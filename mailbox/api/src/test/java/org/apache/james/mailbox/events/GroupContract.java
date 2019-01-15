@@ -217,7 +217,7 @@ public interface GroupContract {
             MailboxListener listener = newListener();
 
             MailboxListener failingListener = mock(MailboxListener.class);
-            when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
+            when(failingListener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
             doThrow(new RuntimeException()).when(failingListener).event(any());
 
             eventBus().register(failingListener, GROUP_A);

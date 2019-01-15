@@ -48,10 +48,6 @@ class MailboxListenerRegistry {
         }
     }
 
-    synchronized void clear() {
-        listeners.clear();
-    }
-
     Flux<MailboxListener> getLocalMailboxListeners(RegistrationKey registrationKey) {
         return Flux.fromIterable(listeners.get(registrationKey));
     }

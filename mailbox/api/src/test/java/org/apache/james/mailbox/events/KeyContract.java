@@ -37,6 +37,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -111,6 +112,16 @@ public interface KeyContract extends EventBusContract {
             eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
             verify(listener, timeout(ONE_SECOND).times(1)).event(any());
+        }
+
+        @Test
+        default void dispatchShouldNotifyLocalRegisteredListenerWithoutDelay() throws Exception {
+            MailboxListener listener = newListener();
+            eventBus().register(listener, KEY_1);
+
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
+
+            verify(listener, times(1)).event(any());
         }
 
         @Test
@@ -276,7 +287,7 @@ public interface KeyContract extends EventBusContract {
             MailboxListener listener = newListener();
 
             MailboxListener failingListener = mock(MailboxListener.class);
-            when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
+            when(failingListener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
             doThrow(new RuntimeException()).when(failingListener).event(any());
 
             eventBus().register(failingListener, KEY_1);
@@ -337,6 +348,20 @@ public interface KeyContract extends EventBusContract {
 
             verify(listener, after(FIVE_HUNDRED_MS).never())
                 .event(any());
+        }
+
+        @Test
+        default void localDispatchedListenersShouldBeDispatchedWithoutDelay() throws Exception {
+            MailboxListener mailboxListener1 = newListener();
+            MailboxListener mailboxListener2 = newListener();
+
+            eventBus().register(mailboxListener1, KEY_1);
+            eventBus2().register(mailboxListener2, KEY_1);
+
+            eventBus2().dispatch(EVENT, KEY_1).block();
+
+            verify(mailboxListener2, times(1)).event(any());
+            verify(mailboxListener1, timeout(ONE_SECOND).times(1)).event(any());
         }
 
     }

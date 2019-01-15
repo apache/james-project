@@ -46,10 +46,6 @@ public class EventBusId {
         this.id = id;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
     @Override
     public final boolean equals(Object o) {
         if (o instanceof EventBusId) {
@@ -57,6 +53,10 @@ public class EventBusId {
             return Objects.equals(this.id, eventBusId.id);
         }
         return false;
+    }
+
+    public String asString() {
+        return id.toString();
     }
 
     @Override

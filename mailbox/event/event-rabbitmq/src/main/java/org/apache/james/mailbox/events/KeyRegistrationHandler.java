@@ -23,6 +23,7 @@ import static org.apache.james.backend.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backend.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backend.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backend.rabbitmq.Constants.NO_ARGUMENTS;
+import static org.apache.james.mailbox.events.RabbitMQEventBus.EVENT_BUS_ID;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -50,6 +51,7 @@ import reactor.rabbitmq.Sender;
 public class KeyRegistrationHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyRegistrationHandler.class);
 
+    private final EventBusId eventBusId;
     private final MailboxListenerRegistry mailboxListenerRegistry;
     private final EventSerializer eventSerializer;
     private final Sender sender;
@@ -59,11 +61,12 @@ public class KeyRegistrationHandler {
     private final RegistrationBinder registrationBinder;
     private Optional<Disposable> receiverSubscriber;
 
-    public KeyRegistrationHandler(EventSerializer eventSerializer, Sender sender, Mono<Connection> connectionMono, RoutingKeyConverter routingKeyConverter) {
+    public KeyRegistrationHandler(EventBusId eventBusId, EventSerializer eventSerializer, Sender sender, Mono<Connection> connectionMono, RoutingKeyConverter routingKeyConverter, MailboxListenerRegistry mailboxListenerRegistry) {
+        this.eventBusId = eventBusId;
         this.eventSerializer = eventSerializer;
         this.sender = sender;
         this.routingKeyConverter = routingKeyConverter;
-        this.mailboxListenerRegistry = new MailboxListenerRegistry();
+        this.mailboxListenerRegistry = mailboxListenerRegistry;
         this.receiver = RabbitFlux.createReceiver(new ReceiverOptions().connectionMono(connectionMono));
         this.registrationQueue = new RegistrationQueueName();
         this.registrationBinder = new RegistrationBinder(sender, registrationQueue);
@@ -89,7 +92,6 @@ public class KeyRegistrationHandler {
         receiverSubscriber.filter(subscriber -> !subscriber.isDisposed())
             .ifPresent(subscriber -> subscriber.dispose());
         receiver.close();
-        mailboxListenerRegistry.clear();
         sender.delete(QueueSpecification.queue(registrationQueue.asString())).block();
     }
 
@@ -107,16 +109,27 @@ public class KeyRegistrationHandler {
         if (delivery.getBody() == null) {
             return Mono.empty();
         }
+
+        String serializedEventBusId = delivery.getProperties().getHeaders().get(EVENT_BUS_ID).toString();
+        EventBusId eventBusId = EventBusId.of(serializedEventBusId);
+
         String routingKey = delivery.getEnvelope().getRoutingKey();
         RegistrationKey registrationKey = routingKeyConverter.toRegistrationKey(routingKey);
         Event event = toEvent(delivery);
 
         return mailboxListenerRegistry.getLocalMailboxListeners(registrationKey)
+            .filter(listener -> !isLocalSynchronousListeners(eventBusId, listener))
             .flatMap(listener -> Mono.fromRunnable(Throwing.runnable(() -> listener.event(event)))
                 .doOnError(e -> LOGGER.error("Exception happens when handling event of user {}", event.getUser().asString(), e))
-                .onErrorResume(e -> Mono.empty()))
+                .onErrorResume(e -> Mono.empty())
+                .then())
             .subscribeOn(Schedulers.elastic())
             .then();
+    }
+
+    private boolean isLocalSynchronousListeners(EventBusId eventBusId, MailboxListener listener) {
+        return eventBusId.equals(this.eventBusId) &&
+            listener.getExecutionMode().equals(MailboxListener.ExecutionMode.SYNCHRONOUS);
     }
 
     private Event toEvent(Delivery delivery) {
