@@ -250,7 +250,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                     .operation((threadNumber, step) -> eventBus.dispatch(EVENT, KEY_1))
                     .threadCount(10)
                     .operationCount(1000)
-                    .runSuccessfullyWithin(Duration.ofSeconds(5));
+                    .runSuccessfullyWithin(Duration.ofMinutes(1));
 
                 eventBus.stop();
                 int callsAfterStop = listener.numberOfEventCalls();
