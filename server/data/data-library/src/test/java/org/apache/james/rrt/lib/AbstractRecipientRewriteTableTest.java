@@ -445,4 +445,47 @@ public abstract class AbstractRecipientRewriteTableTest {
 
         assertThat(virtualUserTable.listSources(groupMapping)).isEmpty();
     }
+
+    @Test
+    public void getSourcesForTypeShouldReturnEmptyWhenNoMapping() throws Exception {
+        assertThat(virtualUserTable.getSourcesForType(Mapping.Type.Alias)).isEmpty();
+    }
+
+    @Test
+    public void getSourcesForTypeShouldReturnEmptyWhenNoMatchingMapping() throws Exception {
+        virtualUserTable.addForwardMapping(SOURCE, ADDRESS);
+
+        assertThat(virtualUserTable.getSourcesForType(Mapping.Type.Alias)).isEmpty();
+    }
+
+    @Test
+    public void getSourcesForTypeShouldReturnMatchingMapping() throws Exception {
+        virtualUserTable.addAliasMapping(SOURCE, ADDRESS);
+
+        assertThat(virtualUserTable.getSourcesForType(Mapping.Type.Alias)).containsOnly(SOURCE);
+    }
+
+    @Test
+    public void getSourcesForTypeShouldNotReturnDuplicatedSources() throws Exception {
+        virtualUserTable.addAliasMapping(SOURCE, ADDRESS);
+        virtualUserTable.addAliasMapping(SOURCE, ADDRESS_2);
+
+        assertThat(virtualUserTable.getSourcesForType(Mapping.Type.Alias)).containsExactly(SOURCE);
+    }
+
+    @Test
+    public void getSourcesForTypeShouldReturnSortedList() throws Exception {
+        MappingSource source1 = MappingSource.fromUser("alice", Domain.LOCALHOST);
+        MappingSource source2 = MappingSource.fromUser("bob", Domain.LOCALHOST);
+        MappingSource source3 = MappingSource.fromUser("cedric", Domain.LOCALHOST);
+
+        virtualUserTable.addAliasMapping(source1, ADDRESS);
+        virtualUserTable.addAliasMapping(source3, ADDRESS);
+        virtualUserTable.addAliasMapping(source2, ADDRESS);
+
+        assertThat(virtualUserTable.getSourcesForType(Mapping.Type.Alias))
+            .containsExactly(source1, source2, source3);
+    }
+
+
 }
