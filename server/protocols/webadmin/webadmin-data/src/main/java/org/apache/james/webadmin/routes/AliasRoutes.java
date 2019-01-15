@@ -24,7 +24,6 @@ import static spark.Spark.halt;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -41,7 +40,6 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.api.SameSourceAndDestinationException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
-import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.OptionalUtils;
@@ -117,11 +115,7 @@ public class AliasRoutes implements Routes {
             message = "Internal server error - Something went bad on the server side.")
     })
     public ImmutableSet<String> listAddressesWithAliases(Request request, Response response) throws RecipientRewriteTableException {
-        return recipientRewriteTable.getAllMappings()
-            .entrySet().stream()
-            .filter(e -> e.getValue().contains(Mapping.Type.Alias))
-            .map(Map.Entry::getValue)
-            .flatMap(Mappings::asStream)
+        return recipientRewriteTable.getMappingsForType(Mapping.Type.Alias)
             .flatMap(mapping -> OptionalUtils.toStream(mapping.asMailAddress()))
             .map(MailAddress::asString)
             .collect(Guavate.toImmutableSortedSet());

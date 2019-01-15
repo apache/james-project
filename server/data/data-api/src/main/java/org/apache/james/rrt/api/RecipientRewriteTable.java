@@ -22,14 +22,17 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.rrt.lib.MappingsImpl;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Interface which should be implemented of classes which map recipients.
@@ -131,4 +134,14 @@ public interface RecipientRewriteTable {
             .sorted(Comparator.comparing(MappingSource::asMailAddressString))
             .collect(Guavate.toImmutableList());
     }
+
+    default Stream<Mapping> getMappingsForType(Mapping.Type type) throws RecipientRewriteTableException {
+        return ImmutableSet.copyOf(getAllMappings()
+            .values().stream()
+            .map(mappings -> mappings.select(type))
+            .reduce(Mappings::union)
+            .orElse(MappingsImpl.empty()))
+            .stream();
+    }
+
 }

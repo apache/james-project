@@ -562,7 +562,7 @@ class AliasRoutesTest {
         void getAllShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .getAllMappings();
+                .getMappingsForType(any());
 
             when()
                 .get()
@@ -574,7 +574,7 @@ class AliasRoutesTest {
         void getAllShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .getAllMappings();
+                .getMappingsForType(any());
 
             when()
                 .get()

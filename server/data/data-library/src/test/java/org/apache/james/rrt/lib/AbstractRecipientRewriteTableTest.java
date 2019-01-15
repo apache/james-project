@@ -487,5 +487,50 @@ public abstract class AbstractRecipientRewriteTableTest {
             .containsExactly(source1, source2, source3);
     }
 
+    @Test
+    public void getMappingsForTypeShouldReturnEmptyWhenNoMapping() throws Exception {
+        assertThat(virtualUserTable.getMappingsForType(Mapping.Type.Alias)).isEmpty();
+    }
+
+    @Test
+    public void getMappingsForTypeShouldReturnEmptyWhenNoMatchingMapping() throws Exception {
+        virtualUserTable.addForwardMapping(SOURCE, ADDRESS);
+
+        assertThat(virtualUserTable.getMappingsForType(Mapping.Type.Alias)).isEmpty();
+    }
+
+    @Test
+    public void getMappingsForTypeShouldReturnMatchingMapping() throws Exception {
+        virtualUserTable.addAliasMapping(SOURCE, ADDRESS);
+
+        assertThat(virtualUserTable.getMappingsForType(Mapping.Type.Alias)).containsOnly(Mapping.alias(ADDRESS));
+    }
+
+    @Test
+    public void getMappingsForTypeShouldNotReturnDuplicatedDestinations() throws Exception {
+        MappingSource source2 = MappingSource.fromUser("bob", Domain.LOCALHOST);
+
+        virtualUserTable.addAliasMapping(SOURCE, ADDRESS);
+        virtualUserTable.addAliasMapping(source2, ADDRESS);
+
+        assertThat(virtualUserTable.getMappingsForType(Mapping.Type.Alias)).containsExactly(Mapping.alias(ADDRESS));
+    }
+
+    @Test
+    public void getMappingsForTypeShouldReturnSortedList() throws Exception {
+        String address1 = "alice@domain.com";
+        String address2 = "bob@domain.com";
+        String address3 = "cedric@domain.com";
+        Mapping mapping1 = Mapping.alias(address1);
+        Mapping mapping2 = Mapping.alias(address2);
+        Mapping mapping3 = Mapping.alias(address3);
+
+        virtualUserTable.addAliasMapping(SOURCE, address1);
+        virtualUserTable.addAliasMapping(SOURCE, address3);
+        virtualUserTable.addAliasMapping(SOURCE, address2);
+
+        assertThat(virtualUserTable.getMappingsForType(Mapping.Type.Alias))
+            .containsExactly(mapping1, mapping2, mapping3);
+    }
 
 }
