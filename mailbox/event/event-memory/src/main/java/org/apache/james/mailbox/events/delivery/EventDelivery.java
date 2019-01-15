@@ -49,4 +49,6 @@ public interface EventDelivery {
 
 
     ExecutionStages deliver(Collection<MailboxListener> mailboxListeners, Event event);
+
+    ExecutionStages deliverWithRetries(Collection<MailboxListener> mailboxListeners, Event event);
 }

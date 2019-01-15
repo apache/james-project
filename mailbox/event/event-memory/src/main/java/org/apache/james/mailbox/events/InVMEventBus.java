@@ -30,10 +30,10 @@ import org.apache.james.mailbox.events.delivery.EventDelivery;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class InVMEventBus implements EventBus {
@@ -66,7 +66,10 @@ public class InVMEventBus implements EventBus {
     @Override
     public Mono<Void> dispatch(Event event, Set<RegistrationKey> keys) {
         if (!event.isNoop()) {
-            return eventDelivery.deliver(registeredListeners(keys), event).synchronousListenerFuture()
+            return Flux.merge(
+                eventDelivery.deliverWithRetries(groups.values(), event).synchronousListenerFuture(),
+                eventDelivery.deliver(registeredListenersByKeys(keys), event).synchronousListenerFuture())
+                .then()
                 .onErrorResume(throwable -> Mono.empty());
         }
         return Mono.empty();
@@ -76,13 +79,9 @@ public class InVMEventBus implements EventBus {
         return groups.keySet();
     }
 
-    private Set<MailboxListener> registeredListeners(Set<RegistrationKey> keys) {
-        return ImmutableSet.<MailboxListener>builder()
-            .addAll(groups.values())
-            .addAll(keys.stream()
-                .flatMap(registrationKey -> registrations.get(registrationKey).stream())
-                .collect(Guavate.toImmutableList()))
-            .build();
+    private Set<MailboxListener> registeredListenersByKeys(Set<RegistrationKey> keys) {
+        return keys.stream()
+            .flatMap(registrationKey -> registrations.get(registrationKey).stream())
+            .collect(Guavate.toImmutableSet());
     }
-
 }

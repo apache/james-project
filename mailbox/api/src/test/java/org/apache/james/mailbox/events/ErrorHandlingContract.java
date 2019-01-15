@@ -23,6 +23,7 @@ import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT;
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT_2;
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT_ID;
 import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_A;
+import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_1;
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.WAIT_CONDITION;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,6 +41,8 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.util.EventCollector;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableSet;
 
 interface ErrorHandlingContract extends EventBusContract {
 
@@ -63,6 +66,20 @@ interface ErrorHandlingContract extends EventBusContract {
 
     default ThrowingListener throwingListener() {
         return new ThrowingListener();
+    }
+
+    @Test
+    default void retryingIsNotAppliedForKeyRegistrations() {
+        EventCollector eventCollector = eventCollector();
+
+        doThrow(new RuntimeException())
+            .when(eventCollector).event(EVENT);
+
+        eventBus().register(eventCollector, KEY_1);
+        eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
+
+        assertThat(eventCollector.getEvents())
+            .isEmpty();
     }
 
     @Test

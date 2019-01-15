@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.events;
 
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT;
+import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT_2;
 import static org.apache.james.mailbox.events.EventBusTestFixture.FIVE_HUNDRED_MS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_1;
 import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_2;
@@ -35,7 +36,6 @@ import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -261,17 +261,11 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void failingRegisteredListenersShouldNotAbortRegisteredDelivery() {
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution listener = spy(new EventBusTestFixture.MailboxListenerCountingSuccessfulExecution());
-            doThrow(new RuntimeException())
-                .doThrow(new RuntimeException())
-                .doThrow(new RuntimeException())
-                .doThrow(new RuntimeException())
-                .doCallRealMethod()
-                .when(listener).event(any());
+            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution listener = new EventBusTestFixture.EventMatcherThrowingListener(ImmutableSet.of(EVENT));
             eventBus().register(listener, KEY_1);
 
             eventBus().dispatch(EVENT, KEY_1).block();
-            eventBus().dispatch(EVENT, KEY_1).block();
+            eventBus().dispatch(EVENT_2, KEY_1).block();
 
             WAIT_CONDITION
                 .until(() -> assertThat(listener.numberOfEventCalls()).isEqualTo(1));
