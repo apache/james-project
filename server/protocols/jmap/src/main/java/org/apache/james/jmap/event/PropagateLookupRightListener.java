@@ -59,30 +59,22 @@ public class PropagateLookupRightListener implements MailboxListener.GroupMailbo
     }
 
     @Override
-    public void event(Event event) {
-        try {
-            MailboxSession mailboxSession = createMailboxSession(event);
+    public void event(Event event) throws MailboxException {
+        MailboxSession mailboxSession = createMailboxSession(event);
 
-            if (event instanceof MailboxACLUpdated) {
-                MailboxACLUpdated aclUpdateEvent = (MailboxACLUpdated) event;
-                MailboxPath mailboxPath = mailboxManager.getMailbox(aclUpdateEvent.getMailboxId(), mailboxSession).getMailboxPath();
+        if (event instanceof MailboxACLUpdated) {
+            MailboxACLUpdated aclUpdateEvent = (MailboxACLUpdated) event;
+            MailboxPath mailboxPath = mailboxManager.getMailbox(aclUpdateEvent.getMailboxId(), mailboxSession).getMailboxPath();
 
-                updateLookupRightOnParent(mailboxSession, mailboxPath, aclUpdateEvent.getAclDiff());
-            } else if (event instanceof MailboxRenamed) {
-                MailboxRenamed renamedEvent = (MailboxRenamed) event;
-                updateLookupRightOnParent(mailboxSession, renamedEvent.getNewPath());
-            }
-        } catch (MailboxException e) {
-            throw new RuntimeException(e);
+            updateLookupRightOnParent(mailboxSession, mailboxPath, aclUpdateEvent.getAclDiff());
+        } else if (event instanceof MailboxRenamed) {
+            MailboxRenamed renamedEvent = (MailboxRenamed) event;
+            updateLookupRightOnParent(mailboxSession, renamedEvent.getNewPath());
         }
     }
 
-    private MailboxSession createMailboxSession(Event event) {
-        try {
-            return mailboxManager.createSystemSession(event.getUser().asString());
-        } catch (MailboxException e) {
-            throw new RuntimeException("unable to create system session of user:" + event.getUser().toString(), e);
-        }
+    private MailboxSession createMailboxSession(Event event) throws MailboxException {
+        return mailboxManager.createSystemSession(event.getUser().asString());
     }
 
     private void updateLookupRightOnParent(MailboxSession session, MailboxPath path) throws MailboxException {
