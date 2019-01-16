@@ -37,15 +37,12 @@ import org.apache.james.mailbox.quota.mailing.commands.DetectThresholdCrossingHa
 import org.apache.james.mailbox.quota.mailing.subscribers.QuotaThresholdMailer;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.MailetContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
 public class QuotaThresholdCrossingListener implements MailboxListener.GroupMailboxListener {
     private static class QuotaThresholdCrossingListenerGroup extends Group {}
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(QuotaThresholdCrossingListener.class);
     private static final Group GROUP = new QuotaThresholdCrossingListenerGroup();
 
     private final EventSourcingSystem eventSourcingSystem;
@@ -72,12 +69,8 @@ public class QuotaThresholdCrossingListener implements MailboxListener.GroupMail
 
     @Override
     public void event(Event event) {
-        try {
-            if (event instanceof QuotaUsageUpdatedEvent) {
-                handleEvent(event.getUser(), (QuotaUsageUpdatedEvent) event);
-            }
-        } catch (Exception e) {
-            LOGGER.error("Can not re-emmit quota threshold events", e);
+        if (event instanceof QuotaUsageUpdatedEvent) {
+            handleEvent(event.getUser(), (QuotaUsageUpdatedEvent) event);
         }
     }
 
