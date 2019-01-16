@@ -141,7 +141,7 @@ public class SpamAssassinListenerTest {
     }
 
     @Test
-    public void eventShouldCallSpamAssassinSpamLearningWhenTheEventMatches() {
+    public void eventShouldCallSpamAssassinSpamLearningWhenTheEventMatches() throws Exception {
         MessageMoveEvent messageMoveEvent = MessageMoveEvent.builder()
             .session(MAILBOX_SESSION)
             .messageMoves(MessageMoves.builder()
@@ -213,7 +213,7 @@ public class SpamAssassinListenerTest {
     }
 
     @Test
-    public void eventShouldCallSpamAssassinHamLearningWhenTheEventMatches() {
+    public void eventShouldCallSpamAssassinHamLearningWhenTheEventMatches() throws Exception {
         MessageMoveEvent messageMoveEvent = MessageMoveEvent.builder()
             .session(MAILBOX_SESSION)
             .messageMoves(MessageMoves.builder()

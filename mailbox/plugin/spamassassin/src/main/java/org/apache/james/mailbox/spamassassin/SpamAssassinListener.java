@@ -82,17 +82,13 @@ public class SpamAssassinListener implements SpamEventListener {
     }
 
     @Override
-    public void event(Event event) {
-        try {
-            MailboxSession session = mailboxManager.createSystemSession(getClass().getCanonicalName());
-            if (event instanceof MessageMoveEvent) {
-                handleMessageMove(event, session, (MessageMoveEvent) event);
-            }
-            if (event instanceof Added) {
-                handleAdded(event, session, (Added) event);
-            }
-        } catch (MailboxException e) {
-            LOGGER.warn("Error while processing SPAM listener", e);
+    public void event(Event event) throws MailboxException {
+        MailboxSession session = mailboxManager.createSystemSession(getClass().getCanonicalName());
+        if (event instanceof MessageMoveEvent) {
+            handleMessageMove(event, session, (MessageMoveEvent) event);
+        }
+        if (event instanceof Added) {
+            handleAdded(event, session, (Added) event);
         }
     }
 
