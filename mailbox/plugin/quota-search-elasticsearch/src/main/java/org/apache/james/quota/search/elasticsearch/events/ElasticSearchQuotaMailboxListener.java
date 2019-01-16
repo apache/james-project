@@ -28,15 +28,12 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.quota.search.elasticsearch.QuotaRatioElasticSearchConstants;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class ElasticSearchQuotaMailboxListener implements MailboxListener.GroupMailboxListener {
     private static class ElasticSearchQuotaMailboxListenerGroup extends Group {}
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchQuotaMailboxListener.class);
     private static final Group GROUP = new ElasticSearchQuotaMailboxListenerGroup();
 
     private final ElasticSearchIndexer indexer;
@@ -56,13 +53,9 @@ public class ElasticSearchQuotaMailboxListener implements MailboxListener.GroupM
     }
 
     @Override
-    public void event(Event event) {
-        try {
-            if (event instanceof QuotaUsageUpdatedEvent) {
-                handleEvent(event.getUser(), (QuotaUsageUpdatedEvent) event);
-            }
-        } catch (Exception e) {
-            LOGGER.error("Can not index quota ratio", e);
+    public void event(Event event) throws JsonProcessingException {
+        if (event instanceof QuotaUsageUpdatedEvent) {
+            handleEvent(event.getUser(), (QuotaUsageUpdatedEvent) event);
         }
     }
 
