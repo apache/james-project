@@ -31,13 +31,21 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.mailet.Mail;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableList;
 
 public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
 
     final String content = "Subject: foo\r\nContent-Transfer-Encoding2: plain";
     final String sep = "\r\n\r\n";
     final String body = "bar\r\n.\r\n";
+
+    @BeforeAll
+    static void setUp() {
+        ContentTypeCleaner.initialize();
+    }
 
     @Override
     protected MimeMessage getMessageFromSources(String sources) throws Exception {
@@ -46,7 +54,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
     }
 
     @Test
-    public void testMessageCloning1() throws Exception {
+    void testMessageCloning1() throws Exception {
         ArrayList<MailAddress> r = new ArrayList<>();
         r.add(new MailAddress("recipient@test.com"));
         MimeMessageCopyOnWriteProxy messageFromSources = (MimeMessageCopyOnWriteProxy) getMessageFromSources(
@@ -72,7 +80,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
     }
 
     @Test
-    public void testMessageCloning2() throws Exception {
+    void testMessageCloning2() throws Exception {
         ArrayList<MailAddress> r = new ArrayList<>();
         r.add(new MailAddress("recipient@test.com"));
         MimeMessageCopyOnWriteProxy messageFromSources = (MimeMessageCopyOnWriteProxy) getMessageFromSources(
@@ -122,7 +130,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
      * change the second, then it should not clone
      */
     @Test
-    public void testMessageAvoidCloning() throws Exception {
+    void testMessageAvoidCloning() throws Exception {
         ArrayList<MailAddress> r = new ArrayList<>();
         r.add(new MailAddress("recipient@test.com"));
         MimeMessageCopyOnWriteProxy messageFromSources = (MimeMessageCopyOnWriteProxy) getMessageFromSources(
@@ -158,7 +166,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
      * should clone the message.
      */
     @Test
-    public void testMessageCloning3() throws Exception {
+    void testMessageCloning3() throws Exception {
         ArrayList<MailAddress> r = new ArrayList<>();
         r.add(new MailAddress("recipient@test.com"));
         MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
@@ -181,7 +189,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
     }
 
     @Test
-    public void testMessageDisposing() throws Exception {
+    void testMessageDisposing() throws Exception {
         ArrayList<MailAddress> r = new ArrayList<>();
         r.add(new MailAddress("recipient@test.com"));
         MimeMessageCopyOnWriteProxy messageFromSources = (MimeMessageCopyOnWriteProxy) getMessageFromSources(
@@ -203,7 +211,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
     }
 
     @Test
-    public void testNPE1() throws MessagingException, InterruptedException {
+    void testNPE1() throws MessagingException, InterruptedException {
         ArrayList<MailAddress> recipients = new ArrayList<>();
         recipients.add(new MailAddress("recipient@test.com"));
         MimeMessageCopyOnWriteProxy mw = new MimeMessageCopyOnWriteProxy(new MimeMessageInputStreamSource("test",
@@ -225,7 +233,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
      * created by a MimeMessageInputStreamSource.
      */
     @Test
-    public void testMessageCloningViaCoW3() throws Exception {
+    void testMessageCloningViaCoW3() throws Exception {
         MimeMessage mmorig = getSimpleMessage();
 
         MimeMessage mm = new MimeMessageCopyOnWriteProxy(mmorig);
@@ -243,6 +251,18 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         }
 
         LifecycleUtil.dispose(mm);
+    }
+
+    @Test
+    void testMessageWithWrongContentTypeShouldNotThrow() throws Exception {
+        ImmutableList<MailAddress> recipients = ImmutableList.of(new MailAddress("recipient@test.com"));
+        MimeMessageCopyOnWriteProxy messageFromSources = (MimeMessageCopyOnWriteProxy) getMessageFromSources(
+                content + sep + body);
+        MailImpl mail = new MailImpl("test", new MailAddress("test@test.com"), recipients, messageFromSources);
+        mail.getMessage().addHeader("Content-Type", "file;name=\"malformed.pdf\"");
+        mail.getMessage().saveChanges();
+        LifecycleUtil.dispose(mail);
+        LifecycleUtil.dispose(messageFromSources);
     }
 
     private static String getReferences(MimeMessage m) {
@@ -268,6 +288,5 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
 
     private static boolean isSameMimeMessage(MimeMessage first, MimeMessage second) {
         return getWrappedMessage(first) == getWrappedMessage(second);
-
     }
 }
