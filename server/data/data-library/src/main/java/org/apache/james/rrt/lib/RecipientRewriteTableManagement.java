@@ -120,40 +120,4 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
                     entry -> entry.getKey().asString(),
                     entry -> entry.getValue()));
     }
-
-    @Override
-    public void addForwardMapping(String user, String domain, String address) throws RecipientRewriteTableException {
-        MappingSource source = MappingSource.fromUser(user, domain);
-        rrt.addForwardMapping(source, address);
-    }
-
-    @Override
-    public void removeForwardMapping(String user, String domain, String address) throws RecipientRewriteTableException {
-        MappingSource source = MappingSource.fromUser(user, domain);
-        rrt.removeForwardMapping(source, address);
-    }
-
-    @Override
-    public void addGroupMapping(String toUser, String toDomain, String fromAddress) throws RecipientRewriteTableException {
-        MappingSource source = MappingSource.fromUser(toUser, toDomain);
-        rrt.addGroupMapping(source, fromAddress);
-    }
-
-    @Override
-    public void removeGroupMapping(String toUser, String toDomain, String fromAddress) throws RecipientRewriteTableException {
-        MappingSource source = MappingSource.fromUser(toUser, toDomain);
-        rrt.removeForwardMapping(source, fromAddress);
-    }
-
-    @Override
-    public void addAliasMapping(String fromAlias, String fromDomain, String toAddress) throws RecipientRewriteTableException {
-        MappingSource source = MappingSource.fromUser(fromAlias, fromDomain);
-        rrt.addAliasMapping(source, toAddress);
-    }
-
-    @Override
-    public void removeAliasMapping(String fromAlias, String fromDomain, String toAddress) throws RecipientRewriteTableException {
-        MappingSource source = MappingSource.fromUser(fromAlias, fromDomain);
-        rrt.removeAliasMapping(source, toAddress);
-    }
 }
