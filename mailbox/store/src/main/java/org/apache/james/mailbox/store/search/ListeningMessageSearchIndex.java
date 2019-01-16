@@ -26,7 +26,6 @@ import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -37,6 +36,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -63,47 +63,27 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
      * something relevant is received
      */
     @Override
-    public void event(Event event) {
-        try {
-            if (event instanceof MailboxEvent) {
-                handleMailboxEvent(event,
-                    sessionProvider.createSystemSession(event.getUser().asString()),
-                    (MailboxEvent) event);
-            }
-        } catch (MailboxException e) {
-            LOGGER.error("Unable to update index for event {}", event, e);
-        }
-    }
-
-    private void handleMailboxEvent(Event event, MailboxSession session, MailboxEvent mailboxEvent) throws MailboxException {
+    public void event(Event event) throws Exception {
         if (INTERESTING_EVENTS.contains(event.getClass())) {
-            Mailbox mailbox = factory.getMailboxMapper(session).findMailboxById(mailboxEvent.getMailboxId());
-
-            if (event instanceof Added) {
-                handleAdded(session, mailbox, (Added) event);
-            } else if (event instanceof Expunged) {
-                handleExpunged(session, mailbox, (Expunged) event);
-            } else if (event instanceof FlagsUpdated) {
-                handleFlagsUpdated(session, mailbox, (FlagsUpdated) event);
-            } else if (event instanceof MailboxDeletion) {
-                deleteAll(session, mailbox);
-            }
+            handleMailboxEvent(event,
+                sessionProvider.createSystemSession(event.getUser().asString()),
+                (MailboxEvent) event);
         }
     }
 
-    private void handleFlagsUpdated(MailboxSession session, Mailbox mailbox, FlagsUpdated flagsUpdated) {
-        try {
-            update(session, mailbox, flagsUpdated.getUpdatedFlags());
-        } catch (MailboxException e) {
-            LOGGER.error("Unable to update flags in index for mailbox {}", mailbox, e);
-        }
-    }
+    private void handleMailboxEvent(Event event, MailboxSession session, MailboxEvent mailboxEvent) throws Exception {
+        Mailbox mailbox = factory.getMailboxMapper(session).findMailboxById(mailboxEvent.getMailboxId());
 
-    private void handleExpunged(MailboxSession session, Mailbox mailbox, Expunged expunged) {
-        try {
+        if (event instanceof Added) {
+            handleAdded(session, mailbox, (Added) event);
+        } else if (event instanceof Expunged) {
+            Expunged expunged = (Expunged) event;
             delete(session, mailbox, expunged.getUids());
-        } catch (MailboxException e) {
-            LOGGER.error("Unable to deleted messages {} from index for mailbox {}", expunged.getUids(), mailbox, e);
+        } else if (event instanceof FlagsUpdated) {
+            FlagsUpdated flagsUpdated = (FlagsUpdated) event;
+            update(session, mailbox, flagsUpdated.getUpdatedFlags());
+        } else if (event instanceof MailboxDeletion) {
+            deleteAll(session, mailbox);
         }
     }
 
@@ -111,7 +91,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
         MessageRange.toRanges(added.getUids())
             .stream()
             .flatMap(range -> retrieveMailboxMessages(session, mailbox, range))
-            .forEach(mailboxMessage -> addMessage(session, mailbox, mailboxMessage));
+            .forEach(Throwing.<MailboxMessage>consumer(mailboxMessage -> add(session, mailbox, mailboxMessage)).sneakyThrow());
     }
 
     private Stream<MailboxMessage> retrieveMailboxMessages(MailboxSession session, Mailbox mailbox, MessageRange range) {
@@ -125,23 +105,14 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
         }
     }
 
-    private void addMessage(MailboxSession session, Mailbox mailbox, MailboxMessage message) {
-        try {
-            add(session, mailbox, message);
-        } catch (MailboxException e) {
-            LOGGER.error("Unable to index message {} for mailbox {}", message.getUid(), mailbox, e);
-        }
-    }
-
     /**
      * Add the {@link MailboxMessage} for the given {@link Mailbox} to the index
      *
      * @param session The mailbox session performing the message addition
      * @param mailbox mailbox on which the message addition was performed
      * @param message The added message
-     * @throws MailboxException
      */
-    public abstract void add(MailboxSession session, Mailbox mailbox, MailboxMessage message) throws MailboxException;
+    public abstract void add(MailboxSession session, Mailbox mailbox, MailboxMessage message) throws Exception;
 
     /**
      * Delete the concerned UIDs for the given {@link Mailbox} from the index
@@ -149,18 +120,16 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
      * @param session The mailbox session performing the expunge
      * @param mailbox mailbox on which the expunge was performed
      * @param expungedUids UIDS to be deleted
-     * @throws MailboxException
      */
-    public abstract void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) throws MailboxException;
+    public abstract void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) throws Exception;
 
     /**
      * Delete the messages contained in the given {@link Mailbox} from the index
      *
      * @param session The mailbox session performing the expunge
      * @param mailbox mailbox on which the expunge was performed
-     * @throws MailboxException
      */
-    public abstract void deleteAll(MailboxSession session, Mailbox mailbox) throws MailboxException;
+    public abstract void deleteAll(MailboxSession session, Mailbox mailbox) throws Exception;
     
     /**
      * Update the messages concerned by the updated flags list for the given {@link Mailbox}
@@ -168,7 +137,6 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
      * @param session session that performed the update
      * @param mailbox mailbox containing the updated messages
      * @param updatedFlagsList list of flags that were updated
-     * @throws MailboxException
      */
-    public abstract void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws MailboxException;
+    public abstract void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws Exception;
 }

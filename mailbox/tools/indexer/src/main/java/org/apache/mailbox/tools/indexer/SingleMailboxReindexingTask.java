@@ -23,7 +23,6 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
@@ -72,7 +71,7 @@ public class SingleMailboxReindexingTask implements Task {
     public Result run() {
         try {
             return reIndexerPerformer.reIndex(mailboxId, reprocessingContext);
-        } catch (MailboxException e) {
+        } catch (Exception e) {
             return Result.PARTIAL;
         }
     }

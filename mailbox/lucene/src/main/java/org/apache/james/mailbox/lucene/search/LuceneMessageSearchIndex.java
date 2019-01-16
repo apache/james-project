@@ -544,7 +544,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * @param membership
      * @return document
      */
-    private Document createMessageDocument(final MailboxSession session, final MailboxMessage membership) throws MailboxException {
+    private Document createMessageDocument(final MailboxSession session, final MailboxMessage membership) throws IOException, MimeException {
         final Document doc = new Document();
         // TODO: Better handling
         doc.add(new Field(USERS, session.getUser().asString().toUpperCase(Locale.US), Store.YES, Index.NOT_ANALYZED));
@@ -738,14 +738,9 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         MimeStreamParser parser = new MimeStreamParser(MimeConfig.PERMISSIVE);
         parser.setContentDecoding(true);
         parser.setContentHandler(handler);
-       
-        try {
-            // parse the message to index headers and body
-            parser.parse(membership.getFullContent());
-        } catch (MimeException | IOException e) {
-            // This should never happen as it was parsed before too without problems.            
-            throw new MailboxException("Unable to index content of message", e);
-        }
+
+        // parse the message to index headers and body
+        parser.parse(membership.getFullContent());
 
 
         return doc;
@@ -1239,26 +1234,22 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public void add(MailboxSession session, Mailbox mailbox, MailboxMessage membership) throws MailboxException {
+    public void add(MailboxSession session, Mailbox mailbox, MailboxMessage membership) throws IOException, MimeException {
         Document doc = createMessageDocument(session, membership);
         Document flagsDoc = createFlagsDocument(membership);
 
-        try {
-            writer.addDocument(doc);
-            writer.addDocument(flagsDoc);
-        } catch (IOException e) {
-            throw new MailboxException("Unable to add message to index", e);
-        }
+        writer.addDocument(doc);
+        writer.addDocument(flagsDoc);
     }
 
     @Override
-    public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws MailboxException {
+    public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws IOException {
         for (UpdatedFlags updatedFlags : updatedFlagsList) {
             update(mailbox, updatedFlags.getUid(), updatedFlags.getNewFlags());
         }
     }
 
-    private void update(Mailbox mailbox, MessageUid uid, Flags f) throws MailboxException {
+    private void update(Mailbox mailbox, MessageUid uid, Flags f) throws IOException {
         try (IndexSearcher searcher = new IndexSearcher(IndexReader.open(writer, true))) {
             BooleanQuery query = new BooleanQuery();
             query.add(new TermQuery(new Term(MAILBOX_ID_FIELD, mailbox.getMailboxId().serialize())), BooleanClause.Occur.MUST);
@@ -1278,8 +1269,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
                 }
             }
-        } catch (IOException e) {
-            throw new MailboxException("Unable to add messages in index", e);
         }
     }
 
@@ -1338,7 +1327,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) throws MailboxException {
+    public void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) throws IOException {
         Collection<MessageRange> messageRanges = MessageRange.toRanges(expungedUids);
         for (MessageRange messageRange : messageRanges) {
             delete(mailbox, messageRange);
@@ -1346,20 +1335,16 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public void deleteAll(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public void deleteAll(MailboxSession session, Mailbox mailbox) throws IOException {
         delete(mailbox, MessageRange.all());
     }
 
-    public void delete(Mailbox mailbox, MessageRange range) throws MailboxException {
+    public void delete(Mailbox mailbox, MessageRange range) throws IOException {
         BooleanQuery query = new BooleanQuery();
         query.add(new TermQuery(new Term(MAILBOX_ID_FIELD, mailbox.getMailboxId().serialize())), BooleanClause.Occur.MUST);
         query.add(createQuery(range), BooleanClause.Occur.MUST);
-        
-        try {
-            writer.deleteDocuments(query);
-        } catch (IOException e) {
-            throw new MailboxException("Unable to delete message from index", e);
-        }
+
+        writer.deleteDocuments(query);
     }
 
     public void commit() throws IOException {

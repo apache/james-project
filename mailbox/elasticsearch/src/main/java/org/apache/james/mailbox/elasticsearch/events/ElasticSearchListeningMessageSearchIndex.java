@@ -25,7 +25,6 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -55,6 +54,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -126,80 +126,61 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
 
     @Override
-    public void add(MailboxSession session, Mailbox mailbox, MailboxMessage message) {
+    public void add(MailboxSession session, Mailbox mailbox, MailboxMessage message) throws JsonProcessingException {
+        LOGGER.info("Indexing mailbox {}-{} of user {} on message {}",
+            mailbox.getName(),
+            mailbox.getMailboxId(),
+            session.getUser().asString(),
+            message.getUid());
+
+        String jsonContent = generateIndexedJson(mailbox, message, session);
+        elasticSearchIndexer.index(indexIdFor(mailbox, message.getUid()), jsonContent);
+    }
+
+    private String generateIndexedJson(Mailbox mailbox, MailboxMessage message, MailboxSession session) throws JsonProcessingException {
         try {
-            LOGGER.info("Indexing mailbox {}-{} of user {} on message {}",
-                    mailbox.getName(),
-                    mailbox.getMailboxId(),
-                    session.getUser().asString(),
-                    message.getUid());
-            elasticSearchIndexer.index(indexIdFor(mailbox, message.getUid()), messageToElasticSearchJson.convertToJson(message, ImmutableList.of(session.getUser())));
+            return messageToElasticSearchJson.convertToJson(message, ImmutableList.of(session.getUser()));
         } catch (Exception e) {
-            try {
-                LOGGER.warn("Indexing mailbox {}-{} of user {} on message {} without attachments ",
-                        mailbox.getName(),
-                        mailbox.getMailboxId().serialize(),
-                        session.getUser().asString(),
-                        message.getUid(),
-                        e);
-                elasticSearchIndexer.index(indexIdFor(mailbox, message.getUid()), messageToElasticSearchJson.convertToJsonWithoutAttachment(message, ImmutableList.of(session.getUser())));
-            } catch (JsonProcessingException e1) {
-                LOGGER.error("Error when indexing mailbox {}-{} of user {} on message {} without its attachment",
-                        mailbox.getName(),
-                        mailbox.getMailboxId().serialize(),
-                        session.getUser().asString(),
-                        message.getUid(),
-                        e1);
-            }
+            LOGGER.warn("Indexing mailbox {}-{} of user {} on message {} without attachments ",
+                mailbox.getName(),
+                mailbox.getMailboxId().serialize(),
+                session.getUser().asString(),
+                message.getUid(),
+                e);
+            return messageToElasticSearchJson.convertToJsonWithoutAttachment(message, ImmutableList.of(session.getUser()));
         }
     }
-    
+
     @Override
     public void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) {
-        try {
             elasticSearchIndexer.delete(expungedUids.stream()
                 .map(uid ->  indexIdFor(mailbox, uid))
-                .collect(Collectors.toList()));
-        } catch (Exception e) {
-            if (LOGGER.isErrorEnabled()) {
-                LOGGER.error("Error when deleting messages {} in mailbox {} from index", mailbox.getMailboxId().serialize(), expungedUids.toArray(), e);
-            }
-        }
+                .collect(Guavate.toImmutableList()));
     }
 
     @Override
     public void deleteAll(MailboxSession session, Mailbox mailbox) {
-        try {
             elasticSearchIndexer.deleteAllMatchingQuery(
                 termQuery(
                     JsonMessageConstants.MAILBOX_ID,
                     mailbox.getMailboxId().serialize()));
-        } catch (Exception e) {
-            LOGGER.error("Error when deleting all messages in mailbox {}", mailbox.getMailboxId().serialize(), e);
-        }
     }
 
     @Override
     public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) {
-        try {
             elasticSearchIndexer.update(updatedFlagsList.stream()
-                .map(updatedFlags -> createUpdatedDocumentPartFromUpdatedFlags(mailbox, updatedFlags))
-                .collect(Collectors.toList()));
-        } catch (Exception e) {
-            LOGGER.error("Error when updating index on mailbox {}", mailbox.getMailboxId().serialize(), e);
-        }
+                .map(Throwing.<UpdatedFlags, UpdatedRepresentation>function(
+                    updatedFlags -> createUpdatedDocumentPartFromUpdatedFlags(mailbox, updatedFlags))
+                    .sneakyThrow())
+                .collect(Guavate.toImmutableList()));
     }
 
-    private UpdatedRepresentation createUpdatedDocumentPartFromUpdatedFlags(Mailbox mailbox, UpdatedFlags updatedFlags) {
-        try {
+    private UpdatedRepresentation createUpdatedDocumentPartFromUpdatedFlags(Mailbox mailbox, UpdatedFlags updatedFlags) throws JsonProcessingException {
             return new UpdatedRepresentation(
                 indexIdFor(mailbox, updatedFlags.getUid()),
                     messageToElasticSearchJson.getUpdatedJsonMessagePart(
                         updatedFlags.getNewFlags(),
                         updatedFlags.getModSeq()));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error while creating updatedDocumentParts", e);
-        }
     }
 
     private String indexIdFor(Mailbox mailbox, MessageUid uid) {
