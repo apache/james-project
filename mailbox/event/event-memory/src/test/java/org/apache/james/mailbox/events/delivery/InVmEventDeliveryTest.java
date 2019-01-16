@@ -35,6 +35,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.RetryBackoffConfiguration;
 import org.apache.james.mailbox.util.EventCollector;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.assertj.core.api.SoftAssertions;
@@ -59,7 +60,7 @@ class InVmEventDeliveryTest {
         event = mock(MailboxListener.MailboxEvent.class);
         listener = mock(MailboxListener.class);
         listener2 = mock(MailboxListener.class);
-        inVmEventDelivery = new InVmEventDelivery(new NoopMetricFactory());
+        inVmEventDelivery = new InVmEventDelivery(new NoopMetricFactory(), RetryBackoffConfiguration.DEFAULT);
     }
 
     @Nested

@@ -27,6 +27,7 @@ import javax.inject.Inject;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.RetryBackoffConfiguration;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
@@ -46,17 +47,20 @@ public class InVmEventDelivery implements EventDelivery {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InVmEventDelivery.class);
-    private static final int MAX_RETRIES = 3;
-    private static final Duration FIRST_BACKOFF = Duration.ofMillis(100);
     private static final Duration MAX_BACKOFF = Duration.ofMillis(Long.MAX_VALUE);
-    private static final double DEFAULT_JITTER_FACTOR = 0.5;
 
     private final MetricFactory metricFactory;
+    private final RetryBackoffConfiguration retryBackoff;
 
     @Inject
     @VisibleForTesting
-    public InVmEventDelivery(MetricFactory metricFactory) {
+    public InVmEventDelivery(MetricFactory metricFactory, RetryBackoffConfiguration retryBackoff) {
         this.metricFactory = metricFactory;
+        this.retryBackoff = retryBackoff;
+    }
+
+    public InVmEventDelivery(MetricFactory metricFactory) {
+        this(metricFactory, RetryBackoffConfiguration.DEFAULT);
     }
 
     @Override
@@ -106,10 +110,10 @@ public class InVmEventDelivery implements EventDelivery {
         }
 
         return firstDelivery
-            .retryBackoff(MAX_RETRIES, FIRST_BACKOFF, MAX_BACKOFF, DEFAULT_JITTER_FACTOR)
+            .retryBackoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff(), MAX_BACKOFF, retryBackoff.getJitterFactor())
             .doOnError(throwable -> LOGGER.error("listener {} exceeded maximum retry({}) to handle event {}",
                 listenerName(mailboxListener),
-                MAX_RETRIES,
+                retryBackoff.getMaxRetries(),
                 eventName(event),
                 throwable))
             .then();

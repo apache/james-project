@@ -32,7 +32,7 @@ public class InVMEventBusTest implements KeyContract.SingleEventBusKeyContract, 
     void setUp() {
         eventBus = new InVMEventBus(
             new InVmEventDelivery(
-                new NoopMetricFactory()));
+                new NoopMetricFactory(), RetryBackoffConfiguration.DEFAULT));
     }
 
     @Override
