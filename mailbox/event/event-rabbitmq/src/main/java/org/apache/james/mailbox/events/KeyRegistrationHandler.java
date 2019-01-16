@@ -33,6 +33,7 @@ import org.apache.james.mailbox.MailboxListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Delivery;
@@ -111,7 +112,7 @@ public class KeyRegistrationHandler {
         Event event = toEvent(delivery);
 
         return mailboxListenerRegistry.getLocalMailboxListeners(registrationKey)
-            .flatMap(listener -> Mono.fromRunnable(() -> listener.event(event))
+            .flatMap(listener -> Mono.fromRunnable(Throwing.runnable(() -> listener.event(event)))
                 .doOnError(e -> LOGGER.error("Exception happens when handling event of user {}", event.getUser().asString(), e))
                 .onErrorResume(e -> Mono.empty()))
             .subscribeOn(Schedulers.elastic())

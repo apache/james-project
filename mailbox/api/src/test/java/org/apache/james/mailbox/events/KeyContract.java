@@ -58,7 +58,7 @@ public interface KeyContract extends EventBusContract {
 
     interface SingleEventBusKeyContract extends EventBusContract {
         @Test
-        default void registeredListenersShouldNotReceiveNoopEvents() {
+        default void registeredListenersShouldNotReceiveNoopEvents() throws Exception {
             MailboxListener listener = newListener();
 
             eventBus().register(listener, KEY_1);
@@ -71,7 +71,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void dispatchShouldNotThrowWhenARegisteredListenerFails() {
+        default void dispatchShouldNotThrowWhenARegisteredListenerFails() throws Exception {
             MailboxListener listener = newListener();
             doThrow(new RuntimeException()).when(listener).event(any());
 
@@ -82,7 +82,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void dispatchShouldNotNotifyRegisteredListenerWhenEmptyKeySet() {
+        default void dispatchShouldNotNotifyRegisteredListenerWhenEmptyKeySet() throws Exception {
             MailboxListener listener = newListener();
             eventBus().register(listener, KEY_1);
 
@@ -93,7 +93,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void dispatchShouldNotNotifyListenerRegisteredOnOtherKeys() {
+        default void dispatchShouldNotNotifyListenerRegisteredOnOtherKeys() throws Exception {
             MailboxListener listener = newListener();
             eventBus().register(listener, KEY_1);
 
@@ -104,7 +104,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void dispatchShouldNotifyRegisteredListeners() {
+        default void dispatchShouldNotifyRegisteredListeners() throws Exception {
             MailboxListener listener = newListener();
             eventBus().register(listener, KEY_1);
 
@@ -114,7 +114,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void dispatchShouldNotifyOnlyRegisteredListener() {
+        default void dispatchShouldNotifyOnlyRegisteredListener() throws Exception {
             MailboxListener listener = newListener();
             MailboxListener listener2 = newListener();
             eventBus().register(listener, KEY_1);
@@ -128,7 +128,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void dispatchShouldNotifyAllListenersRegisteredOnAKey() {
+        default void dispatchShouldNotifyAllListenersRegisteredOnAKey() throws Exception {
             MailboxListener listener = newListener();
             MailboxListener listener2 = newListener();
             eventBus().register(listener, KEY_1);
@@ -141,7 +141,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void registerShouldAllowDuplicatedRegistration() {
+        default void registerShouldAllowDuplicatedRegistration() throws Exception {
             MailboxListener listener = newListener();
             eventBus().register(listener, KEY_1);
             eventBus().register(listener, KEY_1);
@@ -152,7 +152,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void unregisterShouldRemoveDoubleRegisteredListener() {
+        default void unregisterShouldRemoveDoubleRegisteredListener() throws Exception {
             MailboxListener listener = newListener();
             eventBus().register(listener, KEY_1);
             eventBus().register(listener, KEY_1).unregister();
@@ -164,7 +164,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void callingAllUnregisterMethodShouldUnregisterTheListener() {
+        default void callingAllUnregisterMethodShouldUnregisterTheListener() throws Exception {
             MailboxListener listener = newListener();
             Registration registration = eventBus().register(listener, KEY_1);
             eventBus().register(listener, KEY_1).unregister();
@@ -177,7 +177,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void unregisterShouldHaveNotNotifyWhenCalledOnDifferentKeys() {
+        default void unregisterShouldHaveNotNotifyWhenCalledOnDifferentKeys() throws Exception {
             MailboxListener listener = newListener();
             eventBus().register(listener, KEY_1);
             eventBus().register(listener, KEY_2).unregister();
@@ -199,7 +199,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void dispatchShouldAcceptSeveralKeys() {
+        default void dispatchShouldAcceptSeveralKeys() throws Exception {
             MailboxListener listener = newListener();
             eventBus().register(listener, KEY_1);
 
@@ -209,7 +209,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void dispatchShouldCallListenerOnceWhenSeveralKeysMatching() {
+        default void dispatchShouldCallListenerOnceWhenSeveralKeysMatching() throws Exception {
             MailboxListener listener = newListener();
             eventBus().register(listener, KEY_1);
             eventBus().register(listener, KEY_2);
@@ -220,7 +220,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void dispatchShouldNotNotifyUnregisteredListener() {
+        default void dispatchShouldNotNotifyUnregisteredListener() throws Exception {
             MailboxListener listener = newListener();
             eventBus().register(listener, KEY_1).unregister();
 
@@ -231,7 +231,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void dispatchShouldNotBlockAsynchronousListener() {
+        default void dispatchShouldNotBlockAsynchronousListener() throws Exception {
             MailboxListener listener = newListener();
             when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
             CountDownLatch latch = new CountDownLatch(1);
@@ -266,7 +266,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void allRegisteredListenersShouldBeExecutedWhenARegisteredListenerFails() {
+        default void allRegisteredListenersShouldBeExecutedWhenARegisteredListenerFails() throws Exception {
             MailboxListener listener = newListener();
 
             MailboxListener failingListener = mock(MailboxListener.class);
@@ -285,7 +285,7 @@ public interface KeyContract extends EventBusContract {
     interface MultipleEventBusKeyContract extends MultipleEventBusContract {
 
         @Test
-        default void crossEventBusRegistrationShouldBeAllowed() {
+        default void crossEventBusRegistrationShouldBeAllowed() throws Exception {
             MailboxListener mailboxListener = newListener();
 
             eventBus().register(mailboxListener, KEY_1);
@@ -296,7 +296,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void unregisteredDistantListenersShouldNotBeNotified() {
+        default void unregisteredDistantListenersShouldNotBeNotified() throws Exception {
             MailboxListener mailboxListener = newListener();
 
             eventBus().register(mailboxListener, KEY_1).unregister();
@@ -308,7 +308,7 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
-        default void allRegisteredListenersShouldBeDispatched() {
+        default void allRegisteredListenersShouldBeDispatched() throws Exception {
             MailboxListener mailboxListener1 = newListener();
             MailboxListener mailboxListener2 = newListener();
 

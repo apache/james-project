@@ -67,7 +67,7 @@ public interface MailboxListener {
      *
      * @param event not null
      */
-    void event(Event event);
+    void event(Event event) throws Exception;
 
     interface QuotaEvent extends Event {
         QuotaRoot getQuotaRoot();

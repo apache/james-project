@@ -175,7 +175,7 @@ class InVmEventDeliveryTest {
     }
 
     @Test
-    void deliverShouldHaveCalledSynchronousListenersWhenAllListenerExecutedJoined() {
+    void deliverShouldHaveCalledSynchronousListenersWhenAllListenerExecutedJoined() throws Exception {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
 
         inVmEventDelivery.deliver(ImmutableList.of(listener), event).allListenerFuture().block();
@@ -184,7 +184,7 @@ class InVmEventDeliveryTest {
     }
 
     @Test
-    void deliverShouldHaveCalledAsynchronousListenersWhenAllListenerExecutedJoined() {
+    void deliverShouldHaveCalledAsynchronousListenersWhenAllListenerExecutedJoined() throws Exception {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
 
         inVmEventDelivery.deliver(ImmutableList.of(listener), event).allListenerFuture().block();
@@ -193,7 +193,7 @@ class InVmEventDeliveryTest {
     }
 
     @Test
-    void deliverShouldHaveCalledSynchronousListenersWhenSynchronousListenerExecutedJoined() {
+    void deliverShouldHaveCalledSynchronousListenersWhenSynchronousListenerExecutedJoined() throws Exception {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
 
         inVmEventDelivery.deliver(ImmutableList.of(listener), event).synchronousListenerFuture().block();
@@ -202,7 +202,7 @@ class InVmEventDeliveryTest {
     }
 
     @Test
-    void deliverShouldNotBlockOnAsynchronousListenersWhenSynchronousListenerExecutedJoined() {
+    void deliverShouldNotBlockOnAsynchronousListenersWhenSynchronousListenerExecutedJoined() throws Exception {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(invocation -> {
@@ -218,7 +218,7 @@ class InVmEventDeliveryTest {
     }
 
     @Test
-    void deliverShouldNotBlockOnSynchronousListenersWhenNoJoin() {
+    void deliverShouldNotBlockOnSynchronousListenersWhenNoJoin() throws Exception {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(invocation -> {
@@ -234,7 +234,7 @@ class InVmEventDeliveryTest {
     }
 
     @Test
-    void deliverShouldNotBlockOnAsynchronousListenersWhenNoJoin() {
+    void deliverShouldNotBlockOnAsynchronousListenersWhenNoJoin() throws Exception {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(invocation -> {
@@ -250,7 +250,7 @@ class InVmEventDeliveryTest {
     }
 
     @Test
-    void deliverShouldEventuallyDeliverAsynchronousListenersWhenSynchronousListenerExecutedJoined() {
+    void deliverShouldEventuallyDeliverAsynchronousListenersWhenSynchronousListenerExecutedJoined() throws Exception {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
 
         inVmEventDelivery.deliver(ImmutableList.of(listener), event).synchronousListenerFuture().block();
@@ -259,7 +259,7 @@ class InVmEventDeliveryTest {
     }
 
     @Test
-    void deliverShouldEventuallyDeliverSynchronousListenersWhenNoJoin() {
+    void deliverShouldEventuallyDeliverSynchronousListenersWhenNoJoin() throws Exception {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
 
         inVmEventDelivery.deliver(ImmutableList.of(listener), event);
@@ -268,7 +268,7 @@ class InVmEventDeliveryTest {
     }
 
     @Test
-    void deliverShouldCallSynchronousListenersWhenAsynchronousListenersAreAlsoRegistered() {
+    void deliverShouldCallSynchronousListenersWhenAsynchronousListenersAreAlsoRegistered() throws Exception {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
         when(listener2.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
 

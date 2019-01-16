@@ -55,7 +55,7 @@ public interface GroupContract {
     interface SingleEventBusGroupContract extends EventBusContract {
 
         @Test
-        default void listenerGroupShouldReceiveEvents() {
+        default void listenerGroupShouldReceiveEvents() throws Exception {
             MailboxListener listener = newListener();
 
             eventBus().register(listener, GROUP_A);
@@ -66,7 +66,7 @@ public interface GroupContract {
         }
 
         @Test
-        default void groupListenersShouldNotReceiveNoopEvents() {
+        default void groupListenersShouldNotReceiveNoopEvents() throws Exception {
             MailboxListener listener = newListener();
 
             eventBus().register(listener, GROUP_A);
@@ -79,7 +79,7 @@ public interface GroupContract {
         }
 
         @Test
-        default void dispatchShouldNotThrowWhenAGroupListenerFails() {
+        default void dispatchShouldNotThrowWhenAGroupListenerFails() throws Exception {
             MailboxListener listener = newListener();
             doThrow(new RuntimeException()).when(listener).event(any());
 
@@ -90,7 +90,7 @@ public interface GroupContract {
         }
 
         @Test
-        default void eachListenerGroupShouldReceiveEvents() {
+        default void eachListenerGroupShouldReceiveEvents() throws Exception {
             MailboxListener listener = newListener();
             MailboxListener listener2 = newListener();
             eventBus().register(listener, GROUP_A);
@@ -103,7 +103,7 @@ public interface GroupContract {
         }
 
         @Test
-        default void unregisteredGroupListenerShouldNotReceiveEvents() {
+        default void unregisteredGroupListenerShouldNotReceiveEvents() throws Exception {
             MailboxListener listener = newListener();
             Registration registration = eventBus().register(listener, GROUP_A);
 
@@ -148,7 +148,7 @@ public interface GroupContract {
         }
 
         @Test
-        default void registerShouldAcceptAlreadyUnregisteredGroups() {
+        default void registerShouldAcceptAlreadyUnregisteredGroups() throws Exception {
             MailboxListener listener = newListener();
 
             eventBus().register(listener, GROUP_A).unregister();
@@ -160,7 +160,7 @@ public interface GroupContract {
         }
 
         @Test
-        default void dispatchShouldCallSynchronousListener() {
+        default void dispatchShouldCallSynchronousListener() throws Exception {
             MailboxListener listener = newListener();
 
             eventBus().register(listener, GROUP_A);
@@ -183,7 +183,7 @@ public interface GroupContract {
         }
 
         @Test
-        default void allGroupListenersShouldBeExecutedWhenAGroupListenerFails() {
+        default void allGroupListenersShouldBeExecutedWhenAGroupListenerFails() throws Exception {
             MailboxListener listener = newListener();
 
             MailboxListener failingListener = mock(MailboxListener.class);
@@ -202,7 +202,7 @@ public interface GroupContract {
     interface MultipleEventBusGroupContract extends EventBusContract.MultipleEventBusContract {
 
         @Test
-        default void groupsDefinedOnlyOnSomeNodesShouldBeNotified() {
+        default void groupsDefinedOnlyOnSomeNodesShouldBeNotified() throws Exception {
             MailboxListener mailboxListener = newListener();
 
             eventBus().register(mailboxListener, GROUP_A);
@@ -213,7 +213,7 @@ public interface GroupContract {
         }
 
         @Test
-        default void groupListenersShouldBeExecutedOnceInAControlledEnvironment() {
+        default void groupListenersShouldBeExecutedOnceInAControlledEnvironment() throws Exception {
             MailboxListener mailboxListener = newListener();
 
             eventBus().register(mailboxListener, GROUP_A);
@@ -225,7 +225,7 @@ public interface GroupContract {
         }
 
         @Test
-        default void unregisterShouldStopNotificationForDistantGroups() {
+        default void unregisterShouldStopNotificationForDistantGroups() throws Exception {
             MailboxListener mailboxListener = newListener();
 
             eventBus().register(mailboxListener, GROUP_A).unregister();

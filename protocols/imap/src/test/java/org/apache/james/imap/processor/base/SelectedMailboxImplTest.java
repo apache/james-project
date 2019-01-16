@@ -169,7 +169,7 @@ public class SelectedMailboxImplTest {
         };
     }
 
-    private void emitEvent(MailboxListener mailboxListener) {
+    private void emitEvent(MailboxListener mailboxListener) throws Exception {
         mailboxListener.event(EventFactory.added()
             .randomEventId()
             .mailboxSession(MailboxSessionUtil.create("user"))
