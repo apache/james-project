@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.event;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -94,7 +95,7 @@ public class MailboxAnnotationListenerTest {
     }
 
     @Test
-    public void eventShouldDoNothingIfDoNotHaveMailboxDeletionEvent() {
+    public void eventShouldDoNothingIfDoNotHaveMailboxDeletionEvent() throws Exception {
         MailboxListener.MailboxEvent event = new MailboxListener.MailboxAdded(null, null, MAILBOX_PATH, MAILBOX_ID, Event.EventId.random());
         listener.event(event);
 
@@ -133,16 +134,15 @@ public class MailboxAnnotationListenerTest {
     }
 
     @Test
-    public void eventShouldDeteleAllMailboxIfHasAnyOneFailed() throws Exception {
+    public void eventShouldPropagateFailure() throws Exception {
         when(annotationMapper.getAllAnnotations((eq(mailboxId)))).thenReturn(ANNOTATIONS);
         doThrow(new RuntimeException()).when(annotationMapper).deleteAnnotation(eq(mailboxId), eq(PRIVATE_KEY));
 
-        listener.event(deleteEvent);
+        assertThatThrownBy(() -> listener.event(deleteEvent)).isInstanceOf(RuntimeException.class);
 
         verify(mailboxSessionMapperFactory).getAnnotationMapper(eq(mailboxSession));
         verify(annotationMapper).getAllAnnotations(eq(mailboxId));
         verify(annotationMapper).deleteAnnotation(eq(mailboxId), eq(PRIVATE_KEY));
-        verify(annotationMapper).deleteAnnotation(eq(mailboxId), eq(SHARED_KEY));
 
         verifyNoMoreInteractions(mailboxSessionMapperFactory);
         verifyNoMoreInteractions(annotationMapper);
