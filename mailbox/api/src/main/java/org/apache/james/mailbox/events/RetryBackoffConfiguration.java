@@ -25,7 +25,7 @@ import java.util.Objects;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
-class RetryBackoffConfiguration {
+public class RetryBackoffConfiguration {
 
     @FunctionalInterface
     interface RequireMaxRetries {
