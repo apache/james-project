@@ -136,6 +136,7 @@ public class AliasMappingTest {
 
         jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, BOB_ADDRESS, "INBOX");
         jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, ALICE_ADDRESS, "INBOX");
+        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, CEDRIC_ADDRESS, "INBOX");
 
         WebAdminGuiceProbe webAdminGuiceProbe = jamesServer.getProbe(WebAdminGuiceProbe.class);
         webAdminGuiceProbe.await();
@@ -284,5 +285,60 @@ public class AliasMappingTest {
         assertThat(imapMessageReader.readFirstMessage()).contains(MESSAGE_CONTENT);
     }
 
+
+    @Test
+    public void messageShouldRedirectFromAliasContainingSlash() throws Exception {
+        String aliasWithSlash = "bob/alias@" + DOMAIN;
+        String aliasWithEncodedSlash = "bob%2Falias@" + DOMAIN;
+        webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + aliasWithEncodedSlash);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(ALICE_ADDRESS)
+                .recipient(aliasWithSlash));
+
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(BOB_ADDRESS, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+    }
+
+    @Test
+    public void messageShouldRedirectToUserContainingSlash() throws Exception {
+        String userWithSlash = "bob/a@" + DOMAIN;
+        dataProbe.addUser(userWithSlash, PASSWORD);
+        String userWithEncodedSlash = "bob%2Fa@" + DOMAIN;
+        webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + userWithEncodedSlash + "/sources/" + BOB_ALIAS);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(ALICE_ADDRESS)
+                .recipient(BOB_ALIAS));
+
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(userWithSlash, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+    }
+
+    @Test
+    public void messageShouldRedirectToUserWhenEncodingAt() throws Exception {
+        String userWithEncodedAt = "bob%40" + DOMAIN;
+        String aliasWithEncodedAt = "bob-alias%40" + DOMAIN;
+        webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + userWithEncodedAt + "/sources/" + aliasWithEncodedAt);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(ALICE_ADDRESS)
+                .recipient(BOB_ALIAS));
+
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(BOB_ADDRESS, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+    }
 
 }
