@@ -32,12 +32,16 @@ import static org.apache.james.mailbox.events.EventBusTestFixture.GroupA;
 import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_1;
 import static org.apache.james.mailbox.events.EventBusTestFixture.MailboxListenerCountingSuccessfulExecution;
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
+import static org.apache.james.mailbox.events.EventBusTestFixture.WAIT_CONDITION;
 import static org.apache.james.mailbox.events.EventBusTestFixture.newListener;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXCHANGE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -63,6 +67,7 @@ import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.mockito.stubbing.Answer;
 
 import com.rabbitmq.client.Connection;
 
@@ -197,6 +202,41 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         GroupConsumerRetry.RetryExchangeName retryExchangeName = GroupConsumerRetry.RetryExchangeName.of(registeredGroup);
         assertThat(testExtension.rabbitMQExtension.managementAPI().listExchanges())
             .anyMatch(exchange -> exchange.getName().equals(retryExchangeName.asString()));
+    }
+
+    @Nested
+    class AtLeastOnceTest {
+
+        @Test
+        void inProcessingEventShouldBeReDispatchedToAnotherEventBusWhenOneIsDown() {
+            MailboxListenerCountingSuccessfulExecution eventBusListener = spy(new EventBusTestFixture.MailboxListenerCountingSuccessfulExecution());
+            MailboxListenerCountingSuccessfulExecution eventBus2Listener = spy(new EventBusTestFixture.MailboxListenerCountingSuccessfulExecution());
+            MailboxListenerCountingSuccessfulExecution eventBus3Listener = spy(new EventBusTestFixture.MailboxListenerCountingSuccessfulExecution());
+            Answer callEventAndSleepForever = invocation -> {
+                invocation.callRealMethod();
+                TimeUnit.SECONDS.sleep(Long.MAX_VALUE);
+                return null;
+            };
+
+            doAnswer(callEventAndSleepForever).when(eventBusListener).event(any());
+            doAnswer(callEventAndSleepForever).when(eventBus2Listener).event(any());
+
+            eventBus.register(eventBusListener, GROUP_A);
+            eventBus2.register(eventBus2Listener, GROUP_A);
+            eventBus3.register(eventBus3Listener, GROUP_A);
+
+            eventBus.dispatch(EVENT, NO_KEYS).block();
+            WAIT_CONDITION
+                .until(() -> assertThat(eventBusListener.numberOfEventCalls()).isEqualTo(1));
+            eventBus.stop();
+
+            WAIT_CONDITION
+                .until(() -> assertThat(eventBus2Listener.numberOfEventCalls()).isEqualTo(1));
+            eventBus2.stop();
+
+            WAIT_CONDITION
+                .until(() -> assertThat(eventBus3Listener.numberOfEventCalls()).isEqualTo(1));
+        }
     }
 
     @Nested
