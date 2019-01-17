@@ -24,7 +24,7 @@ import org.apache.james.mailbox.Event;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-interface EventDeadLetters {
+public interface EventDeadLetters {
     Mono<Void> store(Group registeredGroup, Event failDeliveredEvent);
 
     Mono<Void> remove(Group registeredGroup, Event.EventId failDeliveredEventId);

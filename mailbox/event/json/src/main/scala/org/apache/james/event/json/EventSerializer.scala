@@ -22,6 +22,7 @@ package org.apache.james.event.json
 import java.time.Instant
 import java.util.{Optional, TreeMap => JavaTreeMap}
 
+import javax.inject.Inject
 import julienrf.json.derived
 import org.apache.james.core.quota.{QuotaCount, QuotaSize, QuotaValue}
 import org.apache.james.core.{Domain, User}
@@ -330,7 +331,7 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
     .map(event => event.toJava)
 }
 
-class EventSerializer(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory) {
+class EventSerializer @Inject() (mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory) {
   private val jsonSerialize = new JsonSerialize(mailboxIdFactory, messageIdFactory)
 
   def toJson(event: JavaEvent): String = jsonSerialize.toJson(event)
