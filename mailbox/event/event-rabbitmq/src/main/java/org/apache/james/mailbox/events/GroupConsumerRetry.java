@@ -46,7 +46,7 @@ class GroupConsumerRetry {
     static class RetryExchangeName {
 
         static RetryExchangeName of(Group group) {
-            return new RetryExchangeName(GroupRegistration.groupName(group.getClass()));
+            return new RetryExchangeName(group.asString());
         }
 
         static final String MAILBOX_EVENT_RETRY_EXCHANGE_PREFIX = MAILBOX_EVENT + "-retryExchange-";

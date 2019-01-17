@@ -118,8 +118,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         eventBus2.stop();
         eventBus3.stop();
         ALL_GROUPS.stream()
-            .map(groupClass -> GroupRegistration.WorkQueueName.of(groupClass).asString())
-            .forEach(queueName -> sender.delete(QueueSpecification.queue(queueName)).block());
+            .map(GroupRegistration.WorkQueueName::of)
+            .forEach(queueName -> sender.delete(QueueSpecification.queue(queueName.asString())).block());
         sender.delete(ExchangeSpecification.exchange(MAILBOX_EVENT_EXCHANGE_NAME)).block();
         sender.close();
     }

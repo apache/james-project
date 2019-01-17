@@ -65,4 +65,14 @@ class GroupTest {
             .withRedefinedSuperclass()
             .verify();
     }
+
+    @Test
+    void asStringShouldReturnFqdnByDefault() {
+        assertThat(new EventBusTestFixture.GroupA().asString()).isEqualTo("org.apache.james.mailbox.events.EventBusTestFixture$GroupA");
+    }
+
+    @Test
+    void asStringShouldReturnNameWhenGenericGroup() {
+        assertThat(new GenericGroup("abc").asString()).isEqualTo("org.apache.james.mailbox.events.GenericGroup-abc");
+    }
 }

@@ -227,6 +227,20 @@ public interface GroupContract {
 
             verify(listener, timeout(ONE_SECOND).times(1)).event(any());
         }
+
+        @Test
+        default void allGroupListenersShouldBeExecutedWhenGenericGroups() throws Exception {
+            MailboxListener listener1 = newListener();
+            MailboxListener listener2 = newListener();
+
+            eventBus().register(listener1, new GenericGroup("a"));
+            eventBus().register(listener2, new GenericGroup("b"));
+
+            eventBus().dispatch(EVENT, NO_KEYS).block();
+
+            verify(listener1, timeout(ONE_SECOND).times(1)).event(any());
+            verify(listener2, timeout(ONE_SECOND).times(1)).event(any());
+        }
     }
 
     interface MultipleEventBusGroupContract extends EventBusContract.MultipleEventBusContract {

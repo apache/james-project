@@ -22,6 +22,10 @@ package org.apache.james.mailbox.events;
 import java.util.Objects;
 
 public class Group {
+    public String asString() {
+        return getClass().getName();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null) {

@@ -36,7 +36,6 @@ import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.rabbitmq.client.Connection;
 
@@ -56,8 +55,6 @@ import reactor.rabbitmq.Sender;
 class GroupRegistration implements Registration {
 
     static class WorkQueueName {
-
-        @VisibleForTesting
         static WorkQueueName of(Group group) {
             return new WorkQueueName(group);
         }
@@ -65,25 +62,19 @@ class GroupRegistration implements Registration {
         static final String MAILBOX_EVENT_WORK_QUEUE_PREFIX = MAILBOX_EVENT + "-workQueue-";
 
         private final Group group;
-        private final String name;
 
         private WorkQueueName(Group group) {
             Preconditions.checkNotNull(group, "Group must be specified");
             this.group = group;
-            this.name = groupName(group.getClass());
         }
 
-        public Group getGroup() {
+        Group getGroup() {
             return group;
         }
 
         String asString() {
-            return MAILBOX_EVENT_WORK_QUEUE_PREFIX + name;
+            return MAILBOX_EVENT_WORK_QUEUE_PREFIX + group.asString();
         }
-    }
-
-    static String groupName(Class<? extends Group> clazz) {
-        return clazz.getName();
     }
 
     static final String RETRY_COUNT = "retry-count";

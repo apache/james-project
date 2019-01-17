@@ -29,6 +29,11 @@ public class GenericGroup extends Group {
     }
 
     @Override
+    public String asString() {
+        return super.asString() + "-" + groupName;
+    }
+
+    @Override
     public final boolean equals(Object o) {
         if (o instanceof GenericGroup) {
             GenericGroup that = (GenericGroup) o;
