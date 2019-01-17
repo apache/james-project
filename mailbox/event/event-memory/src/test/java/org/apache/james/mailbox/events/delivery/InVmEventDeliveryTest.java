@@ -19,359 +19,241 @@
 
 package org.apache.james.mailbox.events.delivery;
 
+import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT;
+import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_A;
+import static org.apache.james.mailbox.events.EventBusTestFixture.MailboxListenerCountingSuccessfulExecution;
+import static org.apache.james.mailbox.events.delivery.EventDelivery.Retryer;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertTimeout;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.Duration;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.MemoryEventDeadLetters;
 import org.apache.james.mailbox.events.RetryBackoffConfiguration;
-import org.apache.james.mailbox.util.EventCollector;
+import org.apache.james.mailbox.events.delivery.EventDelivery.DeliveryOption;
+import org.apache.james.mailbox.events.delivery.EventDelivery.PermanentFailureHandler;
+import org.apache.james.mailbox.events.delivery.EventDelivery.Retryer.BackoffRetryer;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.ImmutableList;
-
-import reactor.core.publisher.Mono;
-
 class InVmEventDeliveryTest {
-    private static final int DELIVERY_DELAY = (int) TimeUnit.MILLISECONDS.toMillis(100);
-
     private InVmEventDelivery inVmEventDelivery;
-    private MailboxListener listener;
-    private MailboxListener listener2;
+    private MailboxListenerCountingSuccessfulExecution listener;
     private MailboxListener.MailboxEvent event;
 
     @BeforeEach
     void setUp() {
         event = mock(MailboxListener.MailboxEvent.class);
-        listener = mock(MailboxListener.class);
-        listener2 = mock(MailboxListener.class);
-        inVmEventDelivery = new InVmEventDelivery(new NoopMetricFactory(), RetryBackoffConfiguration.DEFAULT);
+        listener = newListener();
+        inVmEventDelivery = new InVmEventDelivery(new NoopMetricFactory());
+    }
+
+    MailboxListenerCountingSuccessfulExecution newListener() {
+        return spy(new MailboxListenerCountingSuccessfulExecution());
     }
 
     @Nested
-    class ErrorHandling {
+    class SynchronousListener {
 
-        class AsyncEventCollector extends EventCollector {
-            @Override
-            public ExecutionMode getExecutionMode() {
-                return ExecutionMode.ASYNCHRONOUS;
-            }
+        @Test
+        void deliverShouldDeliverEvent() {
+            when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
+            inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
+                .allListenerFuture()
+                .block();
+
+            assertThat(listener.numberOfEventCalls())
+                .isEqualTo(1);
         }
 
-        private EventCollector syncEventCollector;
-        private EventCollector asyncEventCollector;
-
-        @BeforeEach
-        void setUp() {
-            syncEventCollector = spy(new EventCollector());
-            asyncEventCollector = spy(new AsyncEventCollector());
+        @Test
+        void deliverShouldReturnSuccessSynchronousMono() {
+            when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
+            assertThatCode(() -> inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
+                    .synchronousListenerFuture()
+                    .block())
+                .doesNotThrowAnyException();
         }
 
-        @Nested
-        class SynchronousOnly {
-            @Test
-            void deliverShouldNotDeliverEventToListenerWhenException() {
-                doThrow(RuntimeException.class).when(syncEventCollector).event(event);
+        @Test
+        void deliverShouldNotDeliverWhenListenerGetException() {
+            when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
+            doThrow(new RuntimeException())
+                .when(listener).event(EVENT);
 
-                assertThatThrownBy(() -> inVmEventDelivery
-                    .deliver(ImmutableList.of(syncEventCollector), event).allListenerFuture()
-                    .block())
-                    .isInstanceOf(RuntimeException.class);
+            assertThatThrownBy(() -> inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
+                .allListenerFuture()
+                .block())
+            .isInstanceOf(RuntimeException.class);
 
-                assertThat(syncEventCollector.getEvents())
-                    .isEmpty();
-            }
-
-            @Test
-            void deliverWithRetriesShouldNotDeliverEventToListenerWhenException() {
-                doThrow(RuntimeException.class).when(syncEventCollector).event(event);
-
-                assertThatThrownBy(() -> inVmEventDelivery
-                    .deliverWithRetries(ImmutableList.of(syncEventCollector), event).allListenerFuture()
-                    .block())
-                    .isInstanceOf(IllegalStateException.class);
-
-                assertThat(syncEventCollector.getEvents())
-                    .isEmpty();
-            }
-
-            @Test
-            void deliverShouldBeErrorWhenException() {
-                doThrow(new RuntimeException("mock exception")).when(syncEventCollector).event(event);
-
-                assertThatThrownBy(() -> inVmEventDelivery
-                    .deliver(ImmutableList.of(syncEventCollector), event).allListenerFuture()
-                    .block())
-                    .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("mock exception");
-            }
-
-            @Test
-            void deliverWithRetriesShouldBeErrorWhenException() {
-                doThrow(RuntimeException.class).when(syncEventCollector).event(event);
-
-                assertThatThrownBy(() -> inVmEventDelivery
-                    .deliverWithRetries(ImmutableList.of(syncEventCollector), event).allListenerFuture()
-                    .block())
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Retries exhausted");
-            }
+            assertThat(listener.numberOfEventCalls())
+                .isEqualTo(0);
         }
 
-        @Nested
-        class AsynchronousOnly {
-            @Test
-            void deliverShouldNotDeliverEventToListenerWhenException() {
-                doThrow(RuntimeException.class).when(asyncEventCollector).event(event);
+        @Test
+        void deliverShouldReturnAnErrorMonoWhenListenerGetException() {
+            when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
+            doThrow(new RuntimeException())
+                .when(listener).event(EVENT);
 
-                assertThatThrownBy(() -> inVmEventDelivery
-                    .deliver(ImmutableList.of(asyncEventCollector), event).allListenerFuture()
-                    .block())
-                    .isInstanceOf(RuntimeException.class);
-
-                assertThat(asyncEventCollector.getEvents())
-                    .isEmpty();
-            }
-
-            @Test
-            void deliverWithRetriesShouldNotDeliverEventToListenerWhenException() {
-                doThrow(RuntimeException.class).when(asyncEventCollector).event(event);
-
-                assertThatThrownBy(() -> inVmEventDelivery
-                    .deliverWithRetries(ImmutableList.of(asyncEventCollector), event).allListenerFuture()
-                    .block())
-                    .isInstanceOf(IllegalStateException.class);
-
-                assertThat(asyncEventCollector.getEvents())
-                    .isEmpty();
-            }
-
-            @Test
-            void deliverShouldBeErrorWhenException() {
-                doThrow(new RuntimeException("mock exception")).when(asyncEventCollector).event(event);
-
-                assertThatThrownBy(() -> inVmEventDelivery
-                    .deliver(ImmutableList.of(asyncEventCollector), event).allListenerFuture()
-                    .block())
-                    .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("mock exception");
-            }
-
-            @Test
-            void deliverWithRetriesShouldBeErrorWhenException() {
-                doThrow(RuntimeException.class).when(asyncEventCollector).event(event);
-
-                assertThatThrownBy(() -> inVmEventDelivery
-                    .deliverWithRetries(ImmutableList.of(asyncEventCollector), event).allListenerFuture()
-                    .block())
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("Retries exhausted");
-            }
-        }
-
-        @Nested
-        class BothAsynchronousAndSynchronous {
-            @Test
-            void deliverShouldDeliverEventToSyncListenerWhenAsyncGetException() {
-                doThrow(RuntimeException.class).when(asyncEventCollector).event(event);
-
-                assertThatThrownBy(() -> inVmEventDelivery
-                    .deliver(ImmutableList.of(asyncEventCollector, syncEventCollector), event).allListenerFuture()
-                    .block())
-                    .isInstanceOf(RuntimeException.class);
-
-                SoftAssertions.assertSoftly(softly -> {
-                    softly.assertThat(asyncEventCollector.getEvents()).isEmpty();
-                    softly.assertThat(syncEventCollector.getEvents()).hasSize(1);
-                });
-
-            }
-
-            @Test
-            void deliverWithRetriesShouldDeliverEventToSyncListenerWhenAsyncGetException() {
-                doThrow(RuntimeException.class).when(asyncEventCollector).event(event);
-
-                assertThatThrownBy(() -> inVmEventDelivery
-                    .deliverWithRetries(ImmutableList.of(asyncEventCollector, syncEventCollector), event).allListenerFuture()
-                    .block())
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("Retries exhausted");
-
-                SoftAssertions.assertSoftly(softly -> {
-                    softly.assertThat(asyncEventCollector.getEvents()).isEmpty();
-                    softly.assertThat(syncEventCollector.getEvents()).hasSize(1);
-                });
-            }
-
-            @Test
-            void deliverShouldDeliverEventToAsyncListenerWhenSyncGetException() {
-                doThrow(RuntimeException.class).when(syncEventCollector).event(event);
-
-                inVmEventDelivery.deliver(ImmutableList.of(asyncEventCollector, syncEventCollector), event).allListenerFuture()
-                    .onErrorResume(e -> Mono.empty())
-                    .block();
-
-                SoftAssertions.assertSoftly(softly -> {
-                    softly.assertThat(syncEventCollector.getEvents()).isEmpty();
-                    softly.assertThat(asyncEventCollector.getEvents()).hasSize(1);
-                });
-            }
-
-            @Test
-            void deliverWithRetriesShouldDeliverEventToAsyncListenerWhenSyncGetException() {
-                doThrow(RuntimeException.class).when(syncEventCollector).event(event);
-
-                inVmEventDelivery.deliverWithRetries(ImmutableList.of(asyncEventCollector, syncEventCollector), event).allListenerFuture()
-                    .onErrorResume(e -> Mono.empty())
-                    .block();
-
-                SoftAssertions.assertSoftly(softly -> {
-                    softly.assertThat(syncEventCollector.getEvents()).isEmpty();
-                    softly.assertThat(asyncEventCollector.getEvents()).hasSize(1);
-                });
-            }
-
-            @Test
-            void deliverShouldBeErrorWhenException() {
-                doThrow(new RuntimeException("mock exception")).when(syncEventCollector).event(event);
-                doThrow(new RuntimeException("mock exception")).when(asyncEventCollector).event(event);
-
-                assertThatThrownBy(() -> inVmEventDelivery
-                    .deliver(ImmutableList.of(asyncEventCollector), event).allListenerFuture()
-                    .block())
-                    .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("mock exception");
-            }
-
-            @Test
-            void deliverWithRetriesShouldBeErrorWhenException() {
-                doThrow(RuntimeException.class).when(syncEventCollector).event(event);
-                doThrow(RuntimeException.class).when(asyncEventCollector).event(event);
-
-                assertThatThrownBy(() -> inVmEventDelivery
-                    .deliverWithRetries(ImmutableList.of(asyncEventCollector), event).allListenerFuture()
-                    .block())
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Retries exhausted");
-            }
+            assertThatThrownBy(() -> inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
+                .synchronousListenerFuture()
+                .block())
+            .isInstanceOf(RuntimeException.class);
         }
     }
 
-    @Test
-    void deliverShouldHaveCalledSynchronousListenersWhenAllListenerExecutedJoined() throws Exception {
-        when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
+    @Nested
+    class AsynchronousListener {
 
-        inVmEventDelivery.deliver(ImmutableList.of(listener), event).allListenerFuture().block();
+        @Test
+        void deliverShouldDeliverEvent() {
+            when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
+            inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
+                .allListenerFuture()
+                .block();
 
-        verify(listener).event(event);
+            assertThat(listener.numberOfEventCalls())
+                .isEqualTo(1);
+        }
+
+        @Test
+        void deliverShouldReturnSuccessSynchronousMono() {
+            when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
+            assertThatCode(() -> inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
+                    .synchronousListenerFuture()
+                    .block())
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        void deliverShouldNotDeliverWhenListenerGetException() {
+            when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
+            doThrow(new RuntimeException())
+                .when(listener).event(EVENT);
+
+            assertThatThrownBy(() -> inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
+                .allListenerFuture()
+                .block())
+            .isInstanceOf(RuntimeException.class);
+
+            assertThat(listener.numberOfEventCalls())
+                .isEqualTo(0);
+        }
+
+        @Test
+        void deliverShouldReturnAnSuccessSyncMonoWhenListenerGetException() {
+            when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
+            doThrow(new RuntimeException())
+                .when(listener).event(EVENT);
+
+            assertThatCode(() -> inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
+                .synchronousListenerFuture()
+                .block())
+            .doesNotThrowAnyException();
+        }
     }
 
-    @Test
-    void deliverShouldHaveCalledAsynchronousListenersWhenAllListenerExecutedJoined() throws Exception {
-        when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
+    @Nested
+    class WithOptions {
 
-        inVmEventDelivery.deliver(ImmutableList.of(listener), event).allListenerFuture().block();
+        @Test
+        void retryShouldWorkWhenDeliverWithRetry() {
+            MailboxListenerCountingSuccessfulExecution listener = newListener();
+            doThrow(new RuntimeException())
+                .doThrow(new RuntimeException())
+                .doThrow(new RuntimeException())
+                .doCallRealMethod()
+                .when(listener).event(EVENT);
 
-        verify(listener).event(event);
-    }
+            inVmEventDelivery.deliver(listener, EVENT,
+                DeliveryOption.of(
+                    BackoffRetryer.of(RetryBackoffConfiguration.DEFAULT, listener),
+                    PermanentFailureHandler.NO_HANDLER))
+                .allListenerFuture()
+                .block();
 
-    @Test
-    void deliverShouldHaveCalledSynchronousListenersWhenSynchronousListenerExecutedJoined() throws Exception {
-        when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
+            assertThat(listener.numberOfEventCalls())
+                .isEqualTo(1);
+        }
 
-        inVmEventDelivery.deliver(ImmutableList.of(listener), event).synchronousListenerFuture().block();
+        @Test
+        void failureHandlerShouldWorkWhenDeliverWithFailureHandler() {
+            MailboxListenerCountingSuccessfulExecution listener = newListener();
+            doThrow(new RuntimeException())
+                .when(listener).event(EVENT);
 
-        verify(listener).event(event);
-    }
+            MemoryEventDeadLetters deadLetter = new MemoryEventDeadLetters();
 
-    @Test
-    void deliverShouldNotBlockOnAsynchronousListenersWhenSynchronousListenerExecutedJoined() throws Exception {
-        when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
-        CountDownLatch latch = new CountDownLatch(1);
-        doAnswer(invocation -> {
-            latch.await();
-            return null;
-        }).when(listener).event(event);
+            inVmEventDelivery.deliver(listener, EVENT,
+                DeliveryOption.of(
+                    Retryer.NO_RETRYER,
+                    PermanentFailureHandler.StoreToDeadLetters.of(GROUP_A, deadLetter)))
+                .allListenerFuture()
+                .block();
 
-        assertTimeout(Duration.ofSeconds(2),
-            () -> {
-                inVmEventDelivery.deliver(ImmutableList.of(listener), event).synchronousListenerFuture().block();
-                latch.countDown();
+            assertThat(deadLetter.groupsWithFailedEvents().toStream())
+                .containsOnly(GROUP_A);
+        }
+
+        @Test
+        void failureHandlerShouldNotWorkWhenRetrySuccess() {
+            MailboxListenerCountingSuccessfulExecution listener = newListener();
+            doThrow(new RuntimeException())
+                .doThrow(new RuntimeException())
+                .doCallRealMethod()
+                .when(listener).event(EVENT);
+
+            MemoryEventDeadLetters deadLetter = new MemoryEventDeadLetters();
+
+            inVmEventDelivery.deliver(listener, EVENT,
+                DeliveryOption.of(
+                    BackoffRetryer.of(RetryBackoffConfiguration.DEFAULT, listener),
+                    PermanentFailureHandler.StoreToDeadLetters.of(GROUP_A, deadLetter)))
+                .allListenerFuture()
+                .block();
+
+            SoftAssertions.assertSoftly(softy -> {
+                softy.assertThat(listener.numberOfEventCalls())
+                    .isEqualTo(1);
+                softy.assertThat(deadLetter.groupsWithFailedEvents().toStream())
+                    .isEmpty();
             });
-    }
+        }
 
-    @Test
-    void deliverShouldNotBlockOnSynchronousListenersWhenNoJoin() throws Exception {
-        when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
-        CountDownLatch latch = new CountDownLatch(1);
-        doAnswer(invocation -> {
-            latch.await();
-            return null;
-        }).when(listener).event(event);
 
-        assertTimeout(Duration.ofSeconds(2),
-            () -> {
-                inVmEventDelivery.deliver(ImmutableList.of(listener), event);
-                latch.countDown();
+        @Test
+        void failureHandlerShouldWorkWhenRetryFails() {
+            MailboxListenerCountingSuccessfulExecution listener = newListener();
+            doThrow(new RuntimeException())
+                .doThrow(new RuntimeException())
+                .doThrow(new RuntimeException())
+                .doThrow(new RuntimeException())
+                .doCallRealMethod()
+                .when(listener).event(EVENT);
+
+            MemoryEventDeadLetters deadLetter = new MemoryEventDeadLetters();
+
+            inVmEventDelivery.deliver(listener, EVENT,
+                DeliveryOption.of(
+                    BackoffRetryer.of(RetryBackoffConfiguration.DEFAULT, listener),
+                    PermanentFailureHandler.StoreToDeadLetters.of(GROUP_A, deadLetter)))
+                .allListenerFuture()
+                .block();
+
+            SoftAssertions.assertSoftly(softy -> {
+                softy.assertThat(listener.numberOfEventCalls())
+                    .isEqualTo(0);
+                assertThat(deadLetter.groupsWithFailedEvents().toStream())
+                    .containsOnly(GROUP_A);
             });
-    }
-
-    @Test
-    void deliverShouldNotBlockOnAsynchronousListenersWhenNoJoin() throws Exception {
-        when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
-        CountDownLatch latch = new CountDownLatch(1);
-        doAnswer(invocation -> {
-            latch.await();
-            return null;
-        }).when(listener).event(event);
-
-        assertTimeout(Duration.ofSeconds(2),
-            () -> {
-                inVmEventDelivery.deliver(ImmutableList.of(listener), event);
-                latch.countDown();
-            });
-    }
-
-    @Test
-    void deliverShouldEventuallyDeliverAsynchronousListenersWhenSynchronousListenerExecutedJoined() throws Exception {
-        when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
-
-        inVmEventDelivery.deliver(ImmutableList.of(listener), event).synchronousListenerFuture().block();
-
-        verify(listener, timeout(DELIVERY_DELAY * 10)).event(event);
-    }
-
-    @Test
-    void deliverShouldEventuallyDeliverSynchronousListenersWhenNoJoin() throws Exception {
-        when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
-
-        inVmEventDelivery.deliver(ImmutableList.of(listener), event);
-
-        verify(listener, timeout(DELIVERY_DELAY * 10)).event(event);
-    }
-
-    @Test
-    void deliverShouldCallSynchronousListenersWhenAsynchronousListenersAreAlsoRegistered() throws Exception {
-        when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
-        when(listener2.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
-
-        inVmEventDelivery.deliver(ImmutableList.of(listener, listener2), event).synchronousListenerFuture().block();
-
-        verify(listener2).event(event);
+        }
     }
 }

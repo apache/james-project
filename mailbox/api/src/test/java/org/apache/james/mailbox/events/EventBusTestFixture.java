@@ -50,7 +50,7 @@ public interface EventBusTestFixture {
             calls.incrementAndGet();
         }
 
-        int numberOfEventCalls() {
+        public int numberOfEventCalls() {
             return calls.get();
         }
     }

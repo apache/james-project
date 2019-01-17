@@ -27,8 +27,11 @@ import javax.inject.Inject;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.events.delivery.EventDelivery;
+import org.apache.james.mailbox.events.delivery.EventDelivery.PermanentFailureHandler.StoreToDeadLetters;
+import org.apache.james.mailbox.events.delivery.EventDelivery.Retryer.BackoffRetryer;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -37,15 +40,25 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class InVMEventBus implements EventBus {
+
     private final Multimap<RegistrationKey, MailboxListener> registrations;
     private final ConcurrentHashMap<Group, MailboxListener> groups;
     private final EventDelivery eventDelivery;
+    private final RetryBackoffConfiguration retryBackoff;
+    private final EventDeadLetters eventDeadLetters;
 
     @Inject
-    public InVMEventBus(EventDelivery eventDelivery) {
+    public InVMEventBus(EventDelivery eventDelivery, RetryBackoffConfiguration retryBackoff, EventDeadLetters eventDeadLetters) {
         this.eventDelivery = eventDelivery;
+        this.retryBackoff = retryBackoff;
+        this.eventDeadLetters = eventDeadLetters;
         this.registrations = Multimaps.synchronizedSetMultimap(HashMultimap.create());
         this.groups = new ConcurrentHashMap<>();
+    }
+
+    @VisibleForTesting
+    public InVMEventBus(EventDelivery eventDelivery) {
+        this(eventDelivery, RetryBackoffConfiguration.DEFAULT, new MemoryEventDeadLetters());
     }
 
     @Override
@@ -66,13 +79,32 @@ public class InVMEventBus implements EventBus {
     @Override
     public Mono<Void> dispatch(Event event, Set<RegistrationKey> keys) {
         if (!event.isNoop()) {
-            return Flux.merge(
-                eventDelivery.deliverWithRetries(groups.values(), event).synchronousListenerFuture(),
-                eventDelivery.deliver(registeredListenersByKeys(keys), event).synchronousListenerFuture())
+            return Flux.merge(groupDeliveries(event), keyDeliveries(event, keys))
+                .reduceWith(EventDelivery.ExecutionStages::empty, EventDelivery.ExecutionStages::combine)
+                .flatMap(EventDelivery.ExecutionStages::synchronousListenerFuture)
                 .then()
                 .onErrorResume(throwable -> Mono.empty());
         }
         return Mono.empty();
+    }
+
+    private Flux<EventDelivery.ExecutionStages> keyDeliveries(Event event, Set<RegistrationKey> keys) {
+        return Flux.fromIterable(registeredListenersByKeys(keys))
+            .map(listener -> eventDelivery.deliver(listener, event, EventDelivery.DeliveryOption.none()));
+    }
+
+    private Flux<EventDelivery.ExecutionStages> groupDeliveries(Event event) {
+        return Flux.fromIterable(groups.entrySet())
+            .map(entry -> groupDelivery(event, entry.getValue(), entry.getKey()));
+    }
+
+    private EventDelivery.ExecutionStages groupDelivery(Event event, MailboxListener mailboxListener, Group group) {
+        return eventDelivery.deliver(
+            mailboxListener,
+            event,
+            EventDelivery.DeliveryOption.of(
+                BackoffRetryer.of(retryBackoff, mailboxListener),
+                StoreToDeadLetters.of(group, eventDeadLetters)));
     }
 
     public Set<Group> registeredGroups() {

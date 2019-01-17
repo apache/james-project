@@ -89,7 +89,8 @@ public class MessageIdManagerTestSystem {
                 .mailbox(mailbox)
                 .addMessage(message)
                 .build(),
-                new MailboxIdRegistrationKey(mailboxId));
+                new MailboxIdRegistrationKey(mailboxId))
+            .block();
             return messageId;
         } catch (Exception e) {
             throw new RuntimeException(e);

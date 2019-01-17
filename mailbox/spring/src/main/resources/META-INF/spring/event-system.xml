@@ -27,12 +27,13 @@
 
     <bean id="event-bus" class="org.apache.james.mailbox.events.InVMEventBus" lazy-init="true">
         <constructor-arg index="0" ref="event-delivery"/>
+        <constructor-arg index="1">
+            <util:constant static-field="org.apache.james.mailbox.events.RetryBackoffConfiguration.DEFAULT"/>
+        </constructor-arg>
+        <constructor-arg index="2" ref="event-deadletters"/>
     </bean>
     <bean id="event-delivery" class="org.apache.james.mailbox.events.delivery.InVmEventDelivery" lazy-init="true">
         <constructor-arg index="0" ref="metricFactory"/>
-        <constructor-arg>
-            <util:constant static-field="org.apache.james.mailbox.events.RetryBackoffConfiguration.DEFAULT"/>
-        </constructor-arg>
     </bean>
-
+    <bean id="event-deadletters" class="org.apache.james.mailbox.events.MemoryEventDeadLetters" lazy-init="true"/>
 </beans>

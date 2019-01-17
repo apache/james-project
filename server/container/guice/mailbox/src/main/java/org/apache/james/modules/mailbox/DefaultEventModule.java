@@ -52,8 +52,8 @@ public class DefaultEventModule extends AbstractModule {
         bind(InVmEventDelivery.class).in(Scopes.SINGLETON);
         bind(InVMEventBus.class).in(Scopes.SINGLETON);
         bind(MemoryEventDeadLetters.class).in(Scopes.SINGLETON);
-        bind(EventDeadLetters.class).to(MemoryEventDeadLetters.class);
 
+        bind(EventDeadLetters.class).to(MemoryEventDeadLetters.class);
         bind(MailboxListenersLoader.class).to(MailboxListenersLoaderImpl.class);
         bind(EventDelivery.class).to(InVmEventDelivery.class);
         bind(EventBus.class).to(InVMEventBus.class);

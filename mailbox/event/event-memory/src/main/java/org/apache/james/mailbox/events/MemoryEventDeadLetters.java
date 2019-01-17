@@ -38,7 +38,7 @@ public class MemoryEventDeadLetters implements EventDeadLetters {
 
     private final Multimap<Group, Event> deadLetters;
 
-    MemoryEventDeadLetters() {
+    public MemoryEventDeadLetters() {
         this.deadLetters = Multimaps.synchronizedSetMultimap(HashMultimap.create());
     }
 
