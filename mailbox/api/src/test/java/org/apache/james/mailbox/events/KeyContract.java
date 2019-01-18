@@ -164,6 +164,18 @@ public interface KeyContract extends EventBusContract {
         }
 
         @Test
+        default void registerShouldNotDispatchPastEvents() throws Exception {
+            MailboxListener listener = newListener();
+
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
+
+            eventBus().register(listener, KEY_1);
+
+            verify(listener, after(FIVE_HUNDRED_MS).never())
+                .event(any());
+        }
+
+        @Test
         default void callingAllUnregisterMethodShouldUnregisterTheListener() throws Exception {
             MailboxListener listener = newListener();
             Registration registration = eventBus().register(listener, KEY_1);
@@ -319,6 +331,18 @@ public interface KeyContract extends EventBusContract {
 
             verify(mailboxListener1, timeout(ONE_SECOND).times(1)).event(any());
             verify(mailboxListener2, timeout(ONE_SECOND).times(1)).event(any());
+        }
+
+        @Test
+        default void registerShouldNotDispatchPastEventsInDistributedContext() throws Exception {
+            MailboxListener listener = newListener();
+
+            eventBus2().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
+
+            eventBus().register(listener, KEY_1);
+
+            verify(listener, after(FIVE_HUNDRED_MS).never())
+                .event(any());
         }
 
     }
