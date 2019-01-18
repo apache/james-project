@@ -23,10 +23,15 @@ import java.util.Optional;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration.BaseConfiguration;
+import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.SystemMailboxesProvider;
+import org.apache.james.mailbox.spamassassin.SpamAssassin;
 import org.apache.james.mailbox.spamassassin.SpamAssassinConfiguration;
+import org.apache.james.mailbox.spamassassin.SpamAssassinListener;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailetcontainer.impl.MailetConfigImpl;
 import org.apache.james.spamassassin.SpamAssassinExtension;
-import org.apache.james.spamassassin.SpamAssassinExtension.SpamAssassin;
 import org.apache.james.util.Host;
 import org.apache.james.utils.MailetConfigurationOverride;
 
@@ -50,12 +55,23 @@ public class SpamAssassinModule extends AbstractModule {
                 new MailetConfigurationOverride(
                     org.apache.james.transport.mailets.SpamAssassin.class,
                     spamAssassinMailetConfig()));
+
+        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
+            .addBinding()
+            .to(SpamAssassinListener.class);
+    }
+
+    @Provides
+    @Singleton
+    SpamAssassinListener provideSpamAssassinListener(SpamAssassin spamAssassin, SystemMailboxesProvider systemMailboxesProvider, MailboxManager mailboxManager, MailboxSessionMapperFactory mapperFactory) {
+        return new SpamAssassinListener(spamAssassin, systemMailboxesProvider, mailboxManager, mapperFactory,
+            MailboxListener.ExecutionMode.SYNCHRONOUS);
     }
 
     @Provides
     @Singleton
     private SpamAssassinConfiguration getSpamAssassinConfiguration() {
-        SpamAssassin spamAssassin = spamAssassinExtension.getSpamAssassin();
+        SpamAssassinExtension.SpamAssassin spamAssassin = spamAssassinExtension.getSpamAssassin();
         return new SpamAssassinConfiguration(Optional.of(Host.from(spamAssassin.getIp(), spamAssassin.getBindingPort())));
     }
 

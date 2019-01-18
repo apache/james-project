@@ -63,7 +63,7 @@ public class SpamAssassinListener implements SpamEventListener {
     private final ExecutionMode executionMode;
 
     @Inject
-    SpamAssassinListener(SpamAssassin spamAssassin, SystemMailboxesProvider systemMailboxesProvider, MailboxManager mailboxManager, MailboxSessionMapperFactory mapperFactory, ExecutionMode executionMode) {
+    public SpamAssassinListener(SpamAssassin spamAssassin, SystemMailboxesProvider systemMailboxesProvider, MailboxManager mailboxManager, MailboxSessionMapperFactory mapperFactory, ExecutionMode executionMode) {
         this.spamAssassin = spamAssassin;
         this.systemMailboxesProvider = systemMailboxesProvider;
         this.mailboxManager = mailboxManager;
