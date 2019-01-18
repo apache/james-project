@@ -56,16 +56,11 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.AfterEachCallback;
-import org.junit.jupiter.api.extension.BeforeEachCallback;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.stubbing.Answer;
 
@@ -86,40 +81,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     KeyContract.SingleEventBusKeyContract, KeyContract.MultipleEventBusKeyContract,
     ErrorHandlingContract {
 
-    static class RabbitMQEventExtension implements BeforeEachCallback, AfterEachCallback {
-        static final RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
-
-        void startRabbit() {
-            rabbitMQExtension.beforeAll(null);
-        }
-
-        void stopRabbit() {
-            rabbitMQExtension.afterAll(null);
-        }
-
-        @Override
-        public void beforeEach(ExtensionContext extensionContext) throws Exception {
-            rabbitMQExtension.beforeEach(extensionContext);
-        }
-
-        @Override
-        public void afterEach(ExtensionContext extensionContext) throws Exception {
-            rabbitMQExtension.afterEach(extensionContext);
-        }
-    }
-
-    @BeforeAll
-    static void beforeAll() {
-        testExtension.startRabbit();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        testExtension.stopRabbit();
-    }
-
     @RegisterExtension
-    static RabbitMQEventExtension testExtension = new RabbitMQEventExtension();
+    static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
 
     private RabbitMQEventBus eventBus;
     private RabbitMQEventBus eventBus2;
@@ -131,7 +94,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
     @BeforeEach
     void setUp() {
-        connectionFactory = RabbitMQEventExtension.rabbitMQExtension.getConnectionFactory();
+        connectionFactory = rabbitMQExtension.getConnectionFactory();
         Mono<Connection> connectionMono = Mono.fromSupplier(connectionFactory::create).cache();
 
         TestId.Factory mailboxIdFactory = new TestId.Factory();
@@ -200,7 +163,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         eventBus.register(listener, registeredGroup);
 
         GroupConsumerRetry.RetryExchangeName retryExchangeName = GroupConsumerRetry.RetryExchangeName.of(registeredGroup);
-        assertThat(testExtension.rabbitMQExtension.managementAPI().listExchanges())
+        assertThat(rabbitMQExtension.managementAPI().listExchanges())
             .anyMatch(exchange -> exchange.getName().equals(retryExchangeName.asString()));
     }
 
@@ -281,7 +244,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         }
 
         private Event dequeueEvent() {
-            RabbitMQConnectionFactory connectionFactory = RabbitMQEventExtension.rabbitMQExtension.getConnectionFactory();
+            RabbitMQConnectionFactory connectionFactory = rabbitMQExtension.getConnectionFactory();
             Receiver receiver = RabbitFlux.createReceiver(new ReceiverOptions().connectionMono(Mono.just(connectionFactory.create())));
 
             byte[] eventInBytes = receiver.consumeAutoAck(MAILBOX_WORK_QUEUE_NAME)
@@ -305,7 +268,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
         @BeforeEach
         void setUp() throws Exception {
-            rabbitManagementAPI = RabbitMQEventExtension.rabbitMQExtension.managementAPI();
+            rabbitManagementAPI = rabbitMQExtension.managementAPI();
         }
 
         @Nested
