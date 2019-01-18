@@ -21,6 +21,7 @@ package org.apache.james.mailbox.events;
 
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT;
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT_2;
+import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT_ID;
 import static org.apache.james.mailbox.events.EventBusTestFixture.FIVE_HUNDRED_MS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_A;
 import static org.apache.james.mailbox.events.EventBusTestFixture.GroupB;
@@ -39,6 +40,8 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.james.core.User;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
@@ -53,6 +56,21 @@ import com.google.common.collect.ImmutableSortedMap;
 public interface GroupContract {
 
     interface SingleEventBusGroupContract extends EventBusContract {
+        @Test
+        default void listenersShouldBeAbleToDispatch() {
+            AtomicBoolean successfulRetry = new AtomicBoolean(false);
+            MailboxListener listener = event -> {
+                if (event.getEventId().equals(EVENT_ID)) {
+                    eventBus().dispatch(EVENT_2, NO_KEYS).block();
+                    successfulRetry.set(true);
+                }
+            };
+
+            eventBus().register(listener, GROUP_A);
+            eventBus().dispatch(EVENT, NO_KEYS).block();
+
+            WAIT_CONDITION.until(successfulRetry::get);
+        }
 
         @Test
         default void listenerGroupShouldReceiveEvents() throws Exception {

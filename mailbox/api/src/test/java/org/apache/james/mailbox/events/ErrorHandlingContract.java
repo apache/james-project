@@ -20,6 +20,9 @@
 package org.apache.james.mailbox.events;
 
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT;
+import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT_2;
+import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT_ID;
+import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_A;
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.WAIT_CONDITION;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,6 +33,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
@@ -70,7 +74,7 @@ interface ErrorHandlingContract extends EventBusContract {
             .doCallRealMethod()
             .when(eventCollector).event(EVENT);
 
-        eventBus().register(eventCollector, new EventBusTestFixture.GroupA());
+        eventBus().register(eventCollector, GROUP_A);
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
         WAIT_CONDITION
@@ -87,7 +91,7 @@ interface ErrorHandlingContract extends EventBusContract {
             .doCallRealMethod()
             .when(eventCollector).event(EVENT);
 
-        eventBus().register(eventCollector, new EventBusTestFixture.GroupA());
+        eventBus().register(eventCollector, GROUP_A);
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
         WAIT_CONDITION
@@ -105,7 +109,7 @@ interface ErrorHandlingContract extends EventBusContract {
             .doCallRealMethod()
             .when(eventCollector).event(EVENT);
 
-        eventBus().register(eventCollector, new EventBusTestFixture.GroupA());
+        eventBus().register(eventCollector, GROUP_A);
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
         TimeUnit.SECONDS.sleep(1);
@@ -117,7 +121,7 @@ interface ErrorHandlingContract extends EventBusContract {
     default void exceedingMaxRetriesShouldStopConsumingFailedEvent() throws Exception {
         ThrowingListener throwingListener = throwingListener();
 
-        eventBus().register(throwingListener, new EventBusTestFixture.GroupA());
+        eventBus().register(throwingListener, GROUP_A);
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
         TimeUnit.SECONDS.sleep(5);
@@ -132,7 +136,7 @@ interface ErrorHandlingContract extends EventBusContract {
     default void retriesBackOffShouldDelayByExponentialGrowth() throws Exception {
         ThrowingListener throwingListener = throwingListener();
 
-        eventBus().register(throwingListener, new EventBusTestFixture.GroupA());
+        eventBus().register(throwingListener, GROUP_A);
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
         TimeUnit.SECONDS.sleep(5);
@@ -153,5 +157,26 @@ interface ErrorHandlingContract extends EventBusContract {
             softly.assertThat(timeElapsed.get(3))
                 .isAfterOrEqualTo(timeElapsed.get(2).plusMillis(minThirdDelayAfter));
         });
+    }
+
+    @Test
+    default void retryingListenerCallingDispatchShouldNotFail() {
+        AtomicBoolean firstExecution = new AtomicBoolean(true);
+        AtomicBoolean successfulRetry = new AtomicBoolean(false);
+        MailboxListener listener = event -> {
+            if (event.getEventId().equals(EVENT_ID)) {
+                if (firstExecution.get()) {
+                    firstExecution.set(false);
+                    throw new RuntimeException();
+                }
+                eventBus().dispatch(EVENT_2, NO_KEYS).block();
+                successfulRetry.set(true);
+            }
+        };
+
+        eventBus().register(listener, GROUP_A);
+        eventBus().dispatch(EVENT, NO_KEYS).block();
+
+        WAIT_CONDITION.until(successfulRetry::get);
     }
 }

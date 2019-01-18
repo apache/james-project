@@ -82,6 +82,7 @@ public class InVmEventDelivery implements EventDelivery {
                 listenerName(mailboxListener),
                 eventName(event),
                 throwable))
+            .subscribeOn(Schedulers.elastic())
             .retryBackoff(MAX_RETRIES, FIRST_BACKOFF, MAX_BACKOFF, DEFAULT_JITTER_FACTOR)
             .doOnError(throwable -> LOGGER.error("listener {} exceeded maximum retry({}) to handle event {}",
                 listenerName(mailboxListener),
