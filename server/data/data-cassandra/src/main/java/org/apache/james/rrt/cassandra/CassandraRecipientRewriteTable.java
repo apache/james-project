@@ -31,40 +31,46 @@ import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.util.OptionalUtils;
 
 public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTable {
-    private final CassandraRecipientRewriteTableDAO dao;
+    private final CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO;
+    private final CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO;
 
     @Inject
-    public CassandraRecipientRewriteTable(CassandraRecipientRewriteTableDAO dao) {
-        this.dao = dao;
+    public CassandraRecipientRewriteTable(CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO, CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO) {
+        this.cassandraRecipientRewriteTableDAO = cassandraRecipientRewriteTableDAO;
+        this.cassandraMappingsSourcesDAO = cassandraMappingsSourcesDAO;
     }
 
     @Override
     public void addMapping(MappingSource source, Mapping mapping) {
-        dao.addMapping(source, mapping).block();
+        cassandraRecipientRewriteTableDAO.addMapping(source, mapping)
+            .then(cassandraMappingsSourcesDAO.addMapping(mapping, source))
+            .block();
     }
 
     @Override
     public void removeMapping(MappingSource source, Mapping mapping) {
-        dao.removeMapping(source, mapping).block();
+        cassandraRecipientRewriteTableDAO.removeMapping(source, mapping)
+            .then(cassandraMappingsSourcesDAO.removeMapping(mapping, source))
+            .block();
     }
 
     @Override
     public Mappings getStoredMappings(MappingSource source) {
-        return dao.retrieveMappings(source)
+        return cassandraRecipientRewriteTableDAO.retrieveMappings(source)
             .blockOptional()
             .orElse(MappingsImpl.empty());
     }
 
     @Override
     public Map<MappingSource, Mappings> getAllMappings() {
-        return dao.getAllMappings().block();
+        return cassandraRecipientRewriteTableDAO.getAllMappings().block();
     }
 
     @Override
     protected Mappings mapAddress(String user, Domain domain) {
         return OptionalUtils.orSuppliers(
-            () -> dao.retrieveMappings(MappingSource.fromUser(user, domain)).blockOptional(),
-            () -> dao.retrieveMappings(MappingSource.fromDomain(domain)).blockOptional())
+            () -> cassandraRecipientRewriteTableDAO.retrieveMappings(MappingSource.fromUser(user, domain)).blockOptional(),
+            () -> cassandraRecipientRewriteTableDAO.retrieveMappings(MappingSource.fromDomain(domain)).blockOptional())
                 .orElse(MappingsImpl.empty());
     }
 }

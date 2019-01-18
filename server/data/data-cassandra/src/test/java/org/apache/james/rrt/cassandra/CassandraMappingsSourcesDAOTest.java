@@ -21,93 +21,60 @@ package org.apache.james.rrt.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
-import org.apache.james.rrt.lib.MappingsImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraRecipientRewriteTableDAOTest {
+class CassandraMappingsSourcesDAOTest {
     private static final String USER = "test";
     private static final String ADDRESS = "test@domain";
-    private static final String ADDRESS_2 = "test2@domain";
     private static final MappingSource SOURCE = MappingSource.fromUser(USER, Domain.LOCALHOST);
     private static final Mapping MAPPING = Mapping.alias(ADDRESS);
-    private static final Mapping MAPPING_2 = Mapping.alias(ADDRESS_2);
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraRRTModule.MODULE);
 
-    private CassandraRecipientRewriteTableDAO dao;
+    private static CassandraMappingsSourcesDAO dao;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        dao = new CassandraRecipientRewriteTableDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        dao = new CassandraMappingsSourcesDAO(cassandra.getConf());
     }
 
     @Test
-    void retrieveMappingsShouldReturnEmptyByDefault() {
-        assertThat(dao.retrieveMappings(SOURCE).blockOptional()).isEmpty();
+    void retrieveSourcesShouldReturnEmptyByDefault() {
+        assertThat(dao.retrieveSources(MAPPING).collectList().block()).isEmpty();
     }
 
     @Test
-    void getAllMappingsShouldReturnEmptyByDefault() {
-        assertThat(dao.getAllMappings().block()).isEmpty();
+    void retrieveSourcesShouldReturnStoredMappingSource() {
+        dao.addMapping(MAPPING, SOURCE).block();
+
+        assertThat(dao.retrieveSources(MAPPING).collectList().block()).containsOnly(SOURCE);
     }
 
     @Test
-    void retrieveMappingsShouldReturnStoredMapping() {
-        dao.addMapping(SOURCE, MAPPING).block();
+    void retrieveSourcesShouldNotReturnRemovedMapping() {
+        dao.addMapping(MAPPING, SOURCE).block();
 
-        assertThat(dao.retrieveMappings(SOURCE).blockOptional()).contains(MappingsImpl.fromMappings(MAPPING));
+        dao.removeMapping(MAPPING, SOURCE).block();
+
+        assertThat(dao.retrieveSources(MAPPING).collectList().block()).isEmpty();
     }
 
     @Test
-    void getAllMappingsShouldReturnStoredMapping() {
-        dao.addMapping(SOURCE, MAPPING).block();
+    void retrieveSourcesShouldReturnMultipleStoredMappingSourcesForMapping() {
+        MappingSource source2 = MappingSource.fromUser("bob", Domain.LOCALHOST);
 
-        assertThat(dao.getAllMappings().block()).contains(Pair.of(SOURCE, MappingsImpl.fromMappings(MAPPING)));
-    }
+        dao.addMapping(MAPPING, SOURCE).block();
+        dao.addMapping(MAPPING, source2).block();
 
-    @Test
-    void retrieveMappingsShouldNotReturnRemovedMapping() {
-        dao.addMapping(SOURCE, MAPPING).block();
-
-        dao.removeMapping(SOURCE, MAPPING).block();
-
-        assertThat(dao.retrieveMappings(SOURCE).blockOptional()).isEmpty();
-    }
-
-    @Test
-    void getAllMappingsShouldNotReturnRemovedMapping() {
-        dao.addMapping(SOURCE, MAPPING).block();
-
-        dao.removeMapping(SOURCE, MAPPING).block();
-
-        assertThat(dao.getAllMappings().block()).isEmpty();
-    }
-
-    @Test
-    void retrieveMappingsShouldReturnMultipleStoredMappingsOfSource() {
-        dao.addMapping(SOURCE, MAPPING).block();
-        dao.addMapping(SOURCE, MAPPING_2).block();
-
-        assertThat(dao.retrieveMappings(SOURCE).blockOptional())
-            .contains(MappingsImpl.fromMappings(MAPPING, MAPPING_2));
-    }
-
-    @Test
-    void getAllMappingsShouldReturnMultipleStoredMappings() {
-        dao.addMapping(SOURCE, MAPPING).block();
-        dao.addMapping(SOURCE, MAPPING_2).block();
-
-        assertThat(dao.getAllMappings().block())
-            .contains(Pair.of(SOURCE, MappingsImpl.fromMappings(MAPPING, MAPPING_2)));
+        assertThat(dao.retrieveSources(MAPPING).collectList().block()).containsOnly(SOURCE, source2);
     }
 }
