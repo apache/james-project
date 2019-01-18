@@ -30,8 +30,8 @@ public interface QuotaRatioElasticSearchConstants {
         String QUOTA_RATIO = "quotaRatio";
     }
 
-    WriteAliasName DEFAULT_QUOTA_RATIO_WRITE_ALIAS = new WriteAliasName("quotaRatioWriteAlias");
-    ReadAliasName DEFAULT_QUOTA_RATIO_READ_ALIAS = new ReadAliasName("quotaRatioReadAlias");
+    WriteAliasName DEFAULT_QUOTA_RATIO_WRITE_ALIAS = new WriteAliasName("quota_ratio_write_alias");
+    ReadAliasName DEFAULT_QUOTA_RATIO_READ_ALIAS = new ReadAliasName("quota_ratio_read_alias");
     IndexName DEFAULT_QUOTA_RATIO_INDEX = new IndexName("quota_ratio_v1");
-    TypeName QUOTA_RATIO_TYPE = new TypeName("quotaRatio");
+    TypeName QUOTA_RATIO_TYPE = new TypeName("quota_ratio");
 }
