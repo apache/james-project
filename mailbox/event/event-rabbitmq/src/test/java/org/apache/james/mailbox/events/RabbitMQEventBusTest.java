@@ -34,6 +34,7 @@ import static org.apache.james.mailbox.events.EventBusTestFixture.MailboxListene
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.WAIT_CONDITION;
 import static org.apache.james.mailbox.events.EventBusTestFixture.newListener;
+import static org.apache.james.mailbox.events.GroupRegistration.WorkQueueName.MAILBOX_EVENT_WORK_QUEUE_PREFIX;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXCHANGE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -414,6 +415,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 eventBus3.stop();
 
                 assertThat(rabbitManagementAPI.listQueues())
+                    .filteredOn(queue -> !queue.getName().startsWith(MAILBOX_EVENT_WORK_QUEUE_PREFIX))
                     .isEmpty();
             }
 
