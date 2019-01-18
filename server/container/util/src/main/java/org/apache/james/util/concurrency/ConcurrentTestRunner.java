@@ -111,7 +111,7 @@ public class ConcurrentTestRunner {
                 try {
                     concurrentOperation.execute(threadNumber, i);
                 } catch (Exception e) {
-                    LOGGER.error("Error caught during concurrent testing", e);
+                    LOGGER.error("Error caught during concurrent testing (iteration {}, threadNumber {})", i, threadNumber, e);
                     exception = e;
                 }
             }
