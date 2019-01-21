@@ -38,7 +38,6 @@ import org.apache.james.mailbox.MailboxListener;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.rabbitmq.client.Connection;
 
 import reactor.core.Disposable;
@@ -57,22 +56,25 @@ import reactor.rabbitmq.Sender;
 class GroupRegistration implements Registration {
 
     static class WorkQueueName {
-        @VisibleForTesting
-        static WorkQueueName of(Class<? extends Group> clazz) {
-            return new WorkQueueName(groupName(clazz));
-        }
 
+        @VisibleForTesting
         static WorkQueueName of(Group group) {
-            return of(group.getClass());
+            return new WorkQueueName(group);
         }
 
         static final String MAILBOX_EVENT_WORK_QUEUE_PREFIX = MAILBOX_EVENT + "-workQueue-";
 
+        private final Group group;
         private final String name;
 
-        private WorkQueueName(String name) {
-            Preconditions.checkArgument(!Strings.isNullOrEmpty(name), "Queue name must be specified");
-            this.name = name;
+        private WorkQueueName(Group group) {
+            Preconditions.checkNotNull(group, "Group must be specified");
+            this.group = group;
+            this.name = groupName(group.getClass());
+        }
+
+        public Group getGroup() {
+            return group;
         }
 
         String asString() {
@@ -95,7 +97,6 @@ class GroupRegistration implements Registration {
     private final EventSerializer eventSerializer;
     private final GroupConsumerRetry retryHandler;
     private final WaitDelayGenerator delayGenerator;
-    private final RetryBackoffConfiguration retryBackoff;
     private Optional<Disposable> receiverSubscriber;
 
     GroupRegistration(Mono<Connection> connectionSupplier, Sender sender, EventSerializer eventSerializer,
@@ -109,7 +110,6 @@ class GroupRegistration implements Registration {
         this.receiverSubscriber = Optional.empty();
         this.unregisterGroup = unregisterGroup;
         this.retryHandler = new GroupConsumerRetry(sender, queueName, group, retryBackoff);
-        this.retryBackoff = retryBackoff;
         this.delayGenerator = WaitDelayGenerator.of(retryBackoff);
     }
 

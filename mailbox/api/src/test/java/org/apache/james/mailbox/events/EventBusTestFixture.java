@@ -93,9 +93,11 @@ public interface EventBusTestFixture {
     MailboxIdRegistrationKey KEY_1 = new MailboxIdRegistrationKey(ID_1);
     MailboxIdRegistrationKey KEY_2 = new MailboxIdRegistrationKey(ID_2);
     MailboxIdRegistrationKey KEY_3 = new MailboxIdRegistrationKey(ID_3);
-    List<Class<? extends Group>> ALL_GROUPS = ImmutableList.of(GroupA.class, GroupB.class, GroupC.class);
-
     GroupA GROUP_A = new GroupA();
+    GroupB GROUP_B = new GroupB();
+    GroupC GROUP_C = new GroupC();
+    List<Group> ALL_GROUPS = ImmutableList.of(GROUP_A, GROUP_B, GROUP_C);
+
     ConditionFactory WAIT_CONDITION = await().timeout(Duration.FIVE_SECONDS);
 
     static MailboxListener newListener() {
