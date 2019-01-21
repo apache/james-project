@@ -77,7 +77,6 @@ import reactor.rabbitmq.Sender;
 import reactor.rabbitmq.SenderOptions;
 
 class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract, GroupContract.MultipleEventBusGroupContract,
-    EventBusConcurrentTestContract.MultiEventBusConcurrentContract, EventBusConcurrentTestContract.SingleEventBusConcurrentContract,
     KeyContract.SingleEventBusKeyContract, KeyContract.MultipleEventBusKeyContract,
     ErrorHandlingContract {
 
@@ -138,11 +137,6 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     }
 
     @Override
-    public EventBus eventBus3() {
-        return eventBus3;
-    }
-
-    @Override
     @Test
     @Disabled("This test is failing by RabbitMQEventBus exponential backoff is not implemented at this time")
     public void failingRegisteredListenersShouldNotAbortRegisteredDelivery() {
@@ -165,6 +159,26 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         GroupConsumerRetry.RetryExchangeName retryExchangeName = GroupConsumerRetry.RetryExchangeName.of(registeredGroup);
         assertThat(rabbitMQExtension.managementAPI().listExchanges())
             .anyMatch(exchange -> exchange.getName().equals(retryExchangeName.asString()));
+    }
+
+    @Nested
+    class ConcurrentTest implements EventBusConcurrentTestContract.MultiEventBusConcurrentContract,
+        EventBusConcurrentTestContract.SingleEventBusConcurrentContract {
+
+        @Override
+        public EventBus eventBus3() {
+            return eventBus3;
+        }
+
+        @Override
+        public EventBus eventBus2() {
+            return eventBus2;
+        }
+
+        @Override
+        public EventBus eventBus() {
+            return eventBus;
+        }
     }
 
     @Nested
