@@ -47,6 +47,7 @@ class RabbitMQEventBus implements EventBus {
     private final RoutingKeyConverter routingKeyConverter;
     private final RetryBackoffConfiguration retryBackoff;
     private final EventBusId eventBusId;
+    private final EventDeadLetters eventDeadLetters;
 
     private MailboxListenerRegistry mailboxListenerRegistry;
     private GroupRegistrationHandler groupRegistrationHandler;
@@ -56,21 +57,23 @@ class RabbitMQEventBus implements EventBus {
 
     RabbitMQEventBus(RabbitMQConnectionFactory rabbitMQConnectionFactory, EventSerializer eventSerializer,
                      RetryBackoffConfiguration retryBackoff,
-                     RoutingKeyConverter routingKeyConverter) {
-        this.eventBusId = EventBusId.random();
+                     RoutingKeyConverter routingKeyConverter,
+                     EventDeadLetters eventDeadLetters) {
+            this.eventBusId = EventBusId.random();
         this.connectionMono = Mono.fromSupplier(rabbitMQConnectionFactory::create).cache();
         this.eventSerializer = eventSerializer;
         this.routingKeyConverter = routingKeyConverter;
         this.retryBackoff = retryBackoff;
+        this.eventDeadLetters = eventDeadLetters;
         this.isRunning = new AtomicBoolean(false);
     }
 
     public void start() {
         if (!isRunning.get()) {
             sender = RabbitFlux.createSender(new SenderOptions().connectionMono(connectionMono));
-            groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, sender, connectionMono, retryBackoff);
             mailboxListenerRegistry = new MailboxListenerRegistry();
             keyRegistrationHandler = new KeyRegistrationHandler(eventBusId, eventSerializer, sender, connectionMono, routingKeyConverter, mailboxListenerRegistry);
+            groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, sender, connectionMono, retryBackoff, eventDeadLetters);
             eventDispatcher = new EventDispatcher(eventBusId, eventSerializer, sender, mailboxListenerRegistry);
 
             eventDispatcher.start();

@@ -60,6 +60,8 @@ interface ErrorHandlingContract extends EventBusContract {
         }
     }
 
+    EventDeadLetters deadLetter();
+
     default EventCollector eventCollector() {
         return spy(new EventCollector());
     }
@@ -195,5 +197,66 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
         WAIT_CONDITION.until(successfulRetry::get);
+    }
+
+    @Test
+    default void deadLettersIsNotAppliedForKeyRegistrations() throws Exception {
+        EventCollector eventCollector = eventCollector();
+
+        doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doCallRealMethod()
+            .when(eventCollector).event(EVENT);
+
+        eventBus().register(eventCollector, KEY_1);
+        eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
+
+        TimeUnit.SECONDS.sleep(1);
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(eventCollector.getEvents()).isEmpty();
+            softly.assertThat(deadLetter().groupsWithFailedEvents().toIterable())
+                .isEmpty();
+        });
+    }
+
+    @Test
+    default void deadLetterShouldNotStoreWhenFailsLessThanMaxRetries() {
+        EventCollector eventCollector = eventCollector();
+
+        doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doCallRealMethod()
+            .when(eventCollector).event(EVENT);
+
+        eventBus().register(eventCollector, new EventBusTestFixture.GroupA());
+        eventBus().dispatch(EVENT, NO_KEYS).block();
+
+        WAIT_CONDITION
+            .until(() -> assertThat(eventCollector.getEvents()).hasSize(1));
+
+        assertThat(deadLetter().groupsWithFailedEvents().toIterable())
+            .isEmpty();
+    }
+
+    @Test
+    default void deadLetterShouldStoreWhenFailsGreaterThanMaxRetries() throws Exception {
+        EventCollector eventCollector = eventCollector();
+
+        doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doCallRealMethod()
+            .when(eventCollector).event(EVENT);
+
+        eventBus().register(eventCollector, GROUP_A);
+        eventBus().dispatch(EVENT, NO_KEYS).block();
+
+        WAIT_CONDITION.until(() -> assertThat(deadLetter().failedEventIds(GROUP_A).toIterable())
+            .containsOnly(EVENT.getEventId()));
+        assertThat(eventCollector.getEvents())
+            .isEmpty();
     }
 }

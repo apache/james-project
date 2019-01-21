@@ -22,6 +22,8 @@ package org.apache.james.mailbox.events;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 public class InVMEventBusTest implements KeyContract.SingleEventBusKeyContract, GroupContract.SingleEventBusGroupContract,
     ErrorHandlingContract{
@@ -38,5 +40,28 @@ public class InVMEventBusTest implements KeyContract.SingleEventBusKeyContract, 
     @Override
     public EventBus eventBus() {
         return eventBus;
+    }
+
+    @Override
+    public EventDeadLetters deadLetter() {
+        throw new RuntimeException("this method is not a part of this task contents, will be handled in another pull request");
+    }
+
+    @Test
+    @Disabled("this test is not a part of this task contents, will be handled in another pull request")
+    @Override
+    public void deadLettersIsNotAppliedForKeyRegistrations() {
+    }
+
+    @Test
+    @Disabled("this test is not a part of this task contents, will be handled in another pull request")
+    @Override
+    public void deadLetterShouldNotStoreWhenFailsLessThanMaxRetries() {
+    }
+
+    @Test
+    @Disabled("this test is not a part of this task contents, will be handled in another pull request")
+    @Override
+    public void deadLetterShouldStoreWhenFailsGreaterThanMaxRetries() {
     }
 }

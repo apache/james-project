@@ -90,10 +90,12 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     private RabbitMQConnectionFactory connectionFactory;
     private EventSerializer eventSerializer;
     private RoutingKeyConverter routingKeyConverter;
+    private MemoryEventDeadLetters memoryEventDeadLetters;
 
     @BeforeEach
     void setUp() {
         connectionFactory = rabbitMQExtension.getConnectionFactory();
+        memoryEventDeadLetters = new MemoryEventDeadLetters();
         Mono<Connection> connectionMono = Mono.fromSupplier(connectionFactory::create).cache();
 
         TestId.Factory mailboxIdFactory = new TestId.Factory();
@@ -123,7 +125,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     }
 
     private RabbitMQEventBus newEventBus() {
-        return new RabbitMQEventBus(connectionFactory, eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter);
+        return new RabbitMQEventBus(connectionFactory, eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter, memoryEventDeadLetters);
     }
 
     @Override
@@ -137,10 +139,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     }
 
     @Override
-    @Test
-    @Disabled("This test is failing by RabbitMQEventBus exponential backoff is not implemented at this time")
-    public void failingRegisteredListenersShouldNotAbortRegisteredDelivery() {
-
+    public EventDeadLetters deadLetter() {
+        return memoryEventDeadLetters;
     }
 
     @Override
