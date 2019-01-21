@@ -24,7 +24,7 @@ import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.ListingWithSharingTest;
 import org.junit.Before;
 
-public class InMemoryListingWithSharingTestTest extends ListingWithSharingTest {
+public class InMemoryListingWithSharingTest extends ListingWithSharingTest {
 
     private ImapHostSystem system;
 
