@@ -42,6 +42,7 @@
         <module>jpa</module>
         <module>lucenesearch</module>
         <module>maildir</module>
+        <module>rabbitmq</module>
     </modules>
 
     <dependencyManagement>

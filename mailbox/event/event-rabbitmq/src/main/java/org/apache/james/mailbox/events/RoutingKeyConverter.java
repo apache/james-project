@@ -34,7 +34,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-class RoutingKeyConverter {
+public class RoutingKeyConverter {
     private static final String SEPARATOR = ":";
 
     static class RoutingKey {
@@ -67,7 +67,7 @@ class RoutingKeyConverter {
     private final Set<RegistrationKey.Factory> factories;
 
     @Inject
-    RoutingKeyConverter(Set<RegistrationKey.Factory> factories) {
+    public RoutingKeyConverter(Set<RegistrationKey.Factory> factories) {
         this.factories = factories;
     }
 
