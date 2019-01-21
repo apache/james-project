@@ -41,14 +41,14 @@ import com.datastax.driver.core.Session;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-class CassandraMappingsSourcesDAO {
+public class CassandraMappingsSourcesDAO {
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement insertStatement;
     private final PreparedStatement deleteStatement;
     private final PreparedStatement retrieveSourcesStatement;
 
     @Inject
-    CassandraMappingsSourcesDAO(Session session) {
+    public CassandraMappingsSourcesDAO(Session session) {
         this.executor = new CassandraAsyncExecutor(session);
         this.insertStatement = prepareInsertStatement(session);
         this.deleteStatement = prepareDelete(session);
@@ -77,7 +77,7 @@ class CassandraMappingsSourcesDAO {
             .and(eq(MAPPING_VALUE, bindMarker(MAPPING_VALUE))));
     }
 
-    Mono<Void> addMapping(Mapping mapping, MappingSource source) {
+    public Mono<Void> addMapping(Mapping mapping, MappingSource source) {
         return executor.executeVoidReactor(insertStatement.bind()
             .setString(MAPPING_TYPE, mapping.getType().asPrefix())
             .setString(MAPPING_VALUE, mapping.getMappingValue())
@@ -91,7 +91,7 @@ class CassandraMappingsSourcesDAO {
             .setString(SOURCE, source.asMailAddressString()));
     }
 
-    Flux<MappingSource> retrieveSources(Mapping mapping) {
+    public Flux<MappingSource> retrieveSources(Mapping mapping) {
         return executor.executeReactor(retrieveSourcesStatement.bind()
             .setString(MAPPING_TYPE, mapping.getType().asPrefix())
             .setString(MAPPING_VALUE, mapping.getMappingValue()))

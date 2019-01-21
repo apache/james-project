@@ -58,7 +58,7 @@ class CassandraRecipientRewriteTableDAOTest {
 
     @Test
     void getAllMappingsShouldReturnEmptyByDefault() {
-        assertThat(dao.getAllMappings().block()).isEmpty();
+        assertThat(dao.getAllMappings().collectList().block()).isEmpty();
     }
 
     @Test
@@ -72,7 +72,7 @@ class CassandraRecipientRewriteTableDAOTest {
     void getAllMappingsShouldReturnStoredMapping() {
         dao.addMapping(SOURCE, MAPPING).block();
 
-        assertThat(dao.getAllMappings().block()).contains(Pair.of(SOURCE, MappingsImpl.fromMappings(MAPPING)));
+        assertThat(dao.getAllMappings().collectList().block()).contains(Pair.of(SOURCE, MAPPING));
     }
 
     @Test
@@ -90,7 +90,7 @@ class CassandraRecipientRewriteTableDAOTest {
 
         dao.removeMapping(SOURCE, MAPPING).block();
 
-        assertThat(dao.getAllMappings().block()).isEmpty();
+        assertThat(dao.getAllMappings().collectList().block()).isEmpty();
     }
 
     @Test
@@ -107,7 +107,7 @@ class CassandraRecipientRewriteTableDAOTest {
         dao.addMapping(SOURCE, MAPPING).block();
         dao.addMapping(SOURCE, MAPPING_2).block();
 
-        assertThat(dao.getAllMappings().block())
-            .contains(Pair.of(SOURCE, MappingsImpl.fromMappings(MAPPING, MAPPING_2)));
+        assertThat(dao.getAllMappings().collectList().block())
+            .contains(Pair.of(SOURCE, MAPPING), Pair.of(SOURCE, MAPPING_2));
     }
 }

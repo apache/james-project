@@ -26,6 +26,7 @@ import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.mailbox.cassandra.mail.migration.AttachmentMessageIdCreation;
 import org.apache.james.mailbox.cassandra.mail.migration.AttachmentV2Migration;
 import org.apache.james.mailbox.cassandra.mail.migration.MailboxPathV2Migration;
+import org.apache.james.rrt.cassandra.migration.MappingsSourcesMigration;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.CassandraMigrationRoutes;
@@ -41,6 +42,7 @@ public class CassandraRoutesModule extends AbstractModule {
     private static final SchemaVersion FROM_V3_TO_V4 = new SchemaVersion(3);
     private static final SchemaVersion FROM_V4_TO_V5 = new SchemaVersion(4);
     private static final SchemaVersion FROM_V5_TO_V6 = new SchemaVersion(5);
+    private static final SchemaVersion FROM_V6_TO_V7 = new SchemaVersion(6);
 
     @Override
     protected void configure() {
@@ -57,6 +59,7 @@ public class CassandraRoutesModule extends AbstractModule {
         allMigrationClazzBinder.addBinding(FROM_V3_TO_V4).to(AttachmentV2Migration.class);
         allMigrationClazzBinder.addBinding(FROM_V4_TO_V5).to(AttachmentMessageIdCreation.class);
         allMigrationClazzBinder.addBinding(FROM_V5_TO_V6).to(MailboxPathV2Migration.class);
+        allMigrationClazzBinder.addBinding(FROM_V6_TO_V7).to(MappingsSourcesMigration.class);
 
         bind(SchemaVersion.class)
             .annotatedWith(Names.named(CassandraMigrationService.LATEST_VERSION))
