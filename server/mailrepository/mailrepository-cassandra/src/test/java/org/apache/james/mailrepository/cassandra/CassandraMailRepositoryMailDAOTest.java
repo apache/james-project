@@ -29,6 +29,8 @@ import javax.mail.MessagingException;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.mailrepository.api.MailKey;
@@ -52,8 +54,12 @@ class CassandraMailRepositoryMailDAOTest {
     static final MailKey KEY_1 = new MailKey("key1");
     static final TestBlobId.Factory BLOB_ID_FACTORY = new TestBlobId.Factory();
 
+    public static final CassandraModule MODULE = CassandraModule.aggregateModules(
+            CassandraMailRepositoryModule.MODULE,
+            CassandraSchemaVersionModule.MODULE);
+
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraMailRepositoryModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULE);
 
 
     abstract class TestSuite {
@@ -206,9 +212,9 @@ class CassandraMailRepositoryMailDAOTest {
             String remoteAddr = "remoteAddr";
             String remoteHost = "remoteHost";
             PerRecipientHeaders.Header header = PerRecipientHeaders.Header.builder().name("headerName").value("headerValue").build();
-            String attributeName = "att1";
+            AttributeName attributeName = AttributeName.of("att1");
             List<AttributeValue<?>> attributeValue = ImmutableList.of(AttributeValue.of("value1"), AttributeValue.of("value2"));
-            Attribute attribute = new Attribute(AttributeName.of(attributeName), AttributeValue.of(attributeValue));
+            Attribute attribute = new Attribute(attributeName, AttributeValue.of(attributeValue));
             List<Attribute> attributes = ImmutableList.of(attribute);
 
             testee.store(URL,
@@ -238,8 +244,8 @@ class CassandraMailRepositoryMailDAOTest {
                 softly.assertThat(partialMail.getState()).isEqualTo(state);
                 softly.assertThat(partialMail.getRemoteAddr()).isEqualTo(remoteAddr);
                 softly.assertThat(partialMail.getRemoteHost()).isEqualTo(remoteHost);
-                softly.assertThat(partialMail.getAttributeNames()).containsOnly(attributeName);
-                softly.assertThat(partialMail.getAttribute(AttributeName.of(attributeName))).contains(attribute);
+                softly.assertThat(partialMail.attributeNames()).containsOnly(attributeName);
+                softly.assertThat(partialMail.getAttribute(attributeName)).contains(attribute);
                 softly.assertThat(partialMail.getPerRecipientSpecificHeaders().getRecipientsWithSpecificHeaders())
                     .containsOnly(MailAddressFixture.RECIPIENT1);
                 softly.assertThat(partialMail.getPerRecipientSpecificHeaders().getHeadersForRecipient(MailAddressFixture.RECIPIENT1))
