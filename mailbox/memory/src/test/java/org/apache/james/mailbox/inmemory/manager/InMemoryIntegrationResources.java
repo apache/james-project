@@ -23,9 +23,9 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -136,8 +136,17 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
                                       Authenticator authenticator, Authorizator authorizator,
                                       int limitAnnotationCount, int limitAnnotationSize) {
 
+        return createResources(new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory())),
+            groupMembershipResolver, authenticator, authorizator, limitAnnotationCount, limitAnnotationSize);
+    }
+
+    public Resources createResources(EventBus eventBus, Authenticator authenticator, Authorizator authorizator) {
+        return createResources(eventBus,
+            new SimpleGroupMembershipResolver(), authenticator, authorizator, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
+    }
+
+    private Resources createResources(EventBus eventBus, GroupMembershipResolver groupMembershipResolver, Authenticator authenticator, Authorizator authorizator, int limitAnnotationCount, int limitAnnotationSize) {
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
-        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(),
             groupMembershipResolver, eventBus);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager, limitAnnotationCount, limitAnnotationSize);
