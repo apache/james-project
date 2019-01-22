@@ -16,12 +16,17 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.rrt.cassandra;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 import org.junit.After;
@@ -30,15 +35,21 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
-public class CassandraRecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
+public class CassandraRecipientRewriteTableV6Test extends AbstractRecipientRewriteTableTest {
+    private static final SchemaVersion SCHEMA_VERSION_V6 = new SchemaVersion(6);
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    private static final CassandraModule MODULE = CassandraModule.aggregateModules(
+        CassandraRRTModule.MODULE,
+        CassandraSchemaVersionModule.MODULE);
 
-    private static CassandraCluster cassandra;
+    @ClassRule
+    public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+
+    protected static CassandraCluster cassandra;
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraRRTModule.MODULE, cassandraServer.getHost());
+        cassandra = CassandraCluster.create(MODULE, cassandraServer.getHost());
     }
 
     @Override
@@ -61,11 +72,18 @@ public class CassandraRecipientRewriteTableTest extends AbstractRecipientRewrite
 
     @Override
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
+        CassandraSchemaVersionDAO cassandraSchemaVersionDAO = new CassandraSchemaVersionDAO(
+            cassandra.getConf(),
+            CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+
         CassandraRecipientRewriteTable rrt = new CassandraRecipientRewriteTable(
             new CassandraRecipientRewriteTableDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-            new CassandraMappingsSourcesDAO(cassandra.getConf()));
+            new CassandraMappingsSourcesDAO(cassandra.getConf()),
+            cassandraSchemaVersionDAO);
         rrt.configure(new DefaultConfigurationBuilder());
+
+        cassandraSchemaVersionDAO.updateVersion(SCHEMA_VERSION_V6);
+
         return rrt;
     }
-
 }

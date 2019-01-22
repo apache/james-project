@@ -219,7 +219,6 @@ public class AliasRoutes implements Routes {
         MailAddress destinationAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_DESTINATION_ADDRESS), ADDRESS_TYPE);
 
         return recipientRewriteTable.listSources(Mapping.alias(destinationAddress.asString()))
-            .stream()
             .sorted(Comparator.comparing(MappingSource::asMailAddressString))
             .map(AliasSourcesResponse::new)
             .collect(Guavate.toImmutableSet());

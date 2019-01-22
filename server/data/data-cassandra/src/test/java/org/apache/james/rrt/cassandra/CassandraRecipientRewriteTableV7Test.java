@@ -16,49 +16,74 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.rrt.cassandra;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
-import org.apache.james.rrt.lib.RewriteTablesStepdefs;
+import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 
-import cucumber.api.java.After;
-import cucumber.api.java.Before;
+public class CassandraRecipientRewriteTableV7Test extends AbstractRecipientRewriteTableTest {
+    private static final SchemaVersion SCHEMA_VERSION_V7 = new SchemaVersion(7);
 
-public class CassandraStepdefs {
+    private static final CassandraModule MODULE = CassandraModule.aggregateModules(
+        CassandraRRTModule.MODULE,
+        CassandraSchemaVersionModule.MODULE);
 
-    private CassandraCluster cassandra;
+    @ClassRule
+    public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
-    private final RewriteTablesStepdefs mainStepdefs;
+    protected static CassandraCluster cassandra;
 
-    public CassandraStepdefs(RewriteTablesStepdefs mainStepdefs) {
-        this.mainStepdefs = mainStepdefs;
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(MODULE, cassandraServer.getHost());
     }
 
+    @Override
     @Before
-    public void setup() throws Throwable {
-        cassandra = CassandraCluster.create(
-            CassandraModule.aggregateModules(CassandraRRTModule.MODULE, CassandraSchemaVersionModule.MODULE),
-            RewriteTablesTest.cassandraServer.getHost());
-        mainStepdefs.rewriteTable = getRecipientRewriteTable();
+    public void setUp() throws Exception {
+        super.setUp();
     }
 
+    @Override
     @After
-    public void tearDown() {
-        cassandra.close();
+    public void tearDown() throws Exception {
+        super.tearDown();
+        cassandra.clearTables();
     }
 
-    private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
+    }
+
+    @Override
+    protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
+        CassandraSchemaVersionDAO cassandraSchemaVersionDAO = new CassandraSchemaVersionDAO(
+            cassandra.getConf(),
+            CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+
         CassandraRecipientRewriteTable rrt = new CassandraRecipientRewriteTable(
             new CassandraRecipientRewriteTableDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
             new CassandraMappingsSourcesDAO(cassandra.getConf()),
-            new CassandraSchemaVersionDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION));
+            cassandraSchemaVersionDAO);
         rrt.configure(new DefaultConfigurationBuilder());
+
+        cassandraSchemaVersionDAO.updateVersion(SCHEMA_VERSION_V7);
+
         return rrt;
     }
 }

@@ -20,7 +20,6 @@ package org.apache.james.rrt.api;
 
 import java.util.Comparator;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -30,7 +29,6 @@ import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
@@ -115,15 +113,14 @@ public interface RecipientRewriteTable {
      */
     Map<MappingSource, Mappings> getAllMappings() throws RecipientRewriteTableException;
 
-    default List<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException {
+    default Stream<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException {
         Preconditions.checkArgument(listSourcesSupportedType.contains(mapping.getType()),
             String.format("Not supported mapping of type %s", mapping.getType()));
 
         return getAllMappings()
             .entrySet().stream()
             .filter(entry -> entry.getValue().contains(mapping))
-            .map(Map.Entry::getKey)
-            .collect(Guavate.toImmutableList());
+            .map(Map.Entry::getKey);
     }
 
     default Stream<MappingSource> getSourcesForType(Mapping.Type type) throws RecipientRewriteTableException {

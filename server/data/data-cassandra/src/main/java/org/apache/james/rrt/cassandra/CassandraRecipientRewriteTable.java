@@ -19,10 +19,15 @@
 package org.apache.james.rrt.cassandra;
 
 import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Domain;
+import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -31,15 +36,22 @@ import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.util.OptionalUtils;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Preconditions;
 
 public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTable {
+    private static final SchemaVersion MAPPINGS_SOURCES_SUPPORTED_VERSION = new SchemaVersion(7);
+
     private final CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO;
     private final CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO;
+    private final CassandraSchemaVersionDAO cassandraSchemaVersionDAO;
 
     @Inject
-    public CassandraRecipientRewriteTable(CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO, CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO) {
+    public CassandraRecipientRewriteTable(CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO,
+                                          CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO,
+                                          CassandraSchemaVersionDAO cassandraSchemaVersionDAO) {
         this.cassandraRecipientRewriteTableDAO = cassandraRecipientRewriteTableDAO;
         this.cassandraMappingsSourcesDAO = cassandraMappingsSourcesDAO;
+        this.cassandraSchemaVersionDAO = cassandraSchemaVersionDAO;
     }
 
     @Override
@@ -79,5 +91,21 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
             () -> cassandraRecipientRewriteTableDAO.retrieveMappings(MappingSource.fromUser(user, domain)).blockOptional(),
             () -> cassandraRecipientRewriteTableDAO.retrieveMappings(MappingSource.fromDomain(domain)).blockOptional())
                 .orElse(MappingsImpl.empty());
+    }
+
+    @Override
+    public Stream<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException {
+        Preconditions.checkArgument(listSourcesSupportedType.contains(mapping.getType()),
+            String.format("Not supported mapping of type %s", mapping.getType()));
+
+        SchemaVersion schemaVersion = cassandraSchemaVersionDAO.getCurrentSchemaVersion()
+            .join()
+            .orElse(CassandraSchemaVersionManager.MIN_VERSION);
+
+        if (schemaVersion.isBefore(MAPPINGS_SOURCES_SUPPORTED_VERSION)) {
+            return super.listSources(mapping);
+        }
+
+        return cassandraMappingsSourcesDAO.retrieveSources(mapping).toStream();
     }
 }
