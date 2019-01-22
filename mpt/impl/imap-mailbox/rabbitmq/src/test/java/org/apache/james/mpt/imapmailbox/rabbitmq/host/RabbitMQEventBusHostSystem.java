@@ -20,15 +20,10 @@
 
 package org.apache.james.mpt.imapmailbox.rabbitmq.host;
 
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
-
 import java.net.URISyntaxException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
-import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backend.rabbitmq.RabbitMQConnectionFactory;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
@@ -46,19 +41,16 @@ import org.apache.james.mailbox.events.RoutingKeyConverter;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
-import org.apache.james.util.concurrent.NamedThreadFactory;
 
 import com.google.common.collect.ImmutableSet;
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 
 public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
-
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
         Feature.MOVE_SUPPORT,
         Feature.USER_FLAGS_SUPPORT,
@@ -66,16 +58,11 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
         Feature.ANNOTATION_SUPPORT,
         Feature.MOD_SEQ_SEARCH);
 
-
-    private static final int THREE_RETRIES = 3;
-    private static final int ONE_HUNDRED_MILLISECONDS = 100;
-
     private final DockerRabbitMQ dockerRabbitMQ;
-    private StoreMailboxManager mailboxManager;
     private RabbitMQEventBus eventBus;
-    private InMemoryIntegrationResources integrationResources;
+    private InMemoryIntegrationResources.Resources resources;
 
-    public RabbitMQEventBusHostSystem(DockerRabbitMQ dockerRabbitMQ) {
+    RabbitMQEventBusHostSystem(DockerRabbitMQ dockerRabbitMQ) {
         this.dockerRabbitMQ = dockerRabbitMQ;
     }
 
@@ -83,45 +70,34 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
     public void beforeTest() throws Exception {
         super.beforeTest();
 
-        InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
-        InMemoryId.Factory mailboxIdFactory = new InMemoryId.Factory();
-        EventSerializer eventSerializer = new EventSerializer(mailboxIdFactory, messageIdFactory);
-        RoutingKeyConverter routingKeyConverter = new RoutingKeyConverter(ImmutableSet.of(new MailboxIdRegistrationKey.Factory(mailboxIdFactory)));
-        RabbitMQConnectionFactory rabbitConnectionFactory = createRabbitConnectionFactory();
-        eventBus = new RabbitMQEventBus(rabbitConnectionFactory, eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter, new MemoryEventDeadLetters());
+        eventBus = createEventBus();
         eventBus.start();
 
-        integrationResources = new InMemoryIntegrationResources();
-        mailboxManager = integrationResources.createResources(eventBus, authenticator, authorizator).getMailboxManager();
-
+        InMemoryIntegrationResources integrationResources = new InMemoryIntegrationResources();
+        resources = integrationResources.createResources(eventBus, authenticator, authorizator);
 
         ImapProcessor defaultImapProcessorFactory =
             DefaultImapProcessorFactory.createDefaultProcessor(
-                mailboxManager,
+                resources.getMailboxManager(),
                 eventBus,
-                new StoreSubscriptionManager(mailboxManager.getMapperFactory()),
-                integrationResources.retrieveQuotaManager(mailboxManager),
-                integrationResources.retrieveQuotaRootResolver(mailboxManager),
+                new StoreSubscriptionManager(resources.getMailboxManager().getMapperFactory()),
+                integrationResources.retrieveQuotaManager(resources.getMailboxManager()),
+                resources.getDefaultUserQuotaRootResolver(),
                 new DefaultMetricFactory());
+
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
             new DefaultImapEncoderFactory().buildImapEncoder(),
             defaultImapProcessorFactory);
     }
 
-
-    private RabbitMQConnectionFactory createRabbitConnectionFactory() throws URISyntaxException {
-        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(dockerRabbitMQ.amqpUri())
-            .managementUri(dockerRabbitMQ.managementUri())
-            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
-            .maxRetries(THREE_RETRIES)
-            .minDelay(ONE_HUNDRED_MILLISECONDS)
-            .build();
-
-        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
-        return new RabbitMQConnectionFactory(
-            rabbitMQConfiguration,
-            new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor(threadFactory)));
+    private RabbitMQEventBus createEventBus() throws URISyntaxException {
+        InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
+        InMemoryId.Factory mailboxIdFactory = new InMemoryId.Factory();
+        EventSerializer eventSerializer = new EventSerializer(mailboxIdFactory, messageIdFactory);
+        RoutingKeyConverter routingKeyConverter = new RoutingKeyConverter(ImmutableSet.of(new MailboxIdRegistrationKey.Factory(mailboxIdFactory)));
+        RabbitMQConnectionFactory rabbitConnectionFactory = dockerRabbitMQ.createRabbitConnectionFactory();
+        return new RabbitMQEventBus(rabbitConnectionFactory, eventSerializer, RetryBackoffConfiguration.DEFAULT,
+            routingKeyConverter, new MemoryEventDeadLetters(), new NoopMetricFactory());
     }
 
     @Override
@@ -131,7 +107,7 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
 
     @Override
     protected MailboxManager getMailboxManager() {
-        return mailboxManager;
+        return resources.getMailboxManager();
     }
 
     @Override
@@ -141,12 +117,8 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
 
     @Override
     public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) {
-        try {
-            integrationResources.retrieveMaxQuotaManager(mailboxManager).setGlobalMaxMessage(maxMessageQuota);
-            integrationResources.retrieveMaxQuotaManager(mailboxManager).setGlobalMaxStorage(maxStorageQuota);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        resources.getMaxQuotaManager().setGlobalMaxMessage(maxMessageQuota);
+        resources.getMaxQuotaManager().setGlobalMaxStorage(maxStorageQuota);
     }
 
     @Override

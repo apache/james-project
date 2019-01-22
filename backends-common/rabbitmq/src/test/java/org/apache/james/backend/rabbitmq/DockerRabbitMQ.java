@@ -18,13 +18,18 @@
  ****************************************************************/
 package org.apache.james.backend.rabbitmq;
 
+import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
 import org.slf4j.Logger;
@@ -38,12 +43,15 @@ import org.testcontainers.containers.wait.strategy.WaitStrategy;
 
 import com.github.fge.lambdas.consumers.ThrowingConsumer;
 import com.google.common.collect.ImmutableMap;
+import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 import com.rabbitmq.client.Address;
 import com.rabbitmq.client.ConnectionFactory;
 
 public class DockerRabbitMQ {
     private static final Logger LOGGER = LoggerFactory.getLogger(DockerRabbitMQ.class);
 
+    private static final int MAX_THREE_RETRIES = 3;
+    private static final int MIN_DELAY_OF_ONE_HUNDRED_MILLISECONDS = 100;
     private static final String DEFAULT_RABBIT_HOST_NAME_PREFIX = "my-rabbit";
     private static final String DEFAULT_RABBIT_NODE_NAME_PREFIX = "rabbit";
     private static final int DEFAULT_RABBITMQ_PORT = 5672;
@@ -226,5 +234,20 @@ public class DockerRabbitMQ {
         if (container.isRunning()) {
             actionPerform.accept(this);
         }
+    }
+
+    public RabbitMQConnectionFactory createRabbitConnectionFactory() throws URISyntaxException {
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(amqpUri())
+            .managementUri(managementUri())
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .maxRetries(MAX_THREE_RETRIES)
+            .minDelay(MIN_DELAY_OF_ONE_HUNDRED_MILLISECONDS)
+            .build();
+
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        return new RabbitMQConnectionFactory(
+            rabbitMQConfiguration,
+            new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor(threadFactory)));
     }
 }
