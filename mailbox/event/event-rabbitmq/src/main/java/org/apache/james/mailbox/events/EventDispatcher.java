@@ -76,6 +76,14 @@ class EventDispatcher {
     }
 
     Mono<Void> dispatch(Event event, Set<RegistrationKey> keys) {
+        Mono<byte[]> serializedEvent = Mono.just(event)
+            .publishOn(Schedulers.parallel())
+            .map(this::serializeEvent)
+            .cache();
+
+        Mono<Void> distantDispatchMono = doDispatch(serializedEvent, keys).cache()
+            .subscribeWith(MonoProcessor.create());
+
         Mono<Void> localListenerDelivery = Flux.fromIterable(keys)
             .subscribeOn(Schedulers.elastic())
             .flatMap(key -> mailboxListenerRegistry.getLocalMailboxListeners(key)
@@ -85,17 +93,12 @@ class EventDispatcher {
                 .doOnError(e -> structuredLogger(event, keys)
                     .log(logger -> logger.error("Exception happens when dispatching event", e)))
                 .onErrorResume(e -> Mono.empty()))
-            .then();
-
-        Mono<byte[]> serializedEvent = Mono.just(event)
-            .publishOn(Schedulers.parallel())
-            .map(this::serializeEvent)
-            .cache();
-
-        Mono<Void> distantDispatchMono = doDispatch(serializedEvent, keys).cache();
+            .cache()
+            .then()
+            .subscribeWith(MonoProcessor.create());
 
         return Flux.concat(localListenerDelivery, distantDispatchMono)
-            .subscribeWith(MonoProcessor.create());
+            .then();
     }
 
     private void executeListener(Event event, MailboxListener mailboxListener, RegistrationKey registrationKey) throws Exception {

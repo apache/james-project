@@ -142,7 +142,7 @@ class GroupRegistration implements Registration {
         int currentRetryCount = getRetryCount(acknowledgableDelivery);
 
         return delayGenerator.delayIfHaveTo(currentRetryCount)
-            .flatMap(any -> Mono.fromRunnable(Throwing.runnable(() -> runListener(event))))
+            .flatMap(any -> Mono.fromRunnable(Throwing.runnable(() -> runListener(event))).publishOn(Schedulers.elastic()))
             .onErrorResume(throwable -> retryHandler.handleRetry(eventAsBytes, event, currentRetryCount, throwable))
             .then(Mono.fromRunnable(acknowledgableDelivery::ack))
             .subscribeWith(MonoProcessor.create())
