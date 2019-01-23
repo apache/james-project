@@ -35,6 +35,7 @@ public interface EventBus {
         String USER = "user";
         String GROUP = "group";
         String REGISTRATION_KEYS = "registrationKeys";
+        String REGISTRATION_KEY = "registrationKey";
     }
 
     Registration register(MailboxListener listener, RegistrationKey key);

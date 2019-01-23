@@ -25,12 +25,16 @@ import static org.apache.james.backend.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backend.rabbitmq.Constants.NO_ARGUMENTS;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.EVENT_BUS_ID;
 
+import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.MDCStructuredLogger;
+import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,12 +123,24 @@ class KeyRegistrationHandler {
 
         return mailboxListenerRegistry.getLocalMailboxListeners(registrationKey)
             .filter(listener -> !isLocalSynchronousListeners(eventBusId, listener))
-            .flatMap(listener -> Mono.fromRunnable(Throwing.runnable(() -> listener.event(event)))
-                .doOnError(e -> LOGGER.error("Exception happens when handling event of user {}", event.getUser().asString(), e))
+            .flatMap(listener -> Mono.fromRunnable(Throwing.runnable(() -> executeListener(listener, event, registrationKey)))
+                .doOnError(e -> structuredLogger(event, registrationKey)
+                    .log(logger -> logger.error("Exception happens when handling event", e)))
                 .onErrorResume(e -> Mono.empty())
                 .then())
             .subscribeOn(Schedulers.elastic())
             .then();
+    }
+
+    private void executeListener(MailboxListener listener, Event event, RegistrationKey key) throws Exception {
+        try (Closeable mdc = MDCBuilder.create()
+                .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
+                .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
+                .addContext(EventBus.StructuredLoggingFields.USER, event.getUser())
+                .addContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, key)
+                .build()) {
+            listener.event(event);
+        }
     }
 
     private boolean isLocalSynchronousListeners(EventBusId eventBusId, MailboxListener listener) {
@@ -134,5 +150,13 @@ class KeyRegistrationHandler {
 
     private Event toEvent(Delivery delivery) {
         return eventSerializer.fromJson(new String(delivery.getBody(), StandardCharsets.UTF_8)).get();
+    }
+
+    private StructuredLogger structuredLogger(Event event, RegistrationKey key) {
+        return MDCStructuredLogger.forLogger(LOGGER)
+            .addField(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
+            .addField(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
+            .addField(EventBus.StructuredLoggingFields.USER, event.getUser())
+            .addField(EventBus.StructuredLoggingFields.REGISTRATION_KEY, key);
     }
 }
