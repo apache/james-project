@@ -29,6 +29,13 @@ import com.google.common.collect.ImmutableSet;
 import reactor.core.publisher.Mono;
 
 public interface EventBus {
+    interface StructuredLoggingFields {
+        String EVENT_ID = "eventId";
+        String EVENT_CLASS = "eventClass";
+        String USER = "user";
+        String GROUP = "group";
+    }
+
     Registration register(MailboxListener listener, RegistrationKey key);
 
     Registration register(MailboxListener listener, Group group) throws GroupAlreadyRegistered;

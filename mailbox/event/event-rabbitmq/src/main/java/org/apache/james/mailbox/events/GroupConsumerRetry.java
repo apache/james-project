@@ -26,6 +26,8 @@ import static org.apache.james.mailbox.events.GroupRegistration.RETRY_COUNT;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT;
 
 import org.apache.james.mailbox.Event;
+import org.apache.james.util.MDCStructuredLogger;
+import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +44,7 @@ import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.Sender;
 
 class GroupConsumerRetry {
+
     static class RetryExchangeName {
         static RetryExchangeName of(Group group) {
             return new RetryExchangeName(group.asString());
@@ -90,8 +93,7 @@ class GroupConsumerRetry {
     }
 
     Mono<Void> handleRetry(byte[] eventAsBytes, Event event, int currentRetryCount, Throwable throwable) {
-        LOGGER.error("Exception happens when handling event {} of user {}",
-            event.getEventId().getId().toString(), event.getUser().asString(), throwable);
+        createStructuredLogger(event).log(logger -> logger.error("Exception happens when handling event after {} retries", currentRetryCount, throwable));
 
         return retryOrStoreToDeadLetter(event, eventAsBytes, currentRetryCount);
     }
@@ -113,8 +115,15 @@ class GroupConsumerRetry {
             eventAsByte));
 
         return sender.send(retryMessage)
-            .doOnError(throwable -> LOGGER.error("Exception happens when publishing event of user {} to retry exchange," +
-                    "this event will be lost forever",
-                event.getUser().asString(), throwable));
+            .doOnError(throwable -> createStructuredLogger(event).log(logger -> logger.error("Exception happens when publishing event to retry exchange," +
+                    "this event will be lost forever", throwable)));
+    }
+
+    private StructuredLogger createStructuredLogger(Event event) {
+        return MDCStructuredLogger.forLogger(LOGGER)
+            .addField(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
+            .addField(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
+            .addField(EventBus.StructuredLoggingFields.USER, event.getUser())
+            .addField(EventBus.StructuredLoggingFields.GROUP, group.asString());
     }
 }
