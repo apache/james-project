@@ -45,6 +45,7 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.junit.ExecutorExtension;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.test.FakeMail;

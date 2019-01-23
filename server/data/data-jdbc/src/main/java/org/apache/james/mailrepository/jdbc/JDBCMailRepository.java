@@ -64,8 +64,11 @@ import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
 import org.apache.mailet.Mail;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.steveash.guavate.Guavate;
 
 /**
  * Implementation of a MailRepository on a database.
@@ -474,11 +477,12 @@ public class JDBCMailRepository extends AbstractMailRepository {
                             if (mc instanceof MailImpl) {
                                 oos.writeObject(((MailImpl) mc).getAttributesRaw());
                             } else {
-                                HashMap<String, Serializable> temp = new HashMap<>();
-                                for (Iterator<String> i = mc.getAttributeNames(); i.hasNext();) {
-                                    String hashKey = i.next();
-                                    temp.put(hashKey, mc.getAttribute(hashKey));
-                                }
+                                Map<String, Serializable> temp = mc.attributes()
+                                    .collect(Guavate.toImmutableMap(
+                                            attribute -> attribute.getName().asString(),
+                                            attribute -> (Serializable) attribute.getValue().value()
+                                    ));
+
                                 oos.writeObject(temp);
                             }
                             oos.flush();
@@ -562,11 +566,12 @@ public class JDBCMailRepository extends AbstractMailRepository {
                             if (mc instanceof MailImpl) {
                                 oos.writeObject(((MailImpl) mc).getAttributesRaw());
                             } else {
-                                HashMap<String, Serializable> temp = new HashMap<>();
-                                for (Iterator<String> i = mc.getAttributeNames(); i.hasNext();) {
-                                    String hashKey = i.next();
-                                    temp.put(hashKey, mc.getAttribute(hashKey));
-                                }
+                                Map<String, Serializable> temp = mc.attributes()
+                                        .collect(Guavate.toImmutableMap(
+                                                attribute -> attribute.getName().asString(),
+                                                attribute -> (Serializable) attribute.getValue().value()
+                                        ));
+
                                 oos.writeObject(temp);
                             }
                             oos.flush();

@@ -459,20 +459,21 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void browseShouldReturnMailsWithAttributes() throws Exception {
+        Attribute attribute1 = Attribute.convertToAttribute("Attribute Name 1", "Attribute Value 1");
+        Attribute attribute2 = Attribute.convertToAttribute("Attribute Name 2", "Attribute Value 2");
+
         ManageableMailQueue mailQueue = getManageableMailQueue();
         mailQueue.enQueue(defaultMail()
-            .attributes(ImmutableList.of(
-                Attribute.convertToAttribute("Attribute Name 1", "Attribute Value 1"),
-                Attribute.convertToAttribute("Attribute Name 2", "Attribute Value 2")))
+            .attributes(ImmutableList.of(attribute1, attribute2))
             .name("mail with blob")
             .build());
 
         Mail mail = mailQueue.browse().next().getMail();
-        assertSoftly(softly ->  {
-            softly.assertThat(mail.getAttribute("Attribute Name 1"))
-                .isEqualTo("Attribute Value 1");
-            softly.assertThat(mail.getAttribute("Attribute Name 2"))
-                .isEqualTo("Attribute Value 2");
+        assertSoftly(softly -> {
+            softly.assertThat(mail.getAttribute(attribute1.getName()))
+                .contains(attribute1);
+            softly.assertThat(mail.getAttribute(attribute2.getName()))
+                .contains(attribute2);
         });
     }
 

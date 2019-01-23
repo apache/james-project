@@ -33,6 +33,6 @@ public class MatcherMatch implements Predicate {
     @Override
     public boolean matches(Exchange arg0) {
         Mail m = arg0.getIn().getBody(Mail.class);
-        return m.removeAttribute(MatcherSplitter.MATCHER_MATCHED_ATTRIBUTE) != null;
+        return m.removeAttribute(MatcherSplitter.MATCHER_MATCHED_ATTRIBUTE).isPresent();
     }
 }

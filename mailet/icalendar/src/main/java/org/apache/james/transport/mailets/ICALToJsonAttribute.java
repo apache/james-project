@@ -36,6 +36,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.model.ICAL;
 import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.StreamUtils;
+import org.apache.mailet.AttributeName;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
@@ -90,6 +91,12 @@ public class ICALToJsonAttribute extends GenericMailet {
     public static final String DEFAULT_SOURCE_ATTRIBUTE_NAME = "icalendar";
     public static final String DEFAULT_RAW_SOURCE_ATTRIBUTE_NAME = "attachments";
     public static final String DEFAULT_DESTINATION_ATTRIBUTE_NAME = "icalendarJson";
+    public static final AttributeName SOURCE = AttributeName.of(SOURCE_ATTRIBUTE_NAME);
+    public static final AttributeName RAW_SOURCE = AttributeName.of(RAW_SOURCE_ATTRIBUTE_NAME);
+    public static final AttributeName DESTINATION = AttributeName.of(DESTINATION_ATTRIBUTE_NAME);
+    public static final AttributeName DEFAULT_SOURCE = AttributeName.of(DEFAULT_SOURCE_ATTRIBUTE_NAME);
+    public static final AttributeName DEFAULT_RAW_SOURCE = AttributeName.of(DEFAULT_RAW_SOURCE_ATTRIBUTE_NAME);
+    public static final AttributeName DEFAULT_DESTINATION = AttributeName.of(DEFAULT_DESTINATION_ATTRIBUTE_NAME);
 
     static {
         ICal4JConfigurator.configure();

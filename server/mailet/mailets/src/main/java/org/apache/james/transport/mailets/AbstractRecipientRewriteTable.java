@@ -42,6 +42,9 @@ import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.UserRewritter;
 import org.apache.james.server.core.MailImpl;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -59,7 +62,7 @@ import org.slf4j.LoggerFactory;
 @Experimental
 public abstract class AbstractRecipientRewriteTable extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRecipientRewriteTable.class);
-    private static final String MARKER = "org.apache.james.transport.mailets.AbstractRecipientRewriteTable.mapped";
+    private static final AttributeName MARKER = AttributeName.of("org.apache.james.transport.mailets.AbstractRecipientRewriteTable.mapped");
     private DNSService dns;
     private DomainList domainList;
 
@@ -83,7 +86,7 @@ public abstract class AbstractRecipientRewriteTable extends GenericMailet {
      */
     @Override
     public void service(Mail mail) throws MessagingException {
-        if (mail.getAttribute(MARKER) != null) {
+        if (mail.getAttribute(MARKER).isPresent()) {
             mail.removeAttribute(MARKER);
             return;
         }
@@ -203,7 +206,7 @@ public abstract class AbstractRecipientRewriteTable extends GenericMailet {
                 }
 
                 newMail.setRecipients(recipientsToAddForward);
-                newMail.setAttribute(MARKER, Boolean.TRUE);
+                newMail.setAttribute(new Attribute(MARKER, AttributeValue.of(Boolean.TRUE)));
                 getMailetContext().sendMail(newMail);
             } finally {
                 newMail.dispose();

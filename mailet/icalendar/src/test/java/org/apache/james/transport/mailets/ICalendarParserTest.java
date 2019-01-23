@@ -22,10 +22,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 
 import org.apache.james.util.ClassLoaderUtils;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -43,7 +48,9 @@ public class ICalendarParserTest {
     private static final String SOURCE_ATTRIBUTE = "sourceAttribute";
 
     private static final String DESTINATION_CUSTOM_ATTRIBUTE = "ics.dest.attribute";
+    private static final AttributeName DESTINATION_CUSTOM_ATTRIBUTE_NAME = AttributeName.of(DESTINATION_CUSTOM_ATTRIBUTE);
     private static final String SOURCE_CUSTOM_ATTRIBUTE = "ics.source.attribute";
+    private static final AttributeName SOURCE_CUSTOM_ATTRIBUTE_NAME = AttributeName.of(SOURCE_CUSTOM_ATTRIBUTE);
 
     private static final String RIGHT_ICAL_VALUE = "BEGIN:VCALENDAR\n" +
         "END:VCALENDAR";
@@ -128,7 +135,7 @@ public class ICalendarParserTest {
 
         mailet.service(mail);
 
-        assertThat(mail.getAttributeNames()).isEmpty();
+        assertThat(mail.attributes()).isEmpty();
     }
 
     @Test
@@ -141,13 +148,14 @@ public class ICalendarParserTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
-            .attribute(SOURCE_CUSTOM_ATTRIBUTE, ImmutableMap.of())
+            .attribute(new Attribute(SOURCE_CUSTOM_ATTRIBUTE_NAME, AttributeValue.of(ImmutableMap.of())))
             .build();
 
         mailet.service(mail);
 
-        assertThat((Map<?, ?>)mail.getAttribute(DESTINATION_CUSTOM_ATTRIBUTE))
-            .isEmpty();
+        assertThat(mail.getAttribute(DESTINATION_CUSTOM_ATTRIBUTE_NAME))
+            .isPresent()
+            .hasValueSatisfying(attribute -> assertThat((Map) attribute.getValue().value()).isEmpty());
     }
 
     @Test
@@ -160,12 +168,12 @@ public class ICalendarParserTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
-            .attribute(SOURCE_CUSTOM_ATTRIBUTE, "anyValue")
+            .attribute(new Attribute(SOURCE_CUSTOM_ATTRIBUTE_NAME, AttributeValue.of("anyValue")))
             .build();
 
         mailet.service(mail);
 
-        assertThat(mail.getAttribute(DESTINATION_CUSTOM_ATTRIBUTE)).isNull();
+        assertThat(mail.getAttribute(DESTINATION_CUSTOM_ATTRIBUTE_NAME)).isEmpty();
     }
 
     @Test
@@ -188,8 +196,12 @@ public class ICalendarParserTest {
 
         mailet.service(mail);
 
-        Map<String, Calendar> expectedCalendars = (Map<String, Calendar>)mail.getAttribute(DESTINATION_CUSTOM_ATTRIBUTE);
-        assertThat(expectedCalendars).hasSize(1);
+        Optional<Map<String, Calendar>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, (Class<Map<String, Calendar>>)(Object) Map.class);
+        assertThat(expectedCalendars)
+            .isPresent()
+            .hasValueSatisfying(calendars ->
+                    assertThat(calendars)
+                        .hasSize(1));
     }
 
     @Test

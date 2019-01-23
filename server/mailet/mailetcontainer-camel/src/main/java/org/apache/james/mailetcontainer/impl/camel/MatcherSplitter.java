@@ -39,6 +39,9 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.MDCBuilder;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
 import org.slf4j.Logger;
@@ -55,7 +58,7 @@ public class MatcherSplitter {
     private static final Logger LOGGER = LoggerFactory.getLogger(MatcherSplitter.class);
 
     /** Headername which is used to indicate that the matcher matched */
-    public static final String MATCHER_MATCHED_ATTRIBUTE = "matched";
+    public static final AttributeName MATCHER_MATCHED_ATTRIBUTE = AttributeName.of("matched");
 
     private final MetricFactory metricFactory;
     private final CamelMailetProcessor container;
@@ -154,7 +157,7 @@ public class MatcherSplitter {
 
                     // Set a header because the matcher matched. This can be
                     // used later when processing the route
-                    newMail.setAttribute(MATCHER_MATCHED_ATTRIBUTE, true);
+                    newMail.setAttribute(new Attribute(MATCHER_MATCHED_ATTRIBUTE, AttributeValue.of(true)));
 
                     // add the new generated mail to the mails list
                     mails.add(newMail);
@@ -164,7 +167,7 @@ public class MatcherSplitter {
             if (fullMatch) {
                 // Set a header because the matcher matched. This can be used
                 // later when processing the route
-                mail.setAttribute(MATCHER_MATCHED_ATTRIBUTE, true);
+                mail.setAttribute(new Attribute(MATCHER_MATCHED_ATTRIBUTE, AttributeValue.of(true)));
             }
 
             // add mailMsg to the mails list

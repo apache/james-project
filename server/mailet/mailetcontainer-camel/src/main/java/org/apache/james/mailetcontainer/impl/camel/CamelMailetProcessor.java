@@ -173,7 +173,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
 
         private void handleMailet(Exchange exchange, CamelMailetProcessor container, CamelProcessor mailetProccessor) throws Exception {
             Mail mail = exchange.getIn().getBody(Mail.class);
-            boolean isMatched = mail.removeAttribute(MatcherSplitter.MATCHER_MATCHED_ATTRIBUTE) != null;
+            boolean isMatched = mail.removeAttribute(MatcherSplitter.MATCHER_MATCHED_ATTRIBUTE).isPresent();
             if (isMatched) {
                 mailetProccessor.process(mail);
             }

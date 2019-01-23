@@ -20,6 +20,7 @@ package org.apache.james.queue.jms;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -65,6 +66,7 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.util.SerializationUtil;
+import org.apache.mailet.AttributeName;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.slf4j.Logger;
@@ -72,8 +74,10 @@ import org.slf4j.LoggerFactory;
 import org.threeten.extra.Temporals;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 
 /**
@@ -336,10 +340,16 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
 
         String sender = mail.getMaybeSender().asString("");
 
-        org.apache.james.util.streams.Iterators.toStream(mail.getAttributeNames())
-                .forEach(attrName -> props.put(attrName, SerializationUtil.serialize(mail.getAttribute(attrName))));
+        props.putAll(mail.attributes()
+            .collect(Guavate.toImmutableMap(
+                attribute -> attribute.getName().asString(),
+                attribute -> SerializationUtil.serialize((Serializable) attribute.getValue().value()))));
 
-        props.put(JAMES_MAIL_ATTRIBUTE_NAMES, joiner.join(mail.getAttributeNames()));
+        ImmutableList<String> attributeNames = mail.attributeNames()
+            .map(AttributeName::asString)
+            .collect(Guavate.toImmutableList());
+
+        props.put(JAMES_MAIL_ATTRIBUTE_NAMES, joiner.join(attributeNames));
         props.put(JAMES_MAIL_SENDER, sender);
         props.put(JAMES_MAIL_STATE, mail.getState());
 

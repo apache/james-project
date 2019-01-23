@@ -25,6 +25,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.MessagingException;
 
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -43,10 +46,16 @@ class SetMailAttributeTest {
 
     @Test
     void shouldAddConfiguredAttributes() throws MessagingException {
+        AttributeName name1 = AttributeName.of("org.apache.james.junit1");
+        AttributeName name2 = AttributeName.of("org.apache.james.junit2");
+        AttributeValue<String> value1 = AttributeValue.of("true");
+        AttributeValue<String> value2 = AttributeValue.of("happy");
+        Attribute attribute1 = new Attribute(name1, value1);
+        Attribute attribute2 = new Attribute(name2, value2);
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty("org.apache.james.junit1", "true")
-                .setProperty("org.apache.james.junit2", "happy")
+                .setProperty(name1.asString(), value1.value())
+                .setProperty(name2.asString(), value2.value())
                 .build();
 
         mailet.init(mailetConfig);
@@ -55,8 +64,8 @@ class SetMailAttributeTest {
         
         mailet.service(mail);
 
-        assertThat(mail.getAttribute("org.apache.james.junit1")).isEqualTo("true");
-        assertThat(mail.getAttribute("org.apache.james.junit2")).isEqualTo("happy");
+        assertThat(mail.getAttribute(name1)).contains(attribute1);
+        assertThat(mail.getAttribute(name2)).contains(attribute2);
     }
     
     @Test
@@ -71,7 +80,7 @@ class SetMailAttributeTest {
         
         mailet.service(mail);
 
-        assertThat(mail.getAttributeNames()).isEmpty();
+        assertThat(mail.attributes()).isEmpty();
     }
     
     @Test

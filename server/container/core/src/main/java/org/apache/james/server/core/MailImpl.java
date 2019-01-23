@@ -222,12 +222,6 @@ public class MailImpl implements Disposable, Mail {
             return this;
         }
 
-        @Deprecated
-        public Builder attributes(Map<String, Serializable> attributes) {
-            this.attributes(toAttributeMap(attributes).values());
-            return this;
-        }
-
         public Builder attribute(Attribute attribute) {
             this.attributes.put(attribute.getName(), attribute);
             return this;

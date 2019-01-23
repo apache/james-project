@@ -101,22 +101,26 @@ public class WithStorageDirectiveTest {
 
     @Test
     public void serviceShouldOverridePreviousStorageDirectives() throws Exception {
-        String targetFolderName = "Spam";
+        AttributeName name1 = AttributeName.of("DeliveryPath_recipient1@localhost");
+        AttributeName name2 = AttributeName.of("DeliveryPath_recipient2@localhost");
+        AttributeValue<String> targetFolderName = AttributeValue.of("Spam");
+        Attribute attribute1 = new Attribute(name1, targetFolderName);
+        Attribute attribute2 = new Attribute(name2, targetFolderName);
         testee.init(FakeMailetConfig.builder()
-            .setProperty(WithStorageDirective.TARGET_FOLDER_NAME, targetFolderName)
+            .setProperty(WithStorageDirective.TARGET_FOLDER_NAME, targetFolderName.value())
             .build());
 
         FakeMail mail = FakeMail.builder()
             .recipients(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2)
-            .attribute("DeliveryPath_recipient2@localhost", "otherFolder")
+            .attribute(new Attribute(name2, AttributeValue.of("otherFolder")))
             .build();
 
         testee.service(mail);
 
-        softly.assertThat(mail.getAttributeNames())
-            .containsOnly("DeliveryPath_recipient2@localhost", "DeliveryPath_recipient1@localhost");
-        softly.assertThat(mail.getAttribute("DeliveryPath_recipient1@localhost")).isEqualTo(targetFolderName);
-        softly.assertThat(mail.getAttribute("DeliveryPath_recipient2@localhost")).isEqualTo(targetFolderName);
+        softly.assertThat(mail.attributes())
+            .containsExactlyInAnyOrder(attribute1, attribute2);
+        softly.assertThat(mail.getAttribute(name1)).contains(attribute1);
+        softly.assertThat(mail.getAttribute(name2)).contains(attribute2);
     }
 
 }

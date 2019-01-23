@@ -22,13 +22,11 @@ package org.apache.james.transport.mailets.remote.delivery;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -39,7 +37,8 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.james.transport.mailets.RemoteDelivery;
-import org.apache.james.util.streams.Iterators;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -47,7 +46,6 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -55,10 +53,7 @@ public class RemoteDeliveryTest {
 
     public static class MailProjection {
         public static MailProjection from(Mail mail) {
-            return new MailProjection(mail.getName(), mail.getRecipients(),
-                Iterators.toStream(mail.getAttributeNames())
-                    .map(name -> Pair.of(name, mail.getAttribute(name)))
-                    .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)));
+            return new MailProjection(mail.getName(), mail.getRecipients(), mail.attributesMap());
         }
 
         public static MailProjection from(ManageableMailQueue.MailQueueItemView item) {
@@ -67,9 +62,9 @@ public class RemoteDeliveryTest {
 
         private final String name;
         private final List<MailAddress> recipients;
-        private final Map<String, Serializable> attributes;
+        private final ImmutableMap<AttributeName, Attribute> attributes;
 
-        public MailProjection(String name, Collection<MailAddress> recipients, Map<String, Serializable> attributes) {
+        public MailProjection(String name, Collection<MailAddress> recipients, Map<AttributeName, Attribute> attributes) {
             this.name = name;
             this.recipients = ImmutableList.copyOf(recipients);
             this.attributes = ImmutableMap.copyOf(attributes);

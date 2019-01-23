@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
@@ -34,6 +35,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -50,6 +52,7 @@ import net.fortuna.ical4j.model.Calendar;
 
 public class ICALToJsonAttributeTest {
     public static final MailAddress SENDER = MailAddressFixture.ANY_AT_JAMES;
+    public static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -127,8 +130,8 @@ public class ICALToJsonAttributeTest {
             .build();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME))
-            .isNull();
+        assertThat(mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION))
+            .isEmpty();
     }
 
     @Test
@@ -142,8 +145,8 @@ public class ICALToJsonAttributeTest {
             .build();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME))
-            .isNull();
+        assertThat(mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION))
+            .isEmpty();
     }
 
     @Test
@@ -157,8 +160,8 @@ public class ICALToJsonAttributeTest {
             .build();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME))
-            .isNull();
+        assertThat(mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION))
+            .isEmpty();
     }
 
     @Test
@@ -173,8 +176,8 @@ public class ICALToJsonAttributeTest {
             .build();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME))
-            .isNull();
+        assertThat(mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION))
+            .isEmpty();
     }
 
     @Test
@@ -189,8 +192,8 @@ public class ICALToJsonAttributeTest {
             .build();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME))
-            .isNull();
+        assertThat(mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION))
+            .isEmpty();
     }
 
     @Test
@@ -207,8 +210,8 @@ public class ICALToJsonAttributeTest {
             .build();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME))
-            .isNull();
+        assertThat(mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION))
+            .isEmpty();
     }
 
     @Test
@@ -226,8 +229,9 @@ public class ICALToJsonAttributeTest {
             .build();
         testee.service(mail);
 
-        assertThat((Map<?,?>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME))
-            .isEmpty();
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, ICALToJsonAttribute.DEFAULT_DESTINATION, Map.class))
+            .isPresent()
+            .hasValueSatisfying(map -> assertThat(map).isEmpty());
     }
 
     @SuppressWarnings("unchecked")
@@ -248,19 +252,22 @@ public class ICALToJsonAttributeTest {
             .build();
         testee.service(mail);
 
-        Map<String, byte[]> jsons = (Map<String, byte[]>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME);
-        assertThat(jsons).hasSize(1);
-        assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
-            .isEqualTo("{" +
-                "\"ical\": \"" + toJsonValue(ics) + "\"," +
-                "\"sender\": \"" + SENDER.asString() + "\"," +
-                "\"recipient\": \"" + recipient.asString() + "\"," +
-                "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
-                "\"sequence\": \"0\"," +
-                "\"dtstamp\": \"20170106T115036Z\"," +
-                "\"method\": \"REQUEST\"," +
-                "\"recurrence-id\": null" +
-                "}");
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, ICALToJsonAttribute.DEFAULT_DESTINATION, MAP_STRING_BYTES_CLASS))
+            .isPresent()
+            .hasValueSatisfying(jsons -> {
+                assertThat(jsons).hasSize(1);
+                assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
+                    .isEqualTo("{" +
+                        "\"ical\": \"" + toJsonValue(ics) + "\"," +
+                        "\"sender\": \"" + SENDER.asString() + "\"," +
+                        "\"recipient\": \"" + recipient.asString() + "\"," +
+                        "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
+                        "\"sequence\": \"0\"," +
+                        "\"dtstamp\": \"20170106T115036Z\"," +
+                        "\"method\": \"REQUEST\"," +
+                        "\"recurrence-id\": null" +
+                        "}");
+            });
     }
 
     private String toJsonValue(byte[] ics) {
@@ -284,30 +291,33 @@ public class ICALToJsonAttributeTest {
             .build();
         testee.service(mail);
 
-        Map<String, byte[]> jsons = (Map<String, byte[]>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME);
-        assertThat(jsons).hasSize(2);
-        List<String> actual = toSortedValueList(jsons);
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, ICALToJsonAttribute.DEFAULT_DESTINATION, MAP_STRING_BYTES_CLASS))
+                .isPresent()
+                .hasValueSatisfying(jsons -> {
+                    assertThat(jsons).hasSize(2);
+                    List<String> actual = toSortedValueList(jsons);
 
-        assertThatJson(actual.get(0)).isEqualTo("{" +
-            "\"ical\": \"" + toJsonValue(ics) + "\"," +
-            "\"sender\": \"" + SENDER.asString() + "\"," +
-            "\"recipient\": \"" + MailAddressFixture.ANY_AT_JAMES2.asString() + "\"," +
-            "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
-            "\"sequence\": \"0\"," +
-            "\"dtstamp\": \"20170106T115036Z\"," +
-            "\"method\": \"REQUEST\"," +
-            "\"recurrence-id\": null" +
-            "}");
-        assertThatJson(actual.get(1)).isEqualTo("{" +
-            "\"ical\": \"" + toJsonValue(ics) + "\"," +
-            "\"sender\": \"" + SENDER.asString() + "\"," +
-            "\"recipient\": \"" + MailAddressFixture.OTHER_AT_JAMES.asString() + "\"," +
-            "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
-            "\"sequence\": \"0\"," +
-            "\"dtstamp\": \"20170106T115036Z\"," +
-            "\"method\": \"REQUEST\"," +
-            "\"recurrence-id\": null" +
-            "}");
+                    assertThatJson(actual.get(0)).isEqualTo("{" +
+                        "\"ical\": \"" + toJsonValue(ics) + "\"," +
+                        "\"sender\": \"" + SENDER.asString() + "\"," +
+                        "\"recipient\": \"" + MailAddressFixture.ANY_AT_JAMES2.asString() + "\"," +
+                        "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
+                        "\"sequence\": \"0\"," +
+                        "\"dtstamp\": \"20170106T115036Z\"," +
+                        "\"method\": \"REQUEST\"," +
+                        "\"recurrence-id\": null" +
+                        "}");
+                    assertThatJson(actual.get(1)).isEqualTo("{" +
+                        "\"ical\": \"" + toJsonValue(ics) + "\"," +
+                        "\"sender\": \"" + SENDER.asString() + "\"," +
+                        "\"recipient\": \"" + MailAddressFixture.OTHER_AT_JAMES.asString() + "\"," +
+                        "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
+                        "\"sequence\": \"0\"," +
+                        "\"dtstamp\": \"20170106T115036Z\"," +
+                        "\"method\": \"REQUEST\"," +
+                        "\"recurrence-id\": null" +
+                        "}");
+                });
     }
 
     @SuppressWarnings("unchecked")
@@ -330,30 +340,33 @@ public class ICALToJsonAttributeTest {
             .build();
         testee.service(mail);
 
-        Map<String, byte[]> jsons = (Map<String, byte[]>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME);
-        assertThat(jsons).hasSize(2);
-        List<String> actual = toSortedValueList(jsons);
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, ICALToJsonAttribute.DEFAULT_DESTINATION, MAP_STRING_BYTES_CLASS))
+                .isPresent()
+                .hasValueSatisfying(jsons -> {
+                    assertThat(jsons).hasSize(2);
+                    List<String> actual = toSortedValueList(jsons);
 
-        assertThatJson(actual.get(0)).isEqualTo("{" +
-            "\"ical\": \"" + toJsonValue(ics2) + "\"," +
-            "\"sender\": \"" + SENDER.asString() + "\"," +
-            "\"recipient\": \"" + recipient.asString() + "\"," +
-            "\"uid\": \"f1514f44bf39311568d64072ac247c17656ceafde3b4b3eba961c8c5184cdc6ee047feb2aab16e43439a608f28671ab7c10e754c301b1e32001ad51dd20eac2fc7af20abf4093bbe\"," +
-            "\"sequence\": \"0\"," +
-            "\"dtstamp\": \"20170103T103250Z\"," +
-            "\"method\": \"REQUEST\"," +
-            "\"recurrence-id\": null" +
-            "}");
-        assertThatJson(actual.get(1)).isEqualTo("{" +
-            "\"ical\": \"" + toJsonValue(ics) + "\"," +
-            "\"sender\": \"" + SENDER.asString() + "\"," +
-            "\"recipient\": \"" + recipient.asString() + "\"," +
-            "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
-            "\"sequence\": \"0\"," +
-            "\"dtstamp\": \"20170106T115036Z\"," +
-            "\"method\": \"REQUEST\"," +
-            "\"recurrence-id\": null" +
-            "}");
+                    assertThatJson(actual.get(0)).isEqualTo("{" +
+                        "\"ical\": \"" + toJsonValue(ics2) + "\"," +
+                        "\"sender\": \"" + SENDER.asString() + "\"," +
+                        "\"recipient\": \"" + recipient.asString() + "\"," +
+                        "\"uid\": \"f1514f44bf39311568d64072ac247c17656ceafde3b4b3eba961c8c5184cdc6ee047feb2aab16e43439a608f28671ab7c10e754c301b1e32001ad51dd20eac2fc7af20abf4093bbe\"," +
+                        "\"sequence\": \"0\"," +
+                        "\"dtstamp\": \"20170103T103250Z\"," +
+                        "\"method\": \"REQUEST\"," +
+                        "\"recurrence-id\": null" +
+                        "}");
+                    assertThatJson(actual.get(1)).isEqualTo("{" +
+                        "\"ical\": \"" + toJsonValue(ics) + "\"," +
+                        "\"sender\": \"" + SENDER.asString() + "\"," +
+                        "\"recipient\": \"" + recipient.asString() + "\"," +
+                        "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
+                        "\"sequence\": \"0\"," +
+                        "\"dtstamp\": \"20170106T115036Z\"," +
+                        "\"method\": \"REQUEST\"," +
+                        "\"recurrence-id\": null" +
+                        "}");
+                    });
     }
 
     @SuppressWarnings("unchecked")
@@ -376,20 +389,23 @@ public class ICALToJsonAttributeTest {
             .build();
         testee.service(mail);
 
-        Map<String, byte[]> jsons = (Map<String, byte[]>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME);
-        assertThat(jsons).hasSize(1);
-        List<String> actual = toSortedValueList(jsons);
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, ICALToJsonAttribute.DEFAULT_DESTINATION, MAP_STRING_BYTES_CLASS))
+                .isPresent()
+                .hasValueSatisfying(jsons -> {
+                    assertThat(jsons).hasSize(1);
+                    List<String> actual = toSortedValueList(jsons);
 
-        assertThatJson(actual.get(0)).isEqualTo("{" +
-            "\"ical\": \"" + toJsonValue(ics) + "\"," +
-            "\"sender\": \"" + SENDER.asString() + "\"," +
-            "\"recipient\": \"" + recipient.asString() + "\"," +
-            "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
-            "\"sequence\": \"0\"," +
-            "\"dtstamp\": \"20170106T115036Z\"," +
-            "\"method\": \"REQUEST\"," +
-            "\"recurrence-id\": null" +
-            "}");
+                    assertThatJson(actual.get(0)).isEqualTo("{" +
+                        "\"ical\": \"" + toJsonValue(ics) + "\"," +
+                        "\"sender\": \"" + SENDER.asString() + "\"," +
+                        "\"recipient\": \"" + recipient.asString() + "\"," +
+                        "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
+                        "\"sequence\": \"0\"," +
+                        "\"dtstamp\": \"20170106T115036Z\"," +
+                        "\"method\": \"REQUEST\"," +
+                        "\"recurrence-id\": null" +
+                        "}");
+                });
     }
 
     @SuppressWarnings("unchecked")
@@ -412,20 +428,23 @@ public class ICALToJsonAttributeTest {
             .build();
         testee.service(mail);
 
-        Map<String, byte[]> jsons = (Map<String, byte[]>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME);
-        assertThat(jsons).hasSize(1);
-        List<String> actual = toSortedValueList(jsons);
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, ICALToJsonAttribute.DEFAULT_DESTINATION, MAP_STRING_BYTES_CLASS))
+                .isPresent()
+                .hasValueSatisfying(jsons -> {
+                    assertThat(jsons).hasSize(1);
+                    List<String> actual = toSortedValueList(jsons);
 
-        assertThatJson(actual.get(0)).isEqualTo("{" +
-            "\"ical\": \"" + toJsonValue(ics) + "\"," +
-            "\"sender\": \"" + SENDER.asString() + "\"," +
-            "\"recipient\": \"" + recipient.asString() + "\"," +
-            "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
-            "\"sequence\": \"0\"," +
-            "\"dtstamp\": \"20170106T115036Z\"," +
-            "\"method\": \"REQUEST\"," +
-            "\"recurrence-id\": null" +
-            "}");
+                    assertThatJson(actual.get(0)).isEqualTo("{" +
+                        "\"ical\": \"" + toJsonValue(ics) + "\"," +
+                        "\"sender\": \"" + SENDER.asString() + "\"," +
+                        "\"recipient\": \"" + recipient.asString() + "\"," +
+                        "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
+                        "\"sequence\": \"0\"," +
+                        "\"dtstamp\": \"20170106T115036Z\"," +
+                        "\"method\": \"REQUEST\"," +
+                        "\"recurrence-id\": null" +
+                        "}");
+                });
     }
 
     @SuppressWarnings("unchecked")
@@ -449,19 +468,22 @@ public class ICALToJsonAttributeTest {
             .build();
         testee.service(mail);
 
-        Map<String, byte[]> jsons = (Map<String, byte[]>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME);
-        assertThat(jsons).hasSize(1);
-        assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
-            .isEqualTo("{" +
-                "\"ical\": \"" + toJsonValue(ics) + "\"," +
-                "\"sender\": \"" + from + "\"," +
-                "\"recipient\": \"" + recipient.asString() + "\"," +
-                "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
-                "\"sequence\": \"0\"," +
-                "\"dtstamp\": \"20170106T115036Z\"," +
-                "\"method\": \"REQUEST\"," +
-                "\"recurrence-id\": null" +
-                "}");
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, ICALToJsonAttribute.DEFAULT_DESTINATION, MAP_STRING_BYTES_CLASS))
+                .isPresent()
+                .hasValueSatisfying(jsons -> {
+                    assertThat(jsons).hasSize(1);
+                    assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
+                        .isEqualTo("{" +
+                            "\"ical\": \"" + toJsonValue(ics) + "\"," +
+                            "\"sender\": \"" + from + "\"," +
+                            "\"recipient\": \"" + recipient.asString() + "\"," +
+                            "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
+                            "\"sequence\": \"0\"," +
+                            "\"dtstamp\": \"20170106T115036Z\"," +
+                            "\"method\": \"REQUEST\"," +
+                            "\"recurrence-id\": null" +
+                            "}");
+                });
     }
 
     @SuppressWarnings("unchecked")
@@ -483,19 +505,22 @@ public class ICALToJsonAttributeTest {
             .build();
         testee.service(mail);
 
-        Map<String, byte[]> jsons = (Map<String, byte[]>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME);
-        assertThat(jsons).hasSize(1);
-        assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
-            .isEqualTo("{" +
-                "\"ical\": \"" + toJsonValue(ics) + "\"," +
-                "\"sender\": \"" + SENDER.asString() + "\"," +
-                "\"recipient\": \"" + recipient.asString() + "\"," +
-                "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
-                "\"sequence\": \"0\"," +
-                "\"dtstamp\": \"20170106T115036Z\"," +
-                "\"method\": \"REQUEST\"," +
-                "\"recurrence-id\": null" +
-                "}");
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, ICALToJsonAttribute.DEFAULT_DESTINATION, MAP_STRING_BYTES_CLASS))
+                .isPresent()
+                .hasValueSatisfying(jsons -> {
+                    assertThat(jsons).hasSize(1);
+                    assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
+                        .isEqualTo("{" +
+                            "\"ical\": \"" + toJsonValue(ics) + "\"," +
+                            "\"sender\": \"" + SENDER.asString() + "\"," +
+                            "\"recipient\": \"" + recipient.asString() + "\"," +
+                            "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
+                            "\"sequence\": \"0\"," +
+                            "\"dtstamp\": \"20170106T115036Z\"," +
+                            "\"method\": \"REQUEST\"," +
+                            "\"recurrence-id\": null" +
+                            "}");
+                });
     }
 
     @SuppressWarnings("unchecked")
@@ -518,19 +543,22 @@ public class ICALToJsonAttributeTest {
             .build();
         testee.service(mail);
 
-        Map<String, byte[]> jsons = (Map<String, byte[]>) mail.getAttribute(ICALToJsonAttribute.DEFAULT_DESTINATION_ATTRIBUTE_NAME);
-        assertThat(jsons).hasSize(1);
-        assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
-            .isEqualTo("{" +
-                "\"ical\": \"" + toJsonValue(ics) + "\"," +
-                "\"sender\": \"" + from + "\"," +
-                "\"recipient\": \"" + recipient.asString() + "\"," +
-                "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
-                "\"sequence\": \"0\"," +
-                "\"dtstamp\": \"20170106T115036Z\"," +
-                "\"method\": \"REQUEST\"," +
-                "\"recurrence-id\": null" +
-                "}");
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, ICALToJsonAttribute.DEFAULT_DESTINATION, MAP_STRING_BYTES_CLASS))
+                .isPresent()
+                .hasValueSatisfying(jsons -> {
+                    assertThat(jsons).hasSize(1);
+                    assertThatJson(new String(jsons.values().iterator().next(), StandardCharsets.UTF_8))
+                        .isEqualTo("{" +
+                            "\"ical\": \"" + toJsonValue(ics) + "\"," +
+                            "\"sender\": \"" + from + "\"," +
+                            "\"recipient\": \"" + recipient.asString() + "\"," +
+                            "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
+                            "\"sequence\": \"0\"," +
+                            "\"dtstamp\": \"20170106T115036Z\"," +
+                            "\"method\": \"REQUEST\"," +
+                            "\"recurrence-id\": null" +
+                            "}");
+                });
     }
 
     private List<String> toSortedValueList(Map<String, byte[]> jsons) {

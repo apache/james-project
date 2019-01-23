@@ -29,6 +29,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
@@ -37,6 +38,8 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageWrapper;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.LookupException;
 import org.apache.mailet.Mail;
@@ -45,11 +48,11 @@ import org.slf4j.Logger;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 @SuppressWarnings("deprecation")
 public class FakeMailContext implements MailetContext {
@@ -68,17 +71,8 @@ public class FakeMailContext implements MailetContext {
             .recipients(mail.getRecipients())
             .message(mail.getMessage())
             .state(mail.getState())
-            .attributes(buildAttributesMap(mail))
+            .attributes(mail.attributes().collect(Guavate.toImmutableList()))
             .fromMailet();
-    }
-
-    private static ImmutableMap<String, Serializable> buildAttributesMap(Mail mail) {
-        Map<String, Serializable> result = new HashMap<>();
-        List<String> attributesNames = Lists.newArrayList(mail.getAttributeNames());
-        for (String attributeName: attributesNames) {
-            result.put(attributeName, mail.getAttribute(attributeName));
-        }
-        return ImmutableMap.copyOf(result);
     }
 
     public static FakeMailContext defaultContext() {
@@ -123,7 +117,7 @@ public class FakeMailContext implements MailetContext {
             private MailAddress sender;
             private Optional<Collection<MailAddress>> recipients = Optional.empty();
             private MimeMessage msg;
-            private Map<String, Serializable> attributes = new HashMap<>();
+            private Map<AttributeName, Attribute> attributes = new HashMap<>();
             private Optional<String> state = Optional.empty();
             private Optional<Boolean> fromMailet = Optional.empty();
             private Optional<Delay> delay = Optional.empty();
@@ -172,13 +166,23 @@ public class FakeMailContext implements MailetContext {
                 return this;
             }
 
-            public Builder attributes(Map<String, Serializable> attributes) {
-                this.attributes.putAll(attributes);
+            public Builder attributes(List<Attribute> attributes) {
+                this.attributes.putAll(attributes
+                    .stream()
+                    .collect(Guavate.toImmutableMap(
+                            attribute -> attribute.getName(),
+                            Function.identity()
+                    )));
                 return this;
             }
 
+            @Deprecated
             public Builder attribute(String key, Serializable value) {
-                this.attributes.put(key, value);
+                return attribute(Attribute.convertToAttribute(key, value));
+            }
+
+            public Builder attribute(Attribute attribute) {
+                this.attributes.put(attribute.getName(), attribute);
                 return this;
             }
 
@@ -205,11 +209,11 @@ public class FakeMailContext implements MailetContext {
         private final Collection<MailAddress> recipients;
         private final MimeMessage msg;
         private final Optional<String> subject;
-        private final Map<String, Serializable> attributes;
+        private final Map<AttributeName, Attribute> attributes;
         private final String state;
         private final Optional<Delay> delay;
 
-        private SentMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg, Map<String, Serializable> attributes, String state, Optional<Delay> delay) throws MessagingException {
+        private SentMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg, Map<AttributeName, Attribute> attributes, String state, Optional<Delay> delay) throws MessagingException {
             this.sender = sender;
             this.recipients = ImmutableList.copyOf(recipients);
             this.msg = tryCopyMimeMessage(msg);
@@ -369,7 +373,7 @@ public class FakeMailContext implements MailetContext {
         }
     }
 
-    private final HashMap<String, Object> attributes;
+    private final HashMap<AttributeName, Attribute> attributes;
     private final Collection<SentMail> sentMails;
     private final Collection<BouncedMail> bouncedMails;
     private final Optional<Logger> logger;
@@ -413,7 +417,11 @@ public class FakeMailContext implements MailetContext {
 
     @Override
     public Iterator<String> getAttributeNames() {
-        return attributes.keySet().iterator();
+        return attributes
+            .keySet()
+            .stream()
+            .map(AttributeName::asString)
+            .iterator();
     }
 
     @Override
@@ -525,8 +533,13 @@ public class FakeMailContext implements MailetContext {
                 .build());
     }
 
+    @Deprecated
     public void setAttribute(String name, Serializable object) {
-        attributes.put(name,object);
+        setAttribute(Attribute.convertToAttribute(name, object));
+    }
+
+    public void setAttribute(Attribute attribute) {
+        attributes.put(attribute.getName(), attribute);
     }
 
     public void storeMail(MailAddress sender, MailAddress recipient, MimeMessage msg) throws MessagingException {
