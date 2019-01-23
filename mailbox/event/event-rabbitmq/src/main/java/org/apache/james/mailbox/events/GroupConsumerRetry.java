@@ -42,9 +42,7 @@ import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.Sender;
 
 class GroupConsumerRetry {
-
     static class RetryExchangeName {
-
         static RetryExchangeName of(Group group) {
             return new RetryExchangeName(group.asString());
         }
@@ -63,65 +61,21 @@ class GroupConsumerRetry {
         }
     }
 
-    static class RetryPublisher {
-
-        private final Sender sender;
-        private final RetryExchangeName retryExchangeName;
-        private final RetryBackoffConfiguration retryBackoff;
-        private final EventDeadLetters eventDeadLetters;
-        private final GroupRegistration.WorkQueueName queueName;
-
-        RetryPublisher(Sender sender, RetryExchangeName retryExchangeName, RetryBackoffConfiguration retryBackoff,
-                       EventDeadLetters eventDeadLetters, GroupRegistration.WorkQueueName queueName) {
-            this.sender = sender;
-            this.retryExchangeName = retryExchangeName;
-            this.retryBackoff = retryBackoff;
-            this.eventDeadLetters = eventDeadLetters;
-            this.queueName = queueName;
-        }
-
-        Mono<Void> publish(Event event, byte[] eventAsByte, int currentRetryCount) {
-            return Mono.just(currentRetryCount)
-                .flatMap(retryCount -> retryOrStoreToDeadLetter(event, eventAsByte, retryCount));
-        }
-
-        private Mono<Void> retryOrStoreToDeadLetter(Event event, byte[] eventAsByte, int currentRetryCount) {
-            if (currentRetryCount >= retryBackoff.getMaxRetries()) {
-                return eventDeadLetters.store(queueName.getGroup(), event);
-            }
-
-            return sendRetryMessage(event, eventAsByte, currentRetryCount);
-        }
-
-        private Mono<Void> sendRetryMessage(Event event, byte[] eventAsByte, int currentRetryCount) {
-            Mono<OutboundMessage> retryMessage = Mono.just(new OutboundMessage(
-                retryExchangeName.asString(),
-                EMPTY_ROUTING_KEY,
-                new AMQP.BasicProperties.Builder()
-                    .headers(ImmutableMap.of(RETRY_COUNT, currentRetryCount + 1))
-                    .build(),
-                eventAsByte));
-
-            return sender.send(retryMessage)
-                .doOnError(throwable -> LOGGER.error("Exception happens when publishing event of user {} to retry exchange," +
-                    "this event will be lost forever",
-                    event.getUser().asString(), throwable));
-        }
-    }
-
     private static final Logger LOGGER = LoggerFactory.getLogger(GroupConsumerRetry.class);
 
     private final Sender sender;
     private final GroupRegistration.WorkQueueName queueName;
     private final RetryExchangeName retryExchangeName;
-    private final RetryPublisher retryPublisher;
+    private final RetryBackoffConfiguration retryBackoff;
+    private final EventDeadLetters eventDeadLetters;
 
     GroupConsumerRetry(Sender sender, GroupRegistration.WorkQueueName queueName, Group group,
                        RetryBackoffConfiguration retryBackoff, EventDeadLetters eventDeadLetters) {
         this.sender = sender;
         this.queueName = queueName;
         this.retryExchangeName = RetryExchangeName.of(group);
-        this.retryPublisher = new RetryPublisher(sender, retryExchangeName, retryBackoff, eventDeadLetters, queueName);
+        this.retryBackoff = retryBackoff;
+        this.eventDeadLetters = eventDeadLetters;
     }
 
     Mono<Void> createRetryExchange() {
@@ -140,6 +94,28 @@ class GroupConsumerRetry {
         LOGGER.error("Exception happens when handling event {} of user {}",
             event.getEventId().getId().toString(), event.getUser().asString(), throwable);
 
-        return retryPublisher.publish(event, eventAsBytes, currentRetryCount);
+        return retryOrStoreToDeadLetter(event, eventAsBytes, currentRetryCount);
+    }
+
+    private Mono<Void> retryOrStoreToDeadLetter(Event event, byte[] eventAsByte, int currentRetryCount) {
+        if (currentRetryCount >= retryBackoff.getMaxRetries()) {
+            return eventDeadLetters.store(queueName.getGroup(), event);
+        }
+        return sendRetryMessage(event, eventAsByte, currentRetryCount);
+    }
+
+    private Mono<Void> sendRetryMessage(Event event, byte[] eventAsByte, int currentRetryCount) {
+        Mono<OutboundMessage> retryMessage = Mono.just(new OutboundMessage(
+            retryExchangeName.asString(),
+            EMPTY_ROUTING_KEY,
+            new AMQP.BasicProperties.Builder()
+                .headers(ImmutableMap.of(RETRY_COUNT, currentRetryCount + 1))
+                .build(),
+            eventAsByte));
+
+        return sender.send(retryMessage)
+            .doOnError(throwable -> LOGGER.error("Exception happens when publishing event of user {} to retry exchange," +
+                    "this event will be lost forever",
+                event.getUser().asString(), throwable));
     }
 }
