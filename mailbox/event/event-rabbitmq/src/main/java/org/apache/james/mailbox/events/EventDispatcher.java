@@ -30,6 +30,8 @@ import java.util.Set;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.util.MDCStructuredLogger;
+import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +77,8 @@ class EventDispatcher {
             .flatMap(mailboxListenerRegistry::getLocalMailboxListeners)
             .filter(mailboxListener -> mailboxListener.getExecutionMode().equals(MailboxListener.ExecutionMode.SYNCHRONOUS))
             .flatMap(mailboxListener -> Mono.fromRunnable(Throwing.runnable(() -> mailboxListener.event(event)))
-                .doOnError(e -> LOGGER.error("Exception happens when handling event of user {}", event.getUser().asString(), e))
+                .doOnError(e -> structuredLogger(event, keys)
+                    .log(logger -> logger.error("Exception happens when dispatching event of user {}", event.getUser().asString(), e)))
                 .onErrorResume(e -> Mono.empty()))
             .then();
 
@@ -88,6 +91,14 @@ class EventDispatcher {
 
         return Flux.concat(localListenerDelivery, distantDispatchMono)
             .subscribeWith(MonoProcessor.create());
+    }
+
+    private StructuredLogger structuredLogger(Event event, Set<RegistrationKey> keys) {
+        return MDCStructuredLogger.forLogger(LOGGER)
+            .addField(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
+            .addField(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
+            .addField(EventBus.StructuredLoggingFields.USER, event.getUser())
+            .addField(EventBus.StructuredLoggingFields.REGISTRATION_KEYS, keys);
     }
 
     private Mono<Void> doDispatch(Mono<byte[]> serializedEvent, Set<RegistrationKey> keys) {
