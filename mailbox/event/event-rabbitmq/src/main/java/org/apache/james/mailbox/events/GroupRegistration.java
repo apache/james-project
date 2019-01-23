@@ -27,6 +27,7 @@ import static org.apache.james.backend.rabbitmq.Constants.NO_ARGUMENTS;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXCHANGE_NAME;
 
+import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
@@ -34,6 +35,7 @@ import java.util.Optional;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.util.MDCBuilder;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
@@ -83,6 +85,7 @@ class GroupRegistration implements Registration {
     private final EventSerializer eventSerializer;
     private final GroupConsumerRetry retryHandler;
     private final WaitDelayGenerator delayGenerator;
+    private final Group group;
     private Optional<Disposable> receiverSubscriber;
 
     GroupRegistration(Mono<Connection> connectionSupplier, Sender sender, EventSerializer eventSerializer,
@@ -98,6 +101,7 @@ class GroupRegistration implements Registration {
         this.unregisterGroup = unregisterGroup;
         this.retryHandler = new GroupConsumerRetry(sender, group, retryBackoff, eventDeadLetters);
         this.delayGenerator = WaitDelayGenerator.of(retryBackoff);
+        this.group = group;
     }
 
     GroupRegistration start() {
@@ -137,11 +141,22 @@ class GroupRegistration implements Registration {
         int currentRetryCount = getRetryCount(acknowledgableDelivery);
 
         return delayGenerator.delayIfHaveTo(currentRetryCount)
-            .flatMap(any -> Mono.fromRunnable(Throwing.runnable(() -> mailboxListener.event(event))))
+            .flatMap(any -> Mono.fromRunnable(Throwing.runnable(() -> runListener(event))))
             .onErrorResume(throwable -> retryHandler.handleRetry(eventAsBytes, event, currentRetryCount, throwable))
             .then(Mono.fromRunnable(acknowledgableDelivery::ack))
             .subscribeWith(MonoProcessor.create())
             .then();
+    }
+
+    private void runListener(Event event) throws Exception {
+        try (Closeable mdc = MDCBuilder.create()
+                .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
+                .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
+                .addContext(EventBus.StructuredLoggingFields.USER, event.getUser())
+                .addContext(EventBus.StructuredLoggingFields.GROUP, group)
+                .build()) {
+            mailboxListener.event(event);
+        }
     }
 
     private int getRetryCount(AcknowledgableDelivery acknowledgableDelivery) {
