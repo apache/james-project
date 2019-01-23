@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class EventBusIdTest {
+class EventBusIdTest {
 
     private static final UUID UUID_1 = UUID.fromString("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
 

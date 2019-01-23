@@ -26,7 +26,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 public class EventBusId {
-
     public static EventBusId of(UUID uuid) {
         return new EventBusId(uuid);
     }
@@ -70,5 +69,4 @@ public class EventBusId {
             .add("id", id)
             .toString();
     }
-
 }

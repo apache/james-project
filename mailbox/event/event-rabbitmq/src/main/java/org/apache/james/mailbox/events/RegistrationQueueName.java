@@ -23,7 +23,7 @@ import java.util.Optional;
 
 import com.google.common.base.Preconditions;
 
-public class RegistrationQueueName {
+class RegistrationQueueName {
     private Optional<String> queueName;
 
     RegistrationQueueName() {

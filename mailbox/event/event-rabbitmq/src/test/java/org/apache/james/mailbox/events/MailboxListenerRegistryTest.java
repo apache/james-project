@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.time.Duration;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -36,6 +35,8 @@ import org.junit.jupiter.api.Test;
 
 class MailboxListenerRegistryTest {
     private static final MailboxIdRegistrationKey KEY_1 = new MailboxIdRegistrationKey(TestId.of(42));
+    private static final Runnable NOOP = () -> {
+    };
 
     private MailboxListenerRegistry testee;
 
@@ -53,8 +54,7 @@ class MailboxListenerRegistryTest {
     @Test
     void getLocalMailboxListenersShouldReturnPreviouslyAddedListener() {
         MailboxListener listener = mock(MailboxListener.class);
-        testee.addListener(KEY_1, listener, () -> {
-        });
+        testee.addListener(KEY_1, listener, NOOP);
 
         assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
             .containsOnly(listener);
@@ -64,10 +64,8 @@ class MailboxListenerRegistryTest {
     void getLocalMailboxListenersShouldReturnPreviouslyAddedListeners() {
         MailboxListener listener1 = mock(MailboxListener.class);
         MailboxListener listener2 = mock(MailboxListener.class);
-        testee.addListener(KEY_1, listener1, () -> {
-        });
-        testee.addListener(KEY_1, listener2, () -> {
-        });
+        testee.addListener(KEY_1, listener1, NOOP);
+        testee.addListener(KEY_1, listener2, NOOP);
 
         assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
             .containsOnly(listener1, listener2);
@@ -77,13 +75,10 @@ class MailboxListenerRegistryTest {
     void getLocalMailboxListenersShouldNotReturnRemovedListeners() {
         MailboxListener listener1 = mock(MailboxListener.class);
         MailboxListener listener2 = mock(MailboxListener.class);
-        testee.addListener(KEY_1, listener1, () -> {
-        });
-        testee.addListener(KEY_1, listener2, () -> {
-        });
+        testee.addListener(KEY_1, listener1, NOOP);
+        testee.addListener(KEY_1, listener2, NOOP);
 
-        testee.removeListener(KEY_1, listener2, () -> {
-        });
+        testee.removeListener(KEY_1, listener2, NOOP);
 
         assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
             .containsOnly(listener1);
@@ -104,8 +99,7 @@ class MailboxListenerRegistryTest {
         MailboxListener listener = mock(MailboxListener.class);
 
         AtomicBoolean atomicBoolean = new AtomicBoolean(false);
-        testee.addListener(KEY_1, listener, () -> {
-        });
+        testee.addListener(KEY_1, listener, NOOP);
         testee.addListener(KEY_1, listener, () -> atomicBoolean.set(true));
 
         assertThat(atomicBoolean).isFalse();
@@ -127,10 +121,8 @@ class MailboxListenerRegistryTest {
         MailboxListener listener2 = mock(MailboxListener.class);
 
         AtomicBoolean atomicBoolean = new AtomicBoolean(false);
-        testee.addListener(KEY_1, listener, () -> {
-        });
-        testee.addListener(KEY_1, listener2, () -> {
-        });
+        testee.addListener(KEY_1, listener, NOOP);
+        testee.addListener(KEY_1, listener2, NOOP);
         testee.removeListener(KEY_1, listener, () -> atomicBoolean.set(true));
 
         assertThat(atomicBoolean).isFalse();
@@ -141,8 +133,7 @@ class MailboxListenerRegistryTest {
         MailboxListener listener = mock(MailboxListener.class);
 
         AtomicBoolean atomicBoolean = new AtomicBoolean(false);
-        testee.addListener(KEY_1, listener, () -> {
-        });
+        testee.addListener(KEY_1, listener, NOOP);
         testee.removeListener(KEY_1, listener, () -> atomicBoolean.set(true));
 
         assertThat(atomicBoolean).isTrue();
@@ -157,8 +148,7 @@ class MailboxListenerRegistryTest {
             MailboxListener listener = mock(MailboxListener.class);
 
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> testee.addListener(KEY_1, listener, () -> {
-                }))
+                .operation((threadNumber, operationNumber) -> testee.addListener(KEY_1, listener, NOOP))
                 .threadCount(10)
                 .operationCount(10)
                 .runSuccessfullyWithin(ONE_SECOND);
@@ -176,14 +166,11 @@ class MailboxListenerRegistryTest {
             ConcurrentTestRunner.builder()
                 .operation((threadNumber, operationNumber) -> {
                     if (threadNumber % 3 == 0) {
-                        testee.addListener(KEY_1, listener1, () -> {
-                        });
+                        testee.addListener(KEY_1, listener1, NOOP);
                     } else if (threadNumber % 3 == 1) {
-                        testee.addListener(KEY_1, listener2, () -> {
-                        });
+                        testee.addListener(KEY_1, listener2, NOOP);
                     } else if (threadNumber % 3 == 2) {
-                        testee.addListener(KEY_1, listener3, () -> {
-                        });
+                        testee.addListener(KEY_1, listener3, NOOP);
                     }
                 })
                 .threadCount(6)
@@ -198,13 +185,11 @@ class MailboxListenerRegistryTest {
         void getLocalMailboxListenersShouldReturnEmptyWhenRemoveAddedListener() throws Exception {
             MailboxListener listener1 = mock(MailboxListener.class);
 
-            testee.addListener(KEY_1, listener1, () -> {
-            });
+            testee.addListener(KEY_1, listener1, NOOP);
 
             ConcurrentTestRunner.builder()
                 .operation(((threadNumber, operationNumber) ->
-                    testee.removeListener(KEY_1, listener1, () -> {
-                    })))
+                    testee.removeListener(KEY_1, listener1, NOOP)))
                 .threadCount(10)
                 .operationCount(10)
                 .runSuccessfullyWithin(ONE_SECOND);
@@ -224,11 +209,11 @@ class MailboxListenerRegistryTest {
             ConcurrentTestRunner.builder()
                 .operation((threadNumber, operationNumber) -> {
                     if (threadNumber % 3 == 0) {
-                        testee.addListener(KEY_1, listener1, () -> runIfEmptyCount.incrementAndGet());
+                        testee.addListener(KEY_1, listener1, runIfEmptyCount::incrementAndGet);
                     } else if (threadNumber % 3 == 1) {
-                        testee.addListener(KEY_1, listener2, () -> runIfEmptyCount.incrementAndGet());
+                        testee.addListener(KEY_1, listener2, runIfEmptyCount::incrementAndGet);
                     } else if (threadNumber % 3 == 2) {
-                        testee.addListener(KEY_1, listener3, () -> runIfEmptyCount.incrementAndGet());
+                        testee.addListener(KEY_1, listener3, runIfEmptyCount::incrementAndGet);
                     }
                 })
                 .threadCount(6)
@@ -243,9 +228,9 @@ class MailboxListenerRegistryTest {
             MailboxListener listener1 = mock(MailboxListener.class);
             AtomicInteger runIfEmptyCount = new AtomicInteger(0);
 
-            testee.addListener(KEY_1, listener1, () -> {});
+            testee.addListener(KEY_1, listener1, NOOP);
             ConcurrentTestRunner.builder()
-                .operation(((threadNumber, operationNumber) -> testee.removeListener(KEY_1, listener1, () -> runIfEmptyCount.incrementAndGet())))
+                .operation(((threadNumber, operationNumber) -> testee.removeListener(KEY_1, listener1, runIfEmptyCount::incrementAndGet)))
                 .threadCount(10)
                 .operationCount(10)
                 .runSuccessfullyWithin(ONE_SECOND);

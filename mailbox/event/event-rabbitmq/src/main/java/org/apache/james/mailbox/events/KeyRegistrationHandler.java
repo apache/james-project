@@ -48,7 +48,7 @@ import reactor.rabbitmq.Receiver;
 import reactor.rabbitmq.ReceiverOptions;
 import reactor.rabbitmq.Sender;
 
-public class KeyRegistrationHandler {
+class KeyRegistrationHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyRegistrationHandler.class);
 
     private final EventBusId eventBusId;
@@ -61,7 +61,7 @@ public class KeyRegistrationHandler {
     private final RegistrationBinder registrationBinder;
     private Optional<Disposable> receiverSubscriber;
 
-    public KeyRegistrationHandler(EventBusId eventBusId, EventSerializer eventSerializer, Sender sender, Mono<Connection> connectionMono, RoutingKeyConverter routingKeyConverter, MailboxListenerRegistry mailboxListenerRegistry) {
+    KeyRegistrationHandler(EventBusId eventBusId, EventSerializer eventSerializer, Sender sender, Mono<Connection> connectionMono, RoutingKeyConverter routingKeyConverter, MailboxListenerRegistry mailboxListenerRegistry) {
         this.eventBusId = eventBusId;
         this.eventSerializer = eventSerializer;
         this.sender = sender;
@@ -90,7 +90,7 @@ public class KeyRegistrationHandler {
 
     void stop() {
         receiverSubscriber.filter(subscriber -> !subscriber.isDisposed())
-            .ifPresent(subscriber -> subscriber.dispose());
+            .ifPresent(Disposable::dispose);
         receiver.close();
         sender.delete(QueueSpecification.queue(registrationQueue.asString())).block();
     }

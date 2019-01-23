@@ -53,7 +53,6 @@ import reactor.rabbitmq.ReceiverOptions;
 import reactor.rabbitmq.Sender;
 
 class GroupRegistration implements Registration {
-
     static class WorkQueueName {
         static WorkQueueName of(Group group) {
             return new WorkQueueName(group);
@@ -145,7 +144,7 @@ class GroupRegistration implements Registration {
             .then();
     }
 
-    static int getRetryCount(AcknowledgableDelivery acknowledgableDelivery) {
+    private int getRetryCount(AcknowledgableDelivery acknowledgableDelivery) {
         return Optional.ofNullable(acknowledgableDelivery.getProperties().getHeaders())
             .flatMap(headers -> Optional.ofNullable(headers.get(RETRY_COUNT)))
             .filter(object -> object instanceof Integer)
@@ -156,7 +155,7 @@ class GroupRegistration implements Registration {
     @Override
     public void unregister() {
         receiverSubscriber.filter(subscriber -> !subscriber.isDisposed())
-            .ifPresent(subscriber -> subscriber.dispose());
+            .ifPresent(Disposable::dispose);
         receiver.close();
         unregisterGroup.run();
     }
