@@ -115,8 +115,9 @@ class GroupConsumerRetry {
             eventAsByte));
 
         return sender.send(retryMessage)
-            .doOnError(throwable -> createStructuredLogger(event).log(logger -> logger.error("Exception happens when publishing event to retry exchange," +
-                    "this event will be lost forever", throwable)));
+            .doOnError(throwable -> createStructuredLogger(event)
+                .log(logger -> logger.error("Exception happens when publishing event to retry exchange, this event will be stored in deadLetter", throwable)))
+            .onErrorResume(e -> eventDeadLetters.store(group, event));
     }
 
     private StructuredLogger createStructuredLogger(Event event) {
