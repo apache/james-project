@@ -24,12 +24,15 @@ import static org.apache.james.backend.rabbitmq.Constants.DURABLE;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.EVENT_BUS_ID;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXCHANGE_NAME;
 
+import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.MDCStructuredLogger;
 import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
@@ -74,11 +77,12 @@ class EventDispatcher {
     Mono<Void> dispatch(Event event, Set<RegistrationKey> keys) {
         Mono<Void> localListenerDelivery = Flux.fromIterable(keys)
             .subscribeOn(Schedulers.elastic())
-            .flatMap(mailboxListenerRegistry::getLocalMailboxListeners)
-            .filter(mailboxListener -> mailboxListener.getExecutionMode().equals(MailboxListener.ExecutionMode.SYNCHRONOUS))
-            .flatMap(mailboxListener -> Mono.fromRunnable(Throwing.runnable(() -> mailboxListener.event(event)))
+            .flatMap(key -> mailboxListenerRegistry.getLocalMailboxListeners(key)
+                .map(listener -> Pair.of(key, listener)))
+            .filter(pair -> pair.getRight().getExecutionMode().equals(MailboxListener.ExecutionMode.SYNCHRONOUS))
+            .flatMap(pair -> Mono.fromRunnable(Throwing.runnable(() -> executeListener(event, pair.getRight(), pair.getLeft())))
                 .doOnError(e -> structuredLogger(event, keys)
-                    .log(logger -> logger.error("Exception happens when dispatching event of user {}", event.getUser().asString(), e)))
+                    .log(logger -> logger.error("Exception happens when dispatching event", e)))
                 .onErrorResume(e -> Mono.empty()))
             .then();
 
@@ -91,6 +95,17 @@ class EventDispatcher {
 
         return Flux.concat(localListenerDelivery, distantDispatchMono)
             .subscribeWith(MonoProcessor.create());
+    }
+
+    private void executeListener(Event event, MailboxListener mailboxListener, RegistrationKey registrationKey) throws Exception {
+        try (Closeable mdc = MDCBuilder.create()
+                .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
+                .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
+                .addContext(EventBus.StructuredLoggingFields.USER, event.getUser())
+                .addContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, registrationKey)
+                .build()) {
+            mailboxListener.event(event);
+        }
     }
 
     private StructuredLogger structuredLogger(Event event, Set<RegistrationKey> keys) {
