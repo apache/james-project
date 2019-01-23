@@ -25,9 +25,9 @@ import java.io.Closeable;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.util.MDCBuilder;

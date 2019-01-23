@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.event;
 
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.MailboxListener;
 
 public interface SpamEventListener extends MailboxListener.GroupMailboxListener {
 

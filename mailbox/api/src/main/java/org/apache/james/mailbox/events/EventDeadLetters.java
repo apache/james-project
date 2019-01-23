@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.events;
 
-import org.apache.james.mailbox.Event;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

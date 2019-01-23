@@ -21,7 +21,7 @@ package org.apache.james.mailbox.quota.mailing.listeners;
 
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.mailbox.Event;
+import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.RegistrationKey;

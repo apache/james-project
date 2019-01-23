@@ -33,7 +33,7 @@ import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.utils.TestingClientProvider;
-import org.apache.james.mailbox.Event;
+import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.quota.QuotaFixture.Counts;
 import org.apache.james.mailbox.quota.QuotaFixture.Sizes;
 import org.apache.james.mailbox.store.event.EventFactory;

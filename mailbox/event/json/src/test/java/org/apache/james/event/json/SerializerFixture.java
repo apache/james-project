@@ -20,7 +20,7 @@
 package org.apache.james.event.json;
 
 
-import org.apache.james.mailbox.Event;
+import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 

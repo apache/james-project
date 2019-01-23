@@ -25,7 +25,6 @@ import static org.apache.james.backend.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.mailbox.events.GroupRegistration.RETRY_COUNT;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT;
 
-import org.apache.james.mailbox.Event;
 import org.apache.james.util.MDCStructuredLogger;
 import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;

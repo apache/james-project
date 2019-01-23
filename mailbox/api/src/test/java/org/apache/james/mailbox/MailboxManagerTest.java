@@ -37,6 +37,8 @@ import org.apache.james.mailbox.MailboxManager.MailboxCapabilities;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
+import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MessageMoveEvent;
 import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;

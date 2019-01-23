@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.events;
 
-import org.apache.james.mailbox.Event;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;

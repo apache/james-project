@@ -22,10 +22,10 @@ import java.time.Instant;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.events.RegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;

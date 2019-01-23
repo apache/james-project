@@ -22,10 +22,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.events.Event;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -59,7 +59,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     }
 
     /**
-     * Process the {@link org.apache.james.mailbox.Event} and update the index if
+     * Process the {@link Event} and update the index if
      * something relevant is received
      */
     @Override

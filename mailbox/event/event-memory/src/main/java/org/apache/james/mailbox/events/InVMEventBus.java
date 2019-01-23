@@ -24,8 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.events.delivery.EventDelivery;
 import org.apache.james.mailbox.events.delivery.EventDelivery.PermanentFailureHandler.StoreToDeadLetters;
 import org.apache.james.mailbox.events.delivery.EventDelivery.Retryer.BackoffRetryer;

@@ -21,9 +21,6 @@ package org.apache.james.mailbox.events;
 
 import java.util.Set;
 
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
-
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;

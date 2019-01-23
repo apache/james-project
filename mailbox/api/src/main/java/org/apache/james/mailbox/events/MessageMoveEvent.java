@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox;
+package org.apache.james.mailbox.events;
 
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.core.User;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMoves;

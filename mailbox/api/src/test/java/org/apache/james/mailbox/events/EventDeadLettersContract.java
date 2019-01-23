@@ -31,8 +31,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.james.core.User;
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;

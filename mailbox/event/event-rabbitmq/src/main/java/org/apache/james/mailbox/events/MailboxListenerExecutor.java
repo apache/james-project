@@ -23,8 +23,6 @@ import static org.apache.james.mailbox.events.EventBus.Metrics.timerName;
 
 import java.io.Closeable;
 
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.util.MDCBuilder;

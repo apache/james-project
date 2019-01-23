@@ -32,8 +32,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.event.json.EventSerializer;
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.util.MDCBuilder;
 
 import com.github.fge.lambdas.Throwing;

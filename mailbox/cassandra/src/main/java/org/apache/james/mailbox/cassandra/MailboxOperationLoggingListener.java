@@ -23,9 +23,9 @@ import static org.apache.james.mailbox.cassandra.GhostMailbox.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.GhostMailbox.MAILBOX_NAME;
 import static org.apache.james.mailbox.cassandra.GhostMailbox.TYPE;
 
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.MailboxListener;
 
 /**
  * See https://issues.apache.org/jira/browse/MAILBOX-322 for reading about the Ghost mailbox bug.

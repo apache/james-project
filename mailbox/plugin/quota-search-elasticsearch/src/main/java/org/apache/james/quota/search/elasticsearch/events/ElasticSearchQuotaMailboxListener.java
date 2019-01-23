@@ -23,9 +23,9 @@ import javax.inject.Named;
 
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.core.User;
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.quota.search.elasticsearch.QuotaRatioElasticSearchConstants;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
 

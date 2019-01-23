@@ -32,6 +32,8 @@ import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.acl.ACLDiff;
+import org.apache.james.mailbox.events.Event;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;

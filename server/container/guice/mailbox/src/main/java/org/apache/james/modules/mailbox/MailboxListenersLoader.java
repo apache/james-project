@@ -19,8 +19,8 @@
 package org.apache.james.modules.mailbox;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.MailboxListener;
 
 public interface MailboxListenersLoader {
     Pair<Group, MailboxListener> createListener(ListenerConfiguration configuration);

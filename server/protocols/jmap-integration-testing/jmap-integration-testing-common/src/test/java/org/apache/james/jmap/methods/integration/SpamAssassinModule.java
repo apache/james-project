@@ -23,9 +23,9 @@ import java.util.Optional;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration.BaseConfiguration;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SystemMailboxesProvider;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.spamassassin.SpamAssassin;
 import org.apache.james.mailbox.spamassassin.SpamAssassinConfiguration;
 import org.apache.james.mailbox.spamassassin.SpamAssassinListener;

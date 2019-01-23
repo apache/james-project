@@ -22,9 +22,9 @@ package org.apache.james.mailbox.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.MailboxListener;
 
 public class EventCollector implements MailboxListener.GroupMailboxListener {
     private static class EventCollectorGroup extends Group {}

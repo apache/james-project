@@ -38,7 +38,6 @@ import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.io.input.TeeInputStream;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.MailboxPathLocker;
@@ -48,6 +47,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.ReadOnlyException;
 import org.apache.james.mailbox.model.ComposedMessageId;

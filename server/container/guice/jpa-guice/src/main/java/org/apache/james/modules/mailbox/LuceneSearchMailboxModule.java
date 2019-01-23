@@ -22,7 +22,7 @@ package org.apache.james.modules.mailbox;
 import java.io.IOException;
 
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;

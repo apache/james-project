@@ -24,13 +24,13 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MessageMoveEvent;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.SystemMailboxesProvider;
+import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.MessageMoveEvent;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageRange;

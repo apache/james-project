@@ -18,9 +18,9 @@
  ****************************************************************/
 package org.apache.james.modules.mailbox;
 
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.MailboxListener;
 
 public class NoopMailboxListener implements MailboxListener.GroupMailboxListener {
     private static class NoopMailboxListenerGroup extends Group {}

@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.mailbox;
 
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaManager;
 import org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;

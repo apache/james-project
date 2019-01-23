@@ -27,8 +27,8 @@ import java.util.Optional;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.User;
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener.QuotaUsageUpdatedEvent;
+import org.apache.james.mailbox.events.Event;
+import org.apache.james.mailbox.events.MailboxListener.QuotaUsageUpdatedEvent;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaFixture;
 import org.apache.james.mailbox.store.event.EventFactory;

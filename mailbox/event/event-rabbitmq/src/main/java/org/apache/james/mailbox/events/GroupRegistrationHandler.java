@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.james.event.json.EventSerializer;
-import org.apache.james.mailbox.MailboxListener;
 
 import com.rabbitmq.client.Connection;
 

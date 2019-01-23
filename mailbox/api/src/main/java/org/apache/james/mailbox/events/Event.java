@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox;
+package org.apache.james.mailbox.events;
 
 import java.util.Objects;
 import java.util.UUID;

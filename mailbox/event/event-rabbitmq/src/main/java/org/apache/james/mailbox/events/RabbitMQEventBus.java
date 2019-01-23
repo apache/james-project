@@ -27,8 +27,6 @@ import javax.inject.Inject;
 
 import org.apache.james.backend.rabbitmq.RabbitMQConnectionFactory;
 import org.apache.james.event.json.EventSerializer;
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.metrics.api.MetricFactory;
 
 import com.github.fge.lambdas.Throwing;
