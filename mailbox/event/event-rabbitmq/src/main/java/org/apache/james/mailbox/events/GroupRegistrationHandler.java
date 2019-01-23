@@ -37,15 +37,17 @@ class GroupRegistrationHandler {
     private final Mono<Connection> connectionMono;
     private final RetryBackoffConfiguration retryBackoff;
     private final EventDeadLetters eventDeadLetters;
+    private final MailboxListenerExecutor mailboxListenerExecutor;
 
     GroupRegistrationHandler(EventSerializer eventSerializer, Sender sender, Mono<Connection> connectionMono,
                              RetryBackoffConfiguration retryBackoff,
-                             EventDeadLetters eventDeadLetters) {
+                             EventDeadLetters eventDeadLetters, MailboxListenerExecutor mailboxListenerExecutor) {
         this.eventSerializer = eventSerializer;
         this.sender = sender;
         this.connectionMono = connectionMono;
         this.retryBackoff = retryBackoff;
         this.eventDeadLetters = eventDeadLetters;
+        this.mailboxListenerExecutor = mailboxListenerExecutor;
         this.groupRegistrations = new ConcurrentHashMap<>();
     }
 
@@ -73,6 +75,7 @@ class GroupRegistrationHandler {
             group,
             retryBackoff,
             eventDeadLetters,
-            () -> groupRegistrations.remove(group));
+            () -> groupRegistrations.remove(group),
+            mailboxListenerExecutor);
     }
 }

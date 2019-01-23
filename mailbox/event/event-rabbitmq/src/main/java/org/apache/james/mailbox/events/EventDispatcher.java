@@ -24,7 +24,6 @@ import static org.apache.james.backend.rabbitmq.Constants.DURABLE;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.EVENT_BUS_ID;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXCHANGE_NAME;
 
-import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
@@ -57,14 +56,16 @@ class EventDispatcher {
     private final Sender sender;
     private final MailboxListenerRegistry mailboxListenerRegistry;
     private final AMQP.BasicProperties basicProperties;
+    private final MailboxListenerExecutor mailboxListenerExecutor;
 
-    EventDispatcher(EventBusId eventBusId, EventSerializer eventSerializer, Sender sender, MailboxListenerRegistry mailboxListenerRegistry) {
+    EventDispatcher(EventBusId eventBusId, EventSerializer eventSerializer, Sender sender, MailboxListenerRegistry mailboxListenerRegistry, MailboxListenerExecutor mailboxListenerExecutor) {
         this.eventSerializer = eventSerializer;
         this.sender = sender;
         this.mailboxListenerRegistry = mailboxListenerRegistry;
         this.basicProperties = new AMQP.BasicProperties.Builder()
             .headers(ImmutableMap.of(EVENT_BUS_ID, eventBusId.asString()))
             .build();
+        this.mailboxListenerExecutor = mailboxListenerExecutor;
     }
 
     void start() {
@@ -98,14 +99,10 @@ class EventDispatcher {
     }
 
     private void executeListener(Event event, MailboxListener mailboxListener, RegistrationKey registrationKey) throws Exception {
-        try (Closeable mdc = MDCBuilder.create()
-                .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
-                .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
-                .addContext(EventBus.StructuredLoggingFields.USER, event.getUser())
-                .addContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, registrationKey)
-                .build()) {
-            mailboxListener.event(event);
-        }
+        mailboxListenerExecutor.execute(mailboxListener,
+            MDCBuilder.create()
+                .addContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, registrationKey),
+            event);
     }
 
     private StructuredLogger structuredLogger(Event event, Set<RegistrationKey> keys) {

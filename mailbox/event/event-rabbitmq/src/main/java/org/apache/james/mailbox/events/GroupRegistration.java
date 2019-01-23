@@ -27,7 +27,6 @@ import static org.apache.james.backend.rabbitmq.Constants.NO_ARGUMENTS;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXCHANGE_NAME;
 
-import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
@@ -86,17 +85,19 @@ class GroupRegistration implements Registration {
     private final GroupConsumerRetry retryHandler;
     private final WaitDelayGenerator delayGenerator;
     private final Group group;
+    private final MailboxListenerExecutor mailboxListenerExecutor;
     private Optional<Disposable> receiverSubscriber;
 
     GroupRegistration(Mono<Connection> connectionSupplier, Sender sender, EventSerializer eventSerializer,
                       MailboxListener mailboxListener, Group group, RetryBackoffConfiguration retryBackoff,
                       EventDeadLetters eventDeadLetters,
-                      Runnable unregisterGroup) {
+                      Runnable unregisterGroup, MailboxListenerExecutor mailboxListenerExecutor) {
         this.eventSerializer = eventSerializer;
         this.mailboxListener = mailboxListener;
         this.queueName = WorkQueueName.of(group);
         this.sender = sender;
         this.receiver = RabbitFlux.createReceiver(new ReceiverOptions().connectionMono(connectionSupplier));
+        this.mailboxListenerExecutor = mailboxListenerExecutor;
         this.receiverSubscriber = Optional.empty();
         this.unregisterGroup = unregisterGroup;
         this.retryHandler = new GroupConsumerRetry(sender, group, retryBackoff, eventDeadLetters);
@@ -149,14 +150,11 @@ class GroupRegistration implements Registration {
     }
 
     private void runListener(Event event) throws Exception {
-        try (Closeable mdc = MDCBuilder.create()
-                .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
-                .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
-                .addContext(EventBus.StructuredLoggingFields.USER, event.getUser())
-                .addContext(EventBus.StructuredLoggingFields.GROUP, group)
-                .build()) {
-            mailboxListener.event(event);
-        }
+        mailboxListenerExecutor.execute(
+            mailboxListener,
+            MDCBuilder.create()
+                .addContext(EventBus.StructuredLoggingFields.GROUP, group),
+            event);
     }
 
     private int getRetryCount(AcknowledgableDelivery acknowledgableDelivery) {

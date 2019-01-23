@@ -25,7 +25,6 @@ import static org.apache.james.backend.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backend.rabbitmq.Constants.NO_ARGUMENTS;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.EVENT_BUS_ID;
 
-import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
@@ -63,15 +62,17 @@ class KeyRegistrationHandler {
     private final Receiver receiver;
     private final RegistrationQueueName registrationQueue;
     private final RegistrationBinder registrationBinder;
+    private final MailboxListenerExecutor mailboxListenerExecutor;
     private Optional<Disposable> receiverSubscriber;
 
-    KeyRegistrationHandler(EventBusId eventBusId, EventSerializer eventSerializer, Sender sender, Mono<Connection> connectionMono, RoutingKeyConverter routingKeyConverter, MailboxListenerRegistry mailboxListenerRegistry) {
+    KeyRegistrationHandler(EventBusId eventBusId, EventSerializer eventSerializer, Sender sender, Mono<Connection> connectionMono, RoutingKeyConverter routingKeyConverter, MailboxListenerRegistry mailboxListenerRegistry, MailboxListenerExecutor mailboxListenerExecutor) {
         this.eventBusId = eventBusId;
         this.eventSerializer = eventSerializer;
         this.sender = sender;
         this.routingKeyConverter = routingKeyConverter;
         this.mailboxListenerRegistry = mailboxListenerRegistry;
         this.receiver = RabbitFlux.createReceiver(new ReceiverOptions().connectionMono(connectionMono));
+        this.mailboxListenerExecutor = mailboxListenerExecutor;
         this.registrationQueue = new RegistrationQueueName();
         this.registrationBinder = new RegistrationBinder(sender, registrationQueue);
     }
@@ -133,14 +134,10 @@ class KeyRegistrationHandler {
     }
 
     private void executeListener(MailboxListener listener, Event event, RegistrationKey key) throws Exception {
-        try (Closeable mdc = MDCBuilder.create()
-                .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
-                .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
-                .addContext(EventBus.StructuredLoggingFields.USER, event.getUser())
-                .addContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, key)
-                .build()) {
-            listener.event(event);
-        }
+        mailboxListenerExecutor.execute(listener,
+            MDCBuilder.create()
+                .addContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, key),
+            event);
     }
 
     private boolean isLocalSynchronousListeners(EventBusId eventBusId, MailboxListener listener) {

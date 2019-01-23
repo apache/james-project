@@ -19,43 +19,34 @@
 
 package org.apache.james.mailbox.events;
 
-import java.util.Set;
+import static org.apache.james.mailbox.events.EventBus.Metrics.timerName;
+
+import java.io.Closeable;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.util.MDCBuilder;
 
-import com.google.common.collect.ImmutableSet;
+public class MailboxListenerExecutor {
+    private final MetricFactory metricFactory;
 
-import reactor.core.publisher.Mono;
-
-public interface EventBus {
-    interface StructuredLoggingFields {
-        String EVENT_ID = "eventId";
-        String EVENT_CLASS = "eventClass";
-        String LISTENER_CLASS = "listenerClass";
-        String USER = "user";
-        String GROUP = "group";
-        String REGISTRATION_KEYS = "registrationKeys";
-        String REGISTRATION_KEY = "registrationKey";
+    public MailboxListenerExecutor(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
     }
 
-    interface Metrics {
-        static String timerName(MailboxListener mailboxListener) {
-            return "mailbox-listener-" + mailboxListener.getClass().getSimpleName();
+    void execute(MailboxListener listener, MDCBuilder mdcBuilder, Event event) throws Exception {
+        TimeMetric timer = metricFactory.timer(timerName(listener));
+        try (Closeable mdc = mdcBuilder
+                .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
+                .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
+                .addContext(EventBus.StructuredLoggingFields.USER, event.getUser())
+                .addContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass())
+                .build()) {
+            listener.event(event);
+        } finally {
+            timer.stopAndPublish();
         }
-    }
-
-    Registration register(MailboxListener listener, RegistrationKey key);
-
-    Registration register(MailboxListener listener, Group group) throws GroupAlreadyRegistered;
-
-    Mono<Void> dispatch(Event event, Set<RegistrationKey> key);
-
-    default Mono<Void> dispatch(Event event, RegistrationKey key) {
-        return dispatch(event, ImmutableSet.of(key));
-    }
-
-    default Registration register(MailboxListener.GroupMailboxListener groupMailboxListener) {
-        return register(groupMailboxListener, groupMailboxListener.getDefaultGroup());
     }
 }

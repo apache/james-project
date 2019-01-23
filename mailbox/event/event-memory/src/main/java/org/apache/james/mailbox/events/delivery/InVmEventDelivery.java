@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.events.delivery;
 
+import static org.apache.james.mailbox.events.EventBus.Metrics.timerName;
+
 import java.io.Closeable;
 
 import javax.inject.Inject;
@@ -81,7 +83,7 @@ public class InVmEventDelivery implements EventDelivery {
     }
 
     private void doDeliverToListener(MailboxListener mailboxListener, Event event) {
-        TimeMetric timer = metricFactory.timer("mailbox-listener-" + mailboxListener.getClass().getSimpleName());
+        TimeMetric timer = metricFactory.timer(timerName(mailboxListener));
         try (Closeable mdc = MDCBuilder.create()
                 .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
                 .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
@@ -96,6 +98,7 @@ public class InVmEventDelivery implements EventDelivery {
             timer.stopAndPublish();
         }
     }
+
     private StructuredLogger structuredLogger(Event event, MailboxListener mailboxListener) {
         return MDCStructuredLogger.forLogger(LOGGER)
             .addField(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
