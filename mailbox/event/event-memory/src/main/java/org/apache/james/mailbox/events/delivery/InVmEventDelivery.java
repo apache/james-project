@@ -19,12 +19,18 @@
 
 package org.apache.james.mailbox.events.delivery;
 
+import java.io.Closeable;
+
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.MDCStructuredLogger;
+import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,15 +41,6 @@ import reactor.core.publisher.MonoProcessor;
 import reactor.core.scheduler.Schedulers;
 
 public class InVmEventDelivery implements EventDelivery {
-
-    private static String listenerName(MailboxListener mailboxListener) {
-        return mailboxListener.getClass().getCanonicalName();
-    }
-
-    private static String eventName(Event event) {
-        return event.getClass().getCanonicalName();
-    }
-
     private static final Logger LOGGER = LoggerFactory.getLogger(InVmEventDelivery.class);
 
     private final MetricFactory metricFactory;
@@ -71,10 +68,8 @@ public class InVmEventDelivery implements EventDelivery {
 
     private Mono<Void> deliverByOption(MailboxListener listener, Event event, DeliveryOption deliveryOption) {
         Mono<Void> deliveryToListener = Mono.fromRunnable(() -> doDeliverToListener(listener, event))
-            .doOnError(throwable -> LOGGER.error("Error while processing listener {} for {}",
-                listenerName(listener),
-                eventName(event),
-                throwable))
+            .doOnError(throwable -> structuredLogger(event, listener)
+                .log(logger -> logger.error("Error while processing listener", throwable)))
             .subscribeOn(Schedulers.elastic())
             .then();
 
@@ -87,12 +82,25 @@ public class InVmEventDelivery implements EventDelivery {
 
     private void doDeliverToListener(MailboxListener mailboxListener, Event event) {
         TimeMetric timer = metricFactory.timer("mailbox-listener-" + mailboxListener.getClass().getSimpleName());
-        try {
+        try (Closeable mdc = MDCBuilder.create()
+                .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
+                .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
+                .addContext(EventBus.StructuredLoggingFields.USER, event.getUser())
+                .addContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, mailboxListener.getClass())
+                .build()) {
+
             mailboxListener.event(event);
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
             timer.stopAndPublish();
         }
+    }
+    private StructuredLogger structuredLogger(Event event, MailboxListener mailboxListener) {
+        return MDCStructuredLogger.forLogger(LOGGER)
+            .addField(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
+            .addField(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
+            .addField(EventBus.StructuredLoggingFields.USER, event.getUser())
+            .addField(EventBus.StructuredLoggingFields.LISTENER_CLASS, mailboxListener.getClass());
     }
 }

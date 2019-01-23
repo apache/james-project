@@ -32,6 +32,7 @@ public interface EventBus {
     interface StructuredLoggingFields {
         String EVENT_ID = "eventId";
         String EVENT_CLASS = "eventClass";
+        String LISTENER_CLASS = "listenerClass";
         String USER = "user";
         String GROUP = "group";
         String REGISTRATION_KEYS = "registrationKeys";
