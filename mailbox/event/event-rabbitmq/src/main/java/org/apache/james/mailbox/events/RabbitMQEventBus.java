@@ -61,7 +61,7 @@ public class RabbitMQEventBus implements EventBus {
                      RetryBackoffConfiguration retryBackoff,
                      RoutingKeyConverter routingKeyConverter,
                      EventDeadLetters eventDeadLetters) {
-            this.eventBusId = EventBusId.random();
+        this.eventBusId = EventBusId.random();
         this.connectionMono = Mono.fromSupplier(rabbitMQConnectionFactory::create).cache();
         this.eventSerializer = eventSerializer;
         this.routingKeyConverter = routingKeyConverter;
