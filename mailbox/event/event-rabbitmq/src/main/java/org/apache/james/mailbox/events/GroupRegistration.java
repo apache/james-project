@@ -68,10 +68,6 @@ class GroupRegistration implements Registration {
             this.group = group;
         }
 
-        Group getGroup() {
-            return group;
-        }
-
         String asString() {
             return MAILBOX_EVENT_WORK_QUEUE_PREFIX + group.asString();
         }
@@ -101,13 +97,13 @@ class GroupRegistration implements Registration {
         this.receiver = RabbitFlux.createReceiver(new ReceiverOptions().connectionMono(connectionSupplier));
         this.receiverSubscriber = Optional.empty();
         this.unregisterGroup = unregisterGroup;
-        this.retryHandler = new GroupConsumerRetry(sender, queueName, group, retryBackoff, eventDeadLetters);
+        this.retryHandler = new GroupConsumerRetry(sender, group, retryBackoff, eventDeadLetters);
         this.delayGenerator = WaitDelayGenerator.of(retryBackoff);
     }
 
     GroupRegistration start() {
         createGroupWorkQueue()
-            .then(retryHandler.createRetryExchange())
+            .then(retryHandler.createRetryExchange(queueName))
             .doOnSuccess(any -> this.subscribeWorkQueue())
             .block();
         return this;

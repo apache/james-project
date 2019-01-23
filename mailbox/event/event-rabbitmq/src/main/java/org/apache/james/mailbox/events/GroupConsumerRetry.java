@@ -64,21 +64,20 @@ class GroupConsumerRetry {
     private static final Logger LOGGER = LoggerFactory.getLogger(GroupConsumerRetry.class);
 
     private final Sender sender;
-    private final GroupRegistration.WorkQueueName queueName;
     private final RetryExchangeName retryExchangeName;
     private final RetryBackoffConfiguration retryBackoff;
     private final EventDeadLetters eventDeadLetters;
+    private final Group group;
 
-    GroupConsumerRetry(Sender sender, GroupRegistration.WorkQueueName queueName, Group group,
-                       RetryBackoffConfiguration retryBackoff, EventDeadLetters eventDeadLetters) {
+    GroupConsumerRetry(Sender sender, Group group, RetryBackoffConfiguration retryBackoff, EventDeadLetters eventDeadLetters) {
         this.sender = sender;
-        this.queueName = queueName;
         this.retryExchangeName = RetryExchangeName.of(group);
         this.retryBackoff = retryBackoff;
         this.eventDeadLetters = eventDeadLetters;
+        this.group = group;
     }
 
-    Mono<Void> createRetryExchange() {
+    Mono<Void> createRetryExchange(GroupRegistration.WorkQueueName queueName) {
         return Flux.concat(
             sender.declareExchange(ExchangeSpecification.exchange(retryExchangeName.asString())
                 .durable(DURABLE)
@@ -99,7 +98,7 @@ class GroupConsumerRetry {
 
     private Mono<Void> retryOrStoreToDeadLetter(Event event, byte[] eventAsByte, int currentRetryCount) {
         if (currentRetryCount >= retryBackoff.getMaxRetries()) {
-            return eventDeadLetters.store(queueName.getGroup(), event);
+            return eventDeadLetters.store(group, event);
         }
         return sendRetryMessage(event, eventAsByte, currentRetryCount);
     }
