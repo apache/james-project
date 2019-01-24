@@ -80,7 +80,7 @@ public interface GroupContract {
 
             eventBus().register(listener, GROUP_A);
 
-            verify(listener, after(FIVE_HUNDRED_MS).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
@@ -92,7 +92,7 @@ public interface GroupContract {
 
             eventBus().dispatch(EVENT, NO_KEYS).block();
 
-            verify(listener, timeout(ONE_SECOND).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
@@ -104,7 +104,7 @@ public interface GroupContract {
             MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), User.fromUsername("bob"), MailboxPath.forUser("bob", "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
             eventBus().dispatch(noopEvent, NO_KEYS).block();
 
-            verify(listener, after(FIVE_HUNDRED_MS).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
@@ -128,8 +128,8 @@ public interface GroupContract {
 
             eventBus().dispatch(EVENT, NO_KEYS).block();
 
-            verify(listener, timeout(ONE_SECOND).times(1)).event(any());
-            verify(listener2, timeout(ONE_SECOND).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener2, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
@@ -140,7 +140,7 @@ public interface GroupContract {
             registration.unregister();
 
             eventBus().dispatch(EVENT, NO_KEYS).block();
-            verify(listener, after(FIVE_HUNDRED_MS).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
@@ -186,7 +186,7 @@ public interface GroupContract {
 
             eventBus().dispatch(EVENT, NO_KEYS).block();
 
-            verify(listener, timeout(ONE_SECOND).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
@@ -197,7 +197,7 @@ public interface GroupContract {
 
             eventBus().dispatch(EVENT, NO_KEYS).block();
 
-            verify(listener, timeout(ONE_SECOND).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
@@ -225,7 +225,7 @@ public interface GroupContract {
 
             eventBus().dispatch(EVENT, NO_KEYS).block();
 
-            verify(listener, timeout(ONE_SECOND).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
@@ -238,8 +238,8 @@ public interface GroupContract {
 
             eventBus().dispatch(EVENT, NO_KEYS).block();
 
-            verify(listener1, timeout(ONE_SECOND).times(1)).event(any());
-            verify(listener2, timeout(ONE_SECOND).times(1)).event(any());
+            verify(listener1, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener2, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
     }
 
@@ -253,7 +253,7 @@ public interface GroupContract {
 
             eventBus2().dispatch(EVENT, NO_KEYS).block();
 
-            verify(mailboxListener, timeout(ONE_SECOND).times(1)).event(any());
+            verify(mailboxListener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
@@ -265,7 +265,7 @@ public interface GroupContract {
 
             eventBus2().dispatch(EVENT, NO_KEYS).block();
 
-            verify(mailboxListener, timeout(ONE_SECOND).times(1)).event(any());
+            verify(mailboxListener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
@@ -277,7 +277,7 @@ public interface GroupContract {
             eventBus2().dispatch(EVENT, NO_KEYS).block();
 
 
-            verify(mailboxListener, after(FIVE_HUNDRED_MS).never())
+            verify(mailboxListener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
@@ -289,7 +289,7 @@ public interface GroupContract {
 
             eventBus2().register(listener, GROUP_A);
 
-            verify(listener, after(FIVE_HUNDRED_MS).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
     }

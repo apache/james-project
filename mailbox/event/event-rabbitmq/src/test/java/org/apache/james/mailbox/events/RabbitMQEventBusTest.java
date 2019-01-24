@@ -320,7 +320,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 rabbitMQExtension.getRabbitMQ().unpause();
 
                 eventBus.dispatch(EVENT, NO_KEYS).block();
-                verify(listener, after(THIRTY_SECONDS).times(1)).event(EVENT);
+                verify(listener, after(THIRTY_SECONDS.toMillis()).times(1)).event(EVENT);
             }
 
             @Test
@@ -332,7 +332,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 rabbitMQExtension.getRabbitMQ().restart();
 
                 eventBus.dispatch(EVENT, NO_KEYS).block();
-                verify(listener, after(THIRTY_SECONDS).times(1)).event(EVENT);
+                verify(listener, after(THIRTY_SECONDS.toMillis()).times(1)).event(EVENT);
             }
 
             @Test
@@ -345,7 +345,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 eventBus.register(listener, GROUP_A);
 
                 eventBus.dispatch(EVENT, NO_KEYS).block();
-                verify(listener, after(THIRTY_SECONDS).times(1)).event(EVENT);
+                verify(listener, after(THIRTY_SECONDS.toMillis()).times(1)).event(EVENT);
             }
 
             @Test
@@ -357,7 +357,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 rabbitMQExtension.getRabbitMQ().restart();
 
                 eventBus.dispatch(EVENT, KEY_1).block();
-                verify(listener, after(THIRTY_SECONDS).times(1)).event(EVENT);
+                verify(listener, after(THIRTY_SECONDS.toMillis()).times(1)).event(EVENT);
             }
 
             @Test
@@ -370,7 +370,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 eventBus.register(listener, KEY_1);
 
                 eventBus.dispatch(EVENT, KEY_1).block();
-                verify(listener, after(THIRTY_SECONDS).times(1)).event(EVENT);
+                verify(listener, after(THIRTY_SECONDS.toMillis()).times(1)).event(EVENT);
             }
 
             @Test
@@ -387,7 +387,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
                 eventBus.register(listener, GROUP_A);
                 eventBus.dispatch(EVENT, NO_KEYS).block();
-                verify(listener, after(THIRTY_SECONDS).times(1)).event(EVENT);
+                verify(listener, after(THIRTY_SECONDS.toMillis()).times(1)).event(EVENT);
             }
 
             @Test
@@ -405,7 +405,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 rabbitMQExtension.getRabbitMQ().unpause();
 
                 eventBus.dispatch(EVENT, KEY_1).block();
-                verify(listener, after(THIRTY_SECONDS).times(1)).event(EVENT);
+                verify(listener, after(THIRTY_SECONDS.toMillis()).times(1)).event(EVENT);
             }
 
             @Test
@@ -423,7 +423,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
                 eventBus.register(listener, KEY_1);
                 eventBus.dispatch(EVENT, KEY_1).block();
-                verify(listener, after(THIRTY_SECONDS).times(1)).event(EVENT);
+                verify(listener, after(THIRTY_SECONDS.toMillis()).times(1)).event(EVENT);
             }
 
             @Test
