@@ -25,11 +25,8 @@ import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
 import org.slf4j.Logger;
@@ -43,7 +40,6 @@ import org.testcontainers.containers.wait.strategy.WaitStrategy;
 
 import com.github.fge.lambdas.consumers.ThrowingConsumer;
 import com.google.common.collect.ImmutableMap;
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 import com.rabbitmq.client.Address;
 import com.rabbitmq.client.ConnectionFactory;
 
@@ -253,9 +249,6 @@ public class DockerRabbitMQ {
             .minDelay(MIN_DELAY_OF_ONE_HUNDRED_MILLISECONDS)
             .build();
 
-        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
-        return new RabbitMQConnectionFactory(
-            rabbitMQConfiguration,
-            new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor(threadFactory)));
+        return new RabbitMQConnectionFactory(rabbitMQConfiguration);
     }
 }
