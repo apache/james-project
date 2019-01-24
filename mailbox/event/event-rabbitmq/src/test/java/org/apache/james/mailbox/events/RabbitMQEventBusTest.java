@@ -324,6 +324,56 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
 
             @Test
+            void dispatchShouldWorkAfterRestartForOldRegistration() throws Exception {
+                eventBus.start();
+                MailboxListener listener = newListener();
+                eventBus.register(listener, GROUP_A);
+
+                rabbitMQExtension.getRabbitMQ().restart();
+
+                eventBus.dispatch(EVENT, NO_KEYS).block();
+                verify(listener, after(THIRTY_SECONDS).times(1)).event(EVENT);
+            }
+
+            @Test
+            void dispatchShouldWorkAfterRestartForNewRegistration() throws Exception {
+                eventBus.start();
+                MailboxListener listener = newListener();
+
+                rabbitMQExtension.getRabbitMQ().restart();
+
+                eventBus.register(listener, GROUP_A);
+
+                eventBus.dispatch(EVENT, NO_KEYS).block();
+                verify(listener, after(THIRTY_SECONDS).times(1)).event(EVENT);
+            }
+
+            @Test
+            void dispatchShouldWorkAfterRestartForOldKeyRegistration() throws Exception {
+                eventBus.start();
+                MailboxListener listener = newListener();
+                eventBus.register(listener, KEY_1);
+
+                rabbitMQExtension.getRabbitMQ().restart();
+
+                eventBus.dispatch(EVENT, KEY_1).block();
+                verify(listener, after(THIRTY_SECONDS).times(1)).event(EVENT);
+            }
+
+            @Test
+            void dispatchShouldWorkAfterRestartForNewKeyRegistration() throws Exception {
+                eventBus.start();
+                MailboxListener listener = newListener();
+
+                rabbitMQExtension.getRabbitMQ().restart();
+
+                eventBus.register(listener, KEY_1);
+
+                eventBus.dispatch(EVENT, KEY_1).block();
+                verify(listener, after(THIRTY_SECONDS).times(1)).event(EVENT);
+            }
+
+            @Test
             void dispatchShouldWorkAfterNetworkIssuesForNewRegistration() throws Exception {
                 eventBus.start();
                 MailboxListener listener = newListener();
