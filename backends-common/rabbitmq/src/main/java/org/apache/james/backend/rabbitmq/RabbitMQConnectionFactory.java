@@ -41,7 +41,7 @@ public class RabbitMQConnectionFactory {
         }
 
         @Override
-        public Connection call() throws Exception {
+        public synchronized Connection call() throws Exception {
             if (connection.map(Connection::isOpen).orElse(false)) {
                 return connection.get();
             }
