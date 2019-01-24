@@ -31,6 +31,7 @@ import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.metrics.api.MetricFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.rabbitmq.client.Connection;
 
 import reactor.core.publisher.Mono;
@@ -64,7 +65,7 @@ public class RabbitMQEventBus implements EventBus {
                      EventDeadLetters eventDeadLetters, MetricFactory metricFactory) {
         this.mailboxListenerExecutor = new MailboxListenerExecutor(metricFactory);
         this.eventBusId = EventBusId.random();
-        this.connectionMono = Mono.fromSupplier(rabbitMQConnectionFactory::create).cache();
+        this.connectionMono = rabbitMQConnectionFactory.connectionMono();
         this.eventSerializer = eventSerializer;
         this.routingKeyConverter = routingKeyConverter;
         this.retryBackoff = retryBackoff;
@@ -74,7 +75,8 @@ public class RabbitMQEventBus implements EventBus {
 
     public void start() {
         if (!isRunning.get()) {
-            sender = RabbitFlux.createSender(new SenderOptions().connectionMono(connectionMono));
+            sender = RabbitFlux.createSender(new SenderOptions().connectionMono(connectionMono)
+                .resourceManagementChannelMono(connectionMono.map(Throwing.function(Connection::createChannel))));
             MailboxListenerRegistry mailboxListenerRegistry = new MailboxListenerRegistry();
             keyRegistrationHandler = new KeyRegistrationHandler(eventBusId, eventSerializer, sender, connectionMono, routingKeyConverter, mailboxListenerRegistry, mailboxListenerExecutor);
             groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, sender, connectionMono, retryBackoff, eventDeadLetters, mailboxListenerExecutor);

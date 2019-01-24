@@ -19,6 +19,8 @@
 package org.apache.james.backend.rabbitmq;
 
 import java.time.Duration;
+import java.util.Optional;
+import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
@@ -29,16 +31,34 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class RabbitMQConnectionFactory {
+    private class ConnectionCallable implements Callable<Connection> {
+        private final ConnectionFactory connectionFactory;
+        private Optional<Connection> connection;
+
+        ConnectionCallable(ConnectionFactory connectionFactory) {
+            this.connectionFactory = connectionFactory;
+            connection = Optional.empty();
+        }
+
+        @Override
+        public Connection call() throws Exception {
+            if (connection.map(Connection::isOpen).orElse(false)) {
+                return connection.get();
+            }
+            Connection newConnection = connectionFactory.newConnection();
+            connection = Optional.of(newConnection);
+            return newConnection;
+        }
+    }
+
     private final ConnectionFactory connectionFactory;
 
-    private final int maxRetries;
-    private final int minDelay;
+    private final RabbitMQConfiguration configuration;
 
     @Inject
     public RabbitMQConnectionFactory(RabbitMQConfiguration rabbitMQConfiguration) {
         this.connectionFactory = from(rabbitMQConfiguration);
-        this.maxRetries = rabbitMQConfiguration.getMaxRetries();
-        this.minDelay = rabbitMQConfiguration.getMinDelay();
+        this.configuration = rabbitMQConfiguration;
     }
 
     private ConnectionFactory from(RabbitMQConfiguration rabbitMQConfiguration) {
@@ -56,8 +76,8 @@ public class RabbitMQConnectionFactory {
     }
 
     public Mono<Connection> connectionMono() {
-        return Mono.fromCallable(connectionFactory::newConnection)
-            .retryBackoff(maxRetries, Duration.ofMillis(minDelay))
+        return Mono.fromCallable(new ConnectionCallable(connectionFactory))
+            .retryBackoff(configuration.getMaxRetries(), Duration.ofMillis(configuration.getMinDelay()))
             .publishOn(Schedulers.elastic());
     }
 }
