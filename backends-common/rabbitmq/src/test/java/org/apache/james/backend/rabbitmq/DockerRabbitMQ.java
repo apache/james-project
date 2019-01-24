@@ -236,6 +236,14 @@ public class DockerRabbitMQ {
         }
     }
 
+    public void pause() {
+        DockerClientFactory.instance().client().pauseContainerCmd(container.getContainerId()).exec();
+    }
+
+    public void unpause() {
+        DockerClientFactory.instance().client().unpauseContainerCmd(container.getContainerId()).exec();
+    }
+
     public RabbitMQConnectionFactory createRabbitConnectionFactory() throws URISyntaxException {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
             .amqpUri(amqpUri())
