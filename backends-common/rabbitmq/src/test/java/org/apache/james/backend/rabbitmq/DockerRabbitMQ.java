@@ -246,7 +246,7 @@ public class DockerRabbitMQ {
             .managementUri(managementUri())
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .maxRetries(MAX_THREE_RETRIES)
-            .minDelay(MIN_DELAY_OF_ONE_HUNDRED_MILLISECONDS)
+            .minDelayInMs(MIN_DELAY_OF_ONE_HUNDRED_MILLISECONDS)
             .build();
 
         return new RabbitMQConnectionFactory(rabbitMQConfiguration);

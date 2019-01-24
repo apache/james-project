@@ -77,7 +77,7 @@ public class RabbitMQConnectionFactory {
 
     public Mono<Connection> connectionMono() {
         return Mono.fromCallable(new ConnectionCallable(connectionFactory))
-            .retryBackoff(configuration.getMaxRetries(), Duration.ofMillis(configuration.getMinDelay()))
+            .retryBackoff(configuration.getMaxRetries(), Duration.ofMillis(configuration.getMinDelayInMs()))
             .publishOn(Schedulers.elastic());
     }
 }

@@ -207,7 +207,7 @@ class RabbitMQConfigurationTest {
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
-        assertThat(rabbitMQConfiguration.getMinDelay())
+        assertThat(rabbitMQConfiguration.getMinDelayInMs())
             .isEqualTo(RabbitMQConfiguration.Builder.DEFAULT_MIN_DELAY);
     }
 
@@ -219,10 +219,10 @@ class RabbitMQConfigurationTest {
             .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
             .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
-            .minDelay(minDelay)
+            .minDelayInMs(minDelay)
             .build();
 
-        assertThat(rabbitMQConfiguration.getMinDelay())
+        assertThat(rabbitMQConfiguration.getMinDelayInMs())
             .isEqualTo(minDelay);
     }
 

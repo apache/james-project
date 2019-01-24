@@ -56,7 +56,7 @@ class RabbitMQConnectionFactoryTest {
                 .managementUri(URI.create("http://james:james@rabbitmq_host:15672/api/"))
                 .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
                 .maxRetries(1)
-                .minDelay(1)
+                .minDelayInMs(1)
                 .build();
 
         RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(rabbitMQConfiguration);
