@@ -78,10 +78,10 @@ class KeyRegistrationHandler {
     }
 
     void start() {
-        sender.declareQueue(QueueSpecification.queue()
+        sender.declareQueue(QueueSpecification.queue(eventBusId.asString())
             .durable(DURABLE)
-            .exclusive(EXCLUSIVE)
-            .autoDelete(AUTO_DELETE)
+            .exclusive(!EXCLUSIVE)
+            .autoDelete(!AUTO_DELETE)
             .arguments(NO_ARGUMENTS))
             .map(AMQP.Queue.DeclareOk::getQueue)
             .doOnSuccess(registrationQueue::initialize)
