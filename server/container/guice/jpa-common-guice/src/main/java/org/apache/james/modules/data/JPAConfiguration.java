@@ -18,67 +18,142 @@
  ****************************************************************/
 package org.apache.james.modules.data;
 
-import org.apache.james.backends.jpa.JPAConstants;
+import static org.apache.james.modules.data.JPAConfiguration.Credential.NO_CREDENTIAL;
+import static org.apache.james.modules.data.JPAConfiguration.ReadyToBuild.NO_TEST_ON_BORROW;
+import static org.apache.james.modules.data.JPAConfiguration.ReadyToBuild.NO_VALIDATION_QUERY;
+import static org.apache.james.modules.data.JPAConfiguration.ReadyToBuild.NO_VALIDATION_QUERY_TIMEOUT_SEC;
+
+import java.util.Optional;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class JPAConfiguration {
 
-    public static Builder builder() {
-        return new Builder();
+    public static class Credential {
+        private static final Logger LOGGER = LoggerFactory.getLogger(Credential.class);
+        static final Optional<Credential> NO_CREDENTIAL = Optional.empty();
+
+        public static Optional<Credential> of(String username, String password) {
+            if (StringUtils.isBlank(username) && StringUtils.isBlank(password)) {
+                LOGGER.debug("username and password are blank, returns no credential by default");
+                return NO_CREDENTIAL;
+            }
+
+            return Optional.of(new Credential(username, password));
+        }
+
+        private final String username;
+        private final String password;
+
+        private Credential(String username, String password) {
+            Preconditions.checkArgument(StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password),
+                "username and password for connecting to database can't be blank");
+            this.username = username;
+            this.password = password;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
     }
 
-    public static class Builder {
-        private String driverName;
-        private String driverURL;
-        private boolean testOnBorrow;
-        private int validationQueryTimeoutSec = JPAConstants.VALIDATION_NO_TIMEOUT;
-        private String validationQuery;
+    @FunctionalInterface
+    public interface RequireDriverName {
+        RequireDriverURL driverName(String driverName);
+    }
+
+    @FunctionalInterface
+    public interface RequireDriverURL {
+        ReadyToBuild driverURL(String driverUrl);
+    }
+
+    public static class ReadyToBuild {
+        static final Optional<Boolean> NO_TEST_ON_BORROW = Optional.empty();
+        static final Optional<Integer> NO_VALIDATION_QUERY_TIMEOUT_SEC = Optional.empty();
+        static final Optional<String> NO_VALIDATION_QUERY = Optional.empty();
+
+        private final String driverName;
+        private final String driverURL;
+
+        private Optional<Credential> credential;
+        private Optional<Boolean> testOnBorrow;
+        private Optional<Integer> validationQueryTimeoutSec;
+        private Optional<String> validationQuery;
 
 
-        public Builder driverName(String driverName) {
+        private ReadyToBuild(String driverName, String driverURL, Optional<Credential> credential,
+                            Optional<Boolean> testOnBorrow, Optional<Integer> validationQueryTimeoutSec,
+                            Optional<String> validationQuery) {
             this.driverName = driverName;
-            return this;
-        }
-
-        public Builder driverURL(String driverURL) {
             this.driverURL = driverURL;
-            return this;
-        }
-
-        public Builder testOnBorrow(boolean testOnBorrow) {
+            this.credential = credential;
             this.testOnBorrow = testOnBorrow;
-            return this;
-        }
-
-        public Builder validationQueryTimeoutSec(int validationQueryTimeoutSec) {
             this.validationQueryTimeoutSec = validationQueryTimeoutSec;
-            return this;
-        }
-
-        public Builder validationQuery(String validationQuery) {
             this.validationQuery = validationQuery;
-            return this;
         }
 
         public JPAConfiguration build() {
-            Preconditions.checkNotNull(driverName);
-            Preconditions.checkNotNull(driverURL);
-            return new JPAConfiguration(driverName, driverURL, testOnBorrow, validationQueryTimeoutSec, validationQuery);
+            return new JPAConfiguration(driverName, driverURL, credential, testOnBorrow, validationQueryTimeoutSec, validationQuery);
         }
+
+        public RequirePassword username(String username) {
+            return password -> new ReadyToBuild(driverName, driverURL, Credential.of(username, password),
+                testOnBorrow, validationQueryTimeoutSec, validationQuery);
+        }
+
+        public ReadyToBuild testOnBorrow(Boolean testOnBorrow) {
+            this.testOnBorrow = Optional.ofNullable(testOnBorrow);
+            return this;
+        }
+
+        public ReadyToBuild validationQueryTimeoutSec(Integer validationQueryTimeoutSec) {
+            this.validationQueryTimeoutSec = Optional.ofNullable(validationQueryTimeoutSec);
+            return this;
+        }
+
+        public ReadyToBuild validationQuery(String validationQuery) {
+            this.validationQuery = Optional.ofNullable(validationQuery);
+            return this;
+        }
+    }
+
+    @FunctionalInterface
+    public interface RequirePassword {
+        ReadyToBuild password(String password);
+    }
+
+    public static RequireDriverName builder() {
+        return driverName -> driverURL -> new ReadyToBuild(driverName, driverURL, NO_CREDENTIAL, NO_TEST_ON_BORROW,
+            NO_VALIDATION_QUERY_TIMEOUT_SEC, NO_VALIDATION_QUERY);
     }
 
     private final String driverName;
     private final String driverURL;
-    private final boolean testOnBorrow;
-    private final int validationQueryTimeoutSec;
-    private final String validationQuery;
+    private final Optional<Boolean> testOnBorrow;
+    private final Optional<Integer> validationQueryTimeoutSec;
+    private final Optional<Credential> credential;
+    private final Optional<String> validationQuery;
 
     @VisibleForTesting
-    JPAConfiguration(String driverName, String driverURL, boolean testOnBorrow, int validationQueryTimeoutSec, String validationQuery) {
+    JPAConfiguration(String driverName, String driverURL, Optional<Credential> credential, Optional<Boolean> testOnBorrow,
+                     Optional<Integer> validationQueryTimeoutSec, Optional<String> validationQuery) {
+        Preconditions.checkNotNull(driverName, "driverName cannot be null");
+        Preconditions.checkNotNull(driverURL, "driverURL cannot be null");
+        validationQueryTimeoutSec.ifPresent(timeoutInSec ->
+            Preconditions.checkArgument(timeoutInSec > 0, "validationQueryTimeoutSec is required to be greater than 0"));
+
         this.driverName = driverName;
         this.driverURL = driverURL;
+        this.credential = credential;
         this.testOnBorrow = testOnBorrow;
         this.validationQueryTimeoutSec = validationQueryTimeoutSec;
         this.validationQuery = validationQuery;
@@ -92,16 +167,19 @@ public class JPAConfiguration {
         return driverURL;
     }
 
-    public boolean isTestOnBorrow() {
+    public Optional<Boolean> isTestOnBorrow() {
         return testOnBorrow;
     }
 
-    public int getValidationQueryTimeoutSec() {
+    public Optional<Integer> getValidationQueryTimeoutSec() {
         return validationQueryTimeoutSec;
     }
 
-    public String getValidationQuery() {
+    public Optional<String> getValidationQuery() {
         return validationQuery;
     }
 
+    public Optional<Credential> getCredential() {
+        return credential;
+    }
 }
