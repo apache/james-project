@@ -12,6 +12,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - Listing healthchecks, thanks to [Madhu Bhat](https://github.com/kratostaine)
 - Configuring the ElasticSearch clusterName
 - Logging and Metrics now supports Elasticsearch 6 (previously only Elasticsearch 2 was supported)
+- Implementation of the RabbitMQ EventBus
+- DeadLetter APIs and memory implementation for storing events that failed delivery
+- RecipientRewriteTable Aliases and associated WebAdmin routes
 
 ### Fixed
 - MAILBOX-350 Potential invalid UID <-> MSN mapping upon IMAP COPY
@@ -23,6 +26,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - WebAdmin ReIndexing API had been reworked
 - MailboxListener and mailbox event system were reworked. Custom listeners will need to be adapted. Please see Upgrade instuctions.
 - Docker images are now using a JRE instead of a JDK
+- Replacement of the old mailbox event system with the EventBus
 
 ### Removed
 - Drop HBase and JCR components (mailbox and server/data).
