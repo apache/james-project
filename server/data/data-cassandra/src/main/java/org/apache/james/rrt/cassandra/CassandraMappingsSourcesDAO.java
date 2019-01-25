@@ -24,6 +24,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.truncate;
 import static org.apache.james.rrt.cassandra.tables.CassandraMappingsSourcesTable.MAPPING_TYPE;
 import static org.apache.james.rrt.cassandra.tables.CassandraMappingsSourcesTable.MAPPING_VALUE;
 import static org.apache.james.rrt.cassandra.tables.CassandraMappingsSourcesTable.SOURCE;
@@ -46,6 +47,7 @@ public class CassandraMappingsSourcesDAO {
     private final PreparedStatement insertStatement;
     private final PreparedStatement deleteStatement;
     private final PreparedStatement retrieveSourcesStatement;
+    private final PreparedStatement truncateStatement;
 
     @Inject
     public CassandraMappingsSourcesDAO(Session session) {
@@ -53,6 +55,7 @@ public class CassandraMappingsSourcesDAO {
         this.insertStatement = prepareInsertStatement(session);
         this.deleteStatement = prepareDelete(session);
         this.retrieveSourcesStatement = prepareRetrieveSourcesStatement(session);
+        this.truncateStatement = prepareTruncateStatement(session);
     }
 
     private PreparedStatement prepareInsertStatement(Session session) {
@@ -77,6 +80,10 @@ public class CassandraMappingsSourcesDAO {
             .and(eq(MAPPING_VALUE, bindMarker(MAPPING_VALUE))));
     }
 
+    private PreparedStatement prepareTruncateStatement(Session session) {
+        return session.prepare(truncate(TABLE_NAME));
+    }
+
     public Mono<Void> addMapping(Mapping mapping, MappingSource source) {
         return executor.executeVoidReactor(insertStatement.bind()
             .setString(MAPPING_TYPE, mapping.getType().asPrefix())
@@ -97,5 +104,9 @@ public class CassandraMappingsSourcesDAO {
             .setString(MAPPING_VALUE, mapping.getMappingValue()))
             .flatMapMany(Flux::fromIterable)
             .map(row -> MappingSource.parse(row.getString(SOURCE)));
+    }
+
+    public Mono<Void> removeAllData() {
+        return executor.executeVoidReactor(truncateStatement.bind());
     }
 }

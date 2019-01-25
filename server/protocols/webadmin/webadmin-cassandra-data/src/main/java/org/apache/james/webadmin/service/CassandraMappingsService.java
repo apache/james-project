@@ -17,48 +17,36 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.rrt.cassandra.migration;
+package org.apache.james.webadmin.service;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;
-import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTableDAO;
-import org.apache.james.rrt.lib.Mapping;
-import org.apache.james.rrt.lib.MappingSource;
+import org.apache.james.rrt.cassandra.migration.MappingsSourcesMigration;
 import org.apache.james.task.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.james.webadmin.dto.ActionMappings;
 
-import reactor.core.publisher.Mono;
-
-public class MappingsSourcesMigration implements Migration {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MappingsSourcesMigration.class);
-    private final CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO;
+public class CassandraMappingsService {
+    private final MappingsSourcesMigration mappingsSourcesMigration;
     private final CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO;
 
     @Inject
-    public MappingsSourcesMigration(CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO,
+    public CassandraMappingsService(MappingsSourcesMigration mappingsSourcesMigration,
                                     CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO) {
-        this.cassandraRecipientRewriteTableDAO = cassandraRecipientRewriteTableDAO;
+        this.mappingsSourcesMigration = mappingsSourcesMigration;
         this.cassandraMappingsSourcesDAO = cassandraMappingsSourcesDAO;
     }
 
-    @Override
-    public Result run() {
-        return cassandraRecipientRewriteTableDAO.getAllMappings()
-            .flatMap(this::migrate)
-            .reduce(Result.COMPLETED, Task::combine)
-            .doOnError(e -> LOGGER.error("Error while migrating mappings sources", e))
-            .onErrorResume(e -> Mono.just(Result.PARTIAL))
-            .block();
+    public Task createActionTask(ActionMappings action) {
+        switch (action) {
+            case SolveInconsistencies:
+                return solveMappingsSourcesInconsistencies();
+            default:
+                throw new IllegalArgumentException(action + " is not a supported action");
+        }
     }
 
-    private Mono<Result> migrate(Pair<MappingSource, Mapping> mappingEntry) {
-        return cassandraMappingsSourcesDAO.addMapping(mappingEntry.getRight(), mappingEntry.getLeft())
-            .map(any -> Result.COMPLETED)
-            .doOnError(e -> LOGGER.error("Error while performing migration of mappings sources", e))
-            .onErrorResume(e -> Mono.just(Result.PARTIAL));
+    private Task solveMappingsSourcesInconsistencies() {
+        return new CassandraMappingsSolveInconsistenciesTask(mappingsSourcesMigration, cassandraMappingsSourcesDAO);
     }
 }

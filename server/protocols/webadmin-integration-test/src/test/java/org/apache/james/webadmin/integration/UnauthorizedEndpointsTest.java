@@ -25,6 +25,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.AliasRoutes;
+import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.CassandraMigrationRoutes;
 import org.apache.james.webadmin.routes.DLPConfigurationRoutes;
 import org.apache.james.webadmin.routes.DomainMappingsRoutes;
@@ -107,7 +108,8 @@ class UnauthorizedEndpointsTest {
     @ParameterizedTest
     @ValueSource(strings = {
             CassandraMigrationRoutes.VERSION_BASE + "/upgrade",
-            CassandraMigrationRoutes.VERSION_BASE + "/upgrade/latest"
+            CassandraMigrationRoutes.VERSION_BASE + "/upgrade/latest",
+            CassandraMappingsRoutes.ROOT_PATH
     })
     void checkUrlProtectionOnPost(String url) {
         when()

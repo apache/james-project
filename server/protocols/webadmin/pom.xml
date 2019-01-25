@@ -34,6 +34,7 @@
 
     <modules>
         <module>webadmin-cassandra</module>
+        <module>webadmin-cassandra-data</module>
         <module>webadmin-core</module>
         <module>webadmin-data</module>
         <module>webadmin-mailbox</module>

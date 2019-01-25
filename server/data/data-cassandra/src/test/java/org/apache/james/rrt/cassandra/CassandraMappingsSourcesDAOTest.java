@@ -34,6 +34,7 @@ class CassandraMappingsSourcesDAOTest {
     private static final String USER = "test";
     private static final String ADDRESS = "test@domain";
     private static final MappingSource SOURCE = MappingSource.fromUser(USER, Domain.LOCALHOST);
+    private static final MappingSource SOURCE_2 = MappingSource.fromUser("bob", Domain.LOCALHOST);
     private static final Mapping MAPPING = Mapping.alias(ADDRESS);
 
     @RegisterExtension
@@ -69,11 +70,19 @@ class CassandraMappingsSourcesDAOTest {
 
     @Test
     void retrieveSourcesShouldReturnMultipleStoredMappingSourcesForMapping() {
-        MappingSource source2 = MappingSource.fromUser("bob", Domain.LOCALHOST);
-
         dao.addMapping(MAPPING, SOURCE).block();
-        dao.addMapping(MAPPING, source2).block();
+        dao.addMapping(MAPPING, SOURCE_2).block();
 
-        assertThat(dao.retrieveSources(MAPPING).collectList().block()).containsOnly(SOURCE, source2);
+        assertThat(dao.retrieveSources(MAPPING).collectList().block()).containsOnly(SOURCE, SOURCE_2);
+    }
+
+    @Test
+    void retrieveSourcesShouldReturnEmptyAfterTruncateData() {
+        dao.addMapping(MAPPING, SOURCE).block();
+        dao.addMapping(MAPPING, SOURCE_2).block();
+
+        dao.removeAllData().block();
+
+        assertThat(dao.retrieveSources(MAPPING).collectList().block()).isEmpty();
     }
 }

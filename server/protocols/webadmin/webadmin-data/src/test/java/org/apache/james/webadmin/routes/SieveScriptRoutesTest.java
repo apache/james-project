@@ -166,14 +166,14 @@ public class SieveScriptRoutesTest {
     }
 
     @Test
-    public void defineAddActiveSieveScriptShouldReturnInternalErrorWhenScriptIsNotSet() {
+    public void defineAddActiveSieveScriptShouldReturnBadRequestWhenScriptIsNotSet() {
         given()
             .pathParam("userName", "userA")
             .pathParam("scriptName", "scriptA")
         .when()
             .put("sieve/{userName}/scripts/{scriptName}")
         .then()
-            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+            .statusCode(HttpStatus.BAD_REQUEST_400);
     }
 
     @Test

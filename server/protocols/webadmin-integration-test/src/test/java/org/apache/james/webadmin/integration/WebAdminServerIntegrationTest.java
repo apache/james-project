@@ -25,6 +25,7 @@ import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
@@ -41,12 +42,14 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.AliasRoutes;
+import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.DomainsRoutes;
 import org.apache.james.webadmin.routes.ForwardRoutes;
 import org.apache.james.webadmin.routes.GroupsRoutes;
 import org.apache.james.webadmin.routes.HealthCheckRoutes;
 import org.apache.james.webadmin.routes.MailQueueRoutes;
 import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
+import org.apache.james.webadmin.routes.TasksRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
@@ -58,6 +61,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 
 public class WebAdminServerIntegrationTest {
 
@@ -361,6 +365,7 @@ public class WebAdminServerIntegrationTest {
             .body(containsString("\"tags\":[\"Address Forwards\"]"))
             .body(containsString("\"tags\":[\"Address Aliases\"]"))
             .body(containsString("\"tags\":[\"Address Groups\"]"))
+            .body(containsString("\"tags\":[\"Cassandra Mappings Operations\"]"))
             .body(containsString("{\"name\":\"ReIndexing (mailboxes)\"}"))
             .body(containsString("{\"name\":\"MessageIdReIndexing\"}"));
     }
@@ -371,5 +376,36 @@ public class WebAdminServerIntegrationTest {
             .get(HealthCheckRoutes.HEALTHCHECK)
         .then()
             .statusCode(HttpStatus.OK_200);
+    }
+
+    @Test
+    public void cassandraMappingsEndpointShouldKeepDataConsistencyWhenDataValid() {
+        String alias1 = "alias1@domain.com";
+        String alias2 = "alias2@domain.com";
+
+        with()
+            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/" + alias1);
+        with()
+            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/" + alias2);
+
+        String taskId = with()
+            .queryParam("action", "SolveInconsistencies")
+            .post(CassandraMappingsRoutes.ROOT_PATH)
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"));
+
+        when()
+            .get(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME)
+        .then()
+            .contentType(ContentType.JSON)
+        .statusCode(HttpStatus.OK_200)
+            .body("source", hasItems(alias1, alias2));
     }
 }

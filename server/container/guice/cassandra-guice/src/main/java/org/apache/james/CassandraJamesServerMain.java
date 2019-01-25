@@ -44,6 +44,7 @@ import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
+import org.apache.james.modules.server.CassandraDataRoutesModules;
 import org.apache.james.modules.server.CassandraRoutesModule;
 import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
@@ -67,6 +68,7 @@ public class CassandraJamesServerMain {
 
     public static final Module WEBADMIN = Modules.combine(
         new CassandraRoutesModule(),
+        new CassandraDataRoutesModules(),
         new DataRoutesModules(),
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),
