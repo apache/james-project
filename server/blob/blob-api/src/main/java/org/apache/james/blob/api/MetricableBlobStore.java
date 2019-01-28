@@ -19,12 +19,13 @@
 package org.apache.james.blob.api;
 
 import java.io.InputStream;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.james.metrics.api.MetricFactory;
+
+import reactor.core.publisher.Mono;
 
 public class MetricableBlobStore implements BlobStore {
 
@@ -47,19 +48,19 @@ public class MetricableBlobStore implements BlobStore {
     }
 
     @Override
-    public CompletableFuture<BlobId> save(byte[] data) {
+    public Mono<BlobId> save(byte[] data) {
         return metricFactory
             .runPublishingTimerMetric(SAVE_BYTES_TIMER_NAME, blobStoreImpl.save(data));
     }
 
     @Override
-    public CompletableFuture<BlobId> save(InputStream data) {
+    public Mono<BlobId> save(InputStream data) {
         return metricFactory
             .runPublishingTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(data));
     }
 
     @Override
-    public CompletableFuture<byte[]> readBytes(BlobId blobId) {
+    public Mono<byte[]> readBytes(BlobId blobId) {
         return metricFactory
             .runPublishingTimerMetric(READ_BYTES_TIMER_NAME, blobStoreImpl.readBytes(blobId));
     }

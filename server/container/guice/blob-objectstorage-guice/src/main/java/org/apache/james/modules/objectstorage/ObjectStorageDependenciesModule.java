@@ -20,8 +20,8 @@
 package org.apache.james.modules.objectstorage;
 
 import java.io.FileNotFoundException;
+import java.time.Duration;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.inject.Singleton;
@@ -70,7 +70,7 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
             .blobIdFactory(blobIdFactory)
             .payloadCodec(configuration.getPayloadCodec())
             .build();
-        dao.createContainer(configuration.getNamespace()).get(1, TimeUnit.MINUTES);
+        dao.createContainer(configuration.getNamespace()).block(Duration.ofMinutes(1));
         return dao;
     }
 

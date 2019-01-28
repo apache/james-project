@@ -95,17 +95,13 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
         class FailingStore implements Store<MimeMessage, MimeMessagePartsId> {
 
             @Override
-            public CompletableFuture<MimeMessagePartsId> save(MimeMessage mimeMessage) {
-                return CompletableFuture.supplyAsync(() -> {
-                    throw new RuntimeException("Expected failure while saving");
-                });
+            public Mono<MimeMessagePartsId> save(MimeMessage mimeMessage) {
+                return Mono.error(new RuntimeException("Expected failure while saving"));
             }
 
             @Override
-            public CompletableFuture<MimeMessage> read(MimeMessagePartsId blobIds) {
-                return CompletableFuture.supplyAsync(() -> {
-                    throw new RuntimeException("Expected failure while reading");
-                });
+            public Mono<MimeMessage> read(MimeMessagePartsId blobIds) {
+                return Mono.error(new RuntimeException("Expected failure while reading"));
             }
         }
 

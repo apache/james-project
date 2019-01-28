@@ -36,9 +36,9 @@ public interface ObjectStorageBlobsDAOContract {
 
     default void assertBlobsDAOCanStoreAndRetrieve(ObjectStorageBlobsDAOBuilder.ReadyToBuild builder) {
         ObjectStorageBlobsDAO dao = builder.build();
-        dao.createContainer(containerName());
+        dao.createContainer(containerName()).block();
 
-        BlobId blobId = dao.save(BYTES).join();
+        BlobId blobId = dao.save(BYTES).block();
 
         InputStream inputStream = dao.read(blobId);
         assertThat(inputStream).hasSameContentAs(new ByteArrayInputStream(BYTES));

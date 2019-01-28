@@ -79,30 +79,30 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
 
     @Test
     default void saveBytesShouldPublishSaveBytesTimerMetrics() {
-        testee().save(BYTES_CONTENT).join();
-        testee().save(BYTES_CONTENT).join();
+        testee().save(BYTES_CONTENT).block();
+        testee().save(BYTES_CONTENT).block();
         verify(metricsTestExtension.saveBytesTimeMetric, times(2)).stopAndPublish();
     }
 
     @Test
     default void saveInputStreamShouldPublishSaveInputStreamTimerMetrics() {
-        testee().save(new ByteArrayInputStream(BYTES_CONTENT)).join();
-        testee().save(new ByteArrayInputStream(BYTES_CONTENT)).join();
-        testee().save(new ByteArrayInputStream(BYTES_CONTENT)).join();
+        testee().save(new ByteArrayInputStream(BYTES_CONTENT)).block();
+        testee().save(new ByteArrayInputStream(BYTES_CONTENT)).block();
+        testee().save(new ByteArrayInputStream(BYTES_CONTENT)).block();
         verify(metricsTestExtension.saveInputStreamTimeMetric, times(3)).stopAndPublish();
     }
 
     @Test
     default void readBytesShouldPublishReadBytesTimerMetrics() {
-        BlobId blobId = testee().save(BYTES_CONTENT).join();
-        testee().readBytes(blobId).join();
-        testee().readBytes(blobId).join();
+        BlobId blobId = testee().save(BYTES_CONTENT).block();
+        testee().readBytes(blobId).block();
+        testee().readBytes(blobId).block();
         verify(metricsTestExtension.readBytesTimeMetric, times(2)).stopAndPublish();
     }
 
     @Test
     default void readShouldPublishReadTimerMetrics() {
-        BlobId blobId = testee().save(BYTES_CONTENT).join();
+        BlobId blobId = testee().save(BYTES_CONTENT).block();
         testee().read(blobId);
         testee().read(blobId);
         verify(metricsTestExtension.readTimeMetric, times(2)).stopAndPublish();
