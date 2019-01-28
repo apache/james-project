@@ -126,8 +126,8 @@ public class CassandraAttachmentDAO {
                 .setBytes(PAYLOAD, ByteBuffer.wrap(attachment.getBytes())));
     }
 
-    public CompletableFuture<Void> deleteAttachment(AttachmentId attachmentId) {
-        return cassandraAsyncExecutor.executeVoid(
+    public Mono<Void> deleteAttachment(AttachmentId attachmentId) {
+        return cassandraAsyncExecutor.executeVoidReactor(
             deleteStatement
                 .bind()
                 .setString(ID, attachmentId.getId()));

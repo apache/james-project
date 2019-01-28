@@ -213,7 +213,7 @@ class AttachmentV2MigrationTest {
         when(blobsDAO.save(attachment2.getBytes()))
             .thenThrow(new RuntimeException());
         when(attachmentDAOV2.storeAttachment(any())).thenReturn(Mono.empty());
-        when(attachmentDAO.deleteAttachment(any())).thenReturn(CompletableFuture.completedFuture(null));
+        when(attachmentDAO.deleteAttachment(any())).thenReturn(Mono.empty());
 
         assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
     }

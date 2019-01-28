@@ -84,11 +84,10 @@ public class CassandraMailRepository implements MailRepository {
     @Override
     public Mail retrieve(MailKey key) {
         return mailDAO.read(url, key)
-            .map(optional -> optional.map(this::toMail))
             .flatMap(Mono::justOrEmpty)
-            .flatMap(Function.identity())
-            .defaultIfEmpty(null)
-            .block();
+            .flatMap(this::toMail)
+            .blockOptional()
+            .orElse(null);
     }
 
     private Mono<Mail> toMail(CassandraMailRepositoryMailDAO.MailDTO mailDTO) {

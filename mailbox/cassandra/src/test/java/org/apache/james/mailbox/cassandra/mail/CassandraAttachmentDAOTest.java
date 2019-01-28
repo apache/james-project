@@ -112,7 +112,7 @@ class CassandraAttachmentDAOTest {
             .build();
         testee.storeAttachment(attachment).join();
 
-        testee.deleteAttachment(attachment.getAttachmentId()).join();
+        testee.deleteAttachment(attachment.getAttachmentId()).block();
 
         assertThat(testee.getAttachment(attachment.getAttachmentId()).blockOptional())
             .isEmpty();
