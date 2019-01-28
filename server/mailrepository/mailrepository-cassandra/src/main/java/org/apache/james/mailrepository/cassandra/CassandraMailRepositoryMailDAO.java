@@ -56,7 +56,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 import javax.mail.internet.AddressException;
@@ -168,11 +167,11 @@ public class CassandraMailRepositoryMailDAO implements CassandraMailRepositoryMa
     }
 
     @Override
-    public CompletableFuture<Optional<MailDTO>> read(MailRepositoryUrl url, MailKey key) {
-        return executor.executeSingleRow(selectMail.bind()
-            .setString(REPOSITORY_NAME, url.asString())
-            .setString(MAIL_KEY, key.asString()))
-            .thenApply(rowOptional -> rowOptional.map(this::toMail));
+    public Mono<Optional<MailDTO>> read(MailRepositoryUrl url, MailKey key) {
+        return executor.executeSingleRowOptionalReactor(selectMail.bind()
+                .setString(REPOSITORY_NAME, url.asString())
+                .setString(MAIL_KEY, key.asString()))
+            .map(rowOptional -> rowOptional.map(this::toMail));
     }
 
     private MailDTO toMail(Row row) {

@@ -20,14 +20,12 @@
 package org.apache.james.mailrepository.cassandra;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
-import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.Mail;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -57,9 +55,9 @@ public class MergingCassandraMailRepositoryMailDao implements CassandraMailRepos
     }
 
     @Override
-    public CompletableFuture<Optional<MailDTO>> read(MailRepositoryUrl url, MailKey key) {
+    public Mono<Optional<MailDTO>> read(MailRepositoryUrl url, MailKey key) {
         return v2.read(url, key)
-            .thenCombine(v1.read(url, key),
-                (maybeV2Value, maybeV1Value) -> OptionalUtils.or(maybeV2Value, maybeV1Value));
+            .filter(Optional::isPresent)
+            .switchIfEmpty(v1.read(url, key));
     }
 }

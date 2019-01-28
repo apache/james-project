@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.mail.internet.MimeMessage;
 
@@ -160,10 +159,8 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             }
 
             @Override
-            public CompletableFuture<Optional<CassandraMailRepositoryMailDAO.MailDTO>> read(MailRepositoryUrl url, MailKey key) {
-                return CompletableFuture.supplyAsync(() -> {
-                    throw new RuntimeException("Expected failure while reading mail parts");
-                });
+            public Mono<Optional<CassandraMailRepositoryMailDAO.MailDTO>> read(MailRepositoryUrl url, MailKey key) {
+                return Mono.error(new RuntimeException("Expected failure while reading mail parts"));
             }
         }
 

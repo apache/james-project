@@ -80,7 +80,7 @@ class CassandraMailRepositoryMailDAOTest {
                 blobIdBody)
                 .block();
 
-            CassandraMailRepositoryMailDAO.MailDTO mailDTO = testee.read(URL, KEY_1).join().get();
+            CassandraMailRepositoryMailDAO.MailDTO mailDTO = testee.read(URL, KEY_1).block().get();
 
             Mail partialMail = mailDTO.getMailBuilder().build();
             assertSoftly(softly -> {
@@ -106,14 +106,14 @@ class CassandraMailRepositoryMailDAOTest {
 
             testee.remove(URL, KEY_1).block();
 
-            assertThat(testee.read(URL, KEY_1).join())
+            assertThat(testee.read(URL, KEY_1).block())
                 .isEmpty();
         }
 
 
         @Test
         void readShouldReturnEmptyWhenAbsent() {
-            assertThat(testee().read(URL, KEY_1).join())
+            assertThat(testee().read(URL, KEY_1).block())
                 .isEmpty();
         }
     }
@@ -163,7 +163,7 @@ class CassandraMailRepositoryMailDAOTest {
                 blobIdBody)
                 .block();
 
-            CassandraMailRepositoryMailDAO.MailDTO mailDTO = testee.read(URL, KEY_1).join().get();
+            CassandraMailRepositoryMailDAO.MailDTO mailDTO = testee.read(URL, KEY_1).block().get();
 
             Mail partialMail = mailDTO.getMailBuilder().build();
             assertSoftly(softly -> {
@@ -233,7 +233,7 @@ class CassandraMailRepositoryMailDAOTest {
                 blobIdBody)
                 .block();
 
-            CassandraMailRepositoryMailDAO.MailDTO mailDTO = testee.read(URL, KEY_1).join().get();
+            CassandraMailRepositoryMailDAO.MailDTO mailDTO = testee.read(URL, KEY_1).block().get();
 
             Mail partialMail = mailDTO.getMailBuilder().build();
             assertSoftly(softly -> {
@@ -288,7 +288,7 @@ class CassandraMailRepositoryMailDAOTest {
                 blobIdBody)
                 .block();
 
-            CassandraMailRepositoryMailDaoAPI.MailDTO actual = testee.read(URL, KEY_1).join().get();
+            CassandraMailRepositoryMailDaoAPI.MailDTO actual = testee.read(URL, KEY_1).block().get();
             Mail partialMail = actual.getMailBuilder().build();
             assertSoftly(softly -> {
                 softly.assertThat(actual.getBodyBlobId()).isEqualTo(blobIdBody);
@@ -310,7 +310,7 @@ class CassandraMailRepositoryMailDAOTest {
                 blobIdBody)
                 .block();
 
-            CassandraMailRepositoryMailDaoAPI.MailDTO actual = testee.read(URL, KEY_1).join().get();
+            CassandraMailRepositoryMailDaoAPI.MailDTO actual = testee.read(URL, KEY_1).block().get();
             Mail partialMail = actual.getMailBuilder().build();
             assertSoftly(softly -> {
                 softly.assertThat(actual.getBodyBlobId()).isEqualTo(blobIdBody);
@@ -342,7 +342,7 @@ class CassandraMailRepositoryMailDAOTest {
                 blobIdBody2)
                 .block();
 
-            CassandraMailRepositoryMailDaoAPI.MailDTO actual = testee.read(URL, KEY_1).join().get();
+            CassandraMailRepositoryMailDaoAPI.MailDTO actual = testee.read(URL, KEY_1).block().get();
             Mail partialMail = actual.getMailBuilder().build();
             assertSoftly(softly -> {
                 softly.assertThat(actual.getBodyBlobId()).isEqualTo(blobIdBody2);
@@ -376,8 +376,8 @@ class CassandraMailRepositoryMailDAOTest {
 
             testee.remove(URL, KEY_1).block();
 
-            Optional<CassandraMailRepositoryMailDaoAPI.MailDTO> v1Entry = v1.read(URL, KEY_1).join();
-            Optional<CassandraMailRepositoryMailDaoAPI.MailDTO> v2Entry = v2.read(URL, KEY_1).join();
+            Optional<CassandraMailRepositoryMailDaoAPI.MailDTO> v1Entry = v1.read(URL, KEY_1).block();
+            Optional<CassandraMailRepositoryMailDaoAPI.MailDTO> v2Entry = v2.read(URL, KEY_1).block();
             assertThat(v1Entry).isEmpty();
             assertThat(v2Entry).isEmpty();
         }
