@@ -21,7 +21,6 @@ package org.apache.james.jmap.memory.vacation;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
@@ -29,6 +28,7 @@ import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 
 import com.google.common.base.Preconditions;
+import reactor.core.publisher.Mono;
 
 public class MemoryVacationRepository implements VacationRepository {
 
@@ -39,18 +39,18 @@ public class MemoryVacationRepository implements VacationRepository {
     }
 
     @Override
-    public CompletableFuture<Vacation> retrieveVacation(AccountId accountId) {
+    public Mono<Vacation> retrieveVacation(AccountId accountId) {
         Preconditions.checkNotNull(accountId);
-        return CompletableFuture.completedFuture(vacationMap.getOrDefault(accountId, DEFAULT_VACATION));
+        return Mono.just(vacationMap.getOrDefault(accountId, DEFAULT_VACATION));
     }
 
     @Override
-    public CompletableFuture<Void> modifyVacation(AccountId accountId, VacationPatch vacationPatch) {
+    public Mono<Void> modifyVacation(AccountId accountId, VacationPatch vacationPatch) {
         Preconditions.checkNotNull(accountId);
         Preconditions.checkNotNull(vacationPatch);
-        Vacation oldVacation = retrieveVacation(accountId).join();
+        Vacation oldVacation = retrieveVacation(accountId).block();
         vacationMap.put(accountId, vacationPatch.patch(oldVacation));
-        return CompletableFuture.completedFuture(null);
+        return Mono.empty();
     }
 
 

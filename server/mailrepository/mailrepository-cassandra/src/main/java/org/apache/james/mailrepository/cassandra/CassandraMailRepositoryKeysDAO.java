@@ -86,7 +86,7 @@ public class CassandraMailRepositoryKeysDAO {
     }
 
     public Flux<MailKey> list(MailRepositoryUrl url) {
-        return executor.executeReactor(listKeys.bind()
+        return executor.execute(listKeys.bind()
             .setString(REPOSITORY_NAME, url.asString()))
             .flatMapMany(cassandraUtils::convertToFlux)
             .map(row -> new MailKey(row.getString(MAIL_KEY)));

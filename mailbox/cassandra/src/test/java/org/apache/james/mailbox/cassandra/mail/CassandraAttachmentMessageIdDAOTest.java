@@ -17,51 +17,52 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.cassandra.versions;
+package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
-
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
+import org.apache.james.mailbox.model.AttachmentId;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraSchemaVersionDAOTest {
-    @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSchemaVersionModule.MODULE);
+class CassandraAttachmentMessageIdDAOTest {
 
-    private CassandraSchemaVersionDAO testee;
+    private static final CassandraModule MODULE = CassandraModule.aggregateModules(
+            CassandraAttachmentModule.MODULE,
+            CassandraSchemaVersionModule.MODULE
+    );
+
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULE);
+
+    private CassandraAttachmentMessageIdDAO testee;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        testee = new CassandraSchemaVersionDAO(cassandra.getConf());
+        testee = new CassandraAttachmentMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
     }
 
     @Test
-    void getCurrentSchemaVersionShouldReturnEmptyWhenTableIsEmpty() {
-        assertThat(testee.getCurrentSchemaVersion().block())
-            .isEqualTo(Optional.empty());
-    }
+    void getOwnerMessageIdsShouldReturnDistinctValues() {
+        CassandraMessageId messageId1 = new CassandraMessageId.Factory().generate();
+        CassandraMessageId messageId2 = new CassandraMessageId.Factory().generate();
+        AttachmentId attachmentId = AttachmentId.random();
 
-    @Test
-    void getCurrentSchemaVersionShouldReturnVersionPresentInTheTable() {
-        SchemaVersion version = new SchemaVersion(42);
+        testee.storeAttachmentForMessageId(attachmentId, messageId1).block();
+        testee.storeAttachmentForMessageId(attachmentId, messageId2).block();
+        testee.storeAttachmentForMessageId(attachmentId, messageId1).block();
 
-        testee.updateVersion(version).block();
-
-        assertThat(testee.getCurrentSchemaVersion().block()).contains(version);
-    }
-
-    @Test
-    void getCurrentSchemaVersionShouldBeIdempotent() {
-        SchemaVersion version = new SchemaVersion(42);
-
-        testee.updateVersion(version.next()).block();
-        testee.updateVersion(version).block();
-
-        assertThat(testee.getCurrentSchemaVersion().block()).contains(version.next());
+        assertThat(testee.getOwnerMessageIds(attachmentId).collectList().block())
+            .containsExactlyInAnyOrder(messageId1, messageId2)
+            .hasSize(2);
     }
 }

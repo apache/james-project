@@ -118,14 +118,14 @@ public class CassandraDeletedMessageDAO {
     }
 
     public Mono<Void> addDeleted(CassandraId cassandraId, MessageUid uid) {
-        return cassandraAsyncExecutor.executeVoidReactor(
+        return cassandraAsyncExecutor.executeVoid(
             addStatement.bind()
                 .setUUID(MAILBOX_ID, cassandraId.asUuid())
                 .setLong(UID, uid.asLong()));
     }
 
     public Mono<Void> removeDeleted(CassandraId cassandraId, MessageUid uid) {
-        return cassandraAsyncExecutor.executeVoidReactor(deleteStatement.bind()
+        return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
             .setUUID(MAILBOX_ID, cassandraId.asUuid())
             .setLong(UID, uid.asLong()));
     }
@@ -157,20 +157,20 @@ public class CassandraDeletedMessageDAO {
     }
 
     private Mono<ResultSet> retrieveAllDeleted(CassandraId cassandraId) {
-        return cassandraAsyncExecutor.executeReactor(
+        return cassandraAsyncExecutor.execute(
             selectAllUidStatement.bind()
                 .setUUID(MAILBOX_ID, cassandraId.asUuid()));
     }
 
     private Mono<ResultSet> retrieveOneDeleted(CassandraId cassandraId, MessageUid uid) {
-        return cassandraAsyncExecutor.executeReactor(
+        return cassandraAsyncExecutor.execute(
             selectOneUidStatement.bind()
                 .setUUID(MAILBOX_ID, cassandraId.asUuid())
                 .setLong(UID, uid.asLong()));
     }
 
     private Mono<ResultSet> retrieveDeletedBetween(CassandraId cassandraId, MessageUid from, MessageUid to) {
-        return cassandraAsyncExecutor.executeReactor(
+        return cassandraAsyncExecutor.execute(
             selectBetweenUidStatement.bind()
                 .setUUID(MAILBOX_ID, cassandraId.asUuid())
                 .setLong(UID_FROM, from.asLong())
@@ -178,7 +178,7 @@ public class CassandraDeletedMessageDAO {
     }
 
     private Mono<ResultSet> retrieveDeletedAfter(CassandraId cassandraId, MessageUid from) {
-        return cassandraAsyncExecutor.executeReactor(
+        return cassandraAsyncExecutor.execute(
             selectFromUidStatement.bind()
                 .setUUID(MAILBOX_ID, cassandraId.asUuid())
                 .setLong(UID_FROM, from.asLong()));

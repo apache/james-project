@@ -61,7 +61,7 @@ public class CassandraApplicableFlagDAO {
     }
 
     public Mono<Flags> retrieveApplicableFlag(CassandraId mailboxId) {
-        return cassandraAsyncExecutor.executeSingleRowReactor(
+        return cassandraAsyncExecutor.executeSingleRow(
             select.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid()))
             .map(row -> new FlagsExtractor(row).getApplicableFlags());
@@ -71,7 +71,7 @@ public class CassandraApplicableFlagDAO {
         if (toBeAdded.isEmpty()) {
             return Mono.empty();
         }
-        return cassandraAsyncExecutor.executeVoidReactor(updateQuery(cassandraId, toBeAdded));
+        return cassandraAsyncExecutor.executeVoid(updateQuery(cassandraId, toBeAdded));
     }
 
     private Update.Where updateQuery(CassandraId cassandraId, Set<String> userFlags) {

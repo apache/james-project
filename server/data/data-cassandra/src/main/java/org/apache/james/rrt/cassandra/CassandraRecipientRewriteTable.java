@@ -99,7 +99,7 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
             String.format("Not supported mapping of type %s", mapping.getType()));
 
         SchemaVersion schemaVersion = cassandraSchemaVersionDAO.getCurrentSchemaVersion()
-            .join()
+            .block()
             .orElse(CassandraSchemaVersionManager.MIN_VERSION);
 
         if (schemaVersion.isBefore(MAPPINGS_SOURCES_SUPPORTED_VERSION)) {

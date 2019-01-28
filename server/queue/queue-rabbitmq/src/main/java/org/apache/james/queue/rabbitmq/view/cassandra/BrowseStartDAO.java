@@ -84,23 +84,22 @@ public class BrowseStartDAO {
     }
 
     Mono<Void> updateBrowseStart(MailQueueName mailQueueName, Instant sliceStart) {
-        return Mono.fromCompletionStage(executor.executeVoid(updateOne.bind()
+        return executor.executeVoid(updateOne.bind()
             .setTimestamp(BROWSE_START, Date.from(sliceStart))
-            .setString(QUEUE_NAME, mailQueueName.asString())));
+            .setString(QUEUE_NAME, mailQueueName.asString()));
     }
 
     Mono<Void> insertInitialBrowseStart(MailQueueName mailQueueName, Instant sliceStart) {
-        return Mono.fromCompletionStage(executor.executeVoid(insertOne.bind()
+        return executor.executeVoid(insertOne.bind()
             .setTimestamp(BROWSE_START, Date.from(sliceStart))
-            .setString(QUEUE_NAME, mailQueueName.asString())));
+            .setString(QUEUE_NAME, mailQueueName.asString()));
     }
 
     @VisibleForTesting
     Mono<Row> selectOne(MailQueueName queueName) {
-        return Mono.fromCompletionStage(executor.executeSingleRow(
-            selectOne.bind()
-                .setString(QUEUE_NAME, queueName.asString())))
-            .flatMap(Mono::justOrEmpty);
+        return executor.executeSingleRow(
+                selectOne.bind()
+                    .setString(QUEUE_NAME, queueName.asString()));
     }
 
     private Instant getBrowseStart(Row row) {

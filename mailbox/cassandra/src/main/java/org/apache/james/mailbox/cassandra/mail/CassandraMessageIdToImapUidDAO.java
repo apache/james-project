@@ -149,7 +149,7 @@ public class CassandraMessageIdToImapUidDAO {
     }
 
     public Mono<Void> delete(CassandraMessageId messageId, CassandraId mailboxId) {
-        return cassandraAsyncExecutor.executeVoidReactor(delete.bind()
+        return cassandraAsyncExecutor.executeVoid(delete.bind()
                 .setUUID(MESSAGE_ID, messageId.get())
                 .setUUID(MAILBOX_ID, mailboxId.asUuid()));
     }
@@ -157,7 +157,7 @@ public class CassandraMessageIdToImapUidDAO {
     public Mono<Void> insert(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
         ComposedMessageId composedMessageId = composedMessageIdWithMetaData.getComposedMessageId();
         Flags flags = composedMessageIdWithMetaData.getFlags();
-        return cassandraAsyncExecutor.executeVoidReactor(insert.bind()
+        return cassandraAsyncExecutor.executeVoid(insert.bind()
                 .setUUID(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
                 .setUUID(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
                 .setLong(IMAP_UID, composedMessageId.getUid().asLong())
@@ -210,10 +210,10 @@ public class CassandraMessageIdToImapUidDAO {
 
     private Mono<ResultSet> selectStatement(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
         return mailboxId
-            .map(cassandraId -> cassandraAsyncExecutor.executeReactor(select.bind()
+            .map(cassandraId -> cassandraAsyncExecutor.execute(select.bind()
                 .setUUID(MESSAGE_ID, messageId.get())
                 .setUUID(MAILBOX_ID, cassandraId.asUuid())))
-            .orElseGet(() -> cassandraAsyncExecutor.executeReactor(selectAll.bind()
+            .orElseGet(() -> cassandraAsyncExecutor.execute(selectAll.bind()
                 .setUUID(MESSAGE_ID, messageId.get())));
     }
 }

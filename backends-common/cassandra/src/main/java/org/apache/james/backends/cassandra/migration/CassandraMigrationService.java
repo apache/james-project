@@ -49,7 +49,7 @@ public class CassandraMigrationService {
     }
 
     public Optional<SchemaVersion> getCurrentVersion() {
-        return schemaVersionDAO.getCurrentSchemaVersion().join();
+        return schemaVersionDAO.getCurrentSchemaVersion().block();
     }
 
     public Optional<SchemaVersion> getLatestVersion() {
@@ -91,7 +91,7 @@ public class CassandraMigrationService {
 
             logger.info("Migrating to version {} ", newVersion);
             return allMigrationClazz.get(version).run()
-                .onComplete(() -> schemaVersionDAO.updateVersion(newVersion).join(),
+                .onComplete(() -> schemaVersionDAO.updateVersion(newVersion).block(),
                     () -> logger.info("Migrating to version {} done", newVersion))
                 .onFailure(() -> logger.warn(failureMessage(newVersion)),
                     () -> throwMigrationException(newVersion));

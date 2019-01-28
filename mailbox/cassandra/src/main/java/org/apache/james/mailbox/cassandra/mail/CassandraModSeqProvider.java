@@ -145,7 +145,7 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     }
 
     private Mono<Optional<ModSeq>> findHighestModSeq(CassandraId mailboxId) {
-        return cassandraAsyncExecutor.executeSingleRowOptionalReactor(
+        return cassandraAsyncExecutor.executeSingleRowOptional(
             select.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid()))
             .map(maybeRow -> maybeRow.map(row -> new ModSeq(row.getLong(NEXT_MODSEQ))));

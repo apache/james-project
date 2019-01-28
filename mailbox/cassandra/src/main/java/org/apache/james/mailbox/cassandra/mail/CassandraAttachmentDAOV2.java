@@ -151,14 +151,14 @@ public class CassandraAttachmentDAOV2 {
 
     public Mono<DAOAttachment> getAttachment(AttachmentId attachmentId) {
         Preconditions.checkArgument(attachmentId != null);
-        return cassandraAsyncExecutor.executeSingleRowReactor(
+        return cassandraAsyncExecutor.executeSingleRow(
             selectStatement.bind()
                 .setUUID(ID_AS_UUID, attachmentId.asUUID()))
             .map(row -> CassandraAttachmentDAOV2.fromRow(row, blobIdFactory));
     }
 
     public Mono<Void> storeAttachment(DAOAttachment attachment) {
-        return cassandraAsyncExecutor.executeVoidReactor(
+        return cassandraAsyncExecutor.executeVoid(
             insertStatement.bind()
                 .setUUID(ID_AS_UUID, attachment.getAttachmentId().asUUID())
                 .setString(ID, attachment.getAttachmentId().getId())

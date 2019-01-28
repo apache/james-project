@@ -123,10 +123,10 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     private Mono<SimpleMailbox> retrieveMailbox(CassandraId mailboxId) {
-        Mono<MailboxACL> aclCompletableFuture = cassandraACLMapper.getACL(mailboxId);
-        Mono<SimpleMailbox> simpleMailboxFuture = mailboxDAO.retrieveMailbox(mailboxId);
+        Mono<MailboxACL> acl = cassandraACLMapper.getACL(mailboxId);
+        Mono<SimpleMailbox> simpleMailbox = mailboxDAO.retrieveMailbox(mailboxId);
 
-        return aclCompletableFuture.zipWith(simpleMailboxFuture, this::addAcl);
+        return acl.zipWith(simpleMailbox, this::addAcl);
     }
 
     private SimpleMailbox addAcl(MailboxACL acl, SimpleMailbox mailbox) {

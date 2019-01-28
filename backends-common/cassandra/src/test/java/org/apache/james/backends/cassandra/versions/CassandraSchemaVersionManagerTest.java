@@ -28,13 +28,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.SchemaState;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import reactor.core.publisher.Mono;
 
 public class CassandraSchemaVersionManagerTest {
 
@@ -55,7 +56,7 @@ public class CassandraSchemaVersionManagerTest {
         SchemaVersion currentVersion = minVersion.previous();
 
         when(schemaVersionDAO.getCurrentSchemaVersion())
-            .thenReturn(CompletableFuture.completedFuture(Optional.of(currentVersion)));
+            .thenReturn(Mono.just(Optional.of(currentVersion)));
 
         CassandraSchemaVersionManager testee = new CassandraSchemaVersionManager(
             schemaVersionDAO,
@@ -70,7 +71,7 @@ public class CassandraSchemaVersionManagerTest {
         SchemaVersion currentVersion = maxVersion.next();
 
         when(schemaVersionDAO.getCurrentSchemaVersion())
-            .thenReturn(CompletableFuture.completedFuture(Optional.of(currentVersion)));
+            .thenReturn(Mono.just(Optional.of(currentVersion)));
 
         CassandraSchemaVersionManager testee = new CassandraSchemaVersionManager(
             schemaVersionDAO,
@@ -85,7 +86,7 @@ public class CassandraSchemaVersionManagerTest {
         SchemaVersion currentVersion = maxVersion;
 
         when(schemaVersionDAO.getCurrentSchemaVersion())
-            .thenReturn(CompletableFuture.completedFuture(Optional.of(currentVersion)));
+            .thenReturn(Mono.just(Optional.of(currentVersion)));
 
         CassandraSchemaVersionManager testee = new CassandraSchemaVersionManager(
             schemaVersionDAO,
@@ -100,7 +101,7 @@ public class CassandraSchemaVersionManagerTest {
         SchemaVersion currentVersion = minVersion.next();
 
         when(schemaVersionDAO.getCurrentSchemaVersion())
-            .thenReturn(CompletableFuture.completedFuture(Optional.of(currentVersion)));
+            .thenReturn(Mono.just(Optional.of(currentVersion)));
 
         CassandraSchemaVersionManager testee = new CassandraSchemaVersionManager(
             schemaVersionDAO,
@@ -128,7 +129,7 @@ public class CassandraSchemaVersionManagerTest {
         SchemaVersion maxVersion = new SchemaVersion(4);
         SchemaVersion currentVersion = new SchemaVersion(4);
         when(schemaVersionDAO.getCurrentSchemaVersion())
-            .thenReturn(CompletableFuture.completedFuture(Optional.of(currentVersion)));
+            .thenReturn(Mono.just(Optional.of(currentVersion)));
 
         CassandraSchemaVersionManager testee = new CassandraSchemaVersionManager(
             schemaVersionDAO,
@@ -141,7 +142,7 @@ public class CassandraSchemaVersionManagerTest {
     @Test
     public void defaultComputedSchemaShouldNotBeTooOldNeitherTooRecent() {
         when(schemaVersionDAO.getCurrentSchemaVersion())
-            .thenReturn(CompletableFuture.completedFuture(Optional.of(CassandraSchemaVersionManager.DEFAULT_VERSION)));
+            .thenReturn(Mono.just(Optional.of(CassandraSchemaVersionManager.DEFAULT_VERSION)));
 
         SchemaState schemaState = new CassandraSchemaVersionManager(schemaVersionDAO).computeSchemaState();
 
@@ -153,7 +154,7 @@ public class CassandraSchemaVersionManagerTest {
     @Test
     public void ensureSchemaDefaultConstructorUseCorrectMinVersion() {
         when(schemaVersionDAO.getCurrentSchemaVersion())
-            .thenReturn(CompletableFuture.completedFuture(Optional.empty()));
+            .thenReturn(Mono.just(Optional.empty()));
 
         CassandraSchemaVersionManager testee = new CassandraSchemaVersionManager(schemaVersionDAO);
 
@@ -163,7 +164,7 @@ public class CassandraSchemaVersionManagerTest {
     @Test
     public void ensureSchemaDefaultConstructorUseCorrectMaxVersion() {
         when(schemaVersionDAO.getCurrentSchemaVersion())
-            .thenReturn(CompletableFuture.completedFuture(Optional.empty()));
+            .thenReturn(Mono.just(Optional.empty()));
 
         CassandraSchemaVersionManager testee = new CassandraSchemaVersionManager(schemaVersionDAO);
 

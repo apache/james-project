@@ -25,7 +25,6 @@ import static org.mockito.Mockito.when;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import org.apache.james.core.User;
@@ -43,6 +42,8 @@ import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.Before;
 import org.junit.Test;
+
+import reactor.core.publisher.Mono;
 
 public class GetVacationResponseMethodTest {
 
@@ -98,7 +99,7 @@ public class GetVacationResponseMethodTest {
             .fromDate(Optional.of(DATE_2014))
             .toDate(Optional.of(DATE_2016))
             .build();
-        when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME))).thenReturn(CompletableFuture.completedFuture(vacation));
+        when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME))).thenReturn(Mono.just(vacation));
         when(mailboxSession.getUser()).thenReturn(user);
         when(zonedDateTimeProvider.get()).thenReturn(DATE_2015);
 
@@ -130,7 +131,7 @@ public class GetVacationResponseMethodTest {
             .fromDate(Optional.of(DATE_2015))
             .toDate(Optional.of(DATE_2016))
             .build();
-        when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME))).thenReturn(CompletableFuture.completedFuture(vacation));
+        when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME))).thenReturn(Mono.just(vacation));
         when(mailboxSession.getUser()).thenReturn(user);
         when(zonedDateTimeProvider.get()).thenReturn(DATE_2014);
 
@@ -164,7 +165,7 @@ public class GetVacationResponseMethodTest {
             .fromDate(Optional.of(DATE_2014))
             .toDate(Optional.of(DATE_2015))
             .build();
-        when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME))).thenReturn(CompletableFuture.completedFuture(vacation));
+        when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME))).thenReturn(Mono.just(vacation));
         when(mailboxSession.getUser()).thenReturn(user);
         when(zonedDateTimeProvider.get()).thenReturn(DATE_2016);
 

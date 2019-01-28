@@ -21,7 +21,6 @@ package org.apache.james.sieve.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -29,7 +28,6 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.User;
 import org.apache.james.sieve.cassandra.model.Script;
 import org.apache.james.sieverepository.api.ScriptName;
-import org.apache.james.sieverepository.api.ScriptSummary;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -123,9 +121,7 @@ class CassandraSieveDAOTest {
 
     @Test
     void listScriptsShouldReturnEmpty() {
-        List<ScriptSummary> scriptSummaryList = sieveDAO.listScripts(USER).join();
-
-        assertThat(scriptSummaryList).isEmpty();
+        assertThat(sieveDAO.listScripts(USER).toIterable()).isEmpty();
     }
 
     @Test
@@ -133,8 +129,7 @@ class CassandraSieveDAOTest {
         sieveDAO.insertScript(USER, SCRIPT).block();
         sieveDAO.insertScript(USER, SCRIPT2).block();
 
-        List<ScriptSummary> scriptSummaryList = sieveDAO.listScripts(USER).join();
-
-        assertThat(scriptSummaryList).containsOnly(SCRIPT.toSummary(), SCRIPT2.toSummary());
+        assertThat(sieveDAO.listScripts(USER).toIterable())
+            .containsOnly(SCRIPT.toSummary(), SCRIPT2.toSummary());
     }
 }

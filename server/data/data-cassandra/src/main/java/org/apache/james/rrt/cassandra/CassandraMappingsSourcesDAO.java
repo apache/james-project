@@ -85,21 +85,21 @@ public class CassandraMappingsSourcesDAO {
     }
 
     public Mono<Void> addMapping(Mapping mapping, MappingSource source) {
-        return executor.executeVoidReactor(insertStatement.bind()
+        return executor.executeVoid(insertStatement.bind()
             .setString(MAPPING_TYPE, mapping.getType().asPrefix())
             .setString(MAPPING_VALUE, mapping.getMappingValue())
             .setString(SOURCE, source.asMailAddressString()));
     }
 
     Mono<Void> removeMapping(Mapping mapping, MappingSource source) {
-        return executor.executeVoidReactor(deleteStatement.bind()
+        return executor.executeVoid(deleteStatement.bind()
             .setString(MAPPING_TYPE, mapping.getType().asPrefix())
             .setString(MAPPING_VALUE, mapping.getMappingValue())
             .setString(SOURCE, source.asMailAddressString()));
     }
 
     public Flux<MappingSource> retrieveSources(Mapping mapping) {
-        return executor.executeReactor(retrieveSourcesStatement.bind()
+        return executor.execute(retrieveSourcesStatement.bind()
             .setString(MAPPING_TYPE, mapping.getType().asPrefix())
             .setString(MAPPING_VALUE, mapping.getMappingValue()))
             .flatMapMany(Flux::fromIterable)
@@ -107,6 +107,6 @@ public class CassandraMappingsSourcesDAO {
     }
 
     public Mono<Void> removeAllData() {
-        return executor.executeVoidReactor(truncateStatement.bind());
+        return executor.executeVoid(truncateStatement.bind());
     }
 }

@@ -77,7 +77,7 @@ public class CassandraMailboxCounterDAO {
     public Mono<MailboxCounters> retrieveMailboxCounters(Mailbox mailbox) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
-        return cassandraAsyncExecutor.executeSingleRowReactor(bindWithMailbox(mailboxId, readStatement))
+        return cassandraAsyncExecutor.executeSingleRow(bindWithMailbox(mailboxId, readStatement))
             .map(row ->  MailboxCounters.builder()
                 .count(row.getLong(CassandraMailboxCountersTable.COUNT))
                 .unseen(row.getLong(CassandraMailboxCountersTable.UNSEEN))
@@ -91,31 +91,31 @@ public class CassandraMailboxCounterDAO {
     }
 
     public Mono<Long> countMessagesInMailbox(CassandraId cassandraId) {
-        return cassandraAsyncExecutor.executeSingleRowReactor(bindWithMailbox(cassandraId, readStatement))
+        return cassandraAsyncExecutor.executeSingleRow(bindWithMailbox(cassandraId, readStatement))
             .map(row -> row.getLong(CassandraMailboxCountersTable.COUNT));
     }
 
     public Mono<Long> countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
-        return cassandraAsyncExecutor.executeSingleRowReactor(bindWithMailbox(mailboxId, readStatement))
+        return cassandraAsyncExecutor.executeSingleRow(bindWithMailbox(mailboxId, readStatement))
             .map(row -> row.getLong(CassandraMailboxCountersTable.UNSEEN));
     }
 
     public Mono<Void> decrementCount(CassandraId mailboxId) {
-        return cassandraAsyncExecutor.executeVoidReactor(bindWithMailbox(mailboxId, decrementMessageCountStatement));
+        return cassandraAsyncExecutor.executeVoid(bindWithMailbox(mailboxId, decrementMessageCountStatement));
     }
 
     public Mono<Void> incrementCount(CassandraId mailboxId) {
-        return cassandraAsyncExecutor.executeVoidReactor(bindWithMailbox(mailboxId, incrementMessageCountStatement));
+        return cassandraAsyncExecutor.executeVoid(bindWithMailbox(mailboxId, incrementMessageCountStatement));
     }
 
     public Mono<Void> decrementUnseen(CassandraId mailboxId) {
-        return cassandraAsyncExecutor.executeVoidReactor(bindWithMailbox(mailboxId, decrementUnseenCountStatement));
+        return cassandraAsyncExecutor.executeVoid(bindWithMailbox(mailboxId, decrementUnseenCountStatement));
     }
 
     public Mono<Void> incrementUnseen(CassandraId mailboxId) {
-        return cassandraAsyncExecutor.executeVoidReactor(bindWithMailbox(mailboxId, incrementUnseenCountStatement));
+        return cassandraAsyncExecutor.executeVoid(bindWithMailbox(mailboxId, incrementUnseenCountStatement));
     }
 
     private BoundStatement bindWithMailbox(CassandraId mailboxId, PreparedStatement statement) {

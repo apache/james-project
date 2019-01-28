@@ -150,7 +150,7 @@ public class CassandraACLMapper {
     }
 
     private Mono<Row> getStoredACLRow(CassandraId cassandraId) {
-        return executor.executeSingleRowReactor(
+        return executor.executeSingleRow(
             readStatement.bind()
                 .setUUID(CassandraACLTable.ID, cassandraId.asUuid()));
     }

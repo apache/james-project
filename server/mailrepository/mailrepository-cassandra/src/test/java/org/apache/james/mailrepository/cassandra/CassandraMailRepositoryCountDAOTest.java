@@ -44,7 +44,7 @@ class CassandraMailRepositoryCountDAOTest {
 
     @Test
     void getCountShouldReturnZeroWhenEmpty() {
-        assertThat(testee.getCount(URL).join())
+        assertThat(testee.getCount(URL).block())
             .isEqualTo(0L);
     }
 
@@ -52,7 +52,7 @@ class CassandraMailRepositoryCountDAOTest {
     void getCountShouldReturnOneWhenIncrementedOneTime() {
         testee.increment(URL).block();
 
-        assertThat(testee.getCount(URL).join())
+        assertThat(testee.getCount(URL).block())
             .isEqualTo(1L);
     }
 
@@ -60,7 +60,7 @@ class CassandraMailRepositoryCountDAOTest {
     void incrementShouldNotAffectOtherUrls() {
         testee.increment(URL).block();
 
-        assertThat(testee.getCount(URL2).join())
+        assertThat(testee.getCount(URL2).block())
             .isEqualTo(0L);
     }
 
@@ -69,7 +69,7 @@ class CassandraMailRepositoryCountDAOTest {
         testee.increment(URL).block();
         testee.increment(URL).block();
 
-        assertThat(testee.getCount(URL).join())
+        assertThat(testee.getCount(URL).block())
             .isEqualTo(2L);
     }
 
@@ -81,7 +81,7 @@ class CassandraMailRepositoryCountDAOTest {
 
         testee.decrement(URL).block();
 
-        assertThat(testee.getCount(URL).join())
+        assertThat(testee.getCount(URL).block())
             .isEqualTo(2L);
     }
 
@@ -89,7 +89,7 @@ class CassandraMailRepositoryCountDAOTest {
     void decrementCanLeadToNegativeCount() {
         testee.decrement(URL).block();
 
-        assertThat(testee.getCount(URL).join())
+        assertThat(testee.getCount(URL).block())
             .isEqualTo(-1L);
     }
 }

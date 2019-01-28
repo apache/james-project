@@ -42,11 +42,10 @@ import org.apache.james.eventsourcing.eventstore.History;
 import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.steveash.guavate.Guavate;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class EventStoreDao {
@@ -98,18 +97,14 @@ public class EventStoreDao {
     }
 
     public History getEventsOfAggregate(AggregateId aggregateId) {
-        return toHistory(
-            cassandraAsyncExecutor.execute(
+        return cassandraAsyncExecutor.execute(
                 select.bind()
                     .setString(AGGREGATE_ID, aggregateId.asAggregateKey()))
-                .join());
-    }
-
-    private History toHistory(ResultSet resultSet) {
-        List<Event> events = cassandraUtils.convertToStream(resultSet)
+            .flatMapMany(Flux::fromIterable)
             .map(this::toEvent)
-            .collect(Guavate.toImmutableList());
-        return History.of(events);
+            .collectList()
+            .map(History::of)
+            .block();
     }
 
     private Event toEvent(Row row) {

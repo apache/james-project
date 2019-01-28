@@ -30,7 +30,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
@@ -43,6 +42,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import reactor.core.publisher.Mono;
 
 class CassandraVersionCheckingTest {
     private static final int LIMIT_TO_10_MESSAGES = 10;
@@ -82,7 +83,7 @@ class CassandraVersionCheckingTest {
     @Test
     void serverShouldStartSuccessfullyWhenMaxVersion(GuiceJamesServer server) throws Exception {
         when(versionDAO.getCurrentSchemaVersion())
-            .thenReturn(CompletableFuture.completedFuture(Optional.of(MAX_VERSION)));
+            .thenReturn(Mono.just(Optional.of(MAX_VERSION)));
 
         assertThatServerStartCorrectly(server);
     }
@@ -90,7 +91,7 @@ class CassandraVersionCheckingTest {
     @Test
     void serverShouldStartSuccessfullyWhenBetweenMinAndMaxVersion(GuiceJamesServer server) throws Exception {
         when(versionDAO.getCurrentSchemaVersion())
-            .thenReturn(CompletableFuture.completedFuture(Optional.of(MIN_VERSION.next())));
+            .thenReturn(Mono.just(Optional.of(MIN_VERSION.next())));
 
         assertThatServerStartCorrectly(server);
     }
@@ -98,7 +99,7 @@ class CassandraVersionCheckingTest {
     @Test
     void serverShouldStartSuccessfullyWhenMinVersion(GuiceJamesServer server) throws Exception {
         when(versionDAO.getCurrentSchemaVersion())
-            .thenReturn(CompletableFuture.completedFuture(Optional.of(MIN_VERSION)));
+            .thenReturn(Mono.just(Optional.of(MIN_VERSION)));
 
         assertThatServerStartCorrectly(server);
     }
@@ -106,7 +107,7 @@ class CassandraVersionCheckingTest {
     @Test
     void serverShouldNotStartWhenUnderMinVersion(GuiceJamesServer server) {
         when(versionDAO.getCurrentSchemaVersion())
-            .thenReturn(CompletableFuture.completedFuture(Optional.of(MIN_VERSION.previous())));
+            .thenReturn(Mono.just(Optional.of(MIN_VERSION.previous())));
 
         assertThatThrownBy(server::start).isInstanceOf(IllegalStateException.class);
     }
@@ -114,7 +115,7 @@ class CassandraVersionCheckingTest {
     @Test
     void serverShouldNotStartWhenAboveMaxVersion(GuiceJamesServer server) {
         when(versionDAO.getCurrentSchemaVersion())
-            .thenReturn(CompletableFuture.completedFuture(Optional.of(MAX_VERSION.next())));
+            .thenReturn(Mono.just(Optional.of(MAX_VERSION.next())));
 
         assertThatThrownBy(server::start).isInstanceOf(IllegalStateException.class);
     }

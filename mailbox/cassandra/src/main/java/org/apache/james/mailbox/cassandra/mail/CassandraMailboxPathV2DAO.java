@@ -102,7 +102,7 @@ public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
 
     @Override
     public Mono<CassandraIdAndPath> retrieveId(MailboxPath mailboxPath) {
-        return cassandraAsyncExecutor.executeSingleRowReactor(
+        return cassandraAsyncExecutor.executeSingleRow(
             select.bind()
                 .setString(NAMESPACE, mailboxPath.getNamespace())
                 .setString(USER, sanitizeUser(mailboxPath.getUser()))
@@ -114,7 +114,7 @@ public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
 
     @Override
     public Flux<CassandraIdAndPath> listUserMailboxes(String namespace, String user) {
-        return cassandraAsyncExecutor.executeReactor(
+        return cassandraAsyncExecutor.execute(
             selectAll.bind()
                 .setString(NAMESPACE, namespace)
                 .setString(USER, sanitizeUser(user)))
@@ -175,7 +175,7 @@ public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
 
     @Override
     public Mono<Void> delete(MailboxPath mailboxPath) {
-        return cassandraAsyncExecutor.executeVoidReactor(delete.bind()
+        return cassandraAsyncExecutor.executeVoid(delete.bind()
             .setString(NAMESPACE, mailboxPath.getNamespace())
             .setString(USER, sanitizeUser(mailboxPath.getUser()))
             .setString(MAILBOX_NAME, mailboxPath.getName()));

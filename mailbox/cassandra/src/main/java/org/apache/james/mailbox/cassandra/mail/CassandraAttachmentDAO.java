@@ -33,8 +33,6 @@ import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -48,6 +46,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraAttachmentDAO {
@@ -101,23 +100,22 @@ public class CassandraAttachmentDAO {
 
     public Mono<Attachment> getAttachment(AttachmentId attachmentId) {
         Preconditions.checkArgument(attachmentId != null);
-        return cassandraAsyncExecutor.executeSingleRowReactor(
+        return cassandraAsyncExecutor.executeSingleRow(
             selectStatement.bind()
                 .setString(ID, attachmentId.getId()))
             .map(this::attachment);
     }
 
-    public Stream<Attachment> retrieveAll() {
-        return cassandraUtils.convertToStream(
-            cassandraAsyncExecutor.execute(
+    public Flux<Attachment> retrieveAll() {
+        return cassandraAsyncExecutor.execute(
                 selectAllStatement.bind()
                     .setReadTimeoutMillis(configuration.getAttachmentV2MigrationReadTimeout())
                     .setFetchSize(1))
-                .join())
+            .flatMapMany(Flux::fromIterable)
             .map(this::attachment);
     }
 
-    public CompletableFuture<Void> storeAttachment(Attachment attachment) throws IOException {
+    public Mono<Void> storeAttachment(Attachment attachment) throws IOException {
         return cassandraAsyncExecutor.executeVoid(
             insertStatement.bind()
                 .setString(ID, attachment.getAttachmentId().getId())
@@ -127,7 +125,7 @@ public class CassandraAttachmentDAO {
     }
 
     public Mono<Void> deleteAttachment(AttachmentId attachmentId) {
-        return cassandraAsyncExecutor.executeVoidReactor(
+        return cassandraAsyncExecutor.executeVoid(
             deleteStatement
                 .bind()
                 .setString(ID, attachmentId.getId()));

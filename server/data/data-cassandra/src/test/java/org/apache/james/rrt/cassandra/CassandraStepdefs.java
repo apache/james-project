@@ -57,7 +57,7 @@ public class CassandraStepdefs {
         CassandraRecipientRewriteTable rrt = new CassandraRecipientRewriteTable(
             new CassandraRecipientRewriteTableDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
             new CassandraMappingsSourcesDAO(cassandra.getConf()),
-            new CassandraSchemaVersionDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION));
+            new CassandraSchemaVersionDAO(cassandra.getConf()));
         rrt.configure(new DefaultConfigurationBuilder());
         return rrt;
     }

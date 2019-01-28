@@ -33,9 +33,6 @@ import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.SIZE;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.TABLE_NAME;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.USER_NAME;
 
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -48,7 +45,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Select;
-import com.github.steveash.guavate.Guavate;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraSieveDAO {
@@ -99,7 +96,7 @@ public class CassandraSieveDAO {
     }
 
     public Mono<Void> insertScript(User user, Script script) {
-        return cassandraAsyncExecutor.executeVoidReactor(
+        return cassandraAsyncExecutor.executeVoid(
             insertScriptStatement.bind()
                 .setString(USER_NAME, user.asString())
                 .setString(SCRIPT_NAME, script.getName().getValue())
@@ -108,16 +105,14 @@ public class CassandraSieveDAO {
                 .setLong(SIZE, script.getSize()));
     }
 
-    public CompletableFuture<List<ScriptSummary>> listScripts(User user) {
+    public Flux<ScriptSummary> listScripts(User user) {
         return cassandraAsyncExecutor.execute(
-            selectScriptsStatement.bind()
-                .setString(USER_NAME, user.asString()))
-            .thenApply(resultSet -> resultSet.all()
-                .stream()
-                .map(row -> new ScriptSummary(
+                selectScriptsStatement.bind()
+                    .setString(USER_NAME, user.asString()))
+            .flatMapMany(Flux::fromIterable)
+            .map(row -> new ScriptSummary(
                     new ScriptName(row.getString(SCRIPT_NAME)),
-                    row.getBool(IS_ACTIVE)))
-                .collect(Guavate.toImmutableList()));
+                    row.getBool(IS_ACTIVE)));
     }
 
     public Mono<Boolean> updateScriptActivation(User user, ScriptName scriptName, boolean active) {
@@ -145,7 +140,7 @@ public class CassandraSieveDAO {
     }
 
     private Mono<Row> getScriptRow(User user, ScriptName name) {
-        return cassandraAsyncExecutor.executeSingleRowReactor(
+        return cassandraAsyncExecutor.executeSingleRow(
             selectScriptStatement.bind()
                 .setString(USER_NAME, user.asString())
                 .setString(SCRIPT_NAME, name.getValue()));

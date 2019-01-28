@@ -20,9 +20,7 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -75,7 +73,7 @@ class CassandraMessageIdDAOTest {
 
         testee.delete(mailboxId, messageUid).block();
 
-        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).join();
+        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).block();
         assertThat(message.isPresent()).isFalse();
     }
 
@@ -101,9 +99,9 @@ class CassandraMessageIdDAOTest {
 
         testee.delete(mailboxId, messageUid).block();
 
-        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).join();
+        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).block();
         assertThat(message.isPresent()).isFalse();
-        Optional<ComposedMessageIdWithMetaData> messageNotDeleted = testee.retrieve(mailboxId, messageUid2).join();
+        Optional<ComposedMessageIdWithMetaData> messageNotDeleted = testee.retrieve(mailboxId, messageUid2).block();
         assertThat(messageNotDeleted.isPresent()).isTrue();
     }
 
@@ -120,7 +118,7 @@ class CassandraMessageIdDAOTest {
                 .build();
         testee.insert(composedMessageIdWithMetaData).block();
 
-        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).join();
+        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).block();
         assertThat(message.get()).isEqualTo(composedMessageIdWithMetaData);
     }
 
@@ -145,7 +143,7 @@ class CassandraMessageIdDAOTest {
                 .build();
         testee.updateMetadata(expectedComposedMessageId).block();
 
-        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).join();
+        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).block();
         assertThat(message.get()).isEqualTo(expectedComposedMessageId);
     }
 
@@ -170,7 +168,7 @@ class CassandraMessageIdDAOTest {
                 .build();
         testee.updateMetadata(expectedComposedMessageId).block();
 
-        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).join();
+        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).block();
         assertThat(message.get()).isEqualTo(expectedComposedMessageId);
     }
 
@@ -195,7 +193,7 @@ class CassandraMessageIdDAOTest {
                 .build();
         testee.updateMetadata(expectedComposedMessageId).block();
 
-        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).join();
+        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).block();
         assertThat(message.get()).isEqualTo(expectedComposedMessageId);
     }
 
@@ -220,7 +218,7 @@ class CassandraMessageIdDAOTest {
                 .build();
         testee.updateMetadata(expectedComposedMessageId).block();
 
-        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).join();
+        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).block();
         assertThat(message.get()).isEqualTo(expectedComposedMessageId);
     }
 
@@ -245,7 +243,7 @@ class CassandraMessageIdDAOTest {
                 .build();
         testee.updateMetadata(expectedComposedMessageId).block();
 
-        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).join();
+        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).block();
         assertThat(message.get()).isEqualTo(expectedComposedMessageId);
     }
 
@@ -270,7 +268,7 @@ class CassandraMessageIdDAOTest {
                 .build();
         testee.updateMetadata(expectedComposedMessageId).block();
 
-        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).join();
+        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).block();
         assertThat(message.get()).isEqualTo(expectedComposedMessageId);
     }
 
@@ -295,7 +293,7 @@ class CassandraMessageIdDAOTest {
                 .build();
         testee.updateMetadata(expectedComposedMessageId).block();
 
-        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).join();
+        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).block();
         assertThat(message.get()).isEqualTo(expectedComposedMessageId);
     }
 
@@ -320,7 +318,7 @@ class CassandraMessageIdDAOTest {
                 .build();
         testee.updateMetadata(expectedComposedMessageId).block();
 
-        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).join();
+        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).block();
         assertThat(message.get()).isEqualTo(expectedComposedMessageId);
     }
 
@@ -347,7 +345,7 @@ class CassandraMessageIdDAOTest {
                 .build();
         testee.updateMetadata(expectedComposedMessageId).block();
 
-        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).join();
+        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).block();
         assertThat(message.get()).isEqualTo(expectedComposedMessageId);
     }
 
@@ -363,7 +361,7 @@ class CassandraMessageIdDAOTest {
                 .build();
         testee.insert(composedMessageIdWithMetaData).block();
 
-        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).join();
+        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).block();
 
         assertThat(message.get()).isEqualTo(composedMessageIdWithMetaData);
     }
@@ -390,10 +388,8 @@ class CassandraMessageIdDAOTest {
                 testee.insert(composedMessageIdWithMetaData2))
         .blockLast();
 
-        List<ComposedMessageIdWithMetaData> messages = testee.retrieveMessages(mailboxId, MessageRange.all()).join()
-                .collect(Collectors.toList());
-
-        assertThat(messages).containsOnly(composedMessageIdWithMetaData, composedMessageIdWithMetaData2);
+        assertThat(testee.retrieveMessages(mailboxId, MessageRange.all()).toIterable())
+            .containsOnly(composedMessageIdWithMetaData, composedMessageIdWithMetaData2);
     }
 
     @Test
@@ -426,10 +422,8 @@ class CassandraMessageIdDAOTest {
                 testee.insert(composedMessageIdWithMetaData2))
         .blockLast();
 
-        List<ComposedMessageIdWithMetaData> messages = testee.retrieveMessages(mailboxId, MessageRange.from(messageUid2)).join()
-                .collect(Collectors.toList());
-
-        assertThat(messages).containsOnly(composedMessageIdWithMetaData, composedMessageIdWithMetaData2);
+        assertThat(testee.retrieveMessages(mailboxId, MessageRange.from(messageUid2)).toIterable())
+            .containsOnly(composedMessageIdWithMetaData, composedMessageIdWithMetaData2);
     }
 
     @Test
@@ -471,10 +465,8 @@ class CassandraMessageIdDAOTest {
                     .build()))
         .blockLast();
 
-        List<ComposedMessageIdWithMetaData> messages = testee.retrieveMessages(mailboxId, MessageRange.range(messageUid2, messageUid3)).join()
-                .collect(Collectors.toList());
-
-        assertThat(messages).containsOnly(composedMessageIdWithMetaData, composedMessageIdWithMetaData2);
+        assertThat(testee.retrieveMessages(mailboxId, MessageRange.range(messageUid2, messageUid3)).toIterable())
+            .containsOnly(composedMessageIdWithMetaData, composedMessageIdWithMetaData2);
     }
 
     @Test
@@ -506,9 +498,7 @@ class CassandraMessageIdDAOTest {
                     .build()))
         .blockLast();
 
-        List<ComposedMessageIdWithMetaData> messages = testee.retrieveMessages(mailboxId, MessageRange.one(messageUid2)).join()
-                .collect(Collectors.toList());
-
-        assertThat(messages).containsOnly(composedMessageIdWithMetaData);
+        assertThat(testee.retrieveMessages(mailboxId, MessageRange.one(messageUid2)).toIterable())
+            .containsOnly(composedMessageIdWithMetaData);
     }
 }

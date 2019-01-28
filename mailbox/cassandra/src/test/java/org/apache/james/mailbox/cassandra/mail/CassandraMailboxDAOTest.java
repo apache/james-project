@@ -145,14 +145,14 @@ class CassandraMailboxDAOTest {
 
     @Test
     void updateShouldNotFailWhenMailboxIsAbsent() {
-        testee.updatePath(CASSANDRA_ID_1, NEW_MAILBOX_PATH).join();
+        testee.updatePath(CASSANDRA_ID_1, NEW_MAILBOX_PATH).block();
     }
 
     @Test
     void updateShouldChangeMailboxPath() {
         testee.save(mailbox1).block();
 
-        testee.updatePath(CASSANDRA_ID_1, NEW_MAILBOX_PATH).join();
+        testee.updatePath(CASSANDRA_ID_1, NEW_MAILBOX_PATH).block();
 
         mailbox1.setNamespace(NEW_MAILBOX_PATH.getNamespace());
         mailbox1.setUser(NEW_MAILBOX_PATH.getUser());

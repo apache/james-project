@@ -30,7 +30,6 @@ import java.util.function.Supplier;
 import org.apache.james.backends.cassandra.DockerCassandraExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
@@ -151,6 +150,6 @@ class SessionWithInitializedTablesFactoryTest {
     }
 
     private CassandraSchemaVersionDAO versionManagerDAO(Session session) {
-        return new CassandraSchemaVersionDAO(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        return new CassandraSchemaVersionDAO(session);
     }
 }

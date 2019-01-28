@@ -70,8 +70,8 @@ class CassandraAttachmentFallbackTest {
             CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             CassandraConfiguration.DEFAULT_CONFIGURATION);
         blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
-        attachmentMessageIdDAO = new CassandraAttachmentMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
-        CassandraAttachmentOwnerDAO ownerDAO = new CassandraAttachmentOwnerDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        attachmentMessageIdDAO = new CassandraAttachmentMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
+        CassandraAttachmentOwnerDAO ownerDAO = new CassandraAttachmentOwnerDAO(cassandra.getConf());
         attachmentMapper = new CassandraAttachmentMapper(attachmentDAO, attachmentDAOV2, blobsDAO, attachmentMessageIdDAO, ownerDAO);
     }
 
@@ -102,7 +102,7 @@ class CassandraAttachmentFallbackTest {
 
         BlobId blobId = blobsDAO.save(attachment.getBytes()).block();
         attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).block();
-        attachmentDAO.storeAttachment(otherAttachment).join();
+        attachmentDAO.storeAttachment(otherAttachment).block();
 
         assertThat(attachmentMapper.getAttachment(ATTACHMENT_ID_1))
             .isEqualTo(attachment);
@@ -116,7 +116,7 @@ class CassandraAttachmentFallbackTest {
             .bytes("{\"property\":`\"value\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        attachmentDAO.storeAttachment(attachment).join();
+        attachmentDAO.storeAttachment(attachment).block();
 
         assertThat(attachmentMapper.getAttachment(ATTACHMENT_ID_1))
             .isEqualTo(attachment);
@@ -137,7 +137,7 @@ class CassandraAttachmentFallbackTest {
 
         BlobId blobId = blobsDAO.save(attachment.getBytes()).block();
         attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).block();
-        attachmentDAO.storeAttachment(otherAttachment).join();
+        attachmentDAO.storeAttachment(otherAttachment).block();
 
         assertThat(attachmentMapper.getAttachments(ImmutableList.of(ATTACHMENT_ID_1)))
             .containsExactly(attachment);
@@ -151,7 +151,7 @@ class CassandraAttachmentFallbackTest {
             .bytes("{\"property\":`\"value\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        attachmentDAO.storeAttachment(attachment).join();
+        attachmentDAO.storeAttachment(attachment).block();
 
         assertThat(attachmentMapper.getAttachments(ImmutableList.of(ATTACHMENT_ID_1)))
             .containsExactly(attachment);
@@ -172,7 +172,7 @@ class CassandraAttachmentFallbackTest {
 
         BlobId blobId = blobsDAO.save(attachment.getBytes()).block();
         attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).block();
-        attachmentDAO.storeAttachment(otherAttachment).join();
+        attachmentDAO.storeAttachment(otherAttachment).block();
 
         List<Attachment> attachments = attachmentMapper.getAttachments(ImmutableList.of(ATTACHMENT_ID_1, ATTACHMENT_ID_2));
         assertThat(attachments)

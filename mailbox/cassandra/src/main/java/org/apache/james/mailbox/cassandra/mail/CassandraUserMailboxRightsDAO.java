@@ -28,7 +28,6 @@ import static org.apache.james.mailbox.cassandra.table.CassandraUserMailboxRight
 import static org.apache.james.mailbox.cassandra.table.CassandraUserMailboxRightsTable.USER_NAME;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -108,7 +107,7 @@ public class CassandraUserMailboxRightsDAO {
 
     private Mono<Void> removeAll(CassandraId cassandraId, Stream<MailboxACL.Entry> removedEntries) {
         return Flux.fromStream(removedEntries)
-            .flatMap(entry -> cassandraAsyncExecutor.executeVoidReactor(
+            .flatMap(entry -> cassandraAsyncExecutor.executeVoid(
                 delete.bind()
                     .setString(USER_NAME, entry.getKey().getName())
                     .setUUID(MAILBOX_ID, cassandraId.asUuid())))
@@ -117,7 +116,7 @@ public class CassandraUserMailboxRightsDAO {
 
     private Mono<Void> addAll(CassandraId cassandraId, Stream<MailboxACL.Entry> addedEntries) {
         return Flux.fromStream(addedEntries)
-            .flatMap(entry -> cassandraAsyncExecutor.executeVoidReactor(
+            .flatMap(entry -> cassandraAsyncExecutor.executeVoid(
                 insert.bind()
                     .setString(USER_NAME, entry.getKey().getName())
                     .setUUID(MAILBOX_ID, cassandraId.asUuid())
@@ -125,17 +124,17 @@ public class CassandraUserMailboxRightsDAO {
             .then();
     }
 
-    public CompletableFuture<Optional<Rfc4314Rights>> retrieve(String userName, CassandraId mailboxId) {
-        return cassandraAsyncExecutor.executeSingleRow(
+    public Mono<Optional<Rfc4314Rights>> retrieve(String userName, CassandraId mailboxId) {
+        return cassandraAsyncExecutor.executeSingleRowOptional(
             select.bind()
                 .setString(USER_NAME, userName)
                 .setUUID(MAILBOX_ID, mailboxId.asUuid()))
-            .thenApply(rowOptional ->
+            .map(rowOptional ->
                 rowOptional.map(Throwing.function(row -> Rfc4314Rights.fromSerializedRfc4314Rights(row.getString(RIGHTS)))));
     }
 
     public Flux<Pair<CassandraId, Rfc4314Rights>> listRightsForUser(String userName) {
-        return cassandraAsyncExecutor.executeReactor(
+        return cassandraAsyncExecutor.execute(
             selectUser.bind()
                 .setString(USER_NAME, userName))
             .flatMapMany(cassandraUtils::convertToFlux)

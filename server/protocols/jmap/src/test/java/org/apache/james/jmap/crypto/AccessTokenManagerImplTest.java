@@ -19,107 +19,132 @@
 package org.apache.james.jmap.crypto;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.apache.james.jmap.api.AccessTokenManager;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import reactor.core.publisher.Mono;
 
 public class AccessTokenManagerImplTest {
     
     private AccessTokenManager accessTokenManager;
     private AccessTokenRepository accessTokenRepository;
     
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         accessTokenRepository = new MemoryAccessTokenRepository(100);
         accessTokenManager = new AccessTokenManagerImpl(accessTokenRepository);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void grantShouldThrowOnNullUsername() throws Exception {
-        accessTokenManager.grantAccessToken(null);
+    @Test
+    void grantShouldThrowOnNullUsername() {
+        assertThatNullPointerException()
+            .isThrownBy(() -> accessTokenManager.grantAccessToken(null));
     }
     
     @Test
-    public void grantShouldGenerateATokenOnUsername() throws Exception {
+    void grantShouldGenerateATokenOnUsername() {
         assertThat(accessTokenManager.grantAccessToken("username")).isNotNull();
     }
 
     @Test
-    public void grantShouldStoreATokenOnUsername() throws Exception {
+    void grantShouldStoreATokenOnUsername() {
         AccessToken token = accessTokenManager.grantAccessToken("username");
-        assertThat(accessTokenRepository.getUsernameFromToken(token).join()).isEqualTo("username");
+        assertThat(accessTokenRepository.getUsernameFromToken(token).block()).isEqualTo("username");
     }
     
-    @Test(expected = NullPointerException.class)
-    public void getUsernameShouldThrowWhenNullToken() throws Exception {
-        accessTokenManager.getUsernameFromToken(null);
-    }
-
-    @Test(expected = InvalidAccessToken.class)
-    public void getUsernameShouldThrowWhenUnknownToken() throws Exception {
-        accessTokenManager.getUsernameFromToken(AccessToken.generate());
-    }
-
-    @Test(expected = InvalidAccessToken.class)
-    public void getUsernameShouldThrowWhenOtherToken() throws Exception {
-        accessTokenManager.grantAccessToken("username");
-        accessTokenManager.getUsernameFromToken(AccessToken.generate());
+    @Test
+    void getUsernameShouldThrowWhenNullToken() {
+        assertThatNullPointerException()
+            .isThrownBy(() -> accessTokenManager.getUsernameFromToken(null));
     }
 
     @Test
-    public void getUsernameShouldReturnUsernameWhenExistingUsername() throws Exception {
+    void getUsernameShouldThrowWhenUnknownToken() {
+        assertThatThrownBy(() -> accessTokenManager.getUsernameFromToken(AccessToken.generate()))
+            .isExactlyInstanceOf(InvalidAccessToken.class);
+    }
+
+    @Test
+    void getUsernameShouldThrowWhenOtherToken() {
+        accessTokenManager.grantAccessToken("username");
+        assertThatThrownBy(() -> accessTokenManager.getUsernameFromToken(AccessToken.generate()))
+            .isExactlyInstanceOf(InvalidAccessToken.class);
+    }
+
+    @Test
+    void getUsernameShouldReturnUsernameWhenExistingUsername() {
         AccessToken token = accessTokenManager.grantAccessToken("username");
         assertThat(accessTokenManager.getUsernameFromToken(token)).isEqualTo("username");
     }
     
-    @Test(expected = NullPointerException.class)
-    public void isValidShouldThrowOnNullToken() throws Exception {
-        accessTokenManager.isValid(null);
+    @Test
+    void isValidShouldThrowOnNullToken() {
+        assertThatNullPointerException()
+            .isThrownBy(() -> accessTokenManager.isValid(null));
     }
     
     @Test
-    public void isValidShouldReturnFalseOnUnknownToken() throws Exception {
+    void isValidShouldReturnFalseOnUnknownToken() {
         assertThat(accessTokenManager.isValid(AccessToken.generate())).isFalse();
     }
     
     @Test
-    public void isValidShouldReturnFalseWhenOtherToken() throws Exception {
+    void isValidShouldReturnFalseWhenOtherToken() {
         accessTokenManager.grantAccessToken("username");
         assertThat(accessTokenManager.isValid(AccessToken.generate())).isFalse();
     }
     
     @Test
-    public void isValidShouldReturnTrueWhenValidToken() throws Exception {
+    void isValidShouldReturnTrueWhenValidToken() {
         AccessToken accessToken = accessTokenManager.grantAccessToken("username");
         assertThat(accessTokenManager.isValid(accessToken)).isTrue();
     }
     
-    @Test(expected = NullPointerException.class)
-    public void revokeShouldThrowWhenNullToken() throws Exception {
-        accessTokenManager.revoke(null);
+    @Test
+    void revokeShouldThrowWhenNullToken() {
+        assertThatNullPointerException()
+            .isThrownBy(() -> accessTokenManager.revoke(null));
     }
     
     @Test
-    public void revokeShouldNoopOnUnknownToken() throws Exception {
+    void revokeShouldNoopOnUnknownToken() {
         accessTokenManager.revoke(AccessToken.generate());
     }
     
     @Test
-    public void revokeShouldNoopOnRevokingTwice() throws Exception {
+    void revokeShouldNoopOnRevokingTwice() {
         AccessToken token = AccessToken.generate();
         accessTokenManager.revoke(token);
         accessTokenManager.revoke(token);
     }
     
     @Test
-    public void revokeShouldInvalidExistingToken() throws Exception {
+    void revokeShouldInvalidExistingToken() {
         AccessToken token = accessTokenManager.grantAccessToken("username");
         accessTokenManager.revoke(token);
         assertThat(accessTokenManager.isValid(token)).isFalse();
+    }
+
+    @Test
+    void getUsernameShouldThrowWhenRepositoryThrows() {
+        accessTokenRepository = mock(AccessTokenRepository.class);
+        accessTokenManager = new AccessTokenManagerImpl(accessTokenRepository);
+
+        AccessToken accessToken = AccessToken.generate();
+        when(accessTokenRepository.getUsernameFromToken(accessToken)).thenReturn(Mono.error(new InvalidAccessToken(accessToken)));
+
+        assertThatThrownBy(() -> accessTokenManager.getUsernameFromToken(accessToken))
+            .isExactlyInstanceOf(InvalidAccessToken.class);
     }
 }

@@ -20,7 +20,6 @@
 package org.apache.james.backends.cassandra.utils;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
@@ -28,7 +27,6 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
-
 import net.javacrumbs.futureconverter.java8guava.FutureConverter;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -42,48 +40,34 @@ public class CassandraAsyncExecutor {
         this.session = session;
     }
 
-    public CompletableFuture<ResultSet> execute(Statement statement) {
-        return executeReactor(statement).toFuture();
-    }
-
-    public CompletableFuture<Void> executeVoid(Statement statement) {
-        return executeVoidReactor(statement).toFuture();
-    }
-
-    public CompletableFuture<Optional<Row>> executeSingleRow(Statement statement) {
-        return executeSingleRowOptionalReactor(statement)
-                .toFuture();
-    }
-
-    public Mono<ResultSet> executeReactor(Statement statement) {
+    public Mono<ResultSet> execute(Statement statement) {
         return Mono.defer(() -> Mono.fromFuture(FutureConverter
                 .toCompletableFuture(session.executeAsync(statement)))
                 .publishOn(Schedulers.elastic()));
     }
 
-
     public Mono<Boolean> executeReturnApplied(Statement statement) {
-        return executeSingleRowReactor(statement)
+        return executeSingleRow(statement)
                 .map(row -> row.getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED));
     }
 
-    public Mono<Void> executeVoidReactor(Statement statement) {
-        return executeReactor(statement)
+    public Mono<Void> executeVoid(Statement statement) {
+        return execute(statement)
                 .then();
     }
 
-    public Mono<Row> executeSingleRowReactor(Statement statement) {
-        return executeSingleRowOptionalReactor(statement)
+    public Mono<Row> executeSingleRow(Statement statement) {
+        return executeSingleRowOptional(statement)
                 .flatMap(Mono::justOrEmpty);
     }
 
-    public Mono<Optional<Row>> executeSingleRowOptionalReactor(Statement statement) {
-        return executeReactor(statement)
+    public Mono<Optional<Row>> executeSingleRowOptional(Statement statement) {
+        return execute(statement)
             .map(resultSet -> Optional.ofNullable(resultSet.one()));
     }
 
     public Mono<Boolean> executeReturnExists(Statement statement) {
-        return executeSingleRowReactor(statement)
+        return executeSingleRow(statement)
                 .hasElement();
     }
 }

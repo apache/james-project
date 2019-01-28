@@ -24,7 +24,6 @@ import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 
 import javax.annotation.PreDestroy;
@@ -44,6 +43,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.MonoProcessor;
+import reactor.core.scheduler.Schedulers;
 
 class GuiceLifecycleHeathCheckTest {
     private static final int LIMIT_TO_10_MESSAGES = 10;
@@ -118,12 +120,14 @@ class GuiceLifecycleHeathCheckTest {
 
         @Test
         void stoppingJamesServerShouldBeUnhealthy(GuiceJamesServer server) {
-            CompletableFuture<Void> stopCompletedFuture = CompletableFuture.completedFuture(null);
-
+            Mono<Void> stopMono = Mono.fromRunnable(() -> { });
             try {
                 configureRequestSpecification(server);
 
-                stopCompletedFuture = CompletableFuture.runAsync(server::stop);
+                stopMono = Mono.fromRunnable(server::stop);
+                stopMono
+                    .publishOn(Schedulers.elastic())
+                    .subscribeWith(MonoProcessor.create());
 
                 when()
                     .get("/healthcheck")
@@ -131,7 +135,7 @@ class GuiceLifecycleHeathCheckTest {
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
             } finally {
                 latch.countDown();
-                stopCompletedFuture.join();
+                stopMono.block();
             }
         }
     }

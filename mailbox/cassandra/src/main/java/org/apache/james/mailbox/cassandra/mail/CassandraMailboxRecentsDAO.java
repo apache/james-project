@@ -85,7 +85,7 @@ public class CassandraMailboxRecentsDAO {
     }
 
     public Flux<MessageUid> getRecentMessageUidsInMailbox(CassandraId mailboxId) {
-        return cassandraAsyncExecutor.executeReactor(bindWithMailbox(mailboxId, readStatement))
+        return cassandraAsyncExecutor.execute(bindWithMailbox(mailboxId, readStatement))
             .flatMapMany(cassandraUtils::convertToFlux)
             .map(row -> row.getLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID))
             .map(MessageUid::of);
@@ -97,13 +97,13 @@ public class CassandraMailboxRecentsDAO {
     }
 
     public Mono<Void> removeFromRecent(CassandraId mailboxId, MessageUid messageUid) {
-        return cassandraAsyncExecutor.executeVoidReactor(deleteStatement.bind()
+        return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
             .setUUID(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
             .setLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, messageUid.asLong()));
     }
 
     public Mono<Void> addToRecent(CassandraId mailboxId, MessageUid messageUid) {
-        return cassandraAsyncExecutor.executeVoidReactor(addStatement.bind()
+        return cassandraAsyncExecutor.executeVoid(addStatement.bind()
             .setUUID(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
             .setLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, messageUid.asLong()));
     }

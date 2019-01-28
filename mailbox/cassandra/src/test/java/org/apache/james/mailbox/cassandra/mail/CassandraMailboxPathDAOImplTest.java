@@ -24,8 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.junit.jupiter.api.Test;
 
-import com.github.steveash.guavate.Guavate;
-
 class CassandraMailboxPathDAOImplTest extends CassandraMailboxPathDAOTest {
 
     @Override
@@ -41,7 +39,7 @@ class CassandraMailboxPathDAOImplTest extends CassandraMailboxPathDAOTest {
 
         CassandraMailboxPathDAOImpl daoV1 = (CassandraMailboxPathDAOImpl) testee;
 
-        assertThat(daoV1.countAll().join())
+        assertThat(daoV1.countAll().block())
             .isEqualTo(3);
     }
 
@@ -49,7 +47,7 @@ class CassandraMailboxPathDAOImplTest extends CassandraMailboxPathDAOTest {
     void countAllShouldReturnZeroByDefault() {
         CassandraMailboxPathDAOImpl daoV1 = (CassandraMailboxPathDAOImpl) testee;
 
-        assertThat(daoV1.countAll().join())
+        assertThat(daoV1.countAll().block())
             .isEqualTo(0);
     }
 
@@ -61,7 +59,7 @@ class CassandraMailboxPathDAOImplTest extends CassandraMailboxPathDAOTest {
 
         CassandraMailboxPathDAOImpl daoV1 = (CassandraMailboxPathDAOImpl) testee;
 
-        assertThat(daoV1.readAll().join().collect(Guavate.toImmutableList()))
+        assertThat(daoV1.readAll().toIterable())
             .containsOnly(
                 new CassandraIdAndPath(INBOX_ID, USER_INBOX_MAILBOXPATH),
                 new CassandraIdAndPath(OUTBOX_ID, USER_OUTBOX_MAILBOXPATH),
@@ -72,7 +70,7 @@ class CassandraMailboxPathDAOImplTest extends CassandraMailboxPathDAOTest {
     void readAllShouldReturnEmptyByDefault() {
         CassandraMailboxPathDAOImpl daoV1 = (CassandraMailboxPathDAOImpl) testee;
 
-        assertThat(daoV1.readAll().join().collect(Guavate.toImmutableList()))
+        assertThat(daoV1.readAll().toIterable())
             .isEmpty();
     }
 }

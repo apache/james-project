@@ -116,7 +116,7 @@ public class CassandraUidProvider implements UidProvider {
     }
 
     private Mono<MessageUid> findHighestUid(CassandraId mailboxId) {
-        return Mono.defer(() -> executor.executeSingleRowReactor(
+        return Mono.defer(() -> executor.executeSingleRow(
             selectStatement.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid()))
             .map(row -> MessageUid.of(row.getLong(NEXT_UID))));

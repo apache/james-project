@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.cassandra.vacation;
 
-import java.util.concurrent.CompletableFuture;
-
 import javax.inject.Inject;
 
 import org.apache.james.jmap.api.vacation.AccountId;
@@ -29,6 +27,7 @@ import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 
 import com.google.common.base.Preconditions;
+import reactor.core.publisher.Mono;
 
 public class CassandraVacationRepository implements VacationRepository {
 
@@ -40,18 +39,18 @@ public class CassandraVacationRepository implements VacationRepository {
     }
 
     @Override
-    public CompletableFuture<Void> modifyVacation(AccountId accountId, VacationPatch vacationPatch) {
+    public Mono<Void> modifyVacation(AccountId accountId, VacationPatch vacationPatch) {
         Preconditions.checkNotNull(accountId);
         Preconditions.checkNotNull(vacationPatch);
         if (vacationPatch.isIdentity()) {
-            return CompletableFuture.completedFuture(null);
+            return Mono.empty();
         } else {
             return cassandraVacationDAO.modifyVacation(accountId, vacationPatch);
         }
     }
 
     @Override
-    public CompletableFuture<Vacation> retrieveVacation(AccountId accountId) {
-        return cassandraVacationDAO.retrieveVacation(accountId).thenApply(optional -> optional.orElse(DEFAULT_VACATION));
+    public Mono<Vacation> retrieveVacation(AccountId accountId) {
+        return cassandraVacationDAO.retrieveVacation(accountId).map(optional -> optional.orElse(DEFAULT_VACATION));
     }
 }

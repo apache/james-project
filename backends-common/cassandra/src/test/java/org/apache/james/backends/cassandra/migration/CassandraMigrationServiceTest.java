@@ -31,7 +31,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -48,6 +47,7 @@ import org.junit.rules.ExpectedException;
 
 import com.datastax.driver.core.Session;
 import com.google.common.collect.ImmutableMap;
+import reactor.core.publisher.Mono;
 
 public class CassandraMigrationServiceTest {
     private static final SchemaVersion LATEST_VERSION = new SchemaVersion(3);
@@ -65,7 +65,7 @@ public class CassandraMigrationServiceTest {
     @Before
     public void setUp() throws Exception {
         schemaVersionDAO = mock(CassandraSchemaVersionDAO.class);
-        when(schemaVersionDAO.updateVersion(any())).thenReturn(CompletableFuture.completedFuture(null));
+        when(schemaVersionDAO.updateVersion(any())).thenReturn(Mono.empty());
 
         successfulMigration = mock(Migration.class);
         when(successfulMigration.run()).thenReturn(Migration.Result.COMPLETED);
@@ -86,7 +86,7 @@ public class CassandraMigrationServiceTest {
 
     @Test
     public void getCurrentVersionShouldReturnCurrentVersion() {
-        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(CURRENT_VERSION)));
+        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(CURRENT_VERSION)));
 
         assertThat(testee.getCurrentVersion()).contains(CURRENT_VERSION);
     }
@@ -98,7 +98,7 @@ public class CassandraMigrationServiceTest {
 
     @Test
     public void upgradeToVersionShouldNotThrowWhenCurrentVersionIsUpToDate() {
-        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(CURRENT_VERSION)));
+        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(CURRENT_VERSION)));
 
         assertThat(testee.upgradeToVersion(OLDER_VERSION).run())
             .isEqualTo(Task.Result.COMPLETED);
@@ -106,7 +106,7 @@ public class CassandraMigrationServiceTest {
 
     @Test
     public void upgradeToVersionShouldUpdateToVersion() {
-        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(OLDER_VERSION)));
+        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(OLDER_VERSION)));
 
         testee.upgradeToVersion(CURRENT_VERSION).run();
 
@@ -116,7 +116,7 @@ public class CassandraMigrationServiceTest {
     @Test
     public void upgradeToLastVersionShouldNotThrowWhenVersionIsUpToDate() {
 
-        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(LATEST_VERSION)));
+        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(LATEST_VERSION)));
 
         assertThat(testee.upgradeToLastVersion().run())
             .isEqualTo(Task.Result.COMPLETED);
@@ -124,7 +124,7 @@ public class CassandraMigrationServiceTest {
 
     @Test
     public void upgradeToLastVersionShouldUpdateToLatestVersion() {
-        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(OLDER_VERSION)));
+        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(OLDER_VERSION)));
 
         testee.upgradeToLastVersion().run();
 
@@ -138,7 +138,7 @@ public class CassandraMigrationServiceTest {
             .put(LATEST_VERSION, successfulMigration)
             .build();
         testee = new CassandraMigrationService(schemaVersionDAO, allMigrationClazz, LATEST_VERSION);
-        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(OLDER_VERSION)));
+        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(OLDER_VERSION)));
 
         expectedException.expect(NotImplementedException.class);
 
@@ -154,7 +154,7 @@ public class CassandraMigrationServiceTest {
                 .put(LATEST_VERSION, successfulMigration)
                 .build();
             testee = new CassandraMigrationService(schemaVersionDAO, allMigrationClazz, LATEST_VERSION);
-            when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(CompletableFuture.completedFuture(Optional.of(OLDER_VERSION)));
+            when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(OLDER_VERSION)));
 
             expectedException.expect(RuntimeException.class);
 
@@ -209,19 +209,19 @@ public class CassandraMigrationServiceTest {
         private SchemaVersion currentVersion;
 
         public InMemorySchemaDAO(SchemaVersion currentVersion) {
-            super(mock(Session.class), null);
+            super(mock(Session.class));
             this.currentVersion = currentVersion;
         }
 
         @Override
-        public CompletableFuture<Optional<SchemaVersion>> getCurrentSchemaVersion() {
-            return CompletableFuture.completedFuture(Optional.of(currentVersion));
+        public Mono<Optional<SchemaVersion>> getCurrentSchemaVersion() {
+            return Mono.just(Optional.of(currentVersion));
         }
 
         @Override
-        public CompletableFuture<Void> updateVersion(SchemaVersion newVersion) {
+        public Mono<Void> updateVersion(SchemaVersion newVersion) {
             currentVersion = newVersion;
-            return CompletableFuture.completedFuture(null);
+            return Mono.empty();
         }
     }
 }

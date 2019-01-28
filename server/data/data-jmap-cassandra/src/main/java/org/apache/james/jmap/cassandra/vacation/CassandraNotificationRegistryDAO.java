@@ -27,7 +27,6 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.ttl;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
@@ -39,6 +38,7 @@ import org.apache.james.jmap.cassandra.vacation.tables.CassandraNotificationTabl
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Insert;
+import reactor.core.publisher.Mono;
 
 public class CassandraNotificationRegistryDAO {
 
@@ -73,7 +73,7 @@ public class CassandraNotificationRegistryDAO {
             .value(CassandraNotificationTable.RECIPIENT_ID, bindMarker(CassandraNotificationTable.RECIPIENT_ID));
     }
 
-    public CompletableFuture<Void> register(AccountId accountId, RecipientId recipientId, Optional<Integer> ttl) {
+    public Mono<Void> register(AccountId accountId, RecipientId recipientId, Optional<Integer> ttl) {
         return cassandraAsyncExecutor.executeVoid(
             ttl.map(value -> registerWithTTLStatement.bind().setInt(TTL, value))
                 .orElse(registerStatement.bind())
@@ -81,15 +81,15 @@ public class CassandraNotificationRegistryDAO {
                 .setString(CassandraNotificationTable.RECIPIENT_ID, recipientId.getAsString()));
     }
 
-    public CompletableFuture<Boolean> isRegistered(AccountId accountId, RecipientId recipientId) {
-        return cassandraAsyncExecutor.executeSingleRow(
+    public Mono<Boolean> isRegistered(AccountId accountId, RecipientId recipientId) {
+        return cassandraAsyncExecutor.executeSingleRowOptional(
             isRegisteredStatement.bind()
                 .setString(CassandraNotificationTable.ACCOUNT_ID, accountId.getIdentifier())
                 .setString(CassandraNotificationTable.RECIPIENT_ID, recipientId.getAsString()))
-            .thenApply(Optional::isPresent);
+            .map(Optional::isPresent);
     }
 
-    public CompletableFuture<Void> flush(AccountId accountId) {
+    public Mono<Void> flush(AccountId accountId) {
         return cassandraAsyncExecutor.executeVoid(
             flushStatement.bind()
                 .setString(CassandraNotificationTable.ACCOUNT_ID, accountId.getIdentifier()));

@@ -25,7 +25,6 @@ import java.util.stream.IntStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Username;
@@ -48,13 +47,13 @@ class CassandraAttachmentOwnerDAOTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        testee = new CassandraAttachmentOwnerDAO(cassandra.getConf(),
-            CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        testee = new CassandraAttachmentOwnerDAO(cassandra.getConf()
+        );
     }
 
     @Test
     void retrieveOwnersShouldReturnEmptyByDefault() {
-        assertThat(testee.retrieveOwners(ATTACHMENT_ID).join())
+        assertThat(testee.retrieveOwners(ATTACHMENT_ID).toIterable())
             .isEmpty();
     }
 
@@ -62,7 +61,7 @@ class CassandraAttachmentOwnerDAOTest {
     void retrieveOwnersShouldReturnAddedOwner() {
         testee.addOwner(ATTACHMENT_ID, OWNER_1).block();
 
-        assertThat(testee.retrieveOwners(ATTACHMENT_ID).join())
+        assertThat(testee.retrieveOwners(ATTACHMENT_ID).toIterable())
             .containsOnly(OWNER_1);
     }
 
@@ -71,7 +70,7 @@ class CassandraAttachmentOwnerDAOTest {
         testee.addOwner(ATTACHMENT_ID, OWNER_1).block();
         testee.addOwner(ATTACHMENT_ID, OWNER_2).block();
 
-        assertThat(testee.retrieveOwners(ATTACHMENT_ID).join())
+        assertThat(testee.retrieveOwners(ATTACHMENT_ID).toIterable())
             .containsOnly(OWNER_1, OWNER_2);
     }
 
@@ -87,7 +86,7 @@ class CassandraAttachmentOwnerDAOTest {
                     .then()
                     .block());
 
-        assertThat(testee.retrieveOwners(ATTACHMENT_ID).join())
+        assertThat(testee.retrieveOwners(ATTACHMENT_ID).toIterable())
             .hasSize(referenceCountExceedingPaging);
     }
 }

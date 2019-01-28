@@ -68,10 +68,10 @@ public class MailboxMergingTaskRunner {
 
     private Task.Result moveMessages(CassandraId oldMailboxId, CassandraId newMailboxId, MailboxSession session, MailboxMergingTask.Context context) {
         return cassandraMessageIdDAO.retrieveMessages(oldMailboxId, MessageRange.all())
-            .join()
             .map(ComposedMessageIdWithMetaData::getComposedMessageId)
             .map(messageId -> moveMessage(newMailboxId, messageId, session, context))
-            .reduce(Task.Result.COMPLETED, Task::combine);
+            .reduce(Task.Result.COMPLETED, Task::combine)
+            .block();
     }
 
     private Task.Result moveMessage(CassandraId newMailboxId, ComposedMessageId composedMessageId, MailboxSession session, MailboxMergingTask.Context context) {

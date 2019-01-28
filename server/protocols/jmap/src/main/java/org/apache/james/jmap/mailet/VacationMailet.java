@@ -82,10 +82,10 @@ public class VacationMailet extends GenericMailet {
     private void manageVacation(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate) {
         AccountId accountId = AccountId.fromString(recipient.toString());
 
-        Mono<Vacation> vacation = Mono.fromCompletionStage(vacationRepository.retrieveVacation(accountId));
-        Mono<Boolean> alreadySent = Mono.fromCompletionStage(notificationRegistry.isRegistered(
+        Mono<Vacation> vacation = vacationRepository.retrieveVacation(accountId);
+        Mono<Boolean> alreadySent = notificationRegistry.isRegistered(
                 AccountId.fromString(recipient.toString()),
-                RecipientId.fromMailAddress(processedMail.getMaybeSender().get())));
+                RecipientId.fromMailAddress(processedMail.getMaybeSender().get()));
         Pair<Vacation, Boolean> pair = Flux.combineLatest(vacation, alreadySent, Pair::of)
             .blockFirst();
 
@@ -115,7 +115,7 @@ public class VacationMailet extends GenericMailet {
             notificationRegistry.register(AccountId.fromString(recipient.toString()),
                 RecipientId.fromMailAddress(processedMail.getMaybeSender().get()),
                 vacation.getToDate())
-                .join();
+                .block();
         } catch (MessagingException e) {
             LOGGER.warn("Failed to send JMAP vacation notification from {} to {}", recipient, processedMail.getMaybeSender(), e);
         }

@@ -66,7 +66,7 @@ public class CassandraActiveScriptDAO {
     }
 
     public Mono<ActiveScriptInfo> getActiveSctiptInfo(User user) {
-        return cassandraAsyncExecutor.executeSingleRowReactor(
+        return cassandraAsyncExecutor.executeSingleRow(
             selectActiveName.bind()
                 .setString(USER_NAME, user.asString()))
             .map(row -> new ActiveScriptInfo(
@@ -75,13 +75,13 @@ public class CassandraActiveScriptDAO {
     }
 
     public Mono<Void> unactivate(User user) {
-        return cassandraAsyncExecutor.executeVoidReactor(
+        return cassandraAsyncExecutor.executeVoid(
             deleteActive.bind()
                 .setString(USER_NAME, user.asString()));
     }
 
     public Mono<Void> activate(User user, ScriptName scriptName) {
-        return cassandraAsyncExecutor.executeVoidReactor(
+        return cassandraAsyncExecutor.executeVoid(
             insertActive.bind()
                 .setString(USER_NAME, user.asString())
                 .setString(SCRIPT_NAME, scriptName.getValue())

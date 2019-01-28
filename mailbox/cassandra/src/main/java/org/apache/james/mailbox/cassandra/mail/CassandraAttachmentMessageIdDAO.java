@@ -29,21 +29,17 @@ import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentMessag
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentMessageIdTable.MESSAGE_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentMessageIdTable.TABLE_NAME;
 
-import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageId;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraAttachmentMessageIdDAO {
@@ -52,12 +48,10 @@ public class CassandraAttachmentMessageIdDAO {
     private final PreparedStatement insertStatement;
     private final PreparedStatement selectStatement;
     private final MessageId.Factory messageIdFactory;
-    private final CassandraUtils cassandraUtils;
 
     @Inject
-    public CassandraAttachmentMessageIdDAO(Session session, MessageId.Factory messageIdFactory, CassandraUtils cassandraUtils) {
+    public CassandraAttachmentMessageIdDAO(Session session, MessageId.Factory messageIdFactory) {
         this.messageIdFactory = messageIdFactory;
-        this.cassandraUtils = cassandraUtils;
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
 
         this.selectStatement = prepareSelect(session);
@@ -78,14 +72,13 @@ public class CassandraAttachmentMessageIdDAO {
             .where(eq(ATTACHMENT_ID_AS_UUID, bindMarker(ATTACHMENT_ID_AS_UUID))));
     }
 
-    public CompletableFuture<Collection<MessageId>> getOwnerMessageIds(AttachmentId attachmentId) {
+    public Flux<MessageId> getOwnerMessageIds(AttachmentId attachmentId) {
         Preconditions.checkArgument(attachmentId != null);
         return cassandraAsyncExecutor.execute(
-            selectStatement.bind()
-                .setUUID(ATTACHMENT_ID_AS_UUID, attachmentId.asUUID()))
-            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
-                .map(this::rowToMessageId)
-                .collect(Guavate.toImmutableSet()));
+                selectStatement.bind()
+                    .setUUID(ATTACHMENT_ID_AS_UUID, attachmentId.asUUID()))
+            .flatMapMany(Flux::fromIterable)
+            .map(this::rowToMessageId);
     }
 
     private MessageId rowToMessageId(Row row) {
@@ -93,7 +86,7 @@ public class CassandraAttachmentMessageIdDAO {
     }
 
     public Mono<Void> storeAttachmentForMessageId(AttachmentId attachmentId, MessageId ownerMessageId) {
-        return cassandraAsyncExecutor.executeVoidReactor(
+        return cassandraAsyncExecutor.executeVoid(
             insertStatement.bind()
                 .setUUID(ATTACHMENT_ID_AS_UUID, attachmentId.asUUID())
                 .setString(ATTACHMENT_ID, attachmentId.getId())

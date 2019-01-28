@@ -251,7 +251,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
                     .isInstanceOf(RuntimeException.class)
                     .hasMessage("Expected failure while storing keys");
 
-            assertThat(countDAO.getCount(URL).join()).isEqualTo(0);
+            assertThat(countDAO.getCount(URL).block()).isEqualTo(0);
         }
 
         @Test

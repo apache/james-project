@@ -32,8 +32,6 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.NAM
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.UIDVALIDITY;
 
-import java.util.concurrent.CompletableFuture;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
@@ -114,14 +112,14 @@ public class CassandraMailboxDAO {
 
     public Mono<Void> save(Mailbox mailbox) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        return executor.executeVoidReactor(insertStatement.bind()
+        return executor.executeVoid(insertStatement.bind()
             .setUUID(ID, cassandraId.asUuid())
             .setString(NAME, mailbox.getName())
             .setLong(UIDVALIDITY, mailbox.getUidValidity())
             .setUDTValue(MAILBOX_BASE, mailboxBaseTupleUtil.createMailboxBaseUDT(mailbox.getNamespace(), mailbox.getUser())));
     }
 
-    public CompletableFuture<Void> updatePath(CassandraId mailboxId, MailboxPath mailboxPath) {
+    public Mono<Void> updatePath(CassandraId mailboxId, MailboxPath mailboxPath) {
         return executor.executeVoid(updateStatement.bind()
             .setUUID(ID, mailboxId.asUuid())
             .setString(NAME, mailboxPath.getName())
@@ -129,12 +127,12 @@ public class CassandraMailboxDAO {
     }
 
     public Mono<Void> delete(CassandraId mailboxId) {
-        return executor.executeVoidReactor(deleteStatement.bind()
+        return executor.executeVoid(deleteStatement.bind()
             .setUUID(ID, mailboxId.asUuid()));
     }
 
     public Mono<SimpleMailbox> retrieveMailbox(CassandraId mailboxId) {
-        return executor.executeSingleRowReactor(readStatement.bind()
+        return executor.executeSingleRow(readStatement.bind()
             .setUUID(ID, mailboxId.asUuid()))
             .map(this::mailboxFromRow)
             .map(mailbox -> addMailboxId(mailboxId, mailbox));
@@ -155,7 +153,7 @@ public class CassandraMailboxDAO {
     }
 
     public Flux<SimpleMailbox> retrieveAllMailboxes() {
-        return executor.executeReactor(listStatement.bind())
+        return executor.execute(listStatement.bind())
             .flatMapMany(cassandraUtils::convertToFlux)
             .map(this::toMailboxWithId);
     }

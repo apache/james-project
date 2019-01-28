@@ -64,9 +64,9 @@ public class DeletedMailsDAO {
     }
 
     Mono<Void> markAsDeleted(MailQueueName mailQueueName, MailKey mailKey) {
-        return Mono.fromCompletionStage(executor.executeVoid(insertOne.bind()
+        return executor.executeVoid(insertOne.bind()
             .setString(QUEUE_NAME, mailQueueName.asString())
-            .setString(MAIL_KEY, mailKey.getMailKey())));
+            .setString(MAIL_KEY, mailKey.getMailKey()));
     }
 
     Mono<Boolean> isDeleted(MailQueueName mailQueueName, MailKey mailKey) {

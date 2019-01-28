@@ -31,9 +31,6 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMailboxPathTable
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxPathTable.NAMESPACE_AND_USER;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxPathTable.TABLE_NAME;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
@@ -126,7 +123,7 @@ public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
     }
 
     public Mono<CassandraIdAndPath> retrieveId(MailboxPath mailboxPath) {
-        return cassandraAsyncExecutor.executeSingleRowReactor(
+        return cassandraAsyncExecutor.executeSingleRow(
             select.bind()
                 .setUDTValue(NAMESPACE_AND_USER, mailboxBaseTupleUtil.createMailboxBaseUDT(mailboxPath.getNamespace(), mailboxPath.getUser()))
                 .setString(MAILBOX_NAME, mailboxPath.getName()))
@@ -137,7 +134,7 @@ public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
 
     @Override
     public Flux<CassandraIdAndPath> listUserMailboxes(String namespace, String user) {
-        return cassandraAsyncExecutor.executeReactor(
+        return cassandraAsyncExecutor.execute(
             selectAllForUser.bind()
                 .setUDTValue(NAMESPACE_AND_USER, mailboxBaseTupleUtil.createMailboxBaseUDT(namespace, user)))
             .flatMapMany(resultSet -> cassandraUtils.convertToFlux(resultSet)
@@ -197,20 +194,20 @@ public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
 
     @Override
     public Mono<Void> delete(MailboxPath mailboxPath) {
-        return cassandraAsyncExecutor.executeVoidReactor(delete.bind()
+        return cassandraAsyncExecutor.executeVoid(delete.bind()
             .setUDTValue(NAMESPACE_AND_USER, mailboxBaseTupleUtil.createMailboxBaseUDT(mailboxPath.getNamespace(), mailboxPath.getUser()))
             .setString(MAILBOX_NAME, mailboxPath.getName()));
     }
 
-    public CompletableFuture<Stream<CassandraIdAndPath>> readAll() {
+    public Flux<CassandraIdAndPath> readAll() {
         return cassandraAsyncExecutor.execute(selectAll.bind())
-            .thenApply(cassandraUtils::convertToStream)
-            .thenApply(stream -> stream.map(this::fromRowToCassandraIdAndPath));
+            .flatMapMany(Flux::fromIterable)
+            .map(this::fromRowToCassandraIdAndPath);
     }
 
-    public CompletableFuture<Long> countAll() {
-        return cassandraAsyncExecutor.executeSingleRow(countAll.bind())
-            .thenApply(optional -> optional.map(row -> row.getLong(FIRST_CELL)).orElse(0L));
+    public Mono<Long> countAll() {
+        return cassandraAsyncExecutor.executeSingleRowOptional(countAll.bind())
+            .map(optional -> optional.map(row -> row.getLong(FIRST_CELL)).orElse(0L));
     }
 
 }

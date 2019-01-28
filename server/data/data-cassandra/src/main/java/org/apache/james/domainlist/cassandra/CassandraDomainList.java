@@ -32,7 +32,6 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
@@ -40,22 +39,19 @@ import org.apache.james.domainlist.lib.AbstractDomainList;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
-import com.github.steveash.guavate.Guavate;
-import com.google.common.annotations.VisibleForTesting;
+import reactor.core.publisher.Flux;
 
 public class CassandraDomainList extends AbstractDomainList {
     private final CassandraAsyncExecutor executor;
-    private final CassandraUtils cassandraUtils;
     private final PreparedStatement readAllStatement;
     private final PreparedStatement readStatement;
     private final PreparedStatement insertStatement;
     private final PreparedStatement removeStatement;
 
     @Inject
-    public CassandraDomainList(DNSService dnsService, Session session, CassandraUtils cassandraUtils) {
+    public CassandraDomainList(DNSService dnsService, Session session) {
         super(dnsService);
         this.executor = new CassandraAsyncExecutor(session);
-        this.cassandraUtils = cassandraUtils;
         this.readAllStatement = prepareReadAllStatement(session);
         this.readStatement = prepareReadStatement(session);
         this.insertStatement = prepareInsertStatement(session);
@@ -86,25 +82,20 @@ public class CassandraDomainList extends AbstractDomainList {
             .from(TABLE_NAME));
     }
 
-    @VisibleForTesting
-    CassandraDomainList(DNSService dnsService, Session session) {
-        this(dnsService, session, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
-    }
-
     @Override
     protected List<Domain> getDomainListInternal() throws DomainListException {
         return executor.execute(readAllStatement.bind())
-            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
-                .map(row -> Domain.of(row.getString(DOMAIN)))
-                .collect(Guavate.toImmutableList()))
-            .join();
+            .flatMapMany(Flux::fromIterable)
+            .map(row -> Domain.of(row.getString(DOMAIN)))
+            .collectList()
+            .block();
     }
 
     @Override
     protected boolean containsDomainInternal(Domain domain) throws DomainListException {
-        return executor.executeSingleRow(readStatement.bind()
+        return executor.executeSingleRowOptional(readStatement.bind()
                 .setString(DOMAIN, domain.asString()))
-            .join()
+            .block()
             .isPresent();
     }
 

@@ -49,10 +49,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
+import reactor.core.publisher.Flux;
 
 public class CassandraUsersRepository extends AbstractUsersRepository {
 
@@ -118,12 +118,12 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
 
     @Override
     public User getUserByName(String name) {
-        ResultSet result = executor.execute(getUserStatement.bind()
-            .setString(NAME, name.toLowerCase(Locale.US)))
-            .join();
-        return Optional.ofNullable(result.one())
+        return executor.executeSingleRow(
+                getUserStatement.bind()
+                    .setString(NAME, name.toLowerCase(Locale.US)))
             .map(row -> new DefaultUser(row.getString(REALNAME), row.getString(PASSWORD), row.getString(ALGORITHM)))
             .filter(user -> user.hasUsername(name))
+            .blockOptional()
             .orElse(null);
     }
 
@@ -172,17 +172,18 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     }
 
     @Override
-    public int countUsers() throws UsersRepositoryException {
-        ResultSet result = executor.execute(countUserStatement.bind()).join();
-        return Ints.checkedCast(result.one().getLong(0));
+    public int countUsers() {
+        return executor.executeSingleRow(countUserStatement.bind())
+            .map(row -> Ints.checkedCast(row.getLong(0)))
+            .block();
     }
 
     @Override
     public Iterator<String> list() throws UsersRepositoryException {
-        ResultSet result = executor.execute(listStatement.bind())
-            .join();
-        return cassandraUtils.convertToStream(result)
+        return executor.execute(listStatement.bind())
+            .flatMapMany(Flux::fromIterable)
             .map(row -> row.getString(REALNAME))
+            .toIterable()
             .iterator();
     }
 

@@ -158,19 +158,19 @@ public class CassandraMailRepositoryMailDAO implements CassandraMailRepositoryMa
                 .setTimestamp(LAST_UPDATED, mail.getLastUpdated())
                 .setMap(ATTRIBUTES, toRawAttributeMap(mail))
                 .setMap(PER_RECIPIENT_SPECIFIC_HEADERS, toHeaderMap(mail.getPerRecipientSpecificHeaders())))
-            .flatMap(executor::executeVoidReactor);
+            .flatMap(executor::executeVoid);
     }
 
     @Override
     public Mono<Void> remove(MailRepositoryUrl url, MailKey key) {
-        return executor.executeVoidReactor(deleteMail.bind()
+        return executor.executeVoid(deleteMail.bind()
             .setString(REPOSITORY_NAME, url.asString())
             .setString(MAIL_KEY, key.asString()));
     }
 
     @Override
     public Mono<Optional<MailDTO>> read(MailRepositoryUrl url, MailKey key) {
-        return executor.executeSingleRowOptionalReactor(selectMail.bind()
+        return executor.executeSingleRowOptional(selectMail.bind()
                 .setString(REPOSITORY_NAME, url.asString())
                 .setString(MAIL_KEY, key.asString()))
             .map(rowOptional -> rowOptional.map(this::toMail));

@@ -24,7 +24,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 import javax.inject.Inject;
@@ -44,9 +43,9 @@ import org.apache.james.sieverepository.api.exception.IsActiveException;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
-
 import org.apache.james.util.FunctionalUtils;
 
+import com.github.steveash.guavate.Guavate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -73,16 +72,29 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public void haveSpace(User user, ScriptName name, long newSize) throws QuotaExceededException {
-        throwOnOverQuota(user, spaceThatWillBeUsedByNewScript(user, name, newSize));
+        reThrowQuotaExceededException(() ->
+            spaceThatWillBeUsedByNewScript(user, name, newSize)
+                .flatMap(sizeDifference -> throwOnOverQuota(user, sizeDifference))
+                .block());
     }
 
-    private void throwOnOverQuota(User user, Mono<Long> sizeDifference) throws QuotaExceededException {
-        CompletableFuture<Optional<QuotaSize>> userQuotaFuture = cassandraSieveQuotaDAO.getQuota(user);
-        CompletableFuture<Optional<QuotaSize>> globalQuotaFuture = cassandraSieveQuotaDAO.getQuota();
-        CompletableFuture<Long> spaceUsedFuture = cassandraSieveQuotaDAO.spaceUsedBy(user);
+    private Mono<Void> throwOnOverQuota(User user, Long sizeDifference) {
+        Mono<Optional<QuotaSize>> userQuotaMono = cassandraSieveQuotaDAO.getQuota(user);
+        Mono<Optional<QuotaSize>> globalQuotaMono = cassandraSieveQuotaDAO.getQuota();
+        Mono<Long> spaceUsedMono = cassandraSieveQuotaDAO.spaceUsedBy(user);
 
-        new SieveQuota(spaceUsedFuture.join(), limitToUse(userQuotaFuture, globalQuotaFuture))
-            .checkOverQuotaUponModification(sizeDifference.block());
+        return limitToUse(userQuotaMono, globalQuotaMono).zipWith(spaceUsedMono)
+            .flatMap(pair -> checkOverQuotaUponModification(sizeDifference, pair.getT2(), pair.getT1()));
+    }
+
+    private Mono<Void> checkOverQuotaUponModification(Long sizeDifference, Long spaceUsed, Optional<QuotaSize> limit) {
+        try {
+            new SieveQuota(spaceUsed, limit)
+                .checkOverQuotaUponModification(sizeDifference);
+            return Mono.empty();
+        } catch (QuotaExceededException e) {
+            return Mono.error(new RuntimeException(e));
+        }
     }
 
     private Mono<Long> spaceThatWillBeUsedByNewScript(User user, ScriptName name, long scriptSize) {
@@ -92,28 +104,39 @@ public class CassandraSieveRepository implements SieveRepository {
             .map(sizeOfStoredScript -> scriptSize - sizeOfStoredScript);
     }
 
-    private Optional<QuotaSize> limitToUse(CompletableFuture<Optional<QuotaSize>> userQuota, CompletableFuture<Optional<QuotaSize>> globalQuota) {
-        if (userQuota.join().isPresent()) {
-            return userQuota.join();
-        }
-        return globalQuota.join();
+    private Mono<Optional<QuotaSize>> limitToUse(Mono<Optional<QuotaSize>> userQuota, Mono<Optional<QuotaSize>> globalQuota) {
+        return userQuota
+            .filter(Optional::isPresent)
+            .switchIfEmpty(globalQuota);
     }
 
     @Override
     public void putScript(User user, ScriptName name, ScriptContent content) throws QuotaExceededException {
-        Mono<Long> spaceUsed = spaceThatWillBeUsedByNewScript(user, name, content.length());
-        throwOnOverQuota(user, spaceUsed);
+        Function<Long, Mono<Void>> updateAndInsert = spaceUsed -> Flux.merge(
+                updateSpaceUsed(user, spaceUsed),
+                cassandraSieveDAO.insertScript(user,
+                        Script.builder()
+                                .name(name)
+                                .content(content)
+                                .isActive(false)
+                                .build()))
+                .then();
 
-        Flux.merge(
-            updateSpaceUsed(user, spaceUsed.block()),
-            cassandraSieveDAO.insertScript(user,
-                Script.builder()
-                    .name(name)
-                    .content(content)
-                    .isActive(false)
-                    .build()))
-            .then()
-            .block();
+        reThrowQuotaExceededException(() ->
+            spaceThatWillBeUsedByNewScript(user, name, content.length())
+                .flatMap(spaceUsed -> throwOnOverQuota(user, spaceUsed)
+                        .thenEmpty(updateAndInsert.apply(spaceUsed)))
+                .block());
+    }
+
+    private void reThrowQuotaExceededException(Runnable runnable) throws QuotaExceededException {
+       try {
+           runnable.run();
+       } catch (RuntimeException e) {
+           if (e.getCause() instanceof QuotaExceededException) {
+               throw (QuotaExceededException) e.getCause();
+           }
+       }
     }
 
     private Mono<Void> updateSpaceUsed(User user, long spaceUsed) {
@@ -125,7 +148,7 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public List<ScriptSummary> listScripts(User user) {
-        return cassandraSieveDAO.listScripts(user).join();
+        return cassandraSieveDAO.listScripts(user).collect(Guavate.toImmutableList()).block();
     }
 
     @Override
@@ -224,51 +247,51 @@ public class CassandraSieveRepository implements SieveRepository {
     @Override
     public boolean hasDefaultQuota() {
         return cassandraSieveQuotaDAO.getQuota()
-            .join()
+            .block()
             .isPresent();
     }
 
     @Override
     public QuotaSize getDefaultQuota() throws QuotaNotFoundException {
         return cassandraSieveQuotaDAO.getQuota()
-            .join()
+            .block()
             .orElseThrow(QuotaNotFoundException::new);
     }
 
     @Override
     public void setDefaultQuota(QuotaSize quota) {
-        cassandraSieveQuotaDAO.setQuota(quota).join();
+        cassandraSieveQuotaDAO.setQuota(quota).block();
     }
 
     @Override
     public void removeQuota() {
-        cassandraSieveQuotaDAO.removeQuota().join();
+        cassandraSieveQuotaDAO.removeQuota().block();
     }
 
     @Override
     public boolean hasQuota(User user) {
-        CompletableFuture<Boolean> hasUserQuota = cassandraSieveQuotaDAO.getQuota(user).thenApply(Optional::isPresent);
-        CompletableFuture<Boolean> hasGlobalQuota = cassandraSieveQuotaDAO.getQuota().thenApply(Optional::isPresent);
+        Mono<Boolean> hasUserQuota = cassandraSieveQuotaDAO.getQuota(user).map(Optional::isPresent);
+        Mono<Boolean> hasGlobalQuota = cassandraSieveQuotaDAO.getQuota().map(Optional::isPresent);
 
-        return hasUserQuota.thenCombine(hasGlobalQuota, (a, b) -> a || b)
-            .join();
+        return hasUserQuota.zipWith(hasGlobalQuota, (a, b) -> a || b)
+            .block();
     }
 
     @Override
     public QuotaSize getQuota(User user) throws QuotaNotFoundException {
         return cassandraSieveQuotaDAO.getQuota(user)
-            .join()
+            .block()
             .orElseThrow(QuotaNotFoundException::new);
     }
 
     @Override
     public void setQuota(User user, QuotaSize quota) {
-        cassandraSieveQuotaDAO.setQuota(user, quota).join();
+        cassandraSieveQuotaDAO.setQuota(user, quota).block();
     }
 
     @Override
     public void removeQuota(User user) {
-        cassandraSieveQuotaDAO.removeQuota(user).join();
+        cassandraSieveQuotaDAO.removeQuota(user).block();
     }
 
 }

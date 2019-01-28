@@ -87,7 +87,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
         Preconditions.checkArgument(attachmentIds != null);
         return Flux.fromIterable(attachmentIds)
             .flatMap(this::getAttachmentsAsMono)
-            .collectList()
+            .collect(Guavate.toImmutableList())
             .block();
     }
 
@@ -126,12 +126,13 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     @Override
     public Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException {
         return attachmentMessageIdDAO.getOwnerMessageIds(attachmentId)
-            .join();
+            .collect(Guavate.toImmutableList())
+            .block();
     }
 
     @Override
     public Collection<Username> getOwners(AttachmentId attachmentId) throws MailboxException {
-        return ownerDAO.retrieveOwners(attachmentId).join().collect(Guavate.toImmutableList());
+        return ownerDAO.retrieveOwners(attachmentId).collect(Guavate.toImmutableList()).block();
     }
 
     public Mono<Void> storeAttachmentAsync(Attachment attachment, MessageId ownerMessageId) {

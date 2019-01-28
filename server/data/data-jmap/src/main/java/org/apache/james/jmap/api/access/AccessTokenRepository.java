@@ -19,18 +19,18 @@
 
 package org.apache.james.jmap.api.access;
 
-import java.util.concurrent.CompletableFuture;
-
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
+
+import reactor.core.publisher.Mono;
 
 public interface AccessTokenRepository {
 
     String TOKEN_EXPIRATION_IN_MS = "tokenExpirationInMs";
     
-    CompletableFuture<Void> addToken(String username, AccessToken accessToken);
+    Mono<Void> addToken(String username, AccessToken accessToken);
 
-    CompletableFuture<Void> removeToken(AccessToken accessToken);
+    Mono<Void> removeToken(AccessToken accessToken);
 
-    CompletableFuture<String> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken;
+    Mono<String> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken;
 
 }

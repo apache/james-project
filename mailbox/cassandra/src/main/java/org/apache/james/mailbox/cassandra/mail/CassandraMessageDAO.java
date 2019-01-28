@@ -45,7 +45,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -177,7 +176,7 @@ public class CassandraMessageDAO {
 
     public Mono<Void> save(MailboxMessage message) throws MailboxException {
         return saveContent(message)
-            .flatMap(pair -> cassandraAsyncExecutor.executeVoidReactor(boundWriteStatement(message, pair)))
+            .flatMap(pair -> cassandraAsyncExecutor.executeVoid(boundWriteStatement(message, pair)))
             .then();
     }
 
@@ -250,7 +249,7 @@ public class CassandraMessageDAO {
     private Mono<ResultSet> retrieveRow(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId.getComposedMessageId().getMessageId();
 
-        return cassandraAsyncExecutor.executeReactor(retrieveSelect(fetchType)
+        return cassandraAsyncExecutor.execute(retrieveSelect(fetchType)
             .bind()
             .setUUID(MESSAGE_ID, cassandraMessageId.get()));
     }
@@ -331,7 +330,7 @@ public class CassandraMessageDAO {
         }
     }
 
-    public CompletableFuture<Void> delete(CassandraMessageId messageId) {
+    public Mono<Void> delete(CassandraMessageId messageId) {
         return cassandraAsyncExecutor.executeVoid(delete.bind()
             .setUUID(MESSAGE_ID, messageId.get()));
     }
@@ -399,13 +398,13 @@ public class CassandraMessageDAO {
         }
     }
 
-    public CompletableFuture<Stream<MessageIdAttachmentIds>> retrieveAllMessageIdAttachmentIds() {
+    public Flux<MessageIdAttachmentIds> retrieveAllMessageIdAttachmentIds() {
         return cassandraAsyncExecutor.execute(
             selectAllMessagesWithAttachment.bind()
                 .setReadTimeoutMillis(configuration.getMessageAttachmentIdsReadTimeout()))
-            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
-                .map(this::fromRow)
-                .filter(MessageIdAttachmentIds::hasAttachment));
+            .flatMapMany(Flux::fromIterable)
+            .map(this::fromRow)
+            .filter(MessageIdAttachmentIds::hasAttachment);
     }
 
     private MessageIdAttachmentIds fromRow(Row row) {

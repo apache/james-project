@@ -27,8 +27,11 @@ import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.task.Task;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import reactor.core.publisher.Mono;
 
 public class AttachmentV2Migration implements Migration {
     private static final Logger LOGGER = LoggerFactory.getLogger(AttachmentV2Migration.class);
@@ -47,27 +50,23 @@ public class AttachmentV2Migration implements Migration {
 
     @Override
     public Result run() {
-        try {
-            return attachmentDAOV1.retrieveAll()
-                .map(this::migrateAttachment)
-                .reduce(Result.COMPLETED, Task::combine);
-        } catch (Exception e) {
-            LOGGER.error("Error while performing attachmentDAO V2 migration", e);
-            return Result.PARTIAL;
-        }
+        return attachmentDAOV1.retrieveAll()
+            .flatMap(this::migrateAttachment)
+            .reduce(Result.COMPLETED, Task::combine)
+            .onErrorResume(this::handlError)
+            .block();
     }
 
-    private Result migrateAttachment(Attachment attachment) {
-        try {
-            return blobStore.save(attachment.getBytes())
-                .map(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
-                .flatMap(attachmentDAOV2::storeAttachment)
-                .then(attachmentDAOV1.deleteAttachment(attachment.getAttachmentId()))
-                .thenReturn(Result.COMPLETED)
-                .block();
-        } catch (Exception e) {
-            LOGGER.error("Error while performing attachmentDAO V2 migration", e);
-            return Result.PARTIAL;
-        }
+    private Mono<Result> handlError(Throwable throwable) {
+        LOGGER.error("Error while performing attachmentDAO V2 migration", throwable);
+        return Mono.just(Result.PARTIAL);
+    }
+
+    private Mono<Result> migrateAttachment(Attachment attachment) {
+        return blobStore.save(attachment.getBytes())
+            .map(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
+            .flatMap(attachmentDAOV2::storeAttachment)
+            .then(attachmentDAOV1.deleteAttachment(attachment.getAttachmentId()))
+            .thenReturn(Result.COMPLETED);
     }
 }

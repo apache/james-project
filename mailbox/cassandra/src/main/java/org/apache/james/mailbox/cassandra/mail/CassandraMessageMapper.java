@@ -109,8 +109,8 @@ public class CassandraMessageMapper implements MessageMapper {
     public Iterator<MessageUid> listAllMessageUids(Mailbox mailbox) throws MailboxException {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
         return messageIdDAO.retrieveMessages(cassandraId, MessageRange.all())
-            .join()
             .map(metaData -> metaData.getComposedMessageId().getUid())
+            .toIterable()
             .iterator();
     }
 
@@ -170,8 +170,8 @@ public class CassandraMessageMapper implements MessageMapper {
 
     private List<ComposedMessageIdWithMetaData> retrieveMessageIds(CassandraId mailboxId, MessageRange messageRange) {
         return messageIdDAO.retrieveMessages(mailboxId, messageRange)
-            .join()
-            .collect(Guavate.toImmutableList());
+            .collect(Guavate.toImmutableList())
+            .block();
     }
 
     private Flux<SimpleMailboxMessage> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
@@ -219,7 +219,7 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     private Mono<ComposedMessageIdWithMetaData> retrieveComposedId(CassandraId mailboxId, MessageUid uid) {
-        return Mono.fromCompletionStage(messageIdDAO.retrieve(mailboxId, uid))
+        return messageIdDAO.retrieve(mailboxId, uid)
             .doOnNext(optional -> OptionalUtils.executeIfEmpty(optional,
                 () -> LOGGER.warn("Could not retrieve message {} {}", mailboxId, uid)))
             .flatMap(Mono::justOrEmpty);
@@ -272,8 +272,7 @@ public class CassandraMessageMapper implements MessageMapper {
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagUpdateCalculator, MessageRange range) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
-        Flux<ComposedMessageIdWithMetaData> toBeUpdated = Mono.fromCompletionStage(messageIdDAO.retrieveMessages(mailboxId, range))
-            .flatMapMany(Flux::fromStream);
+        Flux<ComposedMessageIdWithMetaData> toBeUpdated = messageIdDAO.retrieveMessages(mailboxId, range);
 
         FlagsUpdateStageResult firstResult = runUpdateStage(mailboxId, toBeUpdated, flagUpdateCalculator).block();
         FlagsUpdateStageResult finalResult = handleUpdatesStagedRetry(mailboxId, flagUpdateCalculator, firstResult);
@@ -297,8 +296,7 @@ public class CassandraMessageMapper implements MessageMapper {
     private Mono<FlagsUpdateStageResult> retryUpdatesStage(CassandraId mailboxId, FlagsUpdateCalculator flagsUpdateCalculator, List<MessageUid> failed) {
         if (!failed.isEmpty()) {
             Flux<ComposedMessageIdWithMetaData> toUpdate = Flux.fromIterable(failed)
-                .flatMap(uid ->
-                    Mono.fromCompletionStage(messageIdDAO.retrieve(mailboxId, uid))
+                .flatMap(uid -> messageIdDAO.retrieve(mailboxId, uid)
                         .flatMap(Mono::justOrEmpty)
                 );
             return runUpdateStage(mailboxId, toUpdate, flagsUpdateCalculator);

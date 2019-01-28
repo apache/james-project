@@ -67,8 +67,9 @@ public class CassandraMailQueueMailDelete {
     }
 
     void updateBrowseStart(MailQueueName mailQueueName) {
-        Mono<Instant> newBrowseStart = findNewBrowseStart(mailQueueName);
-        updateNewBrowseStart(mailQueueName, newBrowseStart);
+        findNewBrowseStart(mailQueueName)
+            .flatMap(newBrowseStart -> updateNewBrowseStart(mailQueueName, newBrowseStart))
+            .block();
     }
 
     private void maybeUpdateBrowseStart(MailQueueName mailQueueName) {
@@ -83,9 +84,8 @@ public class CassandraMailQueueMailDelete {
             .next();
     }
 
-    private Mono<Void> updateNewBrowseStart(MailQueueName mailQueueName, Mono<Instant> maybeNewBrowseStart) {
-        return maybeNewBrowseStart
-            .flatMap(newBrowseStartInstant -> browseStartDao.updateBrowseStart(mailQueueName, newBrowseStartInstant));
+    private Mono<Void> updateNewBrowseStart(MailQueueName mailQueueName, Instant newBrowseStartInstant) {
+        return browseStartDao.updateBrowseStart(mailQueueName, newBrowseStartInstant);
     }
 
     private boolean shouldUpdateBrowseStart() {

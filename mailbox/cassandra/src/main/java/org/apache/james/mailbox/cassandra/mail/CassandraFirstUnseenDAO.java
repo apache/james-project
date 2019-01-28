@@ -75,20 +75,20 @@ public class CassandraFirstUnseenDAO {
     }
 
     public Mono<Void> addUnread(CassandraId cassandraId, MessageUid uid) {
-        return cassandraAsyncExecutor.executeVoidReactor(
+        return cassandraAsyncExecutor.executeVoid(
             addStatement.bind()
                 .setUUID(MAILBOX_ID, cassandraId.asUuid())
                 .setLong(UID, uid.asLong()));
     }
 
     public Mono<Void> removeUnread(CassandraId cassandraId, MessageUid uid) {
-        return cassandraAsyncExecutor.executeVoidReactor(deleteStatement.bind()
+        return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
             .setUUID(MAILBOX_ID, cassandraId.asUuid())
             .setLong(UID, uid.asLong()));
     }
 
     public Mono<MessageUid> retrieveFirstUnread(CassandraId cassandraId) {
-        return cassandraAsyncExecutor.executeSingleRowReactor(
+        return cassandraAsyncExecutor.executeSingleRow(
             readStatement.bind()
                 .setUUID(MAILBOX_ID, cassandraId.asUuid()))
             .map(row -> MessageUid.of(row.getLong(UID)));

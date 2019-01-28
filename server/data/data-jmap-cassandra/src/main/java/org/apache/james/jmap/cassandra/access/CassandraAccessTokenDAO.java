@@ -27,8 +27,6 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.ttl;
 import static org.apache.james.jmap.api.access.AccessTokenRepository.TOKEN_EXPIRATION_IN_MS;
 
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -41,6 +39,7 @@ import org.apache.james.jmap.cassandra.access.table.CassandraAccessTokenTable;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.google.common.primitives.Ints;
+import reactor.core.publisher.Mono;
 
 public class CassandraAccessTokenDAO {
 
@@ -71,21 +70,21 @@ public class CassandraAccessTokenDAO {
             .where(eq(CassandraAccessTokenTable.TOKEN, bindMarker(CassandraAccessTokenTable.TOKEN))));
     }
 
-    public CompletableFuture<Void> addToken(String username, AccessToken accessToken) {
+    public Mono<Void> addToken(String username, AccessToken accessToken) {
         return cassandraAsyncExecutor.executeVoid(insertStatement.bind()
             .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.asUUID())
             .setString(CassandraAccessTokenTable.USERNAME, username)
             .setInt(TTL, durationInSeconds));
     }
 
-    public CompletableFuture<Void> removeToken(AccessToken accessToken) {
+    public Mono<Void> removeToken(AccessToken accessToken) {
         return cassandraAsyncExecutor.executeVoid(removeStatement.bind()
             .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.asUUID()));
     }
 
-    public CompletableFuture<Optional<String>> getUsernameFromToken(AccessToken accessToken) {
+    public Mono<String> getUsernameFromToken(AccessToken accessToken) {
         return cassandraAsyncExecutor.executeSingleRow(selectStatement.bind()
-            .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.asUUID()))
-            .thenApply(optional -> optional.map(row -> row.getString(CassandraAccessTokenTable.USERNAME)));
+                .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.asUUID()))
+            .map(row -> row.getString(CassandraAccessTokenTable.USERNAME));
     }
 }

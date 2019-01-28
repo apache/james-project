@@ -59,7 +59,7 @@ class CassandraUserMailboxRightsDAOTest {
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS))))
             .block();
 
-        assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).join())
+        assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).block())
             .contains(RIGHTS);
     }
 
@@ -75,7 +75,7 @@ class CassandraUserMailboxRightsDAOTest {
             new MailboxACL(new Entry(ENTRY_KEY, OTHER_RIGHTS))))
             .block();
 
-        assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).join())
+        assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).block())
             .contains(OTHER_RIGHTS);
     }
 
@@ -98,7 +98,7 @@ class CassandraUserMailboxRightsDAOTest {
             MailboxACL.EMPTY))
             .block();
 
-        assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).join())
+        assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).block())
             .isEmpty();
     }
 }
