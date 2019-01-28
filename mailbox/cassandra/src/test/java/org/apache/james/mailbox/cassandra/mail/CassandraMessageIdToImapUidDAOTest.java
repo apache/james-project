@@ -22,7 +22,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -42,6 +41,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.datastax.driver.core.utils.UUIDs;
+import reactor.core.publisher.Flux;
 
 class CassandraMessageIdToImapUidDAOTest {
     public static final CassandraModule MODULE = CassandraModule.aggregateModules(
@@ -77,7 +77,7 @@ class CassandraMessageIdToImapUidDAOTest {
                     .flags(new Flags())
                     .modSeq(1)
                     .build())
-                .join();
+                .block();
 
         testee.delete(messageId, mailboxId).block();
 
@@ -92,7 +92,7 @@ class CassandraMessageIdToImapUidDAOTest {
         CassandraId mailboxId2 = CassandraId.timeBased();
         MessageUid messageUid = MessageUid.of(1);
         MessageUid messageUid2 = MessageUid.of(2);
-        CompletableFuture.allOf(
+        Flux.merge(
             testee.insert(ComposedMessageIdWithMetaData.builder()
                     .composedMessageId(new ComposedMessageId(mailboxId, messageId, messageUid))
                     .flags(new Flags())
@@ -103,7 +103,7 @@ class CassandraMessageIdToImapUidDAOTest {
                     .flags(new Flags())
                     .modSeq(1)
                     .build()))
-        .join();
+        .blockLast();
 
         testee.delete(messageId, mailboxId).block();
 
@@ -127,7 +127,7 @@ class CassandraMessageIdToImapUidDAOTest {
                 .flags(new Flags())
                 .modSeq(1)
                 .build())
-            .join();
+            .block();
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(mailboxId, messageId, messageUid))
@@ -149,7 +149,7 @@ class CassandraMessageIdToImapUidDAOTest {
                 .flags(new Flags())
                 .modSeq(1)
                 .build();
-        testee.insert(composedMessageIdWithFlags).join();
+        testee.insert(composedMessageIdWithFlags).block();
 
         Boolean result = testee.updateMetadata(composedMessageIdWithFlags, 1).block();
 
@@ -167,7 +167,7 @@ class CassandraMessageIdToImapUidDAOTest {
                 .flags(new Flags())
                 .modSeq(1)
                 .build();
-        testee.insert(composedMessageIdWithFlags).join();
+        testee.insert(composedMessageIdWithFlags).block();
 
         Boolean result = testee.updateMetadata(composedMessageIdWithFlags, 3).block();
 
@@ -186,7 +186,7 @@ class CassandraMessageIdToImapUidDAOTest {
                 .flags(new Flags())
                 .modSeq(1)
                 .build())
-            .join();
+            .block();
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
@@ -211,7 +211,7 @@ class CassandraMessageIdToImapUidDAOTest {
                 .flags(new Flags())
                 .modSeq(1)
                 .build())
-            .join();
+            .block();
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
@@ -236,7 +236,7 @@ class CassandraMessageIdToImapUidDAOTest {
                 .flags(new Flags())
                 .modSeq(1)
                 .build())
-            .join();
+            .block();
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
@@ -261,7 +261,7 @@ class CassandraMessageIdToImapUidDAOTest {
                 .flags(new Flags())
                 .modSeq(1)
                 .build())
-            .join();
+            .block();
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
@@ -286,7 +286,7 @@ class CassandraMessageIdToImapUidDAOTest {
                 .flags(new Flags())
                 .modSeq(1)
                 .build())
-            .join();
+            .block();
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
@@ -311,7 +311,7 @@ class CassandraMessageIdToImapUidDAOTest {
                 .flags(new Flags())
                 .modSeq(1)
                 .build())
-            .join();
+            .block();
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
@@ -336,7 +336,7 @@ class CassandraMessageIdToImapUidDAOTest {
                 .flags(new Flags())
                 .modSeq(1)
                 .build())
-            .join();
+            .block();
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
@@ -362,7 +362,7 @@ class CassandraMessageIdToImapUidDAOTest {
                 .flags(new Flags())
                 .modSeq(1)
                 .build())
-            .join();
+            .block();
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
@@ -387,7 +387,7 @@ class CassandraMessageIdToImapUidDAOTest {
                 .flags(new Flags())
                 .modSeq(1)
                 .build())
-            .join();
+            .block();
 
         Flags flags = new Flags();
         flags.add("myCustomFlag");
@@ -412,7 +412,7 @@ class CassandraMessageIdToImapUidDAOTest {
                 .flags(new Flags())
                 .modSeq(1)
                 .build())
-            .join();
+            .block();
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(mailboxId, messageId, messageUid))
@@ -431,7 +431,7 @@ class CassandraMessageIdToImapUidDAOTest {
         CassandraId mailboxId2 = CassandraId.timeBased();
         MessageUid messageUid = MessageUid.of(1);
         MessageUid messageUid2 = MessageUid.of(2);
-        CompletableFuture.allOf(
+        Flux.merge(
                 testee.insert(ComposedMessageIdWithMetaData.builder()
                     .composedMessageId(new ComposedMessageId(mailboxId, messageId, messageUid))
                     .flags(new Flags())
@@ -442,7 +442,7 @@ class CassandraMessageIdToImapUidDAOTest {
                     .flags(new Flags())
                     .modSeq(1)
                     .build()))
-        .join();
+        .blockLast();
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(mailboxId, messageId, messageUid))

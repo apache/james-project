@@ -23,14 +23,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
-
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -140,11 +138,11 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         mailboxMapper.findMailboxById(mailboxId);
         ComposedMessageIdWithMetaData composedMessageIdWithMetaData = createMetadataFor(mailboxMessage);
         messageDAO.save(mailboxMessage)
-            .thenCompose(voidValue -> CompletableFuture.allOf(
+            .thenMany(Flux.merge(
                 imapUidDAO.insert(composedMessageIdWithMetaData),
                 messageIdDAO.insert(composedMessageIdWithMetaData)))
-            .thenCompose(voidValue -> indexTableHandler.updateIndexOnAdd(mailboxMessage, mailboxId).toFuture())
-            .join();
+            .thenEmpty(indexTableHandler.updateIndexOnAdd(mailboxMessage, mailboxId))
+            .block();
     }
 
     @Override
@@ -152,11 +150,11 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         CassandraId mailboxId = (CassandraId) mailboxMessage.getMailboxId();
         mailboxMapper.findMailboxById(mailboxId);
         ComposedMessageIdWithMetaData composedMessageIdWithMetaData = createMetadataFor(mailboxMessage);
-        CompletableFuture.allOf(
-                        imapUidDAO.insert(composedMessageIdWithMetaData),
-                        messageIdDAO.insert(composedMessageIdWithMetaData))
-                .thenCompose(voidValue -> indexTableHandler.updateIndexOnAdd(mailboxMessage, mailboxId).toFuture())
-                .join();
+        Flux.merge(
+                imapUidDAO.insert(composedMessageIdWithMetaData),
+                messageIdDAO.insert(composedMessageIdWithMetaData))
+            .thenEmpty(indexTableHandler.updateIndexOnAdd(mailboxMessage, mailboxId))
+            .block();
     }
 
     private ComposedMessageIdWithMetaData createMetadataFor(MailboxMessage mailboxMessage) {

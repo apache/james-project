@@ -41,7 +41,6 @@ import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SE
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.TABLE_NAME;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
@@ -155,10 +154,10 @@ public class CassandraMessageIdToImapUidDAO {
                 .setUUID(MAILBOX_ID, mailboxId.asUuid()));
     }
 
-    public CompletableFuture<Void> insert(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
+    public Mono<Void> insert(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
         ComposedMessageId composedMessageId = composedMessageIdWithMetaData.getComposedMessageId();
         Flags flags = composedMessageIdWithMetaData.getFlags();
-        return cassandraAsyncExecutor.executeVoid(insert.bind()
+        return cassandraAsyncExecutor.executeVoidReactor(insert.bind()
                 .setUUID(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
                 .setUUID(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
                 .setLong(IMAP_UID, composedMessageId.getUid().asLong())

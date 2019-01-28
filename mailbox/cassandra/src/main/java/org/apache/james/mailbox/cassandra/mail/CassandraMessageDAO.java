@@ -94,6 +94,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Bytes;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 public class CassandraMessageDAO {
     public static final long DEFAULT_LONG_VALUE = 0L;
@@ -174,26 +175,27 @@ public class CassandraMessageDAO {
             .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
     }
 
-    public CompletableFuture<Void> save(MailboxMessage message) throws MailboxException {
-        return saveContent(message).thenCompose(pair ->
-            cassandraAsyncExecutor.executeVoid(boundWriteStatement(message, pair)));
+    public Mono<Void> save(MailboxMessage message) throws MailboxException {
+        return saveContent(message)
+            .flatMap(pair -> cassandraAsyncExecutor.executeVoidReactor(boundWriteStatement(message, pair)))
+            .then();
     }
 
-    private CompletableFuture<Pair<BlobId, BlobId>> saveContent(MailboxMessage message) throws MailboxException {
+    private Mono<Tuple2<BlobId, BlobId>> saveContent(MailboxMessage message) throws MailboxException {
         try {
             byte[] headerContent = IOUtils.toByteArray(message.getHeaderContent());
             byte[] bodyContent = IOUtils.toByteArray(message.getBodyContent());
 
-            CompletableFuture<BlobId> bodyFuture = blobStore.save(bodyContent).toFuture();
-            CompletableFuture<BlobId> headerFuture = blobStore.save(headerContent).toFuture();
+            Mono<BlobId> bodyFuture = blobStore.save(bodyContent);
+            Mono<BlobId> headerFuture = blobStore.save(headerContent);
 
-            return headerFuture.thenCombine(bodyFuture, Pair::of);
+            return headerFuture.zipWith(bodyFuture);
         } catch (IOException e) {
             throw new MailboxException("Error saving mail content", e);
         }
     }
 
-    private BoundStatement boundWriteStatement(MailboxMessage message, Pair<BlobId, BlobId> pair) {
+    private BoundStatement boundWriteStatement(MailboxMessage message, Tuple2<BlobId, BlobId> pair) {
         CassandraMessageId messageId = (CassandraMessageId) message.getMessageId();
         return insert.bind()
             .setUUID(MESSAGE_ID, messageId.get())
@@ -201,8 +203,8 @@ public class CassandraMessageDAO {
             .setInt(BODY_START_OCTET, (int) (message.getHeaderOctets()))
             .setLong(FULL_CONTENT_OCTETS, message.getFullContentOctets())
             .setLong(BODY_OCTECTS, message.getBodyOctets())
-            .setString(BODY_CONTENT, pair.getRight().asString())
-            .setString(HEADER_CONTENT, pair.getLeft().asString())
+            .setString(BODY_CONTENT, pair.getT2().asString())
+            .setString(HEADER_CONTENT, pair.getT1().asString())
             .setLong(TEXTUAL_LINE_COUNT, Optional.ofNullable(message.getTextualLineCount()).orElse(DEFAULT_LONG_VALUE))
             .setList(PROPERTIES, buildPropertiesUdt(message))
             .setList(ATTACHMENTS, buildAttachmentUdt(message));

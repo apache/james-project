@@ -368,7 +368,7 @@ public class CassandraMessageMapper implements MessageMapper {
 
     private Mono<Void> save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        return Mono.fromFuture(messageDAO.save(message))
+        return messageDAO.save(message)
             .thenEmpty(insertIds(message, mailboxId));
     }
 
@@ -379,8 +379,8 @@ public class CassandraMessageMapper implements MessageMapper {
                 .modSeq(message.getModSeq())
                 .build();
         return Flux.merge(
-            Mono.fromCompletionStage(messageIdDAO.insert(composedMessageIdWithMetaData)),
-            Mono.fromCompletionStage(imapUidDAO.insert(composedMessageIdWithMetaData)))
+                messageIdDAO.insert(composedMessageIdWithMetaData),
+                imapUidDAO.insert(composedMessageIdWithMetaData))
             .then();
     }
 

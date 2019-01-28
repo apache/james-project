@@ -30,6 +30,8 @@ import org.apache.james.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reactor.core.publisher.Mono;
+
 public class AttachmentV2Migration implements Migration {
     private static final Logger LOGGER = LoggerFactory.getLogger(AttachmentV2Migration.class);
     private final CassandraAttachmentDAO attachmentDAOV1;
@@ -59,12 +61,12 @@ public class AttachmentV2Migration implements Migration {
 
     private Result migrateAttachment(Attachment attachment) {
         try {
-            blobStore.save(attachment.getBytes()).toFuture()
-                .thenApply(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
-                .thenCompose(daoAttachement -> attachmentDAOV2.storeAttachment(daoAttachement).toFuture())
-                .thenCompose(any -> attachmentDAOV1.deleteAttachment(attachment.getAttachmentId()))
-                .join();
-            return Result.COMPLETED;
+            return blobStore.save(attachment.getBytes())
+                .map(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
+                .flatMap(attachmentDAOV2::storeAttachment)
+                .then(Mono.defer(() -> Mono.fromFuture(attachmentDAOV1.deleteAttachment(attachment.getAttachmentId()))))
+                .thenReturn(Result.COMPLETED)
+                .block();
         } catch (Exception e) {
             LOGGER.error("Error while performing attachmentDAO V2 migration", e);
             return Result.PARTIAL;

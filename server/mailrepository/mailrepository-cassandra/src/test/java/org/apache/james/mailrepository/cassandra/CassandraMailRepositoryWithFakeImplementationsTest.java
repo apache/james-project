@@ -119,7 +119,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
 
             assertThatThrownBy(() -> cassandraMailRepository.store(mail))
                     .isInstanceOf(RuntimeException.class)
-                    .hasMessage("java.lang.RuntimeException: Expected failure while saving");
+                    .hasMessage("Expected failure while saving");
 
             assertThat(keysDAO.list(URL).collectList().block()).isEmpty();
         }
@@ -147,10 +147,8 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             }
 
             @Override
-            public CompletableFuture<Void> store(MailRepositoryUrl url, Mail mail, BlobId headerId, BlobId bodyId) {
-                return CompletableFuture.supplyAsync(() -> {
-                    throw new RuntimeException("Expected failure while storing mail parts");
-                });
+            public Mono<Void> store(MailRepositoryUrl url, Mail mail, BlobId headerId, BlobId bodyId) {
+                return Mono.error(new RuntimeException("Expected failure while storing mail parts"));
             }
 
             @Override
@@ -183,7 +181,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
 
             assertThatThrownBy(() -> cassandraMailRepository.store(mail))
                     .isInstanceOf(RuntimeException.class)
-                    .hasMessage("java.lang.RuntimeException: Expected failure while storing mail parts");
+                    .hasMessage("Expected failure while storing mail parts");
 
             assertThat(keysDAO.list(URL).collectList().block()).isEmpty();
         }
@@ -202,7 +200,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
 
             assertThatThrownBy(() -> cassandraMailRepository.store(mail))
                     .isInstanceOf(RuntimeException.class)
-                    .hasMessage("java.lang.RuntimeException: Expected failure while storing mail parts");
+                    .hasMessage("Expected failure while storing mail parts");
 
             ResultSet resultSet = cassandra.getConf().execute(select()
                     .from(BlobTable.TABLE_NAME));

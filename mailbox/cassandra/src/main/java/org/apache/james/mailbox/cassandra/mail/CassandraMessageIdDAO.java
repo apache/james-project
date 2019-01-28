@@ -176,10 +176,10 @@ public class CassandraMessageIdDAO {
                 .setLong(IMAP_UID, uid.asLong()));
     }
 
-    public CompletableFuture<Void> insert(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
+    public Mono<Void> insert(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
         ComposedMessageId composedMessageId = composedMessageIdWithMetaData.getComposedMessageId();
         Flags flags = composedMessageIdWithMetaData.getFlags();
-        return cassandraAsyncExecutor.executeVoid(insert.bind()
+        return cassandraAsyncExecutor.executeVoidReactor(insert.bind()
                 .setUUID(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
                 .setLong(IMAP_UID, composedMessageId.getUid().asLong())
                 .setUUID(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())

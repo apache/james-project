@@ -34,7 +34,6 @@ import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.util.CompletableFutureUtil;
 import org.apache.mailet.Mail;
 
-import com.github.fge.lambdas.Throwing;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -60,16 +59,14 @@ public class CassandraMailRepository implements MailRepository {
     public MailKey store(Mail mail) throws MessagingException {
         MailKey mailKey = MailKey.forMail(mail);
 
-        Mono.fromFuture(mimeMessageStore.save(mail.getMessage())
-            .toFuture()
-            .thenCompose(Throwing.function(parts -> mailDAO.store(url, mail,
+        return mimeMessageStore.save(mail.getMessage())
+            .flatMap(parts -> mailDAO.store(url, mail,
                 parts.getHeaderBlobId(),
-                parts.getBodyBlobId()))))
+                parts.getBodyBlobId()))
             .then(keysDAO.store(url, mailKey))
             .flatMap(this::increaseSizeIfStored)
+            .thenReturn(mailKey)
             .block();
-
-        return mailKey;
     }
 
     private Mono<Void> increaseSizeIfStored(Boolean isStored) {

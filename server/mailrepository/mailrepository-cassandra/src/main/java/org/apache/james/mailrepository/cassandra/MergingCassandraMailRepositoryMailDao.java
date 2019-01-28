@@ -23,7 +23,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.mailrepository.api.MailKey;
@@ -48,7 +47,7 @@ public class MergingCassandraMailRepositoryMailDao implements CassandraMailRepos
     }
 
     @Override
-    public CompletableFuture<Void> store(MailRepositoryUrl url, Mail mail, BlobId headerId, BlobId bodyId) throws MessagingException {
+    public Mono<Void> store(MailRepositoryUrl url, Mail mail, BlobId headerId, BlobId bodyId) {
         return v2.store(url, mail, headerId, bodyId);
     }
 

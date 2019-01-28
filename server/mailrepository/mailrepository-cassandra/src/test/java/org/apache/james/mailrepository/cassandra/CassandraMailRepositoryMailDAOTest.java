@@ -78,7 +78,7 @@ class CassandraMailRepositoryMailDAOTest {
                     .build(),
                 blobIdHeader,
                 blobIdBody)
-                .join();
+                .block();
 
             CassandraMailRepositoryMailDAO.MailDTO mailDTO = testee.read(URL, KEY_1).join().get();
 
@@ -102,7 +102,7 @@ class CassandraMailRepositoryMailDAOTest {
                     .build(),
                 blobIdHeader,
                 blobIdBody)
-                .join();
+                .block();
 
             testee.remove(URL, KEY_1).block();
 
@@ -161,7 +161,7 @@ class CassandraMailRepositoryMailDAOTest {
                     .build(),
                 blobIdHeader,
                 blobIdBody)
-                .join();
+                .block();
 
             CassandraMailRepositoryMailDAO.MailDTO mailDTO = testee.read(URL, KEY_1).join().get();
 
@@ -231,7 +231,7 @@ class CassandraMailRepositoryMailDAOTest {
                     .build(),
                 blobIdHeader,
                 blobIdBody)
-                .join();
+                .block();
 
             CassandraMailRepositoryMailDAO.MailDTO mailDTO = testee.read(URL, KEY_1).join().get();
 
@@ -286,7 +286,7 @@ class CassandraMailRepositoryMailDAOTest {
                     .build(),
                 blobIdHeader,
                 blobIdBody)
-                .join();
+                .block();
 
             CassandraMailRepositoryMailDaoAPI.MailDTO actual = testee.read(URL, KEY_1).join().get();
             Mail partialMail = actual.getMailBuilder().build();
@@ -308,7 +308,7 @@ class CassandraMailRepositoryMailDAOTest {
                     .build(),
                 blobIdHeader,
                 blobIdBody)
-                .join();
+                .block();
 
             CassandraMailRepositoryMailDaoAPI.MailDTO actual = testee.read(URL, KEY_1).join().get();
             Mail partialMail = actual.getMailBuilder().build();
@@ -332,7 +332,7 @@ class CassandraMailRepositoryMailDAOTest {
                     .build(),
                 blobIdHeader1,
                 blobIdBody1)
-                .join();
+                .block();
 
             v2.store(URL,
                 FakeMail.builder()
@@ -340,7 +340,7 @@ class CassandraMailRepositoryMailDAOTest {
                     .build(),
                 blobIdHeader2,
                 blobIdBody2)
-                .join();
+                .block();
 
             CassandraMailRepositoryMailDaoAPI.MailDTO actual = testee.read(URL, KEY_1).join().get();
             Mail partialMail = actual.getMailBuilder().build();
@@ -364,7 +364,7 @@ class CassandraMailRepositoryMailDAOTest {
                     .build(),
                 blobIdHeader1,
                 blobIdBody1)
-                .join();
+                .block();
 
             v2.store(URL,
                 FakeMail.builder()
@@ -372,7 +372,7 @@ class CassandraMailRepositoryMailDAOTest {
                     .build(),
                 blobIdHeader2,
                 blobIdBody2)
-                .join();
+                .block();
 
             testee.remove(URL, KEY_1).block();
 

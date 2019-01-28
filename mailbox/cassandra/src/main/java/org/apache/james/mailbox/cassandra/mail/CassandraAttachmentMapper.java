@@ -78,8 +78,8 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     private Mono<Attachment> retrievePayload(DAOAttachment daoAttachment) {
-        return Mono.fromCompletionStage(blobStore.readBytes(daoAttachment.getBlobId()).toFuture()
-            .thenApply(daoAttachment::toAttachment));
+        return blobStore.readBytes(daoAttachment.getBlobId())
+            .map(daoAttachment::toAttachment);
     }
 
     @Override

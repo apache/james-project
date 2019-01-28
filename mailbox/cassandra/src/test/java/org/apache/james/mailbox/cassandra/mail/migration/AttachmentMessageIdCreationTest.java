@@ -106,7 +106,7 @@ class AttachmentMessageIdCreationTest {
         List<MessageAttachment> noAttachment = ImmutableList.of();
         message = createMessage(messageId, noAttachment);
 
-        cassandraMessageDAO.save(message).join();
+        cassandraMessageDAO.save(message).block();
 
         assertThat(migration.run())
             .isEqualTo(Migration.Result.COMPLETED);
@@ -117,7 +117,7 @@ class AttachmentMessageIdCreationTest {
         MessageAttachment attachment = createAttachment();
         message = createMessage(messageId, ImmutableList.of(attachment));
 
-        cassandraMessageDAO.save(message).join();
+        cassandraMessageDAO.save(message).block();
 
         assertThat(migration.run())
             .isEqualTo(Migration.Result.COMPLETED);
@@ -128,7 +128,7 @@ class AttachmentMessageIdCreationTest {
         MessageAttachment attachment = createAttachment();
         message = createMessage(messageId, ImmutableList.of(attachment));
 
-        cassandraMessageDAO.save(message).join();
+        cassandraMessageDAO.save(message).block();
 
         migration.run();
 

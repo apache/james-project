@@ -23,8 +23,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import javax.mail.MessagingException;
-
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
@@ -34,7 +32,7 @@ import org.apache.mailet.Mail;
 import reactor.core.publisher.Mono;
 
 public interface CassandraMailRepositoryMailDaoAPI {
-    CompletableFuture<Void> store(MailRepositoryUrl url, Mail mail, BlobId headerId, BlobId bodyId) throws MessagingException;
+    Mono<Void> store(MailRepositoryUrl url, Mail mail, BlobId headerId, BlobId bodyId);
 
     Mono<Void> remove(MailRepositoryUrl url, MailKey key);
 
