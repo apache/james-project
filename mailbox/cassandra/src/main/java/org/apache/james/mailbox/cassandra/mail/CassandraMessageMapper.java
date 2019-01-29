@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -163,9 +162,8 @@ public class CassandraMessageMapper implements MessageMapper {
     public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange messageRange, FetchType ftype, int max) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return retrieveMessages(retrieveMessageIds(mailboxId, messageRange), ftype, Limit.from(max))
-            .map(simpleMailboxMessage -> (MailboxMessage) simpleMailboxMessage)
-            .collectSortedList(Comparator.comparing(MailboxMessage::getUid))
-            .flatMapIterable(Function.identity())
+            .map(MailboxMessage.class::cast)
+            .sort(Comparator.comparing(MailboxMessage::getUid))
             .toIterable()
             .iterator();
     }
