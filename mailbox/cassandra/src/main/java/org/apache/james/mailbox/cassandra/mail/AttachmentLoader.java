@@ -27,6 +27,7 @@ import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import reactor.core.publisher.Flux;
@@ -41,22 +42,25 @@ public class AttachmentLoader {
     }
 
     public Mono<SimpleMailboxMessage> addAttachmentToMessage(Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> messageRepresentation, MessageMapper.FetchType fetchType) {
+        return loadAttachments(messageRepresentation.getRight(), fetchType)
+            .map(attachments -> messageRepresentation.getLeft().toMailboxMessage(attachments));
+    }
 
+    private Mono<List<MessageAttachment>> loadAttachments(Stream<MessageAttachmentRepresentation> messageAttachmentRepresentations, MessageMapper.FetchType fetchType) {
         if (fetchType == MessageMapper.FetchType.Body || fetchType == MessageMapper.FetchType.Full) {
-            return getAttachments(messageRepresentation.getRight().collect(ImmutableList.toImmutableList()))
-                        .map(attachments -> messageRepresentation.getLeft().toMailboxMessage(attachments));
+            return getAttachments(messageAttachmentRepresentations.collect(Guavate.toImmutableList()));
         } else {
-            return Mono.just(messageRepresentation.getLeft().toMailboxMessage(ImmutableList.of()));
+            return Mono.just(ImmutableList.of());
         }
     }
 
     @VisibleForTesting
     Mono<List<MessageAttachment>> getAttachments(List<MessageAttachmentRepresentation> attachmentRepresentations) {
         return Flux.fromIterable(attachmentRepresentations)
-                .flatMap(attachmentRepresentation ->
+                .flatMapSequential(attachmentRepresentation ->
                         attachmentMapper.getAttachmentsAsMono(attachmentRepresentation.getAttachmentId())
                             .map(attachment -> constructMessageAttachment(attachment, attachmentRepresentation)))
-                .collectList();
+                .collect(Guavate.toImmutableList());
     }
 
     private MessageAttachment constructMessageAttachment(Attachment attachment, MessageAttachmentRepresentation messageAttachmentRepresentation) {
