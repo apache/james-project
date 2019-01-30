@@ -406,7 +406,6 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
         @Test
         void createMailboxShouldFireMailboxAddedEvent() throws Exception {
-            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
             retrieveEventBus(mailboxManager).register(listener);
 
             Optional<MailboxId> newId = mailboxManager.createMailbox(newPath, session);
