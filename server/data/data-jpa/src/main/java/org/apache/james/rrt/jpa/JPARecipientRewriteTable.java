@@ -76,42 +76,15 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     @Override
     protected Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException {
-        Mappings userDomainMapping = getMapping(MappingSource.fromUser(user, domain));
+        Mappings userDomainMapping = getStoredMappings(MappingSource.fromUser(user, domain));
         if (userDomainMapping != null && !userDomainMapping.isEmpty()) {
             return userDomainMapping;
         }
-        Mappings domainMapping = getMapping(MappingSource.fromDomain(domain));
+        Mappings domainMapping = getStoredMappings(MappingSource.fromDomain(domain));
         if (domainMapping != null && !domainMapping.isEmpty()) {
             return domainMapping;
         }
         return MappingsImpl.empty();
-    }
-
-    private Mappings getMapping(MappingSource mappingSource) throws RecipientRewriteTableException {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        final EntityTransaction transaction = entityManager.getTransaction();
-        try {
-            transaction.begin();
-            @SuppressWarnings("unchecked")
-            List<JPARecipientRewrite> virtualUsers = entityManager
-                .createNamedQuery("selectUserDomainMapping")
-                .setParameter("user", mappingSource.getFixedUser())
-                .setParameter("domain", mappingSource.getFixedDomain())
-                .getResultList();
-            transaction.commit();
-            if (virtualUsers.size() > 0) {
-                return MappingsImpl.fromRawString(virtualUsers.get(0).getTargetAddress());
-            }
-            return MappingsImpl.empty();
-        } catch (PersistenceException e) {
-            LOGGER.debug("Failed to find mapping for source={}", mappingSource, e);
-            if (transaction.isActive()) {
-                transaction.rollback();
-            }
-            throw new RecipientRewriteTableException("Error while retrieve mappings", e);
-        } finally {
-            entityManager.close();
-        }
     }
 
     @Override
