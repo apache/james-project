@@ -19,6 +19,8 @@
 
 package org.apache.james.transport.mailets.remote.delivery;
 
+import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG;
+import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG_DOMAIN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -27,9 +29,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
+import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -94,10 +98,13 @@ public class RemoteDeliveryTest {
     private ManageableMailQueue mailQueue;
 
     @Before
-    public void setUp() {
+    public void setUp() throws ConfigurationException {
         MailQueueFactory<ManageableMailQueue> queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
         mailQueue = queueFactory.createQueue(RemoteDeliveryConfiguration.OUTGOING);
-        remoteDelivery = new RemoteDelivery(mock(DNSService.class), mock(DomainList.class),
+        DNSService dnsService = mock(DNSService.class);
+        MemoryDomainList domainList = new MemoryDomainList(dnsService);
+        domainList.configure(DomainListConfiguration.builder().defaultDomain(JAMES_APACHE_ORG_DOMAIN));
+        remoteDelivery = new RemoteDelivery(dnsService, domainList,
             queueFactory, new NoopMetricFactory(), RemoteDelivery.ThreadState.DO_NOT_START_THREADS);
     }
 
@@ -115,7 +122,7 @@ public class RemoteDeliveryTest {
             .extracting(MailProjection::from)
             .containsOnly(MailProjection.from(
                 FakeMail.builder()
-                    .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
+                    .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + JAMES_APACHE_ORG)
                     .recipient(MailAddressFixture.ANY_AT_JAMES)
                     .build()));
     }
@@ -137,7 +144,7 @@ public class RemoteDeliveryTest {
             .extracting(MailProjection::from)
             .containsOnly(
                 MailProjection.from(FakeMail.builder()
-                    .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
+                    .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + JAMES_APACHE_ORG)
                     .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES)
                     .build()),
                 MailProjection.from(FakeMail.builder()

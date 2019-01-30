@@ -30,6 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
+import java.time.Duration;
+
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -40,6 +42,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
+import reactor.core.publisher.Flux;
 
 public interface ManageableMailQueueContract extends MailQueueContract {
 
@@ -75,7 +78,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
     default void dequeueShouldDecreaseQueueSize() throws Exception {
         enQueue(defaultMail().name("name").build());
 
-        getManageableMailQueue().deQueue().done(true);
+        Flux.from(getManageableMailQueue().deQueue()).blockFirst().done(true);
 
         long size = getManageableMailQueue().getSize();
 
@@ -86,7 +89,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
     default void noAckShouldNotDecreaseSize() throws Exception {
         enQueue(defaultMail().name("name").build());
 
-        getManageableMailQueue().deQueue().done(false);
+        Flux.from(getManageableMailQueue().deQueue()).blockFirst().done(false);
 
         long size = getManageableMailQueue().getSize();
 
@@ -97,7 +100,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
     default void processedMailsShouldNotDecreaseSize() throws Exception {
         enQueue(defaultMail().name("name").build());
 
-        getManageableMailQueue().deQueue();
+        Flux.from(getManageableMailQueue().deQueue());
 
         long size = getManageableMailQueue().getSize();
 
@@ -158,7 +161,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         getManageableMailQueue().browse();
 
-        assertThatCode(() -> getManageableMailQueue().deQueue()).doesNotThrowAnyException();
+        assertThatCode(() -> Flux.from(getManageableMailQueue().deQueue())).doesNotThrowAnyException();
 
     }
 
@@ -176,7 +179,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
 
-        getManageableMailQueue().deQueue();
+        Flux.from(getManageableMailQueue().deQueue());
 
         assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
     }
@@ -196,7 +199,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
         items.next();
 
-        assertThatCode(() -> getManageableMailQueue().deQueue()).doesNotThrowAnyException();
+        assertThatCode(() -> Flux.from(getManageableMailQueue().deQueue())).doesNotThrowAnyException();
 
     }
 
@@ -206,7 +209,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .name("name1")
             .build());
 
-        assertThat(getManageableMailQueue().deQueue())
+        assertThat(Flux.from(getManageableMailQueue().deQueue()).blockFirst(Duration.ofMinutes(1)))
             .isInstanceOf(MailQueueItemDecoratorFactory.MailQueueItemDecorator.class);
     }
 
@@ -225,7 +228,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
         items.next();
 
-        getManageableMailQueue().deQueue();
+        Flux.from(getManageableMailQueue().deQueue());
 
         assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
     }
@@ -492,7 +495,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
         items.next();
 
-        MailQueue.MailQueueItem mailQueueItem = getManageableMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem = Flux.from(getManageableMailQueue().deQueue()).blockFirst();
 
         assertThat(mailQueueItem.getMail().getName()).isEqualTo("name1");
     }

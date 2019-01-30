@@ -51,6 +51,8 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQueue> {
 
@@ -85,12 +87,17 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
         private final LinkedBlockingDeque<MemoryMailQueueItem> inProcessingMailItems;
         private final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
         private final String name;
+        private final Flux<MailQueueItem> flux;
 
         public MemoryMailQueue(String name, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
             this.mailItems = new DelayQueue<>();
             this.inProcessingMailItems = new LinkedBlockingDeque<>();
             this.name = name;
             this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
+            this.flux = Mono.fromCallable(mailItems::take)
+                .repeat()
+                .flatMap(item -> Mono.just(inProcessingMailItems.add(item)).thenReturn(item))
+                .map(mailQueueItemDecoratorFactory::decorate);
         }
 
         @Override
@@ -136,10 +143,8 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
         }
 
         @Override
-        public MailQueueItem deQueue() throws MailQueueException, InterruptedException {
-            MemoryMailQueueItem item = mailItems.take();
-            inProcessingMailItems.add(item);
-            return mailQueueItemDecoratorFactory.decorate(item);
+        public Flux<MailQueueItem> deQueue() {
+            return flux;
         }
 
         public Mail getLastMail() throws MailQueueException, InterruptedException {

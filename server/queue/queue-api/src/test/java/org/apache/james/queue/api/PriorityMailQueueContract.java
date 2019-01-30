@@ -22,16 +22,16 @@ package org.apache.james.queue.api;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.stream.IntStream;
+import java.util.Iterator;
 
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.Test;
 
-import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
-import com.google.common.collect.ImmutableList;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public interface PriorityMailQueueContract {
 
@@ -89,13 +89,16 @@ public interface PriorityMailQueueContract {
             .attribute(mailPriority(5))
             .build());
 
-        ImmutableList<MailQueue.MailQueueItem> items = IntStream.range(1, 11).boxed()
-            .map(Throwing.function(i -> {
-                MailQueue.MailQueueItem item = getMailQueue().deQueue();
-                item.done(true);
-                return item;
-            }))
-            .collect(Guavate.toImmutableList());
+        Iterable<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).take(10)
+            .flatMap(item -> {
+                try {
+                    item.done(true);
+                    return Mono.just(item);
+                } catch (MailQueue.MailQueueException e) {
+                    return Mono.error(e);
+                }
+            })
+            .toIterable();
 
         assertThat(items)
             .extracting(MailQueue.MailQueueItem::getMail)
@@ -114,9 +117,10 @@ public interface PriorityMailQueueContract {
             .attribute(mailPriority(1))
             .build());
 
-        MailQueue.MailQueueItem mailQueueItem1 = getMailQueue().deQueue();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        MailQueue.MailQueueItem mailQueueItem1 = mailQueueItems.next();
         mailQueueItem1.done(true);
-        MailQueue.MailQueueItem mailQueueItem2 = getMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem2 = mailQueueItems.next();
         mailQueueItem2.done(true);
         assertThat(mailQueueItem1.getMail().getName()).isEqualTo("name1");
         assertThat(mailQueueItem2.getMail().getName()).isEqualTo("name0");
@@ -133,9 +137,10 @@ public interface PriorityMailQueueContract {
             .attribute(mailPriority(8))
             .build());
 
-        MailQueue.MailQueueItem mailQueueItem1 = getMailQueue().deQueue();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        MailQueue.MailQueueItem mailQueueItem1 = mailQueueItems.next();
         mailQueueItem1.done(true);
-        MailQueue.MailQueueItem mailQueueItem2 = getMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem2 = mailQueueItems.next();
         mailQueueItem2.done(true);
         assertThat(mailQueueItem1.getMail().getName()).isEqualTo("name0");
         assertThat(mailQueueItem2.getMail().getName()).isEqualTo("name1");
@@ -156,11 +161,12 @@ public interface PriorityMailQueueContract {
             .attribute(mailPriority(6))
             .build());
 
-        MailQueue.MailQueueItem mailQueueItem1 = getMailQueue().deQueue();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        MailQueue.MailQueueItem mailQueueItem1 = mailQueueItems.next();
         mailQueueItem1.done(true);
-        MailQueue.MailQueueItem mailQueueItem2 = getMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem2 = mailQueueItems.next();
         mailQueueItem2.done(true);
-        MailQueue.MailQueueItem mailQueueItem3 = getMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem3 = mailQueueItems.next();
         mailQueueItem3.done(true);
         assertThat(mailQueueItem1.getMail().getName()).isEqualTo("name3");
         assertThat(mailQueueItem2.getMail().getName()).isEqualTo("name1");
@@ -181,11 +187,12 @@ public interface PriorityMailQueueContract {
             .attribute(mailPriority(6))
             .build());
 
-        MailQueue.MailQueueItem mailQueueItem1 = getMailQueue().deQueue();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        MailQueue.MailQueueItem mailQueueItem1 = mailQueueItems.next();
         mailQueueItem1.done(true);
-        MailQueue.MailQueueItem mailQueueItem2 = getMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem2 = mailQueueItems.next();
         mailQueueItem2.done(true);
-        MailQueue.MailQueueItem mailQueueItem3 = getMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem3 = mailQueueItems.next();
         mailQueueItem3.done(true);
         assertThat(mailQueueItem1.getMail().getName()).isEqualTo("name3");
         assertThat(mailQueueItem2.getMail().getName()).isEqualTo("name1");
@@ -198,7 +205,7 @@ public interface PriorityMailQueueContract {
             .name("name1")
             .build());
 
-        MailQueue.MailQueueItem mailQueueItem = getMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
         assertThat(mailQueueItem.getMail().getName()).isEqualTo("name1");
     }
 

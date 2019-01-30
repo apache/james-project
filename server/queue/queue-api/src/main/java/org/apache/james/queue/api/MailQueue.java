@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
+import org.reactivestreams.Publisher;
 
 /**
  * <p>
@@ -95,7 +96,7 @@ public interface MailQueue {
      * Implementations should take care to do some kind of transactions to not
      * loose any mail on error
      */
-    MailQueueItem deQueue() throws MailQueueException, InterruptedException;
+    Publisher<MailQueueItem> deQueue();
 
     /**
      * Exception which will get thrown if any problems occur while working the

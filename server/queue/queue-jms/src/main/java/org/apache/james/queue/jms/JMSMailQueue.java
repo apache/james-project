@@ -83,6 +83,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * <p>
@@ -96,6 +98,8 @@ import com.google.common.collect.Iterators;
  * </p>
  */
 public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPrioritySupport, Disposable {
+
+    private final Flux<MailQueueItem> flux;
 
     protected static void closeSession(Session session) {
         if (session != null) {
@@ -195,6 +199,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         } catch (JMSException e) {
             throw new RuntimeException(e);
         }
+        flux = Mono.defer(this::deQueueOneItem).repeat();
     }
 
     @Override
@@ -215,37 +220,39 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
      * </p>
      */
     @Override
-    public MailQueueItem deQueue() throws MailQueueException {
+    public Flux<MailQueueItem> deQueue() {
+        return flux;
+    }
+
+    private Mono<MailQueueItem> deQueueOneItem() {
         Session session = null;
         MessageConsumer consumer = null;
+        TimeMetric timeMetric = metricFactory.timer(DEQUEUED_TIMER_METRIC_NAME_PREFIX + queueName);
+        try {
+            session = connection.createSession(true, Session.SESSION_TRANSACTED);
+            Queue queue = session.createQueue(queueName);
+            consumer = session.createConsumer(queue, getMessageSelector());
 
-        while (true) {
-            TimeMetric timeMetric = metricFactory.timer(DEQUEUED_TIMER_METRIC_NAME_PREFIX + queueName);
-            try {
-                session = connection.createSession(true, Session.SESSION_TRANSACTED);
-                Queue queue = session.createQueue(queueName);
-                consumer = session.createConsumer(queue, getMessageSelector());
+            Message message = consumer.receive(10000);
 
-                Message message = consumer.receive(10000);
-
-                if (message != null) {
-                    dequeuedMailsMetric.increment();
-                    return createMailQueueItem(session, consumer, message);
-                } else {
-                    session.commit();
-                    closeConsumer(consumer);
-                    closeSession(session);
-                }
-
-            } catch (Exception e) {
-                rollback(session);
+            if (message != null) {
+                dequeuedMailsMetric.increment();
+                return Mono.just(createMailQueueItem(session, consumer, message));
+            } else {
+                session.commit();
                 closeConsumer(consumer);
                 closeSession(session);
-                throw new MailQueueException("Unable to dequeue next message", e);
-            } finally {
-                timeMetric.stopAndPublish();
             }
+
+        } catch (Exception e) {
+            rollback(session);
+            closeConsumer(consumer);
+            closeSession(session);
+            return Mono.error(new MailQueueException("Unable to dequeue next message", e));
+        } finally {
+            timeMetric.stopAndPublish();
         }
+        return Mono.empty();
     }
 
     @Override

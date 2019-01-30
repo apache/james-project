@@ -37,8 +37,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
-public class DeliveryRunnable implements Runnable {
+public class DeliveryRunnable implements Disposable {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeliveryRunnable.class);
 
     public static final Supplier<Date> CURRENT_DATE_SUPPLIER = Date::new;
@@ -52,77 +56,65 @@ public class DeliveryRunnable implements Runnable {
     private final MetricFactory metricFactory;
     private final Bouncer bouncer;
     private final MailDelivrer mailDelivrer;
-    private final AtomicBoolean isDestroyed;
     private final Supplier<Date> dateSupplier;
+    private Disposable disposable;
 
     public DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, DNSService dnsServer, MetricFactory metricFactory,
-                            MailetContext mailetContext, Bouncer bouncer, AtomicBoolean isDestroyed) {
+                            MailetContext mailetContext, Bouncer bouncer) {
         this(queue, configuration, metricFactory, bouncer,
             new MailDelivrer(configuration, new MailDelivrerToHost(configuration, mailetContext), dnsServer, bouncer),
-            isDestroyed, CURRENT_DATE_SUPPLIER);
+            CURRENT_DATE_SUPPLIER);
     }
 
     @VisibleForTesting
     DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, MetricFactory metricFactory, Bouncer bouncer,
-                     MailDelivrer mailDelivrer, AtomicBoolean isDestroyeds, Supplier<Date> dateSupplier) {
+                     MailDelivrer mailDelivrer, Supplier<Date> dateSupplier) {
         this.queue = queue;
         this.configuration = configuration;
         this.outgoingMailsMetric = metricFactory.generate(OUTGOING_MAILS);
         this.bouncer = bouncer;
         this.mailDelivrer = mailDelivrer;
-        this.isDestroyed = isDestroyeds;
         this.dateSupplier = dateSupplier;
         this.metricFactory = metricFactory;
     }
 
-    @Override
-    public void run() {
+    public void start() {
+        disposable = Flux.from(queue.deQueue())
+            .publishOn(Schedulers.newParallel("RemoteDelivery", configuration.getWorkersThreadCount()))
+            .flatMap(this::runStep)
+            .onErrorContinue(((throwable, nothing) -> LOGGER.error("Exception caught in RemoteDelivery", throwable)))
+            .subscribeOn(Schedulers.elastic())
+            .subscribe();
+    }
+
+    private Mono<Void> runStep(MailQueue.MailQueueItem queueItem) {
+        TimeMetric timeMetric = metricFactory.timer(REMOTE_DELIVERY_TRIAL);
         try {
-            while (!Thread.interrupted() && !isDestroyed.get()) {
-                runStep();
-            }
+            return processMail(queueItem);
+        } catch (Throwable e) {
+            return Mono.error(e);
         } finally {
-            // Restore the thread state to non-interrupted.
-            Thread.interrupted();
+            timeMetric.stopAndPublish();
         }
     }
 
-    private void runStep() {
-        TimeMetric timeMetric = null;
+    private Mono<Void> processMail(MailQueue.MailQueueItem queueItem) throws MailQueue.MailQueueException {
+        Mail mail = queueItem.getMail();
+
         try {
-            // Get the 'mail' object that is ready for deliverying. If no message is
-            // ready, the 'accept' will block until message is ready.
-            // The amount of time to block is determined by the 'getWaitTime' method of the MultipleDelayFilter.
-            MailQueue.MailQueueItem queueItem = queue.deQueue();
-            timeMetric = metricFactory.timer(REMOTE_DELIVERY_TRIAL);
-            Mail mail = queueItem.getMail();
-
-            try {
-                if (configuration.isDebug()) {
-                    LOGGER.debug("{} will process mail {}", Thread.currentThread().getName(), mail.getName());
-                }
-                attemptDelivery(mail);
-                LifecycleUtil.dispose(mail);
-                mail = null;
-                queueItem.done(true);
-            } catch (Exception e) {
-                // Prevent unexpected exceptions from causing looping by removing message from outgoing.
-                // DO NOT CHANGE THIS to catch Error!
-                // For example, if there were an OutOfMemory condition caused because
-                // something else in the server was abusing memory, we would not want to start purging the retrying spool!
-                LOGGER.error("Exception caught in RemoteDelivery.run()", e);
-                LifecycleUtil.dispose(mail);
-                queueItem.done(false);
-            }
-
-        } catch (Throwable e) {
-            if (!isDestroyed.get()) {
-                LOGGER.error("Exception caught in RemoteDelivery.run()", e);
-            }
+            LOGGER.debug("will process mail {}", mail.getName());
+            attemptDelivery(mail);
+            queueItem.done(true);
+            return Mono.empty();
+        } catch (Exception e) {
+            // Prevent unexpected exceptions from causing looping by removing message from outgoing.
+            // DO NOT CHANGE THIS to catch Error!
+            // For example, if there were an OutOfMemory condition caused because
+            // something else in the server was abusing memory, we would not want to start purging the retrying spool!
+            queueItem.done(false);
+            return Mono.error(e);
         } finally {
-            if (timeMetric != null) {
-                timeMetric.stopAndPublish();
-            }
+            LifecycleUtil.dispose(mail);
         }
     }
 
@@ -177,5 +169,10 @@ public class DeliveryRunnable implements Runnable {
             return Delay.DEFAULT_DELAY_TIME;
         }
         return configuration.getDelayTimes().get(retry_count - 1);
+    }
+
+    @Override
+    public void dispose() {
+        disposable.dispose();
     }
 }

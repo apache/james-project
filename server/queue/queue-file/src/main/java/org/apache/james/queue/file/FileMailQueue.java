@@ -63,6 +63,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * {@link ManageableMailQueue} implementation which use the fs to store {@link Mail}'s
@@ -88,6 +90,7 @@ public class FileMailQueue implements ManageableMailQueue {
     private static final int SPLITCOUNT = 10;
     private static final SecureRandom RANDOM = new SecureRandom();
     private final String queueName;
+    private final Flux<MailQueueItem> flux;
 
     public FileMailQueue(MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, File parentDir, String queuename, boolean sync) throws IOException {
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
@@ -96,6 +99,9 @@ public class FileMailQueue implements ManageableMailQueue {
         this.queueDir = new File(parentDir, queueName);
         this.queueDirName = queueDir.getAbsolutePath();
         init();
+        this.flux = Mono.defer(this::deQueueOneItem)
+            .repeat()
+            .limitRate(1);
     }
 
     @Override
@@ -231,7 +237,11 @@ public class FileMailQueue implements ManageableMailQueue {
     }
 
     @Override
-    public MailQueueItem deQueue() throws MailQueueException {
+    public Flux<MailQueueItem> deQueue() {
+        return flux;
+    }
+
+    private Mono<MailQueueItem> deQueueOneItem() {
         try {
             FileItem item = null;
             String k = null;
@@ -273,16 +283,16 @@ public class FileMailQueue implements ManageableMailQueue {
                             LifecycleUtil.dispose(mail);
                         }
                     };
-                    return mailQueueItemDecoratorFactory.decorate(fileMailQueueItem);
+                    return Mono.just(mailQueueItemDecoratorFactory.decorate(fileMailQueueItem));
                 }
                 // TODO: Think about exception handling in detail
             } catch (IOException | ClassNotFoundException | MessagingException e) {
-                throw new MailQueueException("Unable to dequeue", e);
+                return Mono.error(new MailQueueException("Unable to dequeue", e));
             }
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new MailQueueException("Unable to dequeue", e);
+            return Mono.error(new MailQueueException("Unable to dequeue", e));
         }
     }
 

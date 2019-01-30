@@ -21,74 +21,74 @@ package org.apache.james.queue.api;
 
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-import org.apache.james.junit.ExecutorExtension;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Stopwatch;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
-@ExtendWith(ExecutorExtension.class)
 public interface DelayedMailQueueContract {
 
     MailQueue getMailQueue();
 
     @Test
-    default void enqueueShouldDelayMailsWhenSpecified(ExecutorService executorService) throws Exception {
+    default void enqueueShouldDelayMailsWhenSpecified() throws Exception {
         getMailQueue().enQueue(defaultMail()
             .name("name")
             .build(),
-            2L,
+            5L,
             TimeUnit.SECONDS);
 
-        Future<?> future = executorService.submit(Throwing.runnable(() -> getMailQueue().deQueue()));
-        assertThatThrownBy(() -> future.get(1, TimeUnit.SECONDS))
-            .isInstanceOf(TimeoutException.class);
+        Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).next();
+        assertThatThrownBy(() -> next.block(Duration.ofSeconds(1)))
+            .isInstanceOf(RuntimeException.class);
     }
 
     @Test
-    default void enqueueWithNegativeDelayShouldNotDelayDelivery(ExecutorService executorService) throws Exception {
+    default void enqueueWithNegativeDelayShouldNotDelayDelivery() throws Exception {
         getMailQueue().enQueue(defaultMail()
             .name("name")
             .build(),
             -30L,
             TimeUnit.SECONDS);
 
-        Future<?> future = executorService.submit(Throwing.runnable(() -> getMailQueue().deQueue()));
-        future.get(1, TimeUnit.SECONDS);
+        Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).next();
+        assertThatCode(() -> next.block(Duration.ofSeconds(1))).doesNotThrowAnyException();
     }
 
     @Test
-    default void enqueueWithReasonablyLongDelayShouldDelayMail(ExecutorService executorService) throws Exception {
+    default void enqueueWithReasonablyLongDelayShouldDelayMail() throws Exception {
         getMailQueue().enQueue(defaultMail()
             .name("name")
             .build(),
             365 * 10,
             TimeUnit.DAYS);
 
-        Future<?> future = executorService.submit(Throwing.runnable(() -> getMailQueue().deQueue()));
-        assertThatThrownBy(() -> future.get(1, TimeUnit.SECONDS))
-            .isInstanceOf(TimeoutException.class);
+        Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).next();
+        assertThatThrownBy(() -> next.block(Duration.ofSeconds(1)))
+            .isInstanceOf(RuntimeException.class);
     }
 
     @Test
-    default void enqueueWithVeryLongDelayShouldDelayMail(ExecutorService executorService) throws Exception {
+    default void enqueueWithVeryLongDelayShouldDelayMail() throws Exception {
         getMailQueue().enQueue(defaultMail()
             .name("name")
             .build(),
             Long.MAX_VALUE,
             TimeUnit.DAYS);
 
-        Future<?> future = executorService.submit(Throwing.runnable(() -> getMailQueue().deQueue()));
-        assertThatThrownBy(() -> future.get(1, TimeUnit.SECONDS))
-            .isInstanceOf(TimeoutException.class);
+        Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).next();
+        assertThatThrownBy(() -> next.block(Duration.ofSeconds(1)))
+            .isInstanceOf(RuntimeException.class);
     }
 
     @Test
@@ -99,7 +99,7 @@ public interface DelayedMailQueueContract {
             1L,
             TimeUnit.SECONDS);
 
-        MailQueue.MailQueueItem mailQueueItem = getMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
         assertThat(mailQueueItem.getMail().getName()).isEqualTo("name1");
     }
 
@@ -107,6 +107,7 @@ public interface DelayedMailQueueContract {
     default void delayShouldAtLeastBeTheOneSpecified() throws Exception {
         long delay = 1L;
         TimeUnit unit = TimeUnit.SECONDS;
+
         Stopwatch started = Stopwatch.createStarted();
 
         getMailQueue().enQueue(defaultMail()
@@ -115,7 +116,8 @@ public interface DelayedMailQueueContract {
             delay,
             unit);
 
-        getMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
+        assertThat(mailQueueItem).isNotNull();
         assertThat(started.elapsed(TimeUnit.MILLISECONDS))
             .isGreaterThanOrEqualTo(unit.toMillis(delay));
     }

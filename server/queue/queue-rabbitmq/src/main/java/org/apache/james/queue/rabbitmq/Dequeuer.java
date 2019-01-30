@@ -22,7 +22,6 @@ package org.apache.james.queue.rabbitmq;
 import static org.apache.james.queue.api.MailQueue.DEQUEUED_METRIC_NAME_PREFIX;
 
 import java.io.IOException;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -33,15 +32,16 @@ import org.apache.james.queue.rabbitmq.view.api.DeleteCondition;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.mailet.Mail;
 
-import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.consumers.ThrowingConsumer;
 import com.rabbitmq.client.Delivery;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.rabbitmq.AcknowledgableDelivery;
 
 class Dequeuer {
 
     private static final boolean REQUEUE = true;
-    private final LinkedBlockingQueue<AcknowledgableDelivery> messages;
+    private final Flux<AcknowledgableDelivery> flux;
 
     private static class RabbitMQMailQueueItem implements MailQueue.MailQueueItem {
         private final Consumer<Boolean> ack;
@@ -75,27 +75,23 @@ class Dequeuer {
         this.mailReferenceSerializer = serializer;
         this.mailQueueView = mailQueueView;
         this.dequeueMetric = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + name.asString());
-        this.messages = messageIterator(name, rabbitClient);
-    }
-
-    private LinkedBlockingQueue<AcknowledgableDelivery> messageIterator(MailQueueName name, RabbitClient rabbitClient) {
-        LinkedBlockingQueue<AcknowledgableDelivery> dequeue = new LinkedBlockingQueue<>(1);
-        rabbitClient
+        this.flux = rabbitClient
             .receive(name)
-            .filter(getResponse -> getResponse.getBody() != null)
-            .doOnNext(Throwing.consumer(dequeue::put))
-            .subscribe();
-        return dequeue;
+            .filter(getResponse -> getResponse.getBody() != null);
     }
 
-    MailQueue.MailQueueItem deQueue() throws MailQueue.MailQueueException, InterruptedException {
-        return loadItem(messages.take());
+    Flux<MailQueue.MailQueueItem> deQueue() {
+        return flux.flatMap(this::loadItem);
     }
 
-    private RabbitMQMailQueueItem loadItem(AcknowledgableDelivery response) throws MailQueue.MailQueueException {
-        Mail mail = loadMail(response);
-        ThrowingConsumer<Boolean> ack = ack(response, response.getEnvelope().getDeliveryTag(), mail);
-        return new RabbitMQMailQueueItem(ack, mail);
+    private Mono<RabbitMQMailQueueItem> loadItem(AcknowledgableDelivery response) {
+        try {
+            Mail mail = loadMail(response);
+            ThrowingConsumer<Boolean> ack = ack(response, response.getEnvelope().getDeliveryTag(), mail);
+            return Mono.just(new RabbitMQMailQueueItem(ack, mail));
+        } catch (MailQueue.MailQueueException e) {
+            return Mono.error(e);
+        }
     }
 
     private ThrowingConsumer<Boolean> ack(AcknowledgableDelivery response, long deliveryTag, Mail mail) {

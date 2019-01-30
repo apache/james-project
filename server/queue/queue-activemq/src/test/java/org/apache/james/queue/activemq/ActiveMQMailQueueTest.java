@@ -115,7 +115,7 @@ public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract
     @Test
     @Override
     @Disabled("JAMES-2309 Long overflow in JMS delays")
-    public void enqueueWithVeryLongDelayShouldDelayMail(ExecutorService executorService) {
+    public void enqueueWithVeryLongDelayShouldDelayMail() {
 
     }
 

@@ -62,6 +62,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.fge.lambdas.Throwing;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQueueMetricContract {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
@@ -237,8 +239,13 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
     }
 
     private void dequeueMails(int times) {
-        ManageableMailQueue mailQueue = getManageableMailQueue();
-        IntStream.rangeClosed(1, times)
-            .forEach(Throwing.intConsumer(bucketId -> mailQueue.deQueue().done(true)));
+        Flux.from(getManageableMailQueue()
+            .deQueue())
+            .take(times)
+            .flatMap(mailQueueItem -> Mono.fromCallable(() -> {
+                mailQueueItem.done(true);
+                return mailQueueItem;
+            }))
+            .blockLast();
     }
 }

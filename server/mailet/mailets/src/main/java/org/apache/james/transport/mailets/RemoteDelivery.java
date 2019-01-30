@@ -22,10 +22,6 @@ package org.apache.james.transport.mailets;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -43,7 +39,6 @@ import org.apache.james.transport.mailets.remote.delivery.Bouncer;
 import org.apache.james.transport.mailets.remote.delivery.DeliveryRunnable;
 import org.apache.james.transport.mailets.remote.delivery.RemoteDeliveryConfiguration;
 import org.apache.james.transport.mailets.remote.delivery.RemoteDeliverySocketFactory;
-import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
@@ -123,6 +118,7 @@ import com.google.common.collect.HashMultimap;
  */
 public class RemoteDelivery extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(RemoteDelivery.class);
+    private DeliveryRunnable deliveryRunnable;
 
     public enum ThreadState {
         START_THREADS,
@@ -135,12 +131,10 @@ public class RemoteDelivery extends GenericMailet {
     private final DomainList domainList;
     private final MailQueueFactory<?> queueFactory;
     private final MetricFactory metricFactory;
-    private final AtomicBoolean isDestroyed;
     private final ThreadState startThreads;
 
     private MailQueue queue;
     private RemoteDeliveryConfiguration configuration;
-    private ExecutorService executor;
 
     @Inject
     public RemoteDelivery(DNSService dnsServer, DomainList domainList, MailQueueFactory<?> queueFactory, MetricFactory metricFactory) {
@@ -152,7 +146,6 @@ public class RemoteDelivery extends GenericMailet {
         this.domainList = domainList;
         this.queueFactory = queueFactory;
         this.metricFactory = metricFactory;
-        this.isDestroyed = new AtomicBoolean(false);
         this.startThreads = startThreads;
     }
 
@@ -167,23 +160,14 @@ public class RemoteDelivery extends GenericMailet {
         } catch (UnknownHostException e) {
             LOGGER.error("Invalid bind setting ({}): ", configuration.getBindAddress(), e);
         }
+        deliveryRunnable = new DeliveryRunnable(queue,
+            configuration,
+            dnsServer,
+            metricFactory,
+            getMailetContext(),
+            new Bouncer(configuration, getMailetContext()));
         if (startThreads == ThreadState.START_THREADS) {
-            initDeliveryThreads();
-        }
-    }
-
-    private void initDeliveryThreads() {
-        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
-        executor = Executors.newFixedThreadPool(configuration.getWorkersThreadCount(), threadFactory);
-        for (int a = 0; a < configuration.getWorkersThreadCount(); a++) {
-            executor.execute(
-                new DeliveryRunnable(queue,
-                    configuration,
-                    dnsServer,
-                    metricFactory,
-                    getMailetContext(),
-                    new Bouncer(configuration, getMailetContext()),
-                    isDestroyed));
+            deliveryRunnable.start();
         }
     }
 
@@ -261,9 +245,7 @@ public class RemoteDelivery extends GenericMailet {
     @Override
     public synchronized void destroy() {
         if (startThreads == ThreadState.START_THREADS) {
-            isDestroyed.set(true);
-            executor.shutdownNow();
-            notifyAll();
+            deliveryRunnable.dispose();
         }
     }
 

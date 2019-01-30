@@ -37,6 +37,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import reactor.core.publisher.Flux;
+
 public class RemoteDeliveryRunningTest {
 
     public static final String QUEUE_NAME = "queueName";
@@ -61,7 +63,7 @@ public class RemoteDeliveryRunningTest {
         when(mailQueue.deQueue()).thenAnswer(invocation -> {
             countDownLatch.countDown();
             Thread.sleep(TimeUnit.SECONDS.toMillis(20));
-            return null;
+            return Flux.never();
         });
         remoteDelivery.init(FakeMailetConfig.builder()
             .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")

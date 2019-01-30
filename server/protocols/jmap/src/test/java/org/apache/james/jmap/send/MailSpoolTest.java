@@ -33,6 +33,8 @@ import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
 
+import reactor.core.publisher.Flux;
+
 public class MailSpoolTest {
     private static final String USERNAME = "user";
     private static final TestMessageId MESSAGE_ID = TestMessageId.of(1);
@@ -57,7 +59,7 @@ public class MailSpoolTest {
 
         mailSpool.send(mail, new MailMetadata(MESSAGE_ID, USERNAME));
 
-        MailQueueItem actual = myQueue.deQueue();
+        MailQueueItem actual = Flux.from(myQueue.deQueue()).blockFirst();
         assertThat(actual.getMail().getName()).isEqualTo(NAME);
     }
 
@@ -69,7 +71,7 @@ public class MailSpoolTest {
 
         mailSpool.send(mail, new MailMetadata(MESSAGE_ID, USERNAME));
 
-        MailQueueItem actual = myQueue.deQueue();
+        MailQueueItem actual = Flux.from(myQueue.deQueue()).blockFirst();
         assertThat(actual.getMail().getAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE))
             .contains(new Attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of(USERNAME)));
         assertThat(actual.getMail().getAttribute(MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE))

@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.MoreObjects;
+import reactor.core.publisher.Flux;
 
 public class RabbitMQMailQueue implements ManageableMailQueue {
 
@@ -75,9 +76,9 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
     }
 
     @Override
-    public MailQueueItem deQueue() {
-        return metricFactory.runPublishingTimerMetric(DEQUEUED_TIMER_METRIC_NAME_PREFIX + name.asString(),
-            Throwing.supplier(() -> decoratorFactory.decorate(dequeuer.deQueue())).sneakyThrow());
+    public Flux<MailQueueItem> deQueue() {
+        return dequeuer.deQueue()
+            .map(decoratorFactory::decorate);
     }
 
     @Override
