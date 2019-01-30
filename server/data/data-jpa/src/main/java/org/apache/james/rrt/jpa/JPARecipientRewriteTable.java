@@ -76,11 +76,16 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     @Override
     protected Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException {
-        Mappings mapping = getMapping(user, domain, "selectExactMappings");
-        if (!mapping.isEmpty()) {
-            return mapping;
+        Mappings userDomainMapping = getMapping(user, domain, "selectUserDomainMapping");
+        if (userDomainMapping != null && !userDomainMapping.isEmpty()) {
+            return userDomainMapping;
         }
-        return getMapping(user, domain, "selectMappings");
+        MappingSource domainSource = MappingSource.fromDomain(domain);
+        Mappings domainMapping = getMapping(domainSource.getFixedUser(), domain, "selectUserDomainMapping");
+        if (domainMapping != null && !domainMapping.isEmpty()) {
+            return domainMapping;
+        }
+        return MappingsImpl.empty();
     }
 
     private Mappings getMapping(String user, Domain domain, String queryName) throws RecipientRewriteTableException {
@@ -175,7 +180,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     /**
      * Update the mapping for the given user and domain
-     * 
+     *
      * @param user the user
      * @param domain the domain
      * @param mapping the mapping
