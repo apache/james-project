@@ -743,7 +743,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             .previousMailboxIds(getMailboxEntity().getMailboxId())
             .targetMailboxIds(to.getMailboxEntity().getMailboxId(), getMailboxEntity().getMailboxId())
             .build();
-        Flux.merge(
+        Flux.concat(
             eventBus.dispatch(EventFactory.added()
                     .randomEventId()
                     .mailboxSession(session)
@@ -757,7 +757,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
                     .messageId(messageIds.build())
                     .build(),
                 messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(Guavate.toImmutableSet())))
-            .then().block();
+            .blockLast();
 
         return copiedUids;
     }
@@ -777,7 +777,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             .previousMailboxIds(getMailboxEntity().getMailboxId())
             .targetMailboxIds(to.getMailboxEntity().getMailboxId())
             .build();
-        Flux.merge(
+        Flux.concat(
             eventBus.dispatch(EventFactory.added()
                     .randomEventId()
                     .mailboxSession(session)
@@ -798,7 +798,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
                     .session(session)
                     .build(),
                 messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(Guavate.toImmutableSet())))
-            .then().block();
+            .blockLast();
 
         return moveUids;
     }
