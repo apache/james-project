@@ -122,6 +122,12 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-cli</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-classic</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
