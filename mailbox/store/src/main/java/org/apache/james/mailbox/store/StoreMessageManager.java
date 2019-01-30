@@ -50,6 +50,7 @@ import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.ReadOnlyException;
+import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxCounters;
@@ -473,7 +474,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     @Override
     public MetaData getMetaData(boolean resetRecent, MailboxSession mailboxSession, MetaData.FetchGroup fetchGroup) throws MailboxException {
-        MailboxACL resolvedAcl = storeRightManager.getResolvedMailboxACL(mailbox, mailboxSession);
+        MailboxACL resolvedAcl = getResolvedAcl(mailboxSession);
         boolean hasReadRight = storeRightManager.hasRight(mailbox, MailboxACL.Right.Read, mailboxSession);
         if (!hasReadRight) {
             return MailboxMetaData.sensibleInformationFree(resolvedAcl, getMailboxEntity().getUidValidity(), isWriteable(mailboxSession), isModSeqPermanent(mailboxSession));
@@ -522,6 +523,11 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             break;
         }
         return new MailboxMetaData(recent, permanentFlags, uidValidity, uidNext, highestModSeq, messageCount, unseenCount, firstUnseen, isWriteable(mailboxSession), isModSeqPermanent(mailboxSession), resolvedAcl);
+    }
+
+    @Override
+    public MailboxACL getResolvedAcl(MailboxSession mailboxSession) throws UnsupportedRightException {
+        return storeRightManager.getResolvedMailboxACL(mailbox, mailboxSession);
     }
 
     /**

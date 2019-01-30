@@ -35,6 +35,7 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedCriteriaException;
+import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxCounters;
@@ -440,4 +441,11 @@ public interface MessageManager {
         MailboxACL getACL();
 
     }
+
+    /**
+     * Get resolved ACL on this Mailbox for the given Session
+     *
+     * The result will be the same as calling {MessageManager#getMetaDtata().getAcl()} but will load fewer data
+     */
+    MailboxACL getResolvedAcl(MailboxSession mailboxSession) throws UnsupportedRightException;
 }

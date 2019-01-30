@@ -51,7 +51,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 
 public class MailboxFactory {
-    public static final boolean NO_RESET_RECENT = false;
     private final MailboxManager mailboxManager;
     private final QuotaManager quotaManager;
     private final QuotaRootResolver quotaRootResolver;
@@ -113,9 +112,8 @@ public class MailboxFactory {
         boolean isOwner = mailboxPath.belongsTo(mailboxSession);
         Optional<Role> role = Role.from(mailboxPath.getName());
         MailboxCounters mailboxCounters = messageManager.getMailboxCounters(mailboxSession);
-        MessageManager.MetaData metaData = messageManager.getMetaData(NO_RESET_RECENT, mailboxSession, MessageManager.MetaData.FetchGroup.NO_COUNT);
 
-        Rights rights = Rights.fromACL(metaData.getACL())
+        Rights rights = Rights.fromACL(messageManager.getResolvedAcl(mailboxSession))
             .removeEntriesFor(Username.forMailboxPath(mailboxPath));
         Username username = Username.fromSession(mailboxSession);
         Quotas quotas = getQuotas(mailboxPath);
