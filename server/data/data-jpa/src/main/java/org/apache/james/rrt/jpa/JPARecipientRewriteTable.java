@@ -76,28 +76,27 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     @Override
     protected Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException {
-        Mappings userDomainMapping = getMapping(user, domain, "selectUserDomainMapping");
+        Mappings userDomainMapping = getMapping(MappingSource.fromUser(user, domain));
         if (userDomainMapping != null && !userDomainMapping.isEmpty()) {
             return userDomainMapping;
         }
-        MappingSource domainSource = MappingSource.fromDomain(domain);
-        Mappings domainMapping = getMapping(domainSource.getFixedUser(), domain, "selectUserDomainMapping");
+        Mappings domainMapping = getMapping(MappingSource.fromDomain(domain));
         if (domainMapping != null && !domainMapping.isEmpty()) {
             return domainMapping;
         }
         return MappingsImpl.empty();
     }
 
-    private Mappings getMapping(String user, Domain domain, String queryName) throws RecipientRewriteTableException {
+    private Mappings getMapping(MappingSource mappingSource) throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
             transaction.begin();
             @SuppressWarnings("unchecked")
             List<JPARecipientRewrite> virtualUsers = entityManager
-                .createNamedQuery(queryName)
-                .setParameter("user", user)
-                .setParameter("domain", domain.asString())
+                .createNamedQuery("selectUserDomainMapping")
+                .setParameter("user", mappingSource.getFixedUser())
+                .setParameter("domain", mappingSource.getFixedDomain())
                 .getResultList();
             transaction.commit();
             if (virtualUsers.size() > 0) {
@@ -105,7 +104,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
             }
             return MappingsImpl.empty();
         } catch (PersistenceException e) {
-            LOGGER.debug("Failed to find mapping for  user={} and domain={}", user, domain, e);
+            LOGGER.debug("Failed to find mapping for source={}", mappingSource, e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }
