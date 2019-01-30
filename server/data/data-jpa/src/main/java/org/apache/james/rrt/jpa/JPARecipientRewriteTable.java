@@ -54,8 +54,6 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     /**
      * Set the entity manager to use.
-     * 
-     * @param entityManagerFactory
      */
     @Inject
     @PersistenceUnit(unitName = "James")
@@ -153,11 +151,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
     /**
      * Update the mapping for the given user and domain
      *
-     * @param user the user
-     * @param domain the domain
-     * @param mapping the mapping
      * @return true if update was successfully
-     * @throws RecipientRewriteTableException
      */
     private boolean doUpdateMapping(MappingSource source, String mapping) throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
@@ -188,11 +182,6 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     /**
      * Remove a mapping for the given user and domain
-     * 
-     * @param user the user
-     * @param domain the domain
-     * @param mapping the mapping
-     * @throws RecipientRewriteTableException
      */
     private void doRemoveMapping(MappingSource source, String mapping) throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
@@ -220,11 +209,6 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     /**
      * Add mapping for given user and domain
-     * 
-     * @param user the user
-     * @param domain the domain
-     * @param mapping the mapping
-     * @throws RecipientRewriteTableException
      */
     private void doAddMapping(MappingSource source, String mapping) throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
