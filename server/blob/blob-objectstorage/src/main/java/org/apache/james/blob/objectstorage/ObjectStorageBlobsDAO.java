@@ -22,9 +22,6 @@ package org.apache.james.blob.objectstorage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
@@ -33,7 +30,6 @@ import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone3ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
-import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.blobstore.options.CopyOptions;
 import org.jclouds.domain.Location;
@@ -41,10 +37,10 @@ import org.jclouds.io.Payload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
+import reactor.core.publisher.Mono;
 
 public class ObjectStorageBlobsDAO implements BlobStore {
     private static final Location DEFAULT_LOCATION = null;
@@ -56,7 +52,6 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     private final ContainerName containerName;
     private final org.jclouds.blobstore.BlobStore blobStore;
     private final PayloadCodec payloadCodec;
-    private final Executor executor;
 
     ObjectStorageBlobsDAO(ContainerName containerName, BlobId.Factory blobIdFactory,
                           org.jclouds.blobstore.BlobStore blobStore, PayloadCodec payloadCodec) {
@@ -64,7 +59,6 @@ public class ObjectStorageBlobsDAO implements BlobStore {
         this.containerName = containerName;
         this.blobStore = blobStore;
         this.payloadCodec = payloadCodec;
-        this.executor = Executors.newCachedThreadPool(NamedThreadFactory.withClassName(getClass()));
     }
 
     public static ObjectStorageBlobsDAOBuilder.RequireContainerName builder(SwiftTempAuthObjectStorage.Configuration testConfig) {
@@ -79,53 +73,48 @@ public class ObjectStorageBlobsDAO implements BlobStore {
         return SwiftKeystone3ObjectStorage.daoBuilder(testConfig);
     }
 
-    public CompletableFuture<ContainerName> createContainer(ContainerName name) {
-        return CompletableFuture.supplyAsync(() -> blobStore.createContainerInLocation(DEFAULT_LOCATION, name.value()))
-            .thenApply(created -> {
-                if (!created) {
-                    LOGGER.debug("{} already existed", name);
-                }
-                return name;
-            });
+    public Mono<ContainerName> createContainer(ContainerName name) {
+        return Mono.fromCallable(() -> blobStore.createContainerInLocation(DEFAULT_LOCATION, name.value()))
+            .filter(created -> created == false)
+            .doOnNext(ignored -> LOGGER.debug("{} already existed", name))
+            .thenReturn(name);
     }
 
     @Override
-    public CompletableFuture<BlobId> save(byte[] data) {
+    public Mono<BlobId> save(byte[] data) {
         return save(new ByteArrayInputStream(data));
     }
 
     @Override
-    public CompletableFuture<BlobId> save(InputStream data) {
+    public Mono<BlobId> save(InputStream data) {
         Preconditions.checkNotNull(data);
 
         BlobId tmpId = blobIdFactory.randomId();
         return save(data, tmpId)
-            .thenCompose(id -> updateBlobId(tmpId, id));
+            .flatMap(id -> updateBlobId(tmpId, id));
     }
 
-    private CompletableFuture<BlobId> updateBlobId(BlobId from, BlobId to) {
+    private Mono<BlobId> updateBlobId(BlobId from, BlobId to) {
         String containerName = this.containerName.value();
-        return CompletableFuture
-            .supplyAsync(() -> blobStore.copyBlob(containerName, from.asString(), containerName, to.asString(), CopyOptions.NONE), executor)
-            .thenAcceptAsync(any -> blobStore.removeBlob(containerName, from.asString()))
-            .thenApply(any -> to);
+        return Mono
+            .fromCallable(() -> blobStore.copyBlob(containerName, from.asString(), containerName, to.asString(), CopyOptions.NONE))
+            .then(Mono.fromRunnable(() -> blobStore.removeBlob(containerName, from.asString())))
+            .thenReturn(to);
     }
 
-    private CompletableFuture<BlobId> save(InputStream data, BlobId id) {
+    private Mono<BlobId> save(InputStream data, BlobId id) {
         String containerName = this.containerName.value();
         HashingInputStream hashingInputStream = new HashingInputStream(Hashing.sha256(), data);
         Payload payload = payloadCodec.write(hashingInputStream);
         Blob blob = blobStore.blobBuilder(id.asString()).payload(payload).build();
 
-        return CompletableFuture
-            .supplyAsync(() -> blobStore.putBlob(containerName, blob), executor)
-            .thenApply(any -> blobIdFactory.from(hashingInputStream.hash().toString()));
+        return Mono.fromCallable(() -> blobStore.putBlob(containerName, blob))
+            .then(Mono.fromCallable(() -> blobIdFactory.from(hashingInputStream.hash().toString())));
     }
 
     @Override
-    public CompletableFuture<byte[]> readBytes(BlobId blobId) {
-        return CompletableFuture
-            .supplyAsync(Throwing.supplier(() -> IOUtils.toByteArray(read(blobId))).sneakyThrow(), executor);
+    public Mono<byte[]> readBytes(BlobId blobId) {
+        return Mono.fromCallable(() -> IOUtils.toByteArray(read(blobId)));
     }
 
     @Override

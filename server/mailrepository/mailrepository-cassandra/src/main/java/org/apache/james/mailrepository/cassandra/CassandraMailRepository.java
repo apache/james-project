@@ -61,6 +61,7 @@ public class CassandraMailRepository implements MailRepository {
         MailKey mailKey = MailKey.forMail(mail);
 
         Mono.fromFuture(mimeMessageStore.save(mail.getMessage())
+            .toFuture()
             .thenCompose(Throwing.function(parts -> mailDAO.store(url, mail,
                 parts.getHeaderBlobId(),
                 parts.getBodyBlobId()))))
@@ -101,6 +102,7 @@ public class CassandraMailRepository implements MailRepository {
             .build();
 
         return mimeMessageStore.read(parts)
+            .toFuture()
             .thenApply(mimeMessage -> mailDTO.getMailBuilder()
                 .mimeMessage(mimeMessage)
                 .build());

@@ -69,7 +69,7 @@ class Enqueuer {
 
     private CompletableFuture<MimeMessagePartsId> saveMail(Mail mail) throws MailQueue.MailQueueException {
         try {
-            return mimeMessageStore.save(mail.getMessage());
+            return mimeMessageStore.save(mail.getMessage()).toFuture();
         } catch (MessagingException e) {
             throw new MailQueue.MailQueueException("Error while saving blob", e);
         }

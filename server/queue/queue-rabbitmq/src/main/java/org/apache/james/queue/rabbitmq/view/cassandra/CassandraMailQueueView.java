@@ -117,7 +117,7 @@ public class CassandraMailQueueView implements MailQueueView {
             .filter(mailReference -> deleteCondition.shouldBeDeleted(mailReference.getMail()))
             .map(mailReference -> cassandraMailQueueMailDelete.considerDeleted(mailReference.getMail(), mailQueueName))
             .count()
-            .doOnTerminate(() -> cassandraMailQueueMailDelete.updateBrowseStart(mailQueueName))
+            .doOnNext(ignored -> cassandraMailQueueMailDelete.updateBrowseStart(mailQueueName))
             .block();
     }
 
