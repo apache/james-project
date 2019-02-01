@@ -126,6 +126,8 @@ class CassandraMappingsRoutesTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
+            .body("additionalInformation.successfulMappingsCount", is(0))
+            .body("additionalInformation.errorMappingsCount", is(0))
             .body("type", is(CassandraMappingsSolveInconsistenciesTask.TYPE))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
@@ -176,7 +178,9 @@ class CassandraMappingsRoutesTest {
         .when()
             .get(taskId + "/await")
         .then()
-            .body("status", is("completed"));
+            .body("status", is("completed"))
+            .body("additionalInformation.successfulMappingsCount", is(2))
+            .body("additionalInformation.errorMappingsCount", is(0));
 
         assertThat(cassandraMappingsSourcesDAO.retrieveSources(MAPPING).collectList().block())
             .containsOnly(SOURCE_1, SOURCE_2);
@@ -200,7 +204,9 @@ class CassandraMappingsRoutesTest {
         .when()
             .get(taskId + "/await")
         .then()
-            .body("status", is("completed"));
+            .body("status", is("completed"))
+            .body("additionalInformation.successfulMappingsCount", is(1))
+            .body("additionalInformation.errorMappingsCount", is(0));
 
         assertThat(cassandraMappingsSourcesDAO.retrieveSources(MAPPING).collectList().block())
             .containsOnly(SOURCE_1);

@@ -19,11 +19,14 @@
 
 package org.apache.james.webadmin.service;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 
 import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;
 import org.apache.james.rrt.cassandra.migration.MappingsSourcesMigration;
 import org.apache.james.task.Task;
+import org.apache.james.task.TaskExecutionDetails;
 
 import reactor.core.publisher.Mono;
 
@@ -52,5 +55,10 @@ public class CassandraMappingsSolveInconsistenciesTask implements Task {
     @Override
     public String type() {
         return TYPE;
+    }
+
+    @Override
+    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
+        return mappingsSourcesMigration.details();
     }
 }

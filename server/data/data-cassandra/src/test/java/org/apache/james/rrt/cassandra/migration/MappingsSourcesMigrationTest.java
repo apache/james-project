@@ -46,6 +46,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 class MappingsSourcesMigrationTest {
     private static final int THREAD_COUNT = 10;
@@ -93,6 +94,9 @@ class MappingsSourcesMigrationTest {
 
         assertThat(cassandraMappingsSourcesDAO.retrieveSources(MAPPING).collectList().block())
             .containsExactly(SOURCE);
+
+        assertThat(migration.createAdditionalInformation().getSuccessfulMappingsCount()).isEqualTo(1);
+        assertThat(migration.createAdditionalInformation().getErrorMappingsCount()).isEqualTo(0);
     }
 
     @Test
@@ -106,6 +110,9 @@ class MappingsSourcesMigrationTest {
 
         assertThat(cassandraMappingsSourcesDAO.retrieveSources(MAPPING).collectList().block())
             .containsOnly(SOURCE, source2);
+
+        assertThat(migration.createAdditionalInformation().getSuccessfulMappingsCount()).isEqualTo(2);
+        assertThat(migration.createAdditionalInformation().getErrorMappingsCount()).isEqualTo(0);
     }
 
     @Test
@@ -117,6 +124,8 @@ class MappingsSourcesMigrationTest {
         when(cassandraRecipientRewriteTableDAO.getAllMappings()).thenReturn(Flux.error(new RuntimeException()));
 
         assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
+        assertThat(migration.createAdditionalInformation().getSuccessfulMappingsCount()).isEqualTo(0);
+        assertThat(migration.createAdditionalInformation().getErrorMappingsCount()).isEqualTo(0);
     }
 
     @Test
@@ -128,9 +137,31 @@ class MappingsSourcesMigrationTest {
         when(cassandraRecipientRewriteTableDAO.getAllMappings())
             .thenReturn(Flux.just(Pair.of(SOURCE, MAPPING)));
         when(cassandraMappingsSourcesDAO.addMapping(any(Mapping.class), any(MappingSource.class)))
-            .thenThrow(new RuntimeException());
+            .thenReturn(Mono.error(new RuntimeException()));
 
         assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
+        assertThat(migration.createAdditionalInformation().getSuccessfulMappingsCount()).isEqualTo(0);
+        assertThat(migration.createAdditionalInformation().getErrorMappingsCount()).isEqualTo(1);
+    }
+
+    @Test
+    void migrationShouldHaveCorrectErrorCountWhenMultipleAddMappingFails() {
+        MappingSource source2 = MappingSource.fromUser("bob", Domain.LOCALHOST);
+
+        CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO = mock(CassandraRecipientRewriteTableDAO.class);
+        CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO = mock(CassandraMappingsSourcesDAO.class);
+        migration = new MappingsSourcesMigration(cassandraRecipientRewriteTableDAO, cassandraMappingsSourcesDAO);
+
+        when(cassandraRecipientRewriteTableDAO.getAllMappings())
+            .thenReturn(Flux.just(
+                Pair.of(SOURCE, MAPPING),
+                Pair.of(source2, MAPPING)));
+        when(cassandraMappingsSourcesDAO.addMapping(any(Mapping.class), any(MappingSource.class)))
+            .thenReturn(Mono.error(new RuntimeException()));
+
+        assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
+        assertThat(migration.createAdditionalInformation().getSuccessfulMappingsCount()).isEqualTo(0);
+        assertThat(migration.createAdditionalInformation().getErrorMappingsCount()).isEqualTo(2);
     }
 
     @Test
