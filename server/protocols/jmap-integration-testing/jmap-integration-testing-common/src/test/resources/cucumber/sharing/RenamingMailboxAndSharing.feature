@@ -26,6 +26,7 @@ Feature: Renaming mailbox and sharing
     And "alice@domain.tld" has a mailbox "shared"
     And "alice@domain.tld" shares her mailbox "shared" with "bob@domain.tld" with "aeilrwt" rights
 
+  @BasicFeature
   Scenario: A sharee should be able to access a shared mailbox after it has been renamed by the owner
     Given "alice@domain.tld" renames her mailbox "shared" to "mySharedMailbox"
     When "bob@domain.tld" lists mailboxes

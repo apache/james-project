@@ -12,11 +12,11 @@
                 </encoder>
         </appender>
 
-        <root level="DEBUG">
+        <root level="WARN">
                 <appender-ref ref="CONSOLE" />
         </root>
 
-        <logger name="org.apache.james" level="DEBUG"/>
+        <logger name="org.apache.james" level="WARN"/>
 
         <logger name="com.datastax.driver.core.QueryLogger.SLOW" level="DEBUG" />
 

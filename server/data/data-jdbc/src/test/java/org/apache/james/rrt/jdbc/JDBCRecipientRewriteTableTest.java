@@ -22,31 +22,25 @@ import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
-import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 import org.junit.After;
 import org.junit.Before;
 
-/**
- * Test the JDBC Virtual User Table implementation.
- */
 public class JDBCRecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         super.tearDown();
     }
 
-
-    /**
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest#getRecipientRewriteTable()
-     */
     @SuppressWarnings("deprecation")
     @Override
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
@@ -68,45 +62,5 @@ public class JDBCRecipientRewriteTableTest extends AbstractRecipientRewriteTable
         ds.setUsername("james");
         ds.setPassword("james");
         return ds;
-    }
-
-    @Override
-    protected void addMapping(String user, String domain, String mapping, int type) throws RecipientRewriteTableException {
-        switch (type) {
-        case ERROR_TYPE:
-            virtualUserTable.addErrorMapping(user, domain, mapping);
-            break;
-        case REGEX_TYPE:
-            virtualUserTable.addRegexMapping(user, domain, mapping);
-            break;
-        case ADDRESS_TYPE:
-            virtualUserTable.addAddressMapping(user, domain, mapping);
-            break;
-        case ALIASDOMAIN_TYPE:
-            virtualUserTable.addAliasDomainMapping(domain, mapping);
-            break;
-        default:
-            throw new RuntimeException("Invalid mapping type: " + type);
-        }
-    }
-
-    @Override
-    protected void removeMapping(String user, String domain, String mapping, int type) throws RecipientRewriteTableException {
-        switch (type) {
-        case ERROR_TYPE:
-            virtualUserTable.removeErrorMapping(user, domain, mapping);
-            break;
-        case REGEX_TYPE:
-            virtualUserTable.removeRegexMapping(user, domain, mapping);
-            break;
-        case ADDRESS_TYPE:
-            virtualUserTable.removeAddressMapping(user, domain, mapping);
-            break;
-        case ALIASDOMAIN_TYPE:
-            virtualUserTable.removeAliasDomainMapping(domain, mapping);
-            break;
-        default:
-            throw new RuntimeException("Invalid mapping type: " + type);
-        }
     }
 }

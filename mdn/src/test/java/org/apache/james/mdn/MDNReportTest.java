@@ -52,7 +52,6 @@ public class MDNReportTest {
     @Test
     public void shouldMatchBeanContact() {
         EqualsVerifier.forClass(MDNReport.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 
@@ -61,11 +60,9 @@ public class MDNReportTest {
         expectedException.expect(IllegalStateException.class);
 
         MDNReport.builder()
-            .reportingUserAgentField(new ReportingUserAgent(
-                "UA_name",
-                "UA_product"))
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
-            .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
+            .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
+            .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .build();
     }
 
@@ -82,10 +79,8 @@ public class MDNReportTest {
         expectedException.expect(IllegalStateException.class);
 
         MDNReport.builder()
-            .reportingUserAgentField(new ReportingUserAgent(
-                "UA_name",
-                "UA_product"))
-            .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
+            .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
+            .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build();
@@ -99,7 +94,7 @@ public class MDNReportTest {
             .type(DispositionType.Processed)
             .build();
 
-        FinalRecipient finalRecipientField = new FinalRecipient(Text.fromRawText("any@domain.com"));
+        FinalRecipient finalRecipientField = FinalRecipient.builder().finalRecipient(Text.fromRawText("any@domain.com")).build();
         MDNReport mdnReport = MDNReport.builder()
             .finalRecipientField(finalRecipientField)
             .dispositionField(disposition)
@@ -118,13 +113,13 @@ public class MDNReportTest {
             .sendingMode(DispositionSendingMode.Automatic)
             .type(DispositionType.Processed)
             .build();
-        FinalRecipient finalRecipientField = new FinalRecipient(Text.fromRawText("any@domain.com"));
-        ExtensionField extensionField1 = new ExtensionField("name1", "value1");
-        ExtensionField extensionField2 = new ExtensionField("name2", "value2");
-        Gateway gateway = new Gateway(Text.fromRawText("address"));
+        FinalRecipient finalRecipientField = FinalRecipient.builder().finalRecipient(Text.fromRawText("any@domain.com")).build();
+        ExtensionField extensionField1 = ExtensionField.builder().fieldName("name1").rawValue("value1").build();
+        ExtensionField extensionField2 = ExtensionField.builder().fieldName("name2").rawValue("value2").build();;
+        Gateway gateway = Gateway.builder().name(Text.fromRawText("address")).build();
         OriginalMessageId originalMessageIdField = new OriginalMessageId("msgId");
-        OriginalRecipient originalRecipientField = new OriginalRecipient(Text.fromRawText("address"));
-        ReportingUserAgent reportingUserAgentField = new ReportingUserAgent("name");
+        OriginalRecipient originalRecipientField = OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build();
+        ReportingUserAgent reportingUserAgentField = ReportingUserAgent.builder().userAgentName("name").build();
         Error errorField1 = new Error(Text.fromRawText("error 1"));
         Error errorField2 = new Error(Text.fromRawText("error 2"));
 

@@ -27,6 +27,7 @@ public class JPADataModule extends AbstractModule {
         install(new JPAUsersRepositoryModule());
         install(new JPADomainListModule());
         install(new JPARecipientRewriteTableModule());
+        install(new JPAMailRepositoryModule());
     }
 
 }

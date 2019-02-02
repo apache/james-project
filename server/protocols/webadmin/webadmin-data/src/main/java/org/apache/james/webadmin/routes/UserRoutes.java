@@ -77,6 +77,11 @@ public class UserRoutes implements Routes {
     }
 
     @Override
+    public String getBasePath() {
+        return USERS;
+    }
+
+    @Override
     public void define(Service service) {
         this.service = service;
 

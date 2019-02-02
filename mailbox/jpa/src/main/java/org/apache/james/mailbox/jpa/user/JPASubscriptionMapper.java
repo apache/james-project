@@ -39,9 +39,7 @@ public class JPASubscriptionMapper extends JPATransactionalMapper implements Sub
     }
 
     
-    /**
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#findMailboxSubscriptionForUser(java.lang.String, java.lang.String)
-     */
+    @Override
     public Subscription findMailboxSubscriptionForUser(String user, String mailbox) throws SubscriptionException {
         try {
             return (Subscription) getEntityManager().createNamedQuery("findFindMailboxSubscriptionForUser")
@@ -53,10 +51,7 @@ public class JPASubscriptionMapper extends JPATransactionalMapper implements Sub
         }
     }
 
-    /**
-     * @throws SubscriptionException 
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#save(Subscription)
-     */
+    @Override
     public void save(Subscription subscription) throws SubscriptionException {
         try {
             getEntityManager().persist(subscription);
@@ -65,10 +60,7 @@ public class JPASubscriptionMapper extends JPATransactionalMapper implements Sub
         }
     }
 
-    /**
-     * @throws SubscriptionException 
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#findSubscriptionsForUser(java.lang.String)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public List<Subscription> findSubscriptionsForUser(String user) throws SubscriptionException {
         try {
@@ -78,10 +70,7 @@ public class JPASubscriptionMapper extends JPATransactionalMapper implements Sub
         }
     }
 
-    /**
-     * @throws SubscriptionException 
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#delete(Subscription)
-     */
+    @Override
     public void delete(Subscription subscription) throws SubscriptionException {
         try {
             getEntityManager().remove(subscription);

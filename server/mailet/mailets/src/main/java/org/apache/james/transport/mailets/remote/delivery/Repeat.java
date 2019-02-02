@@ -27,7 +27,6 @@ import com.google.common.collect.Iterables;
 
 public class Repeat {
 
-    @SuppressWarnings("unchecked")
     public static <T> List<T> repeat(T element, int times) {
         Preconditions.checkArgument(times >= 0, "Times argument should be strictly positive");
         return ImmutableList.copyOf(

@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-james-mpt-smtp</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>apache-james-mpt-smtp-cassandra</artifactId>
@@ -30,93 +30,76 @@
 
     <name>Apache James MPT SMTP Cassandra</name>
 
-    <properties>
-        <cassandra.includes>empty</cassandra.includes>
-    </properties>
-
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-backends-cassandra</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-backends-es</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-tika</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mpt-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mpt-smtp-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-cassandra-guice</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-cassandra-guice</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-jmap</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-util-java8</artifactId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-util</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <excludes>
-                        <exclude>**/suite/*.java</exclude>
-                        <exclude>**/suite/**/*.java</exclude>
-                    </excludes>
-                    <includes>
-                        <include>${cassandra.includes}</include>
-                    </includes>
+                    <reuseForks>true</reuseForks>
                 </configuration>
             </plugin>
         </plugins>

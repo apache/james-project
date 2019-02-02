@@ -49,9 +49,6 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
         this.store = store;
     }
     
-    /**
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#delete(org.apache.james.mailbox.store.user.model.Subscription)
-     */
     @Override
     public void delete(Subscription subscription) throws SubscriptionException {
         // TODO: we need some kind of file locking here
@@ -67,9 +64,6 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
         }
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#findSubscriptionsForUser(java.lang.String)
-     */
     @Override
     public List<Subscription> findSubscriptionsForUser(String user) throws SubscriptionException {
         Set<String> subscriptionNames = readSubscriptionsForUser(user);
@@ -78,9 +72,6 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
             .collect(Guavate.toImmutableList());
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#findMailboxSubscriptionForUser(java.lang.String, java.lang.String)
-     */
     @Override
     public Subscription findMailboxSubscriptionForUser(String user, String mailbox) throws SubscriptionException {
         File userRoot = new File(store.userRoot(user));
@@ -96,9 +87,6 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
         return null;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#save(org.apache.james.mailbox.store.user.model.Subscription)
-     */
     @Override
     public void save(Subscription subscription) throws SubscriptionException {
         // TODO: we need some kind of file locking here
@@ -117,9 +105,6 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
         }
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.transaction.TransactionalMapper#endRequest()
-     */
     @Override
     public void endRequest() {
         // nothing to do
@@ -152,14 +137,13 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
         if (!subscriptionFile.exists()) {
             return ImmutableSet.of();
         }
-        FileReader fileReader = new FileReader(subscriptionFile);
-        BufferedReader reader = new BufferedReader(fileReader);
-        Set<String> subscriptions = reader.lines()
-            .filter(subscription -> !subscription.equals(""))
-            .collect(Guavate.toImmutableSet());
-        reader.close();
-        fileReader.close();
-        return subscriptions;
+        try (FileReader fileReader = new FileReader(subscriptionFile)) {
+            try (BufferedReader reader = new BufferedReader(fileReader)) {
+                return reader.lines()
+                    .filter(subscription -> !subscription.equals(""))
+                    .collect(Guavate.toImmutableSet());
+            }
+        }
     }
     
     /**
@@ -176,21 +160,19 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
                 throw new IOException("Could not create folder " + mailboxFolder);
             }
         }
-        
+
         File subscriptionFile = new File(mailboxFolder, FILE_SUBSCRIPTION);
         if (!subscriptionFile.exists()) {
             if (!subscriptionFile.createNewFile()) {
                 throw new IOException("Could not create file " + subscriptionFile);
             }
         }
-                
-        FileWriter fileWriter = new FileWriter(subscriptionFile);
-        PrintWriter writer = new PrintWriter(fileWriter);
-        for (String subscription : sortedSubscriptions) {
-            writer.println(subscription);
+
+        try (FileWriter fileWriter = new FileWriter(subscriptionFile)) {
+            try (PrintWriter writer = new PrintWriter(fileWriter)) {
+                sortedSubscriptions.forEach(writer::println);
+            }
         }
-        writer.close();
-        fileWriter.close();
     }
 
 }

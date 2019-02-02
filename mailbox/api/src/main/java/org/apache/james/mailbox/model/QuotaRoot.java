@@ -19,11 +19,53 @@
 
 package org.apache.james.mailbox.model;
 
+import java.util.Optional;
+
+import org.apache.james.core.Domain;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+
 /**
  * Represents RFC 2087 Quota root
  */
-public interface QuotaRoot {
+public class QuotaRoot {
 
-    String getValue();
+    public static QuotaRoot quotaRoot(String value, Optional<Domain> domain) {
+        return new QuotaRoot(value, domain);
+    }
 
+    private final String value;
+    private final Optional<Domain> domain;
+
+    private QuotaRoot(String value, Optional<Domain> domain) {
+        this.value = value;
+        this.domain = domain;
+    }
+
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof QuotaRoot)) {
+            return false;
+        }
+        return value.equals(((QuotaRoot) o).getValue());
+    }
+
+    public int hashCode() {
+        return Objects.hashCode(value, domain);
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public Optional<Domain> getDomain() {
+        return domain;
+    }
+
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("value", value)
+                .add("domain", domain)
+                .toString();
+    }
 }

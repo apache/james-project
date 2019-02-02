@@ -155,7 +155,7 @@
                     </tr>
                     <tr>
                         <td>Mailbox implementation</td>
-                        <td>JPA/MailDir/JCR/Memory</td>
+                        <td>JPA/MailDir/Memory</td>
                         <td>Cassandra</td>
                         <td>Cassandra</td>
                         <td>JPA</td>
@@ -171,7 +171,8 @@
                     </tr>
                     <tr>
                         <td>Server data implementation</td>
-                        <td>JPA/File/HBase/JCR</td>
+                        <td>JPA/File</td>
+                        <td>JPA/File</td>
                         <td>Cassandra</td>
                         <td>Cassandra</td>
                         <td>JPA</td>
@@ -191,6 +192,14 @@
                         <td>Experimental</td>
                         <td>Experimental</td>
                         <td>Experimental</td>
+                        <td>No</td>
+                    </tr>
+                    <tr>
+                        <td>User defined mailbox listener registration</td>
+                        <td>No</td>
+                        <td>Yes (master)</td>
+                        <td>Yes (master)</td>
+                        <td>Yes (master)</td>
                         <td>No</td>
                     </tr>
                     <tr>

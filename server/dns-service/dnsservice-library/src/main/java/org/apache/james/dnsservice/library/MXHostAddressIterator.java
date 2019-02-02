@@ -107,9 +107,6 @@ public class MXHostAddressIterator implements Iterator<HostAddress> {
         return addresses.next();
     }
 
-    /**
-     * Not supported.
-     */
     @Override
     public void remove() {
         throw new UnsupportedOperationException("remove not supported by this iterator");

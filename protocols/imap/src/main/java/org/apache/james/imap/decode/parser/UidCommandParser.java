@@ -44,26 +44,17 @@ public class UidCommandParser extends AbstractImapCommandParser implements Deleg
         super(ImapCommand.selectedStateCommand(ImapConstants.UID_COMMAND_NAME));
     }
 
-    /**
-     * @see org.apache.james.imap.decode.DelegatingImapCommandParser#getParserFactory()
-     */
+    @Override
     public ImapCommandParserFactory getParserFactory() {
         return parserFactory;
     }
 
-    /**
-     * @see org.apache.james.imap.decode.DelegatingImapCommandParser#setParserFactory(ImapCommandParserFactory)
-     */
+    @Override
     public void setParserFactory(ImapCommandParserFactory imapCommandFactory) {
         this.parserFactory = imapCommandFactory;
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.decode.base.AbstractImapCommandParser#decode(org.apache.james.imap.api.ImapCommand,
-     * org.apache.james.imap.decode.ImapRequestLineReader, java.lang.String,
-     * org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, ImapSession session) throws DecodingException {
         // TODO: check the logic against the specification:
         // TODO: suspect that it is now bust

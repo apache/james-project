@@ -26,8 +26,8 @@ import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.utils.ConfigurationPerformer;
@@ -42,10 +42,10 @@ import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.JwtFilter;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.JsonTransformerModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -70,18 +70,20 @@ public class WebAdminServerModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new TaskRoutesModule());
+        install(new HealthCheckRoutesModule());
 
         bind(JsonTransformer.class).in(Scopes.SINGLETON);
         bind(WebAdminServer.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(WebAdminServerModuleConfigurationPerformer.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(WebAdminGuiceProbe.class);
+        Multibinder.newSetBinder(binder(), JsonTransformerModule.class);
     }
 
     @Provides
     public WebAdminConfiguration provideWebAdminConfiguration(PropertiesProvider propertiesProvider) throws Exception {
         try {
-            PropertiesConfiguration configurationFile = propertiesProvider.getConfiguration("webadmin");
+            Configuration configurationFile = propertiesProvider.getConfiguration("webadmin");
             return WebAdminConfiguration.builder()
                 .enable(configurationFile.getBoolean("enabled", DEFAULT_DISABLED))
                 .port(new FixedPortSupplier(configurationFile.getInt("port", WebAdminServer.DEFAULT_PORT)))
@@ -100,7 +102,7 @@ public class WebAdminServerModule extends AbstractModule {
     public AuthenticationFilter providesAuthenticationFilter(PropertiesProvider propertiesProvider,
                                                              JwtTokenVerifier jwtTokenVerifier) throws Exception {
         try {
-            PropertiesConfiguration configurationFile = propertiesProvider.getConfiguration("webadmin");
+            Configuration configurationFile = propertiesProvider.getConfiguration("webadmin");
             if (configurationFile.getBoolean("jwt.enabled", DEFAULT_JWT_DISABLED)) {
                 return new JwtFilter(jwtTokenVerifier);
             }
@@ -110,7 +112,7 @@ public class WebAdminServerModule extends AbstractModule {
         }
     }
 
-    private Optional<TlsConfiguration> readHttpsConfiguration(PropertiesConfiguration configurationFile) {
+    private Optional<TlsConfiguration> readHttpsConfiguration(Configuration configurationFile) {
         boolean enabled = configurationFile.getBoolean("https.enabled", DEFAULT_HTTPS_DISABLED);
         if (enabled) {
             return Optional.of(TlsConfiguration.builder()
@@ -138,7 +140,7 @@ public class WebAdminServerModule extends AbstractModule {
             try {
                 webAdminServer.configure(NO_CONFIGURATION);
             } catch (ConfigurationException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

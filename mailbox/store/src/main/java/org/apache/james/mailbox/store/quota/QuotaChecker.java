@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store.quota;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.Quota;
@@ -29,8 +31,8 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public class QuotaChecker {
 
-    private final Quota messageQuota;
-    private final Quota sizeQuota;
+    private final Quota<QuotaCount> messageQuota;
+    private final Quota<QuotaSize> sizeQuota;
     private final QuotaRoot quotaRoot;
 
     public QuotaChecker(QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, Mailbox mailbox) throws MailboxException {
@@ -39,26 +41,35 @@ public class QuotaChecker {
         this.sizeQuota = quotaManager.getStorageQuota(quotaRoot);
     }
 
-    public QuotaChecker(Quota messageQuota, Quota sizeQuota, QuotaRoot quotaRoot) {
+    public QuotaChecker(Quota<QuotaCount> messageQuota, Quota<QuotaSize> sizeQuota, QuotaRoot quotaRoot) {
         this.messageQuota = messageQuota;
         this.sizeQuota = sizeQuota;
         this.quotaRoot = quotaRoot;
     }
 
-    public boolean tryAddition(long count, long size) throws OverQuotaException {
-        messageQuota.addValueToQuota(count);
-        sizeQuota.addValueToQuota(size);
-        return check();
+    public void tryAddition(long count, long size) throws OverQuotaException {
+        tryCountAddition(count);
+        trySizeAddition(size);
     }
 
-    private boolean check() throws OverQuotaException {
-        if (messageQuota.isOverQuota()) {
-            throw new OverQuotaException("You have too many messages in " + quotaRoot.getValue(), messageQuota.getMax(), messageQuota.getUsed());
+    private void trySizeAddition(long size) throws OverQuotaException {
+        Quota<QuotaSize> afterAdditionQuotaSize = sizeQuota.addValueToQuota(QuotaSize.size(size));
+        if (afterAdditionQuotaSize.isOverQuota()) {
+            throw new OverQuotaException(
+                "You use too much space in " + quotaRoot.getValue(),
+                afterAdditionQuotaSize.getLimit(),
+                afterAdditionQuotaSize.getUsed());
         }
-        if (sizeQuota.isOverQuota()) {
-            throw new OverQuotaException("You use too much space in " + quotaRoot.getValue(), sizeQuota.getMax(), sizeQuota.getUsed());
+    }
+
+    private void tryCountAddition(long count) throws OverQuotaException {
+        Quota<QuotaCount> afterAdditionQuotaCount = messageQuota.addValueToQuota(QuotaCount.count(count));
+        if (afterAdditionQuotaCount.isOverQuota()) {
+            throw new OverQuotaException(
+                "You have too many messages in " + quotaRoot.getValue(),
+                messageQuota.getLimit(),
+                messageQuota.getUsed());
         }
-        return true;
     }
 
 }

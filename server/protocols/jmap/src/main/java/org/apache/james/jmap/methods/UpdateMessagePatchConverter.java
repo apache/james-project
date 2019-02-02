@@ -28,7 +28,6 @@ import org.apache.james.jmap.model.UpdateMessagePatch;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Throwables;
 
 public class UpdateMessagePatchConverter {
 
@@ -54,7 +53,7 @@ public class UpdateMessagePatchConverter {
         try {
             return jsonParser.readerFor(UpdateMessagePatch.class).<UpdateMessagePatch>readValue(updatePatchNode);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 }

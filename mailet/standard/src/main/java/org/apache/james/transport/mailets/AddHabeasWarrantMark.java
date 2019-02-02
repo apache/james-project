@@ -98,6 +98,7 @@ public class AddHabeasWarrantMark extends GenericMailet {
      * @throws javax.mail.MessagingException - if an message or address parsing exception occurs or
      *      an exception that interferes with the mailet's normal operation
      */
+    @Override
     public void service(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
 
@@ -113,6 +114,7 @@ public class AddHabeasWarrantMark extends GenericMailet {
      *
      * @return a string describing this mailet
      */
+    @Override
     public String getMailetInfo() {
         return "Add Habeas Warrant Mark.  Must be used in accordance with a license from Habeas (see http://www.habeas.com for details).";
     }

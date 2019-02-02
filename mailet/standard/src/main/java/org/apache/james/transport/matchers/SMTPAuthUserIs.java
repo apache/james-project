@@ -46,6 +46,7 @@ public class SMTPAuthUserIs extends GenericMatcher {
      */
     private Collection<String> users;
 
+    @Override
     public void init() throws javax.mail.MessagingException {
         StringTokenizer st = new StringTokenizer(getCondition(), ", \t", false);
         users = new java.util.HashSet<>();
@@ -54,6 +55,7 @@ public class SMTPAuthUserIs extends GenericMatcher {
         }
     }
 
+    @Override
     public Collection<MailAddress> match(Mail mail) {
         String authUser = (String) mail.getAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME);
         if (authUser != null && users.contains(authUser)) {

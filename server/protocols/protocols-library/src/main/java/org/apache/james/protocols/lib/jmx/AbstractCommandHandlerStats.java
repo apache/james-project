@@ -78,23 +78,17 @@ public abstract class AbstractCommandHandlerStats extends StandardMBean implemen
      */
     protected abstract void incrementStats(Response response);
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.CommandHandlerStatsMBean#getAll()
-     */
+    @Override
     public long getAll() {
         return all.get();
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.CommandHandlerStatsMBean#getName()
-     */
+    @Override
     public String getName() {
         return handlerName;
     }
 
-    /**
-     * @see org.apache.james.lifecycle.api.Disposable#dispose()
-     */
+    @Override
     public void dispose() {
         try {
             mbeanserver.unregisterMBean(new ObjectName(name));
@@ -103,16 +97,12 @@ public abstract class AbstractCommandHandlerStats extends StandardMBean implemen
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.CommandHandlerStatsMBean#getCommands()
-     */
+    @Override
     public String[] getCommands() {
         return commands;
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.CommandHandlerStatsMBean#getDisconnect()
-     */
+    @Override
     public long getDisconnect() {
         return disconnect.get();
     }

@@ -20,10 +20,8 @@
 package org.apache.james.transport.mailets;
 
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
-import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
-import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,10 +34,13 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
@@ -51,6 +52,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
+import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
 public class AmqpForwardAttachmentTest {
     private static final String FROM = "fromUser@" + DEFAULT_DOMAIN;
@@ -63,7 +65,9 @@ public class AmqpForwardAttachmentTest {
     private static final byte[] TEST_ATTACHMENT_CONTENT = "Test attachment content".getBytes(StandardCharsets.UTF_8);
 
     public SwarmGenericContainer rabbitMqContainer = new SwarmGenericContainer(Images.RABBITMQ)
-            .withAffinityToContainer();
+        .withAffinityToContainer()
+        .waitingFor(new HostPortWaitStrategy()
+            .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
 
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     public AmqpRule amqpRule = new AmqpRule(rabbitMqContainer, EXCHANGE_NAME, ROUTING_KEY);
@@ -126,14 +130,13 @@ public class AmqpForwardAttachmentTest {
                     .filename("test.txt"))
             .setSubject("test");
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(FROM)
-                .recipient(RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(RECIPIENT));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);

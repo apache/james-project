@@ -42,11 +42,11 @@
       <p>Apache James Server uses the <a href="http://james.apache.org/mailbox">Apache James Mailbox</a> storage system 
          to store the users mailboxes.</p>
   
-      <p>The mailbox library supports different persistence mecanisms: MailDir, Database (via JPA) and JCR.</p>
+      <p>The mailbox library supports different persistence mecanisms: MailDir, Database (via JPA).</p>
   
       <p>Mailbox persistence is configured in spring-beans.xml (by default JPA, 
          you set the database connection properties in database.properties - can also be 
-         MailDir, JCR).</p>
+         MailDir).</p>
 
     </subsection>
   

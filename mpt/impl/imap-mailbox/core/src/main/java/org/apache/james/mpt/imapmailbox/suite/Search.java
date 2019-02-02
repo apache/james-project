@@ -21,10 +21,12 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
+import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
 import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -47,6 +49,7 @@ public abstract class Search implements ImapTestConstants {
     
     @Test
     public void testSearchAtomsUS() throws Exception {
+        Assume.assumeTrue(system.supports(ImapFeatures.Feature.MOD_SEQ_SEARCH));
         simpleScriptedTestProtocol
             .withLocale(Locale.US)
             .run("SearchAtoms");
@@ -54,6 +57,7 @@ public abstract class Search implements ImapTestConstants {
 
     @Test
     public void testSearchAtomsITALY() throws Exception {
+        Assume.assumeTrue(system.supports(ImapFeatures.Feature.MOD_SEQ_SEARCH));
         simpleScriptedTestProtocol
             .withLocale(Locale.ITALY)
             .run("SearchAtoms");
@@ -61,6 +65,7 @@ public abstract class Search implements ImapTestConstants {
 
     @Test
     public void testSearchAtomsKOREA() throws Exception {
+        Assume.assumeTrue(system.supports(ImapFeatures.Feature.MOD_SEQ_SEARCH));
         simpleScriptedTestProtocol
             .withLocale(Locale.KOREA)
             .run("SearchAtoms");

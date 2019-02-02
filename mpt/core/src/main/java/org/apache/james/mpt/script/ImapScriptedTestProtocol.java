@@ -51,6 +51,7 @@ public class ImapScriptedTestProtocol extends GenericSimpleScriptedTestProtocol<
             this.rights = rights;
         }
 
+        @Override
         public void prepare(ImapHostSystem system) throws Exception {
             system.grantRights(mailboxPath, userName, rights);
         }

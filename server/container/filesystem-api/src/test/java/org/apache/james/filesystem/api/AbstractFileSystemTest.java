@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.filesystem.api;
 
-import static junitparams.JUnitParamsRunner.$;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
@@ -113,13 +112,13 @@ public abstract class AbstractFileSystemTest {
 
     public static class UrlsAsFileThrowingFileNotFoundExceptionProvider {
         public static Object[] provides() {
-            return $(
-                    $("bad://file"),
-                    $("classpath:" + FAKE_FILE),
-                    $("classpath:/" + FAKE_FILE),
-                    $("http://localhost:$PORT$/"),
-                    $("classpath:" + new File(ClassLoader.getSystemResource(EXISTING_CLASSPATH_FILE).getFile()).getAbsolutePath()),
-                    $("classpath:java/lang/String.class")
+            return toArray(
+                    toArray("bad://file"),
+                    toArray("classpath:" + FAKE_FILE),
+                    toArray("classpath:/" + FAKE_FILE),
+                    toArray("http://localhost:$PORT$/"),
+                    toArray("classpath:" + new File(ClassLoader.getSystemResource(EXISTING_CLASSPATH_FILE).getFile()).getAbsolutePath()),
+                    toArray("classpath:java/lang/String.class")
             );
         }
     }
@@ -134,11 +133,11 @@ public abstract class AbstractFileSystemTest {
 
     public static class NonExistingFilesProvider {
         public static Object[] provides() {
-            return $(
-                    $("file:///" + FAKE_FILE),
-                    $("file:///" + FAKE_DIRECTORY + FAKE_FILE),
-                    $("file://conf/" + FAKE_FILE),
-                    $("file://var/" + FAKE_FILE)
+            return toArray(
+                    toArray("file:///" + FAKE_FILE),
+                    toArray("file:///" + FAKE_DIRECTORY + FAKE_FILE),
+                    toArray("file://conf/" + FAKE_FILE),
+                    toArray("file://var/" + FAKE_FILE)
             );
         }
     }
@@ -152,10 +151,10 @@ public abstract class AbstractFileSystemTest {
 
     public static class NonAvailableStreamsProvider {
         public static Object[] provide() {
-            return $(
-                    $("http://localhost:$PORT$/" + FAKE_FILE),
-                    $("classpath:java/lang/" + FAKE_FILE + ".clas"),
-                    $("classpath:" + FAKE_FILE)
+            return toArray(
+                    toArray("http://localhost:$PORT$/" + FAKE_FILE),
+                    toArray("classpath:java/lang/" + FAKE_FILE + ".clas"),
+                    toArray("classpath:" + FAKE_FILE)
             );
         }
     }
@@ -170,13 +169,13 @@ public abstract class AbstractFileSystemTest {
 
     public static class AvailableStreamsProvider {
         public static Object[] provide() {
-            return $(
-                    $("http://localhost:$PORT$/"),
-                    $("classpath:java/lang/String.class"),
-                    $("classpath:" + EXISTING_CLASSPATH_FILE),
-                    $("classpath:" + EXISTING_CLASSPATH_FILE_WITH_SPACES),
-                    $("classpath:/" + EXISTING_CLASSPATH_FILE),
-                    $("classpath:/" + EXISTING_CLASSPATH_FILE_WITH_SPACES)
+            return toArray(
+                    toArray("http://localhost:$PORT$/"),
+                    toArray("classpath:java/lang/String.class"),
+                    toArray("classpath:" + EXISTING_CLASSPATH_FILE),
+                    toArray("classpath:" + EXISTING_CLASSPATH_FILE_WITH_SPACES),
+                    toArray("classpath:/" + EXISTING_CLASSPATH_FILE),
+                    toArray("classpath:/" + EXISTING_CLASSPATH_FILE_WITH_SPACES)
             );
         }
     }
@@ -185,11 +184,8 @@ public abstract class AbstractFileSystemTest {
     @Parameters(source = AvailableStreamsProvider.class)
     public final void availableInputStreamShouldReturnANonEmptyStream(String url) throws Exception {
         url = replacePort(url);
-        InputStream inputStream = fileSystem.getResource(url);
-        try {
+        try (InputStream inputStream = fileSystem.getResource(url)) {
             assertThat(IOUtils.toByteArray(inputStream).length).isGreaterThan(0);
-        } finally {
-            IOUtils.closeQuietly(inputStream);
         }
     }
 
@@ -199,9 +195,9 @@ public abstract class AbstractFileSystemTest {
 
     public static class FileToCreateProvider {
         public static Object[] provide() {
-            return $(
-                    $("fileSystemTest", ".txt"),
-                    $("file System Test", ".txt")
+            return toArray(
+                    toArray("fileSystemTest", ".txt"),
+                    toArray("file System Test", ".txt")
             );
         }
     }
@@ -234,12 +230,9 @@ public abstract class AbstractFileSystemTest {
     @Parameters(source = FileToCreateProvider.class)
     public final void createdFilesAsInputStreamShouldBeAvailable(String name, String extension) throws Exception {
         File temp = createTempFile(name, extension);
-        InputStream inputStream = null;
-        try {
-            inputStream = fileSystem.getResource("file:" + temp.getAbsolutePath());
+        try (InputStream inputStream = fileSystem.getResource("file:" + temp.getAbsolutePath())) {
             assertThat(IOUtils.toString(inputStream, StandardCharsets.UTF_8)).isEqualTo("content");
         } finally {
-            IOUtils.closeQuietly(inputStream);
             temp.delete();
         }
     }
@@ -248,12 +241,9 @@ public abstract class AbstractFileSystemTest {
     @Parameters(source = FileToCreateProvider.class)
     public final void createdFilesAsInputStreamShouldBeAvailableWhenAccessedWithTwoSlashes(String name, String extension) throws Exception {
         File temp = createTempFile(name, extension);
-        InputStream inputStream = null;
-        try {
-            inputStream = fileSystem.getResource("file://" + temp.getAbsolutePath());
+        try (InputStream inputStream = fileSystem.getResource("file://" + temp.getAbsolutePath())) {
             assertThat(IOUtils.toString(inputStream, StandardCharsets.UTF_8)).isEqualTo("content");
         } finally {
-            IOUtils.closeQuietly(inputStream);
             temp.delete();
         }
     }
@@ -278,4 +268,7 @@ public abstract class AbstractFileSystemTest {
         assertThat(file).hasContent("varcontent");
     }
     
+    private static Object[] toArray(Object... params) {
+        return params;
+    }
 }

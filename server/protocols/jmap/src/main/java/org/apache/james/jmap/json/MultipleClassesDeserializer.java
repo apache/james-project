@@ -30,7 +30,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 
 public class MultipleClassesDeserializer extends StdDeserializer<Object> {
 
@@ -49,14 +48,14 @@ public class MultipleClassesDeserializer extends StdDeserializer<Object> {
                 .filter(req -> ! (root.at(req.getKey()).isMissingNode()))
                 .map(x -> readValue(mapper, root, x.getValue()))
                 .findFirst()
-                .orElseThrow(() -> new JsonMappingException("Can't map request to a known registered class"));
+                .orElseThrow(() -> JsonMappingException.from(ctxt, "Can't map request to a known registered class"));
     }
 
     private Object readValue(ObjectMapper mapper, JsonNode root, Class<?> clazz) {
         try {
             return mapper.treeToValue(root, clazz);
         } catch (JsonProcessingException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

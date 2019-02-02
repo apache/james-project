@@ -33,7 +33,6 @@ public class UsernameTest {
     @Test
     public void shouldRespectBeanContract() {
         EqualsVerifier.forClass(Username.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 
@@ -53,17 +52,6 @@ public class UsernameTest {
     public void fromMailboxSessionShouldThrowOnNullUser() {
         MailboxSession mailboxSession = mock(MailboxSession.class);
         when(mailboxSession.getUser()).thenReturn(null);
-
-        assertThatThrownBy(() -> Username.fromMailboxSession(mailboxSession))
-            .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    public void fromMailboxSessionShouldThrowOnNullUsername() {
-        MailboxSession mailboxSession = mock(MailboxSession.class);
-        MailboxSession.User user = mock(MailboxSession.User.class);
-        when(mailboxSession.getUser()).thenReturn(user);
-        when(user.getUserName()).thenReturn(null);
 
         assertThatThrownBy(() -> Username.fromMailboxSession(mailboxSession))
             .isInstanceOf(NullPointerException.class);

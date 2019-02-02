@@ -27,12 +27,12 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.utils.MimeMessageBodyGenerator;
+import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 public class VacationReply {
 
@@ -68,16 +68,16 @@ public class VacationReply {
 
         public VacationReply build(MimeMessageBodyGenerator mimeMessageBodyGenerator) throws MessagingException {
             Preconditions.checkState(mailRecipient != null, "Original recipient address should not be null");
-            Preconditions.checkState(originalMail.getSender() != null, "Original sender address should not be null");
+            Preconditions.checkState(originalMail.hasSender(), "Original sender address should not be null");
 
-            return new VacationReply(mailRecipient, ImmutableList.of(originalMail.getSender()), generateMimeMessage(mimeMessageBodyGenerator));
+            return new VacationReply(mailRecipient, OptionalUtils.toList(originalMail.getMaybeSender().asOptional()), generateMimeMessage(mimeMessageBodyGenerator));
         }
 
         private MimeMessage generateMimeMessage(MimeMessageBodyGenerator mimeMessageBodyGenerator) throws MessagingException {
             MimeMessage reply = (MimeMessage) originalMail.getMessage().reply(NOT_REPLY_TO_ALL);
             vacation.getSubject().ifPresent(Throwing.consumer(subjectString -> reply.setHeader("subject", subjectString)));
             reply.setHeader(FROM_HEADER, mailRecipient.toString());
-            reply.setHeader(TO_HEADER, originalMail.getSender().toString());
+            reply.setHeader(TO_HEADER, originalMail.getMaybeSender().get().asString());
             reply.setHeader(AutomaticallySentMailDetector.AUTO_SUBMITTED_HEADER, AutomaticallySentMailDetector.AUTO_REPLIED_VALUE);
 
             return mimeMessageBodyGenerator.from(reply, vacation.getTextBody(), vacation.getHtmlBody());

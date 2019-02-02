@@ -62,6 +62,11 @@ public class InMemoryMessageId implements MessageId {
     }
 
     @Override
+    public boolean isSerializable() {
+        return true;
+    }
+
+    @Override
     public final int hashCode() {
         return Objects.hashCode(value);
     }

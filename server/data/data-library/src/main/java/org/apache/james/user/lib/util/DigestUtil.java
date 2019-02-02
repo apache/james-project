@@ -31,10 +31,14 @@ import java.util.Locale;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeUtility;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Computes and verifies digests of files and strings
  */
 public class DigestUtil {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DigestUtil.class);
 
     /**
      * Command line interface. Use -help for arguments.
@@ -111,7 +115,7 @@ public class DigestUtil {
                 fos.flush();
             }
         } catch (Exception e) {
-            System.out.println("Error computing Digest: " + e);
+            LOGGER.error("Error computing Digest", e);
         }
     }
 
@@ -141,7 +145,7 @@ public class DigestUtil {
             encodedStream.write(digest);
             return bos.toString("iso-8859-1");
         } catch (IOException | MessagingException e) {
-            throw new RuntimeException("Fatal error: " + e);
+            throw new RuntimeException("Fatal error", e);
         }
     }
 

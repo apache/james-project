@@ -31,7 +31,6 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
-import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -39,7 +38,7 @@ import org.junit.rules.ExpectedException;
 import com.google.common.collect.ImmutableList;
 
 public abstract class AttachmentMapperTest {
-    private static final AttachmentId UNKNOWN_ATTACHMENT_ID = AttachmentId.forPayloadAndType("unknown".getBytes(StandardCharsets.UTF_8), "type");
+    private static final AttachmentId UNKNOWN_ATTACHMENT_ID = AttachmentId.from("unknown");
     public static final Username OWNER = Username.fromRawValue("owner");
     public static final Username ADDITIONAL_OWNER = Username.fromRawValue("additionalOwner");
 
@@ -48,14 +47,12 @@ public abstract class AttachmentMapperTest {
     @Rule
     public ExpectedException expected = ExpectedException.none();
 
-    protected abstract MapperProvider createMapperProvider();
+    protected abstract AttachmentMapper createAttachmentMapper();
 
     protected abstract MessageId generateMessageId();
 
     public void setUp() throws MailboxException {
-        MapperProvider mapperProvider = createMapperProvider();
-        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.ATTACHMENT));
-        this.attachmentMapper = mapperProvider.createAttachmentMapper();
+        this.attachmentMapper = createAttachmentMapper();
     }
 
     @Test
@@ -108,13 +105,13 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    public void getAttachmentsShouldThrowWhenNullAttachmentId() throws Exception {
+    public void getAttachmentsShouldThrowWhenNullAttachmentId() {
         expected.expect(IllegalArgumentException.class);
         attachmentMapper.getAttachments(null);
     }
 
     @Test
-    public void getAttachmentsShouldReturnEmptyListWhenNonReferencedAttachmentId() throws Exception {
+    public void getAttachmentsShouldReturnEmptyListWhenNonReferencedAttachmentId() {
         List<Attachment> attachments = attachmentMapper.getAttachments(ImmutableList.of(UNKNOWN_ATTACHMENT_ID));
 
         assertThat(attachments).isEmpty();

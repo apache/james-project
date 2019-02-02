@@ -72,9 +72,7 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
         this.fileSystem = fileSystem;
     }
 
-    /**
-     * @see org.apache.james.user.lib.AbstractJamesUsersRepository#doConfigure(org.apache.commons.configuration.HierarchicalConfiguration)
-     */
+    @Override
     protected void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
         super.doConfigure(configuration);
         destination = configuration.getString("destination.[@URL]");
@@ -105,16 +103,12 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
         }
     }
 
-    /**
-     * @see org.apache.james.user.api.UsersRepository#list()
-     */
+    @Override
     public Iterator<String> list() {
         return objectRepository.list();
     }
 
-    /**
-     * @see org.apache.james.user.lib.AbstractJamesUsersRepository#doAddUser(org.apache.james.user.api.model.User)
-     */
+    @Override
     protected void doAddUser(User user) throws UsersRepositoryException {
         if (contains(user.getUserName())) {
             throw new UsersRepositoryException(user.getUserName() + " already exists.");
@@ -122,14 +116,11 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
         try {
             objectRepository.put(user.getUserName(), user);
         } catch (Exception e) {
-            throw new UsersRepositoryException("Exception caught while storing user: " + e);
+            throw new UsersRepositoryException("Exception caught while storing user", e);
         }
     }
 
-    /**
-     * @throws UsersRepositoryException
-     * @see org.apache.james.user.api.UsersRepository#getUserByName(java.lang.String)
-     */
+    @Override
     public synchronized User getUserByName(String name) throws UsersRepositoryException {
         if (ignoreCase) {
             name = getRealName(name);
@@ -141,7 +132,7 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
             try {
                 return (User) objectRepository.get(name);
             } catch (Exception e) {
-                throw new UsersRepositoryException("Exception while retrieving user: " + e.getMessage());
+                throw new UsersRepositoryException("Exception while retrieving user", e);
             }
         } else {
             return null;
@@ -182,30 +173,23 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
         return getRealName(name, ignoreCase);
     }
 
-    /**
-     * @throws UsersRepositoryException
-     * @see org.apache.james.user.lib.AbstractJamesUsersRepository#doUpdateUser(org.apache.james.user.api.model.User)
-     */
+    @Override
     protected void doUpdateUser(User user) throws UsersRepositoryException {
         try {
             objectRepository.put(user.getUserName(), user);
         } catch (Exception e) {
-            throw new UsersRepositoryException("Exception caught while storing user: " + e);
+            throw new UsersRepositoryException("Exception caught while storing user", e);
         }
     }
 
-    /**
-     * @see org.apache.james.user.api.UsersRepository#removeUser(java.lang.String)
-     */
+    @Override
     public synchronized void removeUser(String name) throws UsersRepositoryException {
         if (!objectRepository.remove(name)) {
             throw new UsersRepositoryException("User " + name + " does not exist");
         }
     }
 
-    /**
-     * @see org.apache.james.user.api.UsersRepository#contains(java.lang.String)
-     */
+    @Override
     public boolean contains(String name) throws UsersRepositoryException {
         if (ignoreCase) {
             return containsCaseInsensitive(name);
@@ -214,10 +198,7 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
         }
     }
 
-    /*
-     * This is not longer in the api (deprecated)
-     * @see org.apache.james.user.api.UsersRepository#containsCaseInsensitive(java.lang.String)
-     */
+    @Deprecated
     private boolean containsCaseInsensitive(String name) {
         Iterator<String> it = list();
         while (it.hasNext()) {
@@ -228,10 +209,7 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
         return false;
     }
 
-    /**
-     * @see org.apache.james.user.api.UsersRepository#test(java.lang.String,
-     *      java.lang.String)
-     */
+    @Override
     public boolean test(String name, String password) throws UsersRepositoryException {
         User user;
         try {
@@ -240,14 +218,12 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
                 return false;
             }
         } catch (Exception e) {
-            throw new RuntimeException("Exception retrieving User" + e);
+            throw new RuntimeException("Exception retrieving User", e);
         }
         return user.verifyPassword(password);
     }
 
-    /**
-     * @see org.apache.james.user.api.UsersRepository#countUsers()
-     */
+    @Override
     public int countUsers() throws UsersRepositoryException {
         int count = 0;
         for (Iterator<String> it = list(); it.hasNext(); it.next()) {

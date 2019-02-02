@@ -47,32 +47,22 @@ public class ProtocolSessionImpl implements ProtocolSession {
         this.config = config;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolSession#getLocalAddress()
-     */
+    @Override
     public InetSocketAddress getLocalAddress() {
         return transport.getLocalAddress();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolSession#getRemoteAddress()
-     */
+    @Override
     public InetSocketAddress getRemoteAddress() {
         return transport.getRemoteAddress();
     }
 
-    /**
-     * @see org.apache.james.protocols.api.ProtocolSession#getUser()
-     */
+    @Override
     public String getUser() {
         return user;
     }
 
-    /**
-     * @see org.apache.james.protocols.api.ProtocolSession#setUser(java.lang.String)
-     */
+    @Override
     public void setUser(String user) {
         this.user = user;
     }
@@ -86,38 +76,28 @@ public class ProtocolSessionImpl implements ProtocolSession {
         return transport;
     }
 
-    /**
-     * @see org.apache.james.protocols.api.ProtocolSession#isStartTLSSupported()
-     */
+    @Override
     public boolean isStartTLSSupported() {
         return transport.isStartTLSSupported();
     }
 
-    /**
-     * @see org.apache.james.protocols.api.ProtocolSession#isTLSStarted()
-     */
+    @Override
     public boolean isTLSStarted() {
         return transport.isTLSStarted();
     }
 
-    /**
-     * @see org.apache.james.protocols.api.ProtocolSession#getSessionID()
-     */
+    @Override
     public String getSessionID() {
         return transport.getId();
     }
     
     
-    /**
-     * @see org.apache.james.protocols.api.ProtocolSession#getConnectionState()
-     */
+    @Override
     public Map<String, Object> getConnectionState() {
         return connectionState;
     }
 
-    /**
-     * @see org.apache.james.protocols.api.ProtocolSession#getState()
-     */
+    @Override
     public Map<String, Object> getState() {
         return sessionState;
     }
@@ -126,6 +106,7 @@ public class ProtocolSessionImpl implements ProtocolSession {
      * This implementation just returns <code>null</code>. Sub-classes should
      * overwrite this if needed
      */
+    @Override
     public Response newLineTooLongResponse() {
         return null;
     }
@@ -134,6 +115,7 @@ public class ProtocolSessionImpl implements ProtocolSession {
      * This implementation just returns <code>null</code>. Sub-classes should
      * overwrite this if needed
      */
+    @Override
     public Response newFatalErrorResponse() {
         return null;
     }
@@ -142,21 +124,17 @@ public class ProtocolSessionImpl implements ProtocolSession {
      * This implementation just clears the sessions state. Sub-classes should
      * overwrite this if needed
      */
+    @Override
     public void resetState() {
         sessionState.clear();
     }
 
-    /**
-     * @see org.apache.james.protocols.api.ProtocolSession#getConfiguration()
-     */
+    @Override
     public ProtocolConfiguration getConfiguration() {
         return config;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolSession#setAttachment(java.lang.String, java.lang.Object, org.apache.james.protocols.api.ProtocolSession.State)
-     */
+    @Override
     public Object setAttachment(String key, Object value, State state) {
         if (state == State.Connection) {
             if (value == null) {
@@ -173,10 +151,7 @@ public class ProtocolSessionImpl implements ProtocolSession {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolSession#getAttachment(java.lang.String, org.apache.james.protocols.api.ProtocolSession.State)
-     */
+    @Override
     public Object getAttachment(String key, State state) {
         if (state == State.Connection) {
             return connectionState.get(key);
@@ -188,6 +163,7 @@ public class ProtocolSessionImpl implements ProtocolSession {
     /**
      * Returns a Charset for US-ASCII
      */
+    @Override
     public Charset getCharset() {
         return CHARSET;
     }
@@ -195,30 +171,22 @@ public class ProtocolSessionImpl implements ProtocolSession {
     /**
      * Returns "\r\n";
      */
+    @Override
     public String getLineDelimiter() {
         return DELIMITER;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolSession#popLineHandler()
-     */
+    @Override
     public void popLineHandler() {
         transport.popLineHandler();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolSession#getPushedLineHandlerCount()
-     */
+    @Override
     public int getPushedLineHandlerCount() {
         return transport.getPushedLineHandlerCount();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolSession#pushLineHandler(org.apache.james.protocols.api.handler.LineHandler)
-     */
+    @Override
     public <T extends ProtocolSession> void pushLineHandler(LineHandler<T> overrideCommandHandler) {
         transport.pushLineHandler(overrideCommandHandler, this);
     }

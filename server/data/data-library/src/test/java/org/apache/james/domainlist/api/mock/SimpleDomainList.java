@@ -21,6 +21,7 @@ package org.apache.james.domainlist.api.mock;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 
@@ -31,20 +32,20 @@ import com.google.common.collect.ImmutableList;
  */
 public class SimpleDomainList implements DomainList {
 
-    private final List<String> domains = new LinkedList<>();
+    private final List<Domain> domains = new LinkedList<>();
 
     @Override
-    public boolean containsDomain(String domain) throws DomainListException {
+    public boolean containsDomain(Domain domain) {
         return domains.contains(domain);
     }
 
     @Override
-    public List<String> getDomains() throws DomainListException {
+    public List<Domain> getDomains() {
         return ImmutableList.copyOf(domains);
     }
 
     @Override
-    public void addDomain(String domain) throws DomainListException {
+    public void addDomain(Domain domain) throws DomainListException {
         if (domains.contains(domain)) {
             throw new DomainListException("Domain " + domain + " already exist");
         }
@@ -52,14 +53,14 @@ public class SimpleDomainList implements DomainList {
     }
 
     @Override
-    public void removeDomain(String domain) throws DomainListException {
+    public void removeDomain(Domain domain) throws DomainListException {
         if (!domains.remove(domain)) {
             throw new DomainListException("Domain " + domain + " does not exist");
         }
     }
 
     @Override
-    public String getDefaultDomain() {
-        return "localhost";
+    public Domain getDefaultDomain() {
+        return Domain.LOCALHOST;
     }
 }

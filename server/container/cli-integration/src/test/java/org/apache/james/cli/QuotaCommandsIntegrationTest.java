@@ -22,11 +22,12 @@ package org.apache.james.cli;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import java.util.Optional;
+
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.cli.util.OutputCapture;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.store.quota.QuotaRootImpl;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.modules.server.JMXServerModule;
@@ -37,7 +38,7 @@ import org.junit.Test;
 
 public class QuotaCommandsIntegrationTest {
     public static final String USER = "user";
-    public static final QuotaRoot QUOTA_ROOT = QuotaRootImpl.quotaRoot("#private&" + USER);
+    public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&" + USER, Optional.empty());
     private OutputCapture outputCapture;
 
     @Rule
@@ -60,46 +61,46 @@ public class QuotaCommandsIntegrationTest {
     }
 
     @Test
-    public void setDefaultMaxStorageShouldWork() throws Exception {
-        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setdefaultmaxstoragequota", "36"});
+    public void setGlobalMaxStorageShouldWork() throws Exception {
+        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setglobalmaxstoragequota", "36"});
 
-        assertThat(quotaProbe.getDefaultMaxStorage()).isEqualTo(36);
+        assertThat(quotaProbe.getGlobalMaxStorage().encodeAsLong()).isEqualTo(36);
     }
 
     @Test
-    public void getDefaultMaxStorageShouldWork() throws Exception {
-        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setdefaultmaxstoragequota", "36M"});
+    public void getGlobalMaxStorageShouldWork() throws Exception {
+        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setglobalmaxstoragequota", "36M"});
 
-        ServerCmd.executeAndOutputToStream(new String[] {"-h", "127.0.0.1", "-p", "9999", "getdefaultmaxstoragequota"},
+        ServerCmd.executeAndOutputToStream(new String[] {"-h", "127.0.0.1", "-p", "9999", "getglobalmaxstoragequota"},
             outputCapture.getPrintStream());
 
         assertThat(outputCapture.getContent())
-            .containsOnlyOnce("Default Maximum Storage Quota: 36 MB");
+            .containsOnlyOnce("Global Maximum Storage Quota: 36 MiB");
     }
 
     @Test
-    public void setDefaultMaxMessageCountShouldWork() throws Exception {
-        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setdefaultmaxmessagecountquota", "36"});
+    public void setGlobalMaxMessageCountShouldWork() throws Exception {
+        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setglobalmaxmessagecountquota", "36"});
 
-        assertThat(quotaProbe.getDefaultMaxMessageCount()).isEqualTo(36);
+        assertThat(quotaProbe.getGlobalMaxMessageCount().encodeAsLong()).isEqualTo(36);
     }
 
     @Test
-    public void getDefaultMaxMessageCountShouldWork() throws Exception {
-        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setdefaultmaxmessagecountquota", "36"});
+    public void getGlobalMaxMessageCountShouldWork() throws Exception {
+        ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setglobalmaxmessagecountquota", "36"});
 
-        ServerCmd.executeAndOutputToStream(new String[] {"-h", "127.0.0.1", "-p", "9999", "getdefaultmaxmessagecountquota"},
+        ServerCmd.executeAndOutputToStream(new String[] {"-h", "127.0.0.1", "-p", "9999", "getglobalmaxmessagecountquota"},
             outputCapture.getPrintStream());
 
         assertThat(outputCapture.getContent())
-            .containsOnlyOnce("Default Maximum message count Quota: 36");
+            .containsOnlyOnce("Global Maximum message count Quota: 36");
     }
 
     @Test
     public void setMaxStorageShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setmaxstoragequota", QUOTA_ROOT.getValue(), "36"});
 
-        assertThat(quotaProbe.getMaxStorage(QUOTA_ROOT.getValue())).isEqualTo(36);
+        assertThat(quotaProbe.getMaxStorage(QUOTA_ROOT.getValue()).encodeAsLong()).isEqualTo(36);
     }
 
     @Test
@@ -110,14 +111,14 @@ public class QuotaCommandsIntegrationTest {
             outputCapture.getPrintStream());
 
         assertThat(outputCapture.getContent())
-            .containsOnlyOnce("Storage space allowed for Quota Root #private&user: 1 GB");
+            .containsOnlyOnce("Storage space allowed for Quota Root #private&user: 1 GiB");
     }
 
     @Test
     public void setMaxMessageCountShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setmaxmessagecountquota", QUOTA_ROOT.getValue(), "36"});
 
-        assertThat(quotaProbe.getMaxMessageCount(QUOTA_ROOT.getValue())).isEqualTo(36);
+        assertThat(quotaProbe.getMaxMessageCount(QUOTA_ROOT.getValue()).encodeAsLong()).isEqualTo(36);
     }
 
     @Test

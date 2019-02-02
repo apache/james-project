@@ -47,46 +47,22 @@ public class HookResultLogger implements HookResultHook {
 
     }
 
+    @Override
     public HookResult onHookResult(SMTPSession session, HookResult hResult, long executionTime, Hook hook) {
-        boolean match = false;
-        boolean info = false;
-        int result = hResult.getResult();
-        StringBuilder sb = new StringBuilder();
-        sb.append(hook.getClass().getName());
-        sb.append(": result=");
-        sb.append(result);
-        sb.append(" (");
-        if ((result & HookReturnCode.DECLINED) == HookReturnCode.DECLINED) {
-            sb.append("DECLINED");
-            match = true;
-        }
-        if ((result & HookReturnCode.OK) == HookReturnCode.OK) {
-            sb.append("OK");
-            match = true;
-        }
-        if ((result & HookReturnCode.DENY) == HookReturnCode.DENY) {
-            sb.append("DENY");
-            match = true;
-            info = true;
-        }
-        if ((result & HookReturnCode.DENYSOFT) == HookReturnCode.DENYSOFT) {
-            sb.append("DENYSOFT");
-            match = true;
-            info = true;
-        }
-        if ((result & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
-            if (match) {
-                sb.append("|");
-            }
-            sb.append("DISCONNECT");
-            info = true;
-        }
-        sb.append(")");
+        HookReturnCode result = hResult.getResult();
 
-        if (info) {
-            LOGGER.info("{}", sb);
+        boolean requiresInfoLogging = result.getAction() == HookReturnCode.Action.DENY
+            || result.getAction() == HookReturnCode.Action.DENYSOFT
+            || result.isDisconnected();
+
+        if (requiresInfoLogging) {
+            LOGGER.info("{}: result= ({} {})", hook.getClass().getName(),
+                result.getAction(),
+                result.getConnectionStatus());
         } else {
-            LOGGER.debug("{}", sb);
+            LOGGER.debug("{}: result= ({} {})", hook.getClass().getName(),
+                result.getAction(),
+                result.getConnectionStatus());
         }
         return hResult;
     }

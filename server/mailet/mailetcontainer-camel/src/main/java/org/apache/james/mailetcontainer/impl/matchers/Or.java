@@ -37,6 +37,7 @@ import org.apache.mailet.Matcher;
  */
 public class Or extends GenericCompositeMatcher {
 
+    @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         HashSet<MailAddress> result = new HashSet<>();
         for (Matcher matcher : getMatchers()) {

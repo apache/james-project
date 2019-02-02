@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.mailbox.Role;
 import org.junit.Test;
 
 public class MailboxCreateRequestTest {

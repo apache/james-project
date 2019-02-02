@@ -32,9 +32,7 @@ import org.apache.james.imap.api.display.Localizer;
  */
 public class DefaultLocalizer implements Localizer {
 
-    /**
-     * @see Localizer#localize(HumanReadableText, Locales)
-     */
+    @Override
     public String localize(HumanReadableText text, Locales locales) {
         
         String result;

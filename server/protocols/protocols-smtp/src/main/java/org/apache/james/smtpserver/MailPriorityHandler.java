@@ -27,11 +27,11 @@ import java.util.Map;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
-import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.mailet.Mail;
 
@@ -43,20 +43,16 @@ import org.apache.mailet.Mail;
  */
 public class MailPriorityHandler implements JamesMessageHook, ProtocolHandler {
 
-    private final Map<String, Integer> prioMap = new HashMap<>();
+    private final Map<Domain, Integer> prioMap = new HashMap<>();
 
-    /**
-     * @see
-     * org.apache.james.smtpserver.JamesMessageHook#onMessage(org.apache.james.protocols.smtp.SMTPSession,
-     *  org.apache.mailet.Mail)
-     */
+    @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
         Iterator<MailAddress> rcpts = mail.getRecipients().iterator();
 
         Integer p = null;
 
         while (rcpts.hasNext()) {
-            String domain = rcpts.next().getDomain();
+            Domain domain = rcpts.next().getDomain();
             Integer prio;
             if (domain != null) {
                 prio = prioMap.get(domain);
@@ -77,14 +73,14 @@ public class MailPriorityHandler implements JamesMessageHook, ProtocolHandler {
         if (p != null) {
             mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, p);
         }
-        return new HookResult(HookReturnCode.DECLINED);
+        return HookResult.DECLINED;
     }
 
     @Override
     public void init(Configuration config) throws ConfigurationException {
         List<HierarchicalConfiguration> entries = ((HierarchicalConfiguration)config).configurationsAt("priorityEntries.priorityEntry");
         for (HierarchicalConfiguration prioConf : entries) {
-            String domain = prioConf.getString("domain");
+            Domain domain = Domain.of(prioConf.getString("domain"));
             int prio = prioConf.getInt("priority", MailPrioritySupport.NORMAL_PRIORITY);
             if (prio > MailPrioritySupport.HIGH_PRIORITY || prio < MailPrioritySupport.LOW_PRIORITY) {
                 throw new ConfigurationException("configured priority must be >= " + MailPrioritySupport.LOW_PRIORITY + " and <= " + MailPrioritySupport.HIGH_PRIORITY);

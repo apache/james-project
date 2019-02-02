@@ -22,7 +22,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
-import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
 
@@ -46,6 +45,7 @@ public class AddDefaultAttributesMessageHook implements JamesMessageHook {
 
     }
 
+    @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
         if (mail instanceof MailImpl) {
 
@@ -60,7 +60,7 @@ public class AddDefaultAttributesMessageHook implements JamesMessageHook {
                 mail.setAttribute(SMTP_AUTH_NETWORK_NAME, "true");
             }
         }
-        return new HookResult(HookReturnCode.DECLINED);
+        return HookResult.DECLINED;
     }
 
 }

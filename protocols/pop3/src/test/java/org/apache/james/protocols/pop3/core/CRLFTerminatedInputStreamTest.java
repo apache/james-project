@@ -22,8 +22,11 @@ package org.apache.james.protocols.pop3.core;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+import org.junit.Test;
+
 public class CRLFTerminatedInputStreamTest extends AbstractInputStreamTest {
 
+    @Test
     public void testCRLFPresent() throws IOException {
         String data = "Subject: test\r\n\r\ndata\r\n";
         checkRead(new CRLFTerminatedInputStream(new ByteArrayInputStream(data.getBytes())), data);
@@ -31,6 +34,7 @@ public class CRLFTerminatedInputStreamTest extends AbstractInputStreamTest {
 
     }
 
+    @Test
     public void testCRPresent() throws IOException {
         String data = "Subject: test\r\n\r\ndata\r";
         String expected = data + "\n";
@@ -38,6 +42,7 @@ public class CRLFTerminatedInputStreamTest extends AbstractInputStreamTest {
         checkReadViaArray(new CRLFTerminatedInputStream(new ByteArrayInputStream(data.getBytes())), expected);
     }
 
+    @Test
     public void testNonPresent() throws IOException {
         String data = "Subject: test\r\n\r\ndata";
         String expected = data + "\r\n";

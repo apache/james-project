@@ -63,17 +63,12 @@ public final class MailetManagement extends StandardMBean implements MailetManag
         lastProcessing.set(processTime);
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.api.jmx.MailetManagementMBean#getMailetName()
-     */
+    @Override
     public String getMailetName() {
         return config.getMailetName();
     }
 
-    /**
-     * @see org.apache.james.mailetcontainer.api.jmx.MailetManagementMBean#getMailetParameters()
-     */
+    @Override
     public String[] getMailetParameters() {
         List<String> parameterList = new ArrayList<>();
         Iterator<String> iterator = config.getInitParameterNames();
@@ -85,46 +80,32 @@ public final class MailetManagement extends StandardMBean implements MailetManag
         return parameterList.toArray(new String[parameterList.size()]);
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getErrorCount()
-     */
+    @Override
     public long getErrorCount() {
         return errorCount.get();
     }
 
-    /**
-     * @see org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getFastestProcessing()
-     */
+    @Override
     public long getFastestProcessing() {
         return fastestProcessing.get();
     }
 
-    /**
-     * @see org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getHandledMailCount()
-     */
+    @Override
     public long getHandledMailCount() {
         return getErrorCount() + getSuccessCount();
     }
 
-    /**
-     * @see org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getSlowestProcessing()
-     */
+    @Override
     public long getSlowestProcessing() {
         return slowestProcessing.get();
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getSuccessCount()
-     */
+    @Override
     public long getSuccessCount() {
         return successCount.get();
     }
 
-    /**
-     * @see org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getLastProcessing()
-     */
+    @Override
     public long getLastProcessing() {
         return lastProcessing.get();
     }

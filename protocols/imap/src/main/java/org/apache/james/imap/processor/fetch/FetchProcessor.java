@@ -63,13 +63,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         super(FetchRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.processor.AbstractMailboxProcessor#doProcess(org.apache.james.imap.api.message.request.ImapRequest,
-     * org.apache.james.imap.api.process.ImapSession, java.lang.String,
-     * org.apache.james.imap.api.ImapCommand,
-     * org.apache.james.imap.api.process.ImapProcessor.Responder)
-     */
+    @Override
     protected void doProcess(FetchRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
         final boolean useUids = request.isUseUids();
         final IdRange[] idSet = request.getIdSet();
@@ -131,10 +125,10 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             unsolicitedResponses(session, responder, omitExpunged, useUids);
             okComplete(command, tag, responder);
         } catch (MessageRangeException e) {
-            LOGGER.debug("Fetch failed for mailbox {} because of invalid sequence-set {}", session.getSelected().getPath(), idSet, e);
+            LOGGER.debug("Fetch failed for mailbox {} because of invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            LOGGER.error("Fetch failed for mailbox {} and sequence-set {}", session.getSelected().getPath(), idSet, e);
+            LOGGER.error("Fetch failed for mailbox {} and sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
         }
     }

@@ -24,23 +24,29 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.spamassassin.SpamAssassinResult;
+import org.apache.james.spamassassin.mock.MockSpamd;
+import org.apache.james.spamassassin.mock.MockSpamdTestRule;
+import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.Port;
-import org.apache.james.util.scanner.SpamAssassinInvoker;
-import org.apache.james.utils.MockSpamd;
-import org.apache.james.utils.MockSpamdTestRule;
 import org.apache.mailet.Mail;
+import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Rule;
 import org.junit.Test;
+
+import com.github.steveash.guavate.Guavate;
 
 public class SpamAssassinTest {
 
     @Rule
     public MockSpamdTestRule spamd = new MockSpamdTestRule();
 
-    private SpamAssassin mailet = new SpamAssassin();
+    private SpamAssassin mailet = new SpamAssassin(new NoopMetricFactory(), MemoryUsersRepository.withVirtualHosting());
 
     @Test
     public void initShouldSetDefaultSpamdHostWhenNone() throws Exception {
@@ -91,7 +97,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void initShouldThrowWhenSpamdPortIsNotNumber() throws Exception {
+    public void initShouldThrowWhenSpamdPortIsNotNumber() {
         assertThatThrownBy(() -> mailet.init(FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_PORT, "noNumber")
@@ -99,7 +105,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void initShouldThrowWhenSpamdPortIsNegative() throws Exception {
+    public void initShouldThrowWhenSpamdPortIsNegative() {
         assertThatThrownBy(() -> mailet.init(FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_PORT, "-1")
@@ -107,7 +113,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void initShouldThrowWhenSpamdPortIsZero() throws Exception {
+    public void initShouldThrowWhenSpamdPortIsZero() {
         assertThatThrownBy(() -> mailet.init(FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_PORT, "0")
@@ -115,7 +121,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void initShouldThrowWhenSpamdPortTooBig() throws Exception {
+    public void initShouldThrowWhenSpamdPortTooBig() {
         assertThatThrownBy(() -> mailet.init(FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_PORT,
@@ -144,6 +150,7 @@ public class SpamAssassinTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
+            .recipient("user1@exemple.com")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient("user1@exemple.com")
                 .addFrom("sender@exemple.com")
@@ -154,8 +161,16 @@ public class SpamAssassinTest {
 
         mailet.service(mail);
 
-        assertThat(mail.getAttributeNames())
-            .containsOnly(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME, SpamAssassinInvoker.STATUS_MAIL_ATTRIBUTE_NAME);
+
+
+        assertThat(
+            mail.getPerRecipientSpecificHeaders()
+                .getHeadersByRecipient()
+                .get(new MailAddress("user1@exemple.com"))
+                .stream()
+                .map(PerRecipientHeaders.Header::getName)
+                .collect(Guavate.toImmutableList()))
+            .contains(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME, SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME);
     }
 
     @Test
@@ -168,6 +183,7 @@ public class SpamAssassinTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
+            .recipient("user1@exemple.com")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient("user1@exemple.com")
                 .addFrom("sender@exemple.com")
@@ -178,7 +194,18 @@ public class SpamAssassinTest {
 
         mailet.service(mail);
 
-        assertThat(mail.getAttribute(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("NO");
+        assertThat(mail.getPerRecipientSpecificHeaders())
+            .isEqualTo(new PerRecipientHeaders()
+                .addHeaderForRecipient(
+                    PerRecipientHeaders.Header.builder()
+                        .name(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME)
+                        .value("NO"),
+                    new MailAddress("user1@exemple.com"))
+                .addHeaderForRecipient(
+                    PerRecipientHeaders.Header.builder()
+                        .name(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME)
+                        .value("No, hits=3 required=5"),
+                    new MailAddress("user1@exemple.com")));
     }
 
     @Test
@@ -191,6 +218,7 @@ public class SpamAssassinTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
+            .recipient("user1@exemple.com")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient("user1@exemple.com")
                 .addFrom("sender@exemple.com")
@@ -201,11 +229,22 @@ public class SpamAssassinTest {
 
         mailet.service(mail);
 
-        assertThat(mail.getAttribute(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("YES");
+        assertThat(mail.getPerRecipientSpecificHeaders())
+            .isEqualTo(new PerRecipientHeaders()
+                .addHeaderForRecipient(
+                    PerRecipientHeaders.Header.builder()
+                        .name(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME)
+                        .value("YES"),
+                    new MailAddress("user1@exemple.com"))
+                .addHeaderForRecipient(
+                    PerRecipientHeaders.Header.builder()
+                        .name(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME)
+                        .value("Yes, hits=1000 required=5"),
+                    new MailAddress("user1@exemple.com")));
     }
 
     @Test
-    public void getMailetInfoShouldReturnSpamAssasinMailetInformation() throws Exception {
+    public void getMailetInfoShouldReturnSpamAssasinMailetInformation() {
         assertThat(mailet.getMailetInfo()).isEqualTo("Checks message against SpamAssassin");
     }
 

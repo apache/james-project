@@ -28,7 +28,6 @@ public class PositiveUserACLChangedTest {
     @Test
     public void shouldMatchBeanContact() {
         EqualsVerifier.forClass(PositiveUserACLChanged.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 }

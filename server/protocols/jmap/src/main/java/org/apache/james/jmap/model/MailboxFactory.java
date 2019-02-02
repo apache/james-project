@@ -23,30 +23,38 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.quota.QuotaValue;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.MailboxNamespace;
+import org.apache.james.jmap.model.mailbox.Quotas;
+import org.apache.james.jmap.model.mailbox.Quotas.QuotaId;
 import org.apache.james.jmap.model.mailbox.Rights;
 import org.apache.james.jmap.model.mailbox.Rights.Username;
-import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.model.mailbox.SortOrder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.mailbox.quota.QuotaRootResolver;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.base.Throwables;
 
 public class MailboxFactory {
     public static final boolean NO_RESET_RECENT = false;
     private final MailboxManager mailboxManager;
+    private final QuotaManager quotaManager;
+    private final QuotaRootResolver quotaRootResolver;
 
     public static class MailboxBuilder {
         private final MailboxFactory mailboxFactory;
@@ -83,14 +91,16 @@ public class MailboxFactory {
             } catch (MailboxNotFoundException e) {
                 return Optional.empty();
             } catch (MailboxException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
     }
 
     @Inject
-    public MailboxFactory(MailboxManager mailboxManager) {
+    public MailboxFactory(MailboxManager mailboxManager, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) {
         this.mailboxManager = mailboxManager;
+        this.quotaManager = quotaManager;
+        this.quotaRootResolver = quotaRootResolver;
     }
 
     public MailboxBuilder builder() {
@@ -106,8 +116,9 @@ public class MailboxFactory {
         MessageManager.MetaData metaData = messageManager.getMetaData(NO_RESET_RECENT, mailboxSession, MessageManager.MetaData.FetchGroup.NO_COUNT);
 
         Rights rights = Rights.fromACL(metaData.getACL())
-            .removeEntriesFor(Username.forMailboxPath(messageManager.getMailboxPath()));
+            .removeEntriesFor(Username.forMailboxPath(mailboxPath));
         Username username = Username.fromSession(mailboxSession);
+        Quotas quotas = getQuotas(mailboxPath);
 
         return Mailbox.builder()
             .id(messageManager.getId())
@@ -125,7 +136,34 @@ public class MailboxFactory {
             .mayRemoveItems(rights.mayRemoveItems(username).orElse(isOwner))
             .mayRename(rights.mayRename(username).orElse(isOwner))
             .namespace(getNamespace(mailboxPath, isOwner))
+            .quotas(quotas)
             .build();
+    }
+
+    private Quotas getQuotas(MailboxPath mailboxPath) throws MailboxException {
+        QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
+        return Quotas.from(
+            QuotaId.fromQuotaRoot(quotaRoot),
+            Quotas.Quota.from(
+                quotaToValue(quotaManager.getStorageQuota(quotaRoot)),
+                quotaToValue(quotaManager.getMessageQuota(quotaRoot))));
+    }
+
+    private <T extends QuotaValue<T>> Quotas.Value<T> quotaToValue(Quota<T> quota) {
+        return new Quotas.Value<>(
+                quotaValueToNumber(quota.getUsed()),
+                quotaValueToOptionalNumber(quota.getLimit()));
+    }
+
+    private Number quotaValueToNumber(QuotaValue<?> value) {
+        return Number.BOUND_SANITIZING_FACTORY.from(value.asLong());
+    }
+
+    private Optional<Number> quotaValueToOptionalNumber(QuotaValue<?> value) {
+        if (value.isUnlimited()) {
+            return Optional.empty();
+        }
+        return Optional.of(quotaValueToNumber(value));
     }
 
     private MailboxNamespace getNamespace(MailboxPath mailboxPath, boolean isOwner) {

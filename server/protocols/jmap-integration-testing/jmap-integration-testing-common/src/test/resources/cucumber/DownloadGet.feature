@@ -26,6 +26,7 @@ Feature: Download GET
     And a user "bob@domain.tld"
     And "alice@domain.tld" has a mailbox "INBOX"
 
+  @BasicFeature
   Scenario: Getting an attachment previously stored
     Given "alice@domain.tld" mailbox "INBOX" contains a message "1" with an attachment "2"
     When "alice@domain.tld" downloads "2"
@@ -49,11 +50,17 @@ Feature: Download GET
     Then she can read that blob
     And the attachment is named "ديناصور.odt"
 
+  @BasicFeature
   Scenario: Getting a message blob previously stored
     Given "alice@domain.tld" mailbox "INBOX" contains a message "1"
     When "alice@domain.tld" downloads "1"
     Then she can read that blob
     And the blob size is 4963
+
+  Scenario: Content-Length header should be positioned before transfers starts
+    Given "alice@domain.tld" mailbox "INBOX" contains a big message "1"
+    When "alice@domain.tld" downloads "1"
+    Then the blob size is 2621440
 
   Scenario: Getting a message then getting its blob
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail"

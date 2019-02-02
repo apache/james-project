@@ -64,6 +64,7 @@ public class MailetConfigImpl implements MailetConfig {
      * 
      * @return the parameter value
      */
+    @Override
     public String getInitParameter(String name) {
         return configuration.getString(name);
     }
@@ -71,6 +72,7 @@ public class MailetConfigImpl implements MailetConfig {
     /**
      * @return an iterator over the set of configuration parameter names.
      */
+    @Override
     public Iterator<String> getInitParameterNames() {
         Iterator<String> it = configuration.getKeys();
         List<String> params = new ArrayList<>();
@@ -98,11 +100,7 @@ public class MailetConfigImpl implements MailetConfig {
         return configuration.getString("[@" + name + "]", null);
     }
 
-    /**
-     * Get the mailet's MailetContext object.
-     * 
-     * @return the MailetContext for the mailet
-     */
+    @Override
     public MailetContext getMailetContext() {
         return mailetContext;
     }
@@ -153,11 +151,7 @@ public class MailetConfigImpl implements MailetConfig {
         configuration = builder;
     }
 
-    /**
-     * Get the name of the mailet.
-     * 
-     * @return the name of the mailet
-     */
+    @Override
     public String getMailetName() {
         return name;
     }

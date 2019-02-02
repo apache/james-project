@@ -21,6 +21,7 @@ package org.apache.james.jmap;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 
 import java.io.IOException;
+import java.nio.channels.ClosedChannelException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,7 +47,6 @@ import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 
 public class JMAPServlet extends HttpServlet {
 
@@ -79,9 +79,9 @@ public class JMAPServlet extends HttpServlet {
                     .collect(Collectors.toList());
 
             resp.setContentType(JSON_CONTENT_TYPE);
-            objectMapper.writeValue(resp.getOutputStream(), responses);
+            sendResponses(resp, responses);
         } catch (IOException e) {
-            LOGGER.warn("error handling request", e);
+            LOGGER.warn("Error handling request", e);
             resp.setStatus(SC_BAD_REQUEST);
         } catch (Exception e) {
             LOGGER.error("Error handling request", e);
@@ -91,11 +91,20 @@ public class JMAPServlet extends HttpServlet {
         }
     }
 
+    private void sendResponses(HttpServletResponse response, List<Object[]> responses) throws IOException {
+        try {
+            objectMapper.writeValue(response.getOutputStream(), responses);
+        } catch (ClosedChannelException e) {
+            LOGGER.info("Error sending response", e);
+            response.setStatus(SC_BAD_REQUEST);
+        }
+    }
+
     private Stream<? extends ProtocolResponse> handle(AuthenticatedProtocolRequest request) {
         try {
             return requestHandler.handle(request);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

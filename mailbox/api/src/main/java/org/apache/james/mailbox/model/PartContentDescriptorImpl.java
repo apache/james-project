@@ -46,10 +46,12 @@ public class PartContentDescriptorImpl implements PartContentDescriptor {
         this.content = this.content | content;
     }
 
+    @Override
     public int content() {
         return content;
     }
 
+    @Override
     public MimePath path() {
         return path;
     }

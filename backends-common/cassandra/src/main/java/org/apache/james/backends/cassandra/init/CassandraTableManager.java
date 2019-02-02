@@ -19,33 +19,60 @@
 
 package org.apache.james.backends.cassandra.init;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import javax.inject.Inject;
 
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraTable;
+import org.apache.james.backends.cassandra.components.CassandraTable.InitializationStatus;
+import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+
+import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class CassandraTableManager {
 
     private final Session session;
     private final CassandraModule module;
 
+    @Inject
     public CassandraTableManager(CassandraModule module, Session session) {
         this.session = session;
         this.module = module;
     }
 
-    public CassandraTableManager ensureAllTables() {
-        module.moduleTables()
-            .forEach(table -> session.execute(table.getCreateStatement()));
-        return this;
+    public InitializationStatus initializeTables() {
+        KeyspaceMetadata keyspaceMetadata = session.getCluster()
+            .getMetadata()
+            .getKeyspace(session.getLoggedKeyspace());
+
+        return module.moduleTables()
+                .stream()
+                .map(table -> table.initialize(keyspaceMetadata, session))
+                .reduce((left, right) -> left.reduce(right))
+                .orElse(InitializationStatus.ALREADY_DONE);
     }
 
     public void clearAllTables() {
-        module.moduleTables()
-            .forEach(table -> clearTable(table.getName()));
+        CassandraAsyncExecutor executor = new CassandraAsyncExecutor(session);
+        Flux.fromIterable(module.moduleTables())
+                .publishOn(Schedulers.elastic())
+                .map(CassandraTable::getName)
+                .flatMap(name -> truncate(executor, name))
+                .then()
+                .block();
     }
 
-    private void clearTable(String tableName) {
-        session.execute(QueryBuilder.truncate(tableName));
+    private Mono<?> truncate(CassandraAsyncExecutor executor, String name) {
+        return Mono.fromFuture(executor.execute(
+                QueryBuilder.select()
+                        .from(name)
+                        .limit(1)
+                        .setFetchSize(1)))
+                .filter(resultSet -> !resultSet.isExhausted())
+                .flatMap(ignored -> Mono.fromFuture(executor.execute(QueryBuilder.truncate(name))));
     }
 }

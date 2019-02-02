@@ -46,6 +46,7 @@ public interface JsonMessageConstants {
     String SENT_DATE = "sentDate";
     String ATTACHMENTS = "attachments";
     String TEXT = "text";
+    String MIME_MESSAGE_ID = "mimeMessageID";
 
     /*
     James properties we can easily get
@@ -71,7 +72,6 @@ public interface JsonMessageConstants {
         String CONTENT_DISPOSITION = "contentDisposition";
         String FILENAME = "fileName";
         String FILE_EXTENSION = "fileExtension";
-        String FILE_METADATA = "fileMetadata";
     }
 
     interface Property {

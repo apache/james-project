@@ -20,7 +20,7 @@
 package org.apache.james.jmap.model;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.FlagsBuilder;
+import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,12 +44,16 @@ import com.google.common.collect.ImmutableSet;
 
 public class Keywords {
 
-    public static final Keywords DEFAULT_VALUE = factory().fromSet(ImmutableSet.of());
+    public static final Keywords DEFAULT_VALUE = new Keywords(ImmutableSet.of());
     private static final Logger LOGGER = LoggerFactory.getLogger(Keywords.class);
-
-    public interface KeywordsValidator {
-        void validate(Set<Keyword> keywords);
-    }
+    private static final KeywordsFactory STRICT_KEYWORDS_FACTORY = new KeywordsFactory(
+        KeywordsFactory.KeywordsValidator.THROW_ON_IMAP_NON_EXPOSED_KEYWORDS,
+        KeywordsFactory.KeywordFilter.KEEP_ALL,
+        KeywordsFactory.ToKeyword.STRICT);
+    private static final KeywordsFactory LENIENT_KEYWORDS_FACTORY = new KeywordsFactory(
+        KeywordsFactory.KeywordsValidator.IGNORE_NON_EXPOSED_IMAP_KEYWORDS,
+        KeywordsFactory.KeywordFilter.FILTER_IMAP_NON_EXPOSED_KEYWORDS,
+        KeywordsFactory.ToKeyword.LENIENT);
 
     private FlagsBuilder combiner(FlagsBuilder firstBuilder, FlagsBuilder secondBuilder) {
         return firstBuilder.add(secondBuilder.build());
@@ -59,31 +64,56 @@ public class Keywords {
     }
 
     public static class KeywordsFactory {
-        private Optional<KeywordsValidator> validator;
-        private Optional<Predicate<Keyword>> filter;
+        @FunctionalInterface
+        interface KeywordsValidator {
+            KeywordsValidator THROW_ON_IMAP_NON_EXPOSED_KEYWORDS = keywords -> Preconditions.checkArgument(
+                keywords.stream().allMatch(Keyword::isExposedImapKeyword),
+                "Does not allow to update 'Deleted' or 'Recent' flag");
 
-        private KeywordsFactory() {
-            validator = Optional.empty();
-            filter = Optional.empty();
+            KeywordsValidator IGNORE_NON_EXPOSED_IMAP_KEYWORDS = keywords -> { };
+
+            void validate(Set<Keyword> keywords);
         }
 
-        public KeywordsFactory throwOnImapNonExposedKeywords() {
-            validator = Optional.of(keywords -> Preconditions.checkArgument(
-                keywords.stream().allMatch(Keyword::isExposedImapKeyword), "Does not allow to update 'Deleted' or 'Recent' flag"));
-            return this;
+        @FunctionalInterface
+        interface KeywordFilter extends Predicate<Keyword> {
+            KeywordFilter FILTER_IMAP_NON_EXPOSED_KEYWORDS = Keyword::isExposedImapKeyword;
+            KeywordFilter KEEP_ALL = keyword -> true;
         }
 
-        public KeywordsFactory filterImapNonExposedKeywords() {
-            filter = Optional.of(keyword -> keyword.isExposedImapKeyword());
-            return this;
+        @FunctionalInterface
+        interface ToKeyword {
+            ToKeyword STRICT = value -> Optional.of(Keyword.of(value));
+            ToKeyword LENIENT = value -> {
+                Optional<Keyword> result = Keyword.parse(value);
+                if (!result.isPresent()) {
+                    LOGGER.warn("Fail to parse {} flag", value);
+                }
+                return result;
+            };
+
+            Optional<Keyword> toKeyword(String value);
+
+            default Stream<Keyword> asKeywordStream(String value) {
+                return OptionalUtils.toStream(toKeyword(value));
+            }
+        }
+
+        private final KeywordsValidator validator;
+        private final Predicate<Keyword> filter;
+        private final ToKeyword toKeyword;
+
+        public KeywordsFactory(KeywordsValidator validator, Predicate<Keyword> filter, ToKeyword toKeyword) {
+            this.validator = validator;
+            this.filter = filter;
+            this.toKeyword = toKeyword;
         }
 
         public Keywords fromSet(Set<Keyword> setKeywords) {
-            validator.orElse(keywords -> { })
-                .validate(setKeywords);
+            validator.validate(setKeywords);
 
             return new Keywords(setKeywords.stream()
-                    .filter(filter.orElse(keyword -> true))
+                    .filter(filter)
                     .collect(Guavate.toImmutableSet()));
         }
 
@@ -92,9 +122,9 @@ public class Keywords {
                     .collect(Guavate.toImmutableSet()));
         }
 
-        public Keywords fromList(List<String> keywords) {
+        public Keywords fromCollection(Collection<String> keywords) {
             return fromSet(keywords.stream()
-                    .map(Keyword::new)
+                    .flatMap(toKeyword::asKeywordStream)
                     .collect(Guavate.toImmutableSet()));
         }
 
@@ -102,36 +132,37 @@ public class Keywords {
         Keywords fromMap(Map<String, Boolean> mapKeywords) {
             Preconditions.checkArgument(mapKeywords.values()
                 .stream()
-                .noneMatch(keywordValue -> keywordValue == false), "Keyword must be true");
-            Set<Keyword> setKeywords = mapKeywords.keySet()
-                .stream()
-                .map(Keyword::new)
-                .collect(Guavate.toImmutableSet());
+                .allMatch(keywordValue -> keywordValue), "Keyword must be true");
 
-            return fromSet(setKeywords);
+            return fromCollection(mapKeywords.keySet());
         }
 
         public Keywords fromFlags(Flags flags) {
             return fromSet(Stream.concat(
                         Stream.of(flags.getUserFlags())
-                            .flatMap(this::asKeyword),
+                            .flatMap(toKeyword::asKeywordStream),
                         Stream.of(flags.getSystemFlags())
                             .map(Keyword::fromFlag))
                     .collect(Guavate.toImmutableSet()));
         }
-
-        private Stream<Keyword> asKeyword(String flagName) {
-            try {
-                return Stream.of(new Keyword(flagName));
-            } catch (IllegalArgumentException e) {
-                LOGGER.warn("Fail to parse {} flag", flagName);
-                return Stream.of();
-            }
-        }
     }
 
-    public static KeywordsFactory factory() {
-        return new KeywordsFactory();
+    /**
+     * This Keywords factory will filter out invalid keywords (containing inavlid character, being too long or being non
+     * exposed IMAP flags)
+     */
+    public static KeywordsFactory strictFactory() {
+        return STRICT_KEYWORDS_FACTORY;
+    }
+
+    /**
+     * This Keywords factory will throw upon invalid keywords (containing inavlid character, being too long or being non
+     * exposed IMAP flags)
+     *
+     * @throws IllegalArgumentException
+     */
+    public static KeywordsFactory lenientFactory() {
+        return LENIENT_KEYWORDS_FACTORY;
     }
 
     private final ImmutableSet<Keyword> keywords;

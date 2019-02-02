@@ -41,15 +41,7 @@ public class ACLResponseEncoder extends AbstractChainedImapEncoder {
         super(next);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.imap.encode.base.AbstractChainedImapEncoder#doEncode
-     * (org.apache.james.imap.api.ImapMessage,
-     * org.apache.james.imap.encode.ImapResponseComposer,
-     * org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
         final ACLResponse aclResponse = (ACLResponse) acceptableMessage;
         final Map<EntryKey, Rfc4314Rights> entries = aclResponse.getAcl().getEntries();
@@ -70,13 +62,7 @@ public class ACLResponseEncoder extends AbstractChainedImapEncoder {
         composer.end();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.imap.encode.base.AbstractChainedImapEncoder#isAcceptable
-     * (org.apache.james.imap.api.ImapMessage)
-     */
+    @Override
     public boolean isAcceptable(ImapMessage message) {
         return message instanceof ACLResponse;
     }

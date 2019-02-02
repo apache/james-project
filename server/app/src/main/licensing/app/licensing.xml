@@ -1159,7 +1159,6 @@ The Apache Software Foundation (http://www.apache.org/).
                 <resource name='domainlist.xml'/>
                 <resource name='fetchmail.xml'/>
                 <resource name='imapserver.xml'/>
-                <resource name='jcr-repository.xml'/>
                 <resource name='jmx.properties'/>
                 <resource name='lmtpserver.xml'/>
                 <resource name='log4j.properties'/>
@@ -1185,7 +1184,6 @@ The Apache Software Foundation (http://www.apache.org/).
     <within dir='conf/context'>
         <with-license id='ApacheLicenseVersion2'>
             <by-organisation id='apache.org'>        
-                <resource name='james-mailbox-jcr-context.xml'/>
                 <resource name='james-mailbox-jpa-context.xml'/>
                 <resource name='james-mailbox-maildir-context.xml'/>
                 <resource name='james-mailbox-memory-context.xml'/>
@@ -1254,11 +1252,6 @@ The Apache Software Foundation (http://www.apache.org/).
                 <resource name='wrapper.jar'/>
             </by-organisation>
         </with-license>
-        <with-license id='DaySpecLicensePlusAddendum'>
-            <by-organisation id='day.com'>
-                <resource name='jcr-2.0.jar'/>
-            </by-organisation>
-        </with-license>
         <with-license id='CDDL'>
             <by-organisation id='oracle.com'>
                 <resource name='mail-1.4.4.jar' source='http://kenai.com/projects/javamail/downloads'/>
@@ -1296,7 +1289,6 @@ All rights reserved.
                 <resource name='apache-james-imap-message-0.2.1.jar'/>
                 <resource name='apache-james-imap-processor-0.2.1.jar'/>
                 <resource name='apache-james-mailbox-api-0.3.jar'/>
-                <resource name='apache-james-mailbox-jcr-0.3.jar'/>
                 <resource name='apache-james-mailbox-jpa-0.3.jar'/>
                 <resource name='apache-james-mailbox-maildir-0.3.jar'/>
                 <resource name='apache-james-mailbox-memory-0.3.jar'/>
@@ -1324,7 +1316,7 @@ All rights reserved.
                 <resource name='commons-logging-1.0.3.jar'/>
                 <resource name='commons-logging-api-1.1.jar'/>
                 <resource name='commons-pool-1.5.5.jar'/>
-                <resource name='derby-10.7.1.1.jar'/>
+                <resource name='derby-10.14.2.0.jar'/>
                 <resource name='geronimo-annotation_1.0_spec-1.1.1.jar'/>
                 <resource name='geronimo-annotation_1.1_spec-1.0.1.jar'/>
                 <resource name='geronimo-j2ee-management_1.1_spec-1.0.1.jar'/>
@@ -1334,7 +1326,6 @@ All rights reserved.
                 <resource name='geronimo-stax-api_1.0_spec-1.0.1.jar'/>
                 <resource name='jackrabbit-api-2.2.5.jar'/>
                 <resource name='jackrabbit-core-2.2.5.jar'/>
-                <resource name='jackrabbit-jcr-commons-2.2.5.jar'/>
                 <resource name='jackrabbit-spi-2.2.5.jar'/>
                 <resource name='jackrabbit-spi-commons-2.2.5.jar'/>
                 <resource name='james-server-cli-3.0-beta3.jar'/>
@@ -1349,7 +1340,6 @@ All rights reserved.
                 <resource name='james-server-file-3.0-beta3.jar'/>
                 <resource name='james-server-filesystem-api-3.0-beta3.jar'/>
                 <resource name='james-server-imapserver-3.0-beta3.jar'/>
-                <resource name='james-server-jcr-3.0-beta3.jar'/>
                 <resource name='james-server-jdbc-3.0-beta3.jar'/>
                 <resource name='james-server-jpa-3.0-beta3.jar'/>
                 <resource name='james-server-ldap-3.0-beta3.jar'/>
@@ -1419,12 +1409,12 @@ All rights reserved.
                 <resource name='bcprov-jdk15-1.45.jar'/>
             </by-organisation>
         </with-license>
-        <with-license id='BSD3Clause'>
+        <with-license id='BSD2Clause'>
             <copyright-notice>
 dnsjava is placed under the BSD license.  Several files are also under
 additional licenses; see the individual files for details.
 
-Copyright (c) 1999-2005, Brian Wellington
+Copyright (c) 1999-2011, Brian Wellington
 All rights reserved.
             </copyright-notice>
             <license-parameters>
@@ -1434,7 +1424,7 @@ All rights reserved.
                 </parameter>
             </license-parameters>
             <by-organisation id='person:Brian.Wellington'>
-                <resource name='dnsjava-2.1.1.jar'/>
+                <resource name='dnsjava-2.1.8.jar'/>
             </by-organisation>
         </with-license>
         <with-license id='BSD3Clause'>

@@ -28,8 +28,10 @@ import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
 import org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota;
-import org.apache.james.mailbox.jpa.quota.model.MaxDefaultMessageCount;
-import org.apache.james.mailbox.jpa.quota.model.MaxDefaultStorage;
+import org.apache.james.mailbox.jpa.quota.model.MaxDomainMessageCount;
+import org.apache.james.mailbox.jpa.quota.model.MaxDomainStorage;
+import org.apache.james.mailbox.jpa.quota.model.MaxGlobalMessageCount;
+import org.apache.james.mailbox.jpa.quota.model.MaxGlobalStorage;
 import org.apache.james.mailbox.jpa.quota.model.MaxUserMessageCount;
 import org.apache.james.mailbox.jpa.quota.model.MaxUserStorage;
 import org.apache.james.mailbox.jpa.user.model.JPASubscription;
@@ -38,7 +40,7 @@ import com.google.common.collect.ImmutableList;
 
 public interface JPAMailboxFixture {
 
-    List<Class<?>> MAILBOX_PERSISTANCE_CLASSES = ImmutableList.<Class<?>>of(
+    List<Class<?>> MAILBOX_PERSISTANCE_CLASSES = ImmutableList.of(
         JPAMailbox.class,
         AbstractJPAMailboxMessage.class,
         JPAMailboxMessage.class,
@@ -48,15 +50,17 @@ public interface JPAMailboxFixture {
         JPASubscription.class
     );
 
-    List<Class<?>> QUOTA_PERSISTANCE_CLASSES = ImmutableList.<Class<?>>of(
-        MaxDefaultMessageCount.class,
-        MaxDefaultStorage.class,
+    List<Class<?>> QUOTA_PERSISTANCE_CLASSES = ImmutableList.of(
+        MaxGlobalMessageCount.class,
+        MaxGlobalStorage.class,
+        MaxDomainStorage.class,
+        MaxDomainMessageCount.class,
         MaxUserMessageCount.class,
         MaxUserStorage.class,
         JpaCurrentQuota.class
     );
 
-    List<String> MAILBOX_TABLE_NAMES = ImmutableList.<String>of(
+    List<String> MAILBOX_TABLE_NAMES = ImmutableList.of(
         "JAMES_MAIL_USERFLAG",
         "JAMES_MAIL_PROPERTY",
         "JAMES_MAILBOX_ANNOTATION",
@@ -64,11 +68,13 @@ public interface JPAMailboxFixture {
         "JAMES_MAIL",
         "JAMES_SUBSCRIPTION");
 
-    List<String> QUOTA_TABLES_NAMES = ImmutableList.<String>of(
-        "JAMES_MAX_DEFAULT_MESSAGE_COUNT",
-        "JAMES_MAX_DEFAULT_STORAGE",
+    List<String> QUOTA_TABLES_NAMES = ImmutableList.of(
+        "JAMES_MAX_GLOBAL_MESSAGE_COUNT",
+        "JAMES_MAX_GLOBAL_STORAGE",
         "JAMES_MAX_USER_MESSAGE_COUNT",
         "JAMES_MAX_USER_STORAGE",
+        "JAMES_MAX_DOMAIN_MESSAGE_COUNT",
+        "JAMES_MAX_DOMAIN_STORAGE",
         "JAMES_QUOTA_CURRENTQUOTA"
     );
 }

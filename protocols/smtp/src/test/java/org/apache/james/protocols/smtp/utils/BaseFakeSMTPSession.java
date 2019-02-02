@@ -50,144 +50,123 @@ public class BaseFakeSMTPSession implements SMTPSession {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.SMTPSession#getConnectionState()
-     */
+    @Override
     public Map<String, Object> getConnectionState() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.SMTPSession#getRcptCount()
-     */
+    @Override
     public int getRcptCount() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.SMTPSession#getSessionID()
-     */
+    @Override
     public String getSessionID() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.SMTPSession#getState()
-     */
+    @Override
     public Map<String, Object> getState() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.SMTPSession#getUser()
-     */
+    @Override
     public String getUser() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.SMTPSession#isAuthSupported()
-     */
+    @Override
     public boolean isAuthSupported() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.SMTPSession#isRelayingAllowed()
-     */
+    @Override
     public boolean isRelayingAllowed() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.SMTPSession#resetState()
-     */
+    @Override
     public void resetState() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.SMTPSession#setRelayingAllowed(boolean)
-     */
+    @Override
     public void setRelayingAllowed(boolean relayingAllowed) {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.SMTPSession#setUser(java.lang.String)
-     */
+    @Override
     public void setUser(String user) {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
 
-    /**
-     * @see org.apache.james.protocols.smtp.SMTPSession#popLineHandler()
-     */
+    @Override
     public void popLineHandler() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
+    @Override
     public boolean isStartTLSSupported() {
         return false;
     }
 
+    @Override
     public boolean isTLSStarted() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
+    @Override
     public int getPushedLineHandlerCount() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
+    @Override
     public Response newLineTooLongResponse() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
+    @Override
     public Response newFatalErrorResponse() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolSession#getRemoteAddress()
-     */
+    @Override
     public InetSocketAddress getRemoteAddress() {
         return new InetSocketAddress("localhost", 22);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolSession#getLocalAddress()
-     */
+    @Override
     public InetSocketAddress getLocalAddress() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.smtp.SMTPSession#getConfiguration()
-     */
+    @Override
     public SMTPConfiguration getConfiguration() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
+    @Override
     public Object setAttachment(String key, Object value, State state) {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
+    @Override
     public Object getAttachment(String key, State state) {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
+    @Override
     public Charset getCharset() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
+    @Override
     public String getLineDelimiter() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
+    @Override
     public <T extends ProtocolSession> void pushLineHandler(LineHandler<T> overrideCommandHandler) {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }

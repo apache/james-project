@@ -31,11 +31,7 @@ import org.apache.james.protocols.api.CombinedInputStream;
  */
 public abstract class AbstractMailbox implements Mailbox {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.protocols.pop3.mailbox.Mailbox#getMessage(String)
-     */
+    @Override
     public InputStream getMessage(String uid) throws IOException {
         return new CombinedInputStream(getMessageHeaders(uid), getMessageBody(uid));
     }
@@ -43,6 +39,7 @@ public abstract class AbstractMailbox implements Mailbox {
     /**
      * Does nothing
      */
+    @Override
     public void close() throws IOException {
         // do nothing
     }

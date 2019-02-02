@@ -110,10 +110,7 @@ public class CommandDispatcher<SessionT extends ProtocolSession> implements Exte
         return handlers;
     }
 
-    /**
-     * @throws WiringException 
-     * @see org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
-     */
+    @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void wireExtensions(Class interfaceName, List extensions) throws WiringException {
         if (interfaceName.equals(ProtocolHandlerResultHandler.class)) {
@@ -143,25 +140,25 @@ public class CommandDispatcher<SessionT extends ProtocolSession> implements Exte
 
     }
     
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.handler.LineHandler#onLine(org.apache.james.protocols.api.ProtocolSession, java.nio.ByteBuffer)
-     */
+    @Override
     public Response onLine(SessionT session, ByteBuffer line) {
-        
+        Request request;
         try {
             
-            Request request = parseRequest(session, line);
+            request = parseRequest(session, line);
             if (request == null) {
                 return null;
             }
-            return dispatchCommandHandlers(session, request);
         } catch (Exception e) {
             LOGGER.debug("Unable to parse request", e);
             return session.newFatalErrorResponse();
-        } 
-
-       
+        }
+        try {
+            return dispatchCommandHandlers(session, request);
+        } catch (Exception e) {
+            LOGGER.error("Error dispatching command for request {}", request.getCommand(), e);
+            return session.newFatalErrorResponse();
+        }
     }
     
     /**
@@ -254,9 +251,7 @@ public class CommandDispatcher<SessionT extends ProtocolSession> implements Exte
 
     }
    
-    /**
-     * @see org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
-     */
+    @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public List<Class<?>> getMarkerInterfaces() {
         List res = new LinkedList();

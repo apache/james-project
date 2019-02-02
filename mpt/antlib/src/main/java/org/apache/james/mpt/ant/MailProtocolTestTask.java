@@ -20,6 +20,7 @@
 package org.apache.james.mpt.ant;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,6 +29,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
 
 import org.apache.james.mpt.Runner;
 import org.apache.james.mpt.api.ImapFeatures;
@@ -36,6 +38,7 @@ import org.apache.james.mpt.api.Monitor;
 import org.apache.james.mpt.host.ExternalHostSystem;
 import org.apache.james.mpt.protocol.ProtocolSessionBuilder;
 import org.apache.james.mpt.user.ScriptedUserAdder;
+import org.apache.james.util.Port;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
@@ -55,7 +58,7 @@ public class MailProtocolTestTask extends Task implements Monitor {
     private boolean quiet = false;
     private File script;
     private Union scripts;
-    private int port = 0;
+    private Optional<Port> port = Optional.empty();
     private String host = "127.0.0.1";
     private boolean skip = false;
     private String shabang = null;
@@ -139,7 +142,9 @@ public class MailProtocolTestTask extends Task implements Monitor {
      * @return port number
      */
     public int getPort() {
-        return port;
+        return port
+            .map(Port::getValue)
+            .orElseThrow(() -> new RuntimeException("Port must be set"));
     }
 
     /**
@@ -147,7 +152,7 @@ public class MailProtocolTestTask extends Task implements Monitor {
      * @param port port number
      */
     public void setPort(int port) {
-        this.port = port;
+        this.port = Optional.of(new Port(port));
     }
 
     /**
@@ -189,8 +194,8 @@ public class MailProtocolTestTask extends Task implements Monitor {
 
     @Override
     public void execute() throws BuildException {
-        if (port <= 0) {
-            throw new BuildException("Port must be set to a positive integer");
+        if (! port.isPresent()) {
+            throw new BuildException("Port must be set");
         }
         
         if (scripts == null && script == null) {
@@ -232,7 +237,7 @@ public class MailProtocolTestTask extends Task implements Monitor {
             userAdder.execute();
         }
         
-        final ExternalHostSystem host = new ExternalHostSystem(SUPPORTED_FEATURES, getHost(), getPort(), this, getShabang(), null);
+        final ExternalHostSystem host = new ExternalHostSystem(SUPPORTED_FEATURES, getHost(), port.get(), this, getShabang(), null);
         final ProtocolSessionBuilder builder = new ProtocolSessionBuilder();
         
         if (scripts == null) {
@@ -277,7 +282,7 @@ public class MailProtocolTestTask extends Task implements Monitor {
      */
     public class AddUser {
         
-        private int port;
+        private Port port;
         private String user;
         private String passwd;
         private File script;
@@ -289,7 +294,7 @@ public class MailProtocolTestTask extends Task implements Monitor {
          * @return port number
          */
         public int getPort() {
-            return port;
+            return port.getValue();
         }
 
         /**
@@ -298,7 +303,7 @@ public class MailProtocolTestTask extends Task implements Monitor {
          * @param port port number
          */
         public void setPort(int port) {
-            this.port = port;
+            this.port = new Port(port);
         }
 
         /**
@@ -370,7 +375,7 @@ public class MailProtocolTestTask extends Task implements Monitor {
                 throw new BuildException("Choose either script text or script attribute but not both.");
             }
             
-            if (port <= 0) {
+            if (port == null) {
                 throw new BuildException("'port' attribute must be set on AddUser to the port against which the script should run.");
             }
         }
@@ -383,21 +388,25 @@ public class MailProtocolTestTask extends Task implements Monitor {
             validate();
             try {
                 final File scriptFile = getScript();
-                final Reader reader;
-                if (scriptFile == null) {
-                    reader = new StringReader(scriptText);
-                } else {
-                    reader = new FileReader(scriptFile);
+                final ScriptedUserAdder adder = new ScriptedUserAdder(getHost(), port, MailProtocolTestTask.this);
+                try (Reader reader = newReader(scriptFile)) {
+                    adder.addUser(getUser(), getPasswd(), reader);
                 }
-                final ScriptedUserAdder adder = new ScriptedUserAdder(getHost(), getPort(), MailProtocolTestTask.this);
-                adder.addUser(getUser(), getPasswd(), reader);
             } catch (Exception e) {
                 log(e.getMessage(), Project.MSG_ERR);
                 throw new BuildException("User addition failed: \n" + e.getMessage(), e);
             }
-        } 
+        }
+
+        private Reader newReader(File scriptFile) throws FileNotFoundException {
+            if (scriptFile == null) {
+                return new StringReader(scriptText);
+            }
+            return new FileReader(scriptFile);
+        }
     }
 
+    @Override
     public void note(String message) {
         if (quiet) {
             log(message, Project.MSG_DEBUG);
@@ -406,10 +415,12 @@ public class MailProtocolTestTask extends Task implements Monitor {
         }
     }
 
+    @Override
     public void debug(char character) {
         log("'" + character + "'", Project.MSG_DEBUG);
     }
 
+    @Override
     public void debug(String message) {
         log(message, Project.MSG_DEBUG);
     }

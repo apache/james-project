@@ -30,15 +30,15 @@ import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class HasExceptionTest {
 
     private FakeMail mockedMail;
     private Matcher testee;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         MimeMessage mimeMessage = MailUtil.createMimeMessage();
         mockedMail = MailUtil.createMockMail2Recipients(mimeMessage);

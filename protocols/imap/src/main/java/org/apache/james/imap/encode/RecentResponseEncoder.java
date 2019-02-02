@@ -33,10 +33,12 @@ public class RecentResponseEncoder extends AbstractChainedImapEncoder {
         super(next);
     }
 
+    @Override
     public boolean isAcceptable(ImapMessage message) {
         return (message instanceof RecentResponse);
     }
 
+    @Override
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
         final RecentResponse recentResponse = (RecentResponse) acceptableMessage;
         final int numberFlaggedRecent = recentResponse.getNumberFlaggedRecent();

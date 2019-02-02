@@ -134,7 +134,7 @@ public class ErrorResponderTest {
             jsonPath.read("$.statusCode"),
             jsonPath.read("$.type"),
             jsonPath.read("$.message"),
-            Optional.ofNullable(jsonPath.read("$.cause"))));
+            Optional.ofNullable(jsonPath.read("$.details"))));
     }
 
 }

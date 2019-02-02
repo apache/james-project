@@ -19,8 +19,14 @@
 
 package org.apache.james.imap.decode.parser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -37,9 +43,6 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.protocols.imap.DecodingException;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -129,14 +132,9 @@ public class SearchCommandParserQuotedCharsetTest {
     }
 
     SearchCommandParser parser;
-
     StatusResponseFactory mockStatusResponseFactory;
-
     ImapCommand command;
-
     ImapMessage message;
-
-    private Mockery mockery = new JUnit4Mockery();
 
     private ImapSession session;
     
@@ -144,9 +142,9 @@ public class SearchCommandParserQuotedCharsetTest {
     public void setUp() throws Exception {
         parser = new SearchCommandParser();
         command = ImapCommand.anyStateCommand("Command");
-        message = mockery.mock(ImapMessage.class);
-        mockStatusResponseFactory = mockery.mock(StatusResponseFactory.class);
-        session = mockery.mock(ImapSession.class);
+        message = mock(ImapMessage.class);
+        mockStatusResponseFactory = mock(StatusResponseFactory.class);
+        session = mock(ImapSession.class);
 
         parser.setStatusResponseFactory(mockStatusResponseFactory);
     }
@@ -160,7 +158,7 @@ public class SearchCommandParserQuotedCharsetTest {
                         BYTES_QUOTED_UTF8_LENGTHY_NON_ASCII_SEARCH_TERM)),
                 new ByteArrayOutputStream());
         final SearchKey searchKey = parser.searchKey(null, reader, null, true);
-        assertEquals(key, searchKey);
+        assertThat(searchKey).isEqualTo(key);
     }
 
     @Test
@@ -172,24 +170,22 @@ public class SearchCommandParserQuotedCharsetTest {
                         BYTES_QUOTED_UTF8_NON_ASCII_SEARCH_TERM)),
                 new ByteArrayOutputStream());
         final SearchKey searchKey = parser.searchKey(null, reader, null, true);
-        assertEquals(key, searchKey);
+        assertThat(searchKey).isEqualTo(key);
     }
 
     @Test
-    public void testBadCharset() throws Exception {      
-        mockery.checking(new Expectations() {{
-                oneOf(mockStatusResponseFactory).taggedNo(
-                        with(equal(TAG)), 
-                        with(same(command)), 
-                        with(equal(HumanReadableText.BAD_CHARSET)),
-                        with(equal(StatusResponse.ResponseCode.badCharset(CharsetUtil.getAvailableCharsetNames()))));
-                }
-            }
-        );
+    public void testBadCharset() throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream("CHARSET BOGUS ".getBytes("US-ASCII")),
                 new ByteArrayOutputStream());
         parser.decode(command, reader, TAG, false, session);
+
+        verify(mockStatusResponseFactory, times(1)).taggedNo(
+            eq(TAG),
+            same(command),
+            eq(HumanReadableText.BAD_CHARSET),
+            eq(StatusResponse.ResponseCode.badCharset(CharsetUtil.getAvailableCharsetNames())));
+        verifyNoMoreInteractions(mockStatusResponseFactory);
     }
 
     @Test
@@ -277,7 +273,7 @@ public class SearchCommandParserQuotedCharsetTest {
                         BYTES_UTF8_NON_ASCII_SEARCH_TERM)),
                 new ByteArrayOutputStream());
         final SearchKey searchKey = parser.searchKey(null, reader, null, true);
-        assertEquals(key, searchKey);
+        assertThat(searchKey).isEqualTo(key);
     }
 
     private void checkValid(String input, SearchKey key, boolean isFirst,
@@ -287,7 +283,7 @@ public class SearchCommandParserQuotedCharsetTest {
                 new ByteArrayOutputStream());
 
         final SearchKey searchKey = parser.searchKey(null, reader, null, isFirst);
-        assertEquals(key, searchKey);
+        assertThat(searchKey).isEqualTo(key);
     }
 
 }

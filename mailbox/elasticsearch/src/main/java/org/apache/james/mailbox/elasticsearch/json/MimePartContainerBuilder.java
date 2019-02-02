@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.elasticsearch.json;
 
 import java.io.InputStream;
+import java.nio.charset.Charset;
 
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mime4j.stream.Field;
@@ -37,6 +38,8 @@ public interface MimePartContainerBuilder {
     MimePartContainerBuilder addChild(MimePart mimePart);
 
     MimePartContainerBuilder addFileName(String fileName);
+
+    MimePartContainerBuilder charset(Charset charset);
 
     MimePartContainerBuilder addMediaType(String mediaType);
 

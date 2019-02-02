@@ -32,7 +32,6 @@ import javax.mail.MessagingException;
 import javax.sql.DataSource;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.MailetException;
@@ -111,6 +110,11 @@ import org.apache.mailet.MailetException;
 @Experimental
 @Deprecated
 public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
+
+    // @deprecated QUERY is deprecated - SQL queries are now located in
+    // sqlResources.xml
+    private static final String QUERY = "select RecipientRewriteTable.target_address from RecipientRewriteTable, RecipientRewriteTable as VUTDomains where (RecipientRewriteTable.user like ? or RecipientRewriteTable.user like '\\%') and (RecipientRewriteTable.domain like ? or (RecipientRewriteTable.domain like '%*%' and VUTDomains.domain like ?)) order by concat(RecipientRewriteTable.user,'@',RecipientRewriteTable.domain) desc limit 1";
+
     protected DataSource datasource;
 
     /**
@@ -128,9 +132,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
         this.datasource = datasource;
     }
 
-    /**
-     * Initialize the mailet
-     */
+    @Override
     public void init() throws MessagingException {
         if (getInitParameter("table") == null) {
             throw new MailetException("Table location not specified for JDBCRecipientRewriteTable");
@@ -142,10 +144,8 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
         int pos = datasourceName.indexOf("/");
         String tableName = datasourceName.substring(pos + 1);
         datasourceName = datasourceName.substring(0, pos);
-        Connection conn = null;
 
-        try {
-            conn = datasource.getConnection();
+        try (Connection conn = datasource.getConnection()) {
 
             // Check if the required table exists. If not, complain.
             DatabaseMetaData dbMetaData = conn.getMetaData();
@@ -158,13 +158,11 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             }
 
             // Build the query
-            query = getInitParameter("sqlquery", RecipientRewriteTableUtil.QUERY);
+            query = getInitParameter("sqlquery", QUERY);
         } catch (MailetException me) {
             throw me;
         } catch (Exception e) {
             throw new MessagingException("Error initializing JDBCRecipientRewriteTable", e);
-        } finally {
-            theJDBCUtil.closeJDBCConnection(conn);
         }
     }
 
@@ -175,39 +173,31 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @param recipientsMap
      *            the mapping of virtual to real recipients
      */
+    @Override
     protected void mapRecipients(Map<MailAddress, String> recipientsMap) throws MessagingException {
-        Connection conn = null;
-        PreparedStatement mappingStmt = null;
 
         Collection<MailAddress> recipients = recipientsMap.keySet();
 
-        try {
-            conn = datasource.getConnection();
-            mappingStmt = conn.prepareStatement(query);
-
-            for (MailAddress recipient : recipients) {
-                ResultSet mappingRS = null;
-                try {
+        try (Connection conn = datasource.getConnection()) {
+            try (PreparedStatement mappingStmt = conn.prepareStatement(query)) {
+                for (MailAddress recipient : recipients) {
                     mappingStmt.setString(1, recipient.getLocalPart());
-                    mappingStmt.setString(2, recipient.getDomain());
-                    mappingStmt.setString(3, recipient.getDomain());
-                    mappingRS = mappingStmt.executeQuery();
-                    if (mappingRS.next()) {
-                        String targetString = mappingRS.getString(1);
-                        recipientsMap.put(recipient, targetString);
+                    mappingStmt.setString(2, recipient.getDomain().asString());
+                    mappingStmt.setString(3, recipient.getDomain().asString());
+                    try (ResultSet mappingRS = mappingStmt.executeQuery()) {
+                        if (mappingRS.next()) {
+                            String targetString = mappingRS.getString(1);
+                            recipientsMap.put(recipient, targetString);
+                        }
                     }
-                } finally {
-                    theJDBCUtil.closeJDBCResultSet(mappingRS);
                 }
             }
         } catch (SQLException sqle) {
             throw new MessagingException("Error accessing database", sqle);
-        } finally {
-            theJDBCUtil.closeJDBCStatement(mappingStmt);
-            theJDBCUtil.closeJDBCConnection(conn);
         }
     }
 
+    @Override
     public String getMailetInfo() {
         return "JDBC Virtual User Table mailet";
     }

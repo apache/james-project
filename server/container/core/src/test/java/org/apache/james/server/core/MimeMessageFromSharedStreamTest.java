@@ -21,7 +21,7 @@ package org.apache.james.server.core;
 
 import javax.mail.internet.MimeMessage;
 
-import org.apache.mailet.base.test.MimeMessageUtil;
+import org.apache.james.util.MimeMessageUtil;
 
 public class MimeMessageFromSharedStreamTest extends MimeMessageFromStreamTest {
 

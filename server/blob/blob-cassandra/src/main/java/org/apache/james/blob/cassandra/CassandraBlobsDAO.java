@@ -24,37 +24,41 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 
+import java.io.InputStream;
+import java.io.PipedInputStream;
 import java.nio.ByteBuffer;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.IntStream;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.backends.cassandra.init.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.ObjectStore;
+import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.cassandra.BlobTable.BlobParts;
 import org.apache.james.blob.cassandra.utils.DataChunker;
-import org.apache.james.util.FluentFutureStream;
-import org.apache.james.util.OptionalUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.james.blob.cassandra.utils.PipedStreamSubscriber;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
-public class CassandraBlobsDAO implements ObjectStore {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraBlobsDAO.class);
+public class CassandraBlobsDAO implements BlobStore {
+
+    private static final int PREFETCH = 16;
+    private static final int MAX_CONCURRENCY = 2;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insert;
     private final PreparedStatement insertPart;
@@ -62,10 +66,10 @@ public class CassandraBlobsDAO implements ObjectStore {
     private final PreparedStatement selectPart;
     private final DataChunker dataChunker;
     private final CassandraConfiguration configuration;
-    private final CassandraBlobId.Factory blobIdFactory;
+    private final HashBlobId.Factory blobIdFactory;
 
     @Inject
-    public CassandraBlobsDAO(Session session, CassandraConfiguration cassandraConfiguration, CassandraBlobId.Factory blobIdFactory) {
+    public CassandraBlobsDAO(Session session, CassandraConfiguration cassandraConfiguration, HashBlobId.Factory blobIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.configuration = cassandraConfiguration;
         this.blobIdFactory = blobIdFactory;
@@ -79,7 +83,7 @@ public class CassandraBlobsDAO implements ObjectStore {
 
     @VisibleForTesting
     public CassandraBlobsDAO(Session session) {
-        this(session, CassandraConfiguration.DEFAULT_CONFIGURATION, new CassandraBlobId.Factory());
+        this(session, CassandraConfiguration.DEFAULT_CONFIGURATION, new HashBlobId.Factory());
     }
 
     private PreparedStatement prepareSelect(Session session) {
@@ -109,77 +113,66 @@ public class CassandraBlobsDAO implements ObjectStore {
     }
 
     @Override
-    public CompletableFuture<BlobId> save(byte[] data) {
+    public Mono<BlobId> save(byte[] data) {
         Preconditions.checkNotNull(data);
 
-        CassandraBlobId blobId = blobIdFactory.forPayload(data);
+        return saveAsMono(data);
+    }
+
+    private Mono<BlobId> saveAsMono(byte[] data) {
+        BlobId blobId = blobIdFactory.forPayload(data);
         return saveBlobParts(data, blobId)
-            .thenCompose(numberOfChunk -> saveBlobPartsReferences(blobId, numberOfChunk))
-            .thenApply(any -> blobId);
+            .flatMap(numberOfChunk -> saveBlobPartsReferences(blobId, numberOfChunk));
     }
 
-    private CompletableFuture<Integer> saveBlobParts(byte[] data, CassandraBlobId blobId) {
-        return FluentFutureStream.of(
-            dataChunker.chunk(data, configuration.getBlobPartSize())
-                .map(pair -> writePart(pair.getRight(), blobId, pair.getKey())
-                    .thenApply(partId -> Pair.of(pair.getKey(), partId))))
-            .completableFuture()
-            .thenApply(stream ->
-                getLastOfStream(stream)
-                    .map(numOfChunkAndPartId -> numOfChunkAndPartId.getLeft() + 1)
-                    .orElse(0));
+    private Mono<Integer> saveBlobParts(byte[] data, BlobId blobId) {
+        Stream<Pair<Integer, ByteBuffer>> chunks = dataChunker.chunk(data, configuration.getBlobPartSize());
+        return Flux.fromStream(chunks)
+            .publishOn(Schedulers.elastic(), PREFETCH)
+            .flatMap(pair -> writePart(pair.getValue(), blobId, getChunkNum(pair)))
+            .collect(Collectors.maxBy(Comparator.comparingInt(x -> x)))
+            .flatMap(Mono::justOrEmpty)
+            .map(this::numToCount)
+            .defaultIfEmpty(0);
     }
 
-    private static <T> Optional<T> getLastOfStream(Stream<T> stream) {
-        return stream.reduce((first, second) -> second);
+    private int numToCount(int number) {
+        return number + 1;
     }
 
-    private CompletableFuture<Void> writePart(ByteBuffer data, CassandraBlobId blobId, int position) {
-        return cassandraAsyncExecutor.executeVoid(
+    private Integer getChunkNum(Pair<Integer, ByteBuffer> pair) {
+        return pair.getKey();
+    }
+
+    private Mono<Integer> writePart(ByteBuffer data, BlobId blobId, int position) {
+        return cassandraAsyncExecutor.executeVoidReactor(
             insertPart.bind()
                 .setString(BlobTable.ID, blobId.asString())
                 .setInt(BlobParts.CHUNK_NUMBER, position)
-                .setBytes(BlobParts.DATA, data));
+                .setBytes(BlobParts.DATA, data))
+            .then(Mono.just(position));
     }
 
-    private CompletableFuture<Void> saveBlobPartsReferences(CassandraBlobId blobId, int numberOfChunk) {
-        return cassandraAsyncExecutor.executeVoid(insert.bind()
-            .setString(BlobTable.ID, blobId.asString())
-            .setInt(BlobTable.NUMBER_OF_CHUNK, numberOfChunk));
+    private Mono<BlobId> saveBlobPartsReferences(BlobId blobId, int numberOfChunk) {
+        return cassandraAsyncExecutor.executeVoidReactor(
+            insert.bind()
+                .setString(BlobTable.ID, blobId.asString())
+                .setInt(BlobTable.NUMBER_OF_CHUNK, numberOfChunk))
+            .then(Mono.just(blobId));
     }
 
     @Override
-    public CompletableFuture<byte[]> read(BlobId blobId) {
-        return cassandraAsyncExecutor.executeSingleRow(
-            select.bind()
-                .setString(BlobTable.ID, blobId.asString()))
-            .thenCompose(row -> toDataParts(row, blobId))
-            .thenApply(this::concatenateDataParts);
+    public Mono<byte[]> readBytes(BlobId blobId) {
+        return readBlobParts(blobId)
+            .collectList()
+            .map(parts -> Bytes.concat(parts.toArray(new byte[0][])));
     }
 
-    private CompletableFuture<Stream<BlobPart>> toDataParts(Optional<Row> blobRowOptional, BlobId blobId) {
-        return blobRowOptional.map(blobRow -> {
-            int numOfChunk = blobRow.getInt(BlobTable.NUMBER_OF_CHUNK);
-            return FluentFutureStream.of(
-                IntStream.range(0, numOfChunk)
-                    .mapToObj(position -> readPart(blobId, position)))
-                .completableFuture();
-        }).orElseGet(() -> {
-            LOGGER.warn("Could not retrieve blob metadata for {}", blobId);
-            return CompletableFuture.completedFuture(Stream.empty());
-        });
-    }
-
-    private byte[] concatenateDataParts(Stream<BlobPart> blobParts) {
-        ImmutableList<byte[]> parts = blobParts
-            .map(blobPart -> OptionalUtils.executeIfEmpty(
-                blobPart.row,
-                () -> LOGGER.warn("Missing blob part for blobId {} and position {}", blobPart.blobId, blobPart.position)))
-            .flatMap(OptionalUtils::toStream)
-            .map(this::rowToData)
-            .collect(Guavate.toImmutableList());
-
-        return Bytes.concat(parts.toArray(new byte[parts.size()][]));
+    private Mono<Integer> selectRowCount(BlobId blobId) {
+        return cassandraAsyncExecutor.executeSingleRowReactor(
+                select.bind()
+                    .setString(BlobTable.ID, blobId.asString()))
+            .map(row -> row.getInt(BlobTable.NUMBER_OF_CHUNK));
     }
 
     private byte[] rowToData(Row row) {
@@ -188,25 +181,39 @@ public class CassandraBlobsDAO implements ObjectStore {
         return data;
     }
 
-    private CompletableFuture<BlobPart> readPart(BlobId blobId, int position) {
-        return cassandraAsyncExecutor.executeSingleRow(
+    private Mono<byte[]> readPart(BlobId blobId, int position) {
+        return cassandraAsyncExecutor.executeSingleRowReactor(
             selectPart.bind()
                 .setString(BlobTable.ID, blobId.asString())
                 .setInt(BlobParts.CHUNK_NUMBER, position))
-            .thenApply(row -> new BlobPart(blobId, position, row));
+            .map(this::rowToData)
+            .switchIfEmpty(Mono.error(new IllegalStateException(
+                String.format("Missing blob part for blobId %s and position %d", blobId, position))));
     }
 
-    private static class BlobPart {
-        private final BlobId blobId;
-        private final int position;
-        private final Optional<Row> row;
+    @Override
+    public InputStream read(BlobId blobId) {
+        PipedInputStream pipedInputStream = new PipedInputStream();
+        readBlobParts(blobId)
+            .subscribe(new PipedStreamSubscriber(pipedInputStream));
+        return pipedInputStream;
+    }
 
-        public BlobPart(BlobId blobId, int position, Optional<Row> row) {
-            Preconditions.checkNotNull(blobId);
-            Preconditions.checkArgument(position >= 0, "position need to be positive");
-            this.blobId = blobId;
-            this.position = position;
-            this.row = row;
-        }
+    private Flux<byte[]> readBlobParts(BlobId blobId) {
+        Integer rowCount = selectRowCount(blobId)
+            .publishOn(Schedulers.elastic())
+            .switchIfEmpty(Mono.error(
+                new ObjectStoreException(String.format("Could not retrieve blob metadata for %s", blobId))))
+            .block();
+        return Flux.range(0, rowCount)
+            .publishOn(Schedulers.elastic(), PREFETCH)
+            .flatMapSequential(partIndex -> readPart(blobId, partIndex), MAX_CONCURRENCY, PREFETCH);
+    }
+
+    @Override
+    public Mono<BlobId> save(InputStream data) {
+        Preconditions.checkNotNull(data);
+        return Mono.fromCallable(() -> IOUtils.toByteArray(data))
+            .flatMap(this::saveAsMono);
     }
 }

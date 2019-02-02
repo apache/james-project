@@ -21,7 +21,6 @@ package org.apache.james.queue.activemq;
 
 import java.io.IOException;
 
-import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -44,14 +43,12 @@ public class ActiveMQMailQueueItem extends JMSMailQueueItem implements ActiveMQS
 
     private final Message message;
 
-    public ActiveMQMailQueueItem(Mail mail, Connection connection, Session session, MessageConsumer consumer, Message message) {
-        super(mail, connection, session, consumer);
+    public ActiveMQMailQueueItem(Mail mail, Session session, MessageConsumer consumer, Message message) {
+        super(mail,  session, consumer);
         this.message = message;
     }
 
-    /**
-     * @see org.apache.james.queue.jms.JMSMailQueueItem#done(boolean)
-     */
+    @Override
     public void done(boolean success) throws MailQueueException {
         super.done(success);
         if (success) {

@@ -28,6 +28,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 
 public class UnpooledStatusResponseFactory extends AbstactStatusResponseFactory implements StatusResponseFactory {
 
+    @Override
     protected StatusResponse createResponse(Type type, String tag, ImapCommand command, HumanReadableText displayTextKey, ResponseCode code) {
         return new ImmutableStatusResponse(type, tag, command, displayTextKey, code);
     }

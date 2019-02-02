@@ -18,10 +18,13 @@
  ****************************************************************/
 package org.apache.james;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static com.jayway.restassured.RestAssured.given;
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static io.restassured.RestAssured.given;
+import static io.restassured.config.EncoderConfig.encoderConfig;
+import static io.restassured.config.RestAssuredConfig.newConfig;
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
+import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JmapURIBuilder.baseUri;
+import static org.awaitility.Awaitility.await;
 
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
@@ -31,55 +34,62 @@ import java.util.TimerTask;
 import java.util.stream.Collectors;
 
 import org.apache.commons.net.imap.IMAPClient;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestESMetricReporterModule;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
+import org.awaitility.Duration;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.jayway.awaitility.Duration;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
+import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.http.ContentType;
 
-public class ESReporterTest {
+class ESReporterTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ESReporterTest.class);
+    private static final int LIMIT_TO_10_MESSAGES = 10;
 
-    private static final int IMAP_PORT = 1143;
+
+    static final EmbeddedElasticSearchExtension embeddedElasticSearchExtension = new EmbeddedElasticSearchExtension();
+
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+        .extension(embeddedElasticSearchExtension)
+        .extension(new CassandraExtension())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(new TestESMetricReporterModule()))
+        .build();
+
     private static final int DELAY_IN_MS = 100;
     private static final int PERIOD_IN_MS = 100;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ESReporterTest.class);
 
     private static final String DOMAIN = "james.org";
     private static final String USERNAME = "user1@" + DOMAIN;
     private static final String PASSWORD = "secret";
 
-    private EmbeddedElasticSearchRule embeddedElasticSearchRule = new EmbeddedElasticSearchRule();
-
     private Timer timer;
-
-    @Rule
-    public CassandraJmapTestRule cassandraJmap = new CassandraJmapTestRule(embeddedElasticSearchRule, new DockerCassandraRule());
-
-    private GuiceJamesServer server;
     private AccessToken accessToken;
 
-    @Before
-    public void setup() throws Exception {
-        server = cassandraJmap.jmapServer();
-        server.start();
-        DataProbeImpl serverProbe = server.getProbe(DataProbeImpl.class);
-        serverProbe.addDomain(DOMAIN);
-        serverProbe.addUser(USERNAME, PASSWORD);
+    @BeforeEach
+    void setup(GuiceJamesServer server) throws Exception {
+        server.getProbe(DataProbeImpl.class)
+            .fluent()
+            .addDomain(DOMAIN)
+            .addUser(USERNAME, PASSWORD);
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
@@ -87,31 +97,20 @@ public class ESReporterTest {
                 .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
                 .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort())
                 .build();
-        accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USERNAME, PASSWORD);
+        accessToken = authenticateJamesUser(baseUri(server), USERNAME, PASSWORD);
 
         timer = new Timer();
     }
 
-    private URIBuilder baseUri() {
-        return new URIBuilder()
-            .setScheme("http")
-            .setHost("localhost")
-            .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort())
-            .setCharset(StandardCharsets.UTF_8);
-    }
-
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() {
         timer.cancel();
-        if (server != null) {
-            server.stop();
-        }
     }
 
     @Test
-    public void timeMetricsShouldBeReportedWhenImapCommandsReceived() throws Exception {
+    void timeMetricsShouldBeReportedWhenImapCommandsReceived(GuiceJamesServer server) throws Exception {
         IMAPClient client = new IMAPClient();
-        client.connect(InetAddress.getLocalHost(), IMAP_PORT);
+        client.connect(InetAddress.getLocalHost(), server.getProbe(ImapGuiceProbe.class).getImapPort());
         client.login(USERNAME, PASSWORD);
         
         TimerTask timerTask = new TimerTask() {
@@ -131,7 +130,7 @@ public class ESReporterTest {
     }
 
     @Test
-    public void timeMetricsShouldBeReportedWhenJmapRequestsReceived() throws Exception {
+    void timeMetricsShouldBeReportedWhenJmapRequestsReceived() {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -153,7 +152,7 @@ public class ESReporterTest {
     }
 
     private boolean checkMetricRecordedInElasticSearch() {
-        try (Client client = embeddedElasticSearchRule.getNode().client()) {
+        try (Client client = embeddedElasticSearchExtension.getEmbeddedElasticSearch().getNode().client()) {
             return !Arrays.stream(client.prepareSearch()
                     .setQuery(QueryBuilders.matchAllQuery())
                     .get().getHits().getHits())

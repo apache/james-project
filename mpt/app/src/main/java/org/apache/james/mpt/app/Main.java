@@ -23,11 +23,12 @@ import java.io.File;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.james.util.Port;
 
 /**
  * <p>Runs MPT application.</p>
@@ -45,18 +46,18 @@ public class Main {
     private static final int FILE_NOT_FOUND = 1;
     private static final int PORT_NOT_A_NUMBER = 2;
     
-    private static final char FILE_OPTION = 'f';
-    private static final char PORT_OPTION = 'p';
-    private static final char HOST_OPTION = 'h';
-    private static final char SHABANG_OPTION = 's';
-    private static final char VERBOSE_OPTION = 'v';
+    private static final String FILE_OPTION = "f";
+    private static final String PORT_OPTION = "p";
+    private static final String HOST_OPTION = "h";
+    private static final String SHABANG_OPTION = "s";
+    private static final String VERBOSE_OPTION = "v";
 
     public static final void main(String[] args) throws Exception {
         Options options = buildOptions();
         
         try {
             
-            CommandLineParser parser = new GnuParser();
+            CommandLineParser parser = new DefaultParser();
             CommandLine cmd = parser.parse(options, args);
             runCommand(cmd);
             
@@ -73,7 +74,7 @@ public class Main {
         File file = new File(cmd.getOptionValue(FILE_OPTION));
         if (file.exists()) {
             try {
-                int port = Integer.parseInt(cmd.getOptionValue(PORT_OPTION));    
+                Port port = new Port(Integer.parseInt(cmd.getOptionValue(PORT_OPTION)));    
                 String host = cmd.getOptionValue(HOST_OPTION, "localhost");
                 String shabang = cmd.getOptionValue(SHABANG_OPTION, null);
                 RunScript runner = new RunScript(file, port, host, shabang, verbose);
@@ -97,47 +98,46 @@ public class Main {
         return options;
     }
 
-    @SuppressWarnings("static-access")
     private static void addRunScriptOptions(Options options) {
         // -f <file> runs this script
-        options.addOption(OptionBuilder
-                    .withArgName("file")
+        options.addOption(Option.builder(FILE_OPTION)
+                    .argName("file")
                     .hasArg()
-                    .withDescription("run this script")
-                    .withLongOpt("file")
-                    .isRequired()
-                    .create(FILE_OPTION));
+                    .desc("run this script")
+                    .longOpt("file")
+                    .required()
+                    .build());
         
         // -p <port> runs against this port
-        options.addOption(OptionBuilder
-                    .withArgName("port")
+        options.addOption(Option.builder(PORT_OPTION)
+                    .argName("port")
                     .hasArg()
-                    .withDescription("runs against this port")
-                    .withLongOpt("port")
-                    .isRequired()
-                    .create(PORT_OPTION));
+                    .desc("runs against this port")
+                    .longOpt("port")
+                    .required()
+                    .build());
         
         // -h <host> runs against this host
-        options.addOption(OptionBuilder
-                    .withArgName("host")
+        options.addOption(Option.builder(HOST_OPTION)
+                    .argName("host")
                     .hasArg()
-                    .withDescription("runs against this host (defaults to localhost)")
-                    .withLongOpt("host")
-                    .isRequired(false)
-                    .create(HOST_OPTION));
+                    .desc("runs against this host (defaults to localhost)")
+                    .longOpt("host")
+                    .required(false)
+                    .build());
         // -s <shabang> sets shabang
-        options.addOption(OptionBuilder
-                    .withArgName("shabang")
+        options.addOption(Option.builder(SHABANG_OPTION)
+                    .argName("shabang")
                     .hasArg()
-                    .withDescription("sets shabang (defaults to empty)")
-                    .withLongOpt("shabang")
-                    .isRequired(false)
-                    .create(SHABANG_OPTION));
+                    .desc("sets shabang (defaults to empty)")
+                    .longOpt("shabang")
+                    .required(false)
+                    .build());
         // -v sets logging to verbose
-        options.addOption(OptionBuilder
-                    .withDescription("prints lots of logging")
-                    .withLongOpt("verbose")
-                    .isRequired(false)
-                    .create(VERBOSE_OPTION));
+        options.addOption(Option.builder(VERBOSE_OPTION)
+                    .desc("prints lots of logging")
+                    .longOpt("verbose")
+                    .required(false)
+                    .build());
     }
 }

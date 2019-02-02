@@ -18,16 +18,10 @@
  ****************************************************************/
 package org.apache.james.modules.mailbox;
 
-import java.io.FileNotFoundException;
-import java.util.HashMap;
+import static org.apache.james.modules.Names.MAILBOXMANAGER_NAME;
 
 import javax.inject.Singleton;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.james.JPAConfiguration;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthorizator;
 import org.apache.james.mailbox.MailboxManager;
@@ -37,7 +31,8 @@ import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
 import org.apache.james.mailbox.jpa.JPASubscriptionManager;
@@ -49,28 +44,32 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
-import org.apache.james.modules.Names;
+import org.apache.james.modules.data.JPAEntityManagerModule;
 import org.apache.james.utils.MailboxManagerDefinition;
-import org.apache.james.utils.PropertiesProvider;
+import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
 public class JPAMailboxModule extends AbstractModule {
 
     @Override
     protected void configure() {
         install(new JpaQuotaModule());
+        install(new JPAQuotaSearchModule());
+        install(new JPAEntityManagerModule());
 
         bind(JPAMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
         bind(OpenJPAMailboxManager.class).in(Scopes.SINGLETON);
@@ -84,6 +83,7 @@ public class JPAMailboxModule extends AbstractModule {
         bind(SimpleGroupMembershipResolver.class).in(Scopes.SINGLETON);
         bind(UnionMailboxACLResolver.class).in(Scopes.SINGLETON);
         bind(DefaultMessageId.Factory.class).in(Scopes.SINGLETON);
+        bind(ReIndexerImpl.class).in(Scopes.SINGLETON);
 
         bind(MessageMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
         bind(MailboxMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
@@ -96,20 +96,22 @@ public class JPAMailboxModule extends AbstractModule {
         bind(MailboxPathLocker.class).to(JVMMailboxPathLocker.class);
         bind(Authenticator.class).to(UserRepositoryAuthenticator.class);
         bind(MailboxManager.class).to(OpenJPAMailboxManager.class);
+        bind(StoreMailboxManager.class).to(OpenJPAMailboxManager.class);
         bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
         bind(MailboxId.Factory.class).to(JPAId.Factory.class);
         bind(GroupMembershipResolver.class).to(SimpleGroupMembershipResolver.class);
         bind(MailboxACLResolver.class).to(UnionMailboxACLResolver.class);
+
+        bind(ReIndexer.class).to(ReIndexerImpl.class);
         
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class).addBinding().to(JPAMailboxManagerDefinition.class);
-    }
 
-    @Provides
-    @Named(Names.MAILBOXMANAGER_NAME)
-    @Singleton
-    public MailboxManager provideMailboxManager(OpenJPAMailboxManager jpaMailboxManager) throws MailboxException {
-        jpaMailboxManager.init();
-        return jpaMailboxManager;
+        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
+            .addBinding()
+            .to(MailboxAnnotationListener.class);
+
+        bind(MailboxManager.class).annotatedWith(Names.named(MAILBOXMANAGER_NAME)).to(MailboxManager.class);
+        bind(MailboxManagerConfiguration.class).toInstance(MailboxManagerConfiguration.DEFAULT);
     }
     
     @Singleton
@@ -118,27 +120,5 @@ public class JPAMailboxModule extends AbstractModule {
         private JPAMailboxManagerDefinition(OpenJPAMailboxManager manager) {
             super("jpa-mailboxmanager", manager);
         }
-    }
-    
-    @Provides
-    @Singleton
-    public EntityManagerFactory provideEntityManagerFactory(JPAConfiguration jpaConfiguration) {
-        HashMap<String, String> properties = new HashMap<>();
-        
-        properties.put("openjpa.ConnectionDriverName", jpaConfiguration.getDriverName());
-        properties.put("openjpa.ConnectionURL", jpaConfiguration.getDriverURL());
-
-        return Persistence.createEntityManagerFactory("Global", properties);
-
-    }
-
-    @Provides
-    @Singleton
-    JPAConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws FileNotFoundException, ConfigurationException {
-        PropertiesConfiguration dataSource = propertiesProvider.getConfiguration("james-database");
-        return JPAConfiguration.builder()
-                .driverName(dataSource.getString("database.driverClassName"))
-                .driverURL(dataSource.getString("database.url"))
-                .build();
     }
 }

@@ -22,15 +22,13 @@ package org.apache.james.mailbox.jpa.mail;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.transaction.Mapper;
-
-import com.google.common.base.Throwables;
 
 public class TransactionalAnnotationMapper implements AnnotationMapper {
     private final JPAAnnotationMapper wrapped;
@@ -41,12 +39,12 @@ public class TransactionalAnnotationMapper implements AnnotationMapper {
 
     @Override
     public void endRequest() {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
-    public <T> T execute(Transaction<T> transaction) throws MailboxException {
-        throw new NotImplementedException();
+    public <T> T execute(Transaction<T> transaction) {
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
@@ -74,7 +72,7 @@ public class TransactionalAnnotationMapper implements AnnotationMapper {
         try {
             wrapped.execute(Mapper.toTransaction(() -> wrapped.deleteAnnotation(mailboxId, key)));
         } catch (MailboxException e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -83,7 +81,7 @@ public class TransactionalAnnotationMapper implements AnnotationMapper {
         try {
             wrapped.execute(Mapper.toTransaction(() -> wrapped.insertAnnotation(mailboxId, mailboxAnnotation)));
         } catch (MailboxException e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

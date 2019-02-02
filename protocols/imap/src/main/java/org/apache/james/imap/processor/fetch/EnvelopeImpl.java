@@ -60,72 +60,52 @@ final class EnvelopeImpl implements FetchResponse.Envelope {
         this.to = to;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Envelope#getBcc()
-     */
+    @Override
     public Address[] getBcc() {
         return bcc;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Envelope#getCc()
-     */
+    @Override
     public Address[] getCc() {
         return cc;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Envelope#getDate()
-     */
+    @Override
     public String getDate() {
         return date;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Envelope#getFrom()
-     */
+    @Override
     public Address[] getFrom() {
         return from;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Envelope#getInReplyTo()
-     */
+    @Override
     public String getInReplyTo() {
         return inReplyTo;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Envelope#getMessageId()
-     */
+    @Override
     public String getMessageId() {
         return messageId;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Envelope#getReplyTo()
-     */
+    @Override
     public Address[] getReplyTo() {
         return replyTo;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Envelope#getSender()
-     */
+    @Override
     public Address[] getSender() {
         return sender;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Envelope#getSubject()
-     */
+    @Override
     public String getSubject() {
         return subject;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Envelope#getTo()
-     */
+    @Override
     public Address[] getTo() {
         return to;
     }

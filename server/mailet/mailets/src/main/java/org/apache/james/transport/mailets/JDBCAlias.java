@@ -70,9 +70,7 @@ public class JDBCAlias extends GenericMailet {
     // The JDBCUtil helper class
     private final JDBCUtil theJDBCUtil = new JDBCUtil();
 
-    /**
-     * Initialize the mailet
-     */
+    @Override
     public void init() throws MessagingException {
         String mappingsURL = getInitParameter("mappings");
 
@@ -113,6 +111,7 @@ public class JDBCAlias extends GenericMailet {
         }
     }
 
+    @Override
     public void service(Mail mail) throws MessagingException {
         // Then loop through each address in the recipient list and try to map
         // it according to the alias table
@@ -168,11 +167,7 @@ public class JDBCAlias extends GenericMailet {
         recipients.addAll(recipientsToAdd);
     }
 
-    /**
-     * Return a string describing this mailet.
-     * 
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "JDBC aliasing mailet";
     }

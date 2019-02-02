@@ -68,14 +68,17 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
  * </p>
  */
 
-public interface MailboxManager extends RequestAware, MailboxListenerSupport, RightManager, MailboxAnnotationManager {
+public interface MailboxManager extends RequestAware, RightManager, MailboxAnnotationManager {
+
+    int MAX_MAILBOX_NAME_LENGTH = 200;
 
     enum MailboxCapabilities {
         Annotation,
         Move,
         Namespace,
         UserFlag,
-        ACL
+        ACL,
+        Quota
     }
 
     EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities();
@@ -83,7 +86,6 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport, Ri
     boolean hasCapability(MailboxCapabilities capability);
 
     enum MessageCapabilities {
-        Attachment,
         UniqueID
     }
 
@@ -91,6 +93,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport, Ri
 
     enum SearchCapabilities {
         MultimailboxSearch,
+        PartialEmailMatch,
         /**
          *  The implementation supporting this capability should
          *  provide an index on the fields: 
@@ -98,7 +101,8 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport, Ri
          */
         Text,
         FullText,
-        Attachment
+        Attachment,
+        AttachmentFileName
     }
     
     EnumSet<SearchCapabilities> getSupportedSearchCapabilities();
@@ -175,7 +179,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport, Ri
      *             otherwise
      * @throws MailboxExistsException
      *             when the <code>to</code> mailbox exists
-     * @throws MailboxNotFound
+     * @throws MailboxNotFoundException
      *             when the <code>from</code> mailbox does not exist
      */
     void renameMailbox(MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException;

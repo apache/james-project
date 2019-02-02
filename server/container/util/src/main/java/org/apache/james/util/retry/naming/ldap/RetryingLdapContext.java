@@ -51,9 +51,6 @@ public abstract class RetryingLdapContext extends RetryingDirContext implements 
         super(schedule, maxRetries);
     }
 
-    /**
-     * @see javax.naming.ldap.LdapContext#extendedOperation(javax.naming.ldap.ExtendedRequest)
-     */
     @Override
     public ExtendedResponse extendedOperation(final ExtendedRequest request) throws NamingException {
         return (ExtendedResponse) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
@@ -64,9 +61,6 @@ public abstract class RetryingLdapContext extends RetryingDirContext implements 
             }.perform();
     }
 
-    /**
-     * @see javax.naming.ldap.LdapContext#getConnectControls()
-     */
     @Override
     public Control[] getConnectControls() throws NamingException {
         return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
@@ -77,9 +71,6 @@ public abstract class RetryingLdapContext extends RetryingDirContext implements 
             }.perform();
     }
 
-    /**
-     * @see javax.naming.ldap.LdapContext#getRequestControls()
-     */
     @Override
     public Control[] getRequestControls() throws NamingException {
         return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
@@ -90,9 +81,6 @@ public abstract class RetryingLdapContext extends RetryingDirContext implements 
             }.perform();
     }
 
-    /**
-     * @see javax.naming.ldap.LdapContext#getResponseControls()
-     */
     @Override
     public Control[] getResponseControls() throws NamingException {
         return (Control[]) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
@@ -103,9 +91,6 @@ public abstract class RetryingLdapContext extends RetryingDirContext implements 
             }.perform();
     }
 
-    /**
-     * @see javax.naming.ldap.LdapContext#newInstance(javax.naming.ldap.Control[])
-     */
     @Override
     public LdapContext newInstance(final Control[] requestControls) throws NamingException {
         final Context context = getDelegate();
@@ -118,9 +103,6 @@ public abstract class RetryingLdapContext extends RetryingDirContext implements 
         };
     }
 
-    /**
-     * @see javax.naming.ldap.LdapContext#reconnect(javax.naming.ldap.Control[])
-     */
     @Override
     public void reconnect(final Control[] connCtls) throws NamingException {
         new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {
@@ -132,9 +114,6 @@ public abstract class RetryingLdapContext extends RetryingDirContext implements 
             }.perform();
     }
 
-    /**
-     * @see javax.naming.ldap.LdapContext#setRequestControls(javax.naming.ldap.Control[])
-     */
     @Override
     public void setRequestControls(final Control[] requestControls) throws NamingException {
         new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, getSchedule(), getMaxRetries()) {

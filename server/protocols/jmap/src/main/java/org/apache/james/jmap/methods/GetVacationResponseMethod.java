@@ -70,7 +70,7 @@ public class GetVacationResponseMethod implements Method {
         Preconditions.checkNotNull(mailboxSession);
         Preconditions.checkArgument(request instanceof GetVacationRequest);
 
-        return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(),
+        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
             MDCBuilder.create()
                 .addContext(MDCBuilder.ACTION, "VACATION")
                 .wrapArround(
@@ -82,9 +82,9 @@ public class GetVacationResponseMethod implements Method {
     }
 
     private GetVacationResponse process(MailboxSession mailboxSession) {
-        Vacation vacation = vacationRepository.retrieveVacation(AccountId.fromString(mailboxSession.getUser().getUserName())).join();
+        Vacation vacation = vacationRepository.retrieveVacation(AccountId.fromString(mailboxSession.getUser().asString())).join();
         return GetVacationResponse.builder()
-            .accountId(mailboxSession.getUser().getUserName())
+            .accountId(mailboxSession.getUser().asString())
             .vacationResponse(VacationResponse.builder()
                 .fromVacation(vacation)
                 .activated(vacation.isActiveAtDate(zonedDateTimeProvider.get()))

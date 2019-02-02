@@ -35,9 +35,7 @@ import org.apache.james.user.lib.model.DefaultUser;
 @Deprecated
 public class JamesUsersJdbcRepository extends AbstractJdbcUsersRepository {
 
-    /**
-     * @see org.apache.james.user.jdbc.AbstractJdbcUsersRepository#readUserFromResultSet(java.sql.ResultSet)
-     */
+    @Override
     protected User readUserFromResultSet(ResultSet rsUsers) throws SQLException {
         // Get the column values
         String username = rsUsers.getString(1);
@@ -68,18 +66,12 @@ public class JamesUsersJdbcRepository extends AbstractJdbcUsersRepository {
         return user;
     }
 
-    /**
-     * @see org.apache.james.user.jdbc.AbstractJdbcUsersRepository#setUserForInsertStatement(org.apache.james.user.api.model.User,
-     *      java.sql.PreparedStatement)
-     */
+    @Override
     protected void setUserForInsertStatement(User user, PreparedStatement userInsert) throws SQLException {
         setUserForStatement(user, userInsert, false);
     }
 
-    /**
-     * @see org.apache.james.user.jdbc.AbstractJdbcUsersRepository#setUserForUpdateStatement(org.apache.james.user.api.model.User,
-     *      java.sql.PreparedStatement)
-     */
+    @Override
     protected void setUserForUpdateStatement(User user, PreparedStatement userUpdate) throws SQLException {
         setUserForStatement(user, userUpdate, true);
     }

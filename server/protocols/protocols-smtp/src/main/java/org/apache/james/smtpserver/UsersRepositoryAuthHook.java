@@ -59,21 +59,21 @@ public class UsersRepositoryAuthHook implements AuthHook {
         this.users = users;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.hook.AuthHook#doAuth(org.apache.james.protocols.smtp.SMTPSession,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     public HookResult doAuth(SMTPSession session, String username, String password) {
         try {
             if (users.test(username, password)) {
                 session.setUser(username);
                 session.setRelayingAllowed(true);
-                return new HookResult(HookReturnCode.OK, "Authentication Successful");
+                return HookResult.builder()
+                    .hookReturnCode(HookReturnCode.ok())
+                    .smtpDescription("Authentication Successful")
+                    .build();
             }
         } catch (UsersRepositoryException e) {
             LOGGER.info("Unable to access UsersRepository", e);
         }
-        return new HookResult(HookReturnCode.DECLINED);
+        return HookResult.DECLINED;
     }
 
     @Override

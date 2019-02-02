@@ -23,16 +23,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
@@ -53,10 +53,11 @@ import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.server.core.MimeMessageInputStreamSource;
-import org.apache.james.smtpserver.model.MailetMailAddressAdapter;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Handles the calling of JamesMessageHooks
@@ -80,6 +81,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
 
     }
 
+    @Override
     public Response onLine(SMTPSession session, ByteBuffer lineByteBuffer, LineHandler<SMTPSession> next) {
 
         byte[] line = new byte[lineByteBuffer.remaining()];
@@ -98,19 +100,9 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
 
                 @SuppressWarnings("unchecked")
                 List<MailAddress> recipientCollection = (List<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction);
-                MailAddress mailAddress = (MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction);
+                MaybeSender sender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, State.Transaction);
 
-                List<MailAddress> rcpts = new ArrayList<>();
-                for (MailAddress address : recipientCollection) {
-                    rcpts.add(new MailetMailAddressAdapter(address));
-                }
-
-                MailetMailAddressAdapter mailetMailAddressAdapter = null;
-                if (mailAddress != MailAddress.nullSender()) {
-                    mailetMailAddressAdapter = new MailetMailAddressAdapter(mailAddress);
-                }
-
-                MailImpl mail = new MailImpl(MailImpl.getId(), mailetMailAddressAdapter, rcpts);
+                MailImpl mail = new MailImpl(MailImpl.getId(), Optional.ofNullable(sender).flatMap(MaybeSender::asOptional), recipientCollection);
 
                 // store mail in the session so we can be sure it get disposed later
                 session.setAttachment(SMTPConstants.MAIL, mail, State.Transaction);
@@ -149,11 +141,6 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
             LifecycleUtil.dispose(mmiss);
             SMTPResponse response = new SMTPResponse(SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Error processing message: " + e.getMessage());
             LOGGER.error("Unknown error occurred while processing DATA.", e);
-            return response;
-        } catch (AddressException e) {
-            LifecycleUtil.dispose(mmiss);
-            SMTPResponse response = new SMTPResponse(SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Error processing message: " + e.getMessage());
-            LOGGER.error("Invalid email address while processing DATA.", e);
             return response;
         }
         return null;
@@ -271,21 +258,12 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
 
         @Override
         public List<MailAddress> getRecipients() {
-            //TODO: not sure this MailAddress transformation code does the right thing
-            List<MailAddress> mailAddressList = new ArrayList<>();
-            for (MailAddress address : mail.getRecipients()) {
-                try {
-                    mailAddressList.add(new MailAddress(address.getLocalPart(), address.getDomain()));
-                } catch (AddressException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-            return mailAddressList;
+            return ImmutableList.copyOf(mail.getRecipients());
         }
 
         @Override
-        public MailAddress getSender() {
-            return mail.getSender();
+        public MaybeSender getMaybeSender() {
+            return mail.getMaybeSender();
         }
 
         @Override

@@ -18,10 +18,10 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -29,16 +29,17 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.apache.mailet.base.test.MimeMessageUtil;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ContactExtractorTest {
@@ -51,7 +52,7 @@ public class ContactExtractorTest {
     private MailetContext mailetContext;
     private FakeMailetConfig mailetConfig;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         mailet = new ContactExtractor();
         mailetContext = FakeMailContext.builder()
@@ -92,8 +93,9 @@ public class ContactExtractorTest {
                 .build();
 
         ObjectMapper objectMapper = mock(ObjectMapper.class);
+        JsonGenerator jsonGenerator = null;
         when(objectMapper.writeValueAsString(any(ContactExtractor.ExtractedContacts.class)))
-            .thenThrow(new JsonGenerationException(""));
+            .thenThrow(new JsonGenerationException("", jsonGenerator));
 
         mailet.init(mailetConfig);
         mailet.objectMapper = objectMapper;

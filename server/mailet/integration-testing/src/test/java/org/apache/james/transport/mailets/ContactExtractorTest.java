@@ -18,12 +18,10 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
-import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
-import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,10 +34,13 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.SMTPAuthSuccessful;
 import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
@@ -51,6 +52,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
+import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
 public class ContactExtractorTest {
     public static final String SENDER = "sender@" + DEFAULT_DOMAIN;
@@ -63,7 +65,8 @@ public class ContactExtractorTest {
     public static final String EXCHANGE = "collector:email";
     public static final String ROUTING_KEY = "";
 
-    public SwarmGenericContainer rabbit = new SwarmGenericContainer(Images.RABBITMQ);
+    public SwarmGenericContainer rabbit = new SwarmGenericContainer(Images.RABBITMQ)
+        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     public AmqpRule amqpRule = new AmqpRule(rabbit, EXCHANGE, ROUTING_KEY);
     public TemporaryFolder folder = new TemporaryFolder();
 
@@ -100,10 +103,16 @@ public class ContactExtractorTest {
             .withMailetContainer(mailets)
             .build(folder);
 
-        DataProbeImpl probe = jamesServer.getProbe(DataProbeImpl.class);
-        probe.addDomain(DEFAULT_DOMAIN);
-        probe.addUser(SENDER, PASSWORD);
-        probe.addUser(TO, PASSWORD);
+        jamesServer.getProbe(DataProbeImpl.class)
+            .fluent()
+            .addDomain(DEFAULT_DOMAIN)
+            .addUser(SENDER, PASSWORD)
+            .addUser(TO, PASSWORD)
+            .addUser(TO2, PASSWORD)
+            .addUser(CC, PASSWORD)
+            .addUser(CC2, PASSWORD)
+            .addUser(BCC, PASSWORD)
+            .addUser(BCC2, PASSWORD);
     }
 
     @After
@@ -120,15 +129,14 @@ public class ContactExtractorTest {
             .addBccRecipient(BCC, "John Bcc2 <" + BCC2 + ">")
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(SENDER, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipients(TO, TO2, CC, CC2, BCC, BCC2))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipients(TO, TO2, CC, CC2, BCC, BCC2));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(TO, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);

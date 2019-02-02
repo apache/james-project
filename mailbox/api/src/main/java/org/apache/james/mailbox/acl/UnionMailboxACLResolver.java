@@ -223,10 +223,6 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
         }
     }
 
-    /**
-     * @see org.apache.james.mailbox.MailboxACLResolver#applyGlobalACL(org.apache
-     *      .james.mailbox.MailboxACL, boolean)
-     */
     @Override
     public MailboxACL applyGlobalACL(MailboxACL resourceACL, boolean resourceOwnerIsGroup) throws UnsupportedRightException {
         return resourceOwnerIsGroup ? resourceACL.union(groupGlobalACL) : resourceACL.union(userGlobalACL);
@@ -304,12 +300,6 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
         return result.toArray(new Rfc4314Rights[result.size()]);
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MailboxACLResolver#rightsOf(java.
-     *      lang.String, org.apache.james.mailbox.store.mail.MailboxACLResolver.
-     *      GroupMembershipResolver, org.apache.james.mailbox.MailboxACL,
-     *      java.lang.String)
-     */
     @Override
     public Rfc4314Rights resolveRights(String requestUser, GroupMembershipResolver groupMembershipResolver, MailboxACL resourceACL, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException {
         Rfc4314Rights[] positiveNegativePair = { MailboxACL.NO_RIGHTS, MailboxACL.NO_RIGHTS };

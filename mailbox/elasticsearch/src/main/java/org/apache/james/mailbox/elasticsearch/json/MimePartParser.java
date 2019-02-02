@@ -20,8 +20,10 @@
 package org.apache.james.mailbox.elasticsearch.json;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.Optional;
 
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.mail.model.Message;
@@ -36,14 +38,6 @@ import com.google.common.base.Preconditions;
 
 public class MimePartParser {
 
-    private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
-        .setMaxContentLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxHeaderLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxLineLen(-1)
-        .build();
-
     private final Message message;
     private final TextExtractor textExtractor;
     private final MimeTokenStream stream;
@@ -57,7 +51,7 @@ public class MimePartParser {
         this.builderStack = new LinkedList<>();
         this.currentlyBuildMimePart = new RootMimePartContainerBuilder();
         this.stream = new MimeTokenStream(
-            MIME_ENTITY_CONFIG,
+            MimeConfig.PERMISSIVE,
             new DefaultBodyDescriptorBuilder());
     }
 
@@ -69,7 +63,7 @@ public class MimePartParser {
         return result;
     }
 
-    private void processMimePart(MimeTokenStream stream, EntityState state) throws IOException {
+    private void processMimePart(MimeTokenStream stream, EntityState state) {
         switch (state) {
             case T_START_MULTIPART:
             case T_START_MESSAGE:
@@ -114,17 +108,22 @@ public class MimePartParser {
         }
     }
 
-    private void manageBodyExtraction(MimeTokenStream stream) throws IOException {
+    private void manageBodyExtraction(MimeTokenStream stream) {
         extractMimePartBodyDescription(stream);
         currentlyBuildMimePart.addBodyContent(stream.getDecodedInputStream());
     }
 
     private void extractMimePartBodyDescription(MimeTokenStream stream) {
-        final MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) stream.getBodyDescriptor();
+        MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) stream.getBodyDescriptor();
+
         currentlyBuildMimePart.addMediaType(descriptor.getMediaType())
             .addSubType(descriptor.getSubType())
             .addContentDisposition(descriptor.getContentDispositionType())
             .addFileName(descriptor.getContentDispositionFilename());
+
+        Optional.ofNullable(descriptor.getCharset())
+            .map(Charset::forName)
+            .ifPresent(currentlyBuildMimePart::charset);
     }
 
 }

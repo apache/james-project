@@ -22,21 +22,24 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-backends-common</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>apache-james-backends-es</artifactId>
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-util-java8</artifactId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-util</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-util-java8</artifactId>
-            <version>${project.version}</version>
-            <type>test-jar</type>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-testing</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -44,17 +47,22 @@
             <artifactId>throwing-lambdas</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.jayway.awaitility</groupId>
-            <artifactId>awaitility</artifactId>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
         </dependency>
         <dependency>
             <groupId>org.elasticsearch</groupId>
@@ -70,12 +78,12 @@
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <scope>test</scope>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>

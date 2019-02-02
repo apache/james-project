@@ -105,10 +105,8 @@ public class MailHeaders extends InternetHeaders implements Serializable, Clonea
      * If the new header is a Return-Path we get sure that we add it to the top
      * Javamail, at least until 1.4.0 does the wrong thing if it loaded a stream
      * with a return-path in the middle.
-     * 
-     * @see javax.mail.internet.InternetHeaders#addHeader(java.lang.String,
-     *      java.lang.String)
      */
+    @Override
     public synchronized void addHeader(String arg0, String arg1) {
         if (RFC2822Headers.RETURN_PATH.equalsIgnoreCase(arg0)) {
             headers.add(0, new InternetHeader(arg0, arg1));
@@ -122,10 +120,8 @@ public class MailHeaders extends InternetHeaders implements Serializable, Clonea
      * If the new header is a Return-Path we get sure that we add it to the top
      * Javamail, at least until 1.4.0 does the wrong thing if it loaded a stream
      * with a return-path in the middle.
-     * 
-     * @see javax.mail.internet.InternetHeaders#setHeader(java.lang.String,
-     *      java.lang.String)
      */
+    @Override
     public synchronized void setHeader(String arg0, String arg1) {
         if (RFC2822Headers.RETURN_PATH.equalsIgnoreCase(arg0)) {
             super.removeHeader(arg0);

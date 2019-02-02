@@ -21,13 +21,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apache.james</groupId>
+        <groupId>org.apache.james.protocols</groupId>
         <artifactId>protocols</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>org.apache.james.protocols</groupId>
     <artifactId>protocols-lmtp</artifactId>
     <packaging>bundle</packaging>
 
@@ -35,26 +34,26 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.protocols.groupId}</groupId>
             <artifactId>protocols-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.protocols.groupId}</groupId>
             <artifactId>protocols-api</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.protocols.groupId}</groupId>
             <artifactId>protocols-netty</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.protocols.groupId}</groupId>
             <artifactId>protocols-smtp</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.protocols.groupId}</groupId>
             <artifactId>protocols-smtp</artifactId>
             <type>test-jar</type>
             <scope>test</scope>

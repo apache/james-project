@@ -81,6 +81,7 @@ public class SMIMEDecrypt extends GenericMailet {
     private X509CertificateHolder certificateHolder;
     protected String mailAttribute = "org.apache.james.SMIMEDecrypt";
     
+    @Override
     public void init() throws MessagingException {
         super.init();
         
@@ -120,9 +121,7 @@ public class SMIMEDecrypt extends GenericMailet {
         }
     }
     
-    /**
-     * @see org.apache.mailet.Mailet#service(org.apache.mailet.Mail)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public void service(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();

@@ -1,0 +1,7 @@
+S: 220 mydomain.tld smtp
+C: AUTH LOGIN
+S: 334 VXNlcm5hbWU6
+C: Ym9iQG15ZG9tYWluLnRsZA==
+S: 334 UGFzc3dvcmQ6
+C: c2VjcmV0
+S: 235 Authentication Successful

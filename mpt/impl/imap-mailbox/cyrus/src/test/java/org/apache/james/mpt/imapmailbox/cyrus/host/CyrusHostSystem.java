@@ -22,6 +22,8 @@ import java.net.InetSocketAddress;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
@@ -33,7 +35,6 @@ import org.apache.james.mpt.protocol.ProtocolSession;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
@@ -72,11 +73,13 @@ public class CyrusHostSystem extends ExternalHostSystem implements Provider<Cont
         return true;
     }
     
+    @Override
     public void beforeTest() throws Exception {
         container = docker.start();
         addressSupplier = () -> new InetSocketAddress(docker.getHost(container), docker.getIMAPPort(container));
     }
 
+    @Override
     public void afterTest() throws Exception {
         docker.stop(container);
         container = null;
@@ -126,12 +129,12 @@ public class CyrusHostSystem extends ExternalHostSystem implements Provider<Cont
                 session.stop();
             }
         } catch (Exception e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws Exception {
+    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) throws Exception {
         throw new NotImplementedException();
     }
 }

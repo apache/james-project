@@ -40,20 +40,18 @@ public class WrapText extends GenericMailet {
     private boolean optionFlowedDelsp = false;
     private int optionWidth = FlowedMessageUtils.RFC2646_WIDTH;
     
-    /**
-     * returns a String describing this mailet.
-     * 
-     * @return A desciption of this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "WrapText";
     }
     
+    @Override
     public void init() throws MailetException {
         optionFlowedDelsp = getBooleanParameter(getInitParameter(PARAMETER_NAME_FLOWED_DELSP), optionFlowedDelsp);
         optionWidth = Integer.parseInt(getInitParameter(PARAMETER_NAME_WIDTH, "" + optionWidth));
     }
 
+    @Override
     public void service(Mail mail) throws MailetException {
         // TODO We could even manage the flow when the message is quoted-printable
         try {

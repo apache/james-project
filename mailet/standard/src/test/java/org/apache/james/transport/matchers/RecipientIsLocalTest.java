@@ -28,8 +28,8 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class RecipientIsLocalTest {
 
@@ -40,7 +40,7 @@ public class RecipientIsLocalTest {
     private MailAddress mailAddress2;
     private Mail mail;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         mailetContext = mock(MailetContext.class);
         testee = new RecipientIsLocal();

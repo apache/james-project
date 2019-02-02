@@ -22,10 +22,10 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -56,13 +56,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         super(AuthenticateRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.processor.AbstractMailboxProcessor#doProcess(org.apache.james.imap.api.message.request.ImapRequest,
-     * org.apache.james.imap.api.process.ImapSession, java.lang.String,
-     * org.apache.james.imap.api.ImapCommand,
-     * org.apache.james.imap.api.process.ImapProcessor.Responder)
-     */
+    @Override
     protected void doProcess(AuthenticateRequest request, ImapSession session, final String tag, final ImapCommand command, final Responder responder) {
         final String authType = request.getAuthType();
         if (authType.equalsIgnoreCase(PLAIN)) {
@@ -113,8 +107,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     private AuthenticationAttempt parseDelegationAttempt(String initialClientResponse) {
         String token2;
         try {
-
-            String userpass = new String(Base64.decodeBase64(initialClientResponse));
+            String userpass = new String(Base64.getDecoder().decode(initialClientResponse));
             StringTokenizer authTokenizer = new StringTokenizer(userpass, "\0");
             String token1 = authTokenizer.nextToken();  // Authorization Identity
             token2 = authTokenizer.nextToken();                 // Authentication Identity
@@ -147,10 +140,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         }
     }
 
-    /**
-     * @see org.apache.james.imap.processor.CapabilityImplementingProcessor
-     * #getImplementedCapabilities(org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     public List<String> getImplementedCapabilities(ImapSession session) {
         List<String> caps = new ArrayList<>();
         // Only ounce AUTH=PLAIN if the session does allow plain auth or TLS is active.

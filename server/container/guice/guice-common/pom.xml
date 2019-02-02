@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-server-guice</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -33,119 +33,130 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-mailet-base</artifactId>
-            <type>test-jar</type>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>apache-mailet-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-file</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-library</artifactId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-data-jpa</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-data-memory</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-dnsservice-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-dnsservice-dnsjava</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-dnsservice-library</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-filesystem-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-configuration</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-imap</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-lmtp</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-mailet</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-netty</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-pop</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-smtp</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-webadmin</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-mailets</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-mailrepository-memory</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-onami</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-protocols-library</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-protocols-smtp</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-queue-activemq</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-queue-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-task</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>metrics-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>metrics-dropwizard</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>metrics-logger</artifactId>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.stefanbirkner</groupId>
+            <artifactId>system-rules</artifactId>
+            <version>1.18.0</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.github.steveash.guavate</groupId>
@@ -160,21 +171,22 @@
             <artifactId>guice-multibindings</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.jayway.awaitility</groupId>
-            <artifactId>awaitility</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jayway.restassured</groupId>
+            <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.nurkiewicz.asyncretry</groupId>
-            <artifactId>asyncretry</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -185,11 +197,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 

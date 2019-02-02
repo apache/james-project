@@ -28,7 +28,8 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -67,11 +68,6 @@ public class CassandraCurrentQuotaManager implements StoreCurrentQuotaManager {
     }
 
     @Override
-    public MailboxListener.ListenerType getAssociatedListenerType() {
-        return MailboxListener.ListenerType.ONCE;
-    }
-
-    @Override
     public void increase(QuotaRoot quotaRoot, long count, long size) throws MailboxException {
         checkArguments(count, size);
         session.execute(increaseStatement.bind(count, size, quotaRoot.getValue()));
@@ -84,21 +80,21 @@ public class CassandraCurrentQuotaManager implements StoreCurrentQuotaManager {
     }
 
     @Override
-    public long getCurrentMessageCount(QuotaRoot quotaRoot) throws MailboxException {
+    public QuotaCount getCurrentMessageCount(QuotaRoot quotaRoot) throws MailboxException {
         ResultSet resultSet = session.execute(getCurrentMessageCountStatement.bind(quotaRoot.getValue()));
         if (resultSet.isExhausted()) {
-            return 0L;
+            return QuotaCount.count(0L);
         }
-        return resultSet.one().getLong(CassandraCurrentQuota.MESSAGE_COUNT);
+        return QuotaCount.count(resultSet.one().getLong(CassandraCurrentQuota.MESSAGE_COUNT));
     }
 
     @Override
-    public long getCurrentStorage(QuotaRoot quotaRoot) throws MailboxException {
+    public QuotaSize getCurrentStorage(QuotaRoot quotaRoot) throws MailboxException {
         ResultSet resultSet = session.execute(getCurrentStorageStatement.bind(quotaRoot.getValue()));
         if (resultSet.isExhausted()) {
-            return 0L;
+            return QuotaSize.size(0L);
         }
-        return resultSet.one().getLong(CassandraCurrentQuota.STORAGE);
+        return QuotaSize.size(resultSet.one().getLong(CassandraCurrentQuota.STORAGE));
     }
 
     private void checkArguments(long count, long size) {

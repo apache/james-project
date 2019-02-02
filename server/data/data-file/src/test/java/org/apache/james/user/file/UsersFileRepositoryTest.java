@@ -54,6 +54,7 @@ public class UsersFileRepositoryTest extends AbstractUsersRepositoryTest {
         this.usersRepository = getUsersRepository();
     }
 
+    @Override
     @After
     public void tearDown() throws IOException {
         FileUtils.forceDelete(targetRepositoryFolder);
@@ -100,6 +101,7 @@ public class UsersFileRepositoryTest extends AbstractUsersRepositoryTest {
     public void addUserShouldThrowWhenSameUsernameWithDifferentCase() throws UsersRepositoryException {
     }
 
+    @Override
     protected void disposeUsersRepository() throws UsersRepositoryException {
         if (this.usersRepository != null) {
             Iterator<String> i = this.usersRepository.list();
@@ -108,5 +110,10 @@ public class UsersFileRepositoryTest extends AbstractUsersRepositoryTest {
             }
             LifecycleUtil.dispose(this.usersRepository);
         }
+    }
+
+    @Ignore
+    @Override
+    public void testShouldReturnTrueWhenAUserHasACorrectPasswordAndOtherCaseInDomain() throws Exception {
     }
 }

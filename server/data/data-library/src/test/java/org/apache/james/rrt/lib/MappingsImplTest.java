@@ -21,9 +21,11 @@
 package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
 
+import org.apache.james.core.Domain;
 import org.junit.Test;
 
 
@@ -43,82 +45,82 @@ public class MappingsImplTest {
     @Test
     public void fromRawStringShouldReturnSingletonCollectionWhenSingleElementString() {
         MappingsImpl actual = MappingsImpl.fromRawString("value");
-        assertThat(actual).containsExactly(MappingImpl.address("value"));
+        assertThat(actual).containsOnly(Mapping.address("value"));
     }
 
     @Test
     public void fromRawStringShouldReturnCollectionWhenSeveralElementsString() {
         MappingsImpl actual = MappingsImpl.fromRawString("value1;value2");
-        assertThat(actual).containsExactly(MappingImpl.address("value1"), MappingImpl.address("value2"));
+        assertThat(actual).containsOnly(Mapping.address("value1"), Mapping.address("value2"));
     }
     
     @Test
     public void fromRawStringShouldReturnSingleElementCollectionWhenTrailingDelimiterString() {
         MappingsImpl actual = MappingsImpl.fromRawString("value1;");
-        assertThat(actual).containsExactly(MappingImpl.address("value1"));
+        assertThat(actual).containsOnly(Mapping.address("value1"));
     }
 
     @Test
     public void fromRawStringShouldReturnSingleElementCollectionWhenHeadingDelimiterString() {
         MappingsImpl actual = MappingsImpl.fromRawString(";value1");
-        assertThat(actual).containsExactly(MappingImpl.address("value1"));
+        assertThat(actual).containsOnly(Mapping.address("value1"));
     }
     
 
     @Test
     public void fromRawStringShouldTrimValues() {
         MappingsImpl actual = MappingsImpl.fromRawString("value1 ; value2  ");
-        assertThat(actual).containsExactly(MappingImpl.address("value1"), MappingImpl.address("value2"));
+        assertThat(actual).containsOnly(Mapping.address("value1"), Mapping.address("value2"));
     }
     
     @Test
     public void fromRawStringShouldNotSkipEmptyValue() {
         MappingsImpl actual = MappingsImpl.fromRawString("value1; ;value2");
-        assertThat(actual).containsExactly(MappingImpl.address("value1"), MappingImpl.address(""), MappingImpl.address("value2"));
+        assertThat(actual).containsOnly(Mapping.address("value1"), Mapping.address(""), Mapping.address("value2"));
     }
     
     @Test
     public void fromRawStringShouldReturnCollectionWhenValueContainsCommaSeperatedValues() {
         MappingsImpl actual = MappingsImpl.fromRawString("value1,value2");
-        assertThat(actual).containsExactly(MappingImpl.address("value1"),MappingImpl.address("value2"));
+        assertThat(actual).containsOnly(Mapping.address("value1"),Mapping.address("value2"));
     }
 
     @Test
     public void fromRawStringShouldReturnCollectionWhenValueContainsColonSeperatedValues() {
         MappingsImpl actual = MappingsImpl.fromRawString("value1:value2");
-        assertThat(actual).containsExactly(MappingImpl.address("value1"),MappingImpl.address("value2"));
+        assertThat(actual).containsOnly(Mapping.address("value1"),Mapping.address("value2"));
     }
 
     @Test
     public void fromRawStringShouldUseCommaDelimiterBeforeSemicolonWhenValueContainsBoth() {
         MappingsImpl actual = MappingsImpl.fromRawString("value1;value1,value2");
-        assertThat(actual).containsExactly(MappingImpl.address("value1;value1"),MappingImpl.address("value2"));
+        assertThat(actual).containsOnly(Mapping.address("value1;value1"),Mapping.address("value2"));
     }
 
     @Test
     public void fromRawStringShouldUseSemicolonDelimiterBeforeColonWhenValueContainsBoth() {
         MappingsImpl actual = MappingsImpl.fromRawString("value1:value1;value2");
-        assertThat(actual).containsExactly(MappingImpl.address("value1:value1"),MappingImpl.address("value2"));
+        assertThat(actual).containsOnly(Mapping.address("value1:value1"),Mapping.address("value2"));
     }
     
     @Test
     public void fromRawStringShouldNotUseColonDelimiterWhenValueStartsWithError() {
         MappingsImpl actual = MappingsImpl.fromRawString("error:test");
-        assertThat(actual).containsExactly(MappingImpl.error("test"));
+        assertThat(actual).containsOnly(Mapping.error("test"));
     }
     
 
     @Test
     public void fromRawStringShouldNotUseColonDelimiterWhenValueStartsWithDomain() {
         MappingsImpl actual = MappingsImpl.fromRawString("domain:test");
-        assertThat(actual).containsExactly(MappingImpl.domain("test"));
+        assertThat(actual).containsOnly(Mapping.domain(Domain.of("test")));
     }
     
 
     @Test
     public void fromRawStringShouldNotUseColonDelimiterWhenValueStartsWithRegex() {
         MappingsImpl actual = MappingsImpl.fromRawString("regex:test");
-        assertThat(actual).containsExactly(MappingImpl.regex("test"));
+        assertThat(actual).containsOnly(Mapping.regex("test"));
     }
 
     @Test
@@ -140,34 +142,34 @@ public class MappingsImplTest {
 
     @Test
     public void containsShouldReturnTrueWhenMatchingMapping() {
-        MappingsImpl mappings = MappingsImpl.builder().add(MappingImpl.regex("toto")).build();
+        MappingsImpl mappings = MappingsImpl.builder().add(Mapping.regex("toto")).build();
         assertThat(mappings.contains(Mapping.Type.Regex)).isTrue();
     }
     
     @Test
     public void containsShouldReturnFalseWhenNoMatchingMapping() {
-        MappingsImpl mappings = MappingsImpl.builder().add(MappingImpl.regex("toto")).build();
+        MappingsImpl mappings = MappingsImpl.builder().add(Mapping.regex("toto")).build();
         assertThat(mappings.contains(Mapping.Type.Error)).isFalse();
     }
 
     
     @Test(expected = NullPointerException.class)
     public void containsShouldThrowWhenNull() {
-        MappingsImpl mappings = MappingsImpl.builder().add(MappingImpl.regex("toto")).build();
+        MappingsImpl mappings = MappingsImpl.builder().add(Mapping.regex("toto")).build();
         assertThat(mappings.contains((Mapping.Type)null));
     }
     
     @Test
     public void selectShouldReturnMatchingElementsInOrderWhenMatchingMapping() {
         MappingsImpl mappings = MappingsImpl.builder()
-                .add(MappingImpl.regex("toto"))
-                .add(MappingImpl.address("toto")) 
-                .add(MappingImpl.domain("domain"))
-                .add(MappingImpl.regex("tata"))
-                .build();
+            .add(Mapping.regex("toto"))
+            .add(Mapping.address("toto"))
+            .add(Mapping.domain(Domain.of("domain")))
+            .add(Mapping.regex("tata"))
+            .build();
         MappingsImpl expected = MappingsImpl.builder()
-                .add(MappingImpl.regex("toto"))
-                .add(MappingImpl.regex("tata"))
+                .add(Mapping.regex("toto"))
+                .add(Mapping.regex("tata"))
                 .build();
         assertThat(mappings.select(Mapping.Type.Regex)).isEqualTo(expected);
     }
@@ -175,9 +177,9 @@ public class MappingsImplTest {
     @Test
     public void selectShouldReturnEmptyCollectionWhenNoMatchingMapping() {
         MappingsImpl mappings = MappingsImpl.builder()
-                .add(MappingImpl.regex("toto"))
-                .add(MappingImpl.address("toto")) 
-                .add(MappingImpl.address("tata"))
+                .add(Mapping.regex("toto"))
+                .add(Mapping.address("toto"))
+                .add(Mapping.address("tata"))
                 .build();
         assertThat(mappings.select(Mapping.Type.Domain)).isEqualTo(MappingsImpl.empty());
     }
@@ -185,30 +187,30 @@ public class MappingsImplTest {
     
     @Test(expected = NullPointerException.class)
     public void selectShouldThrowWhenNull() {
-        MappingsImpl mappings = MappingsImpl.builder().add(MappingImpl.regex("toto")).build();
+        MappingsImpl mappings = MappingsImpl.builder().add(Mapping.regex("toto")).build();
         assertThat(mappings.select((Mapping.Type)null));
     }
 
     @Test
     public void excludeShouldReturnNonMatchingElementsInOrderWhenNonMatchingMapping() {
         MappingsImpl mappings = MappingsImpl.builder()
-                .add(MappingImpl.regex("toto"))
-                .add(MappingImpl.address("toto")) 
-                .add(MappingImpl.domain("domain"))
-                .add(MappingImpl.regex("tata"))
-                .build();
+            .add(Mapping.regex("toto"))
+            .add(Mapping.address("toto"))
+            .add(Mapping.domain(Domain.of("domain")))
+            .add(Mapping.regex("tata"))
+            .build();
         MappingsImpl expected = MappingsImpl.builder()
-                .add(MappingImpl.address("toto")) 
-                .add(MappingImpl.domain("domain"))
-                .build();
+            .add(Mapping.address("toto"))
+            .add(Mapping.domain(Domain.of("domain")))
+            .build();
         assertThat(mappings.exclude(Mapping.Type.Regex)).isEqualTo(expected);
     }
     
     @Test
     public void excludeShouldReturnEmptyCollectionWhenOnlyMatchingMapping() {
         MappingsImpl mappings = MappingsImpl.builder()
-                .add(MappingImpl.address("toto")) 
-                .add(MappingImpl.address("tata"))
+                .add(Mapping.address("toto"))
+                .add(Mapping.address("tata"))
                 .build();
         assertThat(mappings.exclude(Mapping.Type.Address)).isEqualTo(MappingsImpl.empty());
     }
@@ -216,7 +218,7 @@ public class MappingsImplTest {
     
     @Test(expected = NullPointerException.class)
     public void excludeShouldThrowWhenNull() {
-        MappingsImpl mappings = MappingsImpl.builder().add(MappingImpl.regex("toto")).build();
+        MappingsImpl mappings = MappingsImpl.builder().add(Mapping.regex("toto")).build();
         assertThat(mappings.exclude((Mapping.Type)null));
     }
 
@@ -250,6 +252,106 @@ public class MappingsImplTest {
     @Test
     public void unionShouldReturnMergedWhenBothContainsData() {
         Mappings mappings = MappingsImpl.fromRawString("toto").union(MappingsImpl.fromRawString("tata"));
-        assertThat(mappings).containsExactly(MappingImpl.address("toto"),MappingImpl.address("tata"));
+        assertThat(mappings).containsOnly(Mapping.address("toto"),Mapping.address("tata"));
+    }
+
+    @Test
+    public void mergeShouldThrowWhenLeftIsNull() {
+        MappingsImpl.Builder left = null;
+        assertThatThrownBy(() -> MappingsImpl.Builder.merge(left, MappingsImpl.builder()))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void mergeShouldThrowWhenRightIsNull() {
+        MappingsImpl.Builder right = null;
+        assertThatThrownBy(() -> MappingsImpl.Builder.merge(MappingsImpl.builder(), right))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void mergeShouldReturnEmptyWhenBothAreEmpty() {
+        MappingsImpl.Builder empty = MappingsImpl.builder();
+        MappingsImpl mappingsImpl = MappingsImpl.Builder
+                .merge(empty, empty)
+                .build();
+        assertThat(mappingsImpl.isEmpty()).isTrue();
+    }
+
+    @Test
+    public void mergeShouldReturnLeftWhenRightIsEmpty() {
+        Mapping expectedMapping = Mapping.address("toto");
+        MappingsImpl.Builder left = MappingsImpl.builder().add(expectedMapping);
+        MappingsImpl.Builder empty = MappingsImpl.builder();
+        MappingsImpl mappingsImpl = MappingsImpl.Builder
+                .merge(left, empty)
+                .build();
+        assertThat(mappingsImpl).containsOnly(expectedMapping);
+    }
+
+    @Test
+    public void mergeShouldReturnRightWhenLeftIsEmpty() {
+        Mapping expectedMapping = Mapping.address("toto");
+        MappingsImpl.Builder right = MappingsImpl.builder().add(expectedMapping);
+        MappingsImpl.Builder empty = MappingsImpl.builder();
+        MappingsImpl mappingsImpl = MappingsImpl.Builder
+                .merge(empty, right)
+                .build();
+        assertThat(mappingsImpl).containsOnly(expectedMapping);
+    }
+
+    @Test
+    public void mergeShouldReturnBothWhenBothAreNotEmpty() {
+        Mapping leftMapping = Mapping.address("toto");
+        MappingsImpl.Builder left = MappingsImpl.builder().add(leftMapping);
+        Mapping rightMapping = Mapping.address("titi");
+        MappingsImpl.Builder right = MappingsImpl.builder().add(rightMapping);
+        MappingsImpl mappingsImpl = MappingsImpl.Builder
+                .merge(left, right)
+                .build();
+        assertThat(mappingsImpl).containsOnly(leftMapping, rightMapping);
+    }
+    
+    @Test
+    public void builderShouldPutDomainAliasFirstWhenVariousMappings() {
+        Mapping addressMapping = Mapping.address("aaa");
+        Mapping errorMapping = Mapping.error("error");
+        Mapping domainMapping = Mapping.domain(Domain.of("domain"));
+        Mapping domain2Mapping = Mapping.domain(Domain.of("domain2"));
+        MappingsImpl mappingsImpl = MappingsImpl.builder()
+                .add(domainMapping)
+                .add(addressMapping)
+                .add(errorMapping)
+                .add(domain2Mapping)
+                .build();
+        assertThat(mappingsImpl).containsExactly(domainMapping, domain2Mapping, addressMapping, errorMapping);
+    }
+    
+    @Test
+    public void builderShouldPutDomainAliasFirstThenForwardWhenVariousMappings() {
+        Mapping regexMapping = Mapping.regex("regex");
+        Mapping forwardMapping = Mapping.forward("forward");
+        Mapping domainMapping = Mapping.domain(Domain.of("domain"));
+        MappingsImpl mappingsImpl = MappingsImpl.builder()
+                .add(regexMapping)
+                .add(forwardMapping)
+                .add(domainMapping)
+                .build();
+        assertThat(mappingsImpl).containsExactly(domainMapping, forwardMapping, regexMapping);
+    }
+
+    @Test
+    public void builderShouldPutGroupsBetweenDomainAndForward() {
+        Mapping regexMapping = Mapping.regex("regex");
+        Mapping forwardMapping = Mapping.forward("forward");
+        Mapping domainMapping = Mapping.domain(Domain.of("domain"));
+        Mapping groupMapping = Mapping.group("group");
+        MappingsImpl mappingsImpl = MappingsImpl.builder()
+                .add(regexMapping)
+                .add(forwardMapping)
+                .add(domainMapping)
+                .add(groupMapping)
+                .build();
+        assertThat(mappingsImpl).containsExactly(domainMapping, groupMapping, forwardMapping, regexMapping);
     }
 }

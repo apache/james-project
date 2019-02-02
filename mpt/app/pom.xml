@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-james-mpt</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -37,11 +37,11 @@ interfaces to the MPT library.</description>
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mpt-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mpt-core</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -54,11 +54,6 @@ interfaces to the MPT library.</description>
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>jmock</groupId>
-            <artifactId>jmock</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -78,7 +73,7 @@ interfaces to the MPT library.</description>
                             <include>commons-logging:commons-logging</include>
                             <include>commons-cli:commons-cli</include>
                             <include>junit:junit</include>
-                            <include>${project.groupId}:apache-james-mpt-core</include>
+                            <include>${james.groupId}:apache-james-mpt-core</include>
                         </includes>
                     </artifactSet>
                 </configuration>

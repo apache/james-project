@@ -90,7 +90,7 @@ public class DownloadServlet extends HttpServlet {
                 return;
             }
             resp.setContentType(TEXT_PLAIN_CONTENT_TYPE);
-            resp.getOutputStream().print(simpleTokenFactory.generateAttachmentAccessToken(mailboxSession.getUser().getUserName(), blobId).serialize());
+            resp.getOutputStream().print(simpleTokenFactory.generateAttachmentAccessToken(mailboxSession.getUser().asString(), blobId).serialize());
             resp.setStatus(SC_OK);
         } catch (MailboxException | IOException e) {
             LOGGER.error("Error while asking attachment access token", e);
@@ -123,13 +123,12 @@ public class DownloadServlet extends HttpServlet {
     @VisibleForTesting void download(MailboxSession mailboxSession, DownloadPath downloadPath, HttpServletResponse resp) {
         String blobId = downloadPath.getBlobId();
         try {
-            addContentDispositionHeader(downloadPath.getName(), resp);
-
             Blob blob = blobManager.retrieve(BlobId.fromString(blobId), mailboxSession);
-            IOUtils.copy(blob.getStream(), resp.getOutputStream());
 
+            addContentDispositionHeader(downloadPath.getName(), resp);
             resp.setHeader("Content-Length", String.valueOf(blob.getSize()));
             resp.setStatus(SC_OK);
+            IOUtils.copy(blob.getStream(), resp.getOutputStream());
         } catch (BlobNotFoundException e) {
             LOGGER.info("Attachment '{}' not found", blobId, e);
             resp.setStatus(SC_NOT_FOUND);
@@ -144,7 +143,7 @@ public class DownloadServlet extends HttpServlet {
     }
 
     private void addContentDispositionHeaderRegardingEncoding(String name, HttpServletResponse resp) {
-        if (CharMatcher.ASCII.matchesAllOf(name)) {
+        if (CharMatcher.ascii().matchesAllOf(name)) {
             resp.addHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
         } else {
             resp.addHeader("Content-Disposition", "attachment; filename*=\"" + EncoderUtil.encodeEncodedWord(name, Usage.TEXT_TOKEN) + "\"");

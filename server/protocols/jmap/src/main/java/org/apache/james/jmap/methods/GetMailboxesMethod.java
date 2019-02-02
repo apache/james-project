@@ -46,7 +46,6 @@ import org.apache.james.util.OptionalUtils;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -77,17 +76,17 @@ public class GetMailboxesMethod implements Method {
         return GetMailboxesRequest.class;
     }
 
+    @Override
     public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof GetMailboxesRequest);
         GetMailboxesRequest mailboxesRequest = (GetMailboxesRequest) request;
-        return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(),
-            () -> MDCBuilder.withMdc(
-                MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "GET_MAILBOXES")
-                    .addContext("accountId", mailboxesRequest.getAccountId())
-                    .addContext("mailboxIds", mailboxesRequest.getIds())
-                    .addContext("properties", mailboxesRequest.getProperties()),
-                () -> process(clientId, mailboxSession, mailboxesRequest)));
+        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
+            MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, "GET_MAILBOXES")
+                .addContext("accountId", mailboxesRequest.getAccountId())
+                .addContext("mailboxIds", mailboxesRequest.getIds())
+                .addContext("properties", mailboxesRequest.getProperties())
+                .wrapArround(() -> process(clientId, mailboxSession, mailboxesRequest)));
     }
 
     private Stream<JmapResponse> process(ClientId clientId, MailboxSession mailboxSession, GetMailboxesRequest mailboxesRequest) {
@@ -112,7 +111,7 @@ public class GetMailboxesMethod implements Method {
                 .forEach(builder::add);
             return builder.build();
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

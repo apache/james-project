@@ -26,7 +26,7 @@ import java.util.Optional;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MimeMessageModifierTest {
 

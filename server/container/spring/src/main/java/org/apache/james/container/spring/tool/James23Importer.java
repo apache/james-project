@@ -19,12 +19,10 @@
 package org.apache.james.container.spring.tool;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.Iterator;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.mail.Flags;
 import javax.mail.MessagingException;
 
 import org.apache.james.domainlist.api.DomainList;
@@ -35,9 +33,11 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryStore.MailRepositoryStoreException;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -132,16 +132,13 @@ public class James23Importer {
      */
     public void importMailsFromJames23(String james23MailRepositoryPath) throws MessagingException, MailRepositoryStoreException, UsersRepositoryException, MailboxException, DomainListException {
 
-        Flags flags = new Flags();
-        boolean isRecent = false;
-
         Iterator<String> james23userRepositoryIterator = james23UsersRepository.list();
 
         while (james23userRepositoryIterator.hasNext()) {
 
             String userName23 = james23userRepositoryIterator.next();
-            MailRepository mailRepository = mailRepositoryStore.select(james23MailRepositoryPath + "/" + userName23);
-            Iterator<String> mailRepositoryIterator = mailRepository.list();
+            MailRepository mailRepository = mailRepositoryStore.select(MailRepositoryUrl.from(james23MailRepositoryPath + "/" + userName23));
+            Iterator<MailKey> mailRepositoryIterator = mailRepository.list();
 
             String userName30 = convert23UserTo30(userName23);
 
@@ -162,7 +159,8 @@ public class James23Importer {
             while (mailRepositoryIterator.hasNext()) {
                 Mail mail = mailRepository.retrieve(mailRepositoryIterator.next());
                 mailboxManager.startProcessingRequest(mailboxSession);
-                messageManager.appendMessage(new MimeMessageInputStream(mail.getMessage()), new Date(), mailboxSession, isRecent, flags);
+                messageManager.appendMessage(MessageManager.AppendCommand.builder()
+                    .build(new MimeMessageInputStream(mail.getMessage())), mailboxSession);
                 mailboxManager.endProcessingRequest(mailboxSession);
             }
 

@@ -43,6 +43,7 @@ public class FetchedFrom extends GenericMatcher {
 
     public static final String X_FETCHED_FROM = "X-fetched-from";
 
+    @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
         String fetchHeaderValue = message.getHeader(X_FETCHED_FROM, null);

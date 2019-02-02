@@ -19,11 +19,10 @@
 
 package org.apache.james.transport.mailets;
 
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -34,17 +33,17 @@ import javax.mail.MessagingException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.util.ClassLoaderUtils;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.fasterxml.jackson.core.io.JsonStringEncoder;
+import com.fasterxml.jackson.core.util.BufferRecyclers;
 import com.google.common.collect.ImmutableMap;
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.model.Calendar;
@@ -63,7 +62,7 @@ public class ICALToJsonAttributeTest {
     }
 
     @Test
-    public void getMailetInfoShouldReturnExpectedValue() throws Exception {
+    public void getMailetInfoShouldReturnExpectedValue() {
         assertThat(testee.getMailetInfo()).isEqualTo("ICALToJson Mailet");
     }
 
@@ -264,8 +263,8 @@ public class ICALToJsonAttributeTest {
                 "}");
     }
 
-    private String toJsonValue(byte[] ics) throws UnsupportedEncodingException {
-        return new String(JsonStringEncoder.getInstance().quoteAsUTF8(new String(ics, StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+    private String toJsonValue(byte[] ics) {
+        return new String(BufferRecyclers.getJsonStringEncoder().quoteAsUTF8(new String(ics, StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
     }
 
     @SuppressWarnings("unchecked")

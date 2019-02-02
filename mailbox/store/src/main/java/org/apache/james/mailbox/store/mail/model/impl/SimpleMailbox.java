@@ -58,60 +58,42 @@ public class SimpleMailbox implements Mailbox {
         this.acl = new MailboxACL(mailbox.getACL().getEntries());
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getMailboxId()
-     */
+    @Override
     public MailboxId getMailboxId() {
         return id;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getNamespace()
-     */
+    @Override
     public String getNamespace() {
         return namespace;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#setNamespace(java.lang.String)
-     */
+    @Override
     public void setNamespace(String namespace) {
         this.namespace = namespace;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getUser()
-     */
+    @Override
     public String getUser() {
         return user;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#setUser(java.lang.String)
-     */
+    @Override
     public void setUser(String user) {
         this.user = user;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getName()
-     */
+    @Override
     public String getName() {
         return name;
     }
 
-    /**
-     * @see
-     * org.apache.james.mailbox.store.mail.model.Mailbox#setName(java.lang.String
-     * )
-     */
+    @Override
     public void setName(String name) {
         this.name = name;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getUidValidity()
-     */
+    @Override
     public long getUidValidity() {
         return uidValidity;
     }
@@ -121,9 +103,7 @@ public class SimpleMailbox implements Mailbox {
         return new MailboxPath(getNamespace(), getUser(), getName());
     }
 
-    /**
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
+    @Override
     public boolean equals(Object obj) {
         if (obj instanceof SimpleMailbox) {
             SimpleMailbox o = (SimpleMailbox)obj;
@@ -132,17 +112,11 @@ public class SimpleMailbox implements Mailbox {
         return false;
     }
 
-    /**
-     * @see java.lang.Object#hashCode()
-     */
     @Override
     public int hashCode() {
         return Objects.hashCode(namespace, user, name);
     }
 
-    /**
-     * @see java.lang.Object#toString()
-     */
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)

@@ -1,0 +1,14 @@
+{
+  "recipients":[],
+  "name":"mail-name-558",
+  "sender":null,
+  "state":null,
+  "errorMessage":null,
+  "lastUpdated":null,
+  "attributes":{},
+  "remoteAddr":"127.0.0.1",
+  "remoteHost":"localhost",
+  "perRecipientHeaders":{},
+  "headerBlobId":"210e7136-ede3-44eb-9495-3ed816d6e23b",
+  "bodyBlobId":"ef46c026-7819-4048-b562-3a37469191ed"
+}

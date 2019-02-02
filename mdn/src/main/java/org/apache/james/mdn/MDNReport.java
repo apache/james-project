@@ -57,11 +57,6 @@ public class MDNReport {
         private ImmutableList.Builder<Error> errorField = ImmutableList.builder();
         private ImmutableList.Builder<ExtensionField> extensionFields = ImmutableList.builder();
 
-        public Builder reportingUserAgentField(String userAgentName, String userAgentProduct) {
-            this.reportingUserAgentField = Optional.of(new ReportingUserAgent(userAgentName, Optional.ofNullable(userAgentProduct)));
-            return this;
-        }
-
         public Builder reportingUserAgentField(ReportingUserAgent reportingUserAgentField) {
             this.reportingUserAgentField = Optional.of(reportingUserAgentField);
             return this;
@@ -70,7 +65,7 @@ public class MDNReport {
         public Builder originalRecipientField(String originalRecipient) {
             this.originalRecipientField = Optional.ofNullable(originalRecipient)
                 .map(Text::fromRawText)
-                .map(OriginalRecipient::new);
+                .map(text -> OriginalRecipient.builder().originalRecipient(text).build());
             return this;
         }
 
@@ -81,16 +76,6 @@ public class MDNReport {
 
         public Builder originalRecipientField(Optional<OriginalRecipient> originalRecipientField) {
             this.originalRecipientField = originalRecipientField;
-            return this;
-        }
-
-        public Builder gatewayField(String gatewayDns) {
-            this.gatewayField = Optional.of(new Gateway(Text.fromRawText(gatewayDns)));
-            return this;
-        }
-
-        public Builder gatewayField(Optional<Gateway> gatewayField) {
-            this.gatewayField = gatewayField;
             return this;
         }
 
@@ -116,7 +101,7 @@ public class MDNReport {
         }
 
         public Builder finalRecipientField(String finalRecipientField) {
-            this.finalRecipientField = Optional.of(new FinalRecipient(Text.fromRawText(finalRecipientField)));
+            this.finalRecipientField = Optional.of(FinalRecipient.builder().finalRecipient(Text.fromRawText(finalRecipientField)).build());
             return this;
         }
 

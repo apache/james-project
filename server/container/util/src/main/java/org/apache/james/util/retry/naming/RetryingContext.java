@@ -102,10 +102,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#addToEnvironment(java.lang.String,
-     *      java.lang.Object)
-     */
     @Override
     public Object addToEnvironment(final String propName, final Object propVal)
             throws NamingException {
@@ -119,9 +115,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#bind(javax.naming.Name, java.lang.Object)
-     */
     @Override
     public void bind(final Name name, final Object obj) throws NamingException {
         new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -135,9 +128,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#bind(java.lang.String, java.lang.Object)
-     */
     @Override
     public void bind(final String name, final Object obj) throws NamingException {
         new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -151,9 +141,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#close()
-     */
     @Override
     public void close() throws NamingException {
         new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -167,10 +154,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#composeName(javax.naming.Name,
-     *      javax.naming.Name)
-     */
     @Override
     public Name composeName(final Name name, final Name prefix) throws NamingException {
         return (Name) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -183,9 +166,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#composeName(java.lang.String, java.lang.String)
-     */
     @Override
     public String composeName(final String name, final String prefix) throws NamingException {
         return (String) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -198,9 +178,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#createSubcontext(javax.naming.Name)
-     */
     @Override
     public Context createSubcontext(final Name name) throws NamingException {
         final Context context = getDelegate();
@@ -213,9 +190,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         };
     }
 
-    /**
-     * @see javax.naming.Context#createSubcontext(java.lang.String)
-     */
     @Override
     public Context createSubcontext(final String name) throws NamingException {
         final Context context = getDelegate();
@@ -228,10 +202,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         };
     }
 
-    /**
-     * @return
-     * @see javax.naming.Context#destroySubcontext(javax.naming.Name)
-     */
     @Override
     public void destroySubcontext(final Name name) throws NamingException {
         new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -245,9 +215,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#destroySubcontext(java.lang.String)
-     */
     @Override
     public void destroySubcontext(final String name) throws NamingException {
         new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -261,9 +228,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#getEnvironment()
-     */
     @Override
     public Hashtable<?, ?> getEnvironment() throws NamingException {
         return (Hashtable<?, ?>) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this,
@@ -276,9 +240,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#getNameInNamespace()
-     */
     @Override
     public String getNameInNamespace() throws NamingException {
         return (String) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -291,9 +252,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#getNameParser(javax.naming.Name)
-     */
     @Override
     public NameParser getNameParser(final Name name) throws NamingException {
         return (NameParser) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -306,9 +264,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#getNameParser(java.lang.String)
-     */
     @Override
     public NameParser getNameParser(final String name) throws NamingException {
         return (NameParser) new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -321,9 +276,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#list(javax.naming.Name)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public NamingEnumeration<NameClassPair> list(final Name name) throws NamingException {
@@ -337,9 +289,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#list(java.lang.String)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public NamingEnumeration<NameClassPair> list(final String name) throws NamingException {
@@ -353,9 +302,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#listBindings(javax.naming.Name)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public NamingEnumeration<Binding> listBindings(final Name name) throws NamingException {
@@ -369,9 +315,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#listBindings(java.lang.String)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public NamingEnumeration<Binding> listBindings(final String name) throws NamingException {
@@ -385,9 +328,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#lookup(javax.naming.Name)
-     */
     @Override
     public Object lookup(final Name name) throws NamingException {
         return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -400,9 +340,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#lookup(java.lang.String)
-     */
     @Override
     public Object lookup(final String name) throws NamingException {
         return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -415,9 +352,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#lookupLink(javax.naming.Name)
-     */
     @Override
     public Object lookupLink(final Name name) throws NamingException {
         return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -430,9 +364,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#lookupLink(java.lang.String)
-     */
     @Override
     public Object lookupLink(final String name) throws NamingException {
         return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -445,9 +376,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#rebind(javax.naming.Name, java.lang.Object)
-     */
     @Override
     public void rebind(final Name name, final Object obj) throws NamingException {
         new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -461,9 +389,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#rebind(java.lang.String, java.lang.Object)
-     */
     @Override
     public void rebind(final String name, final Object obj) throws NamingException {
         new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -477,9 +402,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#removeFromEnvironment(java.lang.String)
-     */
     @Override
     public Object removeFromEnvironment(final String propName) throws NamingException {
         return new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -492,9 +414,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#rename(javax.naming.Name, javax.naming.Name)
-     */
     @Override
     public void rename(final Name oldName, final Name newName) throws NamingException {
         new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -508,9 +427,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#rename(java.lang.String, java.lang.String)
-     */
     @Override
     public void rename(final String oldName, final String newName) throws NamingException {
         new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -524,9 +440,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#unbind(javax.naming.Name)
-     */
     @Override
     public void unbind(final Name name) throws NamingException {
         new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries
@@ -540,9 +453,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#unbind(java.lang.String)
-     */
     @Override
     public void unbind(final String name) throws NamingException {
         new LoggingRetryHandler(DEFAULT_EXCEPTION_CLASSES, this, schedule, maxRetries) {
@@ -555,15 +465,12 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     */
+    @Override
     public Context getDelegate() {
         return delegate;
     }
     
     
-    /**
-     */
     @Override
     public void resetDelegate() throws Exception {
         if (null != delegate) {

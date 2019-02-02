@@ -21,14 +21,24 @@ package org.apache.james.imap.api.message.request;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class SearchKeyTest {
+
+    private static final SearchKey RED = SearchKey.buildFrom("red");
+    private static final SearchKey BLACK = SearchKey.buildTo("black");
+
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(SearchKey.class)
+            .withPrefabValues(SearchKey.class, RED, BLACK)
+            .withPrefabValues(List.class, ImmutableList.of(RED), ImmutableList.of(BLACK))
             .verify();
     }
 

@@ -27,10 +27,12 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.inject.Inject;
+import javax.mail.internet.AddressException;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
@@ -91,11 +93,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
 
     }
 
-    /**
-     * @see
-     * org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler
-     * #onCommand(SMTPSession, Request)
-     */
+    @Override
     public Response onCommand(SMTPSession session, Request request) {
         Response response = super.onCommand(session, request);
         // Check if the response was not ok
@@ -118,40 +116,31 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
      */
     private Response doMAIL(SMTPSession session, String argument) {
         StringBuilder responseBuffer = new StringBuilder();
-        MailAddress sender = (MailAddress) session.getAttachment(
-                SMTPSession.SENDER, State.Transaction);
+        MaybeSender sender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, State.Transaction);
         responseBuffer.append(
                 DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.ADDRESS_OTHER))
                 .append(" Sender <");
         if (sender != null) {
-            responseBuffer.append(sender);
+            responseBuffer.append(sender.asString());
         }
         responseBuffer.append("> OK");
         return new SMTPResponse(SMTPRetCode.MAIL_OK, responseBuffer);
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#doCoreCmd(org.apache.james.protocols.smtp.SMTPSession,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     protected Response doCoreCmd(SMTPSession session, String command,
-            String parameters) {
+                                 String parameters) {
         return doMAIL(session, parameters);
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#doFilterChecks(org.apache.james.protocols.smtp.SMTPSession,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     protected Response doFilterChecks(SMTPSession session, String command,
-            String parameters) {
+                                      String parameters) {
         return doMAILFilter(session, parameters);
     }
 
@@ -225,70 +214,64 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
                 LOGGER.info("Error parsing sender address: {}: did not start and end with < >", sender);
                 return SYNTAX_ERROR;
             }
-            MailAddress senderAddress = null;
-
-            if (session.getConfiguration().useAddressBracketsEnforcement()
-                    || (sender.startsWith("<") && sender.endsWith(">"))) {
-                // Remove < and >
-                sender = sender.substring(1, sender.length() - 1);
+            try {
+                MaybeSender senderAddress = toMaybeSender(removeBrackets(sender));
+                // Store the senderAddress in session map
+                session.setAttachment(SMTPSession.SENDER, senderAddress, State.Transaction);
+            } catch (Exception pe) {
+                LOGGER.info("Error parsing sender address: {}", sender, pe);
+                return SYNTAX_ERROR_ADDRESS;
             }
-
-            if (sender.length() == 0) {
-                // This is the <> case. Let senderAddress == null
-            } else {
-
-                if (!sender.contains("@")) {
-                    sender = sender
-                            + "@"
-                            + getDefaultDomain();
-                }
-
-                try {
-                    senderAddress = new MailAddress(sender);
-                } catch (Exception pe) {
-                    LOGGER.info("Error parsing sender address: {}", sender, pe);
-                    return SYNTAX_ERROR_ADDRESS;
-                }
-            }
-            if ((senderAddress == null) || 
-                    ((senderAddress.getLocalPart().length() == 0) && (senderAddress.getDomain().length() == 0))) {
-                senderAddress = MailAddress.nullSender();
-            }
-            // Store the senderAddress in session map
-            session.setAttachment(SMTPSession.SENDER, senderAddress, State.Transaction);
         }
         return null;
     }
-    
+
+    private MaybeSender toMaybeSender(String senderAsString) throws AddressException {
+        if (senderAsString.length() == 0) {
+            // This is the <> case.
+            return MaybeSender.nullSender();
+        }
+        if (senderAsString.equals("@")) {
+            return MaybeSender.nullSender();
+        }
+        return MaybeSender.of(new MailAddress(
+            appendDefaultDomainIfNeeded(senderAsString)));
+    }
+
+    private String removeBrackets(String input) {
+        if (input.startsWith("<") && input.endsWith(">")) {
+            // Remove < and >
+            return input.substring(1, input.length() - 1);
+        }
+        return input;
+    }
+
+    private String appendDefaultDomainIfNeeded(String address) {
+        if (!address.contains("@")) {
+            return address + "@" + getDefaultDomain();
+        }
+        return address;
+    }
+
+    @Override
     protected Class<MailHook> getHookInterface() {
         return MailHook.class;
     }
 
-
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     protected HookResult callHook(MailHook rawHook, SMTPSession session, String parameters) {
-        MailAddress sender = (MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction);
-        if (sender.isNullSender()) {
-            sender = null;
-        }
+        MaybeSender sender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, State.Transaction);
         return rawHook.doMail(session, sender);
     }
-
     
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#getMarkerInterfaces()
-     */
+    @Override
     public List<Class<?>> getMarkerInterfaces() {
         List<Class<?>> l = super.getMarkerInterfaces();
         l.add(MailParametersHook.class);
         return l;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#wireExtensions(java.lang.Class, java.util.List)
-     */
+    @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void wireExtensions(Class interfaceName, List extension) {
         if (MailParametersHook.class.equals(interfaceName)) {

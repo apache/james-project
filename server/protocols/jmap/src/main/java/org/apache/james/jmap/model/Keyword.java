@@ -24,30 +24,32 @@ import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.james.util.UnicodeSetUtils;
 
-import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
+import com.ibm.icu.text.UnicodeSet;
 
 public class Keyword {
     private static final int FLAG_NAME_MIN_LENGTH = 1;
     private static final int FLAG_NAME_MAX_LENGTH = 255;
-    private static final CharMatcher FLAG_NAME_PATTERN =
-            CharMatcher.JAVA_LETTER_OR_DIGIT
-                .or(CharMatcher.is('$'))
-                .or(CharMatcher.is('_'));
+    private static final UnicodeSet FLAG_NAME_PATTERN =
+            UnicodeSetUtils.letterOrDigitUnicodeSet()
+                .add('$')
+                .add('_')
+                .add('-')
+                .freeze();
 
-    public static final Keyword DRAFT = new Keyword("$Draft");
-    public static final Keyword SEEN = new Keyword("$Seen");
-    public static final Keyword FLAGGED = new Keyword("$Flagged");
-    public static final Keyword ANSWERED = new Keyword("$Answered");
-    public static final Keyword DELETED = new Keyword("$Deleted");
-    public static final Keyword RECENT = new Keyword("$Recent");
-    public static final Keyword FORWARDED = new Keyword("$Forwarded");
-    public static final Boolean FLAG_VALUE = true;
+    public static final Keyword DRAFT = Keyword.of("$Draft");
+    public static final Keyword SEEN = Keyword.of("$Seen");
+    public static final Keyword FLAGGED = Keyword.of("$Flagged");
+    public static final Keyword ANSWERED = Keyword.of("$Answered");
+    public static final Keyword DELETED = Keyword.of("$Deleted");
+    public static final Keyword RECENT = Keyword.of("$Recent");
+    public static final Keyword FORWARDED = Keyword.of("$Forwarded");
+    static final Boolean FLAG_VALUE = true;
 
     private static final ImmutableList<Keyword> NON_EXPOSED_IMAP_KEYWORDS = ImmutableList.of(Keyword.RECENT, Keyword.DELETED);
     private static final ImmutableBiMap<Flags.Flag, Keyword> IMAP_SYSTEM_FLAGS = ImmutableBiMap.<Flags.Flag, Keyword>builder()
@@ -58,30 +60,43 @@ public class Keyword {
         .put(Flags.Flag.RECENT, RECENT)
         .put(Flags.Flag.DELETED, DELETED)
         .build();
+    public static final String VALIDATION_MESSAGE = "Flagname must not be null or empty, must have length form 1-255, " +
+        "must not contain charater with hex from '\\u0000' to '\\u00019' or {'(' ')' '{' ']' '%' '*' '\"' '\\'} ";
 
-    private final String flagName;
+    public static Optional<Keyword> parse(String flagName) {
+        if (isValid(flagName)) {
+            return Optional.of(new Keyword(flagName));
+        }
+        return Optional.empty();
+    }
+
+
+    public static Keyword of(String flagName) {
+        return parse(flagName)
+            .orElseThrow(() -> new IllegalArgumentException(VALIDATION_MESSAGE));
+    }
 
     public static Keyword fromFlag(Flags.Flag flag) {
         return IMAP_SYSTEM_FLAGS.get(flag);
     }
 
-    public Keyword(String flagName) {
-        Preconditions.checkArgument(isValid(flagName),
-                "Flagname must not be null or empty, must have length form 1-255, must not contain charater with hex from '\u0000' to '\u00019' or {'(' ')' '{' ']' '%' '*' '\"' '\\'} ");
-        this.flagName = flagName;
-    }
-
-    private boolean isValid(String flagName) {
+    private static boolean isValid(String flagName) {
         if (StringUtils.isBlank(flagName)) {
             return false;
         }
         if (flagName.length() < FLAG_NAME_MIN_LENGTH || flagName.length() > FLAG_NAME_MAX_LENGTH) {
             return false;
         }
-        if (!FLAG_NAME_PATTERN.matchesAllOf(flagName)) {
+        if (!FLAG_NAME_PATTERN.containsAll(flagName)) {
             return false;
         }
         return true;
+    }
+
+    private final String flagName;
+
+    public Keyword(String flagName) {
+        this.flagName = flagName;
     }
 
     public String getFlagName() {

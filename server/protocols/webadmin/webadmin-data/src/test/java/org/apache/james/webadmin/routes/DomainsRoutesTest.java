@@ -19,13 +19,13 @@
 
 package org.apache.james.webadmin.routes;
 
-import static com.jayway.restassured.RestAssured.given;
-import static com.jayway.restassured.RestAssured.when;
-import static com.jayway.restassured.RestAssured.with;
+import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.when;
+import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -34,6 +34,7 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
@@ -43,17 +44,15 @@ import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.http.ContentType;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 
-import de.bechte.junit.runners.context.HierarchicalContextRunner;
 
-@RunWith(HierarchicalContextRunner.class)
 public class DomainsRoutesTest {
     public static final String DOMAIN = "domain";
 
@@ -71,15 +70,16 @@ public class DomainsRoutesTest {
             .build();
     }
 
-    @After
-    public void stop() {
+    @AfterEach
+    void stop() {
         webAdminServer.destroy();
     }
 
-    public class NormalBehaviour {
+    @Nested
+    class NormalBehaviour {
 
-        @Before
-        public void setUp() throws Exception {
+        @BeforeEach
+        void setUp() throws Exception {
             DNSService dnsService = mock(DNSService.class);
             when(dnsService.getHostName(any())).thenReturn("localhost");
             when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("localhost"));
@@ -90,7 +90,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void getDomainsShouldBeEmptyByDefault() {
+        void getDomainsShouldBeEmptyByDefault() {
             List<String> domains =
                 given()
                     .get()
@@ -106,7 +106,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void putShouldReturnErrorWhenUsedWithEmptyDomain() {
+        void putShouldReturnErrorWhenUsedWithEmptyDomain() {
             given()
                 .put(SEPARATOR)
             .then()
@@ -114,7 +114,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnErrorWhenUsedWithEmptyDomain() {
+        void deleteShouldReturnErrorWhenUsedWithEmptyDomain() {
             given()
                 .delete(SEPARATOR)
             .then()
@@ -122,7 +122,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void putShouldBeOk() {
+        void putShouldBeOk() {
             given()
                 .put(DOMAIN)
             .then()
@@ -130,7 +130,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void getDomainsShouldDisplayAddedDomains() {
+        void getDomainsShouldDisplayAddedDomains() {
             with()
                 .put(DOMAIN);
 
@@ -149,7 +149,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void putShouldReturnUserErrorWhenNameContainsAT() {
+        void putShouldReturnUserErrorWhenNameContainsAT() {
             Map<String, Object> errors = when()
                 .put(DOMAIN + "@" + DOMAIN)
             .then()
@@ -167,7 +167,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void putShouldReturnUserErrorWhenNameContainsUrlSeparator() {
+        void putShouldReturnUserErrorWhenNameContainsUrlSeparator() {
             when()
                 .put(DOMAIN + "/" + DOMAIN)
             .then()
@@ -175,7 +175,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void putShouldReturnUserErrorWhenNameIsTooLong() {
+        void putShouldReturnUserErrorWhenNameIsTooLong() {
             Map<String, Object> errors = when()
                 .put(DOMAIN + "0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789." +
                     "0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789." +
@@ -194,7 +194,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void putShouldWorkOnTheSecondTimeForAGivenValue() {
+        void putShouldWorkOnTheSecondTimeForAGivenValue() {
             with()
                 .put(DOMAIN);
 
@@ -205,7 +205,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void deleteShouldRemoveTheGivenDomain() {
+        void deleteShouldRemoveTheGivenDomain() {
             with()
                 .put(DOMAIN);
 
@@ -229,7 +229,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void deleteShouldBeOkWhenTheDomainIsNotPresent() {
+        void deleteShouldBeOkWhenTheDomainIsNotPresent() {
             given()
                 .delete(DOMAIN)
             .then()
@@ -237,7 +237,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void getDomainShouldReturnOkWhenTheDomainIsPresent() {
+        void getDomainShouldReturnOkWhenTheDomainIsPresent() {
             with()
                 .put(DOMAIN);
 
@@ -248,7 +248,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void getDomainShouldReturnNotFoundWhenTheDomainIsAbsent() {
+        void getDomainShouldReturnNotFoundWhenTheDomainIsAbsent() {
             given()
                 .get(DOMAIN)
             .then()
@@ -257,20 +257,21 @@ public class DomainsRoutesTest {
 
     }
 
-    public class ExceptionHandling {
+    @Nested
+    class ExceptionHandling {
 
         private DomainList domainList;
-        private String domain;
+        private Domain domain;
 
-        @Before
-        public void setUp() throws Exception {
+        @BeforeEach
+        void setUp() throws Exception {
             domainList = mock(DomainList.class);
             createServer(domainList);
-            domain = "domain";
+            domain = Domain.of("domain");
         }
 
         @Test
-        public void deleteShouldReturnErrorOnUnknownException() throws Exception {
+        void deleteShouldReturnErrorOnUnknownException() throws Exception {
             doThrow(new RuntimeException()).when(domainList).removeDomain(domain);
 
             when()
@@ -280,7 +281,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void putShouldReturnErrorOnUnknownException() throws Exception {
+        void putShouldReturnErrorOnUnknownException() throws Exception {
             doThrow(new RuntimeException()).when(domainList).addDomain(domain);
 
             when()
@@ -290,7 +291,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void getDomainShouldReturnErrorOnUnknownException() throws Exception {
+        void getDomainShouldReturnErrorOnUnknownException() throws Exception {
             when(domainList.containsDomain(domain)).thenThrow(new RuntimeException());
 
             when()
@@ -300,7 +301,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void getDomainsShouldReturnErrorOnUnknownException() throws Exception {
+        void getDomainsShouldReturnErrorOnUnknownException() throws Exception {
             when(domainList.getDomains()).thenThrow(new RuntimeException());
 
             when()
@@ -310,7 +311,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnOkWhenDomainListException() throws Exception {
+        void deleteShouldReturnOkWhenDomainListException() throws Exception {
             doThrow(new DomainListException("message")).when(domainList).removeDomain(domain);
 
             when()
@@ -320,7 +321,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void putShouldReturnOkWhenDomainListException() throws Exception {
+        void putShouldReturnOkWhenDomainListException() throws Exception {
             doThrow(new DomainListException("message")).when(domainList).addDomain(domain);
 
             when()
@@ -330,7 +331,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void getDomainShouldReturnErrorOnDomainListException() throws Exception {
+        void getDomainShouldReturnErrorOnDomainListException() throws Exception {
             when(domainList.containsDomain(domain)).thenThrow(new DomainListException("message"));
 
             when()
@@ -340,7 +341,7 @@ public class DomainsRoutesTest {
         }
 
         @Test
-        public void getDomainsShouldReturnErrorOnDomainListException() throws Exception {
+        void getDomainsShouldReturnErrorOnDomainListException() throws Exception {
             when(domainList.getDomains()).thenThrow(new DomainListException("message"));
 
             when()

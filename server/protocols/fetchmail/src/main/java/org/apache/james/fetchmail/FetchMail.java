@@ -112,16 +112,12 @@ public class FetchMail implements Runnable, Configurable {
             setSequenceNumber(sequenceNumber);
         }
 
-        /**
-         * @see java.lang.Object#equals(Object)
-         */
+        @Override
         public boolean equals(Object obj) {
             return null != obj && obj.getClass() == getClass() && (getUserName().equals(((DynamicAccountKey) obj).getUserName()) && getSequenceNumber() == ((DynamicAccountKey) obj).getSequenceNumber());
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
+        @Override
         public int hashCode() {
             return getUserName().hashCode() ^ getSequenceNumber();
         }
@@ -402,9 +398,8 @@ public class FetchMail implements Runnable, Configurable {
      * a new <code>ParsedConfiguration</code>, an <code>Account</code> for each
      * configured static account and a
      * <code>ParsedDynamicAccountParameters</code> for each dynamic account.
-     *
-     * @see org.apache.james.lifecycle.api.Configurable#configure(HierarchicalConfiguration)
      */
+    @Override
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
         // Set any Session parameters passed in the Configuration
         setSessionParameters(configuration);
@@ -459,6 +454,7 @@ public class FetchMail implements Runnable, Configurable {
     /**
      * Method target triggered fetches mail for each configured account.
      */
+    @Override
     public void run() {
         // if we are already fetching then just return
         if (isFetching()) {

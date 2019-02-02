@@ -19,6 +19,7 @@
 package org.apache.james.domainlist.jpa;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.jpa.model.JPADomain;
 import org.apache.james.domainlist.lib.AbstractDomainListTest;
@@ -32,6 +33,7 @@ public class JPADomainListTest extends AbstractDomainListTest {
 
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPADomain.class);
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
@@ -40,7 +42,7 @@ public class JPADomainListTest extends AbstractDomainListTest {
     @After
     public void tearDown() throws Exception {
         DomainList domainList = createDomainList();
-        for (String domain: domainList.getDomains()) {
+        for (Domain domain: domainList.getDomains()) {
             domainList.removeDomain(domain);
         }
     }

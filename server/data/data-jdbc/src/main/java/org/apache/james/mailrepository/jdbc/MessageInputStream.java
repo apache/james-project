@@ -98,6 +98,7 @@ final class MessageInputStream extends InputStream {
 
                 private PipedOutputStream out;
 
+                @Override
                 public void run() {
                     try {
                         writeStream(mail, out, update);
@@ -195,9 +196,7 @@ final class MessageInputStream extends InputStream {
                 throw (IOException) caughtException;
             } else {
                 throw new IOException("Exception caugth in worker thread " + caughtException.getMessage()) {
-                    /**
-                     * @see java.lang.Throwable#getCause()
-                     */
+                    @Override
                     public Throwable getCause() {
                         return caughtException;
                     }
@@ -235,9 +234,7 @@ final class MessageInputStream extends InputStream {
 
     // wrapper methods
 
-    /**
-     * @see java.io.InputStream#available()
-     */
+    @Override
     public int available() throws IOException {
         if (caughtException != null || wrapped == null) {
             throwException();
@@ -245,9 +242,7 @@ final class MessageInputStream extends InputStream {
         return wrapped.available();
     }
 
-    /**
-     * @see java.io.InputStream#close()
-     */
+    @Override
     public void close() throws IOException {
         if (caughtException != null || wrapped == null) {
             throwException();
@@ -256,23 +251,17 @@ final class MessageInputStream extends InputStream {
         wrapped = null;
     }
 
-    /**
-     * @see java.io.InputStream#mark(int)
-     */
+    @Override
     public synchronized void mark(int readLimit) {
         wrapped.mark(readLimit);
     }
 
-    /**
-     * @see java.io.InputStream#markSupported()
-     */
+    @Override
     public boolean markSupported() {
         return wrapped.markSupported();
     }
 
-    /**
-     * @see java.io.InputStream#read(byte[], int, int)
-     */
+    @Override
     public int read(byte[] b, int off, int len) throws IOException {
         if (caughtException != null || wrapped == null) {
             throwException();
@@ -280,9 +269,7 @@ final class MessageInputStream extends InputStream {
         return wrapped.read(b, off, len);
     }
 
-    /**
-     * @see java.io.InputStream#read(byte[])
-     */
+    @Override
     public int read(byte[] b) throws IOException {
         if (caughtException != null || wrapped == null) {
             throwException();
@@ -290,9 +277,7 @@ final class MessageInputStream extends InputStream {
         return wrapped.read(b);
     }
 
-    /**
-     * @see java.io.InputStream#reset()
-     */
+    @Override
     public synchronized void reset() throws IOException {
         if (caughtException != null || wrapped == null) {
             throwException();
@@ -300,9 +285,7 @@ final class MessageInputStream extends InputStream {
         wrapped.reset();
     }
 
-    /**
-     * @see java.io.InputStream#skip(long)
-     */
+    @Override
     public long skip(long n) throws IOException {
         if (caughtException != null || wrapped == null) {
             throwException();
@@ -310,9 +293,7 @@ final class MessageInputStream extends InputStream {
         return wrapped.skip(n);
     }
 
-    /**
-     * @see java.io.InputStream#read()
-     */
+    @Override
     public int read() throws IOException {
         if (caughtException != null || wrapped == null) {
             throwException();

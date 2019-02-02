@@ -19,10 +19,14 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.JPAMailboxFixture;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperTest;
-import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.junit.After;
 import org.junit.Before;
 
@@ -30,16 +34,24 @@ public class JpaMailboxMapperTest extends MailboxMapperTest {
 
     public static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
 
+    private final AtomicInteger counter = new AtomicInteger();
+
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
     }
-    
+
     @Override
-    protected MapperProvider createMapperProvider() {
-        return new JPAMapperProvider(JPA_TEST_CLUSTER);
+    protected MailboxMapper createMailboxMapper() {
+        return new TransactionalMailboxMapper(new JPAMailboxMapper(JPA_TEST_CLUSTER.getEntityManagerFactory()));
     }
-    
+
+    @Override
+    protected MailboxId generateId() {
+        return JPAId.of(counter.incrementAndGet());
+    }
+
     @After
     public void cleanUp() {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);

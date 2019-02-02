@@ -23,6 +23,7 @@ import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.data.MemoryDataJmapModule;
 import org.apache.james.modules.data.MemoryDataModule;
+import org.apache.james.modules.eventstore.MemoryEventStoreModule;
 import org.apache.james.modules.mailbox.MemoryMailboxModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
 import org.apache.james.modules.protocols.JMAPServerModule;
@@ -32,6 +33,7 @@ import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.CamelMailetContainerModule;
+import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
@@ -39,8 +41,11 @@ import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.MemoryMailQueueModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
+import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
+import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
+import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -53,7 +58,9 @@ public class MemoryJamesServerMain {
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
-        new SwaggerRoutesModule());
+        new SwaggerRoutesModule(),
+        new DLPRoutesModule(),
+        new SieveRoutesModule());
 
     public static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),
@@ -61,7 +68,8 @@ public class MemoryJamesServerMain {
         new ManageSieveServerModule(),
         new POP3ServerModule(),
         new ProtocolHandlerModule(),
-        new SMTPServerModule());
+        new SMTPServerModule(),
+        new SpamAssassinListenerModule());
 
     public static final Module JMAP = Modules.combine(
         new MemoryDataJmapModule(),
@@ -69,6 +77,7 @@ public class MemoryJamesServerMain {
 
     public static final Module IN_MEMORY_SERVER_MODULE = Modules.combine(
         new MemoryDataModule(),
+        new MemoryEventStoreModule(),
         new MemoryMailboxModule(),
         new MemoryMailQueueModule(),
         new MailboxModule());
@@ -93,7 +102,11 @@ public class MemoryJamesServerMain {
         WEBADMIN);
 
     public static void main(String[] args) throws Exception {
-        new GuiceJamesServer()
+        Configuration configuration = Configuration.builder()
+            .useWorkingDirectoryEnvProperty()
+            .build();
+
+        GuiceJamesServer.forConfiguration(configuration)
             .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE, new JMXServerModule())
             .start();
     }

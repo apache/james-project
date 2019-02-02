@@ -88,9 +88,7 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
         return lowVal <= value && value <= highVal;
     }
 
-    /**
-     * @see java.lang.Object#hashCode()
-     */
+    @Override
     public int hashCode() {
         final int PRIME = 31;
         int result = 1;
@@ -99,9 +97,7 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
         return result;
     }
 
-    /**
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -187,6 +183,7 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
      * 
      * @return rangeIt
      */
+    @Override
     public Iterator<Long> iterator() {
         long from = getLowVal();
         if (from == Long.MAX_VALUE) {
@@ -210,10 +207,12 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
             this.current = from;
         }
         
+        @Override
         public boolean hasNext() {
             return current <= to;
         }
 
+        @Override
         public Long next() {
             if (hasNext()) {
                 return current++;
@@ -222,12 +221,14 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
             }
         }
 
+        @Override
         public void remove() {
             throw new UnsupportedOperationException("Read-Only");
         }
         
     }
 
+    @Override
     public int compareTo(IdRange range2) {
         // Correctly sort and respect "*" and "*:*" ranges. See IMAP-289
         if (getLowVal() == Long.MAX_VALUE && getHighVal() == Long.MAX_VALUE && range2.getLowVal() == Long.MAX_VALUE && range2.getHighVal() == Long.MAX_VALUE) {

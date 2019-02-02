@@ -117,7 +117,7 @@ public class UidRangeTest {
     
     @Test
     public void mergeZeroRangeShouldOutputZeroRange() {
-        assertThat(UidRange.mergeRanges(ImmutableList.<UidRange>of())).isEmpty();
+        assertThat(UidRange.mergeRanges(ImmutableList.of())).isEmpty();
     }
 
     @Test

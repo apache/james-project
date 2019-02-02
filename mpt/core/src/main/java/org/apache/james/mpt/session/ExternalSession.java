@@ -25,17 +25,17 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.commons.lang.mutable.MutableInt;
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.james.mpt.api.Monitor;
 import org.apache.james.mpt.api.Session;
-
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 
 public final class ExternalSession implements Session {
 
     private static final byte[] CRLF = { '\r', '\n' };
+    public static final int FIVE_SECONDS = 5000;
 
     private final SocketChannel socket;
 
@@ -65,6 +65,7 @@ public final class ExternalSession implements Session {
         this.shabang = shabang;
     }
 
+    @Override
     public String readLine() throws Exception {
         StringBuffer buffer = new StringBuffer();
         readlineInto(buffer);
@@ -138,6 +139,7 @@ public final class ExternalSession implements Session {
         return true;
     }
 
+    @Override
     public void start() throws Exception {
         while (!socket.finishConnect()) {
             monitor.note("connecting...");
@@ -145,15 +147,18 @@ public final class ExternalSession implements Session {
         }
     }
 
+    @Override
     public void restart() throws Exception {
         throw new NotImplementedException("Restart is not implemented for ExternalSession");
     }
 
+    @Override
     public void stop() throws Exception {
         monitor.note("closing");
         socket.close();
     }
 
+    @Override
     public void writeLine(String line) throws Exception {
         monitor.note("-> " + line);
         monitor.debug("[Writing line]");
@@ -166,6 +171,11 @@ public final class ExternalSession implements Session {
             socket.write(lineEndBuffer);
         }
         monitor.debug("[Done]");
+    }
+
+    @Override
+    public void await() throws Exception {
+        Thread.sleep(FIVE_SECONDS);
     }
 
     /**

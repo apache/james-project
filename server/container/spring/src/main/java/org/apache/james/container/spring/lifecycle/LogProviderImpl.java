@@ -55,10 +55,7 @@ public class LogProviderImpl implements LogProvider, InitializingBean, LogProvid
         this.logs = logs;
     }
 
-    /**
-     * @see
-     * org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
+    @Override
     public void afterPropertiesSet() throws Exception {
         if (logs != null) {
             for (String key : logs.keySet()) {
@@ -68,33 +65,23 @@ public class LogProviderImpl implements LogProvider, InitializingBean, LogProvid
         }
     }
 
-    /**
-     * @see
-     * org.apache.james.container.spring.lifecycle.LogProvider#getLog(java.lang.String)
-     */
+    @Override
     public Logger getLog(String name) {
         logMap.putIfAbsent(name, createLog(PREFIX + name));
         return logMap.get(name);
     }
 
-    /**
-     * @see
-     * org.apache.james.container.spring.lifecycle.LogProvider#registerLog(java.lang.String, org.slf4j.Logger)
-     */
+    @Override
     public void registerLog(String beanName, Logger log) {
         logMap.put(beanName, log);
     }
 
-    /**
-     * @see LogProviderManagementMBean#getSupportedLogLevels()
-     */
+    @Override
     public List<String> getSupportedLogLevels() {
         return Arrays.asList("DEBUG", "INFO", "WARN", "ERROR", "OFF");
     }
 
-    /**
-     * @see LogProviderManagementMBean#getLogLevels()
-     */
+    @Override
     public Map<String, String> getLogLevels() {
         TreeMap<String, String> levels = new TreeMap<>();
         for (String name : logMap.keySet()) {
@@ -107,9 +94,7 @@ public class LogProviderImpl implements LogProvider, InitializingBean, LogProvid
 
     }
 
-    /**
-     * @see LogProviderManagementMBean#getLogLevel(java.lang.String)
-     */
+    @Override
     public String getLogLevel(String component) {
         Logger log = logMap.get(component);
         if (log == null) {
@@ -123,9 +108,7 @@ public class LogProviderImpl implements LogProvider, InitializingBean, LogProvid
         return level.toString();
     }
 
-    /**
-     * @see LogProviderManagementMBean#setLogLevel(String, String)
-     */
+    @Override
     public void setLogLevel(String component, String loglevel) {
         if (!getSupportedLogLevels().contains(loglevel)) {
             throw new IllegalArgumentException("Not supported loglevel given");

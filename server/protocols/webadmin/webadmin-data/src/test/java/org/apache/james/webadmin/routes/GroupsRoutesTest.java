@@ -19,59 +19,61 @@
 
 package org.apache.james.webadmin.routes;
 
-import static com.jayway.restassured.RestAssured.given;
-import static com.jayway.restassured.RestAssured.when;
+import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.when;
+import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
 import java.util.List;
 import java.util.Map;
 
+import org.apache.james.core.Domain;
+import org.apache.james.core.User;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mapping;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.dto.MappingSourceModule;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.filter.log.LogDetail;
-import com.jayway.restassured.http.ContentType;
+import io.restassured.RestAssured;
+import io.restassured.filter.log.LogDetail;
+import io.restassured.http.ContentType;
 
-import de.bechte.junit.runners.context.HierarchicalContextRunner;
+class GroupsRoutesTest {
 
-@RunWith(HierarchicalContextRunner.class)
-public class GroupsRoutesTest {
-
-    private static final String DOMAIN = "b.com";
-    private static final String GROUP1 = "group1" + "@" + DOMAIN;
-    private static final String GROUP2 = "group2" + "@" + DOMAIN;
-    private static final String GROUP_WITH_SLASH = "group10/10" + "@" + DOMAIN;
-    private static final String GROUP_WITH_ENCODED_SLASH = "group10%2F10" + "@" + DOMAIN;
-    private static final String USER_A = "a" + "@" + DOMAIN;
-    private static final String USER_B = "b" + "@" + DOMAIN;
-    private static final String USER_WITH_SLASH = "user/@" + DOMAIN;
-    private static final String USER_WITH_ENCODED_SLASH = "user%2F@" + DOMAIN;
+    private static final Domain DOMAIN = Domain.of("b.com");
+    private static final String GROUP1 = "group1" + "@" + DOMAIN.name();
+    private static final String GROUP2 = "group2" + "@" + DOMAIN.name();
+    private static final String GROUP_WITH_SLASH = "group10/10" + "@" + DOMAIN.name();
+    private static final String GROUP_WITH_ENCODED_SLASH = "group10%2F10" + "@" + DOMAIN.name();
+    private static final String USER_A = "a" + "@" + DOMAIN.name();
+    private static final String USER_B = "b" + "@" + DOMAIN.name();
+    private static final String USER_WITH_SLASH = "user/@" + DOMAIN.name();
+    private static final String USER_WITH_ENCODED_SLASH = "user%2F@" + DOMAIN.name();
 
     private WebAdminServer webAdminServer;
 
@@ -83,35 +85,37 @@ public class GroupsRoutesTest {
         webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
-            .setBasePath(GroupsRoutes.ROOT_PATH)
-            .log(LogDetail.ALL)
+            .setBasePath("address/groups")
+            .log(LogDetail.METHOD)
             .build();
     }
 
-    @After
-    public void stop() {
+    @AfterEach
+    void stop() {
         webAdminServer.destroy();
     }
 
-    public class NormalBehaviour {
+    @Nested
+    class NormalBehaviour {
 
         MemoryUsersRepository usersRepository;
         MemoryDomainList domainList;
         MemoryRecipientRewriteTable memoryRecipientRewriteTable;
 
-        @Before
-        public void setUp() throws Exception {
+        @BeforeEach
+        void setUp() throws Exception {
             memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
             DNSService dnsService = mock(DNSService.class);
             domainList = new MemoryDomainList(dnsService);
             domainList.addDomain(DOMAIN);
             usersRepository = MemoryUsersRepository.withVirtualHosting();
             usersRepository.setDomainList(domainList);
-            createServer(new GroupsRoutes(memoryRecipientRewriteTable, usersRepository, domainList, new JsonTransformer()));
+            MappingSourceModule mappingSourceModule = new MappingSourceModule();
+            createServer(new GroupsRoutes(memoryRecipientRewriteTable, usersRepository, domainList, new JsonTransformer(mappingSourceModule)));
         }
 
         @Test
-        public void getGroupsShouldBeEmpty() {
+        void getGroupsShouldBeEmpty() {
             when()
                 .get()
             .then()
@@ -121,7 +125,27 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void getGroupsShouldListExistingGroupsInOrder() {
+        void getShouldNotResolveRecurseGroups() throws Exception {
+            when().put(GROUP1 + SEPARATOR + USER_A);
+
+            memoryRecipientRewriteTable.addForwardMapping(MappingSource.fromUser(User.fromUsername(USER_A)),
+                "b@" + DOMAIN.name());
+
+            List<String> addresses =
+                when()
+                    .get(GROUP1)
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+            assertThat(addresses).containsExactly(USER_A);
+        }
+
+        @Test
+        void getGroupsShouldListExistingGroupsInAlphabeticOrder() {
             given()
                 .put(GROUP2 + SEPARATOR + USER_A);
 
@@ -142,7 +166,18 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void getUnregisteredGroupShouldReturnNotFound() {
+        void putShouldBeIdempotent() {
+            with()
+                .put(GROUP1 + SEPARATOR + USER_A);
+
+            given()
+                .put(GROUP1 + SEPARATOR + USER_A)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
+        void getNotRegisteredGroupShouldReturnNotFound() {
             Map<String, Object> errors = when()
                 .get("unknown@domain.travel")
             .then()
@@ -160,23 +195,63 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putUserInGroupShouldReturnCreated() {
+        void getGroupShouldReturnNotFoundWhenNonGroupMappings() {
+            memoryRecipientRewriteTable.addMapping(
+                MappingSource.fromDomain(DOMAIN),
+                Mapping.domain(Domain.of("target.tld")));
+
+            Map<String, Object> errors = when()
+                .get(GROUP1)
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "The group does not exist");
+        }
+
+        @Test
+        void getGroupShouldReturnNotFoundWhenNoGroupMappings() {
+            Map<String, Object> errors = when()
+                .get(GROUP1)
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "The group does not exist");
+        }
+
+        @Test
+        void putUserInGroupShouldReturnNoContent() {
             when()
                 .put(GROUP1 + SEPARATOR + USER_A)
             .then()
-                .statusCode(HttpStatus.CREATED_201);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
-        public void putUserWithSlashInGroupShouldReturnCreated() {
+        void putUserWithSlashInGroupShouldReturnNoContent() {
             when()
                 .put(GROUP1 + SEPARATOR + USER_WITH_ENCODED_SLASH)
             .then()
-                .statusCode(HttpStatus.CREATED_201);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
-        public void putUserWithSlashInGroupShouldCreateUser() {
+        void putUserWithSlashInGroupShouldCreateUser() {
             when()
                 .put(GROUP1 + SEPARATOR + USER_WITH_ENCODED_SLASH);
 
@@ -194,7 +269,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putUserInGroupShouldCreateGroup() {
+        void putUserInGroupShouldCreateGroup() {
             when()
                 .put(GROUP1 + SEPARATOR + USER_A);
 
@@ -212,15 +287,15 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putUserInGroupWithEncodedSlashShouldReturnCreated() {
+        void putUserInGroupWithEncodedSlashShouldReturnNoContent() {
             when()
                 .put(GROUP_WITH_ENCODED_SLASH + SEPARATOR + USER_A)
             .then()
-                .statusCode(HttpStatus.CREATED_201);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
-        public void putUserInGroupWithEncodedSlashShouldCreateGroup() {
+        void putUserInGroupWithEncodedSlashShouldCreateGroup() {
             when()
                 .put(GROUP_WITH_ENCODED_SLASH + SEPARATOR + USER_A);
 
@@ -238,7 +313,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putSameUserInGroupTwiceShouldBeIdempotent() {
+        void putSameUserInGroupTwiceShouldBeIdempotent() {
             given()
                 .put(GROUP1 + SEPARATOR + USER_A);
 
@@ -259,7 +334,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putUserInGroupShouldAllowSeveralUsers() {
+        void putUserInGroupShouldAllowSeveralUsers() {
             given()
                 .put(GROUP1 + SEPARATOR + USER_A);
 
@@ -280,7 +355,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putUserInGroupShouldNotAllowGroupOnUnregisteredDomain() throws UsersRepositoryException, DomainListException {
+        void putUserInGroupShouldNotAllowGroupOnUnregisteredDomain() {
             Map<String, Object> errors = when()
                 .put("group@unregisteredDomain" + SEPARATOR + USER_A)
             .then()
@@ -297,9 +372,8 @@ public class GroupsRoutesTest {
                 .containsEntry("message", "Server doesn't own the domain: unregisteredDomain");
         }
 
-
         @Test
-        public void putUserInGroupShouldNotAllowUserShadowing() throws UsersRepositoryException, DomainListException {
+        void putUserInGroupShouldNotAllowUserShadowing() throws UsersRepositoryException {
             usersRepository.addUser(USER_A, "whatever");
 
             Map<String, Object> errors = when()
@@ -319,7 +393,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void getGroupShouldReturnMembersInOrder() {
+        void getGroupShouldReturnMembersInAlphabeticOrder() {
             given()
                 .put(GROUP1 + SEPARATOR + USER_B);
 
@@ -341,15 +415,15 @@ public class GroupsRoutesTest {
 
 
         @Test
-        public void deleteUserNotInGroupShouldReturnOK() {
+        void deleteUserNotInGroupShouldReturnOK() {
             when()
                 .delete(GROUP1 + SEPARATOR + USER_A)
             .then()
-                .statusCode(HttpStatus.OK_200);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
-        public void deleteLastUserInGroupShouldDeleteGroup() {
+        void deleteLastUserInGroupShouldDeleteGroup() {
             given()
                 .put(GROUP1 + SEPARATOR + USER_A);
 
@@ -365,34 +439,36 @@ public class GroupsRoutesTest {
         }
     }
 
-    public class FilteringOtherRewriteRuleTypes extends NormalBehaviour {
+    @Nested
+    class FilteringOtherRewriteRuleTypes extends NormalBehaviour {
 
-        @Before
-        public void setup() throws Exception {
+        @BeforeEach
+        void setup() throws Exception {
             super.setUp();
-            memoryRecipientRewriteTable.addErrorMapping("error", DOMAIN, "disabled");
-            memoryRecipientRewriteTable.addRegexMapping("regex", DOMAIN, ".*@b\\.com");
-            memoryRecipientRewriteTable.addAliasDomainMapping("alias", DOMAIN);
+            memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser("error", DOMAIN), "disabled");
+            memoryRecipientRewriteTable.addRegexMapping(MappingSource.fromUser("regex", DOMAIN), ".*@b\\.com");
+            memoryRecipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(Domain.of("alias")), DOMAIN);
 
         }
 
     }
 
-    public class ExceptionHandling {
+    @Nested
+    class ExceptionHandling {
 
         private RecipientRewriteTable memoryRecipientRewriteTable;
 
-        @Before
-        public void setUp() throws Exception {
+        @BeforeEach
+        void setUp() throws Exception {
             memoryRecipientRewriteTable = mock(RecipientRewriteTable.class);
             UsersRepository userRepository = mock(UsersRepository.class);
             DomainList domainList = mock(DomainList.class);
-            Mockito.when(domainList.containsDomain(anyString())).thenReturn(true);
+            Mockito.when(domainList.containsDomain(any())).thenReturn(true);
             createServer(new GroupsRoutes(memoryRecipientRewriteTable, userRepository, domainList, new JsonTransformer()));
         }
 
         @Test
-        public void getMalformedGroupShouldReturnBadRequest() {
+        void getMalformedGroupShouldReturnBadRequest() {
             Map<String, Object> errors = when()
                 .get("not-an-address")
             .then()
@@ -407,11 +483,11 @@ public class GroupsRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
-                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
-        public void putMalformedGroupShouldReturnBadRequest() {
+        void putMalformedGroupShouldReturnBadRequest() {
             Map<String, Object> errors = when()
                 .put("not-an-address" + SEPARATOR + USER_A)
             .then()
@@ -426,29 +502,27 @@ public class GroupsRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
-                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
-        public void putUserInGroupWithSlashShouldReturnNotFound() {
+        void putUserInGroupWithSlashShouldReturnNotFound() {
             when()
                 .put(GROUP_WITH_SLASH + SEPARATOR + USER_A)
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .body(containsString("404 Not found"));
+                .statusCode(HttpStatus.NOT_FOUND_404);
         }
 
         @Test
-        public void putUserWithSlashInGroupShouldReturnNotFound() {
+        void putUserWithSlashInGroupShouldReturnNotFound() {
             when()
                 .put(GROUP1 + SEPARATOR + USER_WITH_SLASH)
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .body(containsString("404 Not found"));
+                .statusCode(HttpStatus.NOT_FOUND_404);
         }
 
         @Test
-        public void putMalformedAddressShouldReturnBadRequest() {
+        void putMalformedAddressShouldReturnBadRequest() {
             Map<String, Object> errors = when()
                 .put(GROUP1 + SEPARATOR + "not-an-address")
             .then()
@@ -463,11 +537,11 @@ public class GroupsRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
-                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
-        public void putRequiresTwoPathParams() {
+        void putRequiresTwoPathParams() {
             when()
                 .put(GROUP1)
             .then()
@@ -476,7 +550,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void deleteMalformedGroupShouldReturnBadRequest() {
+        void deleteMalformedGroupShouldReturnBadRequest() {
             Map<String, Object> errors = when()
                 .delete("not-an-address" + SEPARATOR + USER_A)
             .then()
@@ -491,11 +565,11 @@ public class GroupsRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
-                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
-        public void deleteMalformedAddressShouldReturnBadRequest() {
+        void deleteMalformedAddressShouldReturnBadRequest() {
             Map<String, Object> errors = when()
                 .delete(GROUP1 + SEPARATOR + "not-an-address")
             .then()
@@ -510,11 +584,11 @@ public class GroupsRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
-                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
-        public void deleteRequiresTwoPathParams() {
+        void deleteRequiresTwoPathParams() {
             when()
                 .delete(GROUP1)
             .then()
@@ -523,159 +597,99 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
+        void putShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .addAddressMapping(anyString(), anyString(), anyString());
+                .addGroupMapping(any(), anyString());
 
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
-        public void putShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
-            doThrow(RecipientRewriteTable.ErrorMappingException.class)
+        void putShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
+            doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .addAddressMapping(anyString(), anyString(), anyString());
+                .addGroupMapping(any(), anyString());
 
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
-        public void putShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
-            doThrow(RuntimeException.class)
-                .when(memoryRecipientRewriteTable)
-                .addAddressMapping(anyString(), anyString(), anyString());
-
-            when()
-                .put(GROUP1 + SEPARATOR + GROUP2)
-            .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
-        }
-
-        @Test
-        public void getAllShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
+        void getAllShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .getAllMappings();
+                .getSourcesForType(any());
 
             when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
-        public void getAllShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
-            doThrow(RecipientRewriteTable.ErrorMappingException.class)
+        void getAllShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
+            doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .getAllMappings();
+                .getSourcesForType(any());
 
             when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
-        public void getAllShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
-            doThrow(RuntimeException.class)
-                .when(memoryRecipientRewriteTable)
-                .getAllMappings();
-
-            when()
-                .get()
-            .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
-        }
-
-        @Test
-        public void deleteShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
+        void deleteShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .removeAddressMapping(anyString(), anyString(), anyString());
+                .removeGroupMapping(any(), anyString());
 
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
-        public void deleteShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
-            doThrow(RecipientRewriteTable.ErrorMappingException.class)
-                .when(memoryRecipientRewriteTable)
-                .removeAddressMapping(anyString(), anyString(), anyString());
-
-            when()
-                .delete(GROUP1 + SEPARATOR + GROUP2)
-            .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
-        }
-
-        @Test
-        public void deleteShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
+        void deleteShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .removeAddressMapping(anyString(), anyString(), anyString());
+                .removeGroupMapping(any(), anyString());
 
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
-        public void getShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
+        void getShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .getMappings(anyString(), anyString());
+                .getStoredMappings(any());
 
             when()
                 .get(GROUP1)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
-        public void getShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
-            doThrow(RecipientRewriteTable.ErrorMappingException.class)
-                .when(memoryRecipientRewriteTable)
-                .getMappings(anyString(), anyString());
-
-            when()
-                .get(GROUP1)
-            .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
-        }
-
-        @Test
-        public void getShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
+        void getShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .getMappings(anyString(), anyString());
+                .getStoredMappings(any());
 
             when()
                 .get(GROUP1)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
     }
 

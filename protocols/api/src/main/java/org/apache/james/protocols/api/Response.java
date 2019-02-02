@@ -34,15 +34,18 @@ public interface Response {
      */
     Response DISCONNECT = new Response() {
 
+        @Override
         public String getRetCode() {
             return "";
         }
 
+        @Override
         @SuppressWarnings("unchecked")
         public List<CharSequence> getLines() {
             return Collections.EMPTY_LIST;
         }
 
+        @Override
         public boolean isEndSession() {
             return true;
         }

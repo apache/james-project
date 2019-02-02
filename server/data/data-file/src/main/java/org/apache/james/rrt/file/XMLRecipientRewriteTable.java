@@ -20,16 +20,20 @@ package org.apache.james.rrt.file;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mapping;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 /**
@@ -40,7 +44,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     /**
      * Holds the configured mappings
      */
-    private Map<String, String> mappings;
+    private Map<MappingSource, String> mappings;
 
     @Override
     protected void doConfigure(HierarchicalConfiguration arg0) throws ConfigurationException {
@@ -56,48 +60,41 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected String mapAddressInternal(String user, String domain) throws RecipientRewriteTableException {
-        if (mappings == null) {
-            return null;
-        } else {
-            return RecipientRewriteTableUtil.getTargetString(user, domain, mappings);
-        }
+    protected Mappings mapAddress(String user, Domain domain) {
+        return Optional.ofNullable(mappings)
+            .map(mappings -> RecipientRewriteTableUtil.getTargetString(user, domain, mappings))
+            .map(MappingsImpl::fromRawString)
+            .orElse(MappingsImpl.empty());
     }
 
     @Override
-    protected Mappings getUserDomainMappingsInternal(String user, String domain) throws RecipientRewriteTableException {
-        if (mappings == null) {
-            return null;
-        } else {
-            String maps = mappings.get(user + "@" + domain);
-            if (maps != null) {
-                return MappingsImpl.fromRawString(maps);
-            } else {
-                return null;
-            }
-        }
+    public Mappings getStoredMappings(MappingSource source) {
+        return Optional.ofNullable(mappings)
+            .map(mappings -> mappings.get(source))
+            .map(MappingsImpl::fromRawString)
+            .orElse(MappingsImpl.empty());
     }
 
     @Override
-    protected Map<String, Mappings> getAllMappingsInternal() throws RecipientRewriteTableException {
+    public Map<MappingSource, Mappings> getAllMappings() {
         if (mappings != null && mappings.size() > 0) {
-            Map<String, Mappings> mappingsNew = new HashMap<>();
-            for (String key : mappings.keySet()) {
+            Map<MappingSource, Mappings> mappingsNew = new HashMap<>();
+            for (MappingSource key : mappings.keySet()) {
                 mappingsNew.put(key, MappingsImpl.fromRawString(mappings.get(key)));
             }
             return mappingsNew;
         } else {
-            return null;
+            return ImmutableMap.of();
         }
     }
 
     @Override
-    protected void addMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
+    public void addMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only implementation");
     }
 
     @Override
-    protected void removeMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
+    public void removeMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only implementation");
     }
 }

@@ -47,28 +47,27 @@
 
 
         <processor state="transport" enableJmx="false">
-            <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
-                <name>X-UserIsAuth</name>
-                <value>true</value>
-            </mailet>
+            <matcher name="relay-allowed" match="org.apache.james.mailetcontainer.impl.matchers.Or">
+                <matcher match="SMTPAuthSuccessful"/>
+                <matcher match="SMTPIsAuthNetwork"/>
+                <matcher match="SentByMailet"/>
+                <matcher match="org.apache.james.jmap.mailet.SentByJmap"/>
+            </matcher>
+
             <mailet match="All" class="RemoveMimeHeader">
                 <name>bcc</name>
             </mailet>
             <mailet match="All" class="RecipientRewriteTable" />
             <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
             <mailet match="RecipientIsLocal" class="Sieve"/>
+            <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.filter.JMAPFiltering"/>
             <mailet match="RecipientIsLocal" class="LocalDelivery"/>
             <mailet match="HostIsLocal" class="ToProcessor">
                 <processor>local-address-error</processor>
                 <notice>550 - Requested action not taken: no such user here</notice>
             </mailet>
-            <mailet match="SMTPAuthSuccessful" class="SetMailAttribute">
-                <RelayAllowed>true</RelayAllowed>
-            </mailet>
-            <mailet match="SentByMailet" class="SetMailAttribute">
-                <RelayAllowed>true</RelayAllowed>
-            </mailet>
-            <mailet match="HasMailAttribute=RelayAllowed" class="RemoteDelivery">
+
+            <mailet match="relay-allowed" class="RemoteDelivery">
                 <outgoingQueue>outgoing</outgoingQueue>
                 <delayTime>5000, 100000, 500000</delayTime>
                 <maxRetries>25</maxRetries>
@@ -79,12 +78,6 @@
             </mailet>
             <mailet match="All" class="ToProcessor">
                 <processor>relay-denied</processor>
-            </mailet>
-        </processor>
-
-        <processor state="spam" enableJmx="false">
-            <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/spam/</repositoryPath>
             </mailet>
         </processor>
 

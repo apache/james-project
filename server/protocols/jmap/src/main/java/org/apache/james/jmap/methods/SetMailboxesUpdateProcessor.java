@@ -37,11 +37,11 @@ import org.apache.james.jmap.model.SetMailboxesResponse.Builder;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.MailboxUpdateRequest;
 import org.apache.james.jmap.model.mailbox.Rights.Username;
-import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.utils.MailboxUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.DifferentDomainException;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -107,58 +107,58 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
 
         } catch (SystemMailboxNotUpdatableException e) {
             responseBuilder.notUpdated(mailboxId, SetError.builder()
-                    .type("invalidArguments")
+                    .type(SetError.Type.INVALID_ARGUMENTS)
                     .description("Cannot update a system mailbox.")
                     .build());
         } catch (TooLongMailboxNameException e) {
             responseBuilder.notUpdated(mailboxId, SetError.builder()
-                .type("invalidArguments")
+                .type(SetError.Type.INVALID_ARGUMENTS)
                 .description("The mailbox name length is too long")
                 .build());
         } catch (MailboxNameException e) {
             responseBuilder.notUpdated(mailboxId, SetError.builder()
-                    .type("invalidArguments")
+                    .type(SetError.Type.INVALID_ARGUMENTS)
                     .description(e.getMessage())
                     .build());
         } catch (MailboxNotFoundException e) {
             responseBuilder.notUpdated(mailboxId, SetError.builder()
-                    .type("notFound")
+                    .type(SetError.Type.NOT_FOUND)
                     .description(String.format("The mailbox '%s' was not found", mailboxId.serialize()))
                     .build());
         } catch (MailboxParentNotFoundException e) {
             responseBuilder.notUpdated(mailboxId, SetError.builder()
-                    .type("notFound")
+                    .type(SetError.Type.NOT_FOUND)
                     .description(String.format("The parent mailbox '%s' was not found.", e.getParentId()))
                     .build());
         } catch (MailboxHasChildException e) {
             responseBuilder.notUpdated(mailboxId, SetError.builder()
-                    .type("invalidArguments")
+                    .type(SetError.Type.INVALID_ARGUMENTS)
                     .description("Cannot update a parent mailbox.")
                     .build());
         } catch (MailboxNotOwnedException e) {
             responseBuilder.notUpdated(mailboxId, SetError.builder()
-                    .type("invalidArguments")
+                    .type(SetError.Type.INVALID_ARGUMENTS)
                     .description("Parent mailbox is not owned.")
                     .build());
         } catch (MailboxExistsException e) {
             responseBuilder.notUpdated(mailboxId, SetError.builder()
-                    .type("invalidArguments")
+                    .type(SetError.Type.INVALID_ARGUMENTS)
                     .description("Cannot rename a mailbox to an already existing mailbox.")
                     .build());
         } catch (DifferentDomainException e) {
             responseBuilder.notUpdated(mailboxId, SetError.builder()
-                .type("invalidArguments")
+                .type(SetError.Type.INVALID_ARGUMENTS)
                 .description("Cannot share a mailbox to another domain")
                 .build());
         } catch (IllegalArgumentException e) {
             responseBuilder.notUpdated(mailboxId, SetError.builder()
-                .type("invalidArguments")
+                .type(SetError.Type.INVALID_ARGUMENTS)
                 .description(e.getMessage())
                 .build());
         } catch (MailboxException e) {
             LOGGER.error("Error while updating mailbox", e);
             responseBuilder.notUpdated(mailboxId, SetError.builder()
-                    .type("anErrorOccurred")
+                    .type(SetError.Type.ERROR)
                     .description("An error occurred when updating the mailbox")
                     .build());
         }
@@ -284,7 +284,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
         Optional<MailboxId> parentId = updateRequest.getParentId();
         if (parentId == null) {
             return MailboxPath.forUser(
-                mailboxSession.getUser().getUserName(),
+                mailboxSession.getUser().asString(),
                 updateRequest.getName().orElse(mailbox.getName()));
         }
 

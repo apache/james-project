@@ -184,7 +184,8 @@ public class FilterToSearchQueryTest {
                 SearchQuery.address(AddressType.Bcc, text),
                 SearchQuery.headerContains("Subject", text),
                 SearchQuery.bodyContains(text),
-                SearchQuery.attachmentContains(text))));
+                SearchQuery.attachmentContains(text),
+                SearchQuery.attachmentFileName(text))));
 
         SearchQuery searchQuery = new FilterToSearchQuery().convert(FilterCondition.builder()
                 .text(text)
@@ -539,5 +540,17 @@ public class FilterToSearchQueryTest {
                 .build());
 
         assertThat(searchQuery).isEqualTo(expectedSearchQuery);
+    }
+
+    @Test
+    public void attachmentFileNameShouldMapWhenHasAttachmentFileName() {
+        String fileName = "file.gz";
+
+        SearchQuery expectedResult = new SearchQuery(SearchQuery.attachmentFileName(fileName));
+
+        assertThat(new FilterToSearchQuery().convert(FilterCondition.builder()
+            .attachmentFileName(Optional.of(fileName))
+            .build()))
+            .isEqualTo(expectedResult);
     }
 }

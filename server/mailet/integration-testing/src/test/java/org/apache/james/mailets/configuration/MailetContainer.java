@@ -104,7 +104,7 @@ public class MailetContainer implements SerializableAsXml {
     public String serializeAsXml() {
         StringBuilder builder = new StringBuilder();
         builder.append("<?xml version=\"1.0\"?>\n")
-            .append("<mailetcontainer enableJmx=\"true\">\n")
+            .append("<mailetcontainer enableJmx=\"false\">\n")
             .append("<context><postmaster>").append(getPostmaster()).append("</postmaster>").append("</context>\n")
             .append("<spooler><threads>").append(getThreads()).append("</threads>").append("</spooler>\n")
             .append("<processors>\n");

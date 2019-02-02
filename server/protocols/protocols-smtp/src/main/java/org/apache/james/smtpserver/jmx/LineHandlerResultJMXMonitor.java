@@ -24,10 +24,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
 
 public class LineHandlerResultJMXMonitor extends AbstractLineHandlerResultJMXMonitor<SMTPResponse, SMTPSession> {
 
-    /**
-     * @see
-     * org.apache.james.protocols.lib.jmx.AbstractLineHandlerResultJMXMonitor#getDefaultJMXName()
-     */
+    @Override
     protected String getDefaultJMXName() {
         return "smtpserver";
     }

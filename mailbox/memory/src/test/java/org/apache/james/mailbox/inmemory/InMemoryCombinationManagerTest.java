@@ -25,6 +25,7 @@ import org.junit.Before;
 
 public class InMemoryCombinationManagerTest extends AbstractCombinationManagerTest {
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();

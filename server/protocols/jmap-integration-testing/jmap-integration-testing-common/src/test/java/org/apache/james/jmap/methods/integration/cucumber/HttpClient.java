@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
+import static org.apache.james.jmap.JmapURIBuilder.baseUri;
+
 import javax.inject.Inject;
 
 import org.apache.http.HttpResponse;
@@ -43,7 +45,7 @@ public class HttpClient {
     }
 
     public void post(String requestBody) throws Exception {
-        response = Request.Post(mainStepdefs.baseUri().setPath("/jmap").build())
+        response = Request.Post(baseUri(mainStepdefs.jmapServer).setPath("/jmap").build())
             .addHeader("Authorization", userStepdefs.authenticate(userStepdefs.getConnectedUser()).serialize())
             .addHeader("Accept", org.apache.http.entity.ContentType.APPLICATION_JSON.getMimeType())
             .bodyString(requestBody, org.apache.http.entity.ContentType.APPLICATION_JSON)

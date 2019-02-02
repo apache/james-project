@@ -24,14 +24,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 
 import org.apache.camel.Body;
-import org.apache.camel.ExchangeProperty;
 import org.apache.camel.Handler;
 import org.apache.camel.InOnly;
 import org.apache.james.core.MailAddress;
+import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.impl.ProcessorUtil;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
 import org.apache.james.metrics.api.MetricFactory;
@@ -56,36 +57,32 @@ public class MatcherSplitter {
     /** Headername which is used to indicate that the matcher matched */
     public static final String MATCHER_MATCHED_ATTRIBUTE = "matched";
 
-    /** Headername under which the matcher is stored */
-    public static final String MATCHER_PROPERTY = "matcher";
+    private final MetricFactory metricFactory;
+    private final CamelMailetProcessor container;
+    private final Matcher matcher;
+    private final String onMatchException;
 
-    public static final String ON_MATCH_EXCEPTION_PROPERTY = "onMatchException";
-
-    public static final String LOGGER_PROPERTY = "logger";
-
-    public static final String MAILETCONTAINER_PROPERTY = "container";
-
-    public static final String METRIC_FACTORY = "metricFactory";
+    public MatcherSplitter(MetricFactory metricFactory, CamelMailetProcessor container, MatcherMailetPair pair) {
+        this.metricFactory = metricFactory;
+        this.container = container;
+        this.matcher = pair.getMatcher();
+        this.onMatchException = Optional.ofNullable(pair.getOnMatchException())
+            .map(s -> s.trim().toLowerCase(Locale.US))
+            .orElse(Mail.ERROR);
+    }
 
     /**
      * Generate a List of MailMessage instances for the give @Body. This is done
      * by using the given Matcher to see if we need more then one instance of
      * the MailMessage
-     * 
-     * @param matcher
-     *            Matcher to use for splitting
+     *
      * @param mail
      *            Mail which is stored in the @Body of the MailMessage
      * @return mailMessageList
      * @throws MessagingException
      */
     @Handler
-    public List<Mail> split(@ExchangeProperty(MATCHER_PROPERTY) Matcher matcher,
-                            @ExchangeProperty(ON_MATCH_EXCEPTION_PROPERTY) String onMatchException,
-                            @ExchangeProperty(LOGGER_PROPERTY) Logger logger,
-                            @ExchangeProperty(MAILETCONTAINER_PROPERTY) CamelMailetProcessor container,
-                            @ExchangeProperty(METRIC_FACTORY) MetricFactory metricFactory,
-                            @Body Mail mail) throws MessagingException {
+    public List<Mail> split(@Body Mail mail) throws MessagingException {
         Collection<MailAddress> matchedRcpts = null;
         Collection<MailAddress> origRcpts = new ArrayList<>(mail.getRecipients());
         long start = System.currentTimeMillis();
@@ -106,7 +103,7 @@ public class MatcherSplitter {
                          .addContext("state", mail.getState())
                          .addContext("mail", mail.getName())
                          .addContext("recipients", ImmutableList.copyOf(mail.getRecipients()))
-                         .addContext("sender", mail.getSender())
+                         .addContext("sender", mail.getMaybeSender())
                          .build()) {
                 // call the matcher
                 matchedRcpts = matcher.match(mail);
@@ -122,11 +119,6 @@ public class MatcherSplitter {
 
             } catch (Exception me) {
                 ex = me;
-                if (onMatchException == null) {
-                    onMatchException = Mail.ERROR;
-                } else {
-                    onMatchException = onMatchException.trim().toLowerCase(Locale.US);
-                }
                 if (onMatchException.equalsIgnoreCase("nomatch")) {
                     // In case the matcher returned null, create an empty
                     // Collection
@@ -137,7 +129,7 @@ public class MatcherSplitter {
                     matchedRcpts = mail.getRecipients();
                     // no need to verify addresses
                 } else {
-                    ProcessorUtil.handleException(me, mail, matcher.getMatcherConfig().getMatcherName(), onMatchException, logger);
+                    ProcessorUtil.handleException(me, mail, matcher.getMatcherConfig().getMatcherName(), onMatchException, LOGGER);
                 }
             }
 

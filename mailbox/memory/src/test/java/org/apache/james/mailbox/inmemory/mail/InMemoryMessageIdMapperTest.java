@@ -26,6 +26,7 @@ import org.junit.Before;
 
 public class InMemoryMessageIdMapperTest extends MessageIdMapperTest {
 
+    @Override
     @Before
     public void setUp() throws MailboxException {
         super.setUp();

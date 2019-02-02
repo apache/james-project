@@ -23,43 +23,48 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-server</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>james-server-cli-integration</artifactId>
-    <name>Apache James :: Server :: Cli :: Integretion</name>
+    <name>Apache James :: Server :: Cli :: Integration</name>
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-cli</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-jmap</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-memory-guice</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-memory-guice</artifactId>
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.github.fge</groupId>
             <artifactId>throwing-lambdas</artifactId>
@@ -77,11 +82,6 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 

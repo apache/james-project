@@ -23,6 +23,8 @@ import spark.Service;
 
 public interface Routes {
 
+    String getBasePath();
+
     void define(Service service);
 
 }

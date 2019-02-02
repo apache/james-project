@@ -18,37 +18,41 @@
  ****************************************************************/
 package org.apache.james.mailbox;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.mail.Flags;
-
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;
 
-public abstract class MailboxManagerStressTest {
+public abstract class MailboxManagerStressTest<T extends MailboxManager> {
 
     private static final int APPEND_OPERATIONS = 200;
 
-    private MailboxManager mailboxManager;
+    private T mailboxManager;
 
-    protected abstract MailboxManager provideManager() throws MailboxException;
+    protected abstract T provideManager() throws MailboxException;
 
+    protected abstract EventBus retrieveEventBus(T mailboxManager);
     
     public void setUp() throws Exception {
         this.mailboxManager = provideManager();
@@ -56,40 +60,28 @@ public abstract class MailboxManagerStressTest {
 
     @Test
     public void testStressTest() throws InterruptedException, MailboxException {
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
 
-        final CountDownLatch latch = new CountDownLatch(APPEND_OPERATIONS);
-        final ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 20);
-        final Collection<MessageUid> uList = new ConcurrentLinkedDeque<>();
-        final String username = "username";
+        CountDownLatch latch = new CountDownLatch(APPEND_OPERATIONS);
+        ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 20, threadFactory);
+        Collection<MessageUid> uList = new ConcurrentLinkedDeque<>();
+        String username = "username";
         MailboxSession session = mailboxManager.createSystemSession(username);
         mailboxManager.startProcessingRequest(session);
-        final MailboxPath path = MailboxPath.forUser(username, "INBOX");
-        mailboxManager.createMailbox(path, session);
-        mailboxManager.addListener(path, new MailboxListener() {
-
-            @Override
-            public ListenerType getType() {
-                return ListenerType.MAILBOX;
-            }
-
-            @Override
-            public ExecutionMode getExecutionMode() {
-                return ExecutionMode.SYNCHRONOUS;
-            }
-
-            @Override
-            public void event(Event event) {
-                MessageUid u = ((Added) event).getUids().get(0);
+        MailboxPath path = MailboxPath.forUser(username, "INBOX");
+        MailboxId mailboxId = mailboxManager.createMailbox(path, session).get();
+        retrieveEventBus(mailboxManager).register(
+            event -> {
+                MessageUid u = ((MailboxListener.Added) event).getUids().iterator().next();
                 uList.add(u);
-            }
-        }, session);
+            }, new MailboxIdRegistrationKey(mailboxId));
         mailboxManager.endProcessingRequest(session);
         mailboxManager.logout(session, false);
 
         final AtomicBoolean fail = new AtomicBoolean(false);
         final ConcurrentHashMap<MessageUid, Object> uids = new ConcurrentHashMap<>();
 
-        // fire of 1000 append operations
+        // fire of append operations
         for (int i = 0; i < APPEND_OPERATIONS; i++) {
             pool.execute(() -> {
                 if (fail.get()) {
@@ -103,7 +95,11 @@ public abstract class MailboxManagerStressTest {
 
                     mailboxManager.startProcessingRequest(mailboxSession);
                     MessageManager m = mailboxManager.getMailbox(path, mailboxSession);
-                    ComposedMessageId messageId = m.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, new Flags());
+                    ComposedMessageId messageId = m.appendMessage(
+                        MessageManager.AppendCommand
+                            .from(Message.Builder.of()
+                                .setSubject("test")
+                                .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
 
                     System.out.println("Append message with uid=" + messageId.getUid());
                     if (uids.put(messageId.getUid(), new Object()) != null) {
@@ -128,8 +124,8 @@ public abstract class MailboxManagerStressTest {
         // For mailboxes without locks, even if the UID is monotic, as re-scheduling can happen between UID generation and event delivery,
         // we can not check the order on the event listener
         // No UID duplicates prevents message loss
-        assertEquals(APPEND_OPERATIONS, ImmutableSet.copyOf(uList).size());
-        assertFalse("Unable to append all messages", fail.get());
+        assertThat(ImmutableSet.copyOf(uList).size()).isEqualTo(APPEND_OPERATIONS);
+        assertThat(fail.get()).describedAs("Unable to append all messages").isFalse();
         pool.shutdown();
     }
 }

@@ -42,10 +42,12 @@ import org.apache.mailet.base.RFC2822Headers;
 public class RelayLimit extends GenericMatcher {
     int limit = 30;
 
+    @Override
     public void init() throws MessagingException {
         limit = MailetUtil.getInitParameterAsStrictlyPositiveInteger(getCondition());
     }
 
+    @Override
     public Collection<MailAddress> match(Mail mail) throws javax.mail.MessagingException {
         MimeMessage mm = mail.getMessage();
         int count = 0;

@@ -25,210 +25,199 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule;
 import org.apache.james.mailbox.model.MessageRange;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.steveash.guavate.Guavate;
+class CassandraDeletedMessageDAOTest {
+    private static final CassandraId MAILBOX_ID = CassandraId.of(UUID.fromString("110e8400-e29b-11d4-a716-446655440000"));
+    private static final MessageUid UID_1 = MessageUid.of(1);
+    private static final MessageUid UID_2 = MessageUid.of(2);
+    private static final MessageUid UID_3 = MessageUid.of(3);
+    private static final MessageUid UID_4 = MessageUid.of(4);
+    private static final MessageUid UID_7 = MessageUid.of(7);
+    private static final MessageUid UID_8 = MessageUid.of(8);
 
-public class CassandraDeletedMessageDAOTest {
-    
-    public static final CassandraId MAILBOX_ID = CassandraId.of(UUID.fromString("110e8400-e29b-11d4-a716-446655440000"));
-    public static final MessageUid UID_1 = MessageUid.of(1);
-    public static final MessageUid UID_2 = MessageUid.of(2);
-    public static final MessageUid UID_3 = MessageUid.of(3);
-    public static final MessageUid UID_4 = MessageUid.of(4);
-    public static final MessageUid UID_7 = MessageUid.of(7);
-    public static final MessageUid UID_8 = MessageUid.of(8);
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDeletedMessageModule.MODULE);
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
     private CassandraDeletedMessageDAO testee;
 
-    @Before
-    public void setUp() {
-        cassandra = CassandraCluster.create(
-            new CassandraDeletedMessageModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         testee = new CassandraDeletedMessageDAO(cassandra.getConf());
     }
 
-    @After
-    public void tearDown() {
-        cassandra.close();
-    }
-
     @Test
-    public void retrieveDeletedMessageShouldReturnEmptyByDefault() {
+    void retrieveDeletedMessageShouldReturnEmptyByDefault() {
         List<MessageUid> result = testee
             .retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
-            .join()
-            .collect(Guavate.toImmutableList());
+                .collectList()
+                .block();
 
         assertThat(result).isEmpty();
     }
 
     @Test
-    public void addDeletedMessageShouldThenBeReportedAsDeletedMessage() {
-        testee.addDeleted(MAILBOX_ID, UID_1).join();
-        testee.addDeleted(MAILBOX_ID, UID_2).join();
+    void addDeletedMessageShouldThenBeReportedAsDeletedMessage() {
+        testee.addDeleted(MAILBOX_ID, UID_1).block();
+        testee.addDeleted(MAILBOX_ID, UID_2).block();
 
         List<MessageUid> result = testee.retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
-            .join()
-            .collect(Guavate.toImmutableList());
+                .collectList()
+                .block();
 
         assertThat(result).containsExactly(UID_1, UID_2);
     }
 
     @Test
-    public void addDeletedMessageShouldBeIdempotent() {
-        testee.addDeleted(MAILBOX_ID, UID_1).join();
-        testee.addDeleted(MAILBOX_ID, UID_1).join();
+    void addDeletedMessageShouldBeIdempotent() {
+        testee.addDeleted(MAILBOX_ID, UID_1).block();
+        testee.addDeleted(MAILBOX_ID, UID_1).block();
 
         List<MessageUid> result = testee.retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
-            .join()
-            .collect(Guavate.toImmutableList());
+            .collectList()
+            .block();
 
         assertThat(result).containsExactly(UID_1);
     }
 
 
     @Test
-    public void removeUnreadShouldReturnEmptyWhenNoData() {
-        testee.removeDeleted(MAILBOX_ID, UID_1).join();
+    void removeUnreadShouldReturnEmptyWhenNoData() {
+        testee.removeDeleted(MAILBOX_ID, UID_1).block();
 
         List<MessageUid> result = testee
             .retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
-            .join()
-            .collect(Guavate.toImmutableList());
+            .collectList()
+            .block();
 
         assertThat(result).isEmpty();
     }
 
     @Test
-    public void removeDeletedMessageShouldNotAffectOtherMessage() {
-        testee.addDeleted(MAILBOX_ID, UID_2).join();
-        testee.addDeleted(MAILBOX_ID, UID_1).join();
+    void removeDeletedMessageShouldNotAffectOtherMessage() {
+        testee.addDeleted(MAILBOX_ID, UID_2).block();
+        testee.addDeleted(MAILBOX_ID, UID_1).block();
 
-        testee.removeDeleted(MAILBOX_ID, UID_1).join();
+        testee.removeDeleted(MAILBOX_ID, UID_1).block();
 
         List<MessageUid> result = testee
             .retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
-            .join()
-            .collect(Guavate.toImmutableList());
+            .collectList()
+            .block();
 
         assertThat(result).containsExactly(UID_2);
     }
 
     @Test
-    public void removeDeletedShouldRemoveSpecifiedUID() {
-        testee.addDeleted(MAILBOX_ID, UID_2).join();
+    void removeDeletedShouldRemoveSpecifiedUID() {
+        testee.addDeleted(MAILBOX_ID, UID_2).block();
 
-        testee.removeDeleted(MAILBOX_ID, UID_2).join();
+        testee.removeDeleted(MAILBOX_ID, UID_2).block();
 
         List<MessageUid> result = testee
             .retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
-            .join()
-            .collect(Guavate.toImmutableList());
+            .collectList()
+            .block();
 
         assertThat(result).isEmpty();
     }
 
     private void addMessageForRetrieveTest() {
-        testee.addDeleted(MAILBOX_ID, UID_1).join();
-        testee.addDeleted(MAILBOX_ID, UID_2).join();
-        testee.addDeleted(MAILBOX_ID, UID_3).join();
-        testee.addDeleted(MAILBOX_ID, UID_4).join();
-        testee.addDeleted(MAILBOX_ID, UID_7).join();
-        testee.addDeleted(MAILBOX_ID, UID_8).join();
+        testee.addDeleted(MAILBOX_ID, UID_1).block();
+        testee.addDeleted(MAILBOX_ID, UID_2).block();
+        testee.addDeleted(MAILBOX_ID, UID_3).block();
+        testee.addDeleted(MAILBOX_ID, UID_4).block();
+        testee.addDeleted(MAILBOX_ID, UID_7).block();
+        testee.addDeleted(MAILBOX_ID, UID_8).block();
     }
 
     @Test
-    public void retrieveDeletedMessageShouldReturnAllMessageForMessageRangeAll() {
+    void retrieveDeletedMessageShouldReturnAllMessageForMessageRangeAll() {
         addMessageForRetrieveTest();
 
         List<MessageUid> result = testee
             .retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
-            .join()
-            .collect(Guavate.toImmutableList());
+            .collectList()
+            .block();
 
         assertThat(result).containsExactly(UID_1, UID_2, UID_3, UID_4, UID_7, UID_8);
     }
 
     @Test
-    public void retrieveDeletedMessageShouldReturnOneMessageForMessageRangeOneIfThisMessageIsPresent() {
+    void retrieveDeletedMessageShouldReturnOneMessageForMessageRangeOneIfThisMessageIsPresent() {
         addMessageForRetrieveTest();
 
         List<MessageUid> result = testee
             .retrieveDeletedMessage(MAILBOX_ID, MessageRange.one(UID_1))
-            .join()
-            .collect(Guavate.toImmutableList());
+            .collectList()
+            .block();
 
         assertThat(result).containsExactly(UID_1);
     }
 
     @Test
-    public void retrieveDeletedMessageShouldReturnNoMessageForMessageRangeOneIfThisMessageIsNotPresent() {
+    void retrieveDeletedMessageShouldReturnNoMessageForMessageRangeOneIfThisMessageIsNotPresent() {
         addMessageForRetrieveTest();
 
         List<MessageUid> result = testee
             .retrieveDeletedMessage(MAILBOX_ID, MessageRange.one(MessageUid.of(42)))
-            .join()
-            .collect(Guavate.toImmutableList());
+            .collectList()
+            .block();
 
         assertThat(result).isEmpty();
     }
 
     @Test
-    public void retrieveDeletedMessageShouldReturnMessageInRangeForMessageRangeRange() {
+    void retrieveDeletedMessageShouldReturnMessageInRangeForMessageRangeRange() {
         addMessageForRetrieveTest();
 
         List<MessageUid> result = testee
             .retrieveDeletedMessage(MAILBOX_ID, MessageRange.range(MessageUid.of(3), MessageUid.of(7)))
-            .join()
-            .collect(Guavate.toImmutableList());
+            .collectList()
+            .block();
 
         assertThat(result).containsExactly(UID_3, UID_4, UID_7);
     }
 
     @Test
-    public void retrieveDeletedMessageShouldReturnNoMessageForMessageRangeRangeIfNoDeletedMessageInThatRange() {
+    void retrieveDeletedMessageShouldReturnNoMessageForMessageRangeRangeIfNoDeletedMessageInThatRange() {
         addMessageForRetrieveTest();
 
         List<MessageUid> result = testee
             .retrieveDeletedMessage(MAILBOX_ID, MessageRange.range(MessageUid.of(5), MessageUid.of(6)))
-            .join()
-            .collect(Guavate.toImmutableList());
+            .collectList()
+            .block();
 
         assertThat(result).isEmpty();
     }
 
     @Test
-    public void retrieveDeletedMessageShouldReturnNoMessageForMessageRangeFromIfNoDeletedMessageWithIdBiggerOrSameThanFrom() {
+    void retrieveDeletedMessageShouldReturnNoMessageForMessageRangeFromIfNoDeletedMessageWithIdBiggerOrSameThanFrom() {
         addMessageForRetrieveTest();
 
         List<MessageUid> result = testee
             .retrieveDeletedMessage(MAILBOX_ID, MessageRange.from(MessageUid.of(9)))
-            .join()
-            .collect(Guavate.toImmutableList());
+            .collectList()
+            .block();
 
         assertThat(result).isEmpty();
     }
 
     @Test
-    public void retrieveDeletedMessageShouldReturnDeletedMessageWithIdBiggerOrSameThanFrom() {
+    void retrieveDeletedMessageShouldReturnDeletedMessageWithIdBiggerOrSameThanFrom() {
         addMessageForRetrieveTest();
 
         List<MessageUid> result = testee
             .retrieveDeletedMessage(MAILBOX_ID, MessageRange.from(MessageUid.of(4)))
-            .join()
-            .collect(Guavate.toImmutableList());
+            .collectList()
+            .block();
 
         assertThat(result).containsExactly(UID_4, UID_7, UID_8);
     }

@@ -35,19 +35,24 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.queue.api.ManageableMailQueue.Type;
+import org.apache.james.task.Task;
+import org.apache.james.task.TaskId;
+import org.apache.james.task.TaskManager;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.util.streams.Limit;
-import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.ForceDelivery;
 import org.apache.james.webadmin.dto.MailQueueDTO;
 import org.apache.james.webadmin.dto.MailQueueItemDTO;
+import org.apache.james.webadmin.dto.TaskIdDto;
+import org.apache.james.webadmin.service.ClearMailQueueTask;
+import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTask;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.github.fge.lambdas.Throwing;
@@ -87,13 +92,21 @@ public class MailQueueRoutes implements Routes {
     private final MailQueueFactory<ManageableMailQueue> mailQueueFactory;
     private final JsonTransformer jsonTransformer;
     private final JsonExtractor<ForceDelivery> jsonExtractor;
+    private final TaskManager taskManager;
 
     @Inject
     @SuppressWarnings("unchecked")
-    @VisibleForTesting MailQueueRoutes(MailQueueFactory<?> mailQueueFactory, JsonTransformer jsonTransformer) {
+    @VisibleForTesting MailQueueRoutes(MailQueueFactory<?> mailQueueFactory, JsonTransformer jsonTransformer,
+                                       TaskManager taskManager) {
         this.mailQueueFactory = (MailQueueFactory<ManageableMailQueue>) mailQueueFactory;
         this.jsonTransformer = jsonTransformer;
         this.jsonExtractor = new JsonExtractor<>(ForceDelivery.class);
+        this.taskManager = taskManager;
+    }
+
+    @Override
+    public String getBasePath() {
+        return BASE_URL;
     }
 
     @Override
@@ -210,7 +223,7 @@ public class MailQueueRoutes implements Routes {
     private List<MailQueueItemDTO> listMails(Request request) {
         String mailQueueName = request.params(MAIL_QUEUE_NAME);
         return mailQueueFactory.getQueue(mailQueueName)
-                .map(name -> listMails(name, isDelayed(request.queryParams(DELAYED_QUERY_PARAM)), limit(request.queryParams(LIMIT_QUERY_PARAM))))
+                .map(name -> listMails(name, isDelayed(request.queryParams(DELAYED_QUERY_PARAM)), ParametersExtractor.extractLimit(request)))
                 .orElseThrow(
                     () -> ErrorResponder.builder()
                         .message(String.format("%s can not be found", mailQueueName))
@@ -222,21 +235,6 @@ public class MailQueueRoutes implements Routes {
     @VisibleForTesting Optional<Boolean> isDelayed(String delayedAsString) {
         return Optional.ofNullable(delayedAsString)
                 .map(Boolean::parseBoolean);
-    }
-
-    @VisibleForTesting Limit limit(String limitAsString) throws HaltException {
-        try {
-            return Optional.ofNullable(limitAsString)
-                    .map(Integer::parseInt)
-                    .map(Limit::limit)
-                    .orElseGet(() -> Limit.from(DEFAULT_LIMIT_VALUE));
-        } catch (IllegalArgumentException e) {
-            throw ErrorResponder.builder()
-                .message(String.format("limit can't be less or equals to zero"))
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.NOT_FOUND)
-                .haltError();
-        }
     }
 
     private List<MailQueueItemDTO> listMails(ManageableMailQueue queue, Optional<Boolean> isDelayed, Limit limit) {
@@ -292,20 +290,21 @@ public class MailQueueRoutes implements Routes {
         value = "Delete mails from the MailQueue"
     )
     @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK, the request is being processed"),
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "OK, the task for deleting mails is created"),
         @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The MailQueue does not exist."),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid request for deleting mails from the mail queue."),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void deleteMails(Service service) {
-        service.delete(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MAILS, 
-                (request, response) -> deleteMails(request, response));
+        service.delete(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MAILS,
+                this::deleteMails,
+                jsonTransformer);
     }
 
     private Object deleteMails(Request request, Response response) {
         String mailQueueName = request.params(MAIL_QUEUE_NAME);
-        Object bodyResponse = mailQueueFactory.getQueue(mailQueueName)
-            .map(name -> deleteMails(name, 
+        Task task = mailQueueFactory.getQueue(mailQueueName)
+            .map(name -> deleteMailsTask(name,
                     sender(request.queryParams(SENDER_QUERY_PARAM)),
                     name(request.queryParams(NAME_QUERY_PARAM)),
                     recipient(request.queryParams(RECIPIENT_QUERY_PARAM))))
@@ -315,8 +314,9 @@ public class MailQueueRoutes implements Routes {
                     .statusCode(HttpStatus.NOT_FOUND_404)
                     .type(ErrorResponder.ErrorType.NOT_FOUND)
                     .haltError());
-        response.status(HttpStatus.NO_CONTENT_204);
-        return bodyResponse;
+
+        TaskId taskId = taskManager.submit(task);
+        return TaskIdDto.respond(response, taskId);
     }
 
     private Optional<MailAddress> sender(String senderAsString) throws HaltException {
@@ -424,19 +424,21 @@ public class MailQueueRoutes implements Routes {
         }
     }
 
-    private Object deleteMails(ManageableMailQueue queue, Optional<MailAddress> maybeSender, Optional<String> maybeName, Optional<MailAddress> maybeRecipient) {
-        if (Booleans.countTrue(maybeSender.isPresent(), maybeName.isPresent(), maybeRecipient.isPresent()) != 1) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("You should provide one and only one of the query parameters 'sender', 'name' or 'recipient'.")
-                .haltError();
+    private Task deleteMailsTask(ManageableMailQueue queue, Optional<MailAddress> maybeSender, Optional<String> maybeName, Optional<MailAddress> maybeRecipient) {
+        int paramCount = Booleans.countTrue(maybeSender.isPresent(), maybeName.isPresent(), maybeRecipient.isPresent());
+        switch (paramCount) {
+            case 0:
+                return new ClearMailQueueTask(queue);
+            case 1:
+                return new DeleteMailsFromMailQueueTask(queue, maybeSender, maybeName, maybeRecipient);
+            default:
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("You should provide only one of the query parameters 'sender', 'name', 'recipient' " +
+                            "for deleting mails by condition or no parameter for deleting all mails in the mail queue.")
+                    .haltError();
         }
-        
-        maybeSender.ifPresent(Throwing.consumer((MailAddress sender) -> queue.remove(Type.Sender, sender.asString())).sneakyThrow());
-        maybeName.ifPresent(Throwing.consumer((String name) -> queue.remove(Type.Name, name)).sneakyThrow());
-        maybeRecipient.ifPresent(Throwing.consumer((MailAddress recipient) -> queue.remove(Type.Recipient, recipient.asString())).sneakyThrow());
-        return Constants.EMPTY_BODY;
     }
 
     private void assertDelayedParamIsTrue(Request request) {
@@ -448,5 +450,4 @@ public class MailQueueRoutes implements Routes {
                 .haltError();
         }
     }
-
 }

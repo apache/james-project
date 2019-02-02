@@ -19,9 +19,11 @@
 
 package org.apache.james.backends.es;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.util.docker.SwarmGenericContainer;
+import org.awaitility.Awaitility;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Ignore;
@@ -29,8 +31,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.jayway.awaitility.Awaitility;
 
 @Ignore("JAMES-1952")
 public class ClientProviderImplConnectionTest {
@@ -53,7 +53,7 @@ public class ClientProviderImplConnectionTest {
         Awaitility.await()
             .atMost(1, TimeUnit.MINUTES)
             .pollInterval(5, TimeUnit.SECONDS)
-            .until(() -> isConnected(ClientProviderImpl.forHost(es1.getContainerIp(), 9300)));
+            .until(() -> isConnected(ClientProviderImpl.forHost(es1.getContainerIp(), 9300, Optional.empty())));
     }
 
     @Test
@@ -64,7 +64,8 @@ public class ClientProviderImplConnectionTest {
             .until(() -> isConnected(
                 ClientProviderImpl.fromHostsString(
                     es1.getContainerIp() + ":" + ES_APPLICATIVE_PORT + ","
-                    + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT)));
+                        + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT,
+                    Optional.empty())));
     }
 
     @Test
@@ -77,7 +78,8 @@ public class ClientProviderImplConnectionTest {
             .until(() -> isConnected(
                 ClientProviderImpl.fromHostsString(
                     es1.getContainerIp() + ":" + ES_APPLICATIVE_PORT + ","
-                    + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT)));
+                        + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT,
+                    Optional.empty())));
     }
 
     private boolean isConnected(ClientProvider clientProvider) {

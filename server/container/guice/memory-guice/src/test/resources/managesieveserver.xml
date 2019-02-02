@@ -31,7 +31,7 @@
 
      <jmxName>managesieveserver</jmxName>
 
-     <bind>0.0.0.0:4190</bind>
+     <bind>0.0.0.0:0</bind>
 
      <connectionBacklog>200</connectionBacklog>
 

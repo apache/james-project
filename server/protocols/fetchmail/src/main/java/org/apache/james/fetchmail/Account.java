@@ -252,20 +252,11 @@ class Account implements Comparable<Account> {
         fieldSequenceNumber = sequenceNumber;
     }
 
-    /**
-     * Compares this object with the specified object for order. Returns a
-     * negative integer, zero, or a positive integer if this object is less
-     * than, equal to, or greater than the specified object.
-     * 
-     * @see java.lang.Comparable#compareTo(Object)
-     */
+    @Override
     public int compareTo(Account account) {
         return getSequenceNumber() - account.getSequenceNumber();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -281,9 +272,6 @@ class Account implements Comparable<Account> {
         return getSequenceNumber() == other.getSequenceNumber();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return 31 * 17 + getSequenceNumber();

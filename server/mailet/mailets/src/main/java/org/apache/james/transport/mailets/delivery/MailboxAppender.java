@@ -19,9 +19,6 @@
 
 package org.apache.james.transport.mailets.delivery;
 
-import java.util.Date;
-
-import javax.mail.Flags;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -30,15 +27,17 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.server.core.MimeMessageInputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 
 public class MailboxAppender {
-    private static final boolean IS_RECENT = true;
-    private static final Flags FLAGS = null;
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailboxAppender.class);
 
     private final MailboxManager mailboxManager;
 
@@ -78,14 +77,21 @@ public class MailboxAppender {
         createMailboxIfNotExist(session, path);
         final MessageManager mailbox = mailboxManager.getMailbox(path, session);
         if (mailbox == null) {
-            throw new MessagingException("Mailbox " + path + " for user " + session.getUser().getUserName() + " was not found on this server.");
+            throw new MessagingException("Mailbox " + path + " for user " + session.getUser().asString() + " was not found on this server.");
         }
-        return mailbox.appendMessage(new MimeMessageInputStream(mail), new Date(), session, IS_RECENT, FLAGS);
+        return mailbox.appendMessage(MessageManager.AppendCommand.builder()
+            .recent()
+            .build(new MimeMessageInputStream(mail)),
+            session);
     }
 
     private void createMailboxIfNotExist(MailboxSession session, MailboxPath path) throws MailboxException {
         if (!mailboxManager.mailboxExists(path, session)) {
-            mailboxManager.createMailbox(path, session);
+            try {
+                mailboxManager.createMailbox(path, session);
+            } catch (MailboxExistsException e) {
+                LOGGER.info("Mailbox {} have been created concurrently", path);
+            }
         }
     }
 

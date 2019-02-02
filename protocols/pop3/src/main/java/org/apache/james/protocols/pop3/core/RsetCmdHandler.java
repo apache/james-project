@@ -59,6 +59,7 @@ public class RsetCmdHandler implements CommandHandler<POP3Session> {
      * Handler method called upon receipt of a RSET command. Calls stat() to
      * reset the mailbox.
      */
+    @Override
     public Response onCommand(POP3Session session, Request request) {
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
             stat(session);
@@ -89,9 +90,7 @@ public class RsetCmdHandler implements CommandHandler<POP3Session> {
 
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }

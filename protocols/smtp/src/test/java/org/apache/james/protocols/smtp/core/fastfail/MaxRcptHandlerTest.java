@@ -19,12 +19,13 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
@@ -36,14 +37,17 @@ public class MaxRcptHandlerTest {
         return new BaseFakeSMTPSession() {
             HashMap<String,Object> state = new HashMap<>();
 
+            @Override
             public Map<String,Object> getState() {
                 return state;
             }
 
+            @Override
             public boolean isRelayingAllowed() {
                 return false;
             }
 
+            @Override
             public int getRcptCount() {
                 return rcptCount;
             }
@@ -57,9 +61,9 @@ public class MaxRcptHandlerTest {
         MaxRcptHandler handler = new MaxRcptHandler();
         
         handler.setMaxRcpt(2);
-        int resp = handler.doRcpt(session,null,new MailAddress("test@test")).getResult();
+        HookReturnCode resp = handler.doRcpt(session, MaybeSender.nullSender(), new MailAddress("test@test")).getResult();
     
-        assertEquals("Rejected.. To many recipients", resp, HookReturnCode.DENY);
+        assertThat(HookReturnCode.deny()).describedAs("Rejected.. To many recipients").isEqualTo(resp);
     }
   
   
@@ -69,9 +73,9 @@ public class MaxRcptHandlerTest {
         MaxRcptHandler handler = new MaxRcptHandler();    
 
         handler.setMaxRcpt(4);
-        int resp = handler.doRcpt(session,null,new MailAddress("test@test")).getResult();
+        HookReturnCode resp = handler.doRcpt(session, MaybeSender.nullSender(), new MailAddress("test@test")).getResult();
         
-        assertEquals("Not Rejected..", resp, HookReturnCode.DECLINED);
+        assertThat(HookReturnCode.declined()).describedAs("Not Rejected..").isEqualTo(resp);
     }
 
 }

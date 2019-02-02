@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.memory;
 
+import java.io.IOException;
+
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
@@ -32,7 +34,7 @@ public class MemoryJmapAuthenticationTest extends JMAPAuthenticationTest {
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 
     @Override
-    protected GuiceJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider) {
+    protected GuiceJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider) throws IOException {
         return memoryJmap.jmapServer()
                 .overrideWith((binder) -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
     }

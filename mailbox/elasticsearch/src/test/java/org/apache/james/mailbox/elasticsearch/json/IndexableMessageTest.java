@@ -20,22 +20,23 @@
 package org.apache.james.mailbox.elasticsearch.json;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.ZoneId;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
@@ -43,9 +44,11 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.james.mailbox.tika.TikaConfiguration;
-import org.apache.james.mailbox.tika.TikaContainer;
+import org.apache.james.mailbox.tika.TikaContainerSingletonRule;
 import org.apache.james.mailbox.tika.TikaHttpClientImpl;
 import org.apache.james.mailbox.tika.TikaTextExtractor;
+import org.apache.james.metrics.api.NoopMetricFactory;
+import org.assertj.core.api.iterable.Extractor;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -54,17 +57,16 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class IndexableMessageTest {
-
-    public static final MessageUid MESSAGE_UID = MessageUid.of(154);
+    private static final MessageUid MESSAGE_UID = MessageUid.of(154);
 
     @ClassRule
-    public static TikaContainer tika = new TikaContainer();
+    public static TikaContainerSingletonRule tika = TikaContainerSingletonRule.rule;
 
     private TikaTextExtractor textExtractor;
 
     @Before
     public void setUp() throws Exception {
-        textExtractor = new TikaTextExtractor(new TikaHttpClientImpl(TikaConfiguration.builder()
+        textExtractor = new TikaTextExtractor(new NoopMetricFactory(), new TikaHttpClientImpl(TikaConfiguration.builder()
                 .host(tika.getIp())
                 .port(tika.getPort())
                 .timeoutInMillis(tika.getTimeoutInMillis())
@@ -88,7 +90,7 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -114,7 +116,7 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -140,7 +142,7 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -166,7 +168,7 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -192,7 +194,7 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -218,7 +220,7 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -244,7 +246,7 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -270,7 +272,7 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -307,7 +309,7 @@ public class IndexableMessageTest {
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
@@ -338,7 +340,7 @@ public class IndexableMessageTest {
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -369,7 +371,7 @@ public class IndexableMessageTest {
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -398,7 +400,7 @@ public class IndexableMessageTest {
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -427,7 +429,7 @@ public class IndexableMessageTest {
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
@@ -455,22 +457,33 @@ public class IndexableMessageTest {
 
         TextExtractor textExtractor = mock(TextExtractor.class);
         when(textExtractor.extractContent(any(), any()))
-            .thenReturn(new ParsedContent("first attachment content", ImmutableMap.of()))
+            .thenReturn(new ParsedContent(Optional.of("first attachment content"), ImmutableMap.of()))
             .thenThrow(new RuntimeException("second cannot be parsed"))
-            .thenReturn(new ParsedContent("third attachment content", ImmutableMap.of()));
+            .thenReturn(new ParsedContent(Optional.of("third attachment content"), ImmutableMap.of()));
 
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(textExtractor)
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
                 .build();
 
         // Then
-        assertThat(indexableMessage.getText()).contains("first attachment content");
-        assertThat(indexableMessage.getText()).contains("third attachment content");
+        assertThat(indexableMessage.getAttachments())
+            .extracting(new TextualBodyExtractor())
+            .contains("first attachment content", TextualBodyExtractor.NO_TEXTUAL_BODY, "third attachment content");
+    }
+
+    private static class TextualBodyExtractor implements Extractor<MimePart, String> {
+
+        public static final String NO_TEXTUAL_BODY = "The textual body is not present";
+
+        @Override
+        public String extract(MimePart input) {
+            return input.getTextualBody().orElse(NO_TEXTUAL_BODY);
+        }
     }
 
     @Test
@@ -492,7 +505,7 @@ public class IndexableMessageTest {
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(textExtractor)
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
@@ -524,7 +537,7 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(textExtractor)
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
@@ -553,7 +566,7 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(new MockMailboxSession("username").getUser()))
+                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(textExtractor)
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)

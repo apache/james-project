@@ -22,12 +22,9 @@ package org.apache.james.mailets;
 import static org.apache.james.MemoryJamesServerMain.SMTP_AND_IMAP_MODULE;
 import static org.apache.james.MemoryJamesServerMain.SMTP_ONLY_MODULE;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
-import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
-import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
@@ -37,6 +34,8 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
@@ -45,6 +44,8 @@ import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -55,29 +56,33 @@ public class GatewayRemoteDeliveryIntegrationTest {
     private static final String FROM = "from@" + DEFAULT_DOMAIN;
     private static final String RECIPIENT = "touser@" + JAMES_ANOTHER_DOMAIN;
 
+    @ClassRule
+    public static FakeSmtp fakeSmtp = new FakeSmtp();
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
     @Rule
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
-    @Rule
-    public FakeSmtp fakeSmtp = new FakeSmtp();
 
     private TemporaryJamesServer jamesServer;
     private DataProbe dataProbe;
     private InMemoryDNSService inMemoryDNSService;
 
+    @BeforeClass
+    public static void classSetUp() {
+        fakeSmtp.awaitStarted(awaitAtMostOneMinute);
+    }
+
     @Before
     public void setup() throws Exception {
-        fakeSmtp.awaitStarted(awaitAtMostOneMinute);
-
         inMemoryDNSService = new InMemoryDNSService()
             .registerMxRecord(JAMES_ANOTHER_DOMAIN, fakeSmtp.getContainer().getContainerIp());
     }
 
     @After
     public void tearDown() {
+        fakeSmtp.clean();
         if (jamesServer != null) {
             jamesServer.shutdown();
         }
@@ -96,10 +101,11 @@ public class GatewayRemoteDeliveryIntegrationTest {
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
-        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
+        awaitAtMostOneMinute
+            .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
     @Test
@@ -115,10 +121,10 @@ public class GatewayRemoteDeliveryIntegrationTest {
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
-        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
+        awaitAtMostOneMinute.untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
     @Test
@@ -134,10 +140,11 @@ public class GatewayRemoteDeliveryIntegrationTest {
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
-        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
+        awaitAtMostOneMinute
+            .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
     @Test
@@ -153,10 +160,11 @@ public class GatewayRemoteDeliveryIntegrationTest {
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
-        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
+        awaitAtMostOneMinute
+            .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
     @Test
@@ -173,16 +181,15 @@ public class GatewayRemoteDeliveryIntegrationTest {
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
         // Wait for bounce being sent before checking no email is sent
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
-        assertThat(fakeSmtp.isReceived(response -> response.body("", hasSize(0))))
-            .isTrue();
+        fakeSmtp.assertEmailReceived(response -> response.body("", hasSize(0)));
     }
 
     @Test
@@ -199,10 +206,10 @@ public class GatewayRemoteDeliveryIntegrationTest {
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -228,39 +235,17 @@ public class GatewayRemoteDeliveryIntegrationTest {
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
     }
 
-    @Test
-    public void directResolutionShouldBeWellPerformed() throws Exception {
-        jamesServer = TemporaryJamesServer.builder()
-            .withBase(SMTP_ONLY_MODULE)
-            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(MailetContainer.builder()
-                .putProcessor(CommonProcessors.simpleRoot())
-                .putProcessor(CommonProcessors.error())
-                .putProcessor(directResolutionTransport())
-                .putProcessor(CommonProcessors.bounces()))
-            .build(temporaryFolder);
-
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        dataProbe.addUser(FROM, PASSWORD);
-
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT);
-
-        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
-    }
-
-    private boolean messageIsReceivedByTheSmtpServer() {
-        return fakeSmtp.isReceived(response -> response
+    private void assertMessageReceivedByTheSmtpServer() {
+        fakeSmtp.assertEmailReceived(response -> response
             .body("", hasSize(1))
             .body("[0].from", equalTo(FROM))
             .body("[0].subject", equalTo("test")));
@@ -278,13 +263,4 @@ public class GatewayRemoteDeliveryIntegrationTest {
                 .addProperty("gateway", gatewayProperty)
                 .matcher(All.class));
     }
-
-    private ProcessorConfiguration.Builder directResolutionTransport() {
-        return ProcessorConfiguration.transport()
-            .addMailet(MailetConfiguration.BCC_STRIPPER)
-            .addMailet(MailetConfiguration.remoteDeliveryBuilder()
-                .matcher(All.class));
-    }
-
-
 }

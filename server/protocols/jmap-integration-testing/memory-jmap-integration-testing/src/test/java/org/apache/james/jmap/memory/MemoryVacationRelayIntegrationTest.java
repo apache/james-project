@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.memory;
 
+import java.io.IOException;
+
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.dnsservice.api.DNSService;
@@ -37,7 +39,7 @@ public class MemoryVacationRelayIntegrationTest extends VacationRelayIntegration
     protected void await() {}
 
     @Override
-    protected GuiceJamesServer getJmapServer() {
+    protected GuiceJamesServer getJmapServer() throws IOException {
         return memoryJmap.jmapServer((binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
     }
 

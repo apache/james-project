@@ -28,17 +28,16 @@ import org.apache.camel.CamelContextAware;
 import org.apache.camel.CamelExecutionException;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
-import org.apache.camel.Processor;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.processor.aggregate.UseLatestAggregationStrategy;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
-import org.apache.mailet.MailetConfig;
 import org.apache.mailet.Matcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +55,6 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
 
     private ProducerTemplate producerTemplate;
 
-    private final UseLatestAggregationStrategy aggr = new UseLatestAggregationStrategy();
     private final MetricFactory metricFactory;
     private List<MatcherMailetPair> pairs;
 
@@ -64,10 +62,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
         this.metricFactory = metricFactory;
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.api.MailProcessor#service(org.apache.mailet.Mail)
-     */
+    @Override
     public void service(Mail mail) throws MessagingException {
         try {
             producerTemplate.sendBody(getEndpoint(), mail);
@@ -77,16 +72,12 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
         }
     }
 
-    /**
-     * @see org.apache.camel.CamelContextAware#getCamelContext()
-     */
+    @Override
     public CamelContext getCamelContext() {
         return context;
     }
 
-    /**
-     * @see org.apache.camel.CamelContextAware#setCamelContext(org.apache.camel.CamelContext)
-     */
+    @Override
     public void setCamelContext(CamelContext context) {
         this.context = context;
     }
@@ -106,6 +97,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
         return "direct:processor." + getState();
     }
 
+    @Override
     @PostConstruct
     public void init() throws Exception {
         producerTemplate = context.createProducerTemplate();
@@ -116,15 +108,11 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
         super.init();
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor#setupRouting
-     * (java.util.List)
-     */
+    @Override
     protected void setupRouting(List<MatcherMailetPair> pairs) throws MessagingException {
         try {
             this.pairs = pairs;
-            context.addRoutes(new MailetContainerRouteBuilder(pairs));
+            context.addRoutes(new MailetContainerRouteBuilder(this, metricFactory, pairs));
         } catch (Exception e) {
             throw new MessagingException("Unable to setup routing for MailetMatcherPairs", e);
         }
@@ -134,92 +122,82 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
      * {@link RouteBuilder} which construct the Matcher and Mailet routing use
      * Camel DSL
      */
-    private final class MailetContainerRouteBuilder extends RouteBuilder {
+    private static class MailetContainerRouteBuilder extends RouteBuilder {
+
+        private final CamelMailetProcessor container;
 
         private final List<MatcherMailetPair> pairs;
+        private final MetricFactory metricFactory;
 
-        public MailetContainerRouteBuilder(List<MatcherMailetPair> pairs) {
+        private MailetContainerRouteBuilder(CamelMailetProcessor container, MetricFactory metricFactory, List<MatcherMailetPair> pairs) {
+            this.container = container;
+            this.metricFactory = metricFactory;
             this.pairs = pairs;
         }
 
         @Override
-        public void configure() throws Exception {
-            Processor disposeProcessor = new DisposeProcessor();
-            Processor removePropsProcessor = new RemovePropertiesProcessor();
-            Processor completeProcessor = new CompleteProcessor();
-            Processor stateChangedProcessor = new StateChangedProcessor();
+        public void configure() {
+            String state = container.getState();
+            CamelProcessor terminatingMailetProcessor = new CamelProcessor(metricFactory, container, new TerminatingMailet());
 
-            String state = getState();
-
-            RouteDefinition processorDef = from(getEndpoint()).routeId(state).setExchangePattern(ExchangePattern.InOnly)
-                    // store the logger in properties
-                    .setProperty(MatcherSplitter.LOGGER_PROPERTY, constant(LOGGER))
-                    .setProperty(MatcherSplitter.METRIC_FACTORY, constant(metricFactory));
+            RouteDefinition processorDef = from(container.getEndpoint())
+                .routeId(state)
+                .setExchangePattern(ExchangePattern.InOnly);
 
             for (MatcherMailetPair pair : pairs) {
-                Matcher matcher = pair.getMatcher();
-                Mailet mailet = pair.getMailet();
+                CamelProcessor mailetProccessor = new CamelProcessor(metricFactory, container, pair.getMailet());
+                MatcherSplitter matcherSplitter = new MatcherSplitter(metricFactory, container, pair);
 
-                MailetConfig mailetConfig = mailet.getMailetConfig();
-                String onMatchException = mailetConfig.getInitParameter("onMatchException");
-
-                CamelProcessor mailetProccessor = new CamelProcessor(metricFactory, mailet, CamelMailetProcessor.this);
-                // Store the matcher to use for splitter in properties
-                processorDef.setProperty(MatcherSplitter.MATCHER_PROPERTY, constant(matcher)).setProperty(MatcherSplitter.ON_MATCH_EXCEPTION_PROPERTY, constant(onMatchException)).setProperty(MatcherSplitter.MAILETCONTAINER_PROPERTY, constant(CamelMailetProcessor.this))
-
+                processorDef
                         // do splitting of the mail based on the stored matcher
-                        .split().method(MatcherSplitter.class).aggregationStrategy(aggr)
-
-                        .choice().when(new MatcherMatch()).process(mailetProccessor).end()
-
-                        .choice().when(new MailStateEquals(Mail.GHOST)).process(disposeProcessor).stop().otherwise().process(removePropsProcessor).end()
-
-                        .choice().when(new MailStateNotEquals(state)).process(stateChangedProcessor).process(completeProcessor).stop().end();
+                        .split().method(matcherSplitter)
+                            .aggregationStrategy(new UseLatestAggregationStrategy())
+                        .process(exchange -> handleMailet(exchange, container, mailetProccessor));
             }
-
-            Processor terminatingMailetProcessor = new CamelProcessor(metricFactory, new TerminatingMailet(), CamelMailetProcessor.this);
 
             processorDef
-                    // start choice
-                    .choice()
-
-                    // when the mail state did not change till yet ( the end of
-                    // the route) we need to call the TerminatingMailet to
-                    // make sure we don't fall into a endless loop
-                    .when(new MailStateEquals(state)).process(terminatingMailetProcessor).stop()
-
-                    // dispose when needed
-                    .when(new MailStateEquals(Mail.GHOST)).process(disposeProcessor).stop()
-
-                    // this container is complete
-                    .otherwise().process(completeProcessor).stop();
+                .process(exchange -> terminateSmoothly(exchange, container, terminatingMailetProcessor));
 
         }
 
-        private final class RemovePropertiesProcessor implements Processor {
+        private void terminateSmoothly(Exchange exchange, CamelMailetProcessor container, CamelProcessor terminatingMailetProcessor) throws Exception {
+            Mail mail = exchange.getIn().getBody(Mail.class);
+            if (mail.getState().equals(container.getState())) {
+                terminatingMailetProcessor.process(mail);
+            }
+            if (mail.getState().equals(Mail.GHOST)) {
+                dispose(exchange, mail);
+            }
+            complete(exchange, container);
+        }
 
-            public void process(Exchange exchange) throws Exception {
-                exchange.removeProperty(MatcherSplitter.ON_MATCH_EXCEPTION_PROPERTY);
-                exchange.removeProperty(MatcherSplitter.MATCHER_PROPERTY);
+        private void handleMailet(Exchange exchange, CamelMailetProcessor container, CamelProcessor mailetProccessor) throws Exception {
+            Mail mail = exchange.getIn().getBody(Mail.class);
+            boolean isMatched = mail.removeAttribute(MatcherSplitter.MATCHER_MATCHED_ATTRIBUTE) != null;
+            if (isMatched) {
+                mailetProccessor.process(mail);
+            }
+            if (mail.getState().equals(Mail.GHOST)) {
+                dispose(exchange, mail);
+                return;
+            }
+            if (!mail.getState().equals(container.getState())) {
+                container.toProcessor(mail);
+                complete(exchange, container);
             }
         }
 
-        private final class CompleteProcessor implements Processor {
-
-            public void process(Exchange ex) throws Exception {
-                LOGGER.debug("End of mailetprocessor for state {} reached", getState());
-                ex.setProperty(Exchange.ROUTE_STOP, true);
-            }
+        private void complete(Exchange exchange, CamelMailetProcessor container) {
+            LOGGER.debug("End of mailetprocessor for state {} reached", container.getState());
+            exchange.setProperty(Exchange.ROUTE_STOP, true);
         }
 
-        private final class StateChangedProcessor implements Processor {
+        private void dispose(Exchange exchange, Mail mail) throws MessagingException {
+            LifecycleUtil.dispose(mail.getMessage());
+            LifecycleUtil.dispose(mail);
 
-            public void process(Exchange arg0) throws Exception {
-                Mail mail = arg0.getIn().getBody(Mail.class);
-                toProcessor(mail);
-
-            }
-
+            // stop routing
+            exchange.setProperty(Exchange.ROUTE_STOP, true);
         }
 
     }

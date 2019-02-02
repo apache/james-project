@@ -22,13 +22,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Optional;
 
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TikaHttpClientImpl implements TikaHttpClient {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TikaHttpClientImpl.class);
     private static final String RECURSIVE_METADATA_AS_TEXT_ENDPOINT = "/rmeta/text";
 
     private final TikaConfiguration tikaConfiguration;
@@ -48,16 +52,18 @@ public class TikaHttpClientImpl implements TikaHttpClient {
     }
 
     @Override
-    public InputStream recursiveMetaDataAsJson(InputStream inputStream, String contentType) throws TikaException {
+    public Optional<InputStream> recursiveMetaDataAsJson(InputStream inputStream, String contentType) {
         try {
-            return Request.Put(recursiveMetaData)
-                    .socketTimeout(tikaConfiguration.getTimeoutInMillis())
-                    .bodyStream(inputStream, ContentType.create(contentType))
-                    .execute()
-                    .returnContent()
-                    .asStream();
+            return Optional.ofNullable(
+                    Request.Put(recursiveMetaData)
+                        .socketTimeout(tikaConfiguration.getTimeoutInMillis())
+                        .bodyStream(inputStream, ContentType.create(contentType))
+                        .execute()
+                        .returnContent()
+                        .asStream());
         } catch (IOException e) {
-            throw new TikaException(e);
+            LOGGER.warn("Failing to call Tika for content type {}", contentType, e);
+            return Optional.empty();
         }
     }
 

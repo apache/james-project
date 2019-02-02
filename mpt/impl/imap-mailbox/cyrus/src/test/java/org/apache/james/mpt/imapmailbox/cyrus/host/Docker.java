@@ -23,14 +23,16 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Throwables;
+import org.awaitility.Awaitility;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.jayway.awaitility.Awaitility;
 import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.DockerException;
+import com.spotify.docker.client.DockerClient.RemoveContainerParam;
+import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
+import com.spotify.docker.client.messages.ExecCreation;
 import com.spotify.docker.client.messages.HostConfig;
 
 public class Docker {
@@ -57,7 +59,7 @@ public class Docker {
             dockerClient = DefaultDockerClient.fromEnv().build();
             dockerClient.pull(imageName);
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -88,9 +90,9 @@ public class Docker {
     public void stop(ContainerCreation container) {
         try {
             dockerClient.killContainer(container.id());
-            dockerClient.removeContainer(container.id(), true);
+            dockerClient.removeContainer(container.id(), RemoveContainerParam.removeVolumes());
         } catch (DockerException | InterruptedException e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
     
@@ -109,13 +111,13 @@ public class Docker {
                                     .get(EXPOSED_IMAP_PORT))
                             .hostPort());
         } catch (NumberFormatException | DockerException | InterruptedException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
     
     public void createUser(ContainerCreation container, String user, String password) throws DockerException, InterruptedException {
         String createUserCommand = String.format("echo %s | saslpasswd2 -u test -c %s -p", password, user);
-        String execId = dockerClient.execCreate(container.id(), new String[] {"/bin/bash", "-c", createUserCommand});
-        dockerClient.execStart(execId);
+        ExecCreation execCreation = dockerClient.execCreate(container.id(), new String[]{"/bin/bash", "-c", createUserCommand});
+        dockerClient.execStart(execCreation.id());
     }
 }

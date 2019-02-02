@@ -21,10 +21,13 @@ package org.apache.james;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.jayway.restassured.RestAssured.given;
-import static com.jayway.restassured.RestAssured.with;
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.with;
+import static io.restassured.config.EncoderConfig.encoderConfig;
+import static io.restassured.config.RestAssuredConfig.newConfig;
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
+import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -35,153 +38,129 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 
-import javax.mail.Flags;
-
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.backends.cassandra.ContainerLifecycleConfiguration;
-import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
-import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTask;
-import org.apache.james.mailbox.cassandra.mail.utils.MailboxBaseTupleUtil;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
-import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathTable;
+import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV2Table;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.probe.ACLProbe;
-import org.apache.james.mailbox.store.probe.MailboxProbe;
+import org.apache.james.mailbox.probe.ACLProbe;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.mime4j.dom.Message;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
-import org.apache.james.probe.DataProbe;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.CassandraProbe;
 import org.apache.james.task.TaskManager;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.WebAdminGuiceProbe;
-import org.apache.james.webadmin.RandomPortSupplier;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestRule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
-import com.google.common.base.Charsets;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
-import com.jayway.restassured.specification.RequestSpecification;
+
+import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.http.ContentType;
+import io.restassured.specification.RequestSpecification;
 
 public class FixingGhostMailboxTest {
-
+    private static final int LIMIT_TO_10_MESSAGES = 10;
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
     private static final String FIRST_MAILBOX = ARGUMENTS + ".list[0]";
-    public static final boolean RECENT = true;
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    private static final String DOMAIN = "domain.tld";
+    private static final String CEDRIC = "cedric@" + DOMAIN;
+    private static final String BOB = "bob@" + DOMAIN;
+    private static final String ALICE = "alice@" + DOMAIN;
+    private static final String ALICE_SECRET = "aliceSecret";
+    private static final String BOB_SECRET = "bobSecret";
 
-    public static ContainerLifecycleConfiguration cassandraLifecycleConfiguration = ContainerLifecycleConfiguration.withDefaultIterationsBetweenRestart().container(cassandra.getRawContainer()).build();
+    public static final DockerCassandraRule cassandra = new DockerCassandraRule();
 
-    @Rule
-    public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
-
-    @Rule
-    public TestRule cassandraLifecycleTestRule = cassandraLifecycleConfiguration.asTestRule();
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+        .extension(new EmbeddedElasticSearchExtension())
+        .extension(new CassandraExtension(cassandra))
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class)
+                .toInstance(WebAdminConfiguration.TEST_CONFIGURATION)))
+        .build();
 
     private AccessToken accessToken;
-    private String domain;
-    private String alice;
-    private String bob;
-    private String cedric;
-    private GuiceJamesServer jmapServer;
-    private MailboxProbe mailboxProbe;
+    private MailboxProbeImpl mailboxProbe;
     private ACLProbe aclProbe;
     private Session session;
-    private CassandraTypesProvider cassandraTypesProvider;
-    private MailboxBaseTupleUtil mailboxBaseTupleUtil;
     private ComposedMessageId message1;
     private MailboxId aliceGhostInboxId;
     private MailboxPath aliceInboxPath;
     private ComposedMessageId message2;
-    private WebAdminGuiceProbe webAdminProbe;
     private RequestSpecification webadminSpecification;
 
-    @Before
-    public void setup() throws Throwable {
-        jmapServer = rule.jmapServer(cassandra.getModule(),
-            binder -> binder.bind(WebAdminConfiguration.class)
-            .toInstance(WebAdminConfiguration.builder()
-                .port(new RandomPortSupplier())
-                .enabled()
-                .build()));
-        jmapServer.start();
-        webAdminProbe = jmapServer.getProbe(WebAdminGuiceProbe.class);
-        mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
-        aclProbe = jmapServer.getProbe(ACLProbeImpl.class);
+    @BeforeEach
+    void setup(GuiceJamesServer server) throws Throwable {
+        WebAdminGuiceProbe webAdminProbe = server.getProbe(WebAdminGuiceProbe.class);
+        mailboxProbe = server.getProbe(MailboxProbeImpl.class);
+        aclProbe = server.getProbe(ACLProbeImpl.class);
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(Charsets.UTF_8)))
-            .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
+            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
+            .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort())
             .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
         webadminSpecification = WebAdminUtils.buildRequestSpecification(webAdminProbe.getWebAdminPort())
             .build();
 
-        domain = "domain.tld";
-        alice = "alice@" + domain;
-        String alicePassword = "aliceSecret";
-        bob = "bob@" + domain;
-        cedric = "cedric@" + domain;
-        DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(domain);
-        dataProbe.addUser(alice, alicePassword);
-        dataProbe.addUser(bob, "bobSecret");
-        accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), alice, alicePassword);
+        server.getProbe(DataProbeImpl.class).fluent()
+            .addDomain(DOMAIN)
+            .addUser(ALICE, ALICE_SECRET)
+            .addUser(BOB, BOB_SECRET);
+        accessToken = authenticateJamesUser(baseUri(server), ALICE, ALICE_SECRET);
 
         session = Cluster.builder()
             .addContactPoint(cassandra.getIp())
             .withPort(cassandra.getMappedPort(9042))
             .build()
-            .connect(jmapServer.getProbe(CassandraProbe.class).getKeyspace());
-        cassandraTypesProvider = new CassandraTypesProvider(new CassandraMailboxModule(), session);
-        mailboxBaseTupleUtil = new MailboxBaseTupleUtil(cassandraTypesProvider);
+            .connect(server.getProbe(CassandraProbe.class).getKeyspace());
 
         simulateGhostMailboxBug();
     }
 
-    private void simulateGhostMailboxBug() throws MailboxException {
+    private void simulateGhostMailboxBug() throws MailboxException, IOException {
         // State before ghost mailbox bug
         // Alice INBOX is delegated to Bob and contains one message
-        aliceInboxPath = MailboxPath.forUser(alice, MailboxConstants.INBOX);
-        aliceGhostInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
-        aclProbe.addRights(aliceInboxPath, bob, MailboxACL.FULL_RIGHTS);
-        message1 = mailboxProbe.appendMessage(alice, aliceInboxPath,
-            generateMessageContent(), new Date(), !RECENT, new Flags());
-        rule.await();
+        aliceInboxPath = MailboxPath.forUser(ALICE, MailboxConstants.INBOX);
+        aliceGhostInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
+        aclProbe.addRights(aliceInboxPath, BOB, MailboxACL.FULL_RIGHTS);
+        message1 = mailboxProbe.appendMessage(ALICE, aliceInboxPath, AppendCommand.from(generateMessageContent()));
+        testExtension.await();
 
         // Simulate ghost mailbox bug
-        session.execute(delete().from(CassandraMailboxPathTable.TABLE_NAME)
-            .where(eq(CassandraMailboxPathTable.NAMESPACE_AND_USER, mailboxBaseTupleUtil.createMailboxBaseUDT(MailboxConstants.USER_NAMESPACE, alice)))
-            .and(eq(CassandraMailboxPathTable.MAILBOX_NAME, MailboxConstants.INBOX)));
+        session.execute(delete().from(CassandraMailboxPathV2Table.TABLE_NAME)
+            .where(eq(CassandraMailboxPathV2Table.NAMESPACE, MailboxConstants.USER_NAMESPACE))
+            .and(eq(CassandraMailboxPathV2Table.USER, ALICE))
+            .and(eq(CassandraMailboxPathV2Table.MAILBOX_NAME, MailboxConstants.INBOX)));
 
         // trigger provisioning
         given()
@@ -193,43 +172,31 @@ public class FixingGhostMailboxTest {
             .statusCode(200);
 
         // Received a new message
-        message2 = mailboxProbe.appendMessage(alice, aliceInboxPath,
-            generateMessageContent(), new Date(), !RECENT, new Flags());
-        rule.await();
+        message2 = mailboxProbe.appendMessage(ALICE, aliceInboxPath, AppendCommand.from(generateMessageContent()));
+        testExtension.await();
     }
 
-    private ByteArrayInputStream generateMessageContent() {
-        return new ByteArrayInputStream("Subject: toto\r\n\r\ncontent".getBytes(StandardCharsets.UTF_8));
-    }
-
-    private URIBuilder baseUri() {
-        return new URIBuilder()
-            .setScheme("http")
-            .setHost("localhost")
-            .setPort(jmapServer.getProbe(JmapGuiceProbe.class)
-                .getJmapPort())
-            .setCharset(Charsets.UTF_8);
-    }
-
-    @After
-    public void teardown() {
-        jmapServer.stop();
+    private Message generateMessageContent() throws IOException {
+        return Message.Builder.of()
+            .setSubject("toto")
+            .setBody("content", StandardCharsets.UTF_8)
+            .build();
     }
 
     @Test
-    public void ghostMailboxBugShouldChangeMailboxId() throws Exception {
-        Mailbox newAliceInbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
+    void ghostMailboxBugShouldChangeMailboxId() {
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
 
-        assertThat(aliceGhostInboxId).isNotEqualTo(newAliceInbox.getMailboxId());
+        assertThat(aliceGhostInboxId).isNotEqualTo(newAliceInbox);
     }
 
     @Test
-    public void ghostMailboxBugShouldDiscardOldContent() throws Exception {
-        Mailbox newAliceInbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
+    void ghostMailboxBugShouldDiscardOldContent() {
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
 
         given()
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + newAliceInbox.getMailboxId().serialize() + "\"]}}, \"#0\"]]")
+            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + newAliceInbox.serialize() + "\"]}}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -241,14 +208,14 @@ public class FixingGhostMailboxTest {
     }
 
     @Test
-    public void webadminCanMergeTwoMailboxes() throws Exception {
-        Mailbox newAliceInbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
+    void webadminCanMergeTwoMailboxes() {
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
 
         fixGhostMailboxes(newAliceInbox);
 
         given()
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + newAliceInbox.getMailboxId().serialize() + "\"]}}, \"#0\"]]")
+            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + newAliceInbox.serialize() + "\"]}}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -261,28 +228,28 @@ public class FixingGhostMailboxTest {
     }
 
     @Test
-    public void webadminCanMergeTwoMailboxesRights() throws Exception {
-        Mailbox newAliceInbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
-        aclProbe.addRights(aliceInboxPath, cedric, MailboxACL.FULL_RIGHTS);
+    void webadminCanMergeTwoMailboxesRights() throws Exception {
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
+        aclProbe.addRights(aliceInboxPath, CEDRIC, MailboxACL.FULL_RIGHTS);
 
         fixGhostMailboxes(newAliceInbox);
 
         given()
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMailboxes\", {\"ids\": [\"" + newAliceInbox.getMailboxId().serialize() + "\"]}, \"#0\"]]")
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + newAliceInbox.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
-            .body(FIRST_MAILBOX + ".sharedWith", hasKey(bob))
-            .body(FIRST_MAILBOX + ".sharedWith", hasKey(cedric));
+            .body(FIRST_MAILBOX + ".sharedWith", hasKey(BOB))
+            .body(FIRST_MAILBOX + ".sharedWith", hasKey(CEDRIC));
     }
 
     @Test
-    public void oldGhostedMailboxShouldNoMoreBeAccessible() throws Exception {
-        Mailbox newAliceInbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
-        aclProbe.addRights(aliceInboxPath, cedric, MailboxACL.FULL_RIGHTS);
+    void oldGhostedMailboxShouldNoMoreBeAccessible() throws Exception {
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
+        aclProbe.addRights(aliceInboxPath, CEDRIC, MailboxACL.FULL_RIGHTS);
 
         fixGhostMailboxes(newAliceInbox);
 
@@ -298,8 +265,8 @@ public class FixingGhostMailboxTest {
     }
 
     @Test
-    public void mergingMailboxTaskShouldBeInformative() {
-        Mailbox newAliceInbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
+    void mergingMailboxTaskShouldBeInformative() {
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
 
         String taskId = fixGhostMailboxes(newAliceInbox);
 
@@ -312,7 +279,7 @@ public class FixingGhostMailboxTest {
             .body("status", is(TaskManager.Status.COMPLETED.getValue()))
             .body("taskId", is(taskId))
             .body("additionalInformation.oldMailboxId", is(aliceGhostInboxId.serialize()))
-            .body("additionalInformation.newMailboxId", is(newAliceInbox.getMailboxId().serialize()))
+            .body("additionalInformation.newMailboxId", is(newAliceInbox.serialize()))
             .body("additionalInformation.totalMessageCount", is(1))
             .body("additionalInformation.messageMovedCount", is(1))
             .body("additionalInformation.messageFailedCount", is(0))
@@ -322,12 +289,12 @@ public class FixingGhostMailboxTest {
             .body("completedDate", is(not(nullValue())));
     }
 
-    private String fixGhostMailboxes(Mailbox newAliceInbox) {
+    private String fixGhostMailboxes(MailboxId newAliceInbox) {
         String taskId = given()
             .spec(webadminSpecification)
             .body("{" +
                 "    \"mergeOrigin\":\"" + aliceGhostInboxId.serialize() + "\"," +
-                "    \"mergeDestination\":\"" + newAliceInbox.getMailboxId().serialize() + "\"" +
+                "    \"mergeDestination\":\"" + newAliceInbox.serialize() + "\"" +
                 "}")
             .post(CassandraMailboxMergingRoutes.BASE)
             .jsonPath()
@@ -337,7 +304,7 @@ public class FixingGhostMailboxTest {
             .spec(webadminSpecification)
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
-        rule.await();
+        testExtension.await();
         return taskId;
     }
 

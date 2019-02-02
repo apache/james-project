@@ -72,6 +72,7 @@ public class ManageSieveServerFactory extends AbstractServerFactory {
     }
 
 
+    @Override
     @PostConstruct
     public void init() throws Exception {
         manageSieveProcessor = new ManageSieveProcessor(new ArgumentParser(new CoreProcessor(sieveRepository, usersRepository, sieveParser)));

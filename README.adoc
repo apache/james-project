@@ -26,7 +26,7 @@ James is a project that lives from the contributions of its community! Anyone ca
 Read the https://james.apache.org/contribute.html[contributing guidelines].
 
 We more than welcome *articles* and *blog posts* about James. Contact us by https://james.apache.org/mail.html[email]
-or on https://gitter.im/apache/james-projec[Gitter] to share your experiences.
+or on https://gitter.im/apache/james-project[Gitter] to share your experiences.
 
 *Documentation* is an easy way to get started, and more than wanted! Check out the https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20documentation%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~documentation] label on JIRA.
 
@@ -44,6 +44,7 @@ There is many other ways one can help us: packaging, communication, etc ...
  * https://github.com/apache/james-project/#how-to-release-via-maven-release-plugin[How to release via maven release plugin]
  * https://github.com/apache/james-project/#how-to-check-the-compilation[How to check the compilation]
  * https://github.com/apache/james-project/#how-to-run-james-in-docker[How to run James in Docker]
+ ** https://github.com/apache/james-project/#run-james-with-java-8--guice--cassandra-rabbitmq-swift-elasticsearch[Run James with Java 8 + Guice + Cassandra + RabbitMQ + Swift + ElasticSearch]
  ** https://github.com/apache/james-project/#run-james-with-java-8--guice--cassandra--elasticsearch[Run James with Java 8 + Guice + Cassandra + ElasticSearch]
  ** https://github.com/apache/james-project/#run-james-with-java-8--guice--jpa--lucene[Run James with Java 8 + Guice + JPA + Lucene]
  ** https://github.com/apache/james-project/#run-james-with-java-8--spring--jpa[Run James with Java 8 + Spring + JPA]
@@ -104,6 +105,12 @@ You need to build the homepage by:
 
     $ docker build -t james/homepage dockerfiles/site/homepage
     $ docker run -v $PWD:/origin -v $PWD/site:/destination james/homepage master
+
+In order to test the homepage, you can use this command:
+
+    $ docker run --rm -v $PWD/site:/srv/jekyll  -p 4000:4000 -it jekyll/minimal:3.8.3 jekyll serve
+
+the site will be available at http://localhost:4000/
 
 Then you build the other pages by:
 
@@ -188,10 +195,88 @@ If you are using a a fresh installation of Docker, your DOCKER_HOST should be un
 
 This feature is available for three configurations :
 
+ * Java 8 + Guice + Cassandra + RabbitMQ + Swift + ElasticSearch
  * Java 8 + Guice + Cassandra + ElasticSearch
  * Java 8 + Guice + JPA + Lucene
  * Java 8 + Spring + JPA
 
+
+=== Run James with Java 8 + Guice + Cassandra + RabbitMQ + Swift + ElasticSearch
+
+
+==== Requirements
+Built artifacts should be in ./dockerfiles/run/guice/cassandra-rabbitmq/destination folder for cassandra.
+If you haven't already:
+
+    $ docker build -t james/project dockerfiles/compilation/java-8
+    $ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
+  -v $PWD/dockerfiles/run/guice/cassandra-rabbitmq/destination:/cassandra-rabbitmq/destination \
+  -t james/project -s HEAD
+
+
+==== How to ?
+You need a running *cassandra* in docker. To achieve this run:
+
+    $ docker run -d --name=cassandra cassandra:3.11.3
+
+You need a running *rabbitmq* in docker. To achieve this run:
+
+    $ docker run -d --name=rabbitmq rabbitmq:3.7.7-management
+
+You need a running *swift* objectstorage in docker. To achieve this run:
+
+    $ docker run -d --name=swift linagora/openstack-keystone-swift:pike
+
+You need a running *ElasticSearch* in docker. To achieve this run:
+
+    $ docker run -d --name=elasticsearch elasticsearch:2.4.6
+
+If you want to use all the JMAP search capabilities, you may also need to start Tika:
+
+    $ docker run -d --name=tika logicalspark/docker-tikaserver:1.20
+
+You can find more explanation on the need of Tika in this page http://james.apache.org/server/config-elasticsearch.html
+
+We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
+
+Copy your TLS keys to `run/guice/cassandra-rabbitmq/destination/conf/keystore` or generate it using the following command. The password must be `james72laBalle` to match default configuration.
+
+    $ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/keystore
+
+Then we need to build james container :
+
+    $ docker build -t james_run dockerfiles/run/guice/cassandra-rabbitmq
+
+To run this container :
+
+    $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link rabbitmq:rabbitmq
+   --link elasticsearch:elasticsearch --link tika:tika --link swift:swift --name james_run -t james_run
+
+Where :
+
+- HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
+
+You can add an optional port binding to port 8000, to expose the webadmin server. Please note that users are not authenticated on webadmin server, thus you should avoid exposing it in production.
+
+If you want to pass additional options to the underlying java command, you can configure a _JVM_OPTIONS_ env variable, for example add:
+
+    --env JVM_OPTIONS="-Xms256m -Xmx2048m"
+
+
+To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
+
+==== Handling attachment indexing
+
+You can handle attachment text extraction before indexing in ElasticSearch. This makes attachments searchable. To enable this:
+
+Run tika:
+
+    $ docker run --name tika logicalspark/docker-tikaserver:1.20
+
+Add a link for the tika container in the above command line:
+
+    $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link rabbitmq:rabbitmq
+    --link elasticsearch:elasticsearch --link tika:tika --name james_run -t james_run
 
 === Run James with Java 8 + Guice + Cassandra + ElasticSearch
 
@@ -207,13 +292,19 @@ If you haven't already:
 
 
 ==== How to ?
-You need a running *cassandra* in docker. To achieve this run :
+You need a running *cassandra* in docker. To achieve this run:
 
-    $ docker run -d --name=cassandra cassandra:2.2.3
+    $ docker run -d --name=cassandra cassandra:3.11.3
 
-You need a running *ElasticSearch* in docker. To achieve this run :
+You need a running *ElasticSearch* in docker. To achieve this run:
 
-    $ docker run -d --name=elasticsearch elasticsearch:2.2.1
+    $ docker run -d --name=elasticsearch elasticsearch:2.4.6
+
+If you want to use all the JMAP search capabilities, you may also need to start Tika:
+
+    $ docker run -d --name=tika logicalspark/docker-tikaserver:1.20
+
+You can find more explanation on the need of Tika in this page http://james.apache.org/server/config-elasticsearch.html
 
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
@@ -227,13 +318,13 @@ Then we need to build james container :
 
 To run this container :
 
-    $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link elasticsearch:elasticsearch --name james_run -t james_run
+    $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link elasticsearch:elasticsearch --link tika:tika --name james_run -t james_run
 
 Where :
 
 - HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
 
-You can add an optional port binding to port 8000, to expose the webadmin server. Please note that users are not authenticated on webadmin server, thus you should avoid exposing it in production.
+You can add an optional port binding to port 8000, to expose the webadmin server. Please note that webadmin is not secured by default, unless you configure JWT authentication.
 
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
 
@@ -243,7 +334,7 @@ You can handle attachment text extraction before indexing in ElasticSearch. This
 
 Run tika:
 
-    $ docker run --name tika logicalspark/docker-tikaserver:1.15rc2
+    $ docker run --name tika logicalspark/docker-tikaserver:1.20
 
 Add a link for the tika container in the above command line:
 
@@ -279,7 +370,7 @@ To run this container :
 
 HOSTNAME is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
 
-You can add an optional port binding to port 8000, to expose the webadmin server. Please note that users are not authenticated on webadmin server, thus you should avoid exposing it in production.
+You can add an optional port binding to port 8000, to expose the webadmin server. Please note that webadmin is not secured by default, unless you configure JWT authentication.
 
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
 
@@ -423,18 +514,21 @@ You can generate a deb package and an RPM package for James by using the followi
 First step, you have to build the Docker image used to generate the package
 
     $ docker build -t build-james-packages \
-        --build-arg RELEASE=3.0-beta6 \
+        --build-arg RELEASE=3.2.0 \
         --build-arg ITERATION=1 \
         --build-arg BASE=linagora/james-project \
         --build-arg BASE_LDAP=linagora/james-ldap-project \
+        --build-arg BASE_RABBITMQ=linagora/james-rabbitmq-project \
         --build-arg TAG=latest \
         dockerfiles/packaging/guice/cassandra
 
 Where:
 
-- ITERATION is the release number used after the last hyphen (e.g. 3.0-beta6-1, 3.0-beta6-2, 3.0-beta6-3...)
+- ITERATION is the release number used after the last hyphen (e.g. 3.0.1, 3.1.0, 3.2.0...)
 - BASE is the image jar and executable are copied from. Defaults to linagora/james-project
 - BASE_LDAP is the image jar and executable are copied from for a deployment with an LDAP user repository. Defaults to linagora/james-ldap-project
+- BASE_RABBITMQ is the image jar and executable are copied from for a deployment of linagora/james-project + RabbitMQ + Swift BlobStore.
+Defaults to linagora/james-rabbitmq-project
 - TAG is the tag of these docker images. Defaults to latest.
 
 Then, you have to run the container:
@@ -447,7 +541,7 @@ Where:
 
 Note: A helper script is provided for the generation of packages for a specific git commit. For instance:
 
-    $ sh dockerfiles/packaging/guice/cassandra/package.sh 3.0.1 1 c298195e84 $PWD/result
+    $ sh dockerfiles/packaging/guice/cassandra/package.sh 3.2.0 1 c298195e84 $PWD/result
 
 The generated package allow you to choose between a deployment with or without LDAP using update-alternatives.
 Once installed, try:

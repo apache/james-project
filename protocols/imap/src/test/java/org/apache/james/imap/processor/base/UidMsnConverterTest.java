@@ -21,8 +21,8 @@ package org.apache.james.imap.processor.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
@@ -364,23 +364,37 @@ public class UidMsnConverterTest {
     }
 
     @Test
+    public void removeShouldBeIdempotent() {
+        testee.addUid(messageUid1);
+        testee.addUid(messageUid2);
+        testee.addUid(messageUid3);
+
+        testee.remove(messageUid2);
+        testee.remove(messageUid2);
+
+        assertThat(mapTesteeInternalDataToMsnByUid())
+            .isEqualTo(ImmutableMap.of(1, messageUid1,
+                2, messageUid3));
+    }
+
+    @Test
     public void addAndRemoveShouldLeadToMonoticMSNToUIDConversionWhenMixed() throws Exception {
-        final int initialCount = 1000;
+        int initialCount = 1000;
         for (int i = 1; i <= initialCount; i++) {
             testee.addUid(MessageUid.of(i));
         }
 
-        int threadCount = 2;
-        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, initialCount,
-            (threadNumber, step) -> {
+        ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> {
                 if (threadNumber == 0) {
                     testee.remove(MessageUid.of(step + 1));
                 } else {
                     testee.addUid(MessageUid.of(initialCount + step + 1));
                 }
-            });
-        concurrentTestRunner.run();
-        concurrentTestRunner.awaitTermination(10, TimeUnit.SECONDS);
+            })
+            .threadCount(2)
+            .operationCount(initialCount)
+            .runSuccessfullyWithin(Duration.ofSeconds(10));
 
         ImmutableMap.Builder<Integer, MessageUid> resultBuilder = ImmutableMap.builder();
         for (int i = 1; i <= initialCount; i++) {
@@ -392,13 +406,14 @@ public class UidMsnConverterTest {
 
     @Test
     public void addShouldLeadToMonoticMSNToUIDConversionWhenConcurrent() throws Exception {
-        final int operationCount = 1000;
+        int operationCount = 1000;
         int threadCount = 2;
 
-        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            (threadNumber, step) -> testee.addUid(MessageUid.of((threadNumber * operationCount) + (step + 1))));
-        concurrentTestRunner.run();
-        concurrentTestRunner.awaitTermination(10, TimeUnit.SECONDS);
+        ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> testee.addUid(MessageUid.of((threadNumber * operationCount) + (step + 1))))
+            .threadCount(threadCount)
+            .operationCount(operationCount)
+            .runSuccessfullyWithin(Duration.ofSeconds(10));
 
         ImmutableMap.Builder<Integer, MessageUid> resultBuilder = ImmutableMap.builder();
         for (int i = 1; i <= threadCount * operationCount; i++) {
@@ -410,16 +425,17 @@ public class UidMsnConverterTest {
 
     @Test
     public void removeShouldLeadToMonoticMSNToUIDConversionWhenConcurrent() throws Exception {
-        final int operationCount = 1000;
+        int operationCount = 1000;
         int threadCount = 2;
         for (int i = 1; i <= operationCount * (threadCount + 1); i++) {
             testee.addUid(MessageUid.of(i));
         }
 
-        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            (threadNumber, step) -> testee.remove(MessageUid.of((threadNumber * operationCount) + (step + 1))));
-        concurrentTestRunner.run();
-        concurrentTestRunner.awaitTermination(10, TimeUnit.SECONDS);
+        ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> testee.remove(MessageUid.of((threadNumber * operationCount) + (step + 1))))
+            .threadCount(threadCount)
+            .operationCount(operationCount)
+            .runSuccessfullyWithin(Duration.ofSeconds(10));
 
         ImmutableMap.Builder<Integer, MessageUid> resultBuilder = ImmutableMap.builder();
         for (int i = 1; i <= operationCount; i++) {

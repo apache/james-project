@@ -48,10 +48,7 @@ public class FileSystemBeanFactoryPostProcessor implements BeanFactoryPostProces
         this.fileSystem = fileSystem;
     }
 
-    /**
-     * @see org.springframework.beans.factory.config.BeanFactoryPostProcessor#postProcessBeanFactory
-     * (org.springframework.beans.factory.config.ConfigurableListableBeanFactory)
-     */
+    @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory factory) throws BeansException {
         String[] names = factory.getBeanDefinitionNames();
         for (String name : names) {

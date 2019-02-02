@@ -18,161 +18,117 @@
  ****************************************************************/
 package org.apache.james;
 
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.EnumSet;
 
-import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
-import org.apache.james.backends.es.EmbeddedElasticSearch;
-import org.apache.james.jmap.methods.GetMessageListMethod;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
-import org.apache.james.modules.TestElasticSearchModule;
-import org.apache.james.modules.TestFilesystemModule;
+import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.google.inject.Module;
+class JamesCapabilitiesServerTest {
+    private static final MailboxManager mailboxManager = mock(MailboxManager.class);
 
-public class JamesCapabilitiesServerTest {
+    private static final int LIMIT_MAX_MESSAGES = 10;
 
-    private GuiceJamesServer server;
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
-    private DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    @Rule
-    public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch).around(cassandraServer);
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+        .extension(new EmbeddedElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+            .overrideWith(new TestJMAPServerModule(LIMIT_MAX_MESSAGES))
+            .overrideWith(binder -> binder.bind(MailboxManager.class).toInstance(mailboxManager)))
+        .disableAutoStart()
+        .build();
 
-    @After
-    public void teardown() {
-        server.stop();
-        
-    }
-    
-    private GuiceJamesServer createCassandraJamesServer(final MailboxManager mailboxManager) {
-        Module mockMailboxManager = (binder) -> binder.bind(MailboxManager.class).toInstance(mailboxManager);
-        
-        return new GuiceJamesServer()
-            .combineWith(CassandraJamesServerMain.CASSANDRA_SERVER_MODULE, CassandraJamesServerMain.PROTOCOLS)
-            .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
-            .overrideWith(new TestElasticSearchModule(embeddedElasticSearch),
-                new TestFilesystemModule(temporaryFolder),
-                cassandraServer.getModule(),
-                new TestJMAPServerModule(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT),
-                mockMailboxManager);
-    }
-    
     @Test
-    public void startShouldFailWhenNoMoveCapability() throws Exception {
-        MailboxManager mailboxManager = mock(MailboxManager.class);
-        when(mailboxManager.getSupportedMailboxCapabilities())
-            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.MailboxCapabilities.Move)));
+    void startShouldFailWhenNoMoveCapability(GuiceJamesServer server) {
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move)).thenReturn(false);
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.ACL)).thenReturn(true);
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
-
-        server = createCassandraJamesServer(mailboxManager);
         
-        assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(server::start).isInstanceOf(IllegalArgumentException.class);
     }
     
     @Test
-    public void startShouldFailWhenNoACLCapability() throws Exception {
-        MailboxManager mailboxManager = mock(MailboxManager.class);
-        when(mailboxManager.getSupportedMailboxCapabilities())
-            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.MailboxCapabilities.ACL)));
+    void startShouldFailWhenNoACLCapability(GuiceJamesServer server) {
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move)).thenReturn(true);
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.ACL)).thenReturn(false);
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
-
-        server = createCassandraJamesServer(mailboxManager);
         
-        assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(server::start).isInstanceOf(IllegalArgumentException.class);
     }
     
     @Test
-    public void startShouldFailWhenNoAttachmentCapability() throws Exception {
-        MailboxManager mailboxManager = mock(MailboxManager.class);
-        when(mailboxManager.getSupportedMailboxCapabilities())
-            .thenReturn(EnumSet.allOf(MailboxManager.MailboxCapabilities.class));
-        when(mailboxManager.getSupportedMessageCapabilities())
-            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.MessageCapabilities.Attachment)));
-        when(mailboxManager.getSupportedSearchCapabilities())
-            .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
-
-        server = createCassandraJamesServer(mailboxManager);
-
-        assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
-    }
-    
-    @Test
-    public void startShouldFailWhenNoAttachmentSearchCapability() throws Exception {
-        MailboxManager mailboxManager = mock(MailboxManager.class);
-        when(mailboxManager.getSupportedMailboxCapabilities())
-            .thenReturn(EnumSet.allOf(MailboxManager.MailboxCapabilities.class));
+    void startShouldFailWhenNoAttachmentSearchCapability(GuiceJamesServer server) {
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move)).thenReturn(true);
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.ACL)).thenReturn(true);
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
             .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.SearchCapabilities.Attachment)));
 
-        server = createCassandraJamesServer(mailboxManager);
+        assertThatThrownBy(server::start).isInstanceOf(IllegalArgumentException.class);
+    }
 
-        assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
+    @Test
+    void startShouldFailWhenNoAttachmentFileNameSearchCapability(GuiceJamesServer server) {
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move)).thenReturn(true);
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.ACL)).thenReturn(true);
+        when(mailboxManager.getSupportedMessageCapabilities())
+            .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
+        when(mailboxManager.getSupportedSearchCapabilities())
+            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.SearchCapabilities.AttachmentFileName)));
+
+        assertThatThrownBy(server::start).isInstanceOf(IllegalArgumentException.class);
     }
     
     @Test
-    public void startShouldFailWhenNoMultimailboxSearchCapability() throws Exception {
-        MailboxManager mailboxManager = mock(MailboxManager.class);
-        when(mailboxManager.getSupportedMailboxCapabilities())
-            .thenReturn(EnumSet.allOf(MailboxManager.MailboxCapabilities.class));
+    void startShouldFailWhenNoMultimailboxSearchCapability(GuiceJamesServer server) {
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move)).thenReturn(true);
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.ACL)).thenReturn(true);
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
             .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch)));
 
-        server = createCassandraJamesServer(mailboxManager);
-
-        assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(server::start).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void startShouldFailWhenNoUniqueIDCapability() throws Exception {
-        MailboxManager mailboxManager = mock(MailboxManager.class);
-        when(mailboxManager.getSupportedMailboxCapabilities())
-            .thenReturn(EnumSet.allOf(MailboxManager.MailboxCapabilities.class));
+    void startShouldFailWhenNoUniqueIDCapability(GuiceJamesServer server) {
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move)).thenReturn(true);
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.ACL)).thenReturn(true);
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.MessageCapabilities.UniqueID)));
         when(mailboxManager.getSupportedSearchCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
 
-        server = createCassandraJamesServer(mailboxManager);
-
-        assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(server::start).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void startShouldSucceedWhenRequiredCapabilities() throws Exception {
-        MailboxManager mailboxManager = mock(MailboxManager.class);
-        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move))
-            .thenReturn(true);
-        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.ACL))
-            .thenReturn(true);
+    void startShouldSucceedWhenRequiredCapabilities(GuiceJamesServer server) throws Exception {
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move)).thenReturn(true);
+        when(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.ACL)).thenReturn(true);
         when(mailboxManager.getSupportedMessageCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
-
-        server = createCassandraJamesServer(mailboxManager);
 
         server.start();
     }

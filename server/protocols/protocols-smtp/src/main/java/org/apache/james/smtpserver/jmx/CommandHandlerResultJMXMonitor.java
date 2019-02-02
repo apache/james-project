@@ -30,10 +30,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
  */
 public class CommandHandlerResultJMXMonitor extends AbstractCommandHandlerResultJMXMonitor<SMTPSession> {
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.AbstractCommandHandlerResultJMXMonitor
-     * #createCommandHandlerStats(org.apache.james.protocols.api.handler.CommandHandler)
-     */
+    @Override
     protected AbstractCommandHandlerStats createCommandHandlerStats(CommandHandler<SMTPSession> handler) throws Exception {
         Collection<String> col = handler.getImplCommands();
         String cName = handler.getClass().getName();
@@ -41,6 +38,7 @@ public class CommandHandlerResultJMXMonitor extends AbstractCommandHandlerResult
         return new SMTPCommandHandlerStats(getJMXName(), cName, col.toArray(new String[col.size()]));
     }
 
+    @Override
     protected String getDefaultJMXName() {
         return "smtpserver";
     }

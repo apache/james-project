@@ -34,6 +34,7 @@ public class ByteBufferInputStream extends InputStream {
 
     private boolean readLast = true;
 
+    @Override
     public int read() throws IOException {
         if (!readLast) {
             readLast = true;

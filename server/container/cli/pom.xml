@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-server</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -34,20 +34,25 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-library</artifactId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-mailbox-jmx</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-mailbox-adapter</artifactId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-util</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>
@@ -64,15 +69,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.easymock</groupId>
-            <artifactId>easymock</artifactId>
-            <version>3.3.1</version>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -108,6 +107,8 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
+                            <includeScope>compile</includeScope>
+                            <includeScope>runtime</includeScope>
                             <outputDirectory>${project.build.directory}/${project.artifactId}.lib</outputDirectory>
                         </configuration>
                     </execution>

@@ -63,6 +63,7 @@ public class InSpammerBlacklist extends GenericMatcher {
         this.dnsServer = dnsService;
     }
 
+    @Override
     public void init() throws MessagingException {
         network = getCondition();
 
@@ -73,6 +74,7 @@ public class InSpammerBlacklist extends GenericMatcher {
 
     }
 
+    @Override
     public Collection<MailAddress> match(Mail mail) {
         String host = mail.getRemoteAddr();
         try {

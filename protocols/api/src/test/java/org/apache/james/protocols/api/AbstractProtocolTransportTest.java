@@ -19,7 +19,7 @@
 
 package org.apache.james.protocols.api;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -134,56 +134,69 @@ public class AbstractProtocolTransportTest {
 
         AbstractProtocolTransport transport = new AbstractProtocolTransport() {
 
+            @Override
             public void setReadable(boolean readable) {
                 throw new UnsupportedOperationException();
             }
 
             
+            @Override
             public void popLineHandler() {
                 throw new UnsupportedOperationException();
             }
             
+            @Override
             public boolean isTLSStarted() {
                 throw new UnsupportedOperationException();
             }
             
+            @Override
             public boolean isStartTLSSupported() {
                 throw new UnsupportedOperationException();
             }
             
+            @Override
             public boolean isReadable() {
                 throw new UnsupportedOperationException();
             }
             
+            @Override
             public InetSocketAddress getRemoteAddress() {
                 throw new UnsupportedOperationException();
             }
             
+            @Override
             public int getPushedLineHandlerCount() {
                 throw new UnsupportedOperationException();
             }
             
+            @Override
             public InetSocketAddress getLocalAddress() {
                 throw new UnsupportedOperationException();
             }
             
+            @Override
             public String getId() {
                 throw new UnsupportedOperationException();
             }
             
+            @Override
             protected void writeToClient(InputStream in, ProtocolSession session, boolean startTLS) {
                 throw new UnsupportedOperationException();
             }
             
+            @Override
             protected void writeToClient(byte[] bytes, ProtocolSession session, boolean startTLS) {
                 writtenMessages.add(bytes);
                 latch.countDown();
             }
             
+            @Override
             protected void close() {
                 throw new UnsupportedOperationException();
             }
 
+            @Override
             public void pushLineHandler(LineHandler<? extends ProtocolSession> overrideCommandHandler, ProtocolSession session) {
                 throw new UnsupportedOperationException();                
             }
@@ -193,7 +206,7 @@ public class AbstractProtocolTransportTest {
         }
         latch.await();
         
-        assertEquals(messages.size(), writtenMessages.size());
+        assertThat(writtenMessages.size()).isEqualTo(messages.size());
         
         for (int i = 0; i < messages.size(); i++) {
             Response response = messages.get(i);
@@ -203,9 +216,9 @@ public class AbstractProtocolTransportTest {
     
     private void checkBytesEquals(byte[] expected, byte[] received) throws UnsupportedEncodingException {
         
-        assertEquals("'" + new String(expected, US_ASCII) + "'=>'" + new String(received, US_ASCII) + "'", expected.length, received.length - 2);
+        assertThat(received.length - 2).describedAs("'" + new String(expected, US_ASCII) + "'=>'" + new String(received, US_ASCII) + "'").isEqualTo(expected.length);
         for (int i = 0; i < expected.length; i++) {
-            assertEquals("'" + new String(expected, US_ASCII) + "'=>'" + new String(received, US_ASCII) + "'", expected[i], received[i]);
+            assertThat(received[i]).describedAs("'" + new String(expected, US_ASCII) + "'=>'" + new String(received, US_ASCII) + "'").isEqualTo(expected[i]);
         }
     }
     
@@ -217,14 +230,17 @@ public class AbstractProtocolTransportTest {
             this.msg =  UUID.randomUUID().toString();
         }
         
+        @Override
         public String getRetCode() {
             throw new UnsupportedOperationException();
         }
 
+        @Override
         public List<CharSequence> getLines() {
             return Arrays.asList((CharSequence)msg);
         }
 
+        @Override
         public boolean isEndSession() {
             return false;
         }

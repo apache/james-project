@@ -57,14 +57,17 @@ public class LocalDelivery extends GenericMailet {
         this.mailboxManager = mailboxManager;
     }
 
+    @Override
     public void service(Mail mail) throws MessagingException {
         mailDispatcher.dispatch(mail);
     }
 
+    @Override
     public String getMailetInfo() {
         return "Local Delivery Mailet";
     }
 
+    @Override
     public void init() throws MessagingException {
         mailDispatcher = MailDispatcher.builder()
             .mailStore(SimpleMailStore.builder()

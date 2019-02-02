@@ -31,6 +31,7 @@ import javax.inject.Inject;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.protocols.api.ProtocolSession;
@@ -48,12 +49,11 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.util.MDCBuilder;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 
 
 /**
-  * handles DATA command
+ * handles DATA command
  */
 public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHandler {
 
@@ -65,6 +65,7 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
 
     public static final class DataConsumerLineHandler implements LineHandler<SMTPSession> {
 
+        @Override
         public SMTPResponse onLine(SMTPSession session, ByteBuffer line) {
             // Discard everything until the end of DATA session
             if (line.remaining() == 3 && line.get() == 46) {
@@ -93,12 +94,8 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
             this.filter = filter;
             this.next = next;
         }
-        
 
-        /*
-         * (non-Javadoc)
-         * @see org.apache.james.protocols.api.handler.LineHandler#onLine(org.apache.james.protocols.api.ProtocolSession, java.nio.ByteBuffer)
-         */
+        @Override
         public Response onLine(SMTPSession session, ByteBuffer line) {
             line.rewind();
             return filter.onLine(session, line, next);
@@ -140,6 +137,7 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
      * process DATA command
      *
      */
+    @Override
     public Response onCommand(SMTPSession session, Request request) {
         TimeMetric timeMetric = metricFactory.timer("SMTP-" + request.getCommand());
         session.stopDetectingCommandInjection();
@@ -156,7 +154,7 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
                 return response;
             }
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             timeMetric.stopAndPublish();
             session.needsCommandInjectionDetection();
@@ -174,32 +172,27 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
      */
     @SuppressWarnings("unchecked")
     protected Response doDATA(SMTPSession session, String argument) {
-        MailEnvelope env = createEnvelope(session, (MailAddress) session.getAttachment(SMTPSession.SENDER,ProtocolSession.State.Transaction), new ArrayList<>((Collection<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction)));
+        MaybeSender sender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction);
+        MailEnvelope env = createEnvelope(session, sender, new ArrayList<>((Collection<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction)));
         session.setAttachment(MAILENV, env,ProtocolSession.State.Transaction);
         session.pushLineHandler(lineHandler);
         
         return DATA_READY;
     }
     
-    protected MailEnvelope createEnvelope(SMTPSession session, MailAddress sender, List<MailAddress> recipients) {
+    protected MailEnvelope createEnvelope(SMTPSession session, MaybeSender sender, List<MailAddress> recipients) {
         MailEnvelopeImpl env = new MailEnvelopeImpl();
         env.setRecipients(recipients);
         env.setSender(sender);
         return env;
     }
     
-    
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }
 
-
-    /**
-     * @see org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
-     */
+    @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public List getMarkerInterfaces() {
         List classes = new LinkedList();
@@ -208,9 +201,7 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
     }
 
 
-    /**
-     * @see org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
-     */
+    @Override
     @SuppressWarnings("rawtypes")
     public void wireExtensions(Class interfaceName, List extension) throws WiringException {
         if (DataLineFilter.class.equals(interfaceName)) {

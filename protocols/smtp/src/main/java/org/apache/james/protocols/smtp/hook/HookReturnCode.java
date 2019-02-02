@@ -17,15 +17,99 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
-
 package org.apache.james.protocols.smtp.hook;
 
+import java.util.List;
+import java.util.Objects;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
+
 public class HookReturnCode {
-    public static final int OK = 0x1;
-    public static final int DENY = 0x1 << 1;
-    public static final int DENYSOFT = 0x1 << 2;
-    public static final int DECLINED = 0x1 << 3;
-    public static final int DISCONNECT = 0x1 << 4;
+
+
+    public enum Action {
+        OK,
+        DENY,
+        DENYSOFT,
+        DECLINED,
+        NONE;
+
+        public static List<Action> ACTIVE_ACTIONS =
+            ImmutableList.of(HookReturnCode.Action.DENY, HookReturnCode.Action.DENYSOFT, HookReturnCode.Action.OK);
+
+    }
+
+    public enum ConnectionStatus {
+        Disconnected,
+        Connected
+    }
+
+    public static HookReturnCode denySoft() {
+        return connected(Action.DENYSOFT);
+    }
+
+    public static HookReturnCode deny() {
+        return connected(Action.DENY);
+    }
+
+    public static HookReturnCode ok() {
+        return connected(Action.OK);
+    }
+
+    public static HookReturnCode declined() {
+        return connected(Action.DECLINED);
+    }
+
+    public static HookReturnCode connected(Action action) {
+        return new HookReturnCode(action, ConnectionStatus.Connected);
+    }
+
+    public static HookReturnCode disconnected(Action action) {
+        return new HookReturnCode(action, ConnectionStatus.Disconnected);
+    }
+
+    private final Action action;
+    private final ConnectionStatus connectionStatus;
+
+    public HookReturnCode(Action action, ConnectionStatus connectionStatus) {
+        this.action = action;
+        this.connectionStatus = connectionStatus;
+    }
+
+    public Action getAction() {
+        return action;
+    }
+
+    public ConnectionStatus getConnectionStatus() {
+        return connectionStatus;
+    }
+
+    public boolean isDisconnected() {
+        return connectionStatus == ConnectionStatus.Disconnected;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof HookReturnCode) {
+            HookReturnCode that = (HookReturnCode) o;
+
+            return Objects.equals(this.action, that.action)
+                && Objects.equals(this.connectionStatus, that.connectionStatus);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(action, connectionStatus);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("action", action)
+            .add("disconnection", connectionStatus)
+            .toString();
+    }
 }

@@ -33,14 +33,17 @@ public class FieldImpl implements Field {
         this.body = body;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public String getBody() {
         return body;
     }
 
+    @Override
     public ByteSequence getRaw() {
         return null;
     }

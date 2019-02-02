@@ -55,6 +55,7 @@ Feature: An upload endpoint should be available to upload contents
     When "username@domain.tld" upload a content without content type
     Then the user should receive bad request response
 
+  @BasicFeature
   Scenario: Uploading a content, the content should be retrievable
     When "username@domain.tld" upload a content
     Then "username@domain.tld" should be able to retrieve the content

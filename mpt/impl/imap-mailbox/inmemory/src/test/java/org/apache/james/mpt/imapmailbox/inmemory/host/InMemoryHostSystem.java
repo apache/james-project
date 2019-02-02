@@ -17,26 +17,21 @@
  * under the License.                                           *
  ****************************************************************/
 
+
 package org.apache.james.mpt.imapmailbox.inmemory.host;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
-import org.apache.james.mailbox.mock.MockMailboxSession;
-import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
-import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
-import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
-import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
@@ -48,38 +43,22 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
         Feature.MOVE_SUPPORT,
         Feature.USER_FLAGS_SUPPORT,
         Feature.QUOTA_SUPPORT,
-        Feature.ANNOTATION_SUPPORT);
+        Feature.ANNOTATION_SUPPORT,
+        Feature.MOD_SEQ_SEARCH);
 
     private StoreMailboxManager mailboxManager;
     private InMemoryPerUserMaxQuotaManager perUserMaxQuotaManager;
-
-    public static JamesImapHostSystem build() throws Exception {
-        return new InMemoryHostSystem();
-    }
     
     @Override
     public void beforeTest() throws Exception {
         super.beforeTest();
-        this.mailboxManager = new InMemoryIntegrationResources()
-            .createMailboxManager(new SimpleGroupMembershipResolver(), authenticator, authorizator);
-        QuotaRootResolver quotaRootResolver = new DefaultQuotaRootResolver(mailboxManager.getMapperFactory());
+        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources().createResources(new SimpleGroupMembershipResolver(), authenticator, authorizator);
+        this.mailboxManager = resources.getMailboxManager();
+        this.perUserMaxQuotaManager = resources.getMaxQuotaManager();
 
-        perUserMaxQuotaManager = new InMemoryPerUserMaxQuotaManager();
+        ImapProcessor defaultImapProcessorFactory = DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager,  mailboxManager.getEventBus(), new StoreSubscriptionManager(mailboxManager.getMapperFactory()),
+            mailboxManager.getQuotaComponents().getQuotaManager(), mailboxManager.getQuotaComponents().getQuotaRootResolver(), new DefaultMetricFactory());
 
-        InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(
-            new CurrentQuotaCalculator(mailboxManager.getMapperFactory(), quotaRootResolver),
-            mailboxManager);
-
-        StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, perUserMaxQuotaManager);
-
-        ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver);
-
-        mailboxManager.setQuotaRootResolver(quotaRootResolver);
-        mailboxManager.setQuotaManager(quotaManager);
-        mailboxManager.setQuotaUpdater(quotaUpdater);
-        mailboxManager.addGlobalListener(quotaUpdater, new MockMailboxSession("admin"));
-
-        final ImapProcessor defaultImapProcessorFactory = DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager, new StoreSubscriptionManager(mailboxManager.getMapperFactory()), quotaManager, quotaRootResolver, new DefaultMetricFactory());
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
                 new DefaultImapEncoderFactory().buildImapEncoder(),
                 defaultImapProcessorFactory);
@@ -96,8 +75,13 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
     }
 
     @Override
-    public void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws MailboxException {
-        perUserMaxQuotaManager.setDefaultMaxMessage(maxMessageQuota);
-        perUserMaxQuotaManager.setDefaultMaxStorage(maxStorageQuota);
+    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) {
+        perUserMaxQuotaManager.setGlobalMaxMessage(maxMessageQuota);
+        perUserMaxQuotaManager.setGlobalMaxStorage(maxStorageQuota);
+    }
+
+    @Override
+    protected void await() {
+
     }
 }

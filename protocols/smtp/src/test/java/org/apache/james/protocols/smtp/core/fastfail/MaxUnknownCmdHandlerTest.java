@@ -20,7 +20,7 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,10 +38,12 @@ public class MaxUnknownCmdHandlerTest {
         SMTPSession session = new BaseFakeSMTPSession() {
             private final HashMap<String,Object> map = new HashMap<>();
 
+            @Override
             public Map<String,Object> getState() {
                 return map;
             }
 
+            @Override
             public Object setAttachment(String key, Object value, State state) {
                 if (state == State.Connection) {
                     throw new UnsupportedOperationException();
@@ -55,10 +57,7 @@ public class MaxUnknownCmdHandlerTest {
                 }
             }
 
-            /*
-             * (non-Javadoc)
-             * @see org.apache.james.protocols.api.ProtocolSession#getAttachment(java.lang.String, org.apache.james.protocols.api.ProtocolSession.State)
-             */
+            @Override
             public Object getAttachment(String key, State state) {
                 if (state == State.Connection) {
                     throw new UnsupportedOperationException();
@@ -71,13 +70,13 @@ public class MaxUnknownCmdHandlerTest {
         
         MaxUnknownCmdHandler handler = new MaxUnknownCmdHandler();
         handler.setMaxUnknownCmdCount(2);
-        int resp = handler.doUnknown(session, "what").getResult();
-        assertEquals(HookReturnCode.DECLINED, resp);
+        HookReturnCode resp = handler.doUnknown(session, "what").getResult();
+        assertThat(resp).isEqualTo(HookReturnCode.declined());
 
         resp = handler.doUnknown(session, "what").getResult();
-        assertEquals(HookReturnCode.DECLINED, resp);
+        assertThat(resp).isEqualTo(HookReturnCode.declined());
         
         resp = handler.doUnknown(session, "what").getResult();
-        assertEquals(HookReturnCode.DENY | HookReturnCode.DISCONNECT, resp);
+        assertThat(resp).isEqualTo(new HookReturnCode(HookReturnCode.Action.DENY, HookReturnCode.ConnectionStatus.Disconnected));
     }
 }

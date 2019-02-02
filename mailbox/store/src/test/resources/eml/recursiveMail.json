@@ -11,6 +11,7 @@
     "security",
     "debian"
   ],
+  "mimeMessageID": "<5577F927.2040409@linagora.com>",
   "headers": {
     "date": [
       "Wed, 10 Jun 2015 10:45:27 +0200"
@@ -97,7 +98,6 @@
       "textContent": "Forward as attachment !\n\n\n",
       "mediaType": "text",
       "subtype": "plain",
-      "fileMetadata":{},
       "fileName": null,
       "fileExtension": null,
       "contentDisposition": null,
@@ -114,7 +114,6 @@
       "textContent": null,
       "mediaType": null,
       "subtype": null,
-      "fileMetadata":{},
       "fileName": null,
       "fileExtension": null,
       "contentDisposition": null,
@@ -135,7 +134,6 @@
       "mediaType": null,
       "subtype": null,
       "fileName": null,
-      "fileMetadata":{},
       "fileExtension": null,
       "contentDisposition": null,
       "headers": {
@@ -181,7 +179,6 @@
       "subtype": "plain",
       "fileName": null,
       "fileExtension": null,
-      "fileMetadata":{},
       "contentDisposition": null,
       "headers": {
         "content-transfer-encoding": [
@@ -194,7 +191,6 @@
     },
     {
       "textContent": null,
-      "fileMetadata":{},
       "mediaType": "application",
       "subtype": "vnd.oasis.opendocument.spreadsheet",
       "fileName": "Sprint-2015-05-18.ods",

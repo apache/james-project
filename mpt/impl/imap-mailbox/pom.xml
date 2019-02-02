@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-james-mpt</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
         <relativePath>../..</relativePath>
     </parent>
 
@@ -38,94 +38,64 @@
         <module>cyrus</module>
         <module>elasticsearch</module>
         <module>external-james</module>
-        <module>hbase</module>
         <module>inmemory</module>
-        <module>jcr</module>
         <module>jpa</module>
         <module>lucenesearch</module>
         <module>maildir</module>
+        <module>rabbitmq</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mpt-imapmailbox-cassandra</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mpt-imapmailbox-cyrus</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mpt-imapmailbox-elasticsearch</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-mpt-imapmailbox-hbase</artifactId>
-                <version>${project.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mpt-imapmailbox-inmemory</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>apache-james-mpt-imapmailbox-jcr</artifactId>
-                <version>${project.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mpt-imapmailbox-jpa</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mpt-imapmailbox-jpa-lucene</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mpt-imapmailbox-maildir</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <configuration>
-                        <excludes>
-                            <exclude>**/suite/*.java</exclude>
-                            <exclude>**/suite/**/*.java</exclude>
-                        </excludes>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
 
 </project>

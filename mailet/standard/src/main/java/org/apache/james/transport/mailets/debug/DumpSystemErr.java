@@ -45,6 +45,7 @@ public class DumpSystemErr extends GenericMailet {
      *
      * @throws MessagingException if an error occurs while writing the message
      */
+    @Override
     public void service(Mail mail) throws MessagingException {
         try {
             MimeMessage message = mail.getMessage();
@@ -54,11 +55,7 @@ public class DumpSystemErr extends GenericMailet {
         }
     }
 
-    /**
-     * Return a string describing this mailet.
-     *
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "Dumps message to System.err";
     }

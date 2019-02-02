@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-server-guice</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -40,73 +40,34 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-backends-jpa</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-data-jpa</artifactId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-jpa-common-guice</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-guice-common</artifactId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-jpa-smtp-common-guice</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-guice-activemq</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-guice-es-resporter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-guice-smtp</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-guice-webadmin</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-guice-webadmin-data</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-guice-webadmin-mailqueue</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-guice-webadmin-mailrepository</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-jpa-common-guice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.internetitem</groupId>
-            <artifactId>logback-elasticsearch-appender</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jayway.awaitility</groupId>
-            <artifactId>awaitility</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jayway.restassured</groupId>
+            <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
             <exclusions>
@@ -117,17 +78,27 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.nurkiewicz.asyncretry</groupId>
-            <artifactId>asyncretry</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -150,6 +121,8 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
+                            <includeScope>compile</includeScope>
+                            <includeScope>runtime</includeScope>
                             <outputDirectory>${project.build.directory}/${project.artifactId}.lib</outputDirectory>
                         </configuration>
                     </execution>
@@ -188,19 +161,6 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>**/suite/*.java</exclude>
-                        <exclude>**/suite/**/*.java</exclude>
-                    </excludes>
-                    <includes>
-                        <include>${jpa.includes}</include>
-                    </includes>
-                </configuration>
             </plugin>
         </plugins>
     </build>

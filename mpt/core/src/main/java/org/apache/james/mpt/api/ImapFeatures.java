@@ -30,7 +30,8 @@ public class ImapFeatures {
         MOVE_SUPPORT,
         USER_FLAGS_SUPPORT,
         QUOTA_SUPPORT,
-        ANNOTATION_SUPPORT
+        ANNOTATION_SUPPORT,
+        MOD_SEQ_SEARCH
     }
 
     public static ImapFeatures of(Feature... features) {
@@ -49,9 +50,7 @@ public class ImapFeatures {
     
     public boolean supports(Feature... features) {
         Preconditions.checkNotNull(features);
-        ImmutableSet<Feature> requestedFeatures = ImmutableSet.copyOf(features);
-        return requestedFeatures.stream()
-            .allMatch(feature -> supportedFeatures.contains(feature));
+        return supportedFeatures.containsAll(ImmutableSet.copyOf(features));
     }
     
 }

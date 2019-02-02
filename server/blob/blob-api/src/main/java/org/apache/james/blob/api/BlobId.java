@@ -19,12 +19,18 @@
 
 package org.apache.james.blob.api;
 
+import java.util.UUID;
+
 public interface BlobId {
 
     interface Factory {
         BlobId forPayload(byte[] payload);
 
         BlobId from(String id);
+
+        default BlobId randomId() {
+            return from(UUID.randomUUID().toString());
+        }
     }
 
     String asString();

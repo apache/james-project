@@ -119,6 +119,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
     private MBeanServer mbeanServer;
 
+    private int port;
 
     @Inject
     public final void setFileSystem(FileSystem filesystem) {
@@ -153,11 +154,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         return  "org.apache.james:type=server,name=" + jmxName;
     }
     
-    /**
-     * @see
-     * org.apache.james.lifecycle.api.Configurable
-     * #configure(org.apache.commons.configuration.HierarchicalConfiguration)
-     */
+    @Override
     public final void configure(HierarchicalConfiguration config) throws ConfigurationException {
 
         enabled = config.getBoolean("[@enabled]", true);
@@ -268,6 +265,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             executionHandler = createExecutionHander();
             frameHandlerFactory = createFrameHandlerFactory();
             bind();
+            port = retrieveFirstBindedPort();
 
             mbeanServer = ManagementFactory.getPlatformMBeanServer();
             registerMBean();
@@ -276,6 +274,20 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
         }
     
+    }
+
+    private int retrieveFirstBindedPort() {
+        List<InetSocketAddress> listenAddresses = getListenAddresses();
+        InetSocketAddress inetSocketAddress = listenAddresses.get(0);
+        return inetSocketAddress.getPort();
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public boolean useSSL() {
+        return useSSL;
     }
 
     @PreDestroy
@@ -360,6 +372,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
      * 
      * @return enabled
      */
+    @Override
     public boolean isEnabled() {
         return enabled;
     }
@@ -424,6 +437,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
      * 
      * @return the socket type ('plain' or 'secure')
      */
+    @Override
     public String getSocketType() {
         if (getEncryption() != null && !getEncryption().isStartTLS()) {
             return "secure";
@@ -431,17 +445,12 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         return "plain";
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.ServerMBean#getStartTLSSupported()
-     */
+    @Override
     public boolean getStartTLSSupported() {
         return getEncryption() != null && getEncryption().isStartTLS();
     }
 
-    /**
-     * @see
-     * org.apache.james.protocols.lib.jmx.ServerMBean#getMaximumConcurrentConnections()
-     */
+    @Override
     public int getMaximumConcurrentConnections() {
         return connectionLimit;
     }
@@ -472,16 +481,12 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         return enabledCipherSuites;
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.ServerMBean#isStarted()
-     */
+    @Override
     public boolean isStarted() {
         return isBound();
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.ServerMBean#start()
-     */
+    @Override
     public boolean start() {
         try {
             bind();
@@ -492,24 +497,18 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         return true;
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.ServerMBean#stop()
-     */
+    @Override
     public boolean stop() {
         unbind();
         return true;
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.ServerMBean#getHandledConnections()
-     */
+    @Override
     public long getHandledConnections() {
         return countHandler.getConnectionsTillStartup();
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.ServerMBean#getCurrentConnections()
-     */
+    @Override
     public int getCurrentConnections() {
         return countHandler.getCurrentConnectionCount();
     }
@@ -518,9 +517,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         return countHandler;
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.ServerMBean#getBoundAddresses()
-     */
+    @Override
     public String[] getBoundAddresses() {
 
         List<InetSocketAddress> addresses = getListenAddresses();

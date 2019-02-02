@@ -36,6 +36,7 @@ public class ClassLoaderObjectInputStream extends ObjectInputStream {
         this.classLoader = classLoader;
     }
 
+    @Override
     protected Class<?> resolveClass(ObjectStreamClass objectStreamClass) throws IOException, ClassNotFoundException {
         final Class<?> clazz = Class.forName(objectStreamClass.getName(), false, classLoader);
 

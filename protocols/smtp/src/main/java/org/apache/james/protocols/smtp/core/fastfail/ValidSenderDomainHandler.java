@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.core.fastfail;
 
-import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
@@ -33,14 +33,16 @@ import org.apache.james.protocols.smtp.hook.MailHook;
 public abstract class ValidSenderDomainHandler implements MailHook { 
 
 
-    /**
-     * @see org.apache.james.protocols.smtp.hook.MailHook#doMail(org.apache.james.protocols.smtp.SMTPSession, org.apache.mailet.MailAddress)
-     */
-    public HookResult doMail(SMTPSession session, MailAddress sender) {
-        if (sender != null  && !hasMXRecord(session,sender.getDomain())) {
-            return new HookResult(HookReturnCode.DENY,SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.ADDRESS_SYNTAX_SENDER) + " sender " + sender + " contains a domain with no valid MX records");
+    @Override
+    public HookResult doMail(SMTPSession session, MaybeSender sender) {
+        if (!sender.isNullSender()  && !hasMXRecord(session,sender.get().getDomain().name())) {
+            return HookResult.builder()
+                .hookReturnCode(HookReturnCode.deny())
+                .smtpReturnCode(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS)
+                .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.ADDRESS_SYNTAX_SENDER) + " sender " + sender + " contains a domain with no valid MX records")
+                .build();
         } else {
-            return HookResult.declined();
+            return HookResult.DECLINED;
         }
     }
     

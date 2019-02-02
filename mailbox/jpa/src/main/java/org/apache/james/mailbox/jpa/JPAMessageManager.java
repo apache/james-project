@@ -26,6 +26,7 @@ import javax.mail.internet.SharedInputStream;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
@@ -34,11 +35,9 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
-import org.apache.james.mailbox.store.ImmutableMailboxMessage;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -52,19 +51,18 @@ public class JPAMessageManager extends StoreMessageManager {
     
     public JPAMessageManager(MailboxSessionMapperFactory mapperFactory,
                              MessageSearchIndex index,
-                             final MailboxEventDispatcher dispatcher,
+                             EventBus eventBus,
                              MailboxPathLocker locker,
-                             final Mailbox mailbox,
+                             Mailbox mailbox,
                              QuotaManager quotaManager,
                              QuotaRootResolver quotaRootResolver,
                              MessageParser messageParser,
                              MessageId.Factory messageIdFactory,
                              BatchSizes batchSizes,
-                             ImmutableMailboxMessage.Factory immutableMailboxMessageFactory,
-                             StoreRightManager storeRightManager) throws MailboxException {
+                             StoreRightManager storeRightManager) {
 
-        super(mapperFactory, index, dispatcher, locker, mailbox,
-            quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory, storeRightManager);
+        super(JPAMailboxManager.DEFAULT_NO_MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
+            quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, storeRightManager);
     }
     
     @Override

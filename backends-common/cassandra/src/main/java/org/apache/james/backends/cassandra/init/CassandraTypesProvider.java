@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraType;
 
+import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.UserType;
 import com.github.steveash.guavate.Guavate;
@@ -36,18 +37,15 @@ public class CassandraTypesProvider {
 
     @Inject
     public CassandraTypesProvider(CassandraModule module, Session session) {
+        KeyspaceMetadata keyspaceMetadata = session.getCluster()
+            .getMetadata()
+            .getKeyspace(session.getLoggedKeyspace());
+
         userTypes = module.moduleTypes()
             .stream()
             .collect(Guavate.toImmutableMap(
                     CassandraType::getName,
-                    type -> getSessionType(session, type)));
-    }
-
-    private UserType getSessionType(Session session, CassandraType type) {
-        return session.getCluster()
-            .getMetadata()
-            .getKeyspace(session.getLoggedKeyspace())
-            .getUserType(type.getName());
+                    type -> keyspaceMetadata.getUserType(type.getName())));
     }
 
     public UserType getDefinedUserType(String typeName) {

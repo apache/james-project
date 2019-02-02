@@ -25,8 +25,11 @@ import java.util.Map;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 
@@ -42,12 +45,12 @@ public class MaxQuotaConfigurationReader implements Configurable {
 
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
-        Long defaultMaxMessage = config.configurationAt("maxQuotaManager").getLong("defaultMaxMessage", null);
-        Long defaultMaxStorage = config.configurationAt("maxQuotaManager").getLong("defaultMaxStorage", null);
+        Long globalMaxMessage = config.configurationAt("maxQuotaManager").getLong("globalMaxMessage", null);
+        Long globalMaxStorage = config.configurationAt("maxQuotaManager").getLong("globalMaxStorage", null);
         Map<String, Long> maxMessage = parseMaxMessageConfiguration(config, "maxMessage");
         Map<String, Long> maxStorage = parseMaxMessageConfiguration(config, "maxStorage");
         try {
-            configureDefaultValues(defaultMaxMessage, defaultMaxStorage);
+            configureGlobalValues(globalMaxMessage, globalMaxStorage);
             configureQuotaRootSpecificValues(maxMessage, maxStorage);
         } catch (MailboxException e) {
             throw new ConfigurationException("Exception caught while configuring max quota manager", e);
@@ -63,21 +66,25 @@ public class MaxQuotaConfigurationReader implements Configurable {
         return result;
     }
 
-    private void configureDefaultValues(Long defaultMaxMessage, Long defaultMaxStorage) throws MailboxException {
-        if (defaultMaxMessage != null) {
-            maxQuotaManager.setDefaultMaxMessage(defaultMaxMessage);
+    private void configureGlobalValues(Long globalMaxMessage, Long globalMaxStorage) throws MailboxException {
+        if (globalMaxMessage != null) {
+            maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(globalMaxMessage));
         }
-        if (defaultMaxStorage != null) {
-            maxQuotaManager.setDefaultMaxStorage(defaultMaxStorage);
+        if (globalMaxStorage != null) {
+            maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(globalMaxStorage));
         }
     }
 
     private void configureQuotaRootSpecificValues(Map<String, Long> maxMessage, Map<String, Long> maxStorage) throws MailboxException {
         for (Map.Entry<String, Long> entry : maxMessage.entrySet()) {
-            maxQuotaManager.setMaxMessage(quotaRootResolver.createQuotaRoot(entry.getKey()), entry.getValue());
+            maxQuotaManager.setMaxMessage(toQuotaRoot(entry.getKey()), QuotaCount.count(entry.getValue()));
         }
         for (Map.Entry<String, Long> entry : maxStorage.entrySet()) {
-            maxQuotaManager.setMaxStorage(quotaRootResolver.createQuotaRoot(entry.getKey()), entry.getValue());
+            maxQuotaManager.setMaxStorage(toQuotaRoot(entry.getKey()), QuotaSize.size(entry.getValue()));
         }
+    }
+
+    private QuotaRoot toQuotaRoot(String serializedKey) throws MailboxException {
+        return quotaRootResolver.fromString(serializedKey);
     }
 }

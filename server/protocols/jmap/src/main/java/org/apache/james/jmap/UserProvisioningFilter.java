@@ -31,9 +31,8 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.james.core.MailAddress;
+import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
@@ -41,7 +40,6 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Throwables;
 
 public class UserProvisioningFilter implements Filter {
 
@@ -78,7 +76,7 @@ public class UserProvisioningFilter implements Filter {
         } catch (AlreadyExistInUsersRepositoryException e) {
             // Ignore
         } catch (UsersRepositoryException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             timeMetric.stopAndPublish();
         }
@@ -94,9 +92,9 @@ public class UserProvisioningFilter implements Filter {
 
     private String getUsername(User user) throws UsersRepositoryException {
         try {
-            return usersRepository.getUser(new MailAddress(user.getUserName()));
-        } catch (AddressException e) {
-            return user.getUserName();
+            return usersRepository.getUser(user.asMailAddress());
+        } catch (IllegalStateException | AddressException e) {
+            return user.asString();
         }
     }
     

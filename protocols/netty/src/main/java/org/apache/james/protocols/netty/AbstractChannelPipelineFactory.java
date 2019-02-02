@@ -63,9 +63,7 @@ public abstract class AbstractChannelPipelineFactory implements ChannelPipelineF
     }
     
     
-    /**
-     * @see org.jboss.netty.channel.ChannelPipelineFactory#getPipeline()
-     */
+    @Override
     public ChannelPipeline getPipeline() throws Exception {
         // Create a default pipeline implementation.
         ChannelPipeline pipeline = pipeline();

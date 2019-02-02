@@ -19,28 +19,31 @@
 
 package org.apache.james.mailets.configuration;
 
-import static com.jayway.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
-import static com.jayway.awaitility.Duration.ONE_MINUTE;
+import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Duration.ONE_MINUTE;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
+import java.util.concurrent.TimeUnit;
+
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
+import org.awaitility.core.ConditionFactory;
 
 public class Constants {
-    public static Duration slowPacedPollInterval = FIVE_HUNDRED_MILLISECONDS;
+    public static Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
+    public static Duration ONE_MILLISECOND = new Duration(1, TimeUnit.MILLISECONDS);
+
     public static ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)
         .and()
         .with()
-        .pollDelay(slowPacedPollInterval)
+        .pollDelay(ONE_MILLISECOND)
         .await();
     public static ConditionFactory awaitAtMostOneMinute = calmlyAwait.atMost(ONE_MINUTE);
 
     public static final String DEFAULT_DOMAIN = "james.org";
     public static final String LOCALHOST_IP = "127.0.0.1";
-    public static final int IMAP_PORT = 1143;
-    public static final int SMTP_PORT = 1025;
     public static final String PASSWORD = "secret";
     public static final String FROM = "user@" + DEFAULT_DOMAIN;
     public static final String RECIPIENT = "user2@" + DEFAULT_DOMAIN;
+    public static final String RECIPIENT2 = "user3@" + DEFAULT_DOMAIN;
 }

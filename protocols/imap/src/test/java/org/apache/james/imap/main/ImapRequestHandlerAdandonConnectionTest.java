@@ -18,7 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.main;
 
-import static org.junit.Assert.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,9 +29,6 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.main.ImapRequestStreamHandler;
 import org.apache.james.imap.encode.ImapEncoder;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -47,44 +45,26 @@ public class ImapRequestHandlerAdandonConnectionTest {
     ImapDecoder decoderStub;
     ImapProcessor processorStub;
     ImapEncoder encoderStub;
-    ImapSession sessionStub;    
-
-    private Mockery mockery = new JUnit4Mockery();
-    
+    ImapSession sessionStub;
     
     @Before
     public void setUp() throws Exception {
         // Fakes
         fakeOutput = new ByteArrayOutputStream();
         // Stubs
-        decoderStub = mockery.mock(ImapDecoder.class);
-        processorStub = mockery.mock(ImapProcessor.class);
-        encoderStub = mockery.mock(ImapEncoder.class);
-        sessionStub = mockery.mock(ImapSession.class);
+        decoderStub = mock(ImapDecoder.class);
+        processorStub = mock(ImapProcessor.class);
+        encoderStub = mock(ImapEncoder.class);
+        sessionStub = mock(ImapSession.class);
         // System under test
         subject = new ImapRequestStreamHandler(decoderStub, processorStub, encoderStub);
     }
     
     @Test
-    public void testWhenConsumeLineFailsShouldAbandonConnection() throws Exception {        
-        //
-        // Setup
-        //
-        
-        // Setup stubs
-        mockery.checking(new Expectations() {{
-                    ignoring(decoderStub);
-                    ignoring(processorStub);
-                    ignoring(encoderStub);
-                    ignoring(sessionStub);
-                }
-            }
-        );
-        
+    public void testWhenConsumeLineFailsShouldAbandonConnection() {
         // Create input stream that will throw IOException after first read
         byte[] endOfStreamAfterOneCharacter = {'0'};
         ByteArrayInputStream fakeInput = new ByteArrayInputStream(endOfStreamAfterOneCharacter);
-        
         
         // 
         // Exercise
@@ -94,6 +74,6 @@ public class ImapRequestHandlerAdandonConnectionTest {
         //
         // Verify output
         //
-        assertFalse("Connection should be abandoned", result);
+        assertThat(result).describedAs("Connection should be abandoned").isFalse();
     }
 }

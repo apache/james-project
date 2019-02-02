@@ -18,10 +18,9 @@
  ****************************************************************/
 package org.apache.james.server.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.apache.mailet.base.RFC2822Headers.RETURN_PATH;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -38,9 +37,9 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.base.RFC2822Headers;
-import org.apache.mailet.base.test.MimeMessageUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MimeMessageTest {
 
@@ -89,7 +88,7 @@ public class MimeMessageTest {
     @Test
     public void testSimpleMessage() throws Exception {
         MimeMessage m = getSimpleMessage();
-        assertEquals(getSimpleMessageCleanedSource(), getCleanedMessageSource(m));
+        assertThat(getCleanedMessageSource(m)).isEqualTo(getSimpleMessageCleanedSource());
         LifecycleUtil.dispose(m);
     }
 
@@ -199,7 +198,7 @@ public class MimeMessageTest {
         // .setHeader(RFC2822Headers.CONTENT_TYPE,contentType);
         mm.saveChanges();
 
-        assertEquals(getMultipartMessageExpected1(), getCleanedMessageSource(mm));
+        assertThat(getCleanedMessageSource(mm)).isEqualTo(getMultipartMessageExpected1());
 
         MimeMultipart content2 = (MimeMultipart) mm.getContent();
         content2.addBodyPart(new MimeBodyPart(new InternetHeaders(new ByteArrayInputStream(
@@ -207,14 +206,14 @@ public class MimeMessageTest {
         mm.setContent(content2, mm.getContentType());
         mm.saveChanges();
 
-        assertEquals(getMultipartMessageExpected2(), getCleanedMessageSource(mm));
+        assertThat(getCleanedMessageSource(mm)).isEqualTo(getMultipartMessageExpected2());
 
         mm.setContent("mynewcoòàùntent€à!", "text/plain; charset=cp1252");
         mm.setHeader(RFC2822Headers.CONTENT_TYPE, "binary/octet-stream");
         // mm.setHeader("Content-Transfer-Encoding","8bit");
         mm.saveChanges();
 
-        assertEquals(getMultipartMessageExpected3(), getCleanedMessageSource(mm));
+        assertThat(getCleanedMessageSource(mm)).isEqualTo(getMultipartMessageExpected3());
 
         LifecycleUtil.dispose(mm);
 
@@ -296,7 +295,7 @@ public class MimeMessageTest {
         MimeMessage mm = getMissingEncodingMessage();
         try {
             int count = mm.getLineCount();
-            assertTrue(count == -1 || count == 7);
+            assertThat(count == -1 || count == 7).isTrue();
         } catch (Exception e) {
             fail("Unexpected exception in getLineCount");
         }
@@ -369,7 +368,7 @@ public class MimeMessageTest {
         mm.setHeader("X-Test", "foo");
         mm.saveChanges();
 
-        assertEquals(getSimpleMessageCleanedSourceHeaderExpected(), getCleanedMessageSource(mm));
+        assertThat(getCleanedMessageSource(mm)).isEqualTo(getSimpleMessageCleanedSourceHeaderExpected());
 
         LifecycleUtil.dispose(mm);
         LifecycleUtil.dispose(mmorig);
@@ -378,7 +377,7 @@ public class MimeMessageTest {
     @Test
     public void testReturnPath() throws Exception {
         MimeMessage message = getSimpleMessage();
-        assertNull(message.getHeader(RFC2822Headers.RETURN_PATH));
+        assertThat(message.getHeader(RETURN_PATH)).isNull();
         LifecycleUtil.dispose(message);
     }
 
@@ -388,7 +387,7 @@ public class MimeMessageTest {
         message.setHeader(RFC2822Headers.RETURN_PATH, "<test@test.de>");
         Enumeration<String> h = message.getAllHeaderLines();
 
-        assertEquals(h.nextElement(), "Return-Path: <test@test.de>");
+        assertThat("Return-Path: <test@test.de>").isEqualTo(h.nextElement());
         LifecycleUtil.dispose(message);
     }
 

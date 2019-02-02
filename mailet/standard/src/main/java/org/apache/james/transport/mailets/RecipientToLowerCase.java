@@ -27,30 +27,24 @@ import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Throwables;
-
 
 /**
  * {@link GenericMailet} which convert all Recipients to lowercase
- * 
- *
  */
 public class RecipientToLowerCase extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
         mail.setRecipients(mail.getRecipients().stream()
-            .map(this::toLowerCase)
+            .map(Throwing.function(this::toLowerCase))
             .collect(Guavate.toImmutableList()));
     }
 
-    private MailAddress toLowerCase(MailAddress mailAddress) {
-        try {
-            return new MailAddress(mailAddress.asString().toLowerCase(Locale.US));
-        } catch (AddressException e) {
-            throw Throwables.propagate(e);
-        }
+    private MailAddress toLowerCase(MailAddress mailAddress) throws AddressException {
+        return new MailAddress(mailAddress.asString()
+            .toLowerCase(Locale.US));
     }
 
 }

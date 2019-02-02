@@ -18,14 +18,14 @@
  ****************************************************************/
 package org.apache.james.mailrepository;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.util.Iterator;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.file.MBoxMailRepository;
 import org.junit.Test;
@@ -37,7 +37,7 @@ import org.junit.Test;
  * NOTE this previously extended AbstractMailRepositoryTest to run all of the
  * common mail repository tests on the MBox implementation.
  *
- * @Depracted: See JAMES-2323
+ * @Deprecated: See JAMES-2323
  *
  * Will be removed in James 3.2.0 upcoming release.
  *
@@ -67,15 +67,15 @@ public class MBoxMailRepositoryTest {
     public void testReadMboxrdFile() throws Exception {
         MailRepository mr = getMailRepository();
 
-        Iterator<String> keys = mr.list();
+        Iterator<MailKey> keys = mr.list();
 
-        assertTrue("Two messages in list", keys.hasNext());
+        assertThat(keys.hasNext()).describedAs("Two messages in list").isTrue();
         keys.next();
 
-        assertTrue("One messages in list", keys.hasNext());
+        assertThat(keys.hasNext()).describedAs("One messages in list").isTrue();
         keys.next();
 
-        assertFalse("No messages", keys.hasNext());
+        assertThat(keys.hasNext()).describedAs("No messages").isFalse();
     }
 
     /*

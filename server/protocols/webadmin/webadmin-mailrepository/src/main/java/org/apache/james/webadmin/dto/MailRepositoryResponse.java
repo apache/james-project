@@ -20,22 +20,11 @@
 package org.apache.james.webadmin.dto;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
-public class MailRepositoryResponse {
+public interface MailRepositoryResponse {
 
-    private final String repository;
+    String getRepository();
 
-    public MailRepositoryResponse(String repository) {
-        this.repository = repository;
-    }
+    String getPath() throws UnsupportedEncodingException;
 
-    public String getRepository() {
-        return repository;
-    }
-
-    public String getId() throws UnsupportedEncodingException {
-        return URLEncoder.encode(repository, StandardCharsets.UTF_8.displayName());
-    }
 }

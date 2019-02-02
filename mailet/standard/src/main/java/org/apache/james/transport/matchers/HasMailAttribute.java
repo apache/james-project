@@ -44,15 +44,12 @@ public class HasMailAttribute extends GenericMatcher {
     
     private String attributeName;
 
-    /**
-     * Return a string describing this matcher.
-     *
-     * @return a string describing this matcher
-     */
+    @Override
     public String getMatcherInfo() {
         return "Has Mail Attribute Matcher";
     }
 
+    @Override
     public void init() throws MessagingException {
         attributeName = getCondition();
     }
@@ -63,6 +60,7 @@ public class HasMailAttribute extends GenericMatcher {
      * set on the mail
      *
      **/
+    @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         if (mail.getAttribute(attributeName) != null) {
             return mail.getRecipients();

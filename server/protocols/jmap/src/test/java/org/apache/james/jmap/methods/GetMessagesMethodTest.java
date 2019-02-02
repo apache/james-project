@@ -20,15 +20,12 @@ package org.apache.james.jmap.methods;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -38,6 +35,7 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.core.User;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
@@ -50,12 +48,12 @@ import org.apache.james.jmap.utils.JsoupHtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.BlobId;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
@@ -63,6 +61,9 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
+import org.apache.james.mime4j.message.BodyPartBuilder;
+import org.apache.james.mime4j.message.MultipartBuilder;
+import org.apache.james.mime4j.stream.RawField;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.assertj.core.api.Condition;
 import org.assertj.core.data.MapEntry;
@@ -82,45 +83,14 @@ import com.jayway.jsonpath.JsonPath;
 
 public class GetMessagesMethodTest {
     private static final String FORWARDED = "forwarded";
-    public static final Flags FLAGS = null;
-    public static final boolean NOT_RECENT = false;
+    private static final User ROBERT = User.fromUsername("robert");
+
     private MessageIdManager messageIdManager;
-
-    private static class User implements org.apache.james.mailbox.MailboxSession.User {
-        final String username;
-        final String password;
-
-        public User(String username, String password) {
-            this.username = username;
-            this.password = password;
-        }
-        
-        @Override
-        public String getUserName() {
-            return username;
-        }
-
-        @Override
-        public String getPassword() {
-            return password;
-        }
-        
-        @Override
-        public List<Locale> getLocalePreferences() {
-            return ImmutableList.of();
-        }
-
-        @Override
-        public boolean isSameUser(String username) {
-            return this.username.equalsIgnoreCase(username);
-        }
-    }
-    
-    private static final User ROBERT = new User("robert", "secret");
-
+    private org.apache.james.mime4j.dom.Message messageContent1;
+    private org.apache.james.mime4j.dom.Message messageContent2;
+    private org.apache.james.mime4j.dom.Message messageContent3;
     private StoreMailboxManager mailboxManager;
     private GetMessagesMethod testee;
-
     private MailboxSession session;
     private MailboxPath inboxPath;
     private MailboxPath customMailboxPath;
@@ -139,13 +109,28 @@ public class GetMessagesMethodTest {
         GroupMembershipResolver groupMembershipResolver = inMemoryIntegrationResources.createGroupMembershipResolver();
         mailboxManager = inMemoryIntegrationResources.createMailboxManager(groupMembershipResolver);
 
-        session = new MockMailboxSession(ROBERT.username);
+        session = MailboxSessionUtil.create(ROBERT.asString());
         inboxPath = MailboxPath.inbox(session);
         customMailboxPath = new MailboxPath(inboxPath, "custom");
         mailboxManager.createMailbox(inboxPath, session);
         mailboxManager.createMailbox(customMailboxPath, session);
         messageIdManager = inMemoryIntegrationResources.createMessageIdManager(mailboxManager);
         testee = new GetMessagesMethod(messageFactory, messageIdManager, new DefaultMetricFactory());
+
+        messageContent1 = org.apache.james.mime4j.dom.Message.Builder.of()
+            .setSubject("message 1 subject")
+            .setBody("my message", StandardCharsets.UTF_8)
+            .build();
+
+        messageContent2 = org.apache.james.mime4j.dom.Message.Builder.of()
+            .setSubject("message 2 subject")
+            .setBody("my message", StandardCharsets.UTF_8)
+            .build();
+
+        messageContent3 = org.apache.james.mime4j.dom.Message.Builder.of()
+            .addField(new RawField("Great-Header", "message 3 subject"))
+            .setBody("my message", StandardCharsets.UTF_8)
+            .build();
     }
     
     @Test
@@ -173,15 +158,12 @@ public class GetMessagesMethodTest {
     }
     
     @Test
-    public void processShouldFetchMessages() throws MailboxException {
+    @SuppressWarnings("unchecked")
+    public void processShouldFetchMessages() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
-        ByteArrayInputStream message2Content = new ByteArrayInputStream("Subject: message 2 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message2 = inbox.appendMessage(message2Content, now, session, false, null);
-        ByteArrayInputStream message3Content = new ByteArrayInputStream("Great-Header: message 3 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message3 = inbox.appendMessage(message3Content, now, session, false, null);
+        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent1), session);
+        ComposedMessageId message2 = inbox.appendMessage(AppendCommand.from(messageContent2), session);
+        ComposedMessageId message3 = inbox.appendMessage(AppendCommand.from(messageContent3), session);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(ImmutableList.of(message1.getMessageId(),
@@ -204,14 +186,15 @@ public class GetMessagesMethodTest {
     }
     
     @Test
-    public void processShouldFetchHtmlMessage() throws MailboxException {
+    @SuppressWarnings("unchecked")
+    public void processShouldFetchHtmlMessage() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Content-Type: text/html\r\n"
-                + "Subject: message 1 subject\r\n"
-                + "\r\n"
-                + "my <b>HTML</b> message").getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message = inbox.appendMessage(messageContent, now, session, false, null);
+        ComposedMessageId message = inbox.appendMessage(
+            AppendCommand.from(
+                    org.apache.james.mime4j.dom.Message.Builder.of()
+                        .setSubject("message 1 subject")
+                        .setBody("my <b>HTML</b> message", "html", StandardCharsets.UTF_8)),
+            session);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(ImmutableList.of(message.getMessageId()))
@@ -229,11 +212,9 @@ public class GetMessagesMethodTest {
     }
 
     @Test
-    public void processShouldReturnOnlyMandatoryPropertiesOnEmptyPropertyList() throws MailboxException {
+    public void processShouldReturnOnlyMandatoryPropertiesOnEmptyPropertyList() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
+        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(this.messageContent1), session);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(ImmutableList.of(message1.getMessageId()))
@@ -248,11 +229,10 @@ public class GetMessagesMethodTest {
     }
 
     @Test
-    public void processShouldReturnAllPropertiesWhenNoPropertyGiven() throws MailboxException {
+    public void processShouldReturnAllPropertiesWhenNoPropertyGiven() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
+
+        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent1), session);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(ImmutableList.of(message1.getMessageId()))
@@ -265,11 +245,10 @@ public class GetMessagesMethodTest {
     }
 
     @Test
-    public void processShouldAddMandatoryPropertiesWhenNotInPropertyList() throws MailboxException {
+    public void processShouldAddMandatoryPropertiesWhenNotInPropertyList() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
+
+        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent1), session);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(ImmutableList.of(message1.getMessageId()))
@@ -285,11 +264,10 @@ public class GetMessagesMethodTest {
     }
     
     @Test
-    public void processShouldReturnTextBodyWhenBodyInPropertyListAndEmptyHtmlBody() throws MailboxException {
+    public void processShouldReturnTextBodyWhenBodyInPropertyListAndEmptyHtmlBody() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
+
+        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent1), session);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(ImmutableList.of(message1.getMessageId()))
@@ -306,14 +284,16 @@ public class GetMessagesMethodTest {
     }
 
     @Test
-    public void processShouldReturnTextBodyWhenEmptyTextBodyAndNotEmptyHtmlBody() throws MailboxException {
+    @SuppressWarnings("unchecked")
+    public void processShouldReturnTextBodyWhenEmptyTextBodyAndNotEmptyHtmlBody() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Content-Type: text/html\r\n"
-            + "Subject: message 1 subject\r\n"
-            + "\r\n"
-            + "my <b>HTML</b> message").getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message = inbox.appendMessage(messageContent, now, session, false, null);
+
+        ComposedMessageId message = inbox.appendMessage(
+            AppendCommand.from(
+                org.apache.james.mime4j.dom.Message.Builder.of()
+                    .setSubject("message 1 subject")
+                    .setBody("my <b>HTML</b> message", "html", StandardCharsets.UTF_8)),
+            session);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message.getMessageId()))
@@ -331,13 +311,15 @@ public class GetMessagesMethodTest {
     }
 
     @Test
-    public void processShouldReturnEmptyTextBodyAndHtmlBodyWhenThoseAreEmpty() throws MailboxException {
+    @SuppressWarnings("unchecked")
+    public void processShouldReturnEmptyTextBodyAndHtmlBodyWhenThoseAreEmpty() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Content-Type: text/html\r\n"
-            + "Subject: message 1 subject\r\n"
-            + "\r\n").getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message = inbox.appendMessage(messageContent, now, session, false, null);
+
+        ComposedMessageId message = inbox.appendMessage(
+            AppendCommand.from(org.apache.james.mime4j.dom.Message.Builder.of()
+                    .setSubject("message 1 subject")
+                    .setBody("", "html", StandardCharsets.UTF_8)),
+            session);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message.getMessageId()))
@@ -355,26 +337,21 @@ public class GetMessagesMethodTest {
     }
 
     @Test
-    public void processShouldNotOverrideTextBodyWhenItIsThere() throws MailboxException {
+    @SuppressWarnings("unchecked")
+    public void processShouldNotOverrideTextBodyWhenItIsThere() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Subject\n"
-            + "MIME-Version: 1.0\n"
-            + "Content-Type: multipart/alternative;\n"
-            + "\tboundary=\"----=_Part_370449_1340169331.1489506420401\"\n"
-            + "\n"
-            + "------=_Part_370449_1340169331.1489506420401\n"
-            + "Content-Type: text/plain; charset=UTF-8\n"
-            + "Content-Transfer-Encoding: 7bit\n"
-            + "\n"
-            + "My plain message\n"
-            + "------=_Part_370449_1340169331.1489506420401\n"
-            + "Content-Type: text/html; charset=UTF-8\n"
-            + "Content-Transfer-Encoding: 7bit\n"
-            + "\n"
-            + "<a>The </a> <strong>HTML</strong> message"
-        ).getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message = inbox.appendMessage(messageContent, now, session, false, null);
+
+        ComposedMessageId message = inbox.appendMessage(
+            AppendCommand.from(org.apache.james.mime4j.dom.Message.Builder.of()
+                    .setSubject("message subject")
+                    .setBody(MultipartBuilder.create()
+                        .setSubType("alternative")
+                        .addBodyPart(BodyPartBuilder.create()
+                            .setBody("My plain message", "plain", StandardCharsets.UTF_8))
+                        .addBodyPart(BodyPartBuilder.create()
+                            .setBody("<a>The </a> <strong>HTML</strong> message", "html", StandardCharsets.UTF_8))
+                        .build())),
+            session);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message.getMessageId()))
@@ -392,14 +369,18 @@ public class GetMessagesMethodTest {
     }
 
     @Test
-    public void processShouldReturnHeadersFieldWhenSpecificHeadersRequestedInPropertyList() throws MailboxException {
+    public void processShouldReturnHeadersFieldWhenSpecificHeadersRequestedInPropertyList() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
-                + "header1: Header1Content\r\n"
-                + "HEADer2: Header2Content\r\n"
-                + "Subject: message 1 subject\r\n\r\nmy message").getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
+
+        ComposedMessageId message1 = inbox.appendMessage(
+            AppendCommand.from(
+                org.apache.james.mime4j.dom.Message.Builder.of()
+                    .setFrom("user@domain.tld")
+                    .setField(new RawField("header1", "Header1Content"))
+                    .setField(new RawField("HEADer2", "Header2Content"))
+                    .setSubject("message 1 subject")
+                    .setBody("my message", StandardCharsets.UTF_8)),
+            session);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(ImmutableList.of(message1.getMessageId()))
@@ -418,12 +399,16 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldReturnPropertyFilterWhenFilteringHeadersRequested() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
-                + "header1: Header1Content\r\n"
-                + "HEADer2: Header2Content\r\n"
-                + "Subject: message 1 subject\r\n\r\nmy message").getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
+
+        ComposedMessageId message1 = inbox.appendMessage(
+            AppendCommand.from(
+                org.apache.james.mime4j.dom.Message.Builder.of()
+                    .setFrom("user@domain.tld")
+                    .setField(new RawField("header1", "Header1Content"))
+                    .setField(new RawField("HEADer2", "Header2Content"))
+                    .setSubject("message 1 subject")
+                    .setBody("my message", StandardCharsets.UTF_8)),
+            session);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(ImmutableList.of(message1.getMessageId()))
@@ -446,12 +431,16 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldReturnOneMessageWhenMessageInSeveralMailboxes() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
-            + "header1: Header1Content\r\n"
-            + "HEADer2: Header2Content\r\n"
-            + "Subject: message 1 subject\r\n\r\nmy message").getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
+
+        ComposedMessageId message1 = inbox.appendMessage(
+            AppendCommand.from(
+                org.apache.james.mime4j.dom.Message.Builder.of()
+                    .setFrom("user@domain.tld")
+                    .setField(new RawField("header1", "Header1Content"))
+                    .setField(new RawField("HEADer2", "Header2Content"))
+                    .setSubject("message 1 subject")
+                    .setBody("my message", StandardCharsets.UTF_8)),
+            session);
 
         MailboxId customMailboxId = mailboxManager.getMailbox(customMailboxPath, session).getId();
         messageIdManager.setInMailboxes(message1.getMessageId(),
@@ -478,13 +467,17 @@ public class GetMessagesMethodTest {
         MessageFactory messageFactory = mock(MessageFactory.class);
         testee = new GetMessagesMethod(messageFactory, messageIdManager, new DefaultMetricFactory());
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
-            + "header1: Header1Content\r\n"
-            + "HEADer2: Header2Content\r\n"
-            + "Subject: message 1 subject\r\n\r\nmy message").getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, NOT_RECENT, FLAGS);
-        ComposedMessageId message2 = inbox.appendMessage(message1Content, now, session, NOT_RECENT, FLAGS);
+
+        org.apache.james.mime4j.dom.Message messageContent = org.apache.james.mime4j.dom.Message.Builder.of()
+            .setFrom("user@domain.tld")
+            .setField(new RawField("header1", "Header1Content"))
+            .setField(new RawField("HEADer2", "Header2Content"))
+            .setSubject("message 1 subject")
+            .setBody("my message", StandardCharsets.UTF_8)
+            .build();
+
+        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent), session);
+        ComposedMessageId message2 = inbox.appendMessage(AppendCommand.from(messageContent), session);
         when(messageFactory.fromMetaDataWithContent(any()))
             .thenReturn(mock(Message.class))
             .thenThrow(new RuntimeException());
@@ -504,18 +497,26 @@ public class GetMessagesMethodTest {
     }
 
     @Test
-    public void processShouldReturnKeywordsForMessageFlags() throws MailboxException {
+    public void processShouldReturnKeywordsForMessageFlags() throws Exception {
         Flags flags = FlagsBuilder.builder()
             .add(Flag.ANSWERED, Flag.DRAFT)
             .build();
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, flags);
-        ByteArrayInputStream message2Content = new ByteArrayInputStream("Subject: message 2 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message2 = inbox.appendMessage(message2Content, now, session, false, flags);
-        ByteArrayInputStream message3Content = new ByteArrayInputStream("Great-Header: message 3 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message3 = inbox.appendMessage(message3Content, now, session, false, flags);
+        ComposedMessageId message1 = inbox.appendMessage(
+            AppendCommand.builder()
+                .withFlags(flags)
+                .build(messageContent1),
+            session);
+        ComposedMessageId message2 = inbox.appendMessage(
+            AppendCommand.builder()
+                .withFlags(flags)
+                .build(messageContent2),
+            session);
+        ComposedMessageId message3 = inbox.appendMessage(
+            AppendCommand.builder()
+                .withFlags(flags)
+                .build(messageContent3),
+            session);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId(),
@@ -547,7 +548,7 @@ public class GetMessagesMethodTest {
 
 
     @Test
-    public void processShouldReturnKeywordsWithoutUnsupportedKeywordsForMessageFlags() throws MailboxException {
+    public void processShouldReturnKeywordsWithoutUnsupportedKeywordsForMessageFlags() throws Exception {
         Flags flags1 = FlagsBuilder.builder()
             .add(Flag.ANSWERED, Flag.DRAFT, Flag.DELETED)
             .build();
@@ -558,13 +559,21 @@ public class GetMessagesMethodTest {
             .add(Flag.ANSWERED, Flag.DRAFT, Flag.RECENT)
             .build();
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, flags1);
-        ByteArrayInputStream message2Content = new ByteArrayInputStream("Subject: message 2 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message2 = inbox.appendMessage(message2Content, now, session, false, flags2);
-        ByteArrayInputStream message3Content = new ByteArrayInputStream("Great-Header: message 3 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message3 = inbox.appendMessage(message3Content, now, session, false, flags3);
+        ComposedMessageId message1 = inbox.appendMessage(
+            AppendCommand.builder()
+                .withFlags(flags1)
+                .build(messageContent1),
+            session);
+        ComposedMessageId message2 = inbox.appendMessage(
+            AppendCommand.builder()
+                .withFlags(flags2)
+                .build(messageContent2),
+            session);
+        ComposedMessageId message3 = inbox.appendMessage(
+            AppendCommand.builder()
+                .withFlags(flags3)
+                .build(messageContent3),
+            session);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId(),
@@ -595,15 +604,18 @@ public class GetMessagesMethodTest {
     }
 
     @Test
-    public void processShouldReturnKeywordsWithoutForwardedWhenForwardedUserFlagsMessages() throws MailboxException {
+    public void processShouldReturnKeywordsWithoutForwardedWhenForwardedUserFlagsMessages() throws Exception {
         Flags flags = FlagsBuilder.builder()
             .add(Flag.ANSWERED, Flag.DELETED)
             .add(FORWARDED)
             .build();
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, flags);
+
+        ComposedMessageId message1 = inbox.appendMessage(
+            AppendCommand.builder()
+                .withFlags(flags)
+                .build(messageContent1),
+            session);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId()))
@@ -623,4 +635,5 @@ public class GetMessagesMethodTest {
                             "$Answered", true,
                             FORWARDED, true)));
     }
+
 }

@@ -33,13 +33,12 @@ import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.cassandra.init.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.model.Attachment;
@@ -49,6 +48,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
+import reactor.core.publisher.Mono;
 
 public class CassandraAttachmentDAO {
 
@@ -99,12 +99,12 @@ public class CassandraAttachmentDAO {
             .from(TABLE_NAME));
     }
 
-    public CompletableFuture<Optional<Attachment>> getAttachment(AttachmentId attachmentId) {
+    public Mono<Attachment> getAttachment(AttachmentId attachmentId) {
         Preconditions.checkArgument(attachmentId != null);
-        return cassandraAsyncExecutor.executeSingleRow(
+        return cassandraAsyncExecutor.executeSingleRowReactor(
             selectStatement.bind()
                 .setString(ID, attachmentId.getId()))
-            .thenApply(optional -> optional.map(this::attachment));
+            .map(this::attachment);
     }
 
     public Stream<Attachment> retrieveAll() {

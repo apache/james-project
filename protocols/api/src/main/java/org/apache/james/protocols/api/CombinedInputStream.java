@@ -40,26 +40,17 @@ public class CombinedInputStream extends SequenceInputStream implements Iterable
         streams = new InputStream[] {s1, s2};
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.lang.Iterable#iterator()
-     */
+    @Override
     public Iterator<InputStream> iterator() {
         return new Iterator<InputStream>() {
             private int count = 0;
-           
-            /*
-             * (non-Javadoc)
-             * @see java.util.Iterator#hasNext()
-             */
+
+            @Override
             public boolean hasNext() {
                 return count < streams.length;
             }
 
-            /*
-             * (non-Javadoc)
-             * @see java.util.Iterator#next()
-             */
+            @Override
             public InputStream next() {
                 if (hasNext())  {
                     return streams[count++];
@@ -71,6 +62,7 @@ public class CombinedInputStream extends SequenceInputStream implements Iterable
             /**
              * Read-Only
              */
+            @Override
             public void remove() {
                 throw new UnsupportedOperationException("Read-Only");
             }

@@ -37,7 +37,7 @@
           <dt><strong>elasticsearch.masterHost</strong></dt>
           <dd>Is the IP (or host) of the ElasticSearch master</dd>
           <dt><strong>elasticsearch.port</strong></dt>
-          <dd>Is the IP (or host) of the port of ElasticSearch master</dd>
+          <dd>Is the port of ElasticSearch master</dd>
       </dl>
 
       Or you can connect a cluster by :
@@ -55,14 +55,25 @@
           <dt><strong>elasticsearch.nb.shards</strong></dt>
           <dd>Number of shards for index provisionned by James</dd>
           <dt><strong>elasticsearch.nb.replica</strong></dt>
-          <dd>Number of replica for index provisionned by James</dd>
+          <dd>Number of replica for index provisionned by James (default: 0)</dd>
+          <dt><strong>elasticsearch.index.mailbox.name</strong></dt>
+          <dd>Name of the mailbox index backed by the alias. It will be created if missing.</dd>
           <dt><strong>elasticsearch.index.name</strong></dt>
-          <dd>Name of the index backed by the alias. It will be created if missing.</dd>
+          <dd><strong>Deprecated</strong> Use <strong>elasticsearch.index.mailbox.name</strong> instead. <br/>
+              Name of the mailbox index backed by the alias. It will be created if missing.</dd>
+          <dt><strong>elasticsearch.alias.read.mailbox.name</strong></dt>
+          <dd>Name of the alias to use by Apache James for mailbox reads. It will be created if missing.
+              The target of the alias is the index name configured above.</dd>
           <dt><strong>elasticsearch.alias.read.name</strong></dt>
-          <dd>Name of the alias to use by Apache James for reads. It will be created if missing.
+          <dd><strong>Deprecated</strong> Use <strong>elasticsearch.alias.read.mailbox.name</strong> instead. <br/>
+              Name of the alias to use by Apache James for mailbox reads. It will be created if missing.
+              The target of the alias is the index name configured above.</dd>
+          <dt><strong>elasticsearch.alias.write.mailbox.name</strong></dt>
+          <dd>Name of the alias to use by Apache James for mailbox writes. It will be created if missing.
               The target of the alias is the index name configured above.</dd>
           <dt><strong>elasticsearch.alias.write.name</strong></dt>
-          <dd>Name of the alias to use by Apache James for writes. It will be created if missing.
+          <dd><strong>Deprecated</strong> Use <strong>elasticsearch.alias.write.mailbox.name</strong> instead. <br/>
+              Name of the alias to use by Apache James for mailbox writes. It will be created if missing.
               The target of the alias is the index name configured above.</dd>
           <dt><strong>elasticsearch.retryConnection.maxRetries</strong></dt>
           <dd>Number of retries when connecting the cluster</dd>
@@ -70,6 +81,12 @@
           <dd>Minimum delay between connection attempts</dd>
           <dt><strong>elasticsearch.indexAttachments</strong></dt>
           <dd>Indicates if you wish to index attachments or not (default: true).</dd>
+          <dt><strong>elasticsearch.index.quota.ratio.name</strong></dt>
+          <dd>Specify the ElasticSearch alias name used for quotas</dd>
+          <dt><strong>elasticsearch.alias.read.quota.ratio.name</strong></dt>
+          <dd>Specify the ElasticSearch alias name used for reading quotas</dd>
+          <dt><strong>elasticsearch.alias.write.quota.ratio.name</strong></dt>
+          <dd>Specify the ElasticSearch alias name used for writing quotas</dd>
       </dl>
 
       For configuring the metric reporting on ElasticSearch :
@@ -107,17 +124,43 @@
         Here are the different properties:
 
         <dl>
+            <dt><strong>tika.enabled</strong></dt>
+            <dd>Should Tika text extractor be used? <br/>
+            If true, the TikaTextExtractor will be used behind a cache. <br/>
+            If false, the DefaultTextExtractor will be used (naive implementation only supporting text).<br/>
+            Defaults to false.</dd>
+
             <dt><strong>tika.host</strong></dt>
             <dd>IP or domain name of your Tika server. The default value is 127.0.0.1</dd>
+
             <dt><strong>tika.port</strong></dt>
             <dd>Port of your tika server. The default value is 9998</dd>
+
             <dt><strong>tika.timeoutInMillis</strong></dt>
             <dd>Timeout when issuing request to the tika server. The default value is 3 seconds.</dd>
+
+            <dt><strong>tika.cache.eviction.period</strong></dt>
+            <dd>A cache is used to avoid, when possible, query Tika multiple time for the same attachments. <br/>
+            This entry determines how long after the last read an entry vanishes.<br/>
+            Please note that units are supported (ms - millisecond, s - second, m - minute, h - hour, d - day). Default unit is seconds. <br/>
+            Default value is <b>1 day</b></dd>
+
+            <dt><strong>tika.cache.enabled</strong></dt>
+            <dd>Should the cache be used? False by default</dd>
+
+            <dt><strong>tika.cache.weight.max</strong></dt>
+            <dd>Maximum weight of the cache.<br/>
+            A value of <b>0</b> disables the cache<br/>
+            Please note that units are supported (K for KB, M for MB, G for GB). Defaults is no units, so in bytes.<br/>
+            Default value is <b>100 MB</b>.</dd>
+
+            <dt><strong>tika.contentType.blacklist</strong></dt>
+            <dd>Blacklist of content type is known-to-be-failing with Tika. Specify the list with comma separator.</dd>
         </dl>
 
         Note: You can launch a tika server using this command line:
 
-        <code><pre>docker run --name tika logicalspark/docker-tikaserver:1.15rc2</pre></code>
+        <code><pre>docker run --name tika logicalspark/docker-tikaserver:1.20</pre></code>
 
     </section>
 

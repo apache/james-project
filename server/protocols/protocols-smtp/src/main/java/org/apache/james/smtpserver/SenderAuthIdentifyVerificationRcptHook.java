@@ -22,17 +22,16 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.AbstractSenderAuthIdentifyVerificationRcptHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
-import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-
-import com.google.common.base.Throwables;
 
 /**
  * Handler which check if the authenticated user is incorrect
@@ -63,19 +62,17 @@ public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthId
     }
 
     @Override
-    public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
         ExtendedSMTPSession nSession = (ExtendedSMTPSession) session;
         if (nSession.verifyIdentity()) {
             return super.doRcpt(session, sender, rcpt);
         } else {
-            return new HookResult(HookReturnCode.DECLINED);
+            return HookResult.DECLINED;
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractSenderAuthIdentifyVerificationRcptHook#isLocalDomain(java.lang.String)
-     */
-    protected boolean isLocalDomain(String domain) {
+    @Override
+    protected boolean isLocalDomain(Domain domain) {
         try {
             return domains.containsDomain(domain);
         } catch (DomainListException e) {
@@ -83,15 +80,13 @@ public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthId
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractSenderAuthIdentifyVerificationRcptHook#useVirtualHosting()
-     */
-    protected boolean useVirtualHosting() {
+    @Override
+    protected String getUser(MailAddress mailAddress) {
         try {
-            return users.supportVirtualHosting();
+            return users.getUser(mailAddress);
         } catch (UsersRepositoryException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
-    
+
 }

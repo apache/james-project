@@ -20,6 +20,8 @@ package org.apache.james.jmap.model.mailbox;
 
 import java.util.Optional;
 
+import org.apache.james.mailbox.Role;
+
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;

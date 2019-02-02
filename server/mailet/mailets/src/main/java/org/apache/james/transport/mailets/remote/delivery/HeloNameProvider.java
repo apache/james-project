@@ -41,7 +41,7 @@ public class HeloNameProvider {
         if (heloName == null) {
             // TODO: Maybe we should better just lookup the hostname via dns
             try {
-                return domainList.getDefaultDomain();
+                return domainList.getDefaultDomain().name();
             } catch (DomainListException e) {
                 LOGGER.warn("Unable to access DomainList", e);
                 return LOCALHOST;

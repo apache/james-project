@@ -19,10 +19,18 @@
 
 package org.apache.james.mailbox.store.quota;
 
+import java.util.Map;
+import java.util.Optional;
+
+import org.apache.james.core.Domain;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * A Max Quota Manager that simply throws exceptions
@@ -32,42 +40,102 @@ import org.apache.james.mailbox.quota.MaxQuotaManager;
 public class NoMaxQuotaManager implements MaxQuotaManager {
 
     @Override
-    public void setMaxStorage(QuotaRoot quotaRoot, long maxStorageQuota) throws MailboxException {
+    public void setMaxStorage(QuotaRoot quotaRoot, QuotaSize maxStorageQuota) throws MailboxException {
         throw new MailboxException("Operation is not supported");
     }
 
     @Override
-    public void setMaxMessage(QuotaRoot quotaRoot, long maxMessageCount) throws MailboxException {
+    public void setMaxMessage(QuotaRoot quotaRoot, QuotaCount maxMessageCount) throws MailboxException {
         throw new MailboxException("Operation is not supported");
     }
 
     @Override
-    public void setDefaultMaxStorage(long defaultMaxStorage) throws MailboxException {
+    public void removeMaxMessage(QuotaRoot quotaRoot) throws MailboxException {
         throw new MailboxException("Operation is not supported");
     }
 
     @Override
-    public void setDefaultMaxMessage(long defaultMaxMessageCount) throws MailboxException {
+    public void removeMaxStorage(QuotaRoot quotaRoot) throws MailboxException {
         throw new MailboxException("Operation is not supported");
     }
 
     @Override
-    public long getMaxStorage(QuotaRoot quotaRoot) throws MailboxException {
-        return Quota.UNLIMITED;
+    public void setDomainMaxMessage(Domain domain, QuotaCount count) throws MailboxException {
+        throw new MailboxException("Operation is not supported");
     }
 
     @Override
-    public long getMaxMessage(QuotaRoot quotaRoot) throws MailboxException {
-        return Quota.UNLIMITED;
+    public void setDomainMaxStorage(Domain domain, QuotaSize size) throws MailboxException {
+        throw new MailboxException("Operation is not supported");
     }
 
     @Override
-    public long getDefaultMaxStorage() throws MailboxException {
-        return Quota.UNLIMITED;
+    public void removeDomainMaxMessage(Domain domain) throws MailboxException {
+        throw new MailboxException("Operation is not supported");
     }
 
     @Override
-    public long getDefaultMaxMessage() throws MailboxException {
-        return Quota.UNLIMITED;
+    public void removeDomainMaxStorage(Domain domain) throws MailboxException {
+        throw new MailboxException("Operation is not supported");
+    }
+
+    @Override
+    public void setGlobalMaxStorage(QuotaSize globalMaxStorage) throws MailboxException {
+        throw new MailboxException("Operation is not supported");
+    }
+
+    @Override
+    public void removeGlobalMaxStorage() throws MailboxException {
+        throw new MailboxException("Operation is not supported");
+    }
+
+    @Override
+    public void removeGlobalMaxMessage() throws MailboxException {
+        throw new MailboxException("Operation is not supported");
+    }
+
+    @Override
+    public void setGlobalMaxMessage(QuotaCount globalMaxMessageCount) throws MailboxException {
+        throw new MailboxException("Operation is not supported");
+    }
+
+    @Override
+    public Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Map<Quota.Scope, QuotaCount> listMaxMessagesDetails(QuotaRoot quotaRoot) {
+        return ImmutableMap.of();
+    }
+
+    @Override
+    public Map<Quota.Scope, QuotaSize> listMaxStorageDetails(QuotaRoot quotaRoot) {
+        return ImmutableMap.of();
+    }
+
+    @Override
+    public Optional<QuotaCount> getDomainMaxMessage(Domain domain) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<QuotaSize> getDomainMaxStorage(Domain domain) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<QuotaSize> getGlobalMaxStorage() {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<QuotaCount> getGlobalMaxMessage() {
+        return Optional.empty();
     }
 }

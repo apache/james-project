@@ -80,7 +80,7 @@ public class MailboxAnnotationKeyTest {
         MailboxAnnotationKey annotationKey = new MailboxAnnotationKey("/private/comment");
         MailboxAnnotationKey anotherAnnotationKey = new MailboxAnnotationKey("/PRIVATE/COMMENT");
 
-        assertThat(annotationKey.equals(anotherAnnotationKey)).isTrue();
+        assertThat(annotationKey).isEqualTo(anotherAnnotationKey);
     }
 
     @Test(expected = IllegalArgumentException.class)

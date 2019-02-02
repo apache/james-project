@@ -31,8 +31,10 @@ import javax.persistence.EntityManagerFactory;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.domainlist.jpa.model.JPADomain;
-import org.apache.james.modules.TestFilesystemModule;
+import org.apache.james.mailrepository.jpa.JPAUrl;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
+import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.user.jpa.model.JPAUser;
 import org.junit.After;
 import org.junit.Before;
@@ -41,8 +43,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class JPAJamesServerTest {
-
-    private static final int SMTP_PORT = 1025;
 
     private GuiceJamesServer server;
     private SocketChannel socketChannel;
@@ -55,14 +55,18 @@ public class JPAJamesServerTest {
         server.stop();
     }
 
-    private org.apache.james.GuiceJamesServer createJamesServer() {
-        return new GuiceJamesServer()
+    private org.apache.james.GuiceJamesServer createJamesServer() throws IOException {
+        Configuration configuration = Configuration.builder()
+            .workingDirectory(temporaryFolder.newFolder())
+            .configurationFromClasspath()
+            .build();
+
+        return GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE, JPAJamesServerMain.PROTOCOLS)
                 .overrideWith(
-                        new TestFilesystemModule(temporaryFolder),
                         new TestJPAConfigurationModule(),
                         (binder) -> binder.bind(EntityManagerFactory.class)
-                            .toInstance(JpaTestCluster.create(JPAUser.class, JPADomain.class, JPARecipientRewrite.class)
+                            .toInstance(JpaTestCluster.create(JPAUser.class, JPADomain.class, JPARecipientRewrite.class, JPAUrl.class)
                                     .getEntityManagerFactory()));
     }
     
@@ -80,7 +84,7 @@ public class JPAJamesServerTest {
 
     @Test
     public void connectSMTPServerShouldSendShabangOnConnect() throws Exception {
-        socketChannel.connect(new InetSocketAddress("127.0.0.1", SMTP_PORT));
+        socketChannel.connect(new InetSocketAddress("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort()));
         assertThat(getServerConnectionResponse(socketChannel)).startsWith("220 JAMES Linagora's SMTP awesome Server");
     }
     

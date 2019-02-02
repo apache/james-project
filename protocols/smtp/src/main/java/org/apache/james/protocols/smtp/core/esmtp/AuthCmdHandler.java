@@ -23,14 +23,16 @@ package org.apache.james.protocols.smtp.core.esmtp;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.StringTokenizer;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.Request;
@@ -48,6 +50,7 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailParametersHook;
+import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,6 +85,7 @@ public class AuthCmdHandler
     
     private abstract class AbstractSMTPLineHandler implements LineHandler<SMTPSession> {
 
+        @Override
         public Response onLine(SMTPSession session, ByteBuffer line) {
             String charset = session.getCharset().name();
             try {
@@ -149,6 +153,7 @@ public class AuthCmdHandler
      * handles AUTH command
      *
      */
+    @Override
     public Response onCommand(SMTPSession session, Request request) {
         return doAUTH(session, request.getArgument());
     }
@@ -178,6 +183,7 @@ public class AuthCmdHandler
                 String userpass;
                 if (initialResponse == null) {
                     session.pushLineHandler(new AbstractSMTPLineHandler() {
+                        @Override
                         protected Response onCommand(SMTPSession session, String l) {
                             return doPlainAuthPass(session, l);
                         }
@@ -201,6 +207,7 @@ public class AuthCmdHandler
                 
                 if (initialResponse == null) {
                     session.pushLineHandler(new AbstractSMTPLineHandler() {
+                        @Override
                         protected Response onCommand(SMTPSession session, String l) {
                             return doLoginAuthPass(session, l);
                         }
@@ -240,13 +247,11 @@ public class AuthCmdHandler
      * @param session SMTP session object
      * @param initialResponse the initial response line passed in with the AUTH command
      */
-    private Response doPlainAuthPass(SMTPSession session, String userpass) {
+    private Response doPlainAuthPass(SMTPSession session, String line) {
         String user = null;
         String pass = null;
         try {
-            if (userpass != null) {
-                userpass = new String(Base64.decodeBase64(userpass));
-            }
+            String userpass = decodeBase64(line);
             if (userpass != null) {
                 /*  See: RFC 2595, Section 6
                     The mechanism consists of a single message from the client to the
@@ -301,6 +306,14 @@ public class AuthCmdHandler
         return response;
     }
 
+    private String decodeBase64(String line) {
+        if (line != null) {
+            String lineWithoutTrailingCrLf = line.replace("\r\n", "");
+            return new String(Base64.getDecoder().decode(lineWithoutTrailingCrLf), StandardCharsets.UTF_8);
+        }
+        return null;
+    }
+
     /**
      * Carries out the Login AUTH SASL exchange.
      *
@@ -310,7 +323,7 @@ public class AuthCmdHandler
     private Response doLoginAuthPass(SMTPSession session, String user) {
         if (user != null) {
             try {
-                user = new String(Base64.decodeBase64(user));
+                user = decodeBase64(user);
             } catch (Exception e) {
                 // Ignored - this parse error will be
                 // addressed in the if clause below
@@ -329,6 +342,7 @@ public class AuthCmdHandler
                 return this;
             }
 
+            @Override
             protected Response onCommand(SMTPSession session, String l) {
                 return doLoginAuthPassCheck(session, user, l);
             }
@@ -349,7 +363,7 @@ public class AuthCmdHandler
     private Response doLoginAuthPassCheck(SMTPSession session, String user, String pass) {
         if (pass != null) {
             try {
-                pass = new String(Base64.decodeBase64(pass));
+                pass = decodeBase64(pass);
             } catch (Exception e) {
                 // Ignored - this parse error will be
                 // addressed in the if clause below
@@ -424,64 +438,63 @@ public class AuthCmdHandler
      */
     protected Response calcDefaultSMTPResponse(HookResult result) {
         if (result != null) {
-            int rCode = result.getResult();
-            String smtpRetCode = result.getSmtpRetCode();
-            String smtpDesc = result.getSmtpDescription();
-    
-            if ((rCode & HookReturnCode.DENY) == HookReturnCode.DENY) {
-                if (smtpRetCode == null) {
-                    smtpRetCode = SMTPRetCode.AUTH_FAILED;
-                }
-                if (smtpDesc == null) {
-                    smtpDesc = "Authentication Failed";
-                }
-    
-                SMTPResponse response =  new SMTPResponse(smtpRetCode, smtpDesc);
+            HookReturnCode returnCode = result.getResult();
 
-                if ((rCode & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
+            String smtpReturnCode = OptionalUtils.or(
+                Optional.ofNullable(result.getSmtpRetCode()),
+                retrieveDefaultSmtpReturnCode(returnCode))
+                .orElse(null);
+
+            String smtpDescription = OptionalUtils.or(
+                Optional.ofNullable(result.getSmtpDescription()),
+                retrieveDefaultSmtpDescription(returnCode))
+                .orElse(null);
+    
+            if (HookReturnCode.Action.ACTIVE_ACTIONS.contains(returnCode.getAction())) {
+                SMTPResponse response =  new SMTPResponse(smtpReturnCode, smtpDescription);
+
+                if (returnCode.isDisconnected()) {
                     response.setEndSession(true);
                 }
                 return response;
-            } else if ((rCode & HookReturnCode.DENYSOFT) == HookReturnCode.DENYSOFT) {
-                if (smtpRetCode == null) {
-                    smtpRetCode = SMTPRetCode.LOCAL_ERROR;
-                }
-                if (smtpDesc == null) {
-                    smtpDesc = "Temporary problem. Please try again later";
-                }
-    
-                SMTPResponse response =  new SMTPResponse(smtpRetCode, smtpDesc);
-
-                if ((rCode & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
-                    response.setEndSession(true);
-                }
-                return response;
-            } else if ((rCode & HookReturnCode.OK) == HookReturnCode.OK) {
-                if (smtpRetCode == null) {
-                    smtpRetCode = SMTPRetCode.AUTH_OK;
-                }
-                if (smtpDesc == null) {
-                    smtpDesc = "Authentication Succesfull";
-                }
-                
-                SMTPResponse response =  new SMTPResponse(smtpRetCode, smtpDesc);
-
-                if ((rCode & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
-                    response.setEndSession(true);
-                }
-                return response;
-            } else if ((rCode & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
+            } else if (returnCode.isDisconnected()) {
                 SMTPResponse response =  new SMTPResponse("");
                 response.setEndSession(true);
-            
                 return response;
-            } else {
-                // Return null as default
-                return null;
             }
-        } else {
-            return null;
         }
+        return null;
+
+    }
+
+    private Optional<String> retrieveDefaultSmtpDescription(HookReturnCode returnCode) {
+        switch (returnCode.getAction()) {
+            case DENY:
+                return Optional.of("Authentication Failed");
+            case DENYSOFT:
+                return Optional.of("Temporary problem. Please try again later");
+            case OK:
+                return Optional.of("Authentication Succesfull");
+            case DECLINED:
+            case NONE:
+                break;
+        }
+        return Optional.empty();
+    }
+
+    private Optional<String> retrieveDefaultSmtpReturnCode(HookReturnCode returnCode) {
+        switch (returnCode.getAction()) {
+            case DENY:
+                return Optional.of(SMTPRetCode.AUTH_FAILED);
+            case DENYSOFT:
+                return Optional.of(SMTPRetCode.LOCAL_ERROR);
+            case OK:
+                return Optional.of(SMTPRetCode.AUTH_OK);
+            case DECLINED:
+            case NONE:
+                break;
+        }
+        return Optional.empty();
     }
 
     /**
@@ -498,16 +511,12 @@ public class AuthCmdHandler
 
 
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.esmtp.EhloExtension#getImplementedEsmtpFeatures(org.apache.james.protocols.smtp.SMTPSession)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public List<String> getImplementedEsmtpFeatures(SMTPSession session) {
         if (session.isAuthSupported()) {
@@ -517,9 +526,7 @@ public class AuthCmdHandler
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
-     */
+    @Override
     public List<Class<?>> getMarkerInterfaces() {
         List<Class<?>> classes = new ArrayList<>(1);
         classes.add(AuthHook.class);
@@ -527,9 +534,7 @@ public class AuthCmdHandler
     }
 
 
-    /**
-     * @see org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
         if (AuthHook.class.equals(interfaceName)) {
@@ -553,18 +558,14 @@ public class AuthCmdHandler
         return hooks;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.hook.MailParametersHook#doMailParameter(org.apache.james.protocols.smtp.SMTPSession, java.lang.String, java.lang.String)
-     */
+    @Override
     public HookResult doMailParameter(SMTPSession session, String paramName, String paramValue) {
         // Ignore the AUTH command.
         // TODO we should at least check for correct syntax and put the result in session
-        return HookResult.declined();
+        return HookResult.DECLINED;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.hook.MailParametersHook#getMailParamNames()
-     */
+    @Override
     public String[] getMailParamNames() {
         return MAIL_PARAMS;
     }

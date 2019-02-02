@@ -19,13 +19,16 @@
 
 package org.apache.james.mpt.ant;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.mpt.DiscardProtocol;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.resources.Union;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-import junit.framework.TestCase;
-
-public class TestAddUser extends TestCase {
+public class TestAddUser {
 
     DiscardProtocol fakeServer;
     
@@ -33,32 +36,33 @@ public class TestAddUser extends TestCase {
     
     MailProtocolTestTask subject;
     
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         fakeServer = new DiscardProtocol();
         fakeServer.start();
         record = fakeServer.recordNext();
         
         subject = new MailProtocolTestTask();
         subject.setHost("127.0.0.1");
-        subject.setPort(fakeServer.getPort());
+        subject.setPort(fakeServer.getPort().getValue());
         subject.add(new Union());
         subject.setProject(new Project());
     }
 
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @After
+    public void tearDown() throws Exception {
         fakeServer.stop();
     }
 
+    @Test
     public void testShouldExecuteScriptAgainstPort() throws Exception {
         MailProtocolTestTask.AddUser user = subject.createAddUser();
-        user.setPort(fakeServer.getPort());
+        user.setPort(fakeServer.getPort().getValue());
         user.setPasswd("PASSWORD");
         user.setUser("USER");
         final String script = "This script adds a user";
         user.addText("C: " + script);
         subject.execute();
-        assertEquals(script + "\r\n", record.complete());
+        assertThat(record.complete()).isEqualTo(script + "\r\n");
     }
 }

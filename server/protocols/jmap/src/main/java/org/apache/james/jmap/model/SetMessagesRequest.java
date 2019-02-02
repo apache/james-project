@@ -25,10 +25,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.JmapFieldNotSupportedException;
 import org.apache.james.jmap.methods.JmapRequest;
 import org.apache.james.jmap.methods.UpdateMessagePatchConverter;
 import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
+import org.apache.james.jmap.methods.ValueWithId.MDNCreationEntry;
 import org.apache.james.mailbox.model.MessageId;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -42,6 +43,7 @@ import com.google.common.collect.Maps;
 
 @JsonDeserialize(builder = SetMessagesRequest.Builder.class)
 public class SetMessagesRequest implements JmapRequest {
+    private static final String ISSUER = "SetMessagesRequest";
 
     public static Builder builder() {
         return new Builder();
@@ -53,26 +55,28 @@ public class SetMessagesRequest implements JmapRequest {
         private String accountId;
         private String ifInState;
         private HashMap<CreationMessageId, CreationMessage> create;
+        private HashMap<CreationMessageId, JmapMDN> sendMDN;
         private ImmutableMap.Builder<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>> updatesProvider;
 
         private ImmutableList.Builder<MessageId> destroy;
 
         private Builder() {
             create = new HashMap<>();
+            sendMDN = new HashMap<>();
             updatesProvider = ImmutableMap.builder();
             destroy = ImmutableList.builder();
         }
 
         public Builder accountId(String accountId) {
             if (accountId != null) {
-                throw new NotImplementedException();
+                throw new JmapFieldNotSupportedException(ISSUER, "accountId");
             }
             return this;
         }
 
         public Builder ifInState(String ifInState) {
             if (ifInState != null) {
-                throw new NotImplementedException();
+                throw new JmapFieldNotSupportedException(ISSUER, "ifInState");
             }
             return this;
         }
@@ -84,6 +88,16 @@ public class SetMessagesRequest implements JmapRequest {
 
         public Builder create(Map<CreationMessageId, CreationMessage> creations) {
             this.create.putAll(creations);
+            return this;
+        }
+
+        public Builder sendMDN(CreationMessageId creationMessageId, JmapMDN mdn) {
+            this.sendMDN.put(creationMessageId, mdn);
+            return this;
+        }
+
+        public Builder sendMDN(Map<CreationMessageId, JmapMDN> mdns) {
+            this.sendMDN.putAll(mdns);
             return this;
         }
 
@@ -99,7 +113,7 @@ public class SetMessagesRequest implements JmapRequest {
 
         public SetMessagesRequest build() {
             return new SetMessagesRequest(Optional.ofNullable(accountId), Optional.ofNullable(ifInState), 
-                    messageCreations(), updatesProvider.build(), destroy.build());
+                    messageCreations(), mdnSendings(), updatesProvider.build(), destroy.build());
         }
 
         private ImmutableList<CreationMessageEntry> messageCreations() {
@@ -107,18 +121,29 @@ public class SetMessagesRequest implements JmapRequest {
                     .map(entry -> new CreationMessageEntry(entry.getKey(), entry.getValue()))
                     .collect(Guavate.toImmutableList());
         }
+
+        private ImmutableList<MDNCreationEntry> mdnSendings() {
+            return sendMDN.entrySet().stream()
+                    .map(entry -> new MDNCreationEntry(entry.getKey(), entry.getValue()))
+                    .collect(Guavate.toImmutableList());
+        }
     }
 
     private final Optional<String> accountId;
     private final Optional<String> ifInState;
     private final List<CreationMessageEntry> create;
+    private final List<MDNCreationEntry> sendMDN;
     private final Map<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>> update;
     private final List<MessageId> destroy;
 
-    @VisibleForTesting SetMessagesRequest(Optional<String> accountId, Optional<String> ifInState, List<CreationMessageEntry> create, Map<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>>  update, List<MessageId> destroy) {
+    @VisibleForTesting SetMessagesRequest(Optional<String> accountId, Optional<String> ifInState,
+                                          List<CreationMessageEntry> create, List<MDNCreationEntry> sendMDN,
+                                          Map<MessageId, Function<UpdateMessagePatchConverter, UpdateMessagePatch>> update,
+                                          List<MessageId> destroy) {
         this.accountId = accountId;
         this.ifInState = ifInState;
         this.create = create;
+        this.sendMDN = sendMDN;
         this.update = update;
         this.destroy = destroy;
     }
@@ -133,6 +158,10 @@ public class SetMessagesRequest implements JmapRequest {
 
     public List<CreationMessageEntry> getCreate() {
         return create;
+    }
+
+    public List<MDNCreationEntry> getSendMDN() {
+        return sendMDN;
     }
 
     public Map<MessageId, UpdateMessagePatch> buildUpdatePatches(UpdateMessagePatchConverter converter) {

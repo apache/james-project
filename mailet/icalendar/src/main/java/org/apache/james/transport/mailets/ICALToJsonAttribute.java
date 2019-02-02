@@ -21,7 +21,6 @@ package org.apache.james.transport.mailets;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,6 +34,8 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.model.ICAL;
+import org.apache.james.util.OptionalUtils;
+import org.apache.james.util.StreamUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
@@ -89,6 +90,10 @@ public class ICALToJsonAttribute extends GenericMailet {
     public static final String DEFAULT_SOURCE_ATTRIBUTE_NAME = "icalendar";
     public static final String DEFAULT_RAW_SOURCE_ATTRIBUTE_NAME = "attachments";
     public static final String DEFAULT_DESTINATION_ATTRIBUTE_NAME = "icalendarJson";
+
+    static {
+        ICal4JConfigurator.configure();
+    }
 
     private final ObjectMapper objectMapper;
     private String sourceAttributeName;
@@ -209,17 +214,17 @@ public class ICALToJsonAttribute extends GenericMailet {
     }
 
     private Optional<String> retrieveSender(Mail mail) throws MessagingException {
-        Optional<String> from = Optional.ofNullable(mail.getMessage())
-            .map(Throwing.function(MimeMessage::getFrom).orReturn(new Address[]{}))
-            .map(Arrays::stream)
-            .orElse(Stream.of())
+        Optional<String> fromMime = StreamUtils.ofOptional(
+            Optional.ofNullable(mail.getMessage())
+                .map(Throwing.function(MimeMessage::getFrom).orReturn(new Address[]{})))
             .map(address -> (InternetAddress) address)
             .map(InternetAddress::getAddress)
             .findFirst();
-        if (from.isPresent()) {
-            return from;
-        }
-        return Optional.ofNullable(mail.getSender())
+        Optional<String> fromEnvelope = mail.getMaybeSender().asOptional()
             .map(MailAddress::asString);
+
+        return OptionalUtils.or(
+            fromMime,
+            fromEnvelope);
     }
 }

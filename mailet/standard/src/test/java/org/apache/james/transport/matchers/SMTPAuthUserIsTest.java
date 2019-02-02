@@ -20,6 +20,8 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import java.util.Collection;
 
 import javax.mail.MessagingException;
@@ -27,21 +29,26 @@ import javax.mail.MessagingException;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
+import org.junit.jupiter.api.Test;
 
 public class SMTPAuthUserIsTest extends AbstractHasMailAttributeTest {
 
+    @Override
     protected String getHasMailAttribute() {
         return "test@james.apache.org";
     }
 
+    @Override
     protected GenericMatcher createMatcher() {
         return new SMTPAuthUserIs();
     }
 
+    @Override
     protected String getMatcherName() {
         return "SMTPAuthUserIs";
     }
     
+    @Override
     protected void init() {
         super.init();
         setMailAttributeName(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME);
@@ -49,7 +56,8 @@ public class SMTPAuthUserIsTest extends AbstractHasMailAttributeTest {
     }
     
     
-    // test if the mail attribute was not matched
+    @Override
+    @Test
     public void testAttributeIsNotMatched() throws MessagingException {
         setupAll();
         setMailAttributeValue("notmatched@james.apache.org");

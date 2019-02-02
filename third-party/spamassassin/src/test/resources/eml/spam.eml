@@ -1,0 +1,152 @@
+Return-Path: <user@james.org>
+Subject: Fwd: Invitation: (Aucun objet) - ven. 20 janv. 2017 14:00 - 15:00
+ (CET) (user@james.org)
+To: <user@james.org>
+From: user <user@james.org>
+Message-ID: <f18fa52e-2e9d-1125-327d-2100b23f8a6b@james.org>
+Date: Thu, 19 Jan 2017 20:36:37 +0100
+MIME-Version: 1.0
+In-Reply-To: <001a114380a6a260d105467765ab@google.com>
+Content-Type: multipart/mixed;
+ boundary="------------17D96D411CBD55D8239A8C1F"
+
+This is a multi-part message in MIME format.
+--------------17D96D411CBD55D8239A8C1F
+Content-Type: multipart/alternative;
+ boundary="------------64D716A3DDAEC185D3E67448"
+
+
+--------------64D716A3DDAEC185D3E67448
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+
+
+
+
+-------- Message transéré --------
+Sujet : 	Invitation: (Aucun objet) - ven. 20 janv. 2017 14:00 - 15:00
+(CET) (user@james.org)
+Date : 	Thu, 19 Jan 2017 19:18:23 +0000
+De : 	<user@james.org>
+RÃ©pondre Ã  : 	user@james.org
+Pour : 	user@james.org
+
+
+
+
+--------------64D716A3DDAEC185D3E67448
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+<html>
+  <head>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  </head>
+  <body bgcolor="#FFFFFF" text="#000000">
+    <p><br>
+    </p>
+    <div class="moz-forward-container"><br>
+      <br>
+      -------- Message transéré --------
+      <table class="moz-email-headers-table" border="0" cellpadding="0"
+        cellspacing="0">
+        <tbody>
+          <tr>
+            <th align="RIGHT" valign="BASELINE" nowrap="nowrap">SujetÂ :
+            </th>
+            <td>Invitation: (Aucun objet) - ven. 20 janv. 2017 14:00 -
+              15:00 (CET) (<a class="moz-txt-link-abbreviated" href="mailto:user@james.org">user@james.org</a>)</td>
+          </tr>
+          <tr>
+            <th align="RIGHT" valign="BASELINE" nowrap="nowrap">DateÂ : </th>
+            <td>Thu, 19 Jan 2017 19:18:23 +0000</td>
+          </tr>
+          <tr>
+            <th align="RIGHT" valign="BASELINE" nowrap="nowrap">DeÂ : </th>
+            <td>User <a class="moz-txt-link-rfc2396E" href="mailto:user@james.org">&lt;user@james.org&gt;</a></td>
+          </tr>
+          <tr>
+            <th align="RIGHT" valign="BASELINE" nowrap="nowrap">RÃ©pondre
+              Ã Â : </th>
+            <td><a class="moz-txt-link-abbreviated" href="mailto:user@james.org">user@james.org</a></td>
+          </tr>
+          <tr>
+            <th align="RIGHT" valign="BASELINE" nowrap="nowrap">PourÂ : </th>
+            <td><a class="moz-txt-link-abbreviated" href="mailto:user@james.org">user@james.org</a></td>
+          </tr>
+        </tbody>
+      </table>
+      <br>
+      <br>
+    </div>
+  </body>
+</html>
+
+--------------64D716A3DDAEC185D3E67448--
+
+--------------17D96D411CBD55D8239A8C1F
+Content-Type: text/calendar;
+ name="Portion de message joint"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: attachment;
+ filename="Portion de message joint"
+
+BEGIN:VCALENDAR
+PRODID:-//Google Inc//Google Calendar 70.9054//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+METHOD:REQUEST
+BEGIN:VEVENT
+DTSTART:20170120T130000Z
+DTEND:20170120T140000Z
+DTSTAMP:20170119T191823Z
+ORGANIZER;CN=User:mailto:user@james.org
+UID:ah86k5m342bmcrbe9khkkhln00@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=
+ TRUE;CN=user@james.org;X-NUM-GUESTS=0:mailto:user@james.org
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;RSVP=TRUE
+ ;CN=User;X-NUM-GUESTS=0:mailto:user@james.org
+CREATED:20170119T191823Z
+DESCRIPTION:Affichez votre evenement sur la page https://www.google.com/cal
+ endar/event?action=VIEW&eid=YWg4Nms1bTM0MmJtY3JiZTlraGtraGxuMDAgYWR1cHJhdEB
+ saW5hZ29yYS5jb20&tok=MTkjYW50ZHVwcmF0QGdtYWlsLmNvbTg1OTM5NWM4MGRlYmE1YTI4Nz
+ RjN2UyNjU0M2YyZmQ4NzRkNThhYTQ&ctz=Europe/Paris&hl=fr.
+LAST-MODIFIED:20170119T191823Z
+LOCATION:
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:
+TRANSP:OPAQUE
+END:VEVENT
+END:VCALENDAR
+
+
+--------------17D96D411CBD55D8239A8C1F
+Content-Type: application/ics;
+ name="invite.ics"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="invite.ics"
+
+QkVHSU46VkNBTEVOREFSDQpQUk9ESUQ6LS8vR29vZ2xlIEluYy8vR29vZ2xlIENhbGVuZGFy
+IDcwLjkwNTQvL0VODQpWRVJTSU9OOjIuMA0KQ0FMU0NBTEU6R1JFR09SSUFODQpNRVRIT0Q6
+UkVRVUVTVA0KQkVHSU46VkVWRU5UDQpEVFNUQVJUOjIwMTcwMTIwVDEzMDAwMFoNCkRURU5E
+OjIwMTcwMTIwVDE0MDAwMFoNCkRUU1RBTVA6MjAxNzAxMTlUMTkxODIzWg0KT1JHQU5JWkVS
+O0NOPUFudG9pbmUgRHVwcmF0Om1haWx0bzphbnRkdXByYXRAZ21haWwuY29tDQpVSUQ6YWg4
+Nms1bTM0MmJtY3JiZTlraGtraGxuMDBAZ29vZ2xlLmNvbQ0KQVRURU5ERUU7Q1VUWVBFPUlO
+RElWSURVQUw7Uk9MRT1SRVEtUEFSVElDSVBBTlQ7UEFSVFNUQVQ9TkVFRFMtQUNUSU9OO1JT
+VlA9DQogVFJVRTtDTj1hZHVwcmF0QGxpbmFnb3JhLmNvbTtYLU5VTS1HVUVTVFM9MDptYWls
+dG86YWR1cHJhdEBsaW5hZ29yYS5jb20NCkFUVEVOREVFO0NVVFlQRT1JTkRJVklEVUFMO1JP
+TEU9UkVRLVBBUlRJQ0lQQU5UO1BBUlRTVEFUPUFDQ0VQVEVEO1JTVlA9VFJVRQ0KIDtDTj1B
+bnRvaW5lIER1cHJhdDtYLU5VTS1HVUVTVFM9MDptYWlsdG86YW50ZHVwcmF0QGdtYWlsLmNv
+bQ0KQ1JFQVRFRDoyMDE3MDExOVQxOTE4MjNaDQpERVNDUklQVElPTjpBZmZpY2hleiB2b3Ry
+ZSDDqXbDqW5lbWVudCBzdXIgbGEgcGFnZSBodHRwczovL3d3dy5nb29nbGUuY29tL2NhbA0K
+IGVuZGFyL2V2ZW50P2FjdGlvbj1WSUVXJmVpZD1ZV2c0Tm1zMWJUTTBNbUp0WTNKaVpUbHJh
+R3RyYUd4dU1EQWdZV1IxY0hKaGRFQg0KIHNhVzVoWjI5eVlTNWpiMjAmdG9rPU1Ua2pZVzUw
+WkhWd2NtRjBRR2R0WVdsc0xtTnZiVGcxT1RNNU5XTTRNR1JsWW1FMVlUSTROeg0KIFJqTjJV
+eU5qVTBNMll5Wm1RNE56UmtOVGhoWVRRJmN0ej1FdXJvcGUvUGFyaXMmaGw9ZnIuDQpMQVNU
+LU1PRElGSUVEOjIwMTcwMTE5VDE5MTgyM1oNCkxPQ0FUSU9OOg0KU0VRVUVOQ0U6MA0KU1RB
+VFVTOkNPTkZJUk1FRA0KU1VNTUFSWToNClRSQU5TUDpPUEFRVUUNCkVORDpWRVZFTlQNCkVO
+RDpWQ0FMRU5EQVINCg==
+--------------17D96D411CBD55D8239A8C1F--

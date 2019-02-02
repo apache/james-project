@@ -133,9 +133,7 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
         }
     }
 
-    /**
-     * @see org.springframework.beans.factory.BeanClassLoaderAware#setBeanClassLoader(java.lang.ClassLoader)
-     */
+    @Override
     public void setBeanClassLoader(ClassLoader classLoader) {
         this.classLoader = classLoader;
     }
@@ -180,7 +178,7 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
 
         MutablePropertyValues newprops = new MutablePropertyValues(pvs);
         for (PropertyDescriptor pd : pds) {
-            A s = hasAnnotatedProperty(pd);
+            A s = findAnnotatedProperty(pd);
             if (s != null && !pvs.contains(pd.getName())) {
                 try {
                     logger.debug("Processing annotation [{}] for [{}.{}]", s, beanName, pd.getName());
@@ -269,21 +267,17 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
     }
 
 
-    private A hasAnnotatedProperty(PropertyDescriptor propertyDescriptor) {
+    private A findAnnotatedProperty(PropertyDescriptor propertyDescriptor) {
         Method setter = propertyDescriptor.getWriteMethod();
         return setter != null ? AnnotationUtils.getAnnotation(setter, getAnnotation()) : null;
     }
 
-    /**
-     * @see org.springframework.osgi.context.BundleContextAware#setBundleContext(org.osgi.framework.BundleContext)
-     */
+    @Override
     public void setBundleContext(BundleContext context) {
         this.bundleContext = context;
     }
 
-    /**
-     * @see org.springframework.beans.factory.BeanFactoryAware#setBeanFactory(org.springframework.beans.factory.BeanFactory)
-     */
+    @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
         this.beanFactory = beanFactory;
     }

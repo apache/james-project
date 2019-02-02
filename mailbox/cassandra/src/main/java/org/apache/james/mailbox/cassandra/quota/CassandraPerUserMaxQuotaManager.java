@@ -19,116 +19,168 @@
 
 package org.apache.james.mailbox.cassandra.quota;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.cassandra.table.CassandraDefaultMaxQuota;
-import org.apache.james.mailbox.cassandra.table.CassandraMaxQuota;
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.core.Domain;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.util.OptionalUtils;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Session;
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 
 public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
-    private final Session session;
-    private final PreparedStatement setMaxStorageStatement;
-    private final PreparedStatement setMaxMessageStatement;
-    private final PreparedStatement getMaxStorageStatement;
-    private final PreparedStatement getMaxMessageStatement;
-    private final PreparedStatement setDefaultMaxStorageStatement;
-    private final PreparedStatement setDefaultMaxMessageStatement;
-    private final PreparedStatement getDefaultMaxStatement;
+    private final CassandraPerUserMaxQuotaDao perUserQuota;
+    private final CassandraPerDomainMaxQuotaDao perDomainQuota;
+    private final CassandraGlobalMaxQuotaDao globalQuota;
 
     @Inject
-    public CassandraPerUserMaxQuotaManager(Session session) {
-        this.session = session;
-        this.setMaxStorageStatement = session.prepare(insertInto(CassandraMaxQuota.TABLE_NAME)
-            .value(CassandraMaxQuota.QUOTA_ROOT, bindMarker())
-            .value(CassandraMaxQuota.STORAGE, bindMarker()));
-        this.setMaxMessageStatement = session.prepare(insertInto(CassandraMaxQuota.TABLE_NAME)
-            .value(CassandraMaxQuota.QUOTA_ROOT, bindMarker())
-            .value(CassandraMaxQuota.MESSAGE_COUNT, bindMarker()));
-        this.getMaxStorageStatement = session.prepare(select(CassandraMaxQuota.STORAGE)
-            .from(CassandraMaxQuota.TABLE_NAME)
-            .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker())));
-        this.getMaxMessageStatement = session.prepare(select(CassandraMaxQuota.MESSAGE_COUNT)
-            .from(CassandraMaxQuota.TABLE_NAME)
-            .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker())));
-        this.getDefaultMaxStatement = session.prepare(select(CassandraDefaultMaxQuota.VALUE)
-            .from(CassandraDefaultMaxQuota.TABLE_NAME)
-            .where(eq(CassandraDefaultMaxQuota.TYPE, bindMarker(CassandraDefaultMaxQuota.TYPE))));
-        this.setDefaultMaxMessageStatement = session.prepare(insertInto(CassandraDefaultMaxQuota.TABLE_NAME)
-            .value(CassandraDefaultMaxQuota.TYPE, CassandraDefaultMaxQuota.MESSAGE)
-            .value(CassandraDefaultMaxQuota.VALUE, bindMarker()));
-        this.setDefaultMaxStorageStatement = session.prepare(insertInto(CassandraDefaultMaxQuota.TABLE_NAME)
-            .value(CassandraDefaultMaxQuota.TYPE, CassandraDefaultMaxQuota.STORAGE)
-            .value(CassandraDefaultMaxQuota.VALUE, bindMarker()));
+    public CassandraPerUserMaxQuotaManager(CassandraPerUserMaxQuotaDao perUserQuota,
+                                           CassandraPerDomainMaxQuotaDao domainQuota,
+                                           CassandraGlobalMaxQuotaDao globalQuota) {
+        this.perUserQuota = perUserQuota;
+        this.perDomainQuota = domainQuota;
+        this.globalQuota = globalQuota;
     }
 
     @Override
-    public void setMaxStorage(QuotaRoot quotaRoot, long maxStorageQuota) throws MailboxException {
-        session.execute(setMaxStorageStatement.bind(quotaRoot.getValue(), maxStorageQuota));
+    public void setMaxStorage(QuotaRoot quotaRoot, QuotaSize maxStorageQuota) {
+        perUserQuota.setMaxStorage(quotaRoot, maxStorageQuota);
     }
 
     @Override
-    public void setMaxMessage(QuotaRoot quotaRoot, long maxMessageCount) throws MailboxException {
-        session.execute(setMaxMessageStatement.bind(quotaRoot.getValue(), maxMessageCount));
+    public void setMaxMessage(QuotaRoot quotaRoot, QuotaCount maxMessageCount) {
+        perUserQuota.setMaxMessage(quotaRoot, maxMessageCount);
     }
 
     @Override
-    public void setDefaultMaxStorage(long defaultMaxStorage) throws MailboxException {
-        session.execute(setDefaultMaxStorageStatement.bind(defaultMaxStorage));
+    public void setDomainMaxMessage(Domain domain, QuotaCount count) {
+        perDomainQuota.setMaxMessage(domain, count);
     }
 
     @Override
-    public void setDefaultMaxMessage(long defaultMaxMessageCount) throws MailboxException {
-        session.execute(setDefaultMaxMessageStatement.bind(defaultMaxMessageCount));
+    public void setDomainMaxStorage(Domain domain, QuotaSize size) {
+        perDomainQuota.setMaxStorage(domain, size);
     }
 
     @Override
-    public long getDefaultMaxStorage() throws MailboxException {
-        ResultSet resultSet = session.execute(getDefaultMaxStatement.bind()
-            .setString(CassandraDefaultMaxQuota.TYPE, CassandraDefaultMaxQuota.STORAGE));
-        if (resultSet.isExhausted()) {
-            return Quota.UNLIMITED;
-        }
-        return resultSet.one().getLong(CassandraDefaultMaxQuota.VALUE);
+    public void removeDomainMaxMessage(Domain domain) {
+        perDomainQuota.removeMaxMessage(domain);
     }
 
     @Override
-    public long getDefaultMaxMessage() throws MailboxException {
-        ResultSet resultSet = session.execute(getDefaultMaxStatement.bind()
-            .setString(CassandraDefaultMaxQuota.TYPE, CassandraDefaultMaxQuota.MESSAGE));
-        if (resultSet.isExhausted()) {
-            return Quota.UNLIMITED;
-        }
-        return resultSet.one().getLong(CassandraDefaultMaxQuota.VALUE);
+    public void removeDomainMaxStorage(Domain domain) {
+        perDomainQuota.removeMaxStorage(domain);
     }
 
     @Override
-    public long getMaxStorage(QuotaRoot quotaRoot) throws MailboxException {
-        ResultSet resultSet = session.execute(getMaxStorageStatement.bind(quotaRoot.getValue()));
-        if (resultSet.isExhausted()) {
-            return getDefaultMaxStorage();
-        }
-        return resultSet.one().getLong(CassandraMaxQuota.STORAGE);
+    public Optional<QuotaCount> getDomainMaxMessage(Domain domain) {
+        return perDomainQuota.getMaxMessage(domain);
     }
 
     @Override
-    public long getMaxMessage(QuotaRoot quotaRoot) throws MailboxException {
-        ResultSet resultSet = session.execute(getMaxMessageStatement.bind(quotaRoot.getValue()));
-        if (resultSet.isExhausted()) {
-            return getDefaultMaxMessage();
-        }
-        return resultSet.one().getLong(CassandraMaxQuota.MESSAGE_COUNT);
+    public Optional<QuotaSize> getDomainMaxStorage(Domain domain) {
+        return perDomainQuota.getMaxStorage(domain);
+    }
+
+    @Override
+    public void removeMaxMessage(QuotaRoot quotaRoot) {
+        perUserQuota.removeMaxMessage(quotaRoot);
+    }
+
+    @Override
+    public void removeMaxStorage(QuotaRoot quotaRoot) {
+        perUserQuota.removeMaxStorage(quotaRoot);
+    }
+
+    @Override
+    public void setGlobalMaxStorage(QuotaSize globalMaxStorage) {
+        globalQuota.setGlobalMaxStorage(globalMaxStorage);
+    }
+
+    @Override
+    public void removeGlobalMaxStorage() {
+        globalQuota.removeGlobaltMaxStorage();
+    }
+
+    @Override
+    public void setGlobalMaxMessage(QuotaCount globalMaxMessageCount) {
+        globalQuota.setGlobalMaxMessage(globalMaxMessageCount);
+    }
+
+    @Override
+    public void removeGlobalMaxMessage() {
+        globalQuota.removeGlobalMaxMessage();
+    }
+
+    @Override
+    public Optional<QuotaSize> getGlobalMaxStorage() {
+        return globalQuota.getGlobalMaxStorage();
+    }
+
+    @Override
+    public Optional<QuotaCount> getGlobalMaxMessage() {
+        return globalQuota.getGlobalMaxMessage();
+    }
+
+    @Override
+    public Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) {
+        Supplier<Optional<QuotaSize>> domainQuotaSupplier = Throwing.supplier(() -> quotaRoot.getDomain()
+            .flatMap(this::getDomainMaxStorage)).sneakyThrow();
+        Supplier<Optional<QuotaSize>> globalDomainSupplier = Throwing.supplier(this::getGlobalMaxStorage).sneakyThrow();
+
+        return Stream
+            .of(() -> perUserQuota.getMaxStorage(quotaRoot),
+                domainQuotaSupplier,
+                globalDomainSupplier)
+            .flatMap(supplier -> OptionalUtils.toStream(supplier.get()))
+            .findFirst();
+    }
+
+    @Override
+    public Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) {
+        Supplier<Optional<QuotaCount>> domainQuotaSupplier = Throwing.supplier(() -> quotaRoot.getDomain()
+            .flatMap(this::getDomainMaxMessage)).sneakyThrow();
+        Supplier<Optional<QuotaCount>> globalDomainSupplier = Throwing.supplier(this::getGlobalMaxMessage).sneakyThrow();
+
+        return Stream
+            .of(() -> perUserQuota.getMaxMessage(quotaRoot),
+                domainQuotaSupplier,
+                globalDomainSupplier)
+            .flatMap(supplier -> OptionalUtils.toStream(supplier.get()))
+            .findFirst();
+    }
+
+    @Override
+    public Map<Quota.Scope, QuotaCount> listMaxMessagesDetails(QuotaRoot quotaRoot) {
+        Function<Domain, Optional<QuotaCount>> domainQuotaSupplier = Throwing.function(this::getDomainMaxMessage).sneakyThrow();
+        return Stream.of(
+                Pair.of(Quota.Scope.User, perUserQuota.getMaxMessage(quotaRoot)),
+                Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaSupplier)),
+                Pair.of(Quota.Scope.Global, globalQuota.getGlobalMaxMessage()))
+            .filter(pair -> pair.getValue().isPresent())
+            .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
+    }
+
+    @Override
+    public Map<Quota.Scope, QuotaSize> listMaxStorageDetails(QuotaRoot quotaRoot) {
+        Function<Domain, Optional<QuotaSize>> domainQuotaSupplier = Throwing.function(this::getDomainMaxStorage).sneakyThrow();
+        return Stream.of(
+                Pair.of(Quota.Scope.User, perUserQuota.getMaxStorage(quotaRoot)),
+                Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaSupplier)),
+                Pair.of(Quota.Scope.Global, globalQuota.getGlobalMaxStorage()))
+            .filter(pair -> pair.getValue().isPresent())
+            .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
     }
 }

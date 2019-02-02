@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.OutputStream;
 import java.io.SequenceInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.UUID;
 
@@ -164,8 +165,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
      * Overrides default javamail behaviour by not altering the Message-ID by
      * default, see <a href="https://issues.apache.org/jira/browse/JAMES-875">JAMES-875</a> and
      * <a href="https://issues.apache.org/jira/browse/JAMES-1010">JAMES-1010</a>
-     *
-     * @see javax.mail.internet.MimeMessage#updateMessageID()
      */
     @Override
     protected void updateMessageID() throws MessagingException {
@@ -194,14 +193,8 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         if (headers != null) {
             // Another thread has already loaded these headers
         } else if (source != null) {
-            try {
-                InputStream in = source.getInputStream();
-                try {
-                    headers = createInternetHeaders(in);
-
-                } finally {
-                    IOUtils.closeQuietly(in);
-                }
+            try (InputStream in = source.getInputStream()) {
+                headers = createInternetHeaders(in);
             } catch (IOException ioe) {
                 throw new MessagingException("Unable to parse headers from stream: " + ioe.getMessage(), ioe);
             }
@@ -229,7 +222,11 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                 saved = true;
 
             } catch (IOException ioe) {
-                IOUtils.closeQuietly(sourceIn);
+                try {
+                    sourceIn.close();
+                } catch (IOException e) {
+                    //ignore exception during close
+                }
                 sourceIn = null;
                 throw new MessagingException("Unable to parse stream: " + ioe.getMessage(), ioe);
             }
@@ -301,8 +298,7 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
             // and write to this outputstream
 
             // First handle the headers
-            InputStream in = source.getInputStream();
-            try {
+            try (InputStream in = source.getInputStream()) {
                 InternetHeaders myHeaders;
                 MailHeaders parsedHeaders = new MailHeaders(in);
 
@@ -320,8 +316,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                 Enumeration<String> filteredHeaders = myHeaders.getNonMatchingHeaderLines(ignoreList);
                 IOUtils.copy(new InternetHeadersInputStream(filteredHeaders), headerOs);
                 IOUtils.copy(in, bodyOs);
-            } finally {
-                IOUtils.closeQuietly(in);
             }
         } else {
             // save the changes as the message was modified
@@ -391,29 +385,26 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         }
         // Wrap input stream in LineNumberReader
         // Not sure what encoding to use really...
-        InputStreamReader isr = null;
-        LineNumberReader counter = null;
-        try {
-            if (getEncoding() != null) {
-                isr = new InputStreamReader(in, getEncoding());
-                counter = new LineNumberReader(isr);
-            } else {
-                isr = new InputStreamReader(in);
-                counter = new LineNumberReader(isr);
-            }
+        try (InputStream input = in;
+            InputStreamReader isr = builderReader(input)) {
             // Read through all the data
             char[] block = new char[4096];
-            while (counter.read(block) > -1) {
-                // Just keep reading
+            try (LineNumberReader counter = new LineNumberReader(isr)) {
+                while (counter.read(block) > -1) {
+                    // Just keep reading
+                }
+                return counter.getLineNumber();
             }
-            return counter.getLineNumber();
         } catch (IOException ioe) {
             return -1;
-        } finally {
-            IOUtils.closeQuietly(counter);
-            IOUtils.closeQuietly(isr);
-            IOUtils.closeQuietly(in);
         }
+    }
+
+    private InputStreamReader builderReader(InputStream in) throws MessagingException, UnsupportedEncodingException {
+        if (getEncoding() != null) {
+            return new InputStreamReader(in, getEncoding());
+        }
+        return new InputStreamReader(in);
     }
 
     /**
@@ -542,8 +533,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
     /**
      * The message is changed when working with headers and when altering the
      * content. Every method that alter the content will fallback to this one.
-     * 
-     * @see javax.mail.Part#setDataHandler(javax.activation.DataHandler)
      */
     @Override
     public synchronized void setDataHandler(DataHandler arg0) throws MessagingException {
@@ -556,16 +545,17 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
     @Override
     public void dispose() {
         if (sourceIn != null) {
-            IOUtils.closeQuietly(sourceIn);
+            try {
+                sourceIn.close();
+            } catch (IOException e) {
+                //ignore exception during close
+            }
         }
         if (source != null) {
             LifecycleUtil.dispose(source);
         }
     }
 
-    /**
-     * @see javax.mail.internet.MimeMessage#parse(java.io.InputStream)
-     */
     @Override
     protected synchronized void parse(InputStream is) throws MessagingException {
         // the super implementation calls
@@ -577,8 +567,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
     /**
      * If we already parsed the headers then we simply return the updated ones.
      * Otherwise we parse
-     * 
-     * @see javax.mail.internet.MimeMessage#createInternetHeaders(java.io.InputStream)
      */
     @Override
     protected synchronized InternetHeaders createInternetHeaders(InputStream is) throws MessagingException {
@@ -620,9 +608,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         }
     }
 
-    /**
-     * @see javax.mail.internet.MimeMessage#getContentStream()
-     */
     @Override
     protected InputStream getContentStream() throws MessagingException {
         if (!messageParsed) {
@@ -631,9 +616,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         return super.getContentStream();
     }
 
-    /**
-     * @see javax.mail.internet.MimeMessage#getRawInputStream()
-     */
     @Override
     public synchronized InputStream getRawInputStream() throws MessagingException {
         if (!messageParsed && !isModified() && source != null) {
@@ -644,7 +626,7 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                 new MailHeaders(is);
                 return is;
             } catch (IOException e) {
-                throw new MessagingException("Unable to read the stream: " + e.getMessage(), e);
+                throw new MessagingException("Unable to read the stream", e);
             }
         } else {
             return super.getRawInputStream();

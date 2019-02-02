@@ -19,14 +19,14 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
@@ -39,7 +39,7 @@ public class ValidSenderDomainHandlerTest {
         return new ValidSenderDomainHandler() {
 
             @Override
-            public void init(Configuration config) throws ConfigurationException {
+            public void init(Configuration config) {
 
             }
 
@@ -62,17 +62,20 @@ public class ValidSenderDomainHandlerTest {
         return new BaseFakeSMTPSession() {
             HashMap<String,Object> map = new HashMap<>();
 
+            @Override
             public Map<String,Object> getState() {
 
-                map.put(SMTPSession.SENDER, sender);
+                map.put(SMTPSession.SENDER, MaybeSender.of(sender));
 
                 return map;
             }
 
+            @Override
             public boolean isRelayingAllowed() {
                 return false;
             }
 
+            @Override
             public Object setAttachment(String key, Object value, State state) {
                 if (state == State.Connection) {
                     throw new UnsupportedOperationException();
@@ -86,10 +89,7 @@ public class ValidSenderDomainHandlerTest {
                 }
             }
 
-            /*
-             * (non-Javadoc)
-             * @see org.apache.james.protocols.api.ProtocolSession#getAttachment(java.lang.String, org.apache.james.protocols.api.ProtocolSession.State)
-             */
+            @Override
             public Object getAttachment(String key, State state) {
                 if (state == State.Connection) {
                     throw new UnsupportedOperationException();
@@ -106,17 +106,18 @@ public class ValidSenderDomainHandlerTest {
     @Test
     public void testNullSenderNotReject() {
         ValidSenderDomainHandler handler = createHandler();
-        int response = handler.doMail(setupMockedSession(null),null).getResult();
+        HookReturnCode response = handler.doMail(setupMockedSession(null), MaybeSender.nullSender()).getResult();
         
-        assertEquals("Not blocked cause its a nullsender",response,HookReturnCode.DECLINED);
+        assertThat(HookReturnCode.declined()).describedAs("Not blocked cause its a nullsender").isEqualTo(response);
     }
 
     @Test
     public void testInvalidSenderDomainReject() throws Exception {
         ValidSenderDomainHandler handler = createHandler();
         SMTPSession session = setupMockedSession(new MailAddress("invalid@invalid"));
-        int response = handler.doMail(session,(MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction)).getResult();
+        MaybeSender sender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, State.Transaction);
+        HookReturnCode response = handler.doMail(session, sender).getResult();
         
-        assertEquals("Blocked cause we use reject action", response,HookReturnCode.DENY);
+        assertThat(HookReturnCode.deny()).describedAs("Blocked cause we use reject action").isEqualTo(response);
     }
 }

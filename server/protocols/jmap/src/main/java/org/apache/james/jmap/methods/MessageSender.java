@@ -29,7 +29,6 @@ import org.apache.james.jmap.send.MailMetadata;
 import org.apache.james.jmap.send.MailSpool;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.mailet.Mail;
 
@@ -45,11 +44,10 @@ public class MessageSender {
 
     public void sendMessage(MessageFactory.MetaDataWithContent message,
                             Envelope envelope,
-                            MailboxSession session) throws MailboxException, MessagingException {
+                            MailboxSession session) throws MessagingException {
         Mail mail = mailFactory.build(message, envelope);
         try {
-            MailMetadata metadata = new MailMetadata(message.getMessageId(), session.getUser().getUserName());
-            mailSpool.send(mail, metadata);
+            sendMessage(message.getMessageId(), mail, session);
         } finally {
             LifecycleUtil.dispose(mail);
         }
@@ -57,8 +55,8 @@ public class MessageSender {
 
     public void sendMessage(MessageId messageId,
                             Mail mail,
-                            MailboxSession session) throws MailboxException, MessagingException {
-        MailMetadata metadata = new MailMetadata(messageId, session.getUser().getUserName());
+                            MailboxSession session) throws MessagingException {
+        MailMetadata metadata = new MailMetadata(messageId, session.getUser().asString());
         mailSpool.send(mail, metadata);
     }
 }

@@ -21,7 +21,7 @@ package org.apache.james.mailbox.cassandra.mail;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -31,81 +31,72 @@ import org.apache.james.mailbox.model.MailboxACL.Entry;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraUserMailboxRightsDAOTest {
-
+class CassandraUserMailboxRightsDAOTest {
     private static final String USER_NAME = "userName";
     private static final EntryKey ENTRY_KEY = EntryKey.createUserEntryKey(USER_NAME);
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     private static final Rfc4314Rights RIGHTS = MailboxACL.FULL_RIGHTS;
     private static final Rfc4314Rights OTHER_RIGHTS = new Rfc4314Rights(Right.Administer, Right.Read);
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraAclModule.MODULE);
 
     private CassandraUserMailboxRightsDAO testee;
 
-    @Before
-    public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(new CassandraAclModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         testee = new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        cassandra.close();
-    }
-
     @Test
-    public void saveShouldInsertNewEntry() throws Exception {
+    void saveShouldInsertNewEntry() {
         testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS))))
-            .join();
+            .block();
 
         assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).join())
             .contains(RIGHTS);
     }
 
     @Test
-    public void saveOnSecondShouldOverwrite() throws Exception {
+    void saveOnSecondShouldOverwrite() {
         testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS))))
-            .join();
+            .block();
 
         testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS)),
             new MailboxACL(new Entry(ENTRY_KEY, OTHER_RIGHTS))))
-            .join();
+            .block();
 
         assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).join())
             .contains(OTHER_RIGHTS);
     }
 
     @Test
-    public void listRightsForUserShouldReturnEmptyWhenEmptyData() throws Exception {
-        assertThat(testee.listRightsForUser(USER_NAME).join())
+    void listRightsForUserShouldReturnEmptyWhenEmptyData() {
+        assertThat(testee.listRightsForUser(USER_NAME).collectList().block())
             .isEmpty();
     }
 
     @Test
-    public void deleteShouldDeleteWhenExisting() throws Exception {
+    void deleteShouldDeleteWhenExisting() {
         testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS))))
-            .join();
+            .block();
 
 
         testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS)),
             MailboxACL.EMPTY))
-            .join();
+            .block();
 
         assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).join())
             .isEmpty();

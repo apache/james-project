@@ -36,10 +36,8 @@ public class JPASubscriptionManager extends StoreSubscriptionManager {
         super(mapperFactory);
     }
     
-    /**
-     * @see org.apache.james.mailbox.store.StoreSubscriptionManager#createSubscription(org.apache.james.mailbox.MailboxSession, java.lang.String)
-     */
+    @Override
     protected Subscription createSubscription(MailboxSession session, String mailbox) {
-        return new JPASubscription(session.getUser().getUserName(), mailbox);
+        return new JPASubscription(session.getUser().asString(), mailbox);
     }
 }

@@ -22,6 +22,7 @@ package org.apache.james.backends.cassandra.init;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,7 +36,6 @@ public class CassandraConfigurationTest {
     @Test
     public void cassandraConfigurationShouldRespectBeanContract() {
         EqualsVerifier.forClass(CassandraConfiguration.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

@@ -36,7 +36,6 @@ import org.junit.Test;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.consumers.ConsumerChainer;
-import com.google.common.base.Throwables;
 
 public class MemoryTaskManagerTest {
 
@@ -420,7 +419,7 @@ public class MemoryTaskManagerTest {
         try {
             Thread.sleep(durationInMs);
         } catch (InterruptedException e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -428,7 +427,7 @@ public class MemoryTaskManagerTest {
         try {
             countDownLatch.await();
         } catch (InterruptedException e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 }

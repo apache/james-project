@@ -20,7 +20,6 @@
 package org.apache.james.lmtpserver.hook;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -31,6 +30,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -69,16 +69,8 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
     
     @Override
     public HookResult deliver(SMTPSession session, MailAddress recipient, MailEnvelope envelope) {
-        String username;
-        HookResult result;
-
         try {
-
-            if (users.supportVirtualHosting()) {
-                username = recipient.toString();
-            } else {
-                username = recipient.getLocalPart();
-            }
+            String username = users.getUser(recipient);
 
             MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
             MailboxPath inbox = MailboxPath.inbox(mailboxSession);
@@ -90,14 +82,24 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
                 Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inbox, mailboxSession);
                 LOGGER.info("Provisioning INBOX. {} created.", mailboxId);
             }
-            mailboxManager.getMailbox(MailboxPath.inbox(mailboxSession), mailboxSession).appendMessage(envelope.getMessageInputStream(), new Date(), mailboxSession, true, null);
+            mailboxManager.getMailbox(MailboxPath.inbox(mailboxSession), mailboxSession)
+                .appendMessage(MessageManager.AppendCommand.builder()
+                    .recent()
+                    .build(envelope.getMessageInputStream()),
+                    mailboxSession);
             mailboxManager.endProcessingRequest(mailboxSession);
-            result = new HookResult(HookReturnCode.OK, SMTPRetCode.MAIL_OK, DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received");
+            return HookResult.builder()
+                .hookReturnCode(HookReturnCode.ok())
+                .smtpReturnCode(SMTPRetCode.MAIL_OK)
+                .smtpDescription(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received")
+                .build();
         } catch (IOException | MailboxException | UsersRepositoryException e) {
             LOGGER.error("Unexpected error handling DATA stream", e);
-            result = new HookResult(HookReturnCode.DENYSOFT, " Temporary error deliver message to " + recipient);
+            return HookResult.builder()
+                .hookReturnCode(HookReturnCode.denySoft())
+                .smtpDescription(" Temporary error deliver message to " + recipient)
+                .build();
         }
-        return result;
     }
 
     @Override

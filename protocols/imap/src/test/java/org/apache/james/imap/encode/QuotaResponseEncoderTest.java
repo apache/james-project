@@ -19,13 +19,15 @@
 
 package org.apache.james.imap.encode;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.EndImapEncoder;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.QuotaResponse;
-import org.apache.james.mailbox.store.quota.QuotaImpl;
+import org.apache.james.mailbox.model.Quota;
 import org.junit.Test;
 
 /**
@@ -35,24 +37,26 @@ public class QuotaResponseEncoderTest {
 
     @Test
     public void quotaMessageResponseShouldBeWellFormatted() throws Exception {
-        QuotaResponse response = new QuotaResponse("MESSAGE", "root", QuotaImpl.quota(231, 1024));
+        QuotaResponse response = new QuotaResponse("MESSAGE", "root",
+            Quota.<QuotaCount>builder().used(QuotaCount.count(231)).computedLimit(QuotaCount.count(1024)).build());
         ByteImapResponseWriter byteImapResponseWriter = new ByteImapResponseWriter();
         ImapResponseComposer composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
         QuotaResponseEncoder encoder = new QuotaResponseEncoder(new EndImapEncoder());
         encoder.encode(response, composer, null);
         String responseString = byteImapResponseWriter.getString();
-        assertEquals("* QUOTA root (MESSAGE 231 1024)\r\n", responseString);
+        assertThat(responseString).isEqualTo("* QUOTA root (MESSAGE 231 1024)\r\n");
     }
 
     @Test
     public void quotaStorageResponseShouldBeWellFormatted() throws Exception {
-        QuotaResponse response = new QuotaResponse("STORAGE", "root", QuotaImpl.quota(231 * 1024, 1024 * 1024));
+        QuotaResponse response = new QuotaResponse("STORAGE", "root",
+        Quota.<QuotaSize>builder().used(QuotaSize.size(231 * 1024)).computedLimit(QuotaSize.size(1024 * 1024)).build());
         ByteImapResponseWriter byteImapResponseWriter = new ByteImapResponseWriter();
         ImapResponseComposer composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
         QuotaResponseEncoder encoder = new QuotaResponseEncoder(new EndImapEncoder());
         encoder.encode(response, composer, null);
         String responseString = byteImapResponseWriter.getString();
-        assertEquals("* QUOTA root (STORAGE 231 1024)\r\n", responseString);
+        assertThat(responseString).isEqualTo("* QUOTA root (STORAGE 231 1024)\r\n");
     }
 
 }

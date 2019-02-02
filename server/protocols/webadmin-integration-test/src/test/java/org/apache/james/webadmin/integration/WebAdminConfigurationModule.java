@@ -20,7 +20,6 @@
 package org.apache.james.webadmin.integration;
 
 import org.apache.james.webadmin.WebAdminConfiguration;
-import org.apache.james.webadmin.WebAdminUtils;
 
 import com.google.inject.AbstractModule;
 
@@ -28,7 +27,7 @@ public class WebAdminConfigurationModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(WebAdminConfiguration.class).toProvider(WebAdminUtils::webAdminConfigurationForTesting);
+        bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION);
     }
 
 }

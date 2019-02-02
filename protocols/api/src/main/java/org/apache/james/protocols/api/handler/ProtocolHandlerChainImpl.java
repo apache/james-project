@@ -55,10 +55,7 @@ public class ProtocolHandlerChainImpl extends AbstractProtocolHandlerChain imple
         return readyOnly;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#add(java.lang.Object)
-     */
+    @Override
     public boolean add(ProtocolHandler handler) {
         checkReadOnly();
         return handlers.add(handler);
@@ -69,196 +66,129 @@ public class ProtocolHandlerChainImpl extends AbstractProtocolHandlerChain imple
         return ImmutableList.copyOf(handlers);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#size()
-     */
+    @Override
     public int size() {
         return handlers.size();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#isEmpty()
-     */
+    @Override
     public boolean isEmpty() {
         return handlers.isEmpty();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#contains(java.lang.Object)
-     */
+    @Override
     public boolean contains(Object o) {
         return handlers.contains(o);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#iterator()
-     */
+    @Override
     public Iterator<ProtocolHandler> iterator() {
         return new ProtocolHandlerIterator(handlers.listIterator());
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#toArray()
-     */
+    @Override
     public Object[] toArray() {
         return handlers.toArray();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#toArray(T[])
-     */
+    @Override
     public <T> T[] toArray(T[] a) {
         return handlers.toArray(a);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#remove(java.lang.Object)
-     */
+    @Override
     public boolean remove(Object o) {
         checkReadOnly();
 
         return handlers.remove(o);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#containsAll(java.util.Collection)
-     */
+    @Override
     public boolean containsAll(Collection<?> c) {
         return handlers.containsAll(c);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#addAll(java.util.Collection)
-     */
+    @Override
     public boolean addAll(Collection<? extends ProtocolHandler> c) {
         checkReadOnly();
 
         return handlers.addAll(c);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#addAll(int, java.util.Collection)
-     */
+    @Override
     public boolean addAll(int index, Collection<? extends ProtocolHandler> c) {
         checkReadOnly();
 
         return handlers.addAll(index, c);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#removeAll(java.util.Collection)
-     */
+    @Override
     public boolean removeAll(Collection<?> c) {
         checkReadOnly();
 
         return handlers.removeAll(c);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#retainAll(java.util.Collection)
-     */
+    @Override
     public boolean retainAll(Collection<?> c) {
         return handlers.retainAll(c);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#clear()
-     */
+    @Override
     public void clear() {
         checkReadOnly();
 
         handlers.clear();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#get(int)
-     */
+    @Override
     public ProtocolHandler get(int index) {
         return (ProtocolHandler) handlers.get(index);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#set(int, java.lang.Object)
-     */
+    @Override
     public ProtocolHandler set(int index, ProtocolHandler element) {
         checkReadOnly();
 
         return (ProtocolHandler) handlers.set(index, element);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#add(int, java.lang.Object)
-     */
+    @Override
     public void add(int index, ProtocolHandler element) {
         checkReadOnly();
 
         handlers.add(index, element);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#remove(int)
-     */
+    @Override
     public ProtocolHandler remove(int index) {
         checkReadOnly();
 
         return (ProtocolHandler) handlers.remove(index);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#indexOf(java.lang.Object)
-     */
+    @Override
     public int indexOf(Object o) {
         return handlers.indexOf(o);
     }
 
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#lastIndexOf(java.lang.Object)
-     */
+    @Override
     public int lastIndexOf(Object o) {
         return handlers.lastIndexOf(o);
     }
 
-    /*
-     * 
-     * (non-Javadoc)
-     * @see java.util.List#listIterator()
-     */
+    @Override
     public ListIterator<ProtocolHandler> listIterator() {
         return new ProtocolHandlerIterator(handlers.listIterator());
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#listIterator(int)
-     */
+    @Override
     public ListIterator<ProtocolHandler> listIterator(int index) {
         return new ProtocolHandlerIterator(handlers.listIterator(index));
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#subList(int, int)
-     */
+    @Override
     public List<ProtocolHandler> subList(int fromIndex, int toIndex) {
         List<ProtocolHandler> sList = new ArrayList<>(handlers.subList(fromIndex, toIndex));
         if (readyOnly) {
@@ -280,78 +210,51 @@ public class ProtocolHandlerChainImpl extends AbstractProtocolHandlerChain imple
             this.handlers = handlers;
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#hasNext()
-         */
+        @Override
         public boolean hasNext() {
             return handlers.hasNext();
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#next()
-         */
+        @Override
         public ProtocolHandler next() {
             return (ProtocolHandler) handlers.next();
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#hasPrevious()
-         */
+        @Override
         public boolean hasPrevious() {
             return handlers.hasPrevious();
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#previous()
-         */
+        @Override
         public ProtocolHandler previous() {
             return handlers.previous();
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#nextIndex()
-         */
+        @Override
         public int nextIndex() {
             return handlers.nextIndex();
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#previousIndex()
-         */
+        @Override
         public int previousIndex() {
             return handlers.previousIndex();
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#remove()
-         */
+        @Override
         public void remove() {
             checkReadOnly();
 
             handlers.previousIndex();
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#set(java.lang.Object)
-         */
+        @Override
         public void set(ProtocolHandler e) {
             checkReadOnly();
 
             handlers.set(e);
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#add(java.lang.Object)
-         */
+        @Override
         public void add(ProtocolHandler e) {
             checkReadOnly();
             handlers.add(e);

@@ -30,7 +30,9 @@ public class SearchQueryTest {
 
     @Test
     public void searchQueryShouldRespectBeanContract() {
-        EqualsVerifier.forClass(SearchQuery.class).verify();
+        EqualsVerifier.forClass(SearchQuery.class)
+            .withOnlyTheseFields("criterias")
+            .verify();
     }
 
     @Test

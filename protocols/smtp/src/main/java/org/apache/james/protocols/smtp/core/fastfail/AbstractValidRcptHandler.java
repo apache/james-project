@@ -19,7 +19,9 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
@@ -30,60 +32,38 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Handler which want todo an recipient check should extend this
- *
+ * Handler which want to do a recipient check should extend this
  */
 public abstract class AbstractValidRcptHandler implements RcptHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractValidRcptHandler.class);
 
-    /**
-     * @see org.apache.james.protocols.smtp.hook.RcptHook#doRcpt(org.apache.james.protocols.smtp.SMTPSession, org.apache.mailet.MailAddress, org.apache.mailet.MailAddress)
-     */
-    public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
-        boolean reject = false;
-        
-        if (session.isRelayingAllowed()) {
-            // check if the domain is local, if so we still want to check if the recipient is valid or not as we want to fail fast in such cases
-            if (isLocalDomain(session, rcpt.getDomain())) {
-                if (isValidRecipient(session, rcpt) == false) {
-                    reject = true;
-                }
-            }
-        } else {
-            if (isLocalDomain(session, rcpt.getDomain()) == false) {
-                LOGGER.debug("Unknown domain {} so reject it", rcpt.getDomain());
-
-            } else {
-                if (isValidRecipient(session, rcpt) == false) {
-                    reject = true;
-                }
-            }
+    @Override
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
+        if (!isLocalDomain(session, rcpt.getDomain())) {
+            return HookResult.DECLINED;
         }
-       
-        if (reject) {
-            //user not exist
-            LOGGER.info("Rejected message. Unknown user: {}", rcpt);
-            return new HookResult(HookReturnCode.DENY,SMTPRetCode.MAILBOX_PERM_UNAVAILABLE, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.ADDRESS_MAILBOX) + " Unknown user: " + rcpt.toString());
-        } else {
-            return HookResult.declined();
+        if (!isValidRecipient(session, rcpt)) {
+            return reject(rcpt);
         }
+        return HookResult.DECLINED;
     }
-    
-  
+
+    public HookResult reject(MailAddress rcpt) {
+        LOGGER.info("Rejected message. Unknown user: {}", rcpt);
+        return HookResult.builder()
+            .hookReturnCode(HookReturnCode.deny())
+            .smtpReturnCode(SMTPRetCode.MAILBOX_PERM_UNAVAILABLE)
+            .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.ADDRESS_MAILBOX) + " Unknown user: " + rcpt.asString())
+            .build();
+    }
+
     /**
      * Return true if email for the given recipient should get accepted
-     * 
-     * @param recipient
-     * @return isValid
      */
     protected abstract boolean isValidRecipient(SMTPSession session, MailAddress recipient);
     
     /**
      * Return true if the domain is local
-     * 
-     * @param session
-     * @param domain
-     * @return local
      */
-    protected abstract boolean isLocalDomain(SMTPSession session, String domain);
+    protected abstract boolean isLocalDomain(SMTPSession session, Domain domain);
 }

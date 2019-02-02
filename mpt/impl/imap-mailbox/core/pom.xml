@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-james-mpt-imapmailbox</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
@@ -32,28 +32,28 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-store</artifactId>
             <type>test-jar</type>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mpt-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-memory</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-mailbox-adapter</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>metrics-logger</artifactId>
         </dependency>
         <dependency>
@@ -81,21 +81,8 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james.protocols</groupId>
+            <groupId>${james.protocols.groupId}</groupId>
             <artifactId>protocols-imap</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.protocols</groupId>
-            <artifactId>protocols-imap</artifactId>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.jmock</groupId>
-            <artifactId>jmock</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jmock</groupId>
-            <artifactId>jmock-junit4</artifactId>
         </dependency>
         <!-- As mime4j use commons-logging we need to specify the binding here -->
         <dependency>

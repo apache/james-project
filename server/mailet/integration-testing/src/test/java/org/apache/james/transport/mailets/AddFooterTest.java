@@ -21,11 +21,9 @@ package org.apache.james.transport.mailets;
 
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.FROM;
-import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
-import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,7 +32,9 @@ import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.modules.server.ActiveMQQueueModule;
+import org.apache.james.modules.activemq.ActiveMQQueueModule;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
@@ -84,16 +84,15 @@ public class AddFooterTest {
 
     @Test
     public void shouldAddFooterWhenSimpleMessage() throws Exception {
-        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .setText("Any content")
                     .setSubject("test"))
                 .sender(FROM)
-                .recipient(RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(RECIPIENT));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -103,7 +102,7 @@ public class AddFooterTest {
 
     @Test
     public void shouldAddFooterWhenMultipartMessage() throws Exception {
-        smtpMessageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .setMultipartWithBodyParts(
@@ -115,10 +114,9 @@ public class AddFooterTest {
                             .type("application/data"))
                     .setSubject("test"))
                 .sender(FROM)
-                .recipient(RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(RECIPIENT));
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);

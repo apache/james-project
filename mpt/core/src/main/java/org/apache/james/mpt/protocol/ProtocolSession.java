@@ -142,6 +142,7 @@ public class ProtocolSession implements ProtocolInteractor {
     /**
      * adds a new Client request line to the test elements
      */
+    @Override
     public void cl(String clientLine) {
         testElements.add(new ClientRequest(clientLine));
     }
@@ -150,6 +151,7 @@ public class ProtocolSession implements ProtocolInteractor {
      * adds a new Server Response line to the test elements, with the specified
      * location.
      */
+    @Override
     public void sl(String serverLine, String location) {
         testElements.add(new ServerResponse(serverLine, location));
     }
@@ -157,6 +159,7 @@ public class ProtocolSession implements ProtocolInteractor {
     /**
      * adds a new Server Unordered Block to the test elements.
      */
+    @Override
     public void sub(List<String> serverLines, String location) {
         testElements.add(new ServerUnorderedBlockResponse(serverLines, location));
     }
@@ -164,6 +167,7 @@ public class ProtocolSession implements ProtocolInteractor {
     /**
      * adds a new Client request line to the test elements
      */
+    @Override
     public void cl(int sessionNumber, String clientLine) {
         this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
         testElements.add(new ClientRequest(sessionNumber, clientLine));
@@ -172,6 +176,7 @@ public class ProtocolSession implements ProtocolInteractor {
     /**
      * Adds a continuation. To allow one thread to be used for testing.
      */
+    @Override
     public void cont(int sessionNumber) throws Exception {
         this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
         testElements.add(new ContinuationElement(sessionNumber));
@@ -181,6 +186,7 @@ public class ProtocolSession implements ProtocolInteractor {
      * adds a new Server Response line to the test elements, with the specified
      * location.
      */
+    @Override
     public void sl(int sessionNumber, String serverLine, String location, String lastClientMessage) {
         this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
         testElements.add(new ServerResponse(sessionNumber, serverLine, location, lastClientMessage));
@@ -189,6 +195,7 @@ public class ProtocolSession implements ProtocolInteractor {
     /**
      * adds a new Server Unordered Block to the test elements.
      */
+    @Override
     public void sub(int sessionNumber, List<String> serverLines, String location, String lastClientMessage) {
         this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
         testElements.add(new ServerUnorderedBlockResponse(sessionNumber, serverLines, location, lastClientMessage));
@@ -210,6 +217,11 @@ public class ProtocolSession implements ProtocolInteractor {
     public void reinit(int sessionNumber) {
         this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
         testElements.add(new ReinitElement(sessionNumber));
+    }
+
+    public void await(int sessionNumber) {
+        this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
+        testElements.add(new AwaitElement(sessionNumber));
     }
 
     public void timer(TimerCommand timerCommand, String timerName) {
@@ -249,6 +261,7 @@ public class ProtocolSession implements ProtocolInteractor {
          * 
          * @throws Exception
          */
+        @Override
         public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
             if (sessionNumber < 0) {
                 for (Session session : sessions) {
@@ -265,6 +278,7 @@ public class ProtocolSession implements ProtocolInteractor {
             session.writeLine(message);
         }
 
+        @Override
         public boolean isClient() {
             return true;
         }
@@ -329,6 +343,7 @@ public class ProtocolSession implements ProtocolInteractor {
          *             If the actual server response didn't match the regular
          *             expression expected.
          */
+        @Override
         public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
             if (sessionNumber < 0) {
                 for (Session session : sessions) {
@@ -379,6 +394,7 @@ public class ProtocolSession implements ProtocolInteractor {
             }
         }
 
+        @Override
         public boolean isClient() {
             return false;
         }
@@ -435,6 +451,7 @@ public class ProtocolSession implements ProtocolInteractor {
          *             If a line is encountered which doesn't match one of the
          *             expected lines.
          */
+        @Override
         protected void checkResponse(Session session, boolean continueAfterFailure) throws Exception {
             List<String> testLines = new ArrayList<>(expectedLines);
             while (testLines.size() > 0) {
@@ -473,6 +490,7 @@ public class ProtocolSession implements ProtocolInteractor {
             this.sessionNumber = Math.max(0, sessionNumber);
         }
 
+        @Override
         public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
             Session session = sessions[sessionNumber];
             continuationExpected = true;
@@ -490,6 +508,7 @@ public class ProtocolSession implements ProtocolInteractor {
             }
         }
 
+        @Override
         public boolean isClient() {
             return false;
         }
@@ -511,11 +530,13 @@ public class ProtocolSession implements ProtocolInteractor {
             this.sessionNumber = Math.max(0, sessionNumber);
         }
 
+        @Override
         public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
             Session session = sessions[sessionNumber];
             session.restart();
         }
 
+        @Override
         public boolean isClient() {
             return false;
         }
@@ -606,6 +627,24 @@ public class ProtocolSession implements ProtocolInteractor {
         @Override
         public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
             Thread.sleep(timeToWaitInMs);
+        }
+
+        @Override
+        public boolean isClient() {
+            return false;
+        }
+    }
+
+    private class AwaitElement implements ProtocolElement {
+        private final int sessionNumber;
+
+        private AwaitElement(int sessionNumber) {
+            this.sessionNumber = Math.max(0, sessionNumber);
+        }
+
+        @Override
+        public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
+            sessions[sessionNumber].await();
         }
 
         @Override

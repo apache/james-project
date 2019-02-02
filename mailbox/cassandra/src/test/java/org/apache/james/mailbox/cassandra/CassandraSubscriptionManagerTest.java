@@ -21,10 +21,9 @@ package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.backends.cassandra.init.CassandraConfiguration;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
-import org.apache.james.blob.api.ObjectStore;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.AbstractSubscriptionManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
@@ -37,7 +36,8 @@ import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAOImpl;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV2DAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
@@ -45,13 +45,12 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
 /**
@@ -60,24 +59,28 @@ import org.junit.ClassRule;
 public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManagerTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+
+    private static CassandraCluster cassandra;
+
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(CassandraSubscriptionModule.MODULE, cassandraServer.getHost());
+    }
 
     @Before
     public void init() {
-        CassandraModuleComposite modules = new CassandraModuleComposite(
-            new CassandraSubscriptionModule(),
-            new CassandraMailboxCounterModule(),
-            new CassandraUidModule(),
-            new CassandraModSeqModule());
-        cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
         super.setup();
     }
 
     @After
     public void close() throws SubscriptionException {
         super.teardown();
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Override
@@ -88,7 +91,8 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
         CassandraMailboxCounterDAO mailboxCounterDAO = null;
         CassandraMailboxRecentsDAO mailboxRecentsDAO = null;
         CassandraMailboxDAO mailboxDAO = null;
-        CassandraMailboxPathDAO mailboxPathDAO = null;
+        CassandraMailboxPathDAOImpl mailboxPathDAO = null;
+        CassandraMailboxPathV2DAO mailboxPathV2DAO = null;
         CassandraFirstUnseenDAO firstUnseenDAO = null;
         CassandraApplicableFlagDAO applicableFlagDAO = null;
         CassandraAttachmentDAO attachmentDAO = null;
@@ -98,11 +102,13 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
         CassandraAttachmentOwnerDAO ownerDAO = null;
         CassandraACLMapper aclMapper = null;
         CassandraUserMailboxRightsDAO userMailboxRightsDAO = null;
-        ObjectStore objectStore = null;
+        BlobStore blobStore = null;
+        CassandraUidProvider uidProvider = null;
+        CassandraModSeqProvider modSeqProvider = null;
         return new CassandraSubscriptionManager(
             new CassandraMailboxSessionMapperFactory(
-                new CassandraUidProvider(cassandra.getConf()),
-                new CassandraModSeqProvider(cassandra.getConf()),
+                uidProvider,
+                modSeqProvider,
                 cassandra.getConf(),
                 messageDAO,
                 messageIdDAO,
@@ -111,12 +117,13 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
                 mailboxRecentsDAO,
                 mailboxDAO,
                 mailboxPathDAO,
+                mailboxPathV2DAO,
                 firstUnseenDAO,
                 applicableFlagDAO,
                 attachmentDAO,
                 attachmentDAOV2,
                 deletedMessageDAO,
-                objectStore,
+                blobStore,
                 attachmentMessageIdDAO,
                 ownerDAO,
                 aclMapper,

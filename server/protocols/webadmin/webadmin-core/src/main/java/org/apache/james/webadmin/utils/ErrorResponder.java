@@ -24,6 +24,9 @@ import static spark.Spark.halt;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -31,6 +34,9 @@ import com.google.common.base.Preconditions;
 import spark.HaltException;
 
 public class ErrorResponder {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ErrorResponder.class);
+
     public enum ErrorType {
         INVALID_ARGUMENT("InvalidArgument"),
         NOT_FOUND("notFound"),
@@ -86,27 +92,41 @@ public class ErrorResponder {
         Preconditions.checkNotNull(type, "type must not be null in case of error");
         Preconditions.checkNotNull(message, "message must not be null in case of error");
         try {
-            return halt(statusCode, new JsonTransformer().render(new ErrorDetail(statusCode,
-                type.getType(),
-                message,
-                cause.map(e -> Optional.ofNullable(e.getMessage())).orElse(Optional.empty()))));
+            return halt(statusCode, generateBody());
         } catch (JsonProcessingException e) {
             return halt(statusCode);
         }
     }
 
-    static class ErrorDetail {
+    public String asString() {
+        try {
+            return generateBody();
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed handling Error response formatting", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String generateBody() throws JsonProcessingException {
+        return new JsonTransformer().render(new ErrorDetail(
+            statusCode,
+            type.getType(),
+            message,
+            cause.map(Throwable::getMessage)));
+    }
+
+    public static class ErrorDetail {
         private final int statusCode;
         private final String type;
         private final String message;
-        private final Optional<String> cause;
+        private final Optional<String> details;
 
         @VisibleForTesting
-        ErrorDetail(int statusCode, String type, String message, Optional<String> cause) {
+        ErrorDetail(int statusCode, String type, String message, Optional<String> details) {
             this.statusCode = statusCode;
             this.type = type;
             this.message = message;
-            this.cause = cause;
+            this.details = details;
         }
 
         public int getStatusCode() {
@@ -121,8 +141,8 @@ public class ErrorResponder {
             return message;
         }
 
-        public Optional<String> getCause() {
-            return cause;
+        public Optional<String> getDetails() {
+            return details;
         }
 
         @Override
@@ -133,14 +153,14 @@ public class ErrorResponder {
                 return Objects.equals(this.statusCode, that.statusCode)
                     && Objects.equals(this.type, that.type)
                     && Objects.equals(this.message, that.message)
-                    && Objects.equals(this.cause, that.cause);
+                    && Objects.equals(this.details, that.details);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(statusCode, type, message, cause);
+            return Objects.hash(statusCode, type, message, details);
         }
     }
 }

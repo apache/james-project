@@ -37,6 +37,7 @@ public class CheckProcessor extends AbstractMailboxProcessor<CheckRequest> {
         super(CheckRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
+    @Override
     protected void doProcess(CheckRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) {
         unsolicitedResponses(session, responder, false);
         okComplete(command, tag, responder);

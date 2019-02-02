@@ -25,6 +25,7 @@ import java.net.UnknownHostException;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -92,24 +93,24 @@ public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
         return true;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.hook.RcptHook#doRcpt(org.apache.james.protocols.smtp.SMTPSession, org.apache.mailet.MailAddress, org.apache.mailet.MailAddress)
-     */
-    public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+    @Override
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
         if (check(session,rcpt)) {
-            return new HookResult(HookReturnCode.DENY,SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG)
-                    + " Provided EHLO/HELO " + session.getAttachment(SMTPSession.CURRENT_HELO_NAME, State.Connection) + " can not resolved.");
+            return HookResult.builder()
+                .hookReturnCode(HookReturnCode.deny())
+                .smtpReturnCode(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS)
+                .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG)
+                    + " Provided EHLO/HELO " + session.getAttachment(SMTPSession.CURRENT_HELO_NAME, State.Connection) + " can not resolved.")
+                .build();
         } else {
-            return HookResult.declined();
+            return HookResult.DECLINED;
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.hook.HeloHook#doHelo(org.apache.james.protocols.smtp.SMTPSession, java.lang.String)
-     */
+    @Override
     public HookResult doHelo(SMTPSession session, String helo) {
         checkEhloHelo(session, helo);
-        return HookResult.declined();
+        return HookResult.DECLINED;
     }
 
 }

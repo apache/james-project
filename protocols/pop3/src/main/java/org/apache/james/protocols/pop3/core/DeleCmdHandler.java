@@ -57,6 +57,7 @@ public class DeleCmdHandler implements CommandHandler<POP3Session> {
      * Handler method called upon receipt of a DELE command. This command
      * deletes a particular mail message from the mailbox.
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Response onCommand(POP3Session session, Request request) {
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
@@ -94,9 +95,7 @@ public class DeleCmdHandler implements CommandHandler<POP3Session> {
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }

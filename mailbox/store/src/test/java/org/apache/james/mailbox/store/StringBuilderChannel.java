@@ -31,16 +31,19 @@ public class StringBuilderChannel implements WritableByteChannel {
     
     public boolean isClosed = false;
     
+    @Override
     public int write(ByteBuffer src) throws IOException {
         final int result = src.limit() - src.position();
         builder.append(ASCII.decode(src));
         return result;
     }
 
+    @Override
     public void close() throws IOException {
         isClosed = true;
     }
 
+    @Override
     public boolean isOpen() {
         return !isClosed;
     }

@@ -19,16 +19,18 @@
 package org.apache.james.domainlist.lib;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 
+import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.api.DomainListManagementMBean;
 
-import com.google.common.collect.ImmutableList;
+import com.github.steveash.guavate.Guavate;
 
 public class DomainListManagement extends StandardMBean implements DomainListManagementMBean {
 
@@ -46,7 +48,7 @@ public class DomainListManagement extends StandardMBean implements DomainListMan
     @Override
     public void addDomain(String domain) throws Exception {
         try {
-            domainList.addDomain(domain);
+            domainList.addDomain(Domain.of(domain));
         } catch (DomainListException e) {
             throw new Exception(e.getMessage());
         }
@@ -55,7 +57,7 @@ public class DomainListManagement extends StandardMBean implements DomainListMan
     @Override
     public boolean containsDomain(String domain) throws Exception {
         try {
-            return domainList.containsDomain(domain);
+            return domainList.containsDomain(Domain.of(domain));
         } catch (DomainListException e) {
             throw new Exception(e.getMessage());
         }
@@ -64,7 +66,10 @@ public class DomainListManagement extends StandardMBean implements DomainListMan
     @Override
     public List<String> getDomains() throws Exception {
         try {
-            return ImmutableList.copyOf(domainList.getDomains());
+            return domainList.getDomains()
+                .stream()
+                .map(Domain::name)
+                .collect(Guavate.toImmutableList());
         } catch (DomainListException e) {
             throw new Exception(e.getMessage());
         }
@@ -73,7 +78,7 @@ public class DomainListManagement extends StandardMBean implements DomainListMan
     @Override
     public void removeDomain(String domain) throws Exception {
         try {
-            domainList.removeDomain(domain);
+            domainList.removeDomain(Domain.of(domain));
         } catch (DomainListException e) {
             throw new Exception(e.getMessage());
         }
@@ -82,7 +87,7 @@ public class DomainListManagement extends StandardMBean implements DomainListMan
     @Override
     public String getDefaultDomain() throws Exception {
         try {
-            return domainList.getDefaultDomain();
+            return Optional.ofNullable(domainList.getDefaultDomain()).map(Domain::name).orElse(null);
         } catch (DomainListException e) {
             throw new Exception(e.getMessage());
         }

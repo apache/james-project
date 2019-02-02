@@ -24,7 +24,7 @@ import java.util.Objects;
 public class AliasName {
     private final String value;
 
-    public AliasName(String value) {
+    protected AliasName(String value) {
         this.value = value;
     }
 

@@ -42,6 +42,7 @@ import com.google.common.collect.Lists;
  */
 public class Not extends GenericCompositeMatcher {
 
+    @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         Collection<MailAddress> finalResult = Optional.ofNullable(Lists.newArrayList(mail.getRecipients())).orElse(new ArrayList<>());
         for (Matcher matcher : getMatchers()) {

@@ -33,9 +33,7 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
  */
 public class MatcherLoaderBeanFactory extends AbstractLoaderBeanFactory<Matcher> implements MatcherLoader {
 
-    /**
-     * @see org.apache.james.mailetcontainer.api.MatcherLoader#getMatcher(org.apache.mailet.MatcherConfig)
-     */
+    @Override
     public Matcher getMatcher(MatcherConfig config) throws MessagingException {
 
         String matchName = config.getMatcherName();

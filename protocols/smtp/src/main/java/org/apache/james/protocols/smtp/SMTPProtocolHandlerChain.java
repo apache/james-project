@@ -132,6 +132,7 @@ public class SMTPProtocolHandlerChain extends ProtocolHandlerChainImpl {
         return true;
     }
     
+    @Override
     public boolean add(ProtocolHandler handler) {
         checkForAuth(handler);
         return super.add(handler);

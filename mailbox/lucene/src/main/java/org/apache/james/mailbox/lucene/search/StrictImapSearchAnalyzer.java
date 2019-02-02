@@ -53,6 +53,7 @@ public final class StrictImapSearchAnalyzer extends Analyzer {
    /**
     * @see org.apache.lucene.analysis.Analyzer#tokenStream(java.lang.String, java.io.Reader)
     */
+   @Override
    public TokenStream tokenStream(String fieldName, Reader reader) {
        return new NGramTokenFilter(new UpperCaseFilter(new SentenceTokenizer(reader)), minTokenLength, maxTokenLength);
    }

@@ -22,12 +22,11 @@ import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.jpa.JPAUsersRepository;
 import org.apache.james.utils.ConfigurationPerformer;
-import org.apache.james.utils.ConfigurationProvider;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -61,7 +60,7 @@ public class JPAUsersRepositoryModule extends AbstractModule {
             try {
                 usersRepository.configure(configurationProvider.getConfiguration("usersrepository"));
             } catch (ConfigurationException e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

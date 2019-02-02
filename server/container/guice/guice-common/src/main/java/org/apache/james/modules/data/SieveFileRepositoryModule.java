@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.modules.data;
 
+import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.file.SieveFileRepository;
 
@@ -31,6 +32,7 @@ public class SieveFileRepositoryModule extends AbstractModule {
         bind(SieveFileRepository.class).in(Scopes.SINGLETON);
 
         bind(SieveRepository.class).to(SieveFileRepository.class);
+        bind(SieveQuotaRepository.class).to(SieveFileRepository.class);
     }
 
 }

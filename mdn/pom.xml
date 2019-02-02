@@ -17,25 +17,36 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>james-project</artifactId>
         <groupId>org.apache.james</groupId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>james-mdn</artifactId>
 
     <name>Apache James :: MDN</name>
-    <description>Provides parser and representations for MDN messages</description>
+    <description>Provides builders for RFC 8098 Message Delivery Notification</description>
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>james-server-util-java8</artifactId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>apache-mime4j-dom</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>javax-mail-extension</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.parboiled</groupId>
+            <artifactId>parboiled-java</artifactId>
+            <version>1.1.8</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -61,5 +72,18 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <reuseForks>true</reuseForks>
+                    <forkCount>1C</forkCount>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

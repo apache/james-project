@@ -31,7 +31,7 @@ public class JPAPerUserMaxQuotaTest extends GenericMaxQuotaManagerTest {
 
     @Override
     protected MaxQuotaManager provideMaxQuotaManager() {
-        return new JPAPerUserMaxQuotaManager(JPA_TEST_CLUSTER.getEntityManagerFactory());
+        return new JPAPerUserMaxQuotaManager(new JPAPerUserMaxQuotaDAO(JPA_TEST_CLUSTER.getEntityManagerFactory()));
     }
 
     @After

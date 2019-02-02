@@ -18,12 +18,10 @@
  ****************************************************************/
 package org.apache.james.dnsservice.dnsjava;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 
@@ -102,8 +100,8 @@ public class DNSJavaServiceTest {
 
         // a.setSearchPath(new String[] { "searchdomain.com." });
         Collection<String> records = dnsServer.findMXRecords("nomx.dnstest.com.");
-        assertEquals(1, records.size());
-        assertEquals("nomx.dnstest.com.", records.iterator().next());
+        assertThat(records.size()).isEqualTo(1);
+        assertThat(records.iterator().next()).isEqualTo("nomx.dnstest.com.");
     }
 
     @Test
@@ -114,8 +112,8 @@ public class DNSJavaServiceTest {
 
         // a.setSearchPath(new String[] { "searchdomain.com." });
         Collection<String> records = dnsServer.findMXRecords("badmx.dnstest.com.");
-        assertEquals(1, records.size());
-        assertEquals("badhost.dnstest.com.", records.iterator().next());
+        assertThat(records.size()).isEqualTo(1);
+        assertThat(records.iterator().next()).isEqualTo("badhost.dnstest.com.");
         // Iterator<HostAddress> it =
         // dnsServer.getSMTPHostAddresses("badmx.dnstest.com.");
         // assertFalse(it.hasNext());
@@ -129,8 +127,8 @@ public class DNSJavaServiceTest {
 
         // dnsServer.setLookupper(new ZoneLookupper(z));
         Collection<String> records = dnsServer.findMXRecords("www.pippo.com.");
-        assertEquals(1, records.size());
-        assertEquals("pippo.com.inbound.mxlogic.net.", records.iterator().next());
+        assertThat(records.size()).isEqualTo(1);
+        assertThat(records.iterator().next()).isEqualTo("pippo.com.inbound.mxlogic.net.");
     }
 
     @Test
@@ -147,8 +145,8 @@ public class DNSJavaServiceTest {
         } catch (UnsupportedOperationException e) {
             LOGGER.info("Ignored error", e);
         }
-        assertEquals(1, res.size());
-        assertEquals("mail.test-zone.com.", res.iterator().next());
+        assertThat(res.size()).isEqualTo(1);
+        assertThat(res.iterator().next()).isEqualTo("mail.test-zone.com.");
     }
 
     /**
@@ -162,9 +160,9 @@ public class DNSJavaServiceTest {
 
         // a.setSearchPath(new String[] { "searchdomain.com." });
         Collection<String> records = dnsServer.findMXRecords("two-mx.sameprio.");
-        assertEquals(2, records.size());
-        assertTrue(records.contains("mx1.two-mx.sameprio."));
-        assertTrue(records.contains("mx2.two-mx.sameprio."));
+        assertThat(records.size()).isEqualTo(2);
+        assertThat(records.contains("mx1.two-mx.sameprio.")).isTrue();
+        assertThat(records.contains("mx2.two-mx.sameprio.")).isTrue();
     }
 
     @Test
@@ -175,10 +173,10 @@ public class DNSJavaServiceTest {
 
         // a.setSearchPath(new String[] { "searchdomain.com." });
         ArrayList<String> records = new ArrayList<>(dnsServer.findMXRecords("three-mx.bar."));
-        assertEquals(3, records.size());
-        assertTrue(records.contains("mx1.three-mx.bar."));
-        assertTrue(records.contains("mx2.three-mx.bar."));
-        assertEquals("mx3.three-mx.bar.", records.get(2));
+        assertThat(records.size()).isEqualTo(3);
+        assertThat(records.contains("mx1.three-mx.bar.")).isTrue();
+        assertThat(records.contains("mx2.three-mx.bar.")).isTrue();
+        assertThat(records.get(2)).isEqualTo("mx3.three-mx.bar.");
 
     }
 
@@ -192,9 +190,9 @@ public class DNSJavaServiceTest {
         dnsServer.setCache(mockedCache);
         // a.setSearchPath(new String[] { "searchdomain.com." });
         Collection<String> records = dnsServer.findMXRecords("two-mx.differentprio.");
-        assertEquals(2, records.size());
-        assertTrue(records.contains("mx1.two-mx.differentprio."));
-        assertTrue(records.contains("mx2.two-mx.differentprio."));
+        assertThat(records.size()).isEqualTo(2);
+        assertThat(records.contains("mx1.two-mx.differentprio.")).isTrue();
+        assertThat(records.contains("mx2.two-mx.differentprio.")).isTrue();
 
     }
 
@@ -209,8 +207,8 @@ public class DNSJavaServiceTest {
 
         // a.setSearchPath(new String[] { "searchdomain.com." });
         Collection<String> records = dnsServer.findMXRecords("one-mx.bar.");
-        assertEquals(1, records.size());
-        assertTrue(records.contains("mx1.one-mx.bar."));
+        assertThat(records.size()).isEqualTo(1);
+        assertThat(records.contains("mx1.one-mx.bar.")).isTrue();
     }
     /*
      * public void testCNAMEasMXrecords() throws Exception { // Zone z =
@@ -224,7 +222,7 @@ public class DNSJavaServiceTest {
     private static Zone loadZone(String zoneName) throws IOException {
         String zoneFilename = zoneName + "zone";
         URL zoneResource = Resources.getResource(DNSJavaServiceTest.class, zoneFilename);
-        assertNotNull("test resource for zone could not be loaded: " + zoneFilename, zoneResource);
+        assertThat(zoneResource).withFailMessage("test resource for zone could not be loaded: " + zoneFilename).isNotNull();
         return new Zone(Name.fromString(zoneName), zoneResource.getFile());
     }
 

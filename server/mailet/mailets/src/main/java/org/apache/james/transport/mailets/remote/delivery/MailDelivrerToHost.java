@@ -77,12 +77,7 @@ public class MailDelivrerToHost {
 
     private Properties getPropertiesForMail(Mail mail) {
         Properties props = session.getProperties();
-        if (mail.getSender() == null) {
-            props.put("mail.smtp.from", "<>");
-        } else {
-            String sender = mail.getSender().toString();
-            props.put("mail.smtp.from", sender);
-        }
+        props.put("mail.smtp.from", mail.getMaybeSender().asString());
         return props;
     }
 

@@ -18,47 +18,129 @@
  ****************************************************************/
 package org.apache.james.mailbox.model;
 
-/**
- * A {@link Quota} restriction
- */
-public interface Quota {
+import java.util.Map;
 
-    /**
-     * Unlimited value
-     */
-    long UNLIMITED = -1;
+import org.apache.james.core.quota.QuotaValue;
 
-    /**
-     * Value not known
-     */
-    long UNKNOWN = Long.MIN_VALUE;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
-    /**
-     * Return the maximum value for the {@link Quota}
-     *
-     * @return max
-     */
-    long getMax();
+public class Quota<T extends QuotaValue<T>> {
 
-    /**
-     * Return the currently used for the {@link Quota}
-     *
-     * @return used
-     */
-    long getUsed();
+    public enum Scope {
+        Domain,
+        Global,
+        User
+    }
 
-    /**
-     *  Adds the value to the quota.
-     */
-    void addValueToQuota(long value);
+    public static <T extends QuotaValue<T>> Builder<T> builder() {
+        return new Builder<>();
+    }
+
+    public static class Builder<T extends QuotaValue<T>> {
+
+        private final ImmutableMap.Builder<Scope, T> limitsByScope;
+        private T computedLimit;
+        private T used;
+
+        private Builder() {
+            limitsByScope = ImmutableMap.builder();
+        }
+
+        public Builder<T> computedLimit(T limit) {
+            this.computedLimit = limit;
+            return this;
+        }
+
+        public Builder<T> used(T used) {
+            this.used = used;
+            return this;
+        }
+
+        public Builder<T> limitsByScope(Map<Scope, T> limits) {
+            limitsByScope.putAll(limits);
+            return this;
+        }
+
+        public Builder<T> limitForScope(T limit, Scope scope) {
+            limitsByScope.put(scope, limit);
+            return this;
+        }
+
+        public Quota<T> build() {
+            Preconditions.checkState(used != null);
+            Preconditions.checkState(computedLimit != null);
+            return new Quota<>(used, computedLimit, limitsByScope.build());
+        }
+
+    }
+
+    private final T limit;
+    private final ImmutableMap<Scope, T> limitByScope;
+    private final T used;
+
+    private Quota(T used, T max, ImmutableMap<Scope, T> limitByScope) {
+        this.used = used;
+        this.limit = max;
+        this.limitByScope = limitByScope;
+    }
+
+    public T getLimit() {
+        return limit;
+    }
+
+    public T getUsed() {
+        return used;
+    }
+
+    public double getRatio() {
+        if (limit.isUnlimited()) {
+            return 0;
+        }
+        return Double.valueOf(used.asLong()) / Double.valueOf(limit.asLong());
+    }
+
+    public ImmutableMap<Scope, T> getLimitByScope() {
+        return limitByScope;
+    }
+
+    public Quota<T> addValueToQuota(T value) {
+        return new Quota<>(used.add(value), limit, limitByScope);
+    }
 
     /**
      * Tells us if the quota is reached
      *
      * @return True if the user over uses the resource of this quota
      */
-    boolean isOverQuota();
+    public boolean isOverQuota() {
+        return isOverQuotaWithAdditionalValue(0);
+    }
 
-    boolean isOverQuotaWithAdditionalValue(long additionalValue);
+    public boolean isOverQuotaWithAdditionalValue(long additionalValue) {
+        Preconditions.checkArgument(additionalValue >= 0);
+        return limit.isLimited() && used.add(additionalValue).isGreaterThan(limit);
+    }
+
+    @Override
+    public String toString() {
+        return used + "/" + limit;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || ! (o instanceof  Quota)) {
+            return false;
+        }
+        Quota<?> other = (Quota<?>) o;
+        return Objects.equal(used, other.getUsed())
+            && Objects.equal(limit,other.getLimit());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(used, limit);
+    }
 
 }

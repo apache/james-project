@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.Optional;
 import java.util.TimeZone;
 
@@ -31,10 +33,9 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.MimeMessageUtil;
-import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -94,7 +95,7 @@ public class NotifyMailetsMessageTest {
     @Test
     public void generateMessageShouldAddSentDateWhenMimeMessageAsSome() throws Exception {
         MimeMessage message = MimeMessageUtil.defaultMimeMessage();
-        message.setSentDate(DateTime.parse("2016-09-08T14:25:52.000Z").toDate());
+        message.setSentDate(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")));
         FakeMail mail = FakeMail.from(message);
 
         String generateMessage = new NotifyMailetsMessage().generateMessage("my message", mail);

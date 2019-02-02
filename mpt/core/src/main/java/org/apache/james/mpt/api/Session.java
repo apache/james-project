@@ -59,4 +59,6 @@ public interface Session {
      * @throws Exception
      */
     void stop() throws Exception;
+
+    void await() throws Exception;
 }

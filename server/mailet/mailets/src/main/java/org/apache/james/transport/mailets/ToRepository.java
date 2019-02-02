@@ -24,6 +24,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
@@ -41,7 +42,7 @@ public class ToRepository extends GenericMailet {
 
     private boolean passThrough = false;
 
-    private String repositoryPath;
+    private MailRepositoryUrl repositoryPath;
 
     private MailRepositoryStore mailStore;
 
@@ -52,7 +53,7 @@ public class ToRepository extends GenericMailet {
 
     @Override
     public void init() throws MessagingException {
-        repositoryPath = getInitParameter("repositoryPath");
+        repositoryPath = MailRepositoryUrl.from(getInitParameter("repositoryPath"));
         passThrough = getPassThroughParameter();
         repository = selectRepository();
     }

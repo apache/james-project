@@ -18,21 +18,21 @@
  ****************************************************************/
 package org.apache.james.mpt.smtp;
 
-import static com.jayway.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
-import static com.jayway.awaitility.Duration.ONE_MINUTE;
+import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Duration.ONE_MINUTE;
 import static org.hamcrest.Matchers.equalTo;
 
 import java.util.Locale;
 
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 import org.apache.james.utils.FakeSmtp;
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
+import org.awaitility.core.ConditionFactory;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
-
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
 
 public abstract class ForwardSmtpTest {
 
@@ -40,16 +40,23 @@ public abstract class ForwardSmtpTest {
     public static final String DOMAIN = "mydomain.tld";
     public static final String USER_AT_DOMAIN = USER + "@" + DOMAIN;
     public static final String PASSWORD = "secret";
+    public static final Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
+    public static final ConditionFactory calmlyAwait = Awaitility.with()
+        .pollInterval(slowPacedPollInterval)
+        .await();
 
-    @Rule
-    public FakeSmtp fakeSmtp = new FakeSmtp();
-
-    private ConditionFactory calmlyAwait;
+    @ClassRule
+    public static FakeSmtp fakeSmtp = new FakeSmtp();
 
     protected abstract SmtpHostSystem createSmtpHostSystem();
     
     private SmtpHostSystem hostSystem;
     private SimpleScriptedTestProtocol scriptedTest;
+
+    @BeforeClass
+    public static void classSetUp() {
+        fakeSmtp.awaitStarted(calmlyAwait.atMost(ONE_MINUTE));
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -62,24 +69,14 @@ public abstract class ForwardSmtpTest {
         hostSystem.getInMemoryDnsService()
             .registerMxRecord("yopmail.com", fakeSmtp.getContainer().getContainerIp());
         hostSystem.addAddressMapping(USER, DOMAIN, "ray@yopmail.com");
-
-        Duration slowPacedPollInterval = FIVE_HUNDRED_MILLISECONDS;
-        calmlyAwait = Awaitility.with()
-            .pollInterval(slowPacedPollInterval)
-            .and()
-            .with()
-            .pollDelay(slowPacedPollInterval)
-            .await();
-
-        fakeSmtp.awaitStarted(calmlyAwait.atMost(ONE_MINUTE));
     }
 
     @Test
     public void forwardingAnEmailShouldWork() throws Exception {
         scriptedTest.run("helo");
 
-        calmlyAwait.atMost(ONE_MINUTE).until(() ->
-            fakeSmtp.isReceived(response -> response
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() ->
+            fakeSmtp.assertEmailReceived(response -> response
                 .body("[0].from", equalTo("matthieu@yopmail.com"))
                 .body("[0].subject", equalTo("test"))
                 .body("[0].text", equalTo("content"))));

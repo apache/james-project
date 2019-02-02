@@ -235,50 +235,62 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         return userFlags.clone();
     }
 
+    @Override
     public MailboxId getMailboxId() {
         return mailboxId;
     }
 
+    @Override
     public MessageUid getUid() {
         return uid;
     }
 
+    @Override
     public boolean isAnswered() {
         return answered;
     }
 
+    @Override
     public boolean isDeleted() {
         return deleted;
     }
 
+    @Override
     public boolean isDraft() {
         return draft;
     }
 
+    @Override
     public boolean isFlagged() {
         return flagged;
     }
 
+    @Override
     public boolean isRecent() {
         return recent;
     }
 
+    @Override
     public boolean isSeen() {
         return seen;
     }
 
+    @Override
     public long getModSeq() {
         return modSeq;
     }
 
+    @Override
     public void setModSeq(long modSeq) {
         this.modSeq = modSeq;
     }
 
+    @Override
     public void setUid(MessageUid uid) {
         this.uid = uid;
     }
 
+    @Override
     public synchronized void setFlags(Flags flags) {
         answered = flags.contains(Flags.Flag.ANSWERED);
         deleted = flags.contains(Flags.Flag.DELETED);

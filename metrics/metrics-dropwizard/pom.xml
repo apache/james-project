@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>metrics</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>metrics-dropwizard</artifactId>
@@ -31,15 +31,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-filesystem-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-lifecycle-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>metrics-api</artifactId>
         </dependency>
         <dependency>

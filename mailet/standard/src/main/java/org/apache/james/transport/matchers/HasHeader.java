@@ -93,6 +93,7 @@ public class HasHeader extends GenericMatcher {
 
     private List<HeaderCondition> headerConditions;
 
+    @Override
     public void init() throws MessagingException {
         headerConditions = new ArrayList<>();
         StringTokenizer conditionTokenizer = new StringTokenizer(getCondition(), CONDITION_SEPARATOR);
@@ -114,6 +115,7 @@ public class HasHeader extends GenericMatcher {
         }
     }
 
+    @Override
     public Collection<MailAddress> match(Mail mail) throws javax.mail.MessagingException {
         for (HeaderCondition headerCondition : headerConditions) {
             if (!headerCondition.isMatching(mail.getMessage())) {

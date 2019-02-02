@@ -25,18 +25,33 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager;
+import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
+import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
+import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
+import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
+import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
+import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
+import org.apache.james.mailbox.store.quota.StoreQuotaManager;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
+import org.apache.james.metrics.api.NoopMetricFactory;
 
 import com.datastax.driver.core.Session;
-import com.google.common.base.Throwables;
 
 public class CassandraMailboxManagerProvider {
     private static final int LIMIT_ANNOTATIONS = 3;
@@ -53,23 +68,32 @@ public class CassandraMailboxManagerProvider {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
-        DefaultDelegatingMailboxListener delegatingMailboxListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingMailboxListener);
-        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver, mailboxEventDispatcher);
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
+        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver, eventBus);
 
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager,
             LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE);
 
-        CassandraMailboxManager manager = new CassandraMailboxManager(mapperFactory, noAuthenticator, noAuthorizator, new NoMailboxPathLocker(),
-            messageParser, messageIdFactory, mailboxEventDispatcher, delegatingMailboxListener,
-            annotationManager, storeRightManager);
-        try {
-            manager.init();
-        } catch (MailboxException e) {
-            throw Throwables.propagate(e);
-        }
+        SessionProvider sessionProvider = new SessionProvider(noAuthenticator, noAuthorizator);
+        CassandraPerUserMaxQuotaManager maxQuotaManager = new CassandraPerUserMaxQuotaManager(new CassandraPerUserMaxQuotaDao(session),
+            new CassandraPerDomainMaxQuotaDao(session),
+            new CassandraGlobalMaxQuotaDao(session));
+        CassandraCurrentQuotaManager currentQuotaUpdater = new CassandraCurrentQuotaManager(session);
+        StoreQuotaManager storeQuotaManager = new StoreQuotaManager(currentQuotaUpdater, maxQuotaManager);
+        QuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory);
+        ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaUpdater, quotaRootResolver, eventBus, storeQuotaManager);
+        QuotaComponents quotaComponents = new QuotaComponents(maxQuotaManager, storeQuotaManager, quotaRootResolver, quotaUpdater);
+
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor());
+
+        CassandraMailboxManager manager = new CassandraMailboxManager(mapperFactory, sessionProvider, new NoMailboxPathLocker(),
+            messageParser, messageIdFactory, eventBus, annotationManager, storeRightManager,
+            quotaComponents, index, MailboxManagerConfiguration.DEFAULT);
+
+        eventBus.register(quotaUpdater);
+        eventBus.register(new MailboxAnnotationListener(mapperFactory, sessionProvider));
 
         return manager;
     }

@@ -19,94 +19,88 @@
 
 package org.apache.james.protocols.smtp.hook;
 
+import java.util.Objects;
+import java.util.Optional;
+
+import com.google.common.base.Preconditions;
+
 /**
  * Result which get used for hooks
- * 
  */
 public final class HookResult {
 
-    private static final HookResult DECLINED = new HookResult(HookReturnCode.DECLINED);
-    private static final HookResult OK = new HookResult(HookReturnCode.OK);
-    private static final HookResult DENY = new HookResult(HookReturnCode.DENY);
-    private static final HookResult DENYSOFT = new HookResult(HookReturnCode.DENYSOFT);
-    private static final HookResult DISCONNECT = new HookResult(HookReturnCode.DISCONNECT);
+    public static class Builder {
+        private HookReturnCode result;
+        private Optional<String> smtpReturnCode;
+        private Optional<String> smtpDescription;
 
-    private final int result;
+        public Builder() {
+            smtpDescription = Optional.empty();
+            smtpReturnCode = Optional.empty();
+        }
+
+        public Builder hookReturnCode(HookReturnCode hookReturnCode) {
+            this.result = hookReturnCode;
+            return this;
+        }
+
+        public Builder smtpReturnCode(String smtpReturnCode) {
+            this.smtpReturnCode = Optional.of(smtpReturnCode);
+            return this;
+        }
+
+        public Builder smtpDescription(String smtpDescription) {
+            this.smtpDescription = Optional.of(smtpDescription);
+            return this;
+        }
+
+        public HookResult build() {
+            Preconditions.checkNotNull(result);
+
+            return new HookResult(result,
+                smtpReturnCode.orElse(null),
+                smtpDescription.orElse(null));
+        }
+    }
+
+    public static final HookResult DECLINED = builder()
+        .hookReturnCode(HookReturnCode.declined())
+        .build();
+    public static final HookResult OK =  builder()
+        .hookReturnCode(HookReturnCode.ok())
+        .build();
+    public static final HookResult DENY =  builder()
+        .hookReturnCode(HookReturnCode.deny())
+        .build();
+    public static final HookResult DENYSOFT =  builder()
+        .hookReturnCode(HookReturnCode.denySoft())
+        .build();
+    public static final HookResult DISCONNECT =  builder()
+        .hookReturnCode(new HookReturnCode(HookReturnCode.Action.NONE, HookReturnCode.ConnectionStatus.Disconnected))
+        .build();
+
+    public static Builder builder() {
+        return new Builder();
+    }
+    
+    private final HookReturnCode result;
     private final String smtpRetCode;
     private final String smtpDescription;
-    
-    /**
-     * Construct new HookResult
-     * 
-     * @param result 
-     * @param smtpRetCode 
-     * @param smtpDescription
-     */
-    public HookResult(int result, String smtpRetCode, CharSequence smtpDescription) {
-        boolean match = false;
 
-        if ((result & HookReturnCode.DECLINED) == HookReturnCode.DECLINED) {
-            if (match == true) {
-                throw new IllegalArgumentException();
-            }
-            match = true;
-        }
-        if ((result & HookReturnCode.OK) == HookReturnCode.OK) {
-            if (match == true) {
-                throw new IllegalArgumentException();
-            }
-            match = true;
-        }
-        if ((result & HookReturnCode.DENY) == HookReturnCode.DENY) {
-            if (match == true) {
-                throw new IllegalArgumentException();
-            }
-            match = true;
-        }
-        if ((result & HookReturnCode.DENYSOFT) == HookReturnCode.DENYSOFT) {
-            if (match == true) {
-                throw new IllegalArgumentException();
-            }
-            match = true;
-        }
+    private HookResult(HookReturnCode result, String smtpRetCode, CharSequence smtpDescription) {
         this.result = result;
         this.smtpRetCode = smtpRetCode;
-        this.smtpDescription = (smtpDescription == null) ? null : smtpDescription.toString();
+        this.smtpDescription = Optional.ofNullable(smtpDescription)
+            .map(CharSequence::toString)
+            .orElse(null);
     }
-    
-    /**
-     * Construct new HookResult
-     * 
-     * @param result
-     * @param smtpDescription
-     */
-    public HookResult(int result, String smtpDescription) {
-        this(result,null,smtpDescription);
-    }
-    
-    /**
-     * Construct new HookResult
-     * 
-     * @param result
-     */
-    public HookResult(int result) {
-        this(result,null,null);
-    }
-    
-   
-    /**
-     * Return the result
-     * 
-     * @return result
-     */
-    public int getResult() {
+
+    public HookReturnCode getResult() {
         return result;
     }
     
     /**
-     * Return the SMTPRetCode which should used. If not set return null. 
-     * 
-     * @return smtpRetCode
+     * Return the SMTPRetCode which should used. If not set return null.
      */
     public String getSmtpRetCode() {
         return smtpRetCode;
@@ -114,30 +108,25 @@ public final class HookResult {
     
     /**
      * Return the SMTPDescription which should used. If not set return null
-     *  
-     * @return smtpDescription
      */
     public String getSmtpDescription() {
         return smtpDescription;
     }
-    
-    public static HookResult declined() {
-        return DECLINED;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof HookResult) {
+            HookResult that = (HookResult) o;
+
+            return Objects.equals(this.result, that.result)
+                && Objects.equals(this.smtpRetCode, that.smtpRetCode)
+                && Objects.equals(this.smtpDescription, that.smtpDescription);
+        }
+        return false;
     }
-    
-    public static HookResult ok() {
-        return OK;
-    }
-    
-    public static HookResult deny() {
-        return DENY;
-    }
-    
-    public static HookResult denysoft() {
-        return DENYSOFT;
-    }
-    
-    public static HookResult disconnect() {
-        return DISCONNECT;
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(result, smtpRetCode, smtpDescription);
     }
 }

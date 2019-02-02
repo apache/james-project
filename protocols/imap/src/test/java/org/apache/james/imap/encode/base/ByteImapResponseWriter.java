@@ -54,6 +54,7 @@ public class ByteImapResponseWriter implements ImapConstants, ImapResponseWriter
         this.out = new ByteArrayOutputStream();
     }
 
+    @Override
     public void write(Literal literal) throws IOException {
         InputStream in = null;
         try {
@@ -70,9 +71,7 @@ public class ByteImapResponseWriter implements ImapConstants, ImapResponseWriter
         }
     }
 
-    /**
-     * @see org.apache.james.imap.encode.ImapResponseWriter#write(byte[])
-     */
+    @Override
     public void write(byte[] buffer) throws IOException {
         out.write(buffer);
     }

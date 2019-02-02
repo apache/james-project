@@ -29,7 +29,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MimeMessageUtilsTest {
 
@@ -171,6 +171,6 @@ public class MimeMessageUtilsTest {
                 .build())
                 .toHeaderList())
             .extracting("name")
-            .containsOnly("Message-Id", "MIME-Version", headerName, "Date");
+            .containsOnly("Message-Id", "MIME-Version", headerName, "Date", "Content-Type", "Content-Transfer-Encoding");
     }
 }

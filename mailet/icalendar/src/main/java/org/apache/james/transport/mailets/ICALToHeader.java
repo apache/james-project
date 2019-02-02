@@ -69,6 +69,10 @@ public class ICALToHeader extends GenericMailet {
     public static final String X_MEETING_SEQUENCE_HEADER = "X-MEETING-SEQUENCE";
     public static final String X_MEETING_DTSTAMP_HEADER = "X-MEETING-DTSTAMP";
 
+    static {
+        ICal4JConfigurator.configure();
+    }
+
     private String attribute;
 
     @Override

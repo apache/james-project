@@ -19,13 +19,28 @@
 
 package org.apache.james.webadmin.dto;
 
-public class ExtendedMailRepositoryResponse extends MailRepositoryResponse {
+import java.io.UnsupportedEncodingException;
 
+import org.apache.james.mailrepository.api.MailRepositoryPath;
+
+public class ExtendedMailRepositoryResponse implements MailRepositoryResponse {
+
+    private final MailRepositoryPath repository;
     private final long size;
 
-    public ExtendedMailRepositoryResponse(String repository, long size) {
-        super(repository);
+    public ExtendedMailRepositoryResponse(MailRepositoryPath repository, long size) {
+        this.repository = repository;
         this.size = size;
+    }
+
+    @Override
+    public String getRepository() {
+        return repository.asString();
+    }
+
+    @Override
+    public String getPath() throws UnsupportedEncodingException {
+        return repository.urlEncoded();
     }
 
     public long getSize() {

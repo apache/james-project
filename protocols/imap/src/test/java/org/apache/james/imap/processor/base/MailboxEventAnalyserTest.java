@@ -20,9 +20,11 @@
 package org.apache.james.imap.processor.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.util.Date;
 
 import javax.mail.Flags;
 
@@ -30,25 +32,53 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.events.Event;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.store.event.EventFactory;
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
 public class MailboxEventAnalyserTest {
+    private static final MessageUid UID = MessageUid.of(900);
+    private static final UpdatedFlags ADD_RECENT_UPDATED_FLAGS = UpdatedFlags.builder()
+        .uid(UID)
+        .modSeq(-1)
+        .oldFlags(new Flags())
+        .newFlags(new Flags(Flags.Flag.RECENT))
+        .build();
+    private static final UpdatedFlags ADD_ANSWERED_UPDATED_FLAGS = UpdatedFlags.builder()
+        .uid(UID)
+        .modSeq(-1)
+        .oldFlags(new Flags())
+        .newFlags(new Flags(Flags.Flag.ANSWERED))
+        .build();
+    private static final UpdatedFlags NOOP_UPDATED_FLAGS = UpdatedFlags.builder()
+        .uid(UID)
+        .modSeq(-1)
+        .oldFlags(new Flags())
+        .newFlags(new Flags())
+        .build();
+
     public static class SingleMessageResultIterator implements MessageResultIterator {
         private final MessageResult messageResult;
         private boolean done;
@@ -58,36 +88,49 @@ public class MailboxEventAnalyserTest {
             done = false;
         }
 
+        @Override
         public void remove() {
             throw new NotImplementedException("Not implemented");
         }
 
+        @Override
         public MessageResult next() {
             done = true;
             return messageResult;
         }
 
+        @Override
         public boolean hasNext() {
             return !done;
         }
 
+        @Override
         public MailboxException getException() {
             throw new NotImplementedException("Not implemented");
         }
     }
 
-
     private static final MessageUid MESSAGE_UID = MessageUid.of(1);
-    private static final MockMailboxSession MAILBOX_SESSION = new MockMailboxSession("user");
-    private static final MockMailboxSession OTHER_MAILBOX_SESSION = new MockMailboxSession("user");
+    private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create("user");
+    private static final MailboxSession OTHER_MAILBOX_SESSION = MailboxSessionUtil.create("user");
     private static final char PATH_DELIMITER = '.';
     private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "user", "name");
+    private static final TestId MAILBOX_ID = TestId.of(36);
+    private static final int UID_VALIDITY = 1024;
+    private static final SimpleMailbox DEFAULT_MAILBOX = new SimpleMailbox(MAILBOX_PATH, UID_VALIDITY, MAILBOX_ID);
+    private static final MailboxListener.Added ADDED = EventFactory.added()
+        .randomEventId()
+        .mailboxSession(MAILBOX_SESSION)
+        .mailbox(DEFAULT_MAILBOX)
+        .addMetaData(new MessageMetaData(MessageUid.of(11), 0, new Flags(), 45, new Date(), new DefaultMessageId()))
+        .build();
 
     private SelectedMailboxImpl testee;
 
     @Before
     public void setUp() throws MailboxException {
         ImapSession imapSession = mock(ImapSession.class);
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
         when(imapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))
             .thenReturn(MAILBOX_SESSION);
         when(imapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
@@ -99,24 +142,27 @@ public class MailboxEventAnalyserTest {
             .thenReturn(messageManager);
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(messageManager);
+        when(mailboxManager.getMailbox(any(MailboxId.class), any(MailboxSession.class)))
+            .thenReturn(messageManager);
 
         MessageResult messageResult = mock(MessageResult.class);
-        when(messageResult.getMailboxId()).thenReturn(TestId.of(36));
+        when(messageResult.getMailboxId()).thenReturn(MAILBOX_ID);
         when(messageResult.getUid()).thenReturn(MESSAGE_UID);
 
-        when(messageManager.getApplicableFlags(any()))
-            .thenReturn(new Flags());
+        when(messageManager.getApplicableFlags(any())).thenReturn(new Flags());
+        when(messageManager.getId()).thenReturn(MAILBOX_ID);
         when(messageManager.search(any(), any()))
             .thenReturn(ImmutableList.of(MESSAGE_UID).iterator());
         when(messageManager.getMessages(any(), any(), any()))
             .thenReturn(new SingleMessageResultIterator(messageResult));
 
-        testee = new SelectedMailboxImpl(mailboxManager, imapSession, MAILBOX_PATH);
+        testee = new SelectedMailboxImpl(mailboxManager, eventBus, imapSession, MAILBOX_PATH);
     }
 
     @Test
-    public void testShouldBeNoSizeChangeOnOtherEvent() throws Exception {
-        MailboxListener.Event event = new MailboxListener.Event(MAILBOX_SESSION, MAILBOX_PATH) {};
+    public void testShouldBeNoSizeChangeOnOtherEvent() {
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxAdded(MAILBOX_SESSION.getSessionId(),
+            MAILBOX_SESSION.getUser(), MAILBOX_PATH, MAILBOX_ID, Event.EventId.random());
       
         testee.event(event);
 
@@ -124,67 +170,59 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldBeNoSizeChangeOnAdded() throws Exception {
-        testee.event(new FakeMailboxListenerAdded(MAILBOX_SESSION, ImmutableList.of(MessageUid.of(11)), MAILBOX_PATH));
+    public void testShouldBeNoSizeChangeOnAdded() {
+        testee.event(ADDED);
+
         assertThat(testee.isSizeChanged()).isTrue();
     }
 
     @Test
-    public void testShouldNoSizeChangeAfterReset() throws Exception {
-        testee.event(new FakeMailboxListenerAdded(MAILBOX_SESSION, ImmutableList.of(MessageUid.of(11)), MAILBOX_PATH));
+    public void testShouldNoSizeChangeAfterReset() {
+        testee.event(ADDED);
         testee.resetEvents();
 
         assertThat(testee.isSizeChanged()).isFalse();
     }
 
     @Test
-    public void testShouldNotSetUidWhenNoSystemFlagChange() throws Exception {
-        FakeMailboxListenerFlagsUpdate update = new FakeMailboxListenerFlagsUpdate(MAILBOX_SESSION,
-            ImmutableList.of(MessageUid.of(90L)),
-            ImmutableList.of(UpdatedFlags.builder()
-                .uid(MessageUid.of(90))
-                .modSeq(-1)
-                .oldFlags(new Flags())
-                .newFlags(new Flags())
-                .build()),
-            MAILBOX_PATH);
+    public void testShouldNotSetUidWhenNoSystemFlagChange() {
+        MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
+            .randomEventId()
+            .mailboxSession(MAILBOX_SESSION)
+            .mailbox(DEFAULT_MAILBOX)
+            .updatedFlag(NOOP_UPDATED_FLAGS)
+            .build();
+
         testee.event(update);
 
         assertThat(testee.flagUpdateUids()).isEmpty();
     }
 
     @Test
-    public void testShouldSetUidWhenSystemFlagChange() throws Exception {
-        MessageUid uid = MessageUid.of(900);
-        
-        FakeMailboxListenerFlagsUpdate update = new FakeMailboxListenerFlagsUpdate(OTHER_MAILBOX_SESSION,
-            ImmutableList.of(uid),
-            ImmutableList.of(UpdatedFlags.builder()
-                .uid(uid)
-                .modSeq(-1)
-                .oldFlags(new Flags())
-                .newFlags(new Flags(Flags.Flag.ANSWERED))
-                .build()),
-            MAILBOX_PATH);
+    public void testShouldSetUidWhenSystemFlagChange() {
+        MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
+            .randomEventId()
+            .mailboxSession(OTHER_MAILBOX_SESSION)
+            .mailbox(DEFAULT_MAILBOX)
+            .updatedFlag(ADD_ANSWERED_UPDATED_FLAGS)
+            .build();
+
         testee.event(update);
 
-       assertThat(testee.flagUpdateUids().iterator()).containsExactly(uid);
+       assertThat(testee.flagUpdateUids().iterator()).containsExactly(UID);
     }
 
     @Test
-    public void testShouldClearFlagUidsUponReset() throws Exception {
-        MessageUid uid = MessageUid.of(900);
+    public void testShouldClearFlagUidsUponReset() {
         SelectedMailboxImpl analyser = this.testee;
-        
-        FakeMailboxListenerFlagsUpdate update = new FakeMailboxListenerFlagsUpdate(MAILBOX_SESSION,
-            ImmutableList.of(uid),
-            ImmutableList.of(UpdatedFlags.builder()
-                .uid(uid)
-                .modSeq(-1)
-                .oldFlags(new Flags())
-                .newFlags(new Flags(Flags.Flag.ANSWERED))
-                .build()),
-            MAILBOX_PATH);
+
+        MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
+            .randomEventId()
+            .mailboxSession(MAILBOX_SESSION)
+            .mailbox(DEFAULT_MAILBOX)
+            .updatedFlag(ADD_ANSWERED_UPDATED_FLAGS)
+            .build();
+
         analyser.event(update);
         analyser.event(update);
         analyser.deselect();
@@ -193,36 +231,30 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldSetUidWhenSystemFlagChangeDifferentSessionInSilentMode() throws Exception {
-        MessageUid uid = MessageUid.of(900);
+    public void testShouldSetUidWhenSystemFlagChangeDifferentSessionInSilentMode() {
+        MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
+            .randomEventId()
+            .mailboxSession(OTHER_MAILBOX_SESSION)
+            .mailbox(DEFAULT_MAILBOX)
+            .updatedFlag(ADD_ANSWERED_UPDATED_FLAGS)
+            .build();
 
-        FakeMailboxListenerFlagsUpdate update = new FakeMailboxListenerFlagsUpdate(OTHER_MAILBOX_SESSION,
-            ImmutableList.of(uid),
-            ImmutableList.of(UpdatedFlags.builder()
-                .uid(uid)
-                .modSeq(-1)
-                .oldFlags(new Flags())
-                .newFlags(new Flags(Flags.Flag.ANSWERED))
-                .build()),
-            MAILBOX_PATH);
         testee.event(update);
         testee.setSilentFlagChanges(true);
         testee.event(update);
 
-        assertThat(testee.flagUpdateUids().iterator()).containsExactly(uid);
+        assertThat(testee.flagUpdateUids().iterator()).containsExactly(UID);
     }
 
     @Test
-    public void testShouldNotSetUidWhenSystemFlagChangeSameSessionInSilentMode() throws Exception {
-        FakeMailboxListenerFlagsUpdate update = new FakeMailboxListenerFlagsUpdate(MAILBOX_SESSION,
-            ImmutableList.of(MessageUid.of(345)),
-            ImmutableList.of(UpdatedFlags.builder()
-                .uid(MessageUid.of(345))
-                .modSeq(-1)
-                .oldFlags(new Flags())
-                .newFlags(new Flags())
-                .build()),
-            MAILBOX_PATH);
+    public void testShouldNotSetUidWhenSystemFlagChangeSameSessionInSilentMode() {
+        MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
+            .randomEventId()
+            .mailboxSession(MAILBOX_SESSION)
+            .mailbox(DEFAULT_MAILBOX)
+            .updatedFlag(NOOP_UPDATED_FLAGS)
+            .build();
+
         testee.event(update);
         testee.setSilentFlagChanges(true);
         testee.event(update);
@@ -231,16 +263,14 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldNotSetUidWhenOnlyRecentFlagUpdated() throws Exception {
-        FakeMailboxListenerFlagsUpdate update = new FakeMailboxListenerFlagsUpdate(MAILBOX_SESSION,
-            ImmutableList.of(MessageUid.of(886)),
-            ImmutableList.of(UpdatedFlags.builder()
-                .uid(MessageUid.of(886))
-                .modSeq(-1)
-                .oldFlags(new Flags())
-                .newFlags(new Flags(Flags.Flag.RECENT))
-                .build()),
-            MAILBOX_PATH);
+    public void testShouldNotSetUidWhenOnlyRecentFlagUpdated() {
+        MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
+            .randomEventId()
+            .mailboxSession(MAILBOX_SESSION)
+            .mailbox(DEFAULT_MAILBOX)
+            .updatedFlag(ADD_RECENT_UPDATED_FLAGS)
+            .build();
+
         testee.event(update);
 
         assertThat(testee.flagUpdateUids().iterator()).isEmpty();

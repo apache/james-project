@@ -59,8 +59,14 @@ public class PerRecipientHeaders implements Serializable {
             .collect(Guavate.toImmutableSet());
     }
 
-    public void addHeaderForRecipient(Header header, MailAddress recipient) {
+    public PerRecipientHeaders addHeaderForRecipient(Header header, MailAddress recipient) {
         headersByRecipient.put(recipient, header);
+        return this;
+    }
+
+    public PerRecipientHeaders addHeaderForRecipient(Header.Builder header, MailAddress recipient) {
+        headersByRecipient.put(recipient, header.build());
+        return this;
     }
 
     public void addAll(PerRecipientHeaders other) {

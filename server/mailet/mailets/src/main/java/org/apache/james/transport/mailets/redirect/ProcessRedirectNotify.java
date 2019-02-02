@@ -19,7 +19,6 @@
 package org.apache.james.transport.mailets.redirect;
 
 import javax.mail.MessagingException;
-import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.server.core.MailImpl;
@@ -46,6 +45,7 @@ public class ProcessRedirectNotify {
 
         // duplicates the Mail object, to be able to modify the new mail keeping
         // the original untouched
+        String originalMessageId = originalMail.getMessage().getMessageID();
         MailImpl newMail = MailImpl.duplicate(originalMail);
         try {
             MailModifier mailModifier = MailModifier.builder()
@@ -58,7 +58,7 @@ public class ProcessRedirectNotify {
 
             if (mailet.getInitParameters().isDebug()) {
                 LOGGER.debug("New mail - sender: {}, recipients: {}, name: {}, remoteHost: {}, remoteAddr: {}, state: {}, lastUpdated: {}, errorMessage: {}",
-                        newMail.getSender(), newMail.getRecipients(), newMail.getName(), newMail.getRemoteHost(), newMail.getRemoteAddr(), newMail.getState(), newMail.getLastUpdated(), newMail.getErrorMessage());
+                        newMail.getMaybeSender(), newMail.getRecipients(), newMail.getName(), newMail.getRemoteHost(), newMail.getRemoteAddr(), newMail.getState(), newMail.getLastUpdated(), newMail.getErrorMessage());
             }
 
             // Create the message
@@ -72,24 +72,27 @@ public class ProcessRedirectNotify {
             // Set additional headers
 
             mailModifier.setRecipients(mailet.getRecipients(originalMail));
+
             mailModifier.setTo(mailet.getTo(originalMail));
             mailModifier.setSubjectPrefix(originalMail);
-            mailModifier.setReplyTo(mailet.getReplyTo(originalMail), originalMail);
-            mailModifier.setReversePath(mailet.getReversePath(originalMail), originalMail);
+            mailModifier.setReplyTo(mailet.getReplyTo(originalMail));
+            mailModifier.setReversePath(mailet.getReversePath(originalMail));
             mailModifier.setIsReply(mailet.getInitParameters().isReply(), originalMail);
-            mailModifier.setSender(mailet.getSender(originalMail), originalMail);
+            mailModifier.setSender(mailet.getSender(originalMail));
             mailModifier.initializeDateIfNotPresent();
             if (keepMessageId) {
-                mailModifier.setMessageId(originalMail);
+                mailModifier.setMessageId(originalMessageId);
             }
             finalize(newMail);
 
             if (senderDomainIsValid(newMail)) {
                 // Send it off...
-                mailet.getMailetContext().sendMail(newMail);
+                if (!newMail.getRecipients().isEmpty()) {
+                    mailet.getMailetContext().sendMail(newMail);
+                }
             } else {
                 throw new MessagingException(mailet.getMailetName() + " mailet cannot forward " + originalMail.getName() + ". " +
-                        "Invalid sender domain for " + newMail.getSender() + ". " + 
+                        "Invalid sender domain for " + newMail.getMaybeSender().asString() + ". " +
                         "Consider using the Resend mailet " + "using a different sender.");
             }
 
@@ -115,13 +118,10 @@ public class ProcessRedirectNotify {
         if (isDebug) {
             LOGGER.debug("Alter message");
         }
-        newMail.setMessage(new MimeMessage(Session.getDefaultInstance(System.getProperties(), null)));
-
-        // handle the new message if altered
-        MailMessageAlteringUtils.from(mailet)
-            .originalMail(originalMail)
-            .newMail(newMail)
-            .alterNewMessage();
+        newMail.setMessage(
+            MessageAlteringUtils.from(mailet)
+                .originalMail(originalMail)
+                .alteredMessage());
     }
 
     private void createUnalteredMessage(Mail originalMail, MailImpl newMail) throws MessagingException {
@@ -141,6 +141,7 @@ public class ProcessRedirectNotify {
             super(originalMessage);
         }
 
+        @Override
         protected void updateHeaders() throws MessagingException {
             if (getMessageID() == null) {
                 super.updateHeaders();
@@ -176,7 +177,10 @@ public class ProcessRedirectNotify {
     @SuppressWarnings("deprecation")
     private boolean senderDomainIsValid(Mail mail) throws MessagingException {
         return !mailet.getInitParameters().getFakeDomainCheck()
-                || mail.getSender() == null
-                || !mailet.getMailetContext().getMailServers(mail.getSender().getDomain()).isEmpty();
+                || !mail.hasSender()
+                || !mailet.getMailetContext()
+            .getMailServers(mail.getMaybeSender().get()
+                .getDomain())
+            .isEmpty();
     }
 }

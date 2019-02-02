@@ -19,12 +19,11 @@
 
 package org.apache.james.imap.processor.fetch;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.apache.james.imap.message.response.FetchResponse.BodyElement;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,105 +33,68 @@ public class PartialFetchBodyElementTest {
 
     BodyElement mockBodyElement;
 
-    private Mockery mockery = new JUnit4Mockery();
-    
     @Before
     public void setUp() throws Exception {
-        mockBodyElement = mockery.mock(BodyElement.class);
-        mockery.checking(new Expectations() {{
-                    oneOf(mockBodyElement).getName();will(returnValue("Name"));
-                }
-            }
-        );
+        mockBodyElement = mock(BodyElement.class);
+        when(mockBodyElement.getName()).thenReturn("Name");
     }
 
     @Test
     public void testSizeShouldBeNumberOfOctetsWhenSizeMoreWhenStartIsZero()
             throws Exception {
         final long moreThanNumberOfOctets = NUMBER_OF_OCTETS + 1;
-        PartialFetchBodyElement element = new PartialFetchBodyElement(
-                mockBodyElement, 0, NUMBER_OF_OCTETS);
-        mockery.checking(new Expectations() {{
-                    oneOf(mockBodyElement).size();will(returnValue(new Long(moreThanNumberOfOctets)));
-                }
-            }
-        );
-        assertEquals(
-                "Size is more than number of octets so should be number of octets",
-                NUMBER_OF_OCTETS, element.size());
+        PartialFetchBodyElement element = new PartialFetchBodyElement(mockBodyElement, 0, NUMBER_OF_OCTETS);
+        when(mockBodyElement.size()).thenReturn(moreThanNumberOfOctets);
+
+        assertThat(element.size()).describedAs("Size is more than number of octets so should be number of octets").isEqualTo(NUMBER_OF_OCTETS);
     }
 
     @Test
     public void testSizeShouldBeSizeWhenNumberOfOctetsMoreWhenStartIsZero()
             throws Exception {
         final long lessThanNumberOfOctets = NUMBER_OF_OCTETS - 1;
-        PartialFetchBodyElement element = new PartialFetchBodyElement(
-                mockBodyElement, 0, NUMBER_OF_OCTETS);
-        mockery.checking(new Expectations() {{
-                    oneOf(mockBodyElement).size();will(returnValue(new Long(lessThanNumberOfOctets)));
-                }
-            }
-        );
-        assertEquals("Size is less than number of octets so should be size",
-                lessThanNumberOfOctets, element.size());
+        PartialFetchBodyElement element = new PartialFetchBodyElement(mockBodyElement, 0, NUMBER_OF_OCTETS);
+        when(mockBodyElement.size()).thenReturn(lessThanNumberOfOctets);
+
+        assertThat(element.size()).describedAs("Size is less than number of octets so should be size").isEqualTo(lessThanNumberOfOctets);
     }
 
     @Test
     public void testWhenStartPlusNumberOfOctetsIsMoreThanSizeSizeShouldBeSizeMinusStart()
             throws Exception {
         final long size = 60;
-        PartialFetchBodyElement element = new PartialFetchBodyElement(
-                mockBodyElement, 10, NUMBER_OF_OCTETS);
-        mockery.checking(new Expectations() {{
-                    oneOf(mockBodyElement).size();will(returnValue(new Long(size)));
-                }
-            }
-        );
-        assertEquals("Size is less than number of octets so should be size",
-                50, element.size());
+        PartialFetchBodyElement element = new PartialFetchBodyElement(mockBodyElement, 10, NUMBER_OF_OCTETS);
+        when(mockBodyElement.size()).thenReturn(size);
+
+        assertThat(element.size()).describedAs("Size is less than number of octets so should be size").isEqualTo(50);
     }
 
     @Test
     public void testWhenStartPlusNumberOfOctetsIsLessThanSizeSizeShouldBeNumberOfOctetsMinusStart()
             throws Exception {
         final long size = 100;
-        PartialFetchBodyElement element = new PartialFetchBodyElement(
-                mockBodyElement, 10, NUMBER_OF_OCTETS);
-        mockery.checking(new Expectations() {{
-                    oneOf(mockBodyElement).size();will(returnValue(new Long(size)));
-                }
-            }
-        );
-        assertEquals("Size is less than number of octets so should be size",
-                90, element.size());
+        PartialFetchBodyElement element = new PartialFetchBodyElement(mockBodyElement, 10, NUMBER_OF_OCTETS);
+        when(mockBodyElement.size()).thenReturn(size);
+
+        assertThat(element.size()).describedAs("Size is less than number of octets so should be size").isEqualTo(90);
     }
 
     @Test
     public void testSizeShouldBeZeroWhenStartIsMoreThanSize() throws Exception {
         final long size = 100;
-        PartialFetchBodyElement element = new PartialFetchBodyElement(
-                mockBodyElement, 1000, NUMBER_OF_OCTETS);
-        mockery.checking(new Expectations() {{
-                    oneOf(mockBodyElement).size();will(returnValue(new Long(size)));
-                }
-            }
-        );
-        assertEquals("Size is less than number of octets so should be size", 0,
-                element.size());
+        PartialFetchBodyElement element = new PartialFetchBodyElement(mockBodyElement, 1000, NUMBER_OF_OCTETS);
+        when(mockBodyElement.size()).thenReturn(size);
+
+        assertThat(element.size()).describedAs("Size is less than number of octets so should be size").isEqualTo(0);
     }
 
     @Test
     public void testSizeShouldBeNumberOfOctetsWhenStartMoreThanOctets()
             throws Exception {
         final long size = 2000;
-        PartialFetchBodyElement element = new PartialFetchBodyElement(
-                mockBodyElement, 1000, NUMBER_OF_OCTETS);
-        mockery.checking(new Expectations() {{
-                    oneOf(mockBodyElement).size();will(returnValue(new Long(size)));
-                }
-            }
-        );
-        assertEquals("Content size is less than start. Size should be zero.",
-                NUMBER_OF_OCTETS, element.size());
+        PartialFetchBodyElement element = new PartialFetchBodyElement(mockBodyElement, 1000, NUMBER_OF_OCTETS);
+        when(mockBodyElement.size()).thenReturn(size);
+
+        assertThat(element.size()).describedAs("Content size is less than start. Size should be zero.").isEqualTo(NUMBER_OF_OCTETS);
     }
 }

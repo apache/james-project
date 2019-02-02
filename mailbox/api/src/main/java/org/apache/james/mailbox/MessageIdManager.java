@@ -27,10 +27,13 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.DeleteResult;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
+
+import com.google.common.collect.ImmutableList;
 
 public interface MessageIdManager {
 
@@ -40,7 +43,14 @@ public interface MessageIdManager {
 
     List<MessageResult> getMessages(List<MessageId> messageId, FetchGroup minimal, MailboxSession mailboxSession) throws MailboxException;
 
-    void delete(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
+    DeleteResult delete(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
+
+    DeleteResult delete(List<MessageId> messageId, MailboxSession mailboxSession) throws MailboxException;
 
     void setInMailboxes(MessageId messageId, Collection<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
+
+    default DeleteResult delete(MessageId messageId, MailboxSession mailboxSession) throws MailboxException {
+        return delete(ImmutableList.of(messageId), mailboxSession);
+    }
+
 }

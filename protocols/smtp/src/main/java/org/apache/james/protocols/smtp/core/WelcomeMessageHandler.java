@@ -35,9 +35,7 @@ public class WelcomeMessageHandler implements ConnectHandler<SMTPSession> {
 
     private static final String SERVICE_TYPE = "SMTP";
     
-    /**
-     * @see org.apache.james.protocols.api.handler.ConnectHandler#onConnect(org.apache.james.protocols.api.ProtocolSession)
-     */
+    @Override
     public Response onConnect(SMTPSession session) {
         String smtpGreeting = session.getConfiguration().getGreeting();
 

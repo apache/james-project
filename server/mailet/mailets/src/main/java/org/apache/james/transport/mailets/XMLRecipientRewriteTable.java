@@ -26,7 +26,9 @@ import java.util.Map;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 import org.apache.mailet.Experimental;
 
@@ -79,11 +81,9 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     /**
      * Holds the configured mappings
      */
-    private Map<String, String> mappings = new HashMap<>();
+    private Map<MappingSource, String> mappings = new HashMap<>();
 
-    /**
-     * Initialize the mailet
-     */
+    @Override
     public void init() throws MessagingException {
         String mapping = getInitParameter("mapping");
 
@@ -99,12 +99,13 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @param recipientsMap
      *            the mapping of virtual to real recipients
      */
-    protected void mapRecipients(Map<MailAddress, String> recipientsMap) throws MessagingException {
+    @Override
+    protected void mapRecipients(Map<MailAddress, String> recipientsMap) {
         Collection<MailAddress> recipients = recipientsMap.keySet();
 
         for (MailAddress source : recipients) {
             String user = source.getLocalPart().toLowerCase(Locale.US);
-            String domain = source.getDomain().toLowerCase(Locale.US);
+            Domain domain = source.getDomain();
 
             String targetString = RecipientRewriteTableUtil.getTargetString(user, domain, mappings);
 
@@ -114,6 +115,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
         }
     }
 
+    @Override
     public String getMailetInfo() {
         return "XML Virtual User Table mailet";
     }

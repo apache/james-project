@@ -47,6 +47,7 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
         super(CloseRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
+    @Override
     protected void doProcess(CloseRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) {
         try {
             MessageManager mailbox = getSelectedMailbox(session);
@@ -63,7 +64,7 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
             }
 
         } catch (MailboxException e) {
-            LOGGER.error("Close failed for mailbox {}", session.getSelected().getPath(), e);
+            LOGGER.error("Close failed for mailbox {}", session.getSelected().getMailboxId(), e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

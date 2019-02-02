@@ -65,6 +65,8 @@ import com.google.common.collect.ImmutableList;
 public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(DNSJavaService.class);
 
+    private static final int CACHE_TTL_DISABLE = -1;
+
     /**
      * A resolver instance used to retrieve DNS records. This is a reference to
      * a third party library object.
@@ -81,6 +83,8 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      * Maximum number of RR to cache.
      */
     private int maxCacheSize = 50000;
+
+    private int negativeCacheTTL;
 
     /**
      * Whether the DNS response is required to be authoritative
@@ -123,6 +127,10 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
     @Override
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
+        boolean verbose = configuration.getBoolean("verbose", false);
+        if (verbose) {
+            System.setProperty("dnsjava.options", "verbose,verbosemsg,verbosecache");
+        }
 
         boolean autodiscover = configuration.getBoolean("autodiscover", true);
 
@@ -177,6 +185,8 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         dnsCredibility = authoritative ? Credibility.AUTH_ANSWER : Credibility.NONAUTH_ANSWER;
 
         maxCacheSize = configuration.getInt("maxcachesize", maxCacheSize);
+
+        negativeCacheTTL = configuration.getInt("negativeCacheTTL", CACHE_TTL_DISABLE);
     }
 
     @PostConstruct
@@ -210,6 +220,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
         cache = new Cache(DClass.IN);
         cache.setMaxEntries(maxCacheSize);
+        cache.setMaxNCache(negativeCacheTTL);
 
         if (setAsDNSJavaDefault) {
             Lookup.setDefaultResolver(resolver);
@@ -397,6 +408,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      * < 0 ==> a < b = 0 ==> a = b > 0 ==> a > b
      */
     private static class MXRecordComparator implements Comparator<MXRecord> {
+        @Override
         public int compare(MXRecord a, MXRecord b) {
             int pa = a.getPriority();
             int pb = b.getPriority();

@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.memory;
 
+import java.io.IOException;
+
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.jmap.methods.integration.GetMailboxesMethodTest;
@@ -30,7 +32,7 @@ public class MemoryGetMailboxesMethodTest extends GetMailboxesMethodTest {
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 
     @Override
-    protected GuiceJamesServer createJmapServer() {
+    protected GuiceJamesServer createJmapServer() throws IOException {
         return memoryJmap.jmapServer();
     }
     

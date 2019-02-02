@@ -18,7 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.decode.main;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,7 +29,6 @@ import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.protocols.imap.DecodingException;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class IdRangeParseTest  {
@@ -44,14 +44,14 @@ public class IdRangeParseTest  {
         int val2 = 3;
 
         IdRange[] ranges1 = ranges(rangeAsString(val1, val2));
-        assertEquals(1, ranges1.length);
-        assertEquals(val1, ranges1[0].getLowVal());
-        assertEquals(val2, ranges1[0].getHighVal());
+        assertThat(ranges1.length).isEqualTo(1);
+        assertThat(ranges1[0].getLowVal()).isEqualTo(val1);
+        assertThat(ranges1[0].getHighVal()).isEqualTo(val2);
 
         IdRange[] ranges2 = ranges(rangeAsString(val2, val1));
-        assertEquals(1, ranges2.length);
-        assertEquals(val1, ranges2[0].getLowVal());
-        assertEquals(val2, ranges2[0].getHighVal());
+        assertThat(ranges2.length).isEqualTo(1);
+        assertThat(ranges2[0].getLowVal()).isEqualTo(val1);
+        assertThat(ranges2[0].getHighVal()).isEqualTo(val2);
     }
 
     @Test
@@ -60,7 +60,7 @@ public class IdRangeParseTest  {
 
         try {
             ranges(rangeAsString(0, val1));
-            Assert.fail();
+            fail("Expecting DecodingException");
         } catch (DecodingException e) {
             // number smaller then 1 should not work
         }
@@ -68,15 +68,15 @@ public class IdRangeParseTest  {
 
         try {
             ranges(rangeAsString(Long.MAX_VALUE, val1));
-            Assert.fail();
+            fail("Expecting DecodingException");
         } catch (DecodingException e) {
             // number smaller then 1 should not work
         }
 
         IdRange[] ranges2 = ranges(rangeAsString(ImapConstants.MIN_NZ_NUMBER, ImapConstants.MAX_NZ_NUMBER));
-        assertEquals(1, ranges2.length);
-        assertEquals(ImapConstants.MIN_NZ_NUMBER, ranges2[0].getLowVal());
-        assertEquals(ImapConstants.MAX_NZ_NUMBER, ranges2[0].getHighVal());
+        assertThat(ranges2.length).isEqualTo(1);
+        assertThat(ranges2[0].getLowVal()).isEqualTo(ImapConstants.MIN_NZ_NUMBER);
+        assertThat(ranges2[0].getHighVal()).isEqualTo(ImapConstants.MAX_NZ_NUMBER);
 
     }
 

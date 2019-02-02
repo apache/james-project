@@ -7,6 +7,7 @@
   "date": "2015-06-07T00:00:00+0200",
   "mediaType": "plain",
   "subtype": "text",
+  "mimeMessageID": "<VASs-IZaXqmZao@spam.minet.net>",
   "userFlags": [],
   "headers": {
 	"mime-version": [
@@ -129,7 +130,6 @@
 	  "mediaType": "text",
 	  "subtype": "plain",
 	  "fileName": null,
-	  "fileMetadata":{},
 	  "fileExtension": null,
 	  "contentDisposition": "inline",
 	  "headers": {
@@ -150,7 +150,6 @@
 	  "subtype": "rfc822-headers",
 	  "fileName": "header",
 	  "fileExtension": "",
-	  "fileMetadata":{},
 	  "contentDisposition": "inline",
 	  "headers": {
 		"content-disposition": [
@@ -172,7 +171,6 @@
 	  "mediaType": "text",
 	  "subtype": "plain",
 	  "fileName": null,
-	  "fileMetadata":{},
 	  "fileExtension": null,
 	  "contentDisposition": "inline",
 	  "headers": {

@@ -23,49 +23,61 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZoneId;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.james.backends.es.DeleteByQueryPerformer;
+import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
-import org.apache.james.backends.es.IndexCreationFactory;
-import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.backends.es.utils.TestingClientProvider;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
+import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
-import org.apache.james.mailbox.elasticsearch.MailboxMappingFactory;
+import org.apache.james.mailbox.elasticsearch.MailboxIndexCreationUtil;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
 import org.apache.james.mailbox.elasticsearch.query.CriterionConverter;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.SessionProvider;
+import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
-import org.apache.james.mailbox.store.quota.DefaultQuotaRootResolver;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.elasticsearch.client.Client;
 
 public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
-    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
+        Feature.MOD_SEQ_SEARCH);
 
     private EmbeddedElasticSearch embeddedElasticSearch;
     private Path tempDirectory;
@@ -76,7 +88,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
     public void beforeTest() throws Exception {
         super.beforeTest();
         this.tempDirectory = Files.createTempDirectory("elasticsearch");
-        this.embeddedElasticSearch = new EmbeddedElasticSearch(tempDirectory, MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
+        this.embeddedElasticSearch = new EmbeddedElasticSearch(tempDirectory);
         embeddedElasticSearch.before();
         initFields();
     }
@@ -88,48 +100,60 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
     }
 
     private void initFields() throws MailboxException {
-        Client client = NodeMappingFactory.applyMapping(
-            new IndexCreationFactory()
-                .useIndex(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX)
-                .addAlias(MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS)
-                .addAlias(MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS)
-                .createIndexAndAliases(new TestingClientProvider(embeddedElasticSearch.getNode()).get()),
-            MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX,
-            MailboxElasticSearchConstants.MESSAGE_TYPE,
-            MailboxMappingFactory.getMappingContent());
+        Client client = MailboxIndexCreationUtil.prepareDefaultClient(
+            new TestingClientProvider(embeddedElasticSearch.getNode()).get(),
+                ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
 
-        InMemoryMailboxSessionMapperFactory factory = new InMemoryMailboxSessionMapperFactory();
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
 
+        InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
+        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), eventBus);
+        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
+
+        SessionProvider sessionProvider = new SessionProvider(authenticator, authorizator);
+        QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mailboxSessionMapperFactory);
+
+
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
         ElasticSearchListeningMessageSearchIndex searchIndex = new ElasticSearchListeningMessageSearchIndex(
-            factory,
+            mailboxSessionMapperFactory,
             new ElasticSearchIndexer(client,
-                new DeleteByQueryPerformer(client, Executors.newSingleThreadExecutor(), MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS, MailboxElasticSearchConstants.MESSAGE_TYPE),
+                Executors.newSingleThreadExecutor(threadFactory),
                 MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
                 MailboxElasticSearchConstants.MESSAGE_TYPE),
             new ElasticSearchSearcher(client,
-                new QueryConverter(new CriterionConverter()), new InMemoryId.Factory(), messageIdFactory,
+                new QueryConverter(new CriterionConverter()),
+                ElasticSearchSearcher.DEFAULT_SEARCH_SIZE,
+                new InMemoryId.Factory(), messageIdFactory,
                 MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, MailboxElasticSearchConstants.MESSAGE_TYPE),
-            new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.systemDefault(), IndexAttachments.YES));
+            new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.systemDefault(), IndexAttachments.YES),
+            new SessionProvider(authenticator, authorizator));
 
-        this.mailboxManager = new InMemoryIntegrationResources()
-            .createMailboxManager(new SimpleGroupMembershipResolver(),
-                authenticator,
-                authorizator);
-        this.mailboxManager.setMessageSearchIndex(searchIndex);
-        this.mailboxManager.addGlobalListener(searchIndex, new MockMailboxSession("admin"));
+        mailboxManager = new InMemoryMailboxManager(
+            mailboxSessionMapperFactory,
+            sessionProvider,
+            new JVMMailboxPathLocker(),
+            new MessageParser(),
+            messageIdFactory,
+            eventBus,
+            annotationManager,
+            storeRightManager,
+            quotaComponents,
+            searchIndex);
 
-        final ImapProcessor defaultImapProcessorFactory =
-            DefaultImapProcessorFactory.createDefaultProcessor(this.mailboxManager,
-                new StoreSubscriptionManager(factory),
+        eventBus.register(searchIndex);
+
+        ImapProcessor defaultImapProcessorFactory =
+            DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager,
+                eventBus,
+                new StoreSubscriptionManager(mailboxManager.getMapperFactory()),
                 new NoQuotaManager(),
-                new DefaultQuotaRootResolver(factory),
+                new DefaultUserQuotaRootResolver(mailboxManager.getSessionProvider(), mailboxManager.getMapperFactory()),
                 new DefaultMetricFactory());
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
             new DefaultImapEncoderFactory().buildImapEncoder(),
             defaultImapProcessorFactory);
-
-        embeddedElasticSearch.awaitForElasticSearch();
     }
 
     @Override
@@ -143,7 +167,12 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
     }
 
     @Override
-    public void setQuotaLimits(long maxMessageQuota, long maxStorageQuota) throws Exception {
+    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) {
         throw new NotImplementedException();
+    }
+
+    @Override
+    protected void await() {
+        embeddedElasticSearch.awaitForElasticSearch();
     }
 }

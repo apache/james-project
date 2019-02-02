@@ -21,35 +21,33 @@
 package org.apache.james.transport.matchers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SenderIsTest {
+class SenderIsTest {
 
     private static final String SENDER_NAME = "test@james.apache.org";
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     private SenderIs matcher;
     private MailAddress recipient;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         matcher = new SenderIs();
         recipient = new MailAddress("recipient@james.apache.org");
     }
 
     @Test
-    public void shouldMatchWhenGoodSender() throws Exception {
+    void shouldMatchWhenGoodSender() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderIs")
                 .condition(SENDER_NAME)
@@ -64,7 +62,65 @@ public class SenderIsTest {
     }
 
     @Test
-    public void shouldNotMatchWhenWrongSender() throws Exception {
+    void shouldMatchNotMatchWhenNullSender() throws Exception {
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderIs")
+                .condition(SENDER_NAME)
+                .build());
+
+        FakeMail fakeMail = FakeMail.builder()
+            .recipient(recipient)
+            .sender(MailAddress.nullSender())
+            .build();
+
+        assertThat(matcher.match(fakeMail)).isNull();
+    }
+
+    @Test
+    void shouldMatchNotMatchWhenNoSender() throws Exception {
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderIs")
+                .condition(SENDER_NAME)
+                .build());
+
+        FakeMail fakeMail = FakeMail.builder()
+            .recipient(recipient)
+            .build();
+
+        assertThat(matcher.match(fakeMail)).isNull();
+    }
+
+    @Test
+    void shouldMatchMatchWhenNullSenderWhenConfigured() throws Exception {
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderIs")
+                .condition(MailAddress.NULL_SENDER_AS_STRING)
+                .build());
+
+        FakeMail fakeMail = FakeMail.builder()
+            .recipient(recipient)
+            .sender(MailAddress.nullSender())
+            .build();
+
+        assertThat(matcher.match(fakeMail)).containsExactly(recipient);
+    }
+
+    @Test
+    void shouldMatchMatchWhenNoSenderWhenConfigured() throws Exception {
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderIs")
+                .condition(MailAddress.NULL_SENDER_AS_STRING)
+                .build());
+
+        FakeMail fakeMail = FakeMail.builder()
+            .recipient(recipient)
+            .build();
+
+        assertThat(matcher.match(fakeMail)).containsExactly(recipient);
+    }
+
+    @Test
+    void shouldNotMatchWhenWrongSender() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderIs")
                 .condition(SENDER_NAME)
@@ -79,7 +135,7 @@ public class SenderIsTest {
     }
 
     @Test
-    public void shouldNotMatchWhenNullSender() throws Exception {
+    void shouldNotMatchWhenNullSender() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderIs")
                 .condition(SENDER_NAME)
@@ -93,29 +149,32 @@ public class SenderIsTest {
     }
 
     @Test
-    public void senderIsShouldBeConfigurableWithSeveralAddresses() throws Exception {
+    void senderIsShouldBeConfigurableWithSeveralAddresses() throws Exception {
         String mailAddress = "any@apache.org";
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderIs")
                 .condition(mailAddress + ", " + SENDER_NAME)
                 .build());
 
-        assertThat(matcher.getSenders()).containsExactly(new MailAddress(mailAddress), new MailAddress(SENDER_NAME));
+        assertThat(matcher.getSenders()).containsExactly(Optional.of(new MailAddress(mailAddress)),
+            Optional.of(new MailAddress(SENDER_NAME)));
     }
 
     @Test
-    public void senderIsShouldThrowWhenNoAddressesPassedByConfiguration() throws Exception {
-        expectedException.expect(MessagingException.class);
-        matcher.init(FakeMatcherConfig.builder()
+    void senderIsShouldThrowWhenNoAddressesPassedByConfiguration() {
+        assertThatThrownBy(() ->
+            matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderIs")
-                .build());
+                .build()))
+        .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void senderIsShouldThrowWhenNoConfiguration() throws Exception {
-        expectedException.expect(MessagingException.class);
-        matcher.init(FakeMatcherConfig.builder()
+    void senderIsShouldThrowWhenNoConfiguration() {
+        assertThatThrownBy(() ->
+            matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderIs")
-                .build());
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 }

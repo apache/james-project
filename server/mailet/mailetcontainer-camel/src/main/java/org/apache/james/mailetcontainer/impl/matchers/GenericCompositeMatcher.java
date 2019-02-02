@@ -40,6 +40,7 @@ public abstract class GenericCompositeMatcher extends GenericMatcher implements 
      * @param matcher
      *            Matcher child of the CompositeMatcher.
      */
+    @Override
     public void add(Matcher matcher) {
         matchers.add(matcher);
     }
@@ -47,6 +48,7 @@ public abstract class GenericCompositeMatcher extends GenericMatcher implements 
     /**
      * @return Immutable collection for the child matchers
      */
+    @Override
     public List<Matcher> getMatchers() {
         return ImmutableList.copyOf(matchers);
     }

@@ -25,11 +25,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 import java.util.function.Consumer;
 
 import javax.annotation.PreDestroy;
 
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +51,8 @@ public class MemoryTaskManager implements TaskManager {
     public MemoryTaskManager() {
         idToExecutionDetails = new ConcurrentHashMap<>();
         idToFuture = new ConcurrentHashMap<>();
-        executor = Executors.newSingleThreadExecutor();
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        executor = Executors.newSingleThreadExecutor(threadFactory);
     }
 
     @Override

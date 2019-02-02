@@ -47,12 +47,7 @@ public class ProtocolConfigurationImpl implements ProtocolConfiguration {
         DEFAULT_HELLO_NAME = hName;
     }
     
-    /*
-     * 
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.protocols.pop3.POP3Configuration#getHelloName()
-     */
+    @Override
     public String getHelloName() {
         if (helloName == null) {
             return DEFAULT_HELLO_NAME;
@@ -64,10 +59,7 @@ public class ProtocolConfigurationImpl implements ProtocolConfiguration {
         this.helloName = helloName;
     }
     
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolConfiguration#getGreeting()
-     */
+    @Override
     public String getGreeting() {
         return greeting;
     }
@@ -76,10 +68,7 @@ public class ProtocolConfigurationImpl implements ProtocolConfiguration {
         this.greeting = greeting;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolConfiguration#getSoftwareName()
-     */
+    @Override
     public String getSoftwareName() {
         return softwareName;
     }

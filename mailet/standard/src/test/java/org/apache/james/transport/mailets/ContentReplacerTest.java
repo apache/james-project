@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 

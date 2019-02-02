@@ -18,40 +18,27 @@
  ****************************************************************/
 package org.apache.james.mailbox.maildir;
 
-import java.io.UnsupportedEncodingException;
-
-import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.junit.TemporaryFolderExtension;
 import org.apache.james.mailbox.MailboxManagerTest;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.google.common.base.Throwables;
-
-public class FullUserMaildirMailboxManagerTest extends MailboxManagerTest {
-
-    @Rule
-    public TemporaryFolder tmpFolder = new TemporaryFolder();
-
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-    }
+public class FullUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailboxManager> {
+    @RegisterExtension
+    TemporaryFolderExtension temporaryFolder = new TemporaryFolderExtension();
     
     @Override
-    protected MailboxManager provideMailboxManager() {
+    protected StoreMailboxManager provideMailboxManager() {
         try {
-            return MaildirMailboxManagerProvider.createMailboxManager("/%fulluser", tmpFolder);
+            return MaildirMailboxManagerProvider.createMailboxManager("/%fulluser", temporaryFolder.getTemporaryFolder().getTempDir());
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
-    @Ignore("https://issues.apache.org/jira/browse/MAILBOX-292")
     @Override
-    public void createMailboxShouldReturnRightId() throws MailboxException, UnsupportedEncodingException {
-
+    protected EventBus retrieveEventBus(StoreMailboxManager mailboxManager) {
+        return mailboxManager.getEventBus();
     }
 }

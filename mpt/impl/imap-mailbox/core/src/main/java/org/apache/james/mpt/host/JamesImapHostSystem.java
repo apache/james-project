@@ -43,8 +43,6 @@ import org.apache.james.mpt.helper.ByteBufferOutputStream;
 import org.apache.james.mpt.imapmailbox.GrantRightsOnHost;
 import org.apache.james.user.memory.MemoryUsersRepository;
 
-import com.google.common.base.Throwables;
-
 public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRightsOnHost {
 
     private MemoryUsersRepository memoryUsersRepository;
@@ -62,7 +60,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
         try {
             memoryUsersRepository.configure(userRepositoryConfiguration());
         } catch (ConfigurationException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
         authenticator = new UserRepositoryAuthenticator(memoryUsersRepository);
         authorizator = new UserRepositoryAuthorizator(memoryUsersRepository);
@@ -86,13 +84,17 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
         return true;
     }
 
+    @Override
     public Session newSession(Continuation continuation)
             throws Exception {
         return new Session(continuation);
     }
 
     protected abstract MailboxManager getMailboxManager();
+
+    protected abstract void await() throws Exception;
     
+    @Override
     public void createMailbox(MailboxPath mailboxPath) throws Exception {
         MailboxManager mailboxManager = getMailboxManager();
         MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
@@ -102,6 +104,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
         mailboxManager.endProcessingRequest(mailboxSession);
     }
 
+    @Override
     public void grantRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) throws Exception {
         MailboxManager mailboxManager = getMailboxManager();
         MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
@@ -134,6 +137,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
             session = new FakeImapSession();
         }
 
+        @Override
         public String readLine() throws Exception {
             if (!isReadLast) {
                 handler.handleRequest(in, out, session);
@@ -142,24 +146,32 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
             return out.nextLine();
         }
 
+        @Override
         public void start() throws Exception {
             // Welcome message handled in the server
             out.write("* OK IMAP4rev1 Server ready\r\n");
         }
 
+        @Override
         public void restart() throws Exception {
             session = new FakeImapSession();
         }
 
+        @Override
         public void stop() throws Exception {
             session.deselect();
         }
 
+        @Override
         public void writeLine(String line) throws Exception {
             isReadLast = false;
             in.nextLine(line);
         }
 
+        @Override
+        public void await() throws Exception {
+            JamesImapHostSystem.this.await();
+        }
     }
 
     private HierarchicalConfiguration userRepositoryConfiguration() {

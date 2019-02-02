@@ -31,9 +31,9 @@ import com.google.common.base.Objects;
 public class QuotaResponse implements ImapResponseMessage {
     private final String resourceName;
     private final String quotaRoot;
-    private final Quota quota;
+    private final Quota<?> quota;
 
-    public QuotaResponse(String resource, String quotaRoot, Quota quota) {
+    public QuotaResponse(String resource, String quotaRoot, Quota<?> quota) {
         this.quota = quota;
         this.resourceName = resource;
         this.quotaRoot = quotaRoot;
@@ -50,7 +50,7 @@ public class QuotaResponse implements ImapResponseMessage {
         return false;
     }
 
-    public Quota getQuota() {
+    public Quota<?> getQuota() {
         return quota;
     }
 
@@ -79,7 +79,7 @@ public class QuotaResponse implements ImapResponseMessage {
                 .append(' ')
                 .append(quota.getUsed())
                 .append(' ')
-                .append(quota.getMax())
+                .append(quota.getLimit())
                 .append(')');
         return result.toString();
     }

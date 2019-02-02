@@ -63,7 +63,7 @@ public class UsersRepositoryAliasingForwarding extends GenericMailet {
     public void init() throws MessagingException {
         if (usersRepository instanceof RecipientRewriteTable) {
             RecipientRewriteTable virtualTableStore = (RecipientRewriteTable) usersRepository;
-            processor = new RecipientRewriteTableProcessor(virtualTableStore, domainList, getMailetContext());
+            processor = new RecipientRewriteTableProcessor(virtualTableStore, domainList, getMailetContext(), Mail.ERROR);
         } else {
             throw new MessagingException("The user repository is not RecipientRewriteTable");
         }
@@ -83,6 +83,7 @@ public class UsersRepositoryAliasingForwarding extends GenericMailet {
         processor.processMail(mail);
     }
 
+    @Override
     public String getMailetInfo() {
         return "Local User Aliasing and Forwarding Mailet";
     }

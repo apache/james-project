@@ -21,7 +21,9 @@ package org.apache.james.mailbox.cassandra.mail;
 import java.util.List;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.TestCassandraMailboxSessionMapperFactory;
@@ -29,7 +31,6 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId.Factory;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
@@ -49,13 +50,14 @@ public class CassandraMapperProvider implements MapperProvider {
     private final CassandraCluster cassandra;
     private final MessageUidProvider messageUidProvider;
     private final CassandraModSeqProvider cassandraModSeqProvider;
-    private final MockMailboxSession mailboxSession = new MockMailboxSession("benwa");
-
+    private final MailboxSession mailboxSession = MailboxSessionUtil.create("benwa");
+    private CassandraMailboxSessionMapperFactory mapperFactory;
 
     public CassandraMapperProvider(CassandraCluster cassandra) {
         this.cassandra = cassandra;
         messageUidProvider = new MessageUidProvider();
-        cassandraModSeqProvider = new CassandraModSeqProvider(this.cassandra.getConf());
+        cassandraModSeqProvider = new CassandraModSeqProvider(this.cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
+        mapperFactory = createMapperFactory();
     }
 
     @Override
@@ -65,17 +67,17 @@ public class CassandraMapperProvider implements MapperProvider {
     
     @Override
     public MailboxMapper createMailboxMapper() throws MailboxException {
-        return createMapperFactory().getMailboxMapper(mailboxSession);
+        return mapperFactory.getMailboxMapper(mailboxSession);
     }
 
     @Override
     public MessageMapper createMessageMapper() throws MailboxException {
-        return createMapperFactory().getMessageMapper(mailboxSession);
+        return mapperFactory.getMessageMapper(mailboxSession);
     }
 
     @Override
     public MessageIdMapper createMessageIdMapper() throws MailboxException {
-        return createMapperFactory().getMessageIdMapper(mailboxSession);
+        return mapperFactory.getMessageIdMapper(mailboxSession);
     }
 
     private CassandraMailboxSessionMapperFactory createMapperFactory() {
@@ -85,18 +87,13 @@ public class CassandraMapperProvider implements MapperProvider {
     }
 
     @Override
-    public AttachmentMapper createAttachmentMapper() throws MailboxException {
-        return createMapperFactory().createAttachmentMapper(mailboxSession);
+    public AttachmentMapper createAttachmentMapper() {
+        return mapperFactory.createAttachmentMapper(mailboxSession);
     }
 
     @Override
     public CassandraId generateId() {
         return CassandraId.timeBased();
-    }
-
-    @Override
-    public void clearMapper() throws MailboxException {
-        cassandra.close();
     }
 
     @Override
@@ -106,7 +103,7 @@ public class CassandraMapperProvider implements MapperProvider {
 
     @Override
     public AnnotationMapper createAnnotationMapper() throws MailboxException {
-        return createMapperFactory().getAnnotationMapper(mailboxSession);
+        return mapperFactory.getAnnotationMapper(mailboxSession);
     }
 
     @Override

@@ -88,14 +88,6 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageSearches.class);
 
-    private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
-        .setMaxContentLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxHeaderLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxLineLen(-1)
-        .build();
-
     private final Iterator<MailboxMessage> messages;
     private final SearchQuery query;
     private final TextExtractor textExtractor;
@@ -192,6 +184,9 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
             return matches((SearchQuery.AttachmentCriterion) criterion, message);
         } else if (criterion instanceof SearchQuery.ModSeqCriterion) {
             return matches((SearchQuery.ModSeqCriterion) criterion, message);
+        } else if (criterion instanceof SearchQuery.MimeMessageIDCriterion) {
+            SearchQuery.MimeMessageIDCriterion mimeMessageIDCriterion = (SearchQuery.MimeMessageIDCriterion) criterion;
+            return isMatch(mimeMessageIDCriterion.asHeaderCriterion(), message, recentMessageUids);
         } else {
             throw new UnsupportedSearchException();
         }
@@ -211,6 +206,8 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                 return messageContains(value, message);
             case ATTACHMENTS:
                 return attachmentsContain(value, message);
+            case ATTACHMENT_FILE_NAME:
+                return hasFileName(value, message);
             }
             throw new UnsupportedSearchException();
         } catch (IOException | MimeException e) {
@@ -248,6 +245,13 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         return isInAttachments(value, attachments);
     }
 
+    private boolean hasFileName(String value, MailboxMessage message) throws IOException, MimeException {
+        return message.getAttachments()
+            .stream()
+            .map(MessageAttachment::getName)
+            .anyMatch(nameOptional -> nameOptional.map(value::equals).orElse(false));
+    }
+
     private boolean isInAttachments(String value, List<MessageAttachment> attachments) {
         return attachments.stream()
             .map(MessageAttachment::getAttachment)
@@ -278,7 +282,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
     private HeaderImpl buildTextHeaders(MailboxMessage message) throws IOException, MimeIOException {
         DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
-        defaultMessageBuilder.setMimeEntityConfig(MIME_ENTITY_CONFIG);
+        defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
         Message headersMessage = defaultMessageBuilder
             .parseMessage(message.getHeaderContent());
         HeaderImpl headerImpl = new HeaderImpl();

@@ -21,15 +21,24 @@ package org.apache.james.transport.mailets;
 
 import java.util.Optional;
 
+import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
+import org.apache.james.core.User;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.spamassassin.SpamAssassinInvoker;
+import org.apache.james.spamassassin.SpamAssassinResult;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.Port;
-import org.apache.james.util.scanner.SpamAssassinInvoker;
 import org.apache.mailet.Mail;
+import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.MailetUtil;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
@@ -63,12 +72,19 @@ public class SpamAssassin extends GenericMailet {
     public static final String DEFAULT_HOST = "127.0.0.1";
     public static final int DEFAULT_PORT = 783;
 
+    private final MetricFactory metricFactory;
+    private final UsersRepository usersRepository;
+
     private String spamdHost;
     private int spamdPort;
 
-    /**
-     * @see org.apache.mailet.base.GenericMailet#init()
-     */
+    @Inject
+    public SpamAssassin(MetricFactory metricFactory, UsersRepository usersRepository) {
+        this.metricFactory = metricFactory;
+        this.usersRepository = usersRepository;
+    }
+
+    @Override
     public void init() throws MessagingException {
         spamdHost = Optional.ofNullable(getInitParameter(SPAMD_HOST))
             .filter(s -> !Strings.isNullOrEmpty(s))
@@ -78,27 +94,31 @@ public class SpamAssassin extends GenericMailet {
         Port.assertValid(spamdPort);
     }
 
-    /**
-     * @see org.apache.mailet.base.GenericMailet#service(Mail)
-     */
+    @Override
     public void service(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
 
         // Invoke SpamAssassin connection and scan the message
-        SpamAssassinInvoker sa = new SpamAssassinInvoker(spamdHost, spamdPort);
-        sa.scanMail(message);
-
-        // Add headers as attribute to mail object
-        for (String key : sa.getHeadersAsAttribute().keySet()) {
-            mail.setAttribute(key, sa.getHeadersAsAttribute().get(key));
-        }
-
-        message.saveChanges();
+        SpamAssassinInvoker sa = new SpamAssassinInvoker(metricFactory, spamdHost, spamdPort);
+        mail.getRecipients()
+            .forEach(
+                Throwing.consumer((MailAddress recipient) -> querySpamAssassin(mail, message, sa, recipient))
+                    .sneakyThrow());
     }
 
-    /**
-     * @see org.apache.mailet.base.GenericMailet#getMailetInfo()
-     */
+    private void querySpamAssassin(Mail mail, MimeMessage message, SpamAssassinInvoker sa, MailAddress recipient) throws MessagingException, UsersRepositoryException {
+        SpamAssassinResult result = sa.scanMail(message, User.fromUsername(usersRepository.getUser(recipient)));
+
+        // Add headers per recipient to mail object
+        for (String key : result.getHeadersAsAttribute().keySet()) {
+            mail.addSpecificHeaderForRecipient(PerRecipientHeaders.Header.builder()
+                    .name(key)
+                    .value(result.getHeadersAsAttribute().get(key))
+                    .build(), recipient);
+        }
+    }
+
+    @Override
     public String getMailetInfo() {
         return "Checks message against SpamAssassin";
     }

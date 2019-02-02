@@ -67,16 +67,12 @@ public class DefaultUser implements User, Serializable {
         algorithm = hashAlg;
     }
 
-    /**
-     * @see org.apache.james.user.api.model.User#getUserName()
-     */
+    @Override
     public String getUserName() {
         return userName;
     }
 
-    /**
-     * @see org.apache.james.user.api.model.User#verifyPassword(java.lang.String)
-     */
+    @Override
     public boolean verifyPassword(String pass) {
         try {
             String hashGuess = DigestUtil.digestString(pass, algorithm);
@@ -86,9 +82,7 @@ public class DefaultUser implements User, Serializable {
         }
     }
 
-    /**
-     * @see org.apache.james.user.api.model.User#setPassword(java.lang.String)
-     */
+    @Override
     public boolean setPassword(String newPass) {
         try {
             hashedPassword = DigestUtil.digestString(newPass, algorithm);

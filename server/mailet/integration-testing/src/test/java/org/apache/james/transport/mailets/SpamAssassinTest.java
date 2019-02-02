@@ -21,11 +21,10 @@ package org.apache.james.transport.mailets;
 import static org.apache.james.MemoryJamesServerMain.SMTP_AND_IMAP_MODULE;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.FROM;
-import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
-import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.RECIPIENT2;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,29 +36,33 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
+import org.apache.james.spamassassin.SpamAssassinResult;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.util.docker.SwarmGenericContainer;
-import org.apache.james.util.scanner.SpamAssassinInvoker;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.testcontainers.containers.wait.HostPortWaitStrategy;
+import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
 public class SpamAssassinTest {
     private static final String SPAM_CONTENT = "XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X";
 
-    @Rule
-    public SwarmGenericContainer spamAssassinContainer = new SwarmGenericContainer(Images.SPAMASSASSIN)
+    @ClassRule
+    public static SwarmGenericContainer spamAssassinContainer = new SwarmGenericContainer(Images.SPAMASSASSIN)
         .withExposedPorts(783)
         .withAffinityToContainer()
-        .waitingFor(new HostPortWaitStrategy());
+        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
@@ -78,12 +81,6 @@ public class SpamAssassinTest {
                         .matcher(All.class)
                         .mailet(SpamAssassin.class)
                         .addProperty(SpamAssassin.SPAMD_HOST, spamAssassinContainer.getContainerIp()))
-                    .addMailet(MailetConfiguration.builder()
-                        .matcher(All.class)
-                        .mailet(MailAttributesToMimeHeaders.class)
-                        .addProperty("simplemapping",
-                            SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME + ";" + SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME + "," +
-                            SpamAssassinInvoker.STATUS_MAIL_ATTRIBUTE_NAME + ";" + SpamAssassinInvoker.STATUS_MAIL_ATTRIBUTE_NAME))
                     .addMailetsFrom(CommonProcessors.deliverOnlyTransport()));
 
         jamesServer = TemporaryJamesServer.builder()
@@ -91,10 +88,12 @@ public class SpamAssassinTest {
             .withMailetContainer(mailets)
             .build(temporaryFolder);
 
-        DataProbeImpl probe = jamesServer.getProbe(DataProbeImpl.class);
-        probe.addDomain(DEFAULT_DOMAIN);
-        probe.addUser(FROM, PASSWORD);
-        probe.addUser(RECIPIENT, PASSWORD);
+        jamesServer.getProbe(DataProbeImpl.class)
+            .fluent()
+            .addDomain(DEFAULT_DOMAIN)
+            .addUser(FROM, PASSWORD)
+            .addUser(RECIPIENT, PASSWORD)
+            .addUser(RECIPIENT2, PASSWORD);
     }
 
     @After
@@ -104,61 +103,85 @@ public class SpamAssassinTest {
 
     @Test
     public void spamAssassinShouldAppendNewHeaderOnMessage() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mailWithContent("This is the content"))
-            .awaitSent(awaitAtMostOneMinute);
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(mailWithContent("This is the content", RECIPIENT));
 
-        messageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        messageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
 
         assertThat(messageReader.readFirstMessageHeaders())
             .contains(
-                SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME,
-                SpamAssassinInvoker.STATUS_MAIL_ATTRIBUTE_NAME);
+                SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME,
+                SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME);
     }
 
     @Test
     public void spamAssassinShouldAppendNewHeaderWhichDetectIsSpamWhenSpamMessage() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mailWithContent(SPAM_CONTENT))
-            .awaitSent(awaitAtMostOneMinute);
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(mailWithContent(SPAM_CONTENT, RECIPIENT));
 
-        messageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        messageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
 
         String receivedHeaders = messageReader.readFirstMessageHeaders();
-        assertThat(receivedHeaders).contains(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME + ": YES");
-        assertThat(receivedHeaders).contains(SpamAssassinInvoker.STATUS_MAIL_ATTRIBUTE_NAME + ": Yes");
+        assertThat(receivedHeaders).contains(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME + ": YES");
+        assertThat(receivedHeaders).contains(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME + ": Yes");
     }
 
     @Test
     public void spamAssassinShouldAppendNewHeaderWhichNoWhenNonSpamMessage() throws Exception {
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mailWithContent("This is the content"))
-            .awaitSent(awaitAtMostOneMinute);
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(mailWithContent("This is the content", RECIPIENT));
 
-        messageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        messageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
 
         String receivedHeaders = messageReader.readFirstMessageHeaders();
-        assertThat(receivedHeaders).contains(SpamAssassinInvoker.FLAG_MAIL_ATTRIBUTE_NAME + ": NO");
-        assertThat(receivedHeaders).contains(SpamAssassinInvoker.STATUS_MAIL_ATTRIBUTE_NAME + ": No");
+        assertThat(receivedHeaders).contains(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME + ": NO");
+        assertThat(receivedHeaders).contains(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME + ": No");
     }
 
-    private FakeMail.Builder mailWithContent(String textContent) throws MessagingException {
+    @Test
+    public void spamAssassinShouldAppendNewHeaderPerRecipientOnMessage() throws Exception {
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(mailWithContent("This is the content", RECIPIENT, RECIPIENT2));
+
+        messageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+
+        assertThat(messageReader.readFirstMessageHeaders())
+            .contains(
+                SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME,
+                SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME);
+
+        messageReader.disconnect()
+            .connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT2, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+
+        assertThat(messageReader.readFirstMessageHeaders())
+            .contains(
+                SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME,
+                SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME);
+    }
+
+    private FakeMail.Builder mailWithContent(String textContent, String... recipients) throws MessagingException {
         return FakeMail.builder()
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setSender(FROM)
-                .addToRecipient(RECIPIENT)
+                .addToRecipient(recipients)
                 .setSubject("This is the subject")
                 .setText(textContent))
             .sender(FROM)
-            .recipient(RECIPIENT);
+            .recipients(recipients);
     }
 }

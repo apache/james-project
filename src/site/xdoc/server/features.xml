@@ -30,7 +30,7 @@
                 <tr>
                     <th>Feature</th>
                     <th>Status</th>
-                    <th>3.0</th>
+                    <th>3.x</th>
                     <th>2.3.x</th>
                     <th>Since</th>
                     <th>First released</th>
@@ -212,14 +212,6 @@
                     <td></td>
                 </tr>
                 <tr>
-                    <td>JCR (Jackrabbit) Database Mail Store</td>
-                    <td>deprecated</td>
-                    <td>yes</td>
-                    <td>no</td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
                     <td>Alternate Mail stores</td>
                     <td>Experimental</td>
                     <td>yes</td>
@@ -250,14 +242,6 @@
                     <td>no</td>
                     <td>3.0.0</td>
                     <td>3.0.0</td>
-                </tr>
-                <tr>
-                    <td>JCR Users</td>
-                    <td>Stable</td>
-                    <td>yes</td>
-                    <td>no</td>
-                    <td>1.2.1</td>
-                    <td>1.2.1</td>
                 </tr>
                 <tr>
                     <td>LDAP Users</td>

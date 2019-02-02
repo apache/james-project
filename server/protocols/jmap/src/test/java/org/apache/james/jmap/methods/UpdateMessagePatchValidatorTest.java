@@ -20,8 +20,8 @@
 package org.apache.james.jmap.methods;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +33,7 @@ import org.apache.james.jmap.model.UpdateMessagePatch;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -80,8 +81,9 @@ public class UpdateMessagePatchValidatorTest {
         ObjectNode emptyRootNode = new ObjectMapper().createObjectNode();
 
         ObjectMapper mapper = mock(ObjectMapper.class);
+        JsonGenerator jsonGenerator = null;
         when(mapper.readValue(anyString(), eq(UpdateMessagePatch.class)))
-            .thenThrow(new JsonMappingException("Exception when parsing"));
+            .thenThrow(JsonMappingException.from(jsonGenerator, "Exception when parsing"));
 
         when(objectMapperFactory.forParsing())
             .thenReturn(mapper);

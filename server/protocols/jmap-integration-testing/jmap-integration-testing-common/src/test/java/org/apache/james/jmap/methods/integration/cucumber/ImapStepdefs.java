@@ -19,12 +19,14 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
+import static org.apache.james.transport.mailets.remote.delivery.HeloNameProvider.LOCALHOST;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
 
 import javax.inject.Inject;
 
+import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.IMAPMessageReader;
 
 import com.github.fge.lambdas.Throwing;
@@ -37,10 +39,6 @@ import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
 public class ImapStepdefs {
-
-    private static final int IMAP_PORT = 1143;
-    private static final String LOCALHOST = "127.0.0.1";
-
     private final UserStepdefs userStepdefs;
     private final MainStepdefs mainStepdefs;
     private final Map<String, IMAPMessageReader> imapConnections;
@@ -60,7 +58,7 @@ public class ImapStepdefs {
     @Then("^the user has a IMAP message in mailbox \"([^\"]*)\"$")
     public void hasMessageInMailbox(String mailbox) throws Throwable {
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
-            imapMessageReader.connect(LOCALHOST, IMAP_PORT)
+            imapMessageReader.connect(LOCALHOST, mainStepdefs.jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(userStepdefs.getConnectedUser(),
                         userStepdefs.getUserPassword(userStepdefs.getConnectedUser()))
                 .select(mailbox);
@@ -71,7 +69,7 @@ public class ImapStepdefs {
     @Then("^the message has IMAP flag \"([^\"]*)\" in mailbox \"([^\"]*)\" for \"([^\"]*)\"$")
     public void hasMessageWithFlagInMailbox(String flags, String mailbox, String username) throws Throwable {
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
-            imapMessageReader.connect(LOCALHOST, IMAP_PORT)
+            imapMessageReader.connect(LOCALHOST, mainStepdefs.jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(userStepdefs.getConnectedUser(),
                         userStepdefs.getUserPassword(username))
                 .select(mailbox);
@@ -83,7 +81,7 @@ public class ImapStepdefs {
     @Then("^the user has a IMAP notification about (\\d+) new message when selecting mailbox \"([^\"]*)\"$")
     public void hasANotificationAboutNewMessagesInMailbox(int numOfNewMessage, String mailbox) throws Throwable {
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
-            imapMessageReader.connect(LOCALHOST, IMAP_PORT)
+            imapMessageReader.connect(LOCALHOST, mainStepdefs.jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(userStepdefs.getConnectedUser(),
                         userStepdefs.getUserPassword(userStepdefs.getConnectedUser()))
                 .select(mailbox);
@@ -96,7 +94,7 @@ public class ImapStepdefs {
     @Then("^the user does not have a IMAP message in mailbox \"([^\"]*)\"$")
     public void hasNoMessageInMailbox(String mailbox) throws Throwable {
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
-            imapMessageReader.connect(LOCALHOST, IMAP_PORT)
+            imapMessageReader.connect(LOCALHOST, mainStepdefs.jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(userStepdefs.getConnectedUser(),
                         userStepdefs.getUserPassword(userStepdefs.getConnectedUser()))
                 .select(mailbox);
@@ -112,7 +110,7 @@ public class ImapStepdefs {
         String password = userStepdefs.getUserPassword(login);
 
         imapConnections.put(mailbox, new IMAPMessageReader()
-            .connect(LOCALHOST, IMAP_PORT)
+            .connect(LOCALHOST, mainStepdefs.jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(login, password)
             .select(mailbox));
     }
@@ -137,7 +135,7 @@ public class ImapStepdefs {
         String password = userStepdefs.getUserPassword(login);
 
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
-            imapMessageReader.connect(LOCALHOST, IMAP_PORT)
+            imapMessageReader.connect(LOCALHOST, mainStepdefs.jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(login, password)
                 .select(srcMailbox);
             assertThat(imapMessageReader).isNotNull();

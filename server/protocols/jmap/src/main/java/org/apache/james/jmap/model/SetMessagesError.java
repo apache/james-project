@@ -59,10 +59,10 @@ public class SetMessagesError extends SetError {
         }
         
         @Override
-        public Builder type(String type) {
+        public Builder type(Type type) {
             return (Builder) super.type(type);
         }
-        
+
         public Builder attachmentsNotFound(BlobId... attachmentIds) {
             return attachmentsNotFound(Arrays.asList(attachmentIds));
         }

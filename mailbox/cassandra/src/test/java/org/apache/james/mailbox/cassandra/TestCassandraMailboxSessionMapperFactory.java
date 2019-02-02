@@ -19,62 +19,25 @@
 
 package org.apache.james.mailbox.cassandra;
 
-import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
-import org.apache.james.blob.cassandra.CassandraBlobId;
-import org.apache.james.blob.cassandra.CassandraBlobsDAO;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
-import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
-import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentOwnerDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
-import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
-import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
+import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 
 import com.datastax.driver.core.Session;
 
 public class TestCassandraMailboxSessionMapperFactory {
+
     public static CassandraMailboxSessionMapperFactory forTests(Session session, CassandraTypesProvider typesProvider,
                                                                 CassandraMessageId.Factory factory) {
-        CassandraBlobsDAO cassandraBlobsDAO = new CassandraBlobsDAO(session);
-        CassandraBlobId.Factory blobIdFactory = new CassandraBlobId.Factory();
-        return new CassandraMailboxSessionMapperFactory(
-            new CassandraUidProvider(session),
-            new CassandraModSeqProvider(session),
-            session,
-            new CassandraMessageDAO(session, typesProvider, cassandraBlobsDAO, blobIdFactory, CassandraUtils.WITH_DEFAULT_CONFIGURATION, factory),
-            new CassandraMessageIdDAO(session, factory),
-            new CassandraMessageIdToImapUidDAO(session, factory),
-            new CassandraMailboxCounterDAO(session),
-            new CassandraMailboxRecentsDAO(session),
-            new CassandraMailboxDAO(session, typesProvider),
-            new CassandraMailboxPathDAO(session, typesProvider),
-            new CassandraFirstUnseenDAO(session),
-            new CassandraApplicableFlagDAO(session),
-            new CassandraAttachmentDAO(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION, CassandraConfiguration.DEFAULT_CONFIGURATION),
-            new CassandraAttachmentDAOV2(blobIdFactory, session),
-            new CassandraDeletedMessageDAO(session),
-            cassandraBlobsDAO, new CassandraAttachmentMessageIdDAO(session, factory, CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-            new CassandraAttachmentOwnerDAO(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-            new CassandraACLMapper(session,
-                new CassandraUserMailboxRightsDAO(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-                CassandraConfiguration.DEFAULT_CONFIGURATION),
-            new CassandraUserMailboxRightsDAO(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
-            CassandraConfiguration.DEFAULT_CONFIGURATION);
+        return forTests(session, typesProvider, factory, CassandraConfiguration.DEFAULT_CONFIGURATION);
+    }
+
+    public static CassandraMailboxSessionMapperFactory forTests(Session session, CassandraTypesProvider typesProvider,
+                                                                CassandraMessageId.Factory factory, CassandraConfiguration cassandraConfiguration) {
+
+        return GuiceUtils.testInjector(session, typesProvider, factory, cassandraConfiguration)
+            .getInstance(CassandraMailboxSessionMapperFactory.class);
     }
 
 }

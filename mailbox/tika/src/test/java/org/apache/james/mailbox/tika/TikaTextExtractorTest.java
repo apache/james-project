@@ -20,27 +20,27 @@
 package org.apache.james.mailbox.tika;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.tika.TikaTextExtractor.ContentAndMetadataDeserializer;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
-import com.google.common.collect.ImmutableList;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 public class TikaTextExtractorTest {
 
@@ -54,7 +54,7 @@ public class TikaTextExtractorTest {
 
     @Before
     public void setUp() throws Exception {
-        textExtractor = new TikaTextExtractor(new TikaHttpClientImpl(TikaConfiguration.builder()
+        textExtractor = new TikaTextExtractor(new NoopMetricFactory(), new TikaHttpClientImpl(TikaConfiguration.builder()
                 .host(tika.getIp())
                 .port(tika.getPort())
                 .timeoutInMillis(tika.getTimeoutInMillis())
@@ -156,8 +156,10 @@ public class TikaTextExtractorTest {
     @Test
     public void deserializerShouldNotThrowWhenMoreThanOneNode() throws Exception {
         TikaTextExtractor textExtractor = new TikaTextExtractor(
-            (inputStream, contentType) -> new ByteArrayInputStream(("[{\"X-TIKA:content\": \"This is an awesome LibreOffice document !\"}, " +
-                "{\"Chroma BlackIsZero\": \"true\"}]").getBytes(StandardCharsets.UTF_8)));
+            new NoopMetricFactory(), 
+            (inputStream, contentType) -> Optional.of(new ByteArrayInputStream(("[{\"X-TIKA:content\": \"This is an awesome LibreOffice document !\"}, " +
+                                                            "{\"Chroma BlackIsZero\": \"true\"}]")
+                                                        .getBytes(StandardCharsets.UTF_8))));
 
         InputStream inputStream = null;
         textExtractor.extractContent(inputStream, "text/plain");
@@ -167,8 +169,10 @@ public class TikaTextExtractorTest {
     public void deserializerShouldTakeFirstNodeWhenSeveral() throws Exception {
         String expectedExtractedContent = "content A";
         TikaTextExtractor textExtractor = new TikaTextExtractor(
-            (inputStream, contentType) -> new ByteArrayInputStream(("[{\"X-TIKA:content\": \"" + expectedExtractedContent + "\"}, " +
-                "{\"X-TIKA:content\": \"content B\"}]").getBytes(StandardCharsets.UTF_8)));
+            new NoopMetricFactory(), 
+            (inputStream, contentType) -> Optional.of(new ByteArrayInputStream(("[{\"X-TIKA:content\": \"" + expectedExtractedContent + "\"}, " +
+                                                            "{\"X-TIKA:content\": \"content B\"}]")
+                                                        .getBytes(StandardCharsets.UTF_8))));
 
         InputStream inputStream = null;
         ParsedContent parsedContent = textExtractor.extractContent(inputStream, "text/plain");
@@ -182,7 +186,9 @@ public class TikaTextExtractorTest {
         expectedException.expectMessage("The element should be a Json object");
 
         TikaTextExtractor textExtractor = new TikaTextExtractor(
-            (inputStream, contentType) -> new ByteArrayInputStream("[\"value1\"]".getBytes(StandardCharsets.UTF_8)));
+            new NoopMetricFactory(), 
+            (inputStream, contentType) -> Optional.of(new ByteArrayInputStream("[\"value1\"]"
+                                                        .getBytes(StandardCharsets.UTF_8))));
 
         InputStream inputStream = null;
         textExtractor.extractContent(inputStream, "text/plain");
@@ -190,38 +196,21 @@ public class TikaTextExtractorTest {
 
     @Test
     public void asListOfStringShouldReturnASingletonWhenOneElement() {
-        JsonNode jsonNode = mock(JsonNode.class);
-        when(jsonNode.getNodeType())
-            .thenReturn(JsonNodeType.STRING);
-        String expectedContent = "text";
-        when(jsonNode.asText())
-            .thenReturn(expectedContent);
-        
         ContentAndMetadataDeserializer deserializer = new TikaTextExtractor.ContentAndMetadataDeserializer();
-        List<String> listOfString = deserializer.asListOfString(jsonNode);
+        List<String> listOfString = deserializer.asListOfString(TextNode.valueOf("text"));
         
-        assertThat(listOfString).containsOnly(expectedContent);
+        assertThat(listOfString).containsOnly("text");
     }
 
     @Test
     public void asListOfStringShouldReturnAListWhenMultipleElements() {
-        JsonNode mainNode = mock(JsonNode.class);
-        when(mainNode.getNodeType())
-            .thenReturn(JsonNodeType.ARRAY);
-        JsonNode firstNode = mock(JsonNode.class);
-        when(firstNode.asText())
-            .thenReturn("first");
-        JsonNode secondNode = mock(JsonNode.class);
-        when(secondNode.asText())
-            .thenReturn("second");
-        JsonNode thirdNode = mock(JsonNode.class);
-        when(thirdNode.asText())
-            .thenReturn("third");
-        when(mainNode.elements())
-            .thenReturn(ImmutableList.of(firstNode, secondNode, thirdNode).iterator());
-        
+        ArrayNode jsonArray = new ArrayNode(JsonNodeFactory.instance)
+            .add("first")
+            .add("second")
+            .add("third");
+
         ContentAndMetadataDeserializer deserializer = new TikaTextExtractor.ContentAndMetadataDeserializer();
-        List<String> listOfString = deserializer.asListOfString(mainNode);
+        List<String> listOfString = deserializer.asListOfString(jsonArray);
         
         assertThat(listOfString).containsOnly("first", "second", "third");
     }

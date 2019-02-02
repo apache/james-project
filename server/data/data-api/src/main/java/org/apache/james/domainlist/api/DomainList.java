@@ -20,6 +20,8 @@ package org.apache.james.domainlist.api;
 
 import java.util.List;
 
+import org.apache.james.core.Domain;
+
 /**
  * This interface should be implemented by services which offer domains for
  * which email will accepted.
@@ -32,7 +34,7 @@ public interface DomainList {
      * 
      * @return domains
      */
-    List<String> getDomains() throws DomainListException;
+    List<Domain> getDomains() throws DomainListException;
 
     /**
      * Return true if the domain exists in the service
@@ -41,7 +43,7 @@ public interface DomainList {
      *            the domain
      * @return true if the given domain exists in the service
      */
-    boolean containsDomain(String domain) throws DomainListException;
+    boolean containsDomain(Domain domain) throws DomainListException;
 
     /**
      * Add domain to the service
@@ -51,7 +53,7 @@ public interface DomainList {
      * @throws DomainListException
      *            If the domain could not be added
      */
-    void addDomain(String domain) throws DomainListException;
+    void addDomain(Domain domain) throws DomainListException;
 
     /**
      * Remove domain from the service
@@ -61,7 +63,7 @@ public interface DomainList {
      * @throws DomainListException
      *            If the domain could not be removed
      */
-    void removeDomain(String domain) throws DomainListException;
+    void removeDomain(Domain domain) throws DomainListException;
 
     /**
      * Return the default domain which will get used to deliver mail to if only
@@ -69,6 +71,6 @@ public interface DomainList {
      * 
      * @return the defaultdomain
      */
-    String getDefaultDomain() throws DomainListException;
+    Domain getDefaultDomain() throws DomainListException;
 
 }

@@ -27,6 +27,7 @@ import java.util.StringTokenizer;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
@@ -177,10 +178,8 @@ public class DNSRBLHandler implements RcptHook {
         }
     }
     
-    /**
-     * @see org.apache.james.protocols.smtp.hook.RcptHook#doRcpt(org.apache.james.protocols.smtp.SMTPSession, org.apache.mailet.MailAddress, org.apache.mailet.MailAddress)
-     */
-    public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+    @Override
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
         checkDNSRBL(session, session.getRemoteAddress().getAddress().getHostAddress());
     
         if (!session.isRelayingAllowed()) {
@@ -188,16 +187,23 @@ public class DNSRBLHandler implements RcptHook {
     
             if (blocklisted != null) { // was found in the RBL
                 if (blocklistedDetail == null) {
-                    return new HookResult(HookReturnCode.DENY,DSNStatus.getStatus(DSNStatus.PERMANENT,
-                            DSNStatus.SECURITY_AUTH)  + " Rejected: unauthenticated e-mail from " + session.getRemoteAddress().getAddress() 
-                            + " is restricted.  Contact the postmaster for details.");
+                    return HookResult.builder()
+                        .hookReturnCode(HookReturnCode.deny())
+                        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH)
+                            + " Rejected: unauthenticated e-mail from " + session.getRemoteAddress().getAddress()
+                            + " is restricted.  Contact the postmaster for details.")
+                        .build();
                 } else {
-                    return new HookResult(HookReturnCode.DENY,DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.SECURITY_AUTH) + " " + blocklistedDetail);
+
+                    return HookResult.builder()
+                        .hookReturnCode(HookReturnCode.deny())
+                        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.SECURITY_AUTH) + " " + blocklistedDetail)
+                        .build();
                 }
                
             }
         }
-        return HookResult.declined();
+        return HookResult.DECLINED;
     }
 
     /**

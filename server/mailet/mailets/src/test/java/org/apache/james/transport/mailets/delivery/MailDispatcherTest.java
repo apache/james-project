@@ -20,7 +20,7 @@
 package org.apache.james.transport.mailets.delivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -35,13 +35,13 @@ import javax.mail.MessagingException;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
-import org.apache.mailet.base.test.MimeMessageUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;

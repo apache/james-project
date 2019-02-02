@@ -21,9 +21,12 @@ package org.apache.james.imap.api.process;
 
 import java.util.Collection;
 import java.util.Optional;
+
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 
 /**
@@ -87,7 +90,14 @@ public interface SelectedMailbox {
      * 
      * @return path
      */
-    MailboxPath getPath();
+    MailboxPath getPath() throws MailboxException;
+
+    /**
+     * Return the mailboxId of the selected Mailbox.
+     *
+     * This is beneficial as the MailboxId is immutable.
+     */
+    MailboxId getMailboxId();
 
     /**
      * Is the given uid recent ?

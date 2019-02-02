@@ -51,9 +51,9 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     /**
      * Whether authentication is required to use this SMTP server.
      */
-    private static final int AUTH_DISABLED = 0;
-    private static final int AUTH_REQUIRED = 1;
-    private static final int AUTH_ANNOUNCE = 2;
+    public static final int AUTH_DISABLED = 0;
+    public static final int AUTH_REQUIRED = 1;
+    public static final int AUTH_ANNOUNCE = 2;
     private int authRequired = AUTH_DISABLED;
     
     /**
@@ -197,13 +197,12 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
      * 
      * @return port
      */
+    @Override
     protected int getDefaultPort() {
         return 25;
     }
 
-    /**
-     * @see org.apache.james.smtpserver.netty.SMTPServerMBean#getServiceType()
-     */
+    @Override
     public String getServiceType() {
         return "SMTP Service";
     }
@@ -213,23 +212,17 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
      */
     public class SMTPHandlerConfigurationDataImpl implements SMTPConfiguration {
 
-        /**
-         * @see org.apache.james.protocols.smtp.SMTPConfiguration#getHelloName()
-         */
+        @Override
         public String getHelloName() {
             return SMTPServer.this.getHelloName();
         }
 
-        /**
-         * @see org.apache.james.protocols.smtp.SMTPConfiguration#getMaxMessageSize()
-         */
+        @Override
         public long getMaxMessageSize() {
             return SMTPServer.this.maxMessageSize;
         }
 
-        /**
-         * @see org.apache.james.protocols.smtp.SMTPConfiguration#isRelayingAllowed(String)
-         */
+        @Override
         public boolean isRelayingAllowed(String remoteIP) {
             boolean relayingAllowed = false;
             if (authorizedNetworks != null) {
@@ -238,29 +231,21 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             return relayingAllowed;
         }
 
-        /**
-         * @see org.apache.james.protocols.smtp.SMTPConfiguration#useHeloEhloEnforcement()
-         */
+        @Override
         public boolean useHeloEhloEnforcement() {
             return SMTPServer.this.heloEhloEnforcement;
         }
 
-        /**
-         */
         public String getSMTPGreeting() {
             return SMTPServer.this.smtpGreeting;
         }
 
-        /**
-         * @see org.apache.james.protocols.smtp.SMTPConfiguration#useAddressBracketsEnforcement()
-         */
+        @Override
         public boolean useAddressBracketsEnforcement() {
             return SMTPServer.this.addressBracketsEnforcement;
         }
 
-        /**
-         * @see org.apache.james.protocols.smtp.SMTPConfiguration#isAuthRequired(java.lang.String)
-         */
+        @Override
         public boolean isAuthRequired(String remoteIP) {
             if (SMTPServer.this.authRequired == AUTH_ANNOUNCE) {
                 return true;
@@ -294,62 +279,42 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
     }
 
-    /**
-     * @see org.apache.james.smtpserver.netty.SMTPServerMBean#getMaximalMessageSize()
-     */
+    @Override
     public long getMaximalMessageSize() {
         return maxMessageSize;
     }
 
-    /**
-     * @see
-     * org.apache.james.smtpserver.netty.SMTPServerMBean#getAddressBracketsEnforcement()
-     */
+    @Override
     public boolean getAddressBracketsEnforcement() {
         return addressBracketsEnforcement;
     }
 
-    /**
-     * @see org.apache.james.smtpserver.netty.SMTPServerMBean#getHeloEhloEnforcement()
-     */
+    @Override
     public boolean getHeloEhloEnforcement() {
         return heloEhloEnforcement;
     }
     
-    /**
-     * @see
-     * org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer#getDefaultJMXName()
-     */
+    @Override
     protected String getDefaultJMXName() {
         return "smtpserver";
     }
 
-    /**
-     * @see
-     * org.apache.james.smtpserver.netty.SMTPServerMBean#setMaximalMessageSize(long)
-     */
+    @Override
     public void setMaximalMessageSize(long maxSize) {
         this.maxMessageSize = maxSize;
     }
 
-    /**
-     * @see org.apache.james.smtpserver.netty.SMTPServerMBean#setAddressBracketsEnforcement(boolean)
-     */
+    @Override
     public void setAddressBracketsEnforcement(boolean enforceAddressBrackets) {
         this.addressBracketsEnforcement = enforceAddressBrackets;
     }
 
-    /**
-     * @see
-     * org.apache.james.smtpserver.netty.SMTPServerMBean#setHeloEhloEnforcement(boolean)
-     */
+    @Override
     public void setHeloEhloEnforcement(boolean enforceHeloEHlo) {
         this.heloEhloEnforcement = enforceHeloEHlo;
     }
 
-    /**
-     * @see org.apache.james.smtpserver.netty.SMTPServerMBean#getHeloName()
-     */
+    @Override
     public String getHeloName() {
         return theConfigData.getHelloName();
     }
@@ -374,4 +339,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         return new AllButStartTlsLineChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH);
     }
 
+    public int getAuthRequired() {
+        return authRequired;
+    }
 }

@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
+import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.TestingConstants.NAME;
+import static org.apache.james.mailbox.model.MailboxConstants.INBOX;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
@@ -38,12 +41,17 @@ import javax.mail.Flags;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.apache.james.jmap.TestingConstants;
 import org.apache.james.jmap.methods.integration.cucumber.util.TableRow;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.JmapGuiceProbe;
+import org.apache.james.utils.SMTPMessageSender;
 import org.javatuples.Pair;
 
 import com.github.fge.lambdas.Throwing;
@@ -63,8 +71,6 @@ import net.minidev.json.JSONArray;
 public class GetMessagesMethodStepdefs {
 
     private static final Optional<Map<String, String>> NO_HEADERS = Optional.empty();
-    private static final String NAME = "[0][0]";
-    private static final String ARGUMENTS = "[0][1]";
     private static final String FIRST_MESSAGE = ARGUMENTS + ".list[0]";
     private static final String ATTACHMENTS = FIRST_MESSAGE + ".attachments";
     private static final String FIRST_ATTACHMENT = ATTACHMENTS + "[0]";
@@ -329,8 +335,13 @@ public class GetMessagesMethodStepdefs {
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with inlined attachments without content disposition$")
-    public void appendMessageWithInlinedImageButNoContentDisposition(String username, String messageName, String mailbox) throws Exception {
+    public void appendMessageWithInlinedAttachmentButNoContentDisposition(String username, String messageName, String mailbox) throws Exception {
         userStepdefs.execWithUser(username, () -> appendMessage(messageName, mailbox, "eml/inlinedWithoutContentDisposition.eml"));
+    }
+
+    @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with inlined image without content disposition$")
+    public void appendMessageWithInlinedImageButNoContentDisposition(String username, String messageName, String mailbox) throws Exception {
+        userStepdefs.execWithUser(username, () -> appendMessage(messageName, mailbox, "eml/oneInlinedImageWithoutContentDisposition.eml"));
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with inlined image without content ID$")
@@ -371,6 +382,26 @@ public class GetMessagesMethodStepdefs {
     @Given("^the user has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with flags \"([^\"]*)\"$")
     public void appendMessageWithFlags(String messageName, String mailbox, List<String> flagList) throws Exception {
         appendMessage(messageName, mailbox, StringListToFlags.fromFlagList(flagList));
+    }
+
+    @Given("^\"([^\"]*)\" receives a SMTP message specified in file \"([^\"]*)\" as message \"([^\"]*)\"$")
+    public void smtpSend(String user, String fileName, String messageName) throws Exception {
+        MailboxId mailboxId = mainStepdefs.mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, user, INBOX);
+        SMTPMessageSender smtpMessageSender = new SMTPMessageSender("domain.com");
+        smtpMessageSender
+            .connect("127.0.0.1", mainStepdefs.jmapServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessageWithHeaders("from@domain.com", user,
+                ClassLoaderUtils.getSystemResourceAsString(fileName));
+        smtpMessageSender.close();
+
+        TestingConstants.calmlyAwait.until(() -> !retrieveIds(user, mailboxId).isEmpty());
+        List<String> ids = retrieveIds(user, mailboxId);
+        messageIdStepdefs.addMessageId(messageName, mainStepdefs.messageIdFactory.fromString(ids.get(0)));
+    }
+
+    public List<String> retrieveIds(String user, MailboxId mailboxId) {
+        userStepdefs.execWithUser(user, () -> httpClient.post("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId.serialize() + "\"]}}, \"#0\"]]"));
+        return httpClient.jsonPath.read(ARGUMENTS + ".messageIds.[*]");
     }
 
     private void appendMessage(String messageName, String mailbox, Flags flags) throws Exception {
@@ -505,8 +536,16 @@ public class GetMessagesMethodStepdefs {
         return Joiner.on(": ").join(pair);
     }
 
-    @Then("^an error \"([^\"]*)\" is returned$")
-    public void error(String type) {
+    @Then("^an error \"([^\"]*)\" with type \"([^\"]*)\" is returned$")
+    public void error(String description, String type) {
+        assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
+        assertThat(httpClient.jsonPath.<String>read(NAME)).isEqualTo("error");
+        assertThat(httpClient.jsonPath.<String>read(ARGUMENTS + ".type")).isEqualTo(type);
+        assertThat(httpClient.jsonPath.<String>read(ARGUMENTS + ".description")).isEqualTo(description);
+    }
+
+    @Then("^an error of type \"([^\"]*)\" is returned$")
+    public void errorType(String type) {
         assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
         assertThat(httpClient.jsonPath.<String>read(NAME)).isEqualTo("error");
         assertThat(httpClient.jsonPath.<String>read(ARGUMENTS + ".type")).isEqualTo(type);
@@ -526,11 +565,6 @@ public class GetMessagesMethodStepdefs {
     @Then("^the list of messages is empty$")
     public void assertListIsEmpty() {
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list")).isEmpty();
-    }
-
-    @Then("^the description is \"(.*?)\"$")
-    public void assertDescription(String description) {
-        assertThat(httpClient.jsonPath.<String>read(ARGUMENTS + ".description")).isEqualTo(description);
     }
 
     @Then("^the notFound list should contain \"([^\"]*)\"$")

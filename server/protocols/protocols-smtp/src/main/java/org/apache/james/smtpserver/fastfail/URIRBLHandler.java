@@ -105,10 +105,7 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
         this.getDetail = getDetail;
     }
 
-    /**
-     * @see org.apache.james.smtpserver.JamesMessageHook#onMessage(org.apache.james.protocols.smtp.SMTPSession,
-     *      org.apache.mailet.Mail)
-     */
+    @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
         if (check(session, mail)) {
             String uRblServer = (String) session.getAttachment(URBLSERVER, State.Transaction);
@@ -128,13 +125,19 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
             }
 
             if (detail != null) {
-                return new HookResult(HookReturnCode.DENY, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_OTHER) + "Rejected: message contains domain " + target + " listed by " + uRblServer + " . Details: " + detail);
+                return HookResult.builder()
+                    .hookReturnCode(HookReturnCode.deny())
+                    .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_OTHER) + "Rejected: message contains domain " + target + " listed by " + uRblServer + " . Details: " + detail)
+                    .build();
             } else {
-                return new HookResult(HookReturnCode.DENY, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_OTHER) + " Rejected: message contains domain " + target + " listed by " + uRblServer);
+                return HookResult.builder()
+                    .hookReturnCode(HookReturnCode.deny())
+                    .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_OTHER) + " Rejected: message contains domain " + target + " listed by " + uRblServer)
+                    .build();
             }
 
         } else {
-            return new HookResult(HookReturnCode.DECLINED);
+            return HookResult.DECLINED;
         }
     }
 

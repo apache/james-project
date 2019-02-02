@@ -28,15 +28,15 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class RemoveAllMailAttributesTest {
 
     private Mail mail;
     private Mailet mailet;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")

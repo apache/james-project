@@ -35,7 +35,6 @@ public class ExtensionFieldTest {
     @Test
     public void shouldMatchBeanContract() throws Exception {
         EqualsVerifier.forClass(ExtensionField.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 
@@ -43,28 +42,26 @@ public class ExtensionFieldTest {
     public void shouldThrowOnNullFieldName() {
         expectedException.expect(NullPointerException.class);
 
-        String fieldName = null;
-        new ExtensionField(fieldName, "rawValue");
+        ExtensionField.builder().fieldName(null).rawValue("rawValue").build();
     }
 
     @Test
     public void shouldThrowOnNullRawValue() {
         expectedException.expect(NullPointerException.class);
 
-        String rawValue = null;
-        new ExtensionField("name", rawValue);
+        ExtensionField.builder().fieldName("name").rawValue(null).build();
     }
 
     @Test
     public void shouldThrowOnMultilineName() {
-        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expect(IllegalStateException.class);
 
-        new ExtensionField("name\nmultiline", "rawValue");
+        ExtensionField.builder().fieldName("name\nmultiline").rawValue("rawValue").build();
     }
 
     @Test
     public void formattedValueShouldDisplayNameAndRawValue() {
-        assertThat(new ExtensionField("name", "rawValue")
+        assertThat(ExtensionField.builder().fieldName("name").rawValue("rawValue").build()
             .formattedValue())
             .isEqualTo("name: rawValue");
     }

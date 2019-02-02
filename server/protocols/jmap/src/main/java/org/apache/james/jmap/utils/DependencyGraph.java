@@ -24,20 +24,20 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.james.util.streams.Iterators;
-import org.jgrapht.alg.CycleDetector;
+import org.jgrapht.alg.cycle.CycleDetector;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
-import org.jgrapht.graph.builder.DirectedGraphBuilder;
+import org.jgrapht.graph.builder.GraphBuilder;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 
 public class DependencyGraph<T> {
 
-    private final DirectedGraphBuilder<T, DefaultEdge, DefaultDirectedGraph<T, DefaultEdge>> builder;
+    private final GraphBuilder<T, DefaultEdge, DefaultDirectedGraph<T, DefaultEdge>> builder;
     private final Function<T, Optional<T>> getParent;
 
     public DependencyGraph(Function<T, Optional<T>> getParent) {
         this.getParent = getParent;
-        this.builder = new DirectedGraphBuilder<>(new DefaultDirectedGraph<>(DefaultEdge.class));
+        this.builder = new GraphBuilder<>(new DefaultDirectedGraph<>(DefaultEdge.class));
     }
 
     public void registerItem(T item) {

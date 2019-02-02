@@ -19,31 +19,43 @@
 
 package org.apache.james.mailets;
 
+import static io.restassured.RestAssured.given;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
-import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
-import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.WebAdminGuiceProbe;
+import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.routes.ForwardRoutes;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import io.restassured.specification.RequestSpecification;
+
 public class RecipientRewriteTableIntegrationTest {
     private static final String JAMES_ANOTHER_DOMAIN = "james.com";
 
-    private static final String FROM = "fromUser@" + DEFAULT_DOMAIN;
-    private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
-    private static final String ANY_AT_JAMES = "any@" + DEFAULT_DOMAIN;
+    private static final String FROM_LOCAL_PART = "fromUser";
+    private static final String FROM = FROM_LOCAL_PART + "@" + DEFAULT_DOMAIN;
+    private static final String RECIPIENT_LOCAL_PART = "touser";
+    private static final String RECIPIENT = RECIPIENT_LOCAL_PART + "@" + DEFAULT_DOMAIN;
+    private static final String ANY_LOCAL_PART = "any";
+    private static final String ANY_AT_JAMES = ANY_LOCAL_PART + "@" + DEFAULT_DOMAIN;
     private static final String OTHER_AT_JAMES = "other@" + DEFAULT_DOMAIN;
-    private static final String ANY_AT_ANOTHER_DOMAIN = "any@" + JAMES_ANOTHER_DOMAIN;
+    private static final String ANY_AT_ANOTHER_DOMAIN = ANY_LOCAL_PART + "@" + JAMES_ANOTHER_DOMAIN;
+    private static final String GROUP_LOCAL_PART = "group";
+    private static final String GROUP = GROUP_LOCAL_PART + "@" + DEFAULT_DOMAIN;
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -54,6 +66,7 @@ public class RecipientRewriteTableIntegrationTest {
 
     private TemporaryJamesServer jamesServer;
     private DataProbe dataProbe;
+    private RequestSpecification webAdminApi;
 
     @Before
     public void setup() throws Exception {
@@ -66,6 +79,11 @@ public class RecipientRewriteTableIntegrationTest {
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(ANY_AT_JAMES, PASSWORD);
         dataProbe.addUser(OTHER_AT_JAMES, PASSWORD);
+
+        WebAdminGuiceProbe webAdminGuiceProbe = jamesServer.getProbe(WebAdminGuiceProbe.class);
+        webAdminGuiceProbe.await();
+        webAdminApi = given()
+            .spec(WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort()).build());
     }
 
     @After
@@ -74,37 +92,50 @@ public class RecipientRewriteTableIntegrationTest {
     }
 
     @Test
+    public void rrtServiceShouldNotImpactRecipientsNotMatchingAnyRRT() throws Exception {
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, RECIPIENT);
+
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
+    }
+
+    @Test
     public void rrtServiceShouldDeliverEmailToMappingRecipients() throws Exception {
-        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, ANY_AT_JAMES);
-        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
+        dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, ANY_AT_JAMES);
+        dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(ANY_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(OTHER_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
     }
 
     @Test
     public void rrtServiceShouldNotDeliverEmailToRecipientWhenHaveMappingRecipients() throws Exception {
-        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, ANY_AT_JAMES);
-        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
+        dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, ANY_AT_JAMES);
+        dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitNoMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
     }
 
     @Test
@@ -113,21 +144,22 @@ public class RecipientRewriteTableIntegrationTest {
         String localUser = nonDomainUser + "@" + dataProbe.getDefaultDomain();
         dataProbe.addUser(localUser, PASSWORD);
 
-        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, nonDomainUser);
-        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
+        dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, nonDomainUser);
+        dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(localUser, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(OTHER_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
     }
 
     @Test
@@ -135,14 +167,14 @@ public class RecipientRewriteTableIntegrationTest {
         dataProbe.addDomainAliasMapping(DEFAULT_DOMAIN, JAMES_ANOTHER_DOMAIN);
         dataProbe.addUser(ANY_AT_ANOTHER_DOMAIN, PASSWORD);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, ANY_AT_JAMES)
-            .awaitSent(awaitAtMostOneMinute);
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, ANY_AT_JAMES);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(ANY_AT_ANOTHER_DOMAIN, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
     }
 
     @Test
@@ -150,14 +182,48 @@ public class RecipientRewriteTableIntegrationTest {
         dataProbe.addDomainAliasMapping(DEFAULT_DOMAIN, JAMES_ANOTHER_DOMAIN);
         dataProbe.addUser(ANY_AT_ANOTHER_DOMAIN, PASSWORD);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, ANY_AT_JAMES)
-            .awaitSent(awaitAtMostOneMinute);
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, ANY_AT_JAMES);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(ANY_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitNoMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
     }
 
+    @Test
+    public void rrtServiceShouldDeliverEmailToForwardRecipients() throws Exception {
+        webAdminApi.put(ForwardRoutes.ROOT_PATH + "/" + RECIPIENT + "/targets/" + ANY_AT_JAMES);
+        webAdminApi.put(ForwardRoutes.ROOT_PATH + "/" + RECIPIENT + "/targets/" + OTHER_AT_JAMES);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, RECIPIENT);
+
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(ANY_AT_JAMES, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(OTHER_AT_JAMES, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
+    }
+
+    @Test
+    public void rrtServiceShouldFollowForwardWhenSendingToAGroup() throws Exception {
+        dataProbe.addAddressMapping(GROUP_LOCAL_PART, DEFAULT_DOMAIN, ANY_AT_JAMES);
+
+        webAdminApi.put(ForwardRoutes.ROOT_PATH + "/" + ANY_AT_JAMES + "/targets/" + OTHER_AT_JAMES);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, GROUP);
+
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(OTHER_AT_JAMES, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
+    }
 }

@@ -35,9 +35,7 @@ import org.apache.mailet.Experimental;
 @Experimental
 public class FileRegexMatcher extends GenericRegexMatcher {
     
-    /**
-     * @see org.apache.james.transport.matchers.GenericRegexMatcher#init()
-     */
+    @Override
     public void init() throws MessagingException {
         java.io.RandomAccessFile patternSource = null;
         try {

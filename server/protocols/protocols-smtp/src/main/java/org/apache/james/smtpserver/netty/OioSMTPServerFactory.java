@@ -19,6 +19,8 @@
 
 package org.apache.james.smtpserver.netty;
 
+import javax.inject.Inject;
+
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.metrics.api.MetricFactory;
@@ -27,6 +29,7 @@ import org.jboss.netty.util.HashedWheelTimer;
 
 public class OioSMTPServerFactory extends SMTPServerFactory {
 
+    @Inject
     public OioSMTPServerFactory(DNSService dns, ProtocolHandlerLoader loader, FileSystem fileSystem,
                                 MetricFactory metricFactory, HashedWheelTimer hashedWheelTimer) {
         super(dns, loader, fileSystem, metricFactory, hashedWheelTimer);

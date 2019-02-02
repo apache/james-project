@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 import org.apache.james.jmap.model.Number;
+import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.model.MailboxId;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
@@ -64,6 +65,7 @@ public class Mailbox {
         private Optional<Number> unreadThreads;
         private Optional<Rights> sharedWith;
         private Optional<MailboxNamespace> namespace;
+        private Optional<Quotas> quotas;
 
         private Builder() {
             parentId = Optional.empty();
@@ -74,6 +76,7 @@ public class Mailbox {
             totalThreads = Optional.empty();
             unreadThreads = Optional.empty();
             role = Optional.empty();
+            quotas = Optional.empty();
         }
 
         public Builder id(MailboxId id) {
@@ -168,6 +171,11 @@ public class Mailbox {
             return this;
         }
 
+        public Builder quotas(Quotas quotas) {
+            this.quotas = Optional.of(quotas);
+            return this;
+        }
+
         public Mailbox build() {
             Preconditions.checkState(!Strings.isNullOrEmpty(name), "'name' is mandatory");
             Preconditions.checkState(id != null, "'id' is mandatory");
@@ -189,7 +197,8 @@ public class Mailbox {
                 totalThreads.orElse(Number.ZERO),
                 unreadThreads.orElse(Number.ZERO),
                 sharedWith.orElse(Rights.EMPTY),
-                namespace.orElse(MailboxNamespace.personal()));
+                namespace.orElse(MailboxNamespace.personal()),
+                quotas);
         }
     }
 
@@ -211,10 +220,12 @@ public class Mailbox {
     private final Number unreadThreads;
     private final Rights sharedWith;
     private final MailboxNamespace namespace;
+    private final Optional<Quotas> quotas;
 
     @VisibleForTesting Mailbox(MailboxId id, String name, Optional<MailboxId> parentId, Optional<Role> role, SortOrder sortOrder, boolean mustBeOnlyMailbox,
                                boolean mayReadItems, boolean mayAddItems, boolean mayRemoveItems, boolean mayCreateChild, boolean mayRename, boolean mayDelete,
-                               Number totalMessages, Number unreadMessages, Number totalThreads, Number unreadThreads, Rights sharedWith, MailboxNamespace namespace) {
+                               Number totalMessages, Number unreadMessages, Number totalThreads, Number unreadThreads, Rights sharedWith, MailboxNamespace namespace,
+                               Optional<Quotas> quotas) {
 
         this.id = id;
         this.name = name;
@@ -234,6 +245,7 @@ public class Mailbox {
         this.unreadThreads = unreadThreads;
         this.sharedWith = sharedWith;
         this.namespace = namespace;
+        this.quotas = quotas;
     }
 
     public MailboxId getId() {
@@ -308,6 +320,10 @@ public class Mailbox {
         return namespace;
     }
 
+    public Optional<Quotas> getQuotas() {
+        return quotas;
+    }
+
     @JsonIgnore
     public boolean hasRole(Role role) {
         return this.role
@@ -341,7 +357,8 @@ public class Mailbox {
                 && Objects.equals(this.totalThreads, other.totalThreads)
                 && Objects.equals(this.unreadThreads, other.unreadThreads)
                 && Objects.equals(this.sharedWith, other.sharedWith)
-                && Objects.equals(this.namespace, other.namespace);
+                && Objects.equals(this.namespace, other.namespace)
+                && Objects.equals(this.quotas, other.quotas);
         }
         return false;
     }
@@ -350,7 +367,7 @@ public class Mailbox {
     public final int hashCode() {
         return Objects.hash(id, name, parentId, role, sortOrder, mustBeOnlyMailbox, mayReadItems, mayAddItems, 
             mayRemoveItems, mayCreateChild, mayRename, mayDelete, totalMessages, unreadMessages, totalThreads,
-            unreadThreads, sharedWith, namespace);
+            unreadThreads, sharedWith, namespace, quotas);
     }
 
     @Override

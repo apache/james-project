@@ -19,7 +19,7 @@
 
 package org.apache.james.webadmin.integration;
 
-import static com.jayway.restassured.RestAssured.given;
+import static io.restassured.RestAssured.given;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -43,8 +43,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.response.Header;
+import io.restassured.RestAssured;
 
 public class JwtFilterIntegrationTest {
 
@@ -95,7 +94,7 @@ public class JwtFilterIntegrationTest {
     @Test
     public void jwtAuthenticationShouldWork() throws Exception {
         given()
-            .header(new Header("Authorization", "Bearer " + VALID_TOKEN_ADMIN_TRUE))
+            .header("Authorization", "Bearer " + VALID_TOKEN_ADMIN_TRUE)
         .when()
             .put(SPECIFIC_DOMAIN)
         .then()
@@ -108,7 +107,7 @@ public class JwtFilterIntegrationTest {
     @Test
     public void jwtShouldRejectNonAdminRequests() throws Exception {
         given()
-            .header(new Header("Authorization", "Bearer " + VALID_TOKEN_ADMIN_FALSE))
+            .header("Authorization", "Bearer " + VALID_TOKEN_ADMIN_FALSE)
         .when()
             .put(SPECIFIC_DOMAIN)
         .then()
@@ -121,7 +120,7 @@ public class JwtFilterIntegrationTest {
     @Test
     public void jwtShouldRejectInvalidRequests() throws Exception {
         given()
-            .header(new Header("Authorization", "Bearer invalid"))
+            .header("Authorization", "Bearer invalid")
         .when()
             .put(SPECIFIC_DOMAIN)
         .then()

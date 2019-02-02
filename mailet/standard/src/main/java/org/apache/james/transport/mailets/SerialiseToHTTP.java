@@ -27,7 +27,6 @@ import java.net.URL;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -69,9 +68,7 @@ public class SerialiseToHTTP extends GenericMailet {
     private String messageKeyName = "message";
     private boolean passThrough = true;
 
-    /**
-     * Initialize the mailet.
-     */
+    @Override
     public void init() throws MessagingException {
 
         passThrough = (getInitParameter("passThrough", "true").compareToIgnoreCase("true") == 0);
@@ -118,6 +115,7 @@ public class SerialiseToHTTP extends GenericMailet {
      *            the mail being processed
      *
      */
+    @Override
     public void service(Mail mail) {
         try {
             MimeMessage message = mail.getMessage();
@@ -164,10 +162,9 @@ public class SerialiseToHTTP extends GenericMailet {
             LOGGER.debug("{}::{}", data[1].getName(), data[1].getValue());
         }
 
-        CloseableHttpClient client = HttpClientBuilder.create().build();
-        CloseableHttpResponse clientResponse = null;
-        try {
-            clientResponse = client.execute(requestBuilder.build());
+
+        try (CloseableHttpClient client = HttpClientBuilder.create().build();
+             CloseableHttpResponse clientResponse = client.execute(requestBuilder.build())) {
 
             if (clientResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 LOGGER.debug("POST failed: {}", clientResponse.getStatusLine());
@@ -180,9 +177,6 @@ public class SerialiseToHTTP extends GenericMailet {
         } catch (IOException e) {
             LOGGER.debug("Fatal transport error: ", e);
             return "Fatal transport error: " + e.getMessage();
-        } finally {
-            IOUtils.closeQuietly(clientResponse);
-            IOUtils.closeQuietly(client);
         }
     }
 
@@ -202,11 +196,7 @@ public class SerialiseToHTTP extends GenericMailet {
         return data;
     }
 
-    /**
-     * Return a string describing this mailet.
-     * 
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "HTTP POST serialised message";
     }

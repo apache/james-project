@@ -21,13 +21,13 @@ package org.apache.james.jmap.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Entry;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
@@ -60,7 +60,7 @@ public class PropagateLookupRightListenerTest {
     private StoreMailboxManager storeMailboxManager;
     private PropagateLookupRightListener testee;
 
-    private MailboxSession mailboxSession = new MockMailboxSession(OWNER_USER);
+    private MailboxSession mailboxSession = MailboxSessionUtil.create(OWNER_USER);
 
     private MailboxId parentMailboxId;
     private MailboxId parentMailboxId1;
@@ -74,13 +74,14 @@ public class PropagateLookupRightListenerTest {
     @Before
     public void setup() throws Exception {
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
-        storeMailboxManager = new InMemoryIntegrationResources()
-            .createMailboxManager(groupMembershipResolver);
-        storeRightManager = storeMailboxManager.getStoreRightManager();
+        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources()
+            .createResources(groupMembershipResolver);
+        storeMailboxManager = resources.getMailboxManager();
+        storeRightManager = resources.getStoreRightManager();
         mailboxMapper = storeMailboxManager.getMapperFactory();
 
-        testee = new PropagateLookupRightListener(storeRightManager);
-        storeMailboxManager.addGlobalListener(testee, mailboxSession);
+        testee = new PropagateLookupRightListener(storeRightManager, storeMailboxManager);
+        storeMailboxManager.getEventBus().register(testee);
 
         parentMailboxId = storeMailboxManager.createMailbox(PARENT_MAILBOX, mailboxSession).get();
         parentMailboxId1 = storeMailboxManager.createMailbox(PARENT_MAILBOX1, mailboxSession).get();
@@ -89,11 +90,6 @@ public class PropagateLookupRightListenerTest {
         grandChildMailboxId = storeMailboxManager.createMailbox(GRAND_CHILD_MAILBOX, mailboxSession).get();
 
         lookupEntry = new Entry(SHARED_USER, "l");
-    }
-
-    @Test
-    public void getTypeShouldReturnOnce() throws Exception {
-        assertThat(testee.getType()).isEqualTo(MailboxListener.ListenerType.ONCE);
     }
 
     @Test

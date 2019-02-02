@@ -23,10 +23,10 @@ import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
-import org.junit.Test;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class FileMailQueueTest implements DelayedManageableMailQueueContract {
@@ -54,90 +54,6 @@ public class FileMailQueueTest implements DelayedManageableMailQueueContract {
     @Override
     public ManageableMailQueue getManageableMailQueue() {
         return mailQueue;
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2300 No Order")
-    public void browseShouldReturnElementsInOrder() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2300 No Order")
-    public void flushShouldPreserveBrowseOrder() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentClearShouldNotAlterBrowsingWhenDequeueWhileIterating() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentClearShouldNotAlterBrowsingWhenDequeue() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentDequeueShouldNotAlterBrowsing() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentEnqueueShouldNotAlterBrowsing() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentDequeueShouldNotAlterBrowsingWhenDequeueWhileIterating() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentEnqueueShouldNotAlterBrowsingWhenDequeueWhileIterating() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentRemoveShouldNotAlterBrowsingWhenDequeueWhileIterating() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentFlushShouldNotAlterBrowsingWhenDequeueWhileIterating() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentFlushShouldNotAlterBrowsing() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentRemoveShouldNotAlterBrowsingWhenDequeue() {
-
     }
 
     @Test
@@ -179,6 +95,20 @@ public class FileMailQueueTest implements DelayedManageableMailQueueContract {
     @Override
     @Disabled("JAMES-2298 Not supported yet")
     public void removeByRecipientShouldRemoveSpecificEmailWhenMultipleRecipients() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2544 Not supported yet")
+    public void browseShouldReturnMailsWithMimeMessage() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2544 Mixing concurent operation might lead to a deadlock and missing fiels")
+    public void concurrentEnqueueDequeueWithAckNackShouldNotFail() {
 
     }
 }

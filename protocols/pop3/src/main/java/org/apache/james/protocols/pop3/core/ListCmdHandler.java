@@ -63,6 +63,7 @@ public class ListCmdHandler implements CommandHandler<POP3Session> {
      *            the request to process
      */
 
+    @Override
     @SuppressWarnings("unchecked")
     public Response onCommand(POP3Session session, Request request) {
         String parameters = request.getArgument();
@@ -127,9 +128,7 @@ public class ListCmdHandler implements CommandHandler<POP3Session> {
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }

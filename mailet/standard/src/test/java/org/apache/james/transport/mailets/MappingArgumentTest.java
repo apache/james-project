@@ -20,75 +20,71 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.MessagingException;
 
 import org.assertj.core.data.MapEntry;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-public class MappingArgumentTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class MappingArgumentTest {
 
     @Test
-    public void parseShouldFailIfCalledWithNull() throws MessagingException {
-        expectedException.expect(IllegalArgumentException.class);
-        MappingArgument.parse(null);
+    void parseShouldFailIfCalledWithNull() {
+        assertThatThrownBy(() -> MappingArgument.parse(null))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void parseShouldFailIfCalledWhenMissingMappingParts() throws MessagingException {
-        expectedException.expect(IllegalArgumentException.class);
-        MappingArgument.parse("key1;value1,key2");
+    void parseShouldFailIfCalledWhenMissingMappingParts() {
+        assertThatThrownBy(() -> MappingArgument.parse("key1;value1,key2"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void parseShouldFailIfCalledWhenExtraMappingParts() throws MessagingException {
-        expectedException.expect(IllegalArgumentException.class);
-        MappingArgument.parse("key1;value1,key2;value1;value3");
+    void parseShouldFailIfCalledWhenExtraMappingParts() {
+        assertThatThrownBy(() -> MappingArgument.parse("key1;value1,key2;value1;value3"))
+           .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void parseShouldWorkForEmptyMapping() throws MessagingException {
+    void parseShouldWorkForEmptyMapping() throws MessagingException {
         assertThat(MappingArgument.parse(""))
             .isEmpty();
     }
 
     @Test
-    public void parseShouldWorkForEmptyMappingWithSpace() throws MessagingException {
+    void parseShouldWorkForEmptyMappingWithSpace() throws MessagingException {
         assertThat(MappingArgument.parse("  "))
             .isEmpty();
     }
 
     @Test
-    public void parseShouldWorkForValidParsingWithOnlyOneKey() throws MessagingException {
+    void parseShouldWorkForValidParsingWithOnlyOneKey() throws MessagingException {
         assertThat(MappingArgument.parse("key1;value1"))
             .containsExactly(MapEntry.entry("key1", "value1"));
     }
 
     @Test
-    public void parseShouldWorkForValidParsingWithMoreThanOneKey() throws MessagingException {
+    void parseShouldWorkForValidParsingWithMoreThanOneKey() throws MessagingException {
         assertThat(MappingArgument.parse("key1;value1,key2;value2"))
             .containsExactly(MapEntry.entry("key1", "value1"), MapEntry.entry("key2", "value2"));
     }
 
     @Test
-    public void parserShouldTrimSpacesAroundSemiColon() throws MessagingException {
+    void parserShouldTrimSpacesAroundSemiColon() throws MessagingException {
         assertThat(MappingArgument.parse("key1;    value1"))
             .containsExactly(MapEntry.entry("key1", "value1"));
     }
 
     @Test
-    public void parserShouldTrimSpacesAroundComa() throws MessagingException {
+    void parserShouldTrimSpacesAroundComa() throws MessagingException {
         assertThat(MappingArgument.parse("key1;value1,  key2;value2"))
             .containsExactly(MapEntry.entry("key1", "value1"), MapEntry.entry("key2", "value2"));
     }
 
     @Test
-    public void parserShouldNotFailWhenExtraComa() throws MessagingException {
+    void parserShouldNotFailWhenExtraComa() throws MessagingException {
         assertThat(MappingArgument.parse("key1;value1,"))
             .containsExactly(MapEntry.entry("key1", "value1"));
     }

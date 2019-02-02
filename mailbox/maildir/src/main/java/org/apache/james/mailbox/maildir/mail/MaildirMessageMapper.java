@@ -35,7 +35,6 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -48,7 +47,6 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
-import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.mail.AbstractMessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -147,11 +145,6 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         }
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#updateFlags(org.apache.james.mailbox.store.mail.model.Mailbox,
-     *      javax.mail.Flags, boolean, boolean,
-     *      org.apache.james.mailbox.model.MessageRange)
-     */
     @Override
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange set) throws MailboxException {
         final List<UpdatedFlags> updatedFlags = new ArrayList<>();
@@ -240,19 +233,13 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         Map<MessageUid, MessageMetaData> uids = new HashMap<>();
         for (MailboxMessage m : results) {
             MessageUid uid = m.getUid();
-            uids.put(uid, new SimpleMessageMetaData(m));
+            uids.put(uid, m.metaData());
             delete(mailbox, m);
         }
 
         return uids;
     }
 
-    /**
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#move(org.apache.james.mailbox.store.mail.model.Mailbox,
-     *      MailboxMessage)
-     */
     @Override
     public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
         throw new UnsupportedOperationException("Not implemented - see https://issues.apache.org/jira/browse/IMAP-370");
@@ -268,10 +255,6 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         return save(mailbox, theCopy);
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.AbstractMessageMapper#save(org.apache.james.mailbox.store.mail.model.Mailbox,
-     *      MailboxMessage)
-     */
     @Override
     protected MessageMetaData save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
@@ -292,24 +275,20 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         // billion years...
         MaildirMessageName messageName = MaildirMessageName.createUniqueName(folder, message.getFullContentOctets());
         File messageFile = new File(tmpFolder, messageName.getFullName());
-        FileOutputStream fos = null;
-        InputStream input = null;
         try {
             if (!messageFile.createNewFile()) {
                 throw new IOException("Could not create file " + messageFile);
             }
-            fos = new FileOutputStream(messageFile);
-            input = message.getFullContent();
-            byte[] b = new byte[BUF_SIZE];
-            int len = 0;
-            while ((len = input.read(b)) != -1) {
-                fos.write(b, 0, len);
+            try (FileOutputStream fos = new FileOutputStream(messageFile);
+                InputStream input = message.getFullContent()) {
+                byte[] b = new byte[BUF_SIZE];
+                int len = 0;
+                while ((len = input.read(b)) != -1) {
+                    fos.write(b, 0, len);
+                }
             }
         } catch (IOException ioe) {
             throw new MailboxException("Failure while save MailboxMessage " + message + " in Mailbox " + mailbox, ioe);
-        } finally {
-            IOUtils.closeQuietly(fos);
-            IOUtils.closeQuietly(input);
         }
         File newMessageFile = null;
         // delivered via SMTP, goes to ./new without flags
@@ -332,7 +311,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
             uid = folder.appendMessage(mailboxSession, newMessageFile.getName());
             message.setUid(uid);
             message.setModSeq(newMessageFile.lastModified());
-            return new SimpleMessageMetaData(message);
+            return message.metaData();
         } catch (MailboxException e) {
             throw new MailboxException("Failure while save MailboxMessage " + message + " in Mailbox " + mailbox, e);
         }
@@ -346,9 +325,6 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
             .computeApplicableFlags();
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.transaction.TransactionalMapper#endRequest()
-     */
     @Override
     public void endRequest() {
         // not used
@@ -435,25 +411,16 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
 
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.transaction.TransactionalMapper#begin()
-     */
     @Override
     protected void begin() throws MailboxException {
         // nothing to do
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.transaction.TransactionalMapper#commit()
-     */
     @Override
     protected void commit() throws MailboxException {
         // nothing to do
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.transaction.TransactionalMapper#rollback()
-     */
     @Override
     protected void rollback() throws MailboxException {
         // nothing to do

@@ -33,8 +33,8 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -95,14 +95,14 @@ public class LuceneMailboxMessageSearchIndexTest {
     
     @Before
     public void setUp() throws Exception {
-        session = new MockMailboxSession("username");
+        session = MailboxSessionUtil.create("username");
         TestMessageId.Factory factory = new TestMessageId.Factory();
         id1 = factory.generate();
         id2 = factory.generate();
         id3 = factory.generate();
         id4 = factory.generate();
         id5 = factory.generate();
-        index = new LuceneMessageSearchIndex(null, new TestId.Factory(), new RAMDirectory(), true, useLenient(), factory);
+        index = new LuceneMessageSearchIndex(null, new TestId.Factory(), new RAMDirectory(), true, useLenient(), factory, null);
         index.setEnableSuffixMatch(true);
         Map<String, String> headersSubject = new HashMap<>();
         headersSubject.put("Subject", "test (fwd)");
@@ -644,6 +644,7 @@ public class LuceneMailboxMessageSearchIndexTest {
             this.id = TestId.of(id);
         }
 
+        @Override
         public void setMailboxId(MailboxId id) {
         }
 
@@ -652,35 +653,43 @@ public class LuceneMailboxMessageSearchIndexTest {
             return new MailboxPath(getNamespace(), getUser(), getName());
         }
 
+        @Override
         public TestId getMailboxId() {
             return id;
         }
 
+        @Override
         public String getNamespace() {
             throw new UnsupportedOperationException("Not supported");
         }
 
+        @Override
         public void setNamespace(String namespace) {
             throw new UnsupportedOperationException("Not supported");
         }
 
+        @Override
         public String getUser() {
             throw new UnsupportedOperationException("Not supported");
         }
 
+        @Override
         public void setUser(String user) {
             throw new UnsupportedOperationException("Not supported");
         }
 
+        @Override
         public String getName() {
             return id.serialize();
         }
 
+        @Override
         public void setName(String name) {
             throw new UnsupportedOperationException("Not supported");
 
         }
 
+        @Override
         public long getUidValidity() {
             return 0;
         }

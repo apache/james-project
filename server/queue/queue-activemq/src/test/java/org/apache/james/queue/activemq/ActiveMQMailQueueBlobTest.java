@@ -18,20 +18,25 @@
  ****************************************************************/
 package org.apache.james.queue.activemq;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.api.GaugeRegistry;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.DelayedPriorityMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueMetricContract;
+import org.apache.james.queue.api.MailQueueMetricExtension;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.PriorityManageableMailQueueContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
@@ -45,11 +50,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
-
 @ExtendWith(BrokerExtension.class)
 @Tag(BrokerExtension.STATISTICS)
-public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueContract, DelayedPriorityMailQueueContract, PriorityManageableMailQueueContract {
+public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueContract, DelayedPriorityMailQueueContract, PriorityManageableMailQueueContract,
+    MailQueueMetricContract {
 
     static final String BASE_DIR = "file://target/james-test";
     static final boolean USE_BLOB = true;
@@ -58,7 +62,7 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
     MyFileSystem fileSystem;
 
     @BeforeEach
-    public void setUp(BrokerService broker) throws Exception {
+    public void setUp(BrokerService broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
         fileSystem = new MyFileSystem();
         ActiveMQConnectionFactory connectionFactory = createConnectionFactory();
         FileSystemBlobTransferPolicy policy = new FileSystemBlobTransferPolicy();
@@ -67,15 +71,16 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
         connectionFactory.setBlobTransferPolicy(policy);
 
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
-        NoopMetricFactory metricFactory = new NoopMetricFactory();
+        MetricFactory metricFactory = metricTestSystem.getSpyMetricFactory();
+        GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
         String queueName = BrokerExtension.generateRandomQueueName(broker);
-        mailQueue = new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, USE_BLOB, metricFactory);
+        mailQueue = new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, USE_BLOB, metricFactory, gaugeRegistry);
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
-        fileSystem.destroy();
+    public void tearDown() {
         mailQueue.dispose();
+        fileSystem.destroy();
     }
 
     @Override
@@ -104,30 +109,9 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
 
     @Test
     @Override
-    @Disabled("JAMES-2301 Per recipients headers are not attached to the message.")
-    public void queueShouldPreservePerRecipientHeaders() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2296 Not handled by JMS mailqueue. Only single recipient per-recipient removal works")
-    public void removeByRecipientShouldRemoveSpecificEmailWhenMultipleRecipients() {
-
-    }
-
-    @Test
-    @Override
     @Disabled("JAMES-2308 Flushing JMS mail queue randomly re-order them" +
         "Random test failing around 1% of the time")
     public void flushShouldPreserveBrowseOrder() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2309 Long overflow in JMS delays")
-    public void enqueueWithVeryLongDelayShouldDelayMail(ExecutorService executorService) {
 
     }
 
@@ -137,6 +121,20 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
         "Random test failing around 1% of the time")
     public void clearShouldRemoveAllElements() {
 
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2544 Mixing concurrent ack/nack might lead to a deadlock")
+    public void concurrentEnqueueDequeueWithAckNackShouldNotFail() {
+
+    }
+
+    @Test
+    void computeNextDeliveryTimestampShouldReturnLongMaxWhenOverflow() {
+        long deliveryTimestamp = mailQueue.computeNextDeliveryTimestamp(Long.MAX_VALUE, TimeUnit.DAYS);
+
+        assertThat(deliveryTimestamp).isEqualTo(Long.MAX_VALUE);
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() {
@@ -154,7 +152,7 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
         private static final Logger LOGGER = LoggerFactory.getLogger(MyFileSystem.class);
 
         @Override
-        public InputStream getResource(String url) throws IOException {
+        public InputStream getResource(String url) {
             return null;
         }
 
@@ -175,13 +173,13 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
             throw new FileNotFoundException();
         }
 
-        public void destroy() throws FileNotFoundException {
+        public void destroy() {
             try {
                 FileUtils.forceDelete(getFile(BASE_DIR));
             } catch (FileNotFoundException e) {
                 LOGGER.info("No file specified");
             } catch (IOException e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
     }

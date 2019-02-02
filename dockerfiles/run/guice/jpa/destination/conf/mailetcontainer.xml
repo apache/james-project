@@ -49,21 +49,19 @@
         </processor>
 
         <processor state="transport" enableJmx="true">
-            <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
-                <name>X-UserIsAuth</name>
-                <value>true</value>
-                <onMailetException>ignore</onMailetException>
-            </mailet>
-            <mailet match="HasMailAttribute=org.apache.james.SMIMECheckSignature" class="SetMimeHeader">
-                <name>X-WasSigned</name>
-                <value>true</value>
-                <onMailetException>ignore</onMailetException>
-            </mailet>
+            <matcher name="relay-allowed" match="org.apache.james.mailetcontainer.impl.matchers.Or">
+                <matcher match="SMTPAuthSuccessful"/>
+                <matcher match="SMTPIsAuthNetwork"/>
+                <matcher match="SentByMailet"/>
+            </matcher>
+
             <mailet match="All" class="RemoveMimeHeader">
                 <name>bcc</name>
                 <onMailetException>ignore</onMailetException>
             </mailet>
-            <mailet match="All" class="RecipientRewriteTable" />
+            <mailet match="All" class="RecipientRewriteTable">
+                <errorProcessor>rrt-error</errorProcessor>
+            </mailet>
             <mailet match="RecipientIsLocal" class="Sieve"/>
             <mailet match="RecipientIsLocal" class="AddDeliveredToHeader"/>
             <mailet match="RecipientIsLocal" class="LocalDelivery"/>
@@ -72,18 +70,8 @@
                 <notice>550 - Requested action not taken: no such user here</notice>
             </mailet>
 
-            <mailet match="SMTPAuthSuccessful" class="ToProcessor">
+            <mailet match="relay-allowed" class="ToProcessor">
                 <processor>relay</processor>
-            </mailet>
-            <mailet match="SMTPIsAuthNetwork" class="ToProcessor">
-                <processor>relay</processor>
-            </mailet>
-            <mailet match="SentByMailet" class="ToProcessor">
-                <processor>relay</processor>
-            </mailet>
-
-            <mailet match="All" class="ToProcessor">
-                <processor>relay-denied</processor>
             </mailet>
         </processor>
 
@@ -96,15 +84,6 @@
                 <deliveryThreads>10</deliveryThreads>
                 <sendpartial>true</sendpartial>
                 <bounceProcessor>bounces</bounceProcessor>
-            </mailet>
-        </processor>
-
-        <processor state="spam" enableJmx="true">
-            <mailet match="All" class="MetricsMailet">
-                <metricName>mailetContainerSpam</metricName>
-            </mailet>
-            <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/spam/</repositoryPath>
             </mailet>
         </processor>
 
@@ -140,6 +119,15 @@
             <mailet match="All" class="DSNBounce">
                 <passThrough>false</passThrough>
             </mailet>
+        </processor>
+
+        <processor state="rrt-error" enableJmx="false">
+            <mailet match="All" class="ToRepository">
+                <repositoryPath>file://var/mail/rrt-error/</repositoryPath>
+                <passThrough>true</passThrough>
+            </mailet>
+            <mailet match="IsSenderInRRTLoop" class="Null"/>
+            <mailet match="All" class="Bounce"/>
         </processor>
 
     </processors>

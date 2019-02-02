@@ -28,25 +28,17 @@ public class JamesServerResourceLoader implements JamesDirectoriesProvider {
         this.rootDirectory = rootDirectory;
     }
 
-    /**
-     * @see org.apache.james.container.spring.resource.JamesResourceLoader#getAbsoluteDirectory()
-     */
+    @Override
     public String getAbsoluteDirectory() {
         return "/";
     }
 
-    /**
-     * @see
-     * org.apache.james.container.spring.resource.JamesResourceLoader#getConfDirectory()
-     */
+    @Override
     public String getConfDirectory() {
         return getRootDirectory() + "/conf/";
     }
 
-    /**
-     * @see
-     * org.apache.james.container.spring.resource.JamesResourceLoader#getVarDirectory()
-     */
+    @Override
     public String getVarDirectory() {
         return getRootDirectory() + "/var/";
     }
@@ -61,10 +53,7 @@ public class JamesServerResourceLoader implements JamesDirectoriesProvider {
         return getRootDirectory() + "/conf/lib/";
     }
 
-    /**
-     * @see
-     * org.apache.james.container.spring.resource.JamesResourceLoader#getRootDirectory()
-     */
+    @Override
     public String getRootDirectory() {
         return rootDirectory;
     }

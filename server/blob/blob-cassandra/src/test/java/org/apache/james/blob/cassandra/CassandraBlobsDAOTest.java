@@ -21,67 +21,69 @@ package org.apache.james.blob.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraExtension;
-import org.apache.james.backends.cassandra.DockerCassandraExtension.DockerCassandra;
-import org.apache.james.backends.cassandra.init.CassandraConfiguration;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.ObjectStore;
-import org.apache.james.blob.api.ObjectStoreContract;
-import org.junit.jupiter.api.AfterEach;
+import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.MetricableBlobStore;
+import org.apache.james.blob.api.MetricableBlobStoreContract;
+import org.apache.james.util.ZeroedInputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
 
-@ExtendWith(DockerCassandraExtension.class)
-public class CassandraBlobsDAOTest implements ObjectStoreContract {
-
+public class CassandraBlobsDAOTest implements MetricableBlobStoreContract {
     private static final int CHUNK_SIZE = 10240;
     private static final int MULTIPLE_CHUNK_SIZE = 3;
 
-    private CassandraCluster cassandra;
-    private CassandraBlobsDAO testee;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobModule.MODULE);
+
+    private BlobStore testee;
 
     @BeforeEach
-    public void setUp(DockerCassandra dockerCassandra) {
-        cassandra = CassandraCluster.create(
-                new CassandraBlobModule(), dockerCassandra.getIp(), dockerCassandra.getBindingPort());
-        
-        testee = new CassandraBlobsDAO(cassandra.getConf(),
-            CassandraConfiguration.builder()
-                .blobPartSize(CHUNK_SIZE)
-                .build(),
-            new CassandraBlobId.Factory());
-    }
-
-    @AfterEach
-    public void tearDown() {
-        cassandra.close();
+    void setUp(CassandraCluster cassandra) {
+        testee = new MetricableBlobStore(
+            metricsTestExtension.getMetricFactory(),
+            new CassandraBlobsDAO(cassandra.getConf(),
+                CassandraConfiguration.builder()
+                    .blobPartSize(CHUNK_SIZE)
+                    .build(),
+                new HashBlobId.Factory()));
     }
 
     @Override
-    public ObjectStore testee() {
+    public BlobStore testee() {
         return testee;
     }
 
     @Override
     public BlobId.Factory blobIdFactory() {
-        return new CassandraBlobId.Factory();
+        return new HashBlobId.Factory();
     }
 
     @Test
-    public void readShouldReturnSplitSavedDataByChunk() throws IOException {
+    void readBytesShouldReturnSplitSavedDataByChunk() {
         String longString = Strings.repeat("0123456789\n", MULTIPLE_CHUNK_SIZE);
-        BlobId blobId = testee.save(longString.getBytes(StandardCharsets.UTF_8)).join();
+        BlobId blobId = testee.save(longString.getBytes(StandardCharsets.UTF_8)).block();
 
-        byte[] bytes = testee.read(blobId).join();
+        byte[] bytes = testee.readBytes(blobId).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEqualTo(longString);
+    }
+
+    @Test
+    void blobStoreShouldSupport100MBBlob() {
+        BlobId blobId = testee.save(new ZeroedInputStream(100_000_000)).block();
+        InputStream bytes = testee.read(blobId);
+        assertThat(bytes).hasSameContentAs(new ZeroedInputStream(100_000_000));
     }
 
 }

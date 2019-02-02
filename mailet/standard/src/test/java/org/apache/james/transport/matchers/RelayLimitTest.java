@@ -21,26 +21,27 @@ package org.apache.james.transport.matchers;
 
 import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.apache.mailet.base.test.MimeMessageUtil;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class RelayLimitTest {
+class RelayLimitTest {
 
     private RelayLimit testee;
     private Mail mail;
     private MimeMessage mimeMessage;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         testee = new RelayLimit();
         mimeMessage = MimeMessageUtil.defaultMimeMessage();
         mail = FakeMail.builder()
@@ -49,39 +50,47 @@ public class RelayLimitTest {
                 .build();
     }
 
-    @Test(expected = MessagingException.class)
-    public void relayLimitShouldBeANumber() throws Exception {
-        testee.init(FakeMatcherConfig.builder()
+    @Test
+    void relayLimitShouldBeANumber() {
+        assertThatThrownBy(() ->
+            testee.init(FakeMatcherConfig.builder()
                 .matcherName("RelayLimit")
                 .condition("Abc")
-                .build());
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
-    @Test(expected = MessagingException.class)
-    public void relayLimitShouldBeSpecified() throws Exception {
-        testee.init(FakeMatcherConfig.builder()
+    @Test
+    void relayLimitShouldBeSpecified() {
+        assertThatThrownBy(() ->
+            testee.init(FakeMatcherConfig.builder()
                 .matcherName("RelayLimit")
-                .build());
+                .build()))
+        .isInstanceOf(MessagingException.class);
     }
 
-    @Test(expected = MessagingException.class)
-    public void relayLimitShouldNotBeNull() throws Exception {
-        testee.init(FakeMatcherConfig.builder()
+    @Test
+    void relayLimitShouldNotBeNull() {
+        assertThatThrownBy(() ->
+            testee.init(FakeMatcherConfig.builder()
                 .matcherName("RelayLimit")
                 .condition("0")
-                .build());
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
-    @Test(expected = MessagingException.class)
-    public void relayLimitShouldThrowWhenConditionLessThanZero() throws Exception {
-        testee.init(FakeMatcherConfig.builder()
+    @Test
+    void relayLimitShouldThrowWhenConditionLessThanZero() {
+        assertThatThrownBy(() ->
+            testee.init(FakeMatcherConfig.builder()
                 .matcherName("RelayLimit")
                 .condition("-1")
-                .build());
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
     
     @Test
-    public void shouldNotMatchWhenNoReceivedHeader() throws Exception {
+    void shouldNotMatchWhenNoReceivedHeader() throws Exception {
         testee.init(FakeMatcherConfig.builder()
                 .matcherName("RelayLimit")
                 .condition("2")
@@ -92,7 +101,7 @@ public class RelayLimitTest {
 
 
     @Test
-    public void shouldNotMatchWhenNotEnoughReceivedHeader() throws Exception {
+    void shouldNotMatchWhenNotEnoughReceivedHeader() throws Exception {
         testee.init(FakeMatcherConfig.builder()
                 .matcherName("RelayLimit")
                 .condition("2")
@@ -104,7 +113,7 @@ public class RelayLimitTest {
     }
 
     @Test
-    public void shouldMatchWhenEqualToLimit() throws Exception {
+    void shouldMatchWhenEqualToLimit() throws Exception {
         testee.init(FakeMatcherConfig.builder()
                 .matcherName("RelayLimit")
                 .condition("2")
@@ -117,7 +126,7 @@ public class RelayLimitTest {
     }
 
     @Test
-    public void shouldMatchWhenWhenOverLimit() throws Exception {
+    void shouldMatchWhenWhenOverLimit() throws Exception {
         testee.init(FakeMatcherConfig.builder()
                 .matcherName("RelayLimit")
                 .condition("2")

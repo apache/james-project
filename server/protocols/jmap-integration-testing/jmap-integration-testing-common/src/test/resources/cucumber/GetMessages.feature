@@ -36,7 +36,7 @@ Feature: GetMessages method
 
   Scenario: Retrieving messages with a non null accountId should return a NotSupported error
     When "alice@domain.tld" ask for messages using its accountId
-    Then an error "Not yet implemented" is returned
+    Then an error "The field 'accountId' of 'GetMessagesMethod' is not supported" with type "invalidArguments" is returned
 
   Scenario: Unknown arguments should be ignored when retrieving messages
     When "alice@domain.tld" ask for messages using unknown arguments
@@ -46,8 +46,7 @@ Feature: GetMessages method
 
   Scenario: Retrieving messages with invalid argument should return an InvalidArguments error
     When "alice@domain.tld" ask for messages using invalid argument
-    Then an error "invalidArguments" is returned
-    And the description is "N/A (through reference chain: org.apache.james.jmap.model.Builder["ids"])"
+    Then an error of type "invalidArguments" is returned
 
   Scenario: Retrieving messages should return empty list when no message
     When "alice@domain.tld" ask for messages
@@ -59,6 +58,7 @@ Feature: GetMessages method
     Then no error is returned
     And the notFound list should contain the requested message id
 
+  @BasicFeature
   Scenario: Retrieving message should return messages when exists
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail"
     When "alice@domain.tld" ask for messages "m1"
@@ -155,6 +155,7 @@ Feature: GetMessages method
     And the id of the message is "m1"
     And the subject of the message is "my test subject"
 
+  @BasicFeature
   Scenario: Retrieving message should return attachments when some
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with two attachments
     When "alice@domain.tld" ask for messages "m1"
@@ -164,14 +165,12 @@ Feature: GetMessages method
     And the list of attachments of the message contains 2 attachments
     And the first attachment is:
       |key      | value                                                             |
-      |blobId   |"81dad497ef270bd4537f5b43906aa88ad2e7168744c572be9a7414707727bf58" |
       |type     |"image/jpeg"                                                       |
       |size     |846                                                                |
       |cid      |null                                                               |
       |isInline |false                                                              |
     And the second attachment is:
       |key      | value                                                             |
-      |blobId   |"632b5341bbe044d26e0916b82a689282cc0891b806884b4d5a2339ea90b28e85" |
       |type     |"image/jpeg"                                                       |
       |size     |597                                                                |
       |cid      |"part1.37A15C92.A7C3488D@linagora.com"                             |
@@ -337,6 +336,7 @@ Feature: GetMessages method
             |content-type                                       |tranfer-encoding   |content                                                                                                     |preview                                                                                      |
             |"text/html; charset=iso-8859-1"                    |quoted-printable   |"Dans le cadre du stage effectu=E9 Mlle 2017, =E0 sign=E9e d=E8s que possible, =E0, tr=E8s, journ=E9e.."    |effectué, à, signée dès, très, journée                                                                        |
 
+  @BasicFeature
   Scenario Outline: Retrieving message should display keywords as jmap flag
     Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with flags <flags>
     When "alice@domain.tld" ask for messages "m1"
@@ -409,6 +409,20 @@ Feature: GetMessages method
       |name     |"encrypted.asc"               |
       |isInline |false                         |
 
+  Scenario: Retrieving message should be possible when message with inlined image but without content disposition
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with inlined image without content disposition
+    When "alice@domain.tld" ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the hasAttachment of the message is "true"
+    And the list of attachments of the message contains 1 attachments
+    And the first attachment is:
+      |key      | value                                           |
+      |type     |"image/png"                                      |
+      |cid      |"14672787885774e5c4d4cee471352039@linagora.com"  |
+      |name     |"vlc.png"                                        |
+      |isInline |false                                            |
+
   Scenario: Retrieving message should be possible when message with inlined attachment but without content ID
     Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with inlined image without content ID
     When "alice@domain.tld" ask for messages "m1"
@@ -421,4 +435,18 @@ Feature: GetMessages method
     |type     |"image/jpeg"                  |
     |cid      |null                          |
     |name     |"IMG_6112.JPG"                |
+    |isInline |false                         |
+
+  Scenario: Header only text calendar should be read as normal calendar attachment by JMAP
+    Given "alice@domain.tld" receives a SMTP message specified in file "eml/ics_in_header.eml" as message "m1"
+    When "alice@domain.tld" ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the hasAttachment of the message is "true"
+    And the list of attachments of the message contains 1 attachments
+    And the first attachment is:
+    |key      | value                        |
+    |type     |"text/calendar"               |
+    |size     |1056                          |
+    |name     |"event.ics"                   |
     |isInline |false                         |

@@ -54,10 +54,6 @@ public class ProcessorConfiguration implements SerializableAsXml {
         return builder().state(STATE_ERROR);
     }
 
-    public static Builder spam() {
-        return builder().state(STATE_SPAM);
-    }
-
     public static class Builder {
 
         private String state;

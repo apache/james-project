@@ -21,6 +21,7 @@ package org.apache.james.transport.matchers;
 
 import java.util.Collection;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
@@ -35,11 +36,12 @@ import org.slf4j.LoggerFactory;
 public class SenderInFakeDomain extends AbstractNetworkMatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(SenderInFakeDomain.class);
 
+    @Override
     public Collection<MailAddress> match(Mail mail) {
-        if (mail.getSender() == null) {
+        if (!mail.hasSender()) {
             return null;
         }
-        String domain = mail.getSender().getDomain();
+        Domain domain = mail.getMaybeSender().get().getDomain();
         // DNS Lookup for this domain
         @SuppressWarnings("deprecation")
         Collection<String> servers = getMailetContext().getMailServers(domain);

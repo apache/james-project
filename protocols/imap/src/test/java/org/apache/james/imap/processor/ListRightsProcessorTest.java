@@ -20,8 +20,8 @@
 package org.apache.james.imap.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -41,7 +41,7 @@ import org.apache.james.imap.message.response.ListRightsResponse;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSession.User;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -84,8 +84,7 @@ public class ListRightsProcessorTest {
         mailboxManager = mock(MailboxManager.class);
         subject = new ListRightsProcessor(mock(ImapProcessor.class), mailboxManager, statusResponseFactory, new NoopMetricFactory());
         imapSession = mock(ImapSession.class);
-        mailboxSession = mock(MailboxSession.class);
-        User user1 = mock(User.class);
+        mailboxSession = MailboxSessionUtil.create(USER_1);
         MessageManager messageManager = mock(MessageManager.class);
         metaData = mock(MetaData.class);
         responder = mock(Responder.class);
@@ -96,10 +95,6 @@ public class ListRightsProcessorTest {
             .thenReturn(mailboxSession);
         when(imapSession.getState())
             .thenReturn(ImapSessionState.AUTHENTICATED);
-        when(mailboxSession.getUser())
-            .thenReturn(user1);
-        when(user1.getUserName())
-            .thenReturn(USER_1);
         when(messageManager.getMetaData(anyBoolean(), any(MailboxSession.class), any(MetaData.FetchGroup.class)))
             .thenReturn(metaData);
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))

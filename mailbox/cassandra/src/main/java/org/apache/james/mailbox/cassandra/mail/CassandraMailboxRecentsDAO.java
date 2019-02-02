@@ -25,9 +25,6 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -40,6 +37,8 @@ import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.google.common.annotations.VisibleForTesting;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class CassandraMailboxRecentsDAO {
 
@@ -85,11 +84,11 @@ public class CassandraMailboxRecentsDAO {
                 .value(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, bindMarker(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID)));
     }
 
-    public CompletableFuture<Stream<MessageUid>> getRecentMessageUidsInMailbox(CassandraId mailboxId) {
-        return cassandraAsyncExecutor.execute(bindWithMailbox(mailboxId, readStatement))
-            .thenApply(cassandraUtils::convertToStream)
-            .thenApply(stream -> stream.map(row -> row.getLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID)))
-            .thenApply(stream -> stream.map(MessageUid::of));
+    public Flux<MessageUid> getRecentMessageUidsInMailbox(CassandraId mailboxId) {
+        return cassandraAsyncExecutor.executeReactor(bindWithMailbox(mailboxId, readStatement))
+            .flatMapMany(cassandraUtils::convertToFlux)
+            .map(row -> row.getLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID))
+            .map(MessageUid::of);
     }
 
     private BoundStatement bindWithMailbox(CassandraId mailboxId, PreparedStatement statement) {
@@ -97,14 +96,14 @@ public class CassandraMailboxRecentsDAO {
             .setUUID(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid());
     }
 
-    public CompletableFuture<Void> removeFromRecent(CassandraId mailboxId, MessageUid messageUid) {
-        return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
+    public Mono<Void> removeFromRecent(CassandraId mailboxId, MessageUid messageUid) {
+        return cassandraAsyncExecutor.executeVoidReactor(deleteStatement.bind()
             .setUUID(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
             .setLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, messageUid.asLong()));
     }
 
-    public CompletableFuture<Void> addToRecent(CassandraId mailboxId, MessageUid messageUid) {
-        return cassandraAsyncExecutor.executeVoid(addStatement.bind()
+    public Mono<Void> addToRecent(CassandraId mailboxId, MessageUid messageUid) {
+        return cassandraAsyncExecutor.executeVoidReactor(addStatement.bind()
             .setUUID(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
             .setLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, messageUid.asLong()));
     }

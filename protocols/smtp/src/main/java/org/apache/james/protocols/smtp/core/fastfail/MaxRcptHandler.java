@@ -24,6 +24,7 @@ package org.apache.james.protocols.smtp.core.fastfail;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
@@ -36,8 +37,12 @@ import org.slf4j.LoggerFactory;
 public class MaxRcptHandler implements RcptHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(MaxRcptHandler.class);
 
-    private static final HookResult MAX_RCPT = new HookResult(HookReturnCode.DENY, SMTPRetCode.SYSTEM_STORAGE_ERROR, DSNStatus.getStatus(DSNStatus.NETWORK, DSNStatus.DELIVERY_TOO_MANY_REC)
-            + " Requested action not taken: max recipients reached");
+    private static final HookResult MAX_RCPT = HookResult.builder()
+        .hookReturnCode(HookReturnCode.deny())
+        .smtpReturnCode(SMTPRetCode.SYSTEM_STORAGE_ERROR)
+        .smtpDescription(DSNStatus.getStatus(DSNStatus.NETWORK, DSNStatus.DELIVERY_TOO_MANY_REC)
+            + " Requested action not taken: max recipients reached")
+        .build();
     private int maxRcpt = 0;
 
 
@@ -51,16 +56,14 @@ public class MaxRcptHandler implements RcptHook {
         this.maxRcpt = maxRcpt;
     }
    
-    /**
-     * @see org.apache.james.protocols.smtp.hook.RcptHook#doRcpt(org.apache.james.protocols.smtp.SMTPSession, org.apache.mailet.MailAddress, org.apache.mailet.MailAddress)
-     */
-    public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+    @Override
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
         if ((session.getRcptCount() + 1) > maxRcpt) {
             LOGGER.info("Maximum recipients of {} reached", maxRcpt);
             
             return MAX_RCPT;
         } else {
-            return HookResult.declined();
+            return HookResult.DECLINED;
         }
     }
 

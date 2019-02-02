@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -65,7 +66,8 @@ import org.apache.james.mailbox.model.SearchQuery.NumericOperator;
 import org.apache.james.mailbox.model.SearchQuery.UidCriterion;
 import org.apache.james.mailbox.model.SearchQuery.UidRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
-import org.apache.james.mailbox.store.mail.MessageMapperFactory;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -113,7 +115,6 @@ import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,9 +131,12 @@ import com.google.common.collect.ImmutableList;
  * @param 
  */
 public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
+    private static class LuceneMessageSearchIndexGroup extends org.apache.james.mailbox.events.Group {}
+
     private static final Logger LOGGER = LoggerFactory.getLogger(LuceneMessageSearchIndex.class);
     private static final Date MAX_DATE;
     private static final Date MIN_DATE;
+    private static final org.apache.james.mailbox.events.Group GROUP = new LuceneMessageSearchIndexGroup();
     
     static {
         Calendar cal = Calendar.getInstance();
@@ -355,6 +359,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private final MailboxId.Factory mailboxIdFactory;
     private final MessageId.Factory messageIdFactory;
     private final IndexWriter writer;
+    private final Directory directory;
 
     private int maxQueryResults = DEFAULT_MAX_QUERY_RESULTS;
 
@@ -362,41 +367,44 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     @Inject
     public LuceneMessageSearchIndex(
-        MessageMapperFactory factory,
+        MailboxSessionMapperFactory factory,
         MailboxId.Factory mailboxIdFactory,
         Directory directory,
-        MessageId.Factory messageIdFactory
-    ) throws IOException {
-        this(factory, mailboxIdFactory, directory, false, true, messageIdFactory);
+        MessageId.Factory messageIdFactory,
+        SessionProvider sessionProvider) throws IOException {
+        this(factory, mailboxIdFactory, directory, false, true, messageIdFactory, sessionProvider);
     }
 
     public LuceneMessageSearchIndex(
-            MessageMapperFactory factory,
+            MailboxSessionMapperFactory factory,
             MailboxId.Factory mailboxIdFactory,
             Directory directory,
             boolean dropIndexOnStart,
             boolean lenient,
-            MessageId.Factory messageIdFactory
-    ) throws IOException {
-        super(factory);
+            MessageId.Factory messageIdFactory,
+            SessionProvider sessionProvider) throws IOException {
+        super(factory, sessionProvider);
         this.mailboxIdFactory = mailboxIdFactory;
         this.messageIdFactory = messageIdFactory;
-        this.writer = new IndexWriter(directory,  createConfig(createAnalyzer(lenient), dropIndexOnStart));
+        this.directory = directory;
+        this.writer = new IndexWriter(this.directory,  createConfig(createAnalyzer(lenient), dropIndexOnStart));
     }
-    
-    
-    public LuceneMessageSearchIndex(MessageMapperFactory factory, MailboxId.Factory mailboxIdFactory, MessageId.Factory messageIdFactory, IndexWriter writer) {
-        super(factory);
-        this.mailboxIdFactory = mailboxIdFactory;
-        this.messageIdFactory = messageIdFactory;
-        this.writer = writer;
+
+    @PreDestroy
+    public void close() throws IOException {
+        try {
+            writer.close();
+        } finally {
+            if (IndexWriter.isLocked(directory)) {
+                IndexWriter.unlock(directory);
+            }
+        }
     }
 
     @Override
-    public ListenerType getType() {
-        return ListenerType.EACH_NODE;
+    public org.apache.james.mailbox.events.Group getDefaultGroup() {
+        return GROUP;
     }
-
 
     @Override
     public EnumSet<SearchCapabilities> getSupportedCapabilities(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities) {
@@ -481,12 +489,10 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     
     private List<SearchResult> searchMultimap(Collection<MailboxId> mailboxIds, SearchQuery searchQuery) throws MailboxException {
         ImmutableList.Builder<SearchResult> results = ImmutableList.builder();
-        IndexSearcher searcher = null;
 
         Query inMailboxes = buildQueryFromMailboxes(mailboxIds);
         
-        try {
-            searcher = new IndexSearcher(IndexReader.open(writer, true));
+        try (IndexSearcher searcher = new IndexSearcher(IndexReader.open(writer, true))) {
             BooleanQuery query = new BooleanQuery();
             query.add(inMailboxes, BooleanClause.Occur.MUST);
             // Not return flags documents
@@ -509,14 +515,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             }
         } catch (IOException e) {
             throw new MailboxException("Unable to search the mailbox", e);
-        } finally {
-            if (searcher != null) {
-                try {
-                    searcher.close();
-                } catch (IOException e) {
-                    // ignore on close
-                }
-            }
         }
         return results.build();
     }
@@ -546,14 +544,18 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * @param membership
      * @return document
      */
-    private Document createMessageDocument(final MailboxSession session, final MailboxMessage membership) throws MailboxException {
+    private Document createMessageDocument(final MailboxSession session, final MailboxMessage membership) throws IOException, MimeException {
         final Document doc = new Document();
         // TODO: Better handling
-        doc.add(new Field(USERS, session.getUser().getUserName().toUpperCase(Locale.US), Store.YES, Index.NOT_ANALYZED));
+        doc.add(new Field(USERS, session.getUser().asString().toUpperCase(Locale.US), Store.YES, Index.NOT_ANALYZED));
         doc.add(new Field(MAILBOX_ID_FIELD, membership.getMailboxId().serialize().toUpperCase(Locale.US), Store.YES, Index.NOT_ANALYZED));
         doc.add(new NumericField(UID_FIELD,Store.YES, true).setLongValue(membership.getUid().asLong()));
         doc.add(new Field(HAS_ATTACHMENT_FIELD, Boolean.toString(hasAttachment(membership)), Store.YES, Index.NOT_ANALYZED));
-        doc.add(new Field(MESSAGE_ID_FIELD, SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(membership), Store.YES, Index.NOT_ANALYZED));
+
+        String serializedMessageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(membership);
+        if (serializedMessageId != null) {
+            doc.add(new Field(MESSAGE_ID_FIELD, serializedMessageId, Store.YES, Index.NOT_ANALYZED));
+        }
 
         // create an unqiue key for the document which can be used later on updates to find the document
         doc.add(new Field(ID_FIELD, membership.getMailboxId().serialize().toUpperCase(Locale.US) + "-" + Long.toString(membership.getUid().asLong()), Store.YES, Index.NOT_ANALYZED));
@@ -593,13 +595,12 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                     
                     if (f instanceof DateTimeField) {
                         // We need to make sure we convert it to GMT
-                        final StringReader reader = new StringReader(f.getBody());
-                        try {
+                        try (StringReader reader = new StringReader(f.getBody())) {
                             DateTime dateTime = new DateTimeParser(reader).parseAll();
                             Calendar cal = getGMT();
                             cal.set(dateTime.getYear(), dateTime.getMonth() - 1, dateTime.getDay(), dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond());
-                            sentDate =  cal.getTime();
-                            
+                            sentDate = cal.getTime();
+
                         } catch (org.apache.james.mime4j.field.datetime.parser.ParseException e) {
                             LOGGER.debug("Unable to parse Date header for proper indexing", e);
                             // This should never happen anyway fallback to the already parsed field
@@ -722,32 +723,24 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                     }
                     
                     // Read the content one line after the other and add it to the document
-                    BufferedReader bodyReader = new BufferedReader(new InputStreamReader(in, charset));
-                    String line = null;
-                    while ((line = bodyReader.readLine()) != null) {
-                        doc.add(new Field(BODY_FIELD,  line.toUpperCase(Locale.US),Store.NO, Index.ANALYZED));
+                    try (BufferedReader bodyReader = new BufferedReader(new InputStreamReader(in, charset))) {
+                        String line = null;
+                        while ((line = bodyReader.readLine()) != null) {
+                            doc.add(new Field(BODY_FIELD, line.toUpperCase(Locale.US), Store.NO, Index.ANALYZED));
+                        }
                     }
                     
                 }
             }
  
         };
-        MimeConfig config = MimeConfig.custom()
-                .setMaxLineLen(-1)
-                .setMaxContentLen(-1)
-                .build();
         //config.setStrictParsing(false);
-        MimeStreamParser parser = new MimeStreamParser(config);
+        MimeStreamParser parser = new MimeStreamParser(MimeConfig.PERMISSIVE);
         parser.setContentDecoding(true);
         parser.setContentHandler(handler);
-       
-        try {
-            // parse the message to index headers and body
-            parser.parse(membership.getFullContent());
-        } catch (MimeException | IOException e) {
-            // This should never happen as it was parsed before too without problems.            
-            throw new MailboxException("Unable to index content of message", e);
-        }
+
+        // parse the message to index headers and body
+        parser.parse(membership.getFullContent());
 
 
         return doc;
@@ -980,14 +973,11 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             query.add(bQuery, BooleanClause.Occur.MUST);
         }
         query.add(inMailboxes, BooleanClause.Occur.MUST);
-        
-        
-        IndexSearcher searcher = null;
 
-        try {
+
+        try (IndexSearcher searcher = new IndexSearcher(IndexReader.open(writer, true))) {
             Set<MessageUid> uids = new HashSet<>();
-            searcher = new IndexSearcher(IndexReader.open(writer, true));
-            
+
             // query for all the documents sorted by uid
             TopDocs docs = searcher.search(query, null, maxQueryResults, new Sort(UID_SORT));
             ScoreDoc[] sDocs = docs.scoreDocs;
@@ -1014,14 +1004,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             return createUidQuery((UidCriterion) SearchQuery.uid(nRanges));
         } catch (IOException e) {
             throw new MailboxException("Unable to search mailbox " + inMailboxes, e);
-        } finally {
-            if (searcher != null) {
-                try {
-                    searcher.close();
-                } catch (IOException e) {
-                    // ignore on close
-                }
-            }
         }
     }
     
@@ -1244,43 +1226,31 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             return createConjunctionQuery(crit, inMailboxes, recentUids);
         } else if (criterion instanceof SearchQuery.ModSeqCriterion) {
             return createModSeqQuery((SearchQuery.ModSeqCriterion) criterion);
+        } else if (criterion instanceof SearchQuery.MimeMessageIDCriterion) {
+            SearchQuery.MimeMessageIDCriterion mimeMessageIDCriterion = (SearchQuery.MimeMessageIDCriterion) criterion;
+            return createHeaderQuery(mimeMessageIDCriterion.asHeaderCriterion());
         }
         throw new UnsupportedSearchException();
-
     }
 
-    
-
-    /**
-     * @see org.apache.james.mailbox.store.search.ListeningMessageSearchIndex#add(org.apache.james.mailbox.MailboxSession, org.apache.james.mailbox.store.mail.model.Mailbox, MailboxMessage)
-     */
     @Override
-    public void add(MailboxSession session, Mailbox mailbox, MailboxMessage membership) throws MailboxException {
+    public void add(MailboxSession session, Mailbox mailbox, MailboxMessage membership) throws IOException, MimeException {
         Document doc = createMessageDocument(session, membership);
         Document flagsDoc = createFlagsDocument(membership);
 
-        try {
-            writer.addDocument(doc);
-            writer.addDocument(flagsDoc);
-        } catch (IOException e) {
-            throw new MailboxException("Unable to add message to index", e);
-        }
+        writer.addDocument(doc);
+        writer.addDocument(flagsDoc);
     }
 
-    /**
-     * @see ListeningMessageSearchIndex#update
-     */
     @Override
-    public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws MailboxException {
+    public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws IOException {
         for (UpdatedFlags updatedFlags : updatedFlagsList) {
             update(mailbox, updatedFlags.getUid(), updatedFlags.getNewFlags());
         }
     }
 
-    private void update(Mailbox mailbox, MessageUid uid, Flags f) throws MailboxException {
-        IndexSearcher searcher = null;
-        try {
-            searcher = new IndexSearcher(IndexReader.open(writer, true));
+    private void update(Mailbox mailbox, MessageUid uid, Flags f) throws IOException {
+        try (IndexSearcher searcher = new IndexSearcher(IndexReader.open(writer, true))) {
             BooleanQuery query = new BooleanQuery();
             query.add(new TermQuery(new Term(MAILBOX_ID_FIELD, mailbox.getMailboxId().serialize())), BooleanClause.Occur.MUST);
             query.add(createQuery(MessageRange.one(uid)), BooleanClause.Occur.MUST);
@@ -1299,17 +1269,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
                 }
             }
-        } catch (IOException e) {
-            throw new MailboxException("Unable to add messages in index", e);
-
-        } finally {
-            try {
-                IOUtils.closeWhileHandlingException(searcher);
-            } catch (IOException e) {
-                //can't happen anyway
-            }
         }
-        
     }
 
     /**
@@ -1367,7 +1327,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public void delete(MailboxSession session, Mailbox mailbox, List<MessageUid> expungedUids) throws MailboxException {
+    public void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) throws IOException {
         Collection<MessageRange> messageRanges = MessageRange.toRanges(expungedUids);
         for (MessageRange messageRange : messageRanges) {
             delete(mailbox, messageRange);
@@ -1375,19 +1335,19 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public void deleteAll(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public void deleteAll(MailboxSession session, Mailbox mailbox) throws IOException {
         delete(mailbox, MessageRange.all());
     }
 
-    public void delete(Mailbox mailbox, MessageRange range) throws MailboxException {
+    public void delete(Mailbox mailbox, MessageRange range) throws IOException {
         BooleanQuery query = new BooleanQuery();
         query.add(new TermQuery(new Term(MAILBOX_ID_FIELD, mailbox.getMailboxId().serialize())), BooleanClause.Occur.MUST);
         query.add(createQuery(range), BooleanClause.Occur.MUST);
-        
-        try {
-            writer.deleteDocuments(query);
-        } catch (IOException e) {
-            throw new MailboxException("Unable to delete message from index", e);
-        }
+
+        writer.deleteDocuments(query);
+    }
+
+    public void commit() throws IOException {
+        writer.commit();
     }
 }

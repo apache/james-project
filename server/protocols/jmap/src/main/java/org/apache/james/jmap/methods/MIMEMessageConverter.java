@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap.methods;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -33,7 +33,6 @@ import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.apache.james.mime4j.Charsets;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.EncoderUtil;
 import org.apache.james.mime4j.codec.EncoderUtil.Usage;
@@ -62,7 +61,6 @@ import org.slf4j.LoggerFactory;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -75,7 +73,7 @@ public class MIMEMessageConverter {
 
     private static final String PLAIN_TEXT_MEDIA_TYPE = MediaType.PLAIN_TEXT_UTF_8.withoutParameters().toString();
     private static final String HTML_MEDIA_TYPE = MediaType.HTML_UTF_8.withoutParameters().toString();
-    private static final NameValuePair UTF_8_CHARSET = new NameValuePair("charset", Charsets.UTF_8.name());
+    private static final NameValuePair UTF_8_CHARSET = new NameValuePair("charset", StandardCharsets.UTF_8.name());
     private static final String ALTERNATIVE_SUB_TYPE = "alternative";
     private static final String MIXED_SUB_TYPE = "mixed";
     private static final String FIELD_PARAMETERS_SEPARATOR = ";";
@@ -92,7 +90,6 @@ public class MIMEMessageConverter {
             FieldName.SUBJECT,
             FieldName.MESSAGE_ID,
             FieldName.DATE,
-            IN_REPLY_TO_HEADER,
             FieldName.CONTENT_TYPE,
             FieldName.MIME_VERSION,
             FieldName.CONTENT_TRANSFER_ENCODING);
@@ -107,15 +104,15 @@ public class MIMEMessageConverter {
     }
 
     public byte[] convert(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<MessageAttachment> messageAttachments) {
+        return asBytes(convertToMime(creationMessageEntry, messageAttachments));
+    }
 
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        DefaultMessageWriter writer = new DefaultMessageWriter();
+    public byte[] asBytes(Message message) {
         try {
-            writer.writeMessage(convertToMime(creationMessageEntry, messageAttachments), buffer);
+            return DefaultMessageWriter.asBytes(message);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
-        return buffer.toByteArray();
     }
 
     @VisibleForTesting Message convertToMime(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<MessageAttachment> messageAttachments) {
@@ -201,7 +198,7 @@ public class MIMEMessageConverter {
         String body = newMessage.getHtmlBody()
                         .orElse(newMessage.getTextBody()
                                 .orElse(""));
-        return bodyFactory.textBody(body, Charsets.UTF_8);
+        return bodyFactory.textBody(body, StandardCharsets.UTF_8);
     }
 
     private Multipart createMultipart(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
@@ -219,14 +216,14 @@ public class MIMEMessageConverter {
             }
         } catch (IOException e) {
             LOGGER.error("Error while creating textBody \n{}\n or htmlBody \n{}", newMessage.getTextBody().get(), newMessage.getHtmlBody().get(), e);
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
     private void addBody(CreationMessage newMessage, MultipartBuilder builder) throws IOException {
         if (newMessage.getHtmlBody().isPresent() && newMessage.getTextBody().isPresent()) {
             Multipart body = createMultipartAlternativeBody(newMessage);
-            builder.addBodyPart(BodyPartBuilder.create().setBody(body).build());
+            builder.addBodyPart(BodyPartBuilder.create().setBody(body));
         } else {
             addText(builder, newMessage.getTextBody());
             addHtml(builder, newMessage.getHtmlBody());
@@ -244,10 +241,9 @@ public class MIMEMessageConverter {
         if (textBody.isPresent()) {
             builder.addBodyPart(BodyPartBuilder.create()
                 .use(bodyFactory)
-                .setBody(textBody.get(), Charsets.UTF_8)
+                .setBody(textBody.get(), StandardCharsets.UTF_8)
                 .setContentType(PLAIN_TEXT_MEDIA_TYPE, UTF_8_CHARSET)
-                .setContentTransferEncoding(QUOTED_PRINTABLE)
-                .build());
+                .setContentTransferEncoding(QUOTED_PRINTABLE));
         }
     }
 
@@ -255,10 +251,9 @@ public class MIMEMessageConverter {
         if (htmlBody.isPresent()) {
             builder.addBodyPart(BodyPartBuilder.create()
                 .use(bodyFactory)
-                .setBody(htmlBody.get(), Charsets.UTF_8)
+                .setBody(htmlBody.get(), StandardCharsets.UTF_8)
                 .setContentType(HTML_MEDIA_TYPE, UTF_8_CHARSET)
-                .setContentTransferEncoding(QUOTED_PRINTABLE)
-                .build());
+                .setContentTransferEncoding(QUOTED_PRINTABLE));
         }
     }
 
@@ -268,7 +263,7 @@ public class MIMEMessageConverter {
                 builder.addBodyPart(attachmentBodyPart(att));
             } catch (IOException e) {
                 LOGGER.error("Error while creating attachment", e);
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         };
     }

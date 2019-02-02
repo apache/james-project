@@ -76,7 +76,7 @@ public class SetVacationResponseMethod implements Method {
         Preconditions.checkArgument(request instanceof SetVacationRequest);
         SetVacationRequest setVacationRequest = (SetVacationRequest) request;
 
-        return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(),
+        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
             MDCBuilder.create()
                 .addContext(MDCBuilder.ACTION, "SET_VACATION")
                 .addContext("update", setVacationRequest.getUpdate())
@@ -97,7 +97,7 @@ public class SetVacationResponseMethod implements Method {
         }
 
         return process(clientId,
-            AccountId.fromString(mailboxSession.getUser().getUserName()),
+            AccountId.fromString(mailboxSession.getUser().asString()),
             setVacationRequest.getUpdate().get(Vacation.ID));
     }
 
@@ -120,7 +120,7 @@ public class SetVacationResponseMethod implements Method {
                 .response(SetVacationResponse.builder()
                     .notUpdated(Vacation.ID,
                         SetError.builder()
-                            .type(INVALID_ARGUMENTS)
+                            .type(SetError.Type.INVALID_ARGUMENTS)
                             .description(ERROR_MESSAGE_BASE + vacationResponse.getId())
                             .build())
                     .build())

@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -28,88 +29,131 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.testcontainers.shaded.com.google.common.base.Throwables;
+import org.apache.james.backends.es.ElasticSearchConfiguration;
+import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.util.Host;
+import org.apache.james.util.concurrent.NamedThreadFactory;
+import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.SwarmGenericContainer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JamesServerWithRetryConnectionTest {
-    private static final int IMAP_PORT = 1143;
+import com.google.inject.Module;
+
+class JamesServerWithRetryConnectionTest {
+    private static class DockerElasticSearchRegistrableExtension implements GuiceModuleTestExtension {
+        private final SwarmGenericContainer elasticSearchContainer;
+
+        private DockerElasticSearchRegistrableExtension(SwarmGenericContainer elasticSearchContainer) {
+            this.elasticSearchContainer = elasticSearchContainer;
+        }
+
+        @Override
+        public void beforeEach(ExtensionContext extensionContext) {
+            elasticSearchContainer.start();
+        }
+
+        @Override
+        public void afterEach(ExtensionContext extensionContext) {
+            elasticSearchContainer.stop();
+        }
+
+        @Override
+        public Module getModule() {
+            return binder -> binder.bind(ElasticSearchConfiguration.class)
+                    .toInstance(getElasticSearchConfigurationForDocker());
+        }
+
+        private ElasticSearchConfiguration getElasticSearchConfigurationForDocker() {
+            return ElasticSearchConfiguration.builder()
+                .addHost(Host.from(elasticSearchContainer.getHostIp(), elasticSearchContainer.getMappedPort(ELASTIC_SEARCH_PORT)))
+                .build();
+        }
+    }
+
+    private static final int LIMIT_TO_10_MESSAGES = 10;
     private static final long WAITING_TIME = TimeUnit.MILLISECONDS.convert(10, TimeUnit.SECONDS);
 
-    private final DockerCassandraRule dockerCassandraRule = new DockerCassandraRule();
-    private final DockerElasticSearchRule dockerElasticSearchRule = new DockerElasticSearchRule();
+    private static final int ELASTIC_SEARCH_PORT = 9300;
+    private static final int ELASTIC_SEARCH_HTTP_PORT = 9200;
 
-    @Rule
-    public CassandraJmapTestRule cassandraJmapTestRule = new CassandraJmapTestRule(dockerCassandraRule,
-            dockerElasticSearchRule);
+    private static SwarmGenericContainer elasticSearchContainer = new SwarmGenericContainer(Images.ELASTICSEARCH_2)
+        .withExposedPorts(ELASTIC_SEARCH_HTTP_PORT, ELASTIC_SEARCH_PORT);
+    private static final DockerCassandraRule cassandraRule = new DockerCassandraRule();
 
-    private GuiceJamesServer jamesServer;
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+        .extension(new DockerElasticSearchRegistrableExtension(elasticSearchContainer))
+        .extension(new CassandraExtension(cassandraRule))
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
+        .disableAutoStart()
+        .build();
+
     private SocketChannel socketChannel;
     private ExecutorService executorService;
 
-    @Before
-    public void setUp() throws IOException {
-        executorService = Executors.newFixedThreadPool(1);
+    @BeforeEach
+    void setUp() throws IOException {
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        executorService = Executors.newFixedThreadPool(1, threadFactory);
         socketChannel = SocketChannel.open();
     }
 
-    @After
-    public void after() throws IOException {
+    @AfterEach
+    void after() throws IOException {
         socketChannel.close();
-        if (jamesServer != null) {
-            jamesServer.stop();
-        }
         executorService.shutdownNow();
     }
 
     @Test
-    public void serverShouldStartAtDefault() throws Exception {
-        jamesServer = cassandraJmapTestRule.jmapServer();
-        assertThatServerStartCorrectly();
+    void serverShouldStartAtDefault(GuiceJamesServer server) throws Exception {
+        assertThatServerStartCorrectly(server);
     }
 
     @Test
-    public void serverShouldRetryToConnectToCassandraWhenStartService() throws Exception {
-        jamesServer = cassandraJmapTestRule.jmapServer(dockerCassandraRule.getModule());
-        dockerCassandraRule.pause();
+    void serverShouldRetryToConnectToCassandraWhenStartService(GuiceJamesServer server) throws Exception {
+        cassandraRule.pause();
 
-        waitToStartContainer(WAITING_TIME, dockerCassandraRule::unpause);
+        waitToStartContainer(WAITING_TIME, cassandraRule::unpause);
 
-        assertThatServerStartCorrectly();
+        assertThatServerStartCorrectly(server);
     }
 
     @Test
-    public void serverShouldRetryToConnectToElasticSearchWhenStartService() throws Exception {
-        jamesServer = cassandraJmapTestRule.jmapServer(dockerCassandraRule.getModule());
-        dockerElasticSearchRule.pause();
+    void serverShouldRetryToConnectToElasticSearchWhenStartService(GuiceJamesServer server) throws Exception {
+        elasticSearchContainer.pause();
 
-        waitToStartContainer(WAITING_TIME, dockerElasticSearchRule::unpause);
+        waitToStartContainer(WAITING_TIME, elasticSearchContainer::unpause);
 
-        assertThatServerStartCorrectly();
-    }
-
-    interface StartAction {
-        void execute();
+        assertThatServerStartCorrectly(server);
     }
     
-    private void waitToStartContainer(long waitingTime, StartAction action) {
+    private void waitToStartContainer(long waitingTime, Runnable action) {
         executorService.submit(() -> {
             try {
                 Thread.sleep(waitingTime);
             } catch (InterruptedException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
-            action.execute();
+            action.run();
         });
     }
 
-    private void assertThatServerStartCorrectly() throws Exception {
-        jamesServer.start();
-        socketChannel.connect(new InetSocketAddress("127.0.0.1", IMAP_PORT));
+    private void assertThatServerStartCorrectly(GuiceJamesServer server) throws Exception {
+        server.start();
+        socketChannel.connect(new InetSocketAddress("127.0.0.1", server.getProbe(ImapGuiceProbe.class).getImapPort()));
         assertThat(getServerConnectionResponse(socketChannel)).startsWith("* OK JAMES IMAP4rev1 Server");
     }
 

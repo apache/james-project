@@ -99,41 +99,29 @@ public class QuitCmdHandler extends AbstractHookableCmdHandler<QuitHook> {
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#doCoreCmd(org.apache.james.protocols.smtp.SMTPSession,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     protected Response doCoreCmd(SMTPSession session, String command,
-            String parameters) {
+                                 String parameters) {
         return doQUIT(session, parameters);
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#doFilterChecks(org.apache.james.protocols.smtp.SMTPSession,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     protected Response doFilterChecks(SMTPSession session, String command,
-            String parameters) {
+                                      String parameters) {
         return null;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#getHookInterface()
-     */
+    @Override
     protected Class<QuitHook> getHookInterface() {
         return QuitHook.class;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     protected HookResult callHook(QuitHook rawHook, SMTPSession session, String parameters) {
         return rawHook.doQuit(session);
     }

@@ -18,7 +18,9 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.core;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
@@ -31,29 +33,26 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
  */
 public abstract class AbstractAuthRequiredToRelayRcptHook implements RcptHook {
 
-    private static final HookResult AUTH_REQUIRED = new HookResult(HookReturnCode.DENY,
-            SMTPRetCode.AUTH_REQUIRED, DSNStatus.getStatus(
-                    DSNStatus.PERMANENT,
-                    DSNStatus.SECURITY_AUTH)
-                    + " Authentication Required");
-    private static final HookResult RELAYING_DENIED = new HookResult(
-            HookReturnCode.DENY,
-            // sendmail returns 554 (SMTPRetCode.TRANSACTION_FAILED).
-            // it is not clear in RFC wether it is better to use 550 or 554.
-            SMTPRetCode.MAILBOX_PERM_UNAVAILABLE,
-            DSNStatus.getStatus(DSNStatus.PERMANENT,
-                    DSNStatus.SECURITY_AUTH)
-                    + " Requested action not taken: relaying denied");
+    private static final HookResult AUTH_REQUIRED = HookResult.builder()
+        .hookReturnCode(HookReturnCode.deny())
+        .smtpReturnCode(SMTPRetCode.AUTH_REQUIRED)
+        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH)
+            + " Authentication Required")
+        .build();
+    // sendmail returns 554 (SMTPRetCode.TRANSACTION_FAILED).
+    // it is not clear in RFC wether it is better to use 550 or 554.
+    private static final HookResult RELAYING_DENIED = HookResult.builder()
+        .hookReturnCode(HookReturnCode.deny())
+        .smtpReturnCode(SMTPRetCode.MAILBOX_PERM_UNAVAILABLE)
+        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH)
+            + " Requested action not taken: relaying denied")
+        .build();
     
-    /**
-     * @see org.apache.james.protocols.smtp.hook.RcptHook#doRcpt(org.apache.james.protocols.smtp.SMTPSession,
-     *      org.apache.mailet.MailAddress, org.apache.mailet.MailAddress)
-     */
-    public HookResult doRcpt(SMTPSession session, MailAddress sender,
-            MailAddress rcpt) {
+    @Override
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
         if (!session.isRelayingAllowed()) {
-            String toDomain = rcpt.getDomain();
-            if (isLocalDomain(toDomain) == false) {
+            Domain toDomain = rcpt.getDomain();
+            if (!isLocalDomain(toDomain)) {
                 if (session.isAuthSupported()) {
                     return AUTH_REQUIRED;
                 } else {
@@ -62,7 +61,7 @@ public abstract class AbstractAuthRequiredToRelayRcptHook implements RcptHook {
             }
 
         }
-        return HookResult.declined();
+        return HookResult.DECLINED;
     }
 
     
@@ -72,6 +71,6 @@ public abstract class AbstractAuthRequiredToRelayRcptHook implements RcptHook {
      * @param domain
      * @return isLocal
      */
-    protected abstract boolean isLocalDomain(String domain);
+    protected abstract boolean isLocalDomain(Domain domain);
     
 }

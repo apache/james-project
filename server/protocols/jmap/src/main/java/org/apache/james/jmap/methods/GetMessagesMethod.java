@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.JmapFieldNotSupportedException;
 import org.apache.james.jmap.json.FieldNamePropertyFilter;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMessagesRequest;
@@ -44,7 +44,6 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
@@ -56,12 +55,12 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 
 public class GetMessagesMethod implements Method {
 
     public static final String HEADERS_FILTER = "headersFilter";
+    private static final String ISSUER = "GetMessagesMethod";
     private static final Logger LOGGER = LoggerFactory.getLogger(GetMessagesMethod.class);
     private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMessages");
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messages");
@@ -79,8 +78,7 @@ public class GetMessagesMethod implements Method {
         this.messageFactory = messageFactory;
         this.messageIdManager = messageIdManager;
         this.metricFactory = metricFactory;
-        this.keywordsFactory = Keywords.factory()
-            .filterImapNonExposedKeywords();
+        this.keywordsFactory = Keywords.lenientFactory();
     }
     
     @Override
@@ -102,7 +100,7 @@ public class GetMessagesMethod implements Method {
         GetMessagesRequest getMessagesRequest = (GetMessagesRequest) request;
         MessageProperties outputProperties = getMessagesRequest.getProperties().toOutputProperties();
 
-        return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(),
+        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
             MDCBuilder.create()
                 .addContext(MDCBuilder.ACTION, "GET_MESSAGES")
                 .addContext("accountId", getMessagesRequest.getAccountId())
@@ -129,7 +127,7 @@ public class GetMessagesMethod implements Method {
     }
 
     private GetMessagesResponse getMessagesResponse(MailboxSession mailboxSession, GetMessagesRequest getMessagesRequest) {
-        getMessagesRequest.getAccountId().ifPresent((input) -> notImplemented());
+        getMessagesRequest.getAccountId().ifPresent((input) -> notImplemented("accountId"));
 
         try {
             return GetMessagesResponse.builder()
@@ -147,7 +145,7 @@ public class GetMessagesMethod implements Method {
                 .expectedMessageIds(getMessagesRequest.getIds())
                 .build();
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -171,7 +169,7 @@ public class GetMessagesMethod implements Method {
                 .collect(Guavate.toImmutableList());
             try {
                 Keywords keywords = messageResults.stream()
-                    .map(MessageMetaData::getFlags)
+                    .map(MessageResult::getFlags)
                     .map(keywordsFactory::fromFlags)
                     .reduce(ACCUMULATOR)
                     .get();
@@ -188,7 +186,7 @@ public class GetMessagesMethod implements Method {
         };
     }
 
-    private static void notImplemented() {
-        throw new NotImplementedException();
+    private static void notImplemented(String field) {
+        throw new JmapFieldNotSupportedException(ISSUER, field);
     }
 }

@@ -24,29 +24,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
-import org.apache.mailet.base.test.MimeMessageUtil;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SetMailAttributeTest {
+class SetMailAttributeTest {
 
-    @Rule public ExpectedException expectedException = ExpectedException.none();
-    
     private Mailet mailet;
 
-    @Before
-    public void setupMailet() throws MessagingException {
+    @BeforeEach
+    void setupMailet() {
         mailet = new SetMailAttribute();
     }
 
     @Test
-    public void shouldAddConfiguredAttributes() throws MessagingException {
+    void shouldAddConfiguredAttributes() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("org.apache.james.junit1", "true")
@@ -64,7 +60,7 @@ public class SetMailAttributeTest {
     }
     
     @Test
-    public void shouldAddNothingWhenNoConfiguredAttribute() throws MessagingException {
+    void shouldAddNothingWhenNoConfiguredAttribute() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .build();
@@ -79,7 +75,7 @@ public class SetMailAttributeTest {
     }
     
     @Test
-    public void shouldOverwriteAttributeWhenAttributeAlreadyPresent() throws MessagingException {
+    void shouldOverwriteAttributeWhenAttributeAlreadyPresent() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("org.apache.james.junit1", "bar")

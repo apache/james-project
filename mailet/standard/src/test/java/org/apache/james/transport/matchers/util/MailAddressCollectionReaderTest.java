@@ -20,93 +20,97 @@
 package org.apache.james.transport.matchers.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.util.Optional;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.matchers.utils.MailAddressCollectionReader;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-public class MailAddressCollectionReaderTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class MailAddressCollectionReaderTest {
 
     @Test
-    public void readShouldThrowOnNullInput() {
-        expectedException.expect(IllegalArgumentException.class);
-        MailAddressCollectionReader.read(null);
+    void readShouldThrowOnNullInput() {
+        assertThatThrownBy(() -> MailAddressCollectionReader.read(null))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void readShouldThrowOnEmptyInput() {
-        expectedException.expect(IllegalArgumentException.class);
-        MailAddressCollectionReader.read("");
+    void readShouldThrowOnEmptyInput() {
+        assertThatThrownBy(() -> MailAddressCollectionReader.read(""))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void readShouldThrowOnInvalidEmail() {
-        expectedException.expect(RuntimeException.class);
-        MailAddressCollectionReader.read("not_valid");
+    void readShouldThrowOnInvalidEmail() {
+        assertThatThrownBy(() -> MailAddressCollectionReader.read("not_valid"))
+            .isInstanceOf(RuntimeException.class);
     }
 
     @Test
-    public void readShouldThrowOnInvalidEmailOnSecondPosition() {
-        expectedException.expect(RuntimeException.class);
-        MailAddressCollectionReader.read("valid@apache.org, not_valid");
+    void readShouldThrowOnInvalidEmailOnSecondPosition() {
+        assertThatThrownBy(() -> MailAddressCollectionReader.read("valid@apache.org, not_valid"))
+            .isInstanceOf(RuntimeException.class);
     }
 
     @Test
-    public void readShouldParseOneEmail() throws Exception {
+    void readShouldParseOneEmail() throws Exception {
         MailAddress mailAddress = new MailAddress("valid@apache.org");
 
         assertThat(MailAddressCollectionReader.read(mailAddress.toString()))
-            .containsExactly(mailAddress);
+            .containsExactly(Optional.of(mailAddress));
     }
 
     @Test
-    public void readShouldParseTwoEmailSeparatedByComaOnly() throws Exception {
+    void readShouldParseNullSender() {
+        assertThat(MailAddressCollectionReader.read("<>"))
+            .containsExactly(Optional.empty());
+    }
+
+    @Test
+    void readShouldParseTwoEmailSeparatedByComaOnly() throws Exception {
         MailAddress mailAddress1 = new MailAddress("valid@apache.org");
         MailAddress mailAddress2 = new MailAddress("bis@apache.org");
 
         assertThat(MailAddressCollectionReader.read(mailAddress1.toString() + "," + mailAddress2.toString()))
-            .containsExactly(mailAddress1, mailAddress2);
+            .containsExactly(Optional.of(mailAddress1), Optional.of(mailAddress2));
     }
 
     @Test
-    public void readShouldParseTwoEmailSeparatedBySpaceOnly() throws Exception {
+    void readShouldParseTwoEmailSeparatedBySpaceOnly() throws Exception {
         MailAddress mailAddress1 = new MailAddress("valid@apache.org");
         MailAddress mailAddress2 = new MailAddress("bis@apache.org");
 
         assertThat(MailAddressCollectionReader.read(mailAddress1.toString() + " " + mailAddress2.toString()))
-            .containsExactly(mailAddress1, mailAddress2);
+            .containsExactly(Optional.of(mailAddress1), Optional.of(mailAddress2));
     }
 
     @Test
-    public void readShouldParseTwoEmailSeparatedByTabOnly() throws Exception {
+    void readShouldParseTwoEmailSeparatedByTabOnly() throws Exception {
         MailAddress mailAddress1 = new MailAddress("valid@apache.org");
         MailAddress mailAddress2 = new MailAddress("bis@apache.org");
 
         assertThat(MailAddressCollectionReader.read(mailAddress1.toString() + "\t" + mailAddress2.toString()))
-            .containsExactly(mailAddress1, mailAddress2);
+            .containsExactly(Optional.of(mailAddress1), Optional.of(mailAddress2));
     }
 
 
     @Test
-    public void readShouldParseTwoEmailSeparatorsCombination() throws Exception {
+    void readShouldParseTwoEmailSeparatorsCombination() throws Exception {
         MailAddress mailAddress1 = new MailAddress("valid@apache.org");
         MailAddress mailAddress2 = new MailAddress("bis@apache.org");
 
         assertThat(MailAddressCollectionReader.read(mailAddress1.toString() + ",\t  \t,\t \t " + mailAddress2.toString()))
-            .containsExactly(mailAddress1, mailAddress2);
+            .containsExactly(Optional.of(mailAddress1), Optional.of(mailAddress2));
     }
 
     @Test
-    public void readShouldRemoveDuplicates() throws Exception {
+    void readShouldRemoveDuplicates() throws Exception {
         MailAddress mailAddress = new MailAddress("valid@apache.org");
 
         assertThat(MailAddressCollectionReader.read(mailAddress.toString() + ", " + mailAddress.toString()))
-            .containsExactly(mailAddress);
+            .containsExactly(Optional.of(mailAddress));
     }
 
 

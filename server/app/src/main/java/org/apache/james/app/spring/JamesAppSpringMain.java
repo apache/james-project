@@ -47,32 +47,23 @@ public class JamesAppSpringMain implements Daemon {
 
     }
 
-    /**
-     * @see org.apache.commons.daemon.Daemon#destroy()
-     */
+    @Override
     public void destroy() {
     }
 
-    /**
-     * @see
-     * org.apache.commons.daemon.Daemon#init(org.apache.commons.daemon.DaemonContext)
-     */
+    @Override
     public void init(DaemonContext arg0) throws Exception {
         context = new JamesServerApplicationContext(new String[] { "META-INF/org/apache/james/spring-server.xml" });
         context.registerShutdownHook();
         context.start();
     }
 
-    /**
-     * @see org.apache.commons.daemon.Daemon#start()
-     */
+    @Override
     public void start() throws Exception {
         context.start();
     }
 
-    /**
-     * @see org.apache.commons.daemon.Daemon#stop()
-     */
+    @Override
     public void stop() throws Exception {
         if (context != null) {
             context.stop();

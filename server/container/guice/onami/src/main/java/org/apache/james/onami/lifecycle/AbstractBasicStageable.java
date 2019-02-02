@@ -35,9 +35,6 @@ public abstract class AbstractBasicStageable<S> implements Stageable {
         this.object = object;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public final String toString() {
         return object.toString();

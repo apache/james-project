@@ -21,30 +21,46 @@ package org.apache.james.jmap.cassandra.vacation;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.jmap.api.vacation.AbstractVacationRepositoryTest;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
 public class CassandraVacationRepositoryTest extends AbstractVacationRepositoryTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
 
+    @BeforeClass
+    public static void setUpClass() {
+        CassandraModule module = CassandraModule.aggregateModules(
+                CassandraSchemaVersionModule.MODULE,
+                CassandraVacationModule.MODULE,
+                CassandraZonedDateTimeModule.MODULE);
+        cassandra = CassandraCluster.create(module, cassandraServer.getHost());
+    }
+
+    @Override
     @Before
     public void setUp() throws Exception {
-        CassandraModuleComposite module = new CassandraModuleComposite(new CassandraVacationModule(), new CassandraZonedDateTimeModule());
-        cassandra = CassandraCluster.create(module, cassandraServer.getIp(), cassandraServer.getBindingPort());
         super.setUp();
     }
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
     
     @Override

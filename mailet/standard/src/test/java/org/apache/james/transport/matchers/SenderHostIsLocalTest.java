@@ -32,24 +32,25 @@ import java.util.Collection;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class SenderHostIsLocalTest {
 
     private Matcher matcher;
     
-    @Before
+    @BeforeEach
     public void setUp() throws MessagingException {
         MailetContext mailContext = mock(MailetContext.class);
-        when(mailContext.isLocalServer(JAMES_APACHE_ORG)).thenReturn(true);
-        when(mailContext.isLocalServer(JAMES2_APACHE_ORG)).thenReturn(false);
+        when(mailContext.isLocalServer(Domain.of(JAMES_APACHE_ORG))).thenReturn(true);
+        when(mailContext.isLocalServer(Domain.of(JAMES2_APACHE_ORG))).thenReturn(false);
         
         matcher = new SenderHostIsLocal();
         FakeMatcherConfig mci = FakeMatcherConfig.builder()
@@ -78,6 +79,31 @@ public class SenderHostIsLocalTest {
         //Given
         Mail mail = FakeMail.builder()
             .sender(ANY_AT_JAMES2)
+            .recipient(ANY_AT_JAMES)
+            .build();
+        //When
+        Collection<MailAddress> actual = matcher.match(mail);
+        //Then
+        assertThat(actual).isNull();
+    }
+
+    @Test
+    public void shouldNotMatchWhenNullSender() throws MessagingException {
+        //Given
+        Mail mail = FakeMail.builder()
+            .sender(MailAddress.nullSender())
+            .recipient(ANY_AT_JAMES)
+            .build();
+        //When
+        Collection<MailAddress> actual = matcher.match(mail);
+        //Then
+        assertThat(actual).isNull();
+    }
+
+    @Test
+    public void shouldNotMatchWhenNoSender() throws MessagingException {
+        //Given
+        Mail mail = FakeMail.builder()
             .recipient(ANY_AT_JAMES)
             .build();
         //When

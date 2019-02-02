@@ -19,23 +19,69 @@
 
 package org.apache.james.mailbox;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+
+import org.apache.james.core.User;
+import org.apache.james.mailbox.model.MailboxConstants;
+
+import com.google.common.base.MoreObjects;
 
 /**
  * Mailbox session.
  */
-public interface MailboxSession {
+public class MailboxSession {
 
+    public static class SessionId {
+
+        public static SessionId of(long sessionId) {
+            return new SessionId(sessionId);
+        }
+
+        private final long sessionId;
+
+        private SessionId(long sessionId) {
+            this.sessionId = sessionId;
+        }
+
+        public long getValue() {
+            return sessionId;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof SessionId) {
+                SessionId that = (SessionId) o;
+
+                return Objects.equals(this.sessionId, that.sessionId);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(sessionId);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("sessionId", sessionId)
+                .toString();
+        }
+    }
 
     /**
      * Id which will be used for a System session
      */
-    long SYSTEM_SESSION_ID = 0L;
+    public static long SYSTEM_SESSION_ID = 0L;
 
-    enum SessionType {
+    public enum SessionType {
         /**
          * Session was created via the System
          */
@@ -46,68 +92,93 @@ public interface MailboxSession {
          */
         User
     }
-    
+
+    private final Collection<String> sharedSpaces;
+    private final String otherUsersSpace;
+    private final String personalSpace;
+    private final SessionId sessionId;
+    private final String userName;
+    private boolean open = true;
+    private final List<Locale> localePreferences;
+    private final Map<Object, Object> attributes;
+    private final char pathSeparator;
+    private final SessionType type;
+
+    public MailboxSession(SessionId sessionId, String userName,
+                                List<Locale> localePreferences, char pathSeparator, SessionType type) {
+        this(sessionId, userName, localePreferences, new ArrayList<>(), null, pathSeparator, type);
+    }
+
+    public MailboxSession(SessionId sessionId, String userName,
+                                List<Locale> localePreferences, List<String> sharedSpaces, String otherUsersSpace, char pathSeparator, SessionType type) {
+        this.sessionId = sessionId;
+        this.userName = userName;
+        this.otherUsersSpace = otherUsersSpace;
+        this.sharedSpaces = sharedSpaces;
+        this.type = type;
+        if (otherUsersSpace == null && (sharedSpaces == null || sharedSpaces.isEmpty())) {
+            this.personalSpace = "";
+        } else {
+            this.personalSpace = MailboxConstants.USER_NAMESPACE;
+        }
+
+        this.localePreferences = localePreferences;
+        this.attributes = new HashMap<>();
+        this.pathSeparator = pathSeparator;
+    }
+
     /**
      * Return if the {@link MailboxSession} is of type {@link SessionType#User} or {@link SessionType#System}
      * 
      * @return type
      */
-    SessionType getType();
+    public SessionType getType() {
+        return type;
+    }
     
     /**
      * Gets the session ID.
      * 
      * @return session id
      */
-    long getSessionId();
+    public SessionId getSessionId() {
+        return sessionId;
+    }
 
     /**
      * Is this session open?
      * 
      * @return true if the session is open, false otherwise
      */
-    boolean isOpen();
+    public boolean isOpen() {
+        return open;
+    }
 
     /**
      * Closes this session.
      */
-    void close();
+    public void close() {
+        open = false;
+    }
 
     /**
      * Gets the user executing this session.
      * 
      * @return not null
      */
-    User getUser();
+    public User getUser() {
+        return User.fromUsername(userName);
+    }
 
     /**
-     * A mailbox user. Useful for specialist mailbox implementation.
+     * Gets acceptable localisation for this user in preference order.<br>
+     * When localising a phrase, each <code>Locale</code> should be tried in
+     * order until an appropriate translation is obtained.
+     *
+     * @return not null, when empty the default local should be used
      */
-    interface User {
-        /**
-         * Gets the name of the user.
-         * 
-         * @return not null
-         */
-        String getUserName();
-
-        /**
-         * Return the Password for the logged in user
-         * 
-         * @return password
-         */
-        String getPassword();
-
-        /**
-         * Gets acceptable localisation for this user in preference order.<br>
-         * When localising a phrase, each <code>Locale</code> should be tried in
-         * order until an appropriate translation is obtained.
-         * 
-         * @return not null, when empty the default local should be used
-         */
-        List<Locale> getLocalePreferences();
-        
-        boolean isSameUser(String username);
+    public List<Locale> getLocalePreferences() {
+        return localePreferences;
     }
 
     /**
@@ -119,7 +190,9 @@ public interface MailboxSession {
      * 
      * @return Personal Namespace, not null
      */
-    String getPersonalSpace();
+    public String getPersonalSpace() {
+        return personalSpace;
+    }
 
     /**
      * Gets the <a href='http://www.isi.edu/in-notes/rfc2342.txt' rel='tag'>RFC
@@ -130,7 +203,9 @@ public interface MailboxSession {
      * 
      * @return Other Users Namespace or null when there is non available
      */
-    String getOtherUsersSpace();
+    public String getOtherUsersSpace() {
+        return otherUsersSpace;
+    }
 
     /**
      * Iterates the <a href='http://www.isi.edu/in-notes/rfc2342.txt'
@@ -139,19 +214,37 @@ public interface MailboxSession {
      * 
      * @return not null though possibly empty
      */
-    Collection<String> getSharedSpaces();
+    public Collection<String> getSharedSpaces() {
+        return sharedSpaces;
+    }
 
     /**
      * Return the stored attributes for this {@link MailboxSession}.
      * 
      * @return attributes
      */
-    Map<Object, Object> getAttributes();
+    public Map<Object, Object> getAttributes() {
+        return attributes;
+    }
 
     /**
      * Return server side, folder path separator
      * 
      * @return path separator
      */
-    char getPathDelimiter();
+    public char getPathDelimiter() {
+        return pathSeparator;
+    }
+
+    /**
+     * Renders suitably for logging.
+     *
+     * @return a <code>String</code> representation of this object.
+     */
+    public String toString() {
+        String tab = " ";
+
+        return "MailboxSession ( " + "sessionId = "
+            + this.sessionId + tab + "open = " + this.open + tab + " )";
+    }
 }

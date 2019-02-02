@@ -53,7 +53,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -78,13 +77,11 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     
     @Override
     public EnumSet<SearchCapabilities> getSupportedCapabilities(EnumSet<MessageCapabilities> messageCapabilities) {
-        if (messageCapabilities.contains(MessageCapabilities.Attachment)) {
-            return EnumSet.of(SearchCapabilities.MultimailboxSearch,
-                SearchCapabilities.Text,
-                SearchCapabilities.Attachment);
-        }
         return EnumSet.of(SearchCapabilities.MultimailboxSearch,
-            SearchCapabilities.Text);
+            SearchCapabilities.Text,
+            SearchCapabilities.Attachment,
+            SearchCapabilities.PartialEmailMatch,
+            SearchCapabilities.AttachmentFileName);
     }
     
     /**
@@ -163,7 +160,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         try {
             return searchResults(session, mailbox, query).stream();
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

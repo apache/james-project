@@ -70,9 +70,7 @@ public class MailProcessorManagement extends StandardMBean implements MailProces
 
     }
 
-    /**
-     * @see org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getHandledMailCount()
-     */
+    @Override
     public long getHandledMailCount() {
         return getSuccessCount() + getErrorCount();
     }
@@ -80,7 +78,7 @@ public class MailProcessorManagement extends StandardMBean implements MailProces
     /*
      * TODO
      * Is deprecated or dead code? Can't find an interface defining this method
-     * 
+     *
      * @see
      * org.apache.james.mailetcontainer.api.jmx.MailProcessorDetailMBean#getName()
      */
@@ -88,39 +86,27 @@ public class MailProcessorManagement extends StandardMBean implements MailProces
         return processorName;
     }
 
-    /**
-     * @see org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getFastestProcessing()
-     */
+    @Override
     public long getFastestProcessing() {
         return fastestProcessing.get();
     }
 
-    /**
-     * @see org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getSlowestProcessing()
-     */
+    @Override
     public long getSlowestProcessing() {
         return slowestProcessing.get();
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getErrorCount()
-     */
+    @Override
     public long getErrorCount() {
         return errorCount.get();
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getSuccessCount()
-     */
+    @Override
     public long getSuccessCount() {
         return successCount.get();
     }
 
-    /**
-     * @see org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getLastProcessing()
-     */
+    @Override
     public long getLastProcessing() {
         return lastProcessing.get();
     }

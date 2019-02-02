@@ -49,8 +49,6 @@ public abstract class NamingExceptionRetryHandler extends ExceptionRetryHandler 
         super(exceptionClasses, proxy, schedule, maxRetries);
     }
 
-    /**
-     */
     @Override
     public Object perform() throws NamingException {
         try {
@@ -63,8 +61,6 @@ public abstract class NamingExceptionRetryHandler extends ExceptionRetryHandler 
         }
     }
 
-    /**
-     */
     @Override
     public void postFailure(Exception ex, int retryCount) {
         postFailure(((NamingException) ex), retryCount);        

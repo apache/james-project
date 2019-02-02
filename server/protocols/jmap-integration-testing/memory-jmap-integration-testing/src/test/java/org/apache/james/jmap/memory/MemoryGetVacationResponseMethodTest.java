@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.memory;
 
+import java.io.IOException;
+
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.jmap.methods.integration.GetVacationResponseTest;
@@ -31,7 +33,7 @@ public class MemoryGetVacationResponseMethodTest extends GetVacationResponseTest
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 
     @Override
-    protected GuiceJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) {
+    protected GuiceJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) throws IOException {
         return memoryJmap.jmapServer()
                     .overrideWith(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
     }

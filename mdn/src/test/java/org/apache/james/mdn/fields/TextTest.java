@@ -35,7 +35,6 @@ public class TextTest {
     @Test
     public void shouldMatchBeanContact() {
         EqualsVerifier.forClass(Text.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

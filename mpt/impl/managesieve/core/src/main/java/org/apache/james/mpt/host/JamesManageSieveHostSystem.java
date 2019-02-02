@@ -19,6 +19,8 @@
 
 package org.apache.james.mpt.host;
 
+import org.apache.james.core.User;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieve.jsieve.Parser;
 import org.apache.james.managesieve.transcode.ArgumentParser;
@@ -58,11 +60,11 @@ public abstract class JamesManageSieveHostSystem implements ManageSieveHostSyste
 
     @Override
     public void setMaxQuota(String user, long value) throws Exception {
-        sieveRepository.setQuota(user, value);
+        sieveRepository.setQuota(User.fromUsername(user), QuotaSize.size(value));
     }
 
     @Override
-    public Session newSession(Continuation continuation) throws Exception {
+    public Session newSession(Continuation continuation) {
         return new ManageSieveSession(processor, continuation);
     }
 

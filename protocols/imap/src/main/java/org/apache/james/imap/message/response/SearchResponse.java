@@ -60,20 +60,13 @@ public class SearchResponse implements ImapResponseMessage {
     public final Long getHighestModSeq() {
         return highestModSeq;
     }
-    
 
-    /**
-     * @see java.lang.Object#hashCode()
-     */
-    // @Override
+    @Override
     public int hashCode() {
         return ids.length;
     }
 
-    /**
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
-    // @Override
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;

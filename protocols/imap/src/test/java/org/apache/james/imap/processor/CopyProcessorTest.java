@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.processor;
 
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 
+import org.apache.james.core.User;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionState;
@@ -42,6 +43,7 @@ import org.apache.james.imap.message.request.CopyRequest;
 import org.apache.james.imap.message.request.MoveRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -55,8 +57,9 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 public class CopyProcessorTest {
-
     public static final String TAG = "TAG";
+    private static final String USERNAME = "username";
+    private static final User USER = User.fromUsername(USERNAME);
 
     private CopyProcessor testee;
     private ImapProcessor mockNextProcessor;
@@ -64,7 +67,7 @@ public class CopyProcessorTest {
     private StatusResponseFactory mockStatusResponseFactory;
     private ImapProcessor.Responder mockResponder;
     private ImapSession mockImapSession;
-    private MailboxSession mockMailboxSession;
+    private MailboxSession mailboxSession;
 
     @Before
     public void setUp() {
@@ -73,7 +76,7 @@ public class CopyProcessorTest {
         mockStatusResponseFactory = mock(StatusResponseFactory.class);
         mockResponder = mock(ImapProcessor.Responder.class);
         mockImapSession = mock(ImapSession.class);
-        mockMailboxSession = mock(MailboxSession.class);
+        mailboxSession = MailboxSessionUtil.create(USER.asString());
 
         testee = new CopyProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory, new NoopMetricFactory());
     }
@@ -82,35 +85,31 @@ public class CopyProcessorTest {
     public void processShouldWork() throws Exception {
         CopyRequest copyRequest = new CopyRequest(ImapCommand.anyStateCommand("Name"), new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
 
-        MailboxSession.User user = mock(MailboxSession.User.class);
-        when(user.getUserName()).thenReturn("username");
-        when(mockMailboxSession.getUser()).thenReturn(user);
-        when(mockMailboxSession.getSessionId()).thenReturn(42L);
         when(mockImapSession.getState()).thenReturn(ImapSessionState.SELECTED);
-        when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mockMailboxSession);
-        MailboxPath inbox = MailboxPath.inbox(mockMailboxSession);
+        when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
+        MailboxPath inbox = MailboxPath.inbox(mailboxSession);
         MailboxPath selected = new MailboxPath(inbox, "selected");
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
         when(mockImapSession.getSelected()).thenReturn(selectedMailbox);
-        when(mockMailboxManager.mailboxExists(inbox, mockMailboxSession)).thenReturn(true);
+        when(mockMailboxManager.mailboxExists(inbox, mailboxSession)).thenReturn(true);
         MessageManager targetMessageManager = mock(MessageManager.class);
-        when(mockMailboxManager.getMailbox(inbox, mockMailboxSession)).thenReturn(targetMessageManager);
-        when(targetMessageManager.getMetaData(false, mockMailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN)).thenReturn(new MailboxMetaData(null, null, 58L, MessageUid.of(18), 8L, 8L, 8L, MessageUid.of(8), true, true, null));
+        when(mockMailboxManager.getMailbox(inbox, mailboxSession)).thenReturn(targetMessageManager);
+        when(targetMessageManager.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN)).thenReturn(new MailboxMetaData(null, null, 58L, MessageUid.of(18), 8L, 8L, 8L, MessageUid.of(8), true, true, null));
         StatusResponse okResponse = mock(StatusResponse.class);
         when(mockStatusResponseFactory.taggedOk(any(String.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);
-        when(mockMailboxManager.moveMessages(MessageRange.range(MessageUid.of(4), MessageUid.of(6)), selected, inbox, mockMailboxSession)).thenReturn(Lists.<MessageRange>newArrayList(MessageRange.range(MessageUid.of(4), MessageUid.of(6))));
+        when(mockMailboxManager.moveMessages(MessageRange.range(MessageUid.of(4), MessageUid.of(6)), selected, inbox, mailboxSession)).thenReturn(Lists.<MessageRange>newArrayList(MessageRange.range(MessageUid.of(4), MessageUid.of(6))));
 
         testee.process(copyRequest, mockResponder, mockImapSession);
 
-        verify(mockMailboxManager).startProcessingRequest(mockMailboxSession);
-        verify(mockMailboxManager).endProcessingRequest(mockMailboxSession);
-        verify(mockMailboxManager).mailboxExists(inbox, mockMailboxSession);
-        verify(mockMailboxManager).getMailbox(inbox, mockMailboxSession);
-        verify(mockMailboxManager).copyMessages(MessageRange.range(MessageUid.of(4), MessageUid.of(6)), selected, inbox, mockMailboxSession);
-        verify(targetMessageManager).getMetaData(false, mockMailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN);
+        verify(mockMailboxManager).startProcessingRequest(mailboxSession);
+        verify(mockMailboxManager).endProcessingRequest(mailboxSession);
+        verify(mockMailboxManager).mailboxExists(inbox, mailboxSession);
+        verify(mockMailboxManager).getMailbox(inbox, mailboxSession);
+        verify(mockMailboxManager).copyMessages(MessageRange.range(MessageUid.of(4), MessageUid.of(6)), selected, inbox, mailboxSession);
+        verify(targetMessageManager).getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN);
         verify(mockResponder).respond(okResponse);
         verifyNoMoreInteractions(mockMailboxManager, targetMessageManager, mockResponder, mockNextProcessor);
     }
@@ -120,35 +119,31 @@ public class CopyProcessorTest {
     public void processShouldWorkWithMultipleRanges() throws Exception {
         CopyRequest copyRequest = new CopyRequest(ImapCommand.anyStateCommand("Name"), new IdRange[] {new IdRange(5, 6), new IdRange(1, 3)}, ImapConstants.INBOX_NAME, true, TAG);
 
-        MailboxSession.User user = mock(MailboxSession.User.class);
-        when(user.getUserName()).thenReturn("username");
-        when(mockMailboxSession.getUser()).thenReturn(user);
-        when(mockMailboxSession.getSessionId()).thenReturn(42L);
         when(mockImapSession.getState()).thenReturn(ImapSessionState.SELECTED);
-        when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mockMailboxSession);
-        MailboxPath inbox = MailboxPath.inbox(mockMailboxSession);
+        when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
+        MailboxPath inbox = MailboxPath.inbox(mailboxSession);
         MailboxPath selected = new MailboxPath(inbox, "selected");
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
         when(mockImapSession.getSelected()).thenReturn(selectedMailbox);
-        when(mockMailboxManager.mailboxExists(inbox, mockMailboxSession)).thenReturn(true);
+        when(mockMailboxManager.mailboxExists(inbox, mailboxSession)).thenReturn(true);
         MessageManager targetMessageManager = mock(MessageManager.class);
-        when(mockMailboxManager.getMailbox(inbox, mockMailboxSession)).thenReturn(targetMessageManager);
-        when(targetMessageManager.getMetaData(false, mockMailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN)).thenReturn(new MailboxMetaData(null, null, 58L, MessageUid.of(18), 8L, 8L, 8L, MessageUid.of(8), true, true, null));
+        when(mockMailboxManager.getMailbox(inbox, mailboxSession)).thenReturn(targetMessageManager);
+        when(targetMessageManager.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN)).thenReturn(new MailboxMetaData(null, null, 58L, MessageUid.of(18), 8L, 8L, 8L, MessageUid.of(8), true, true, null));
         StatusResponse okResponse = mock(StatusResponse.class);
         when(mockStatusResponseFactory.taggedOk(any(String.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);
 
         testee.process(copyRequest, mockResponder, mockImapSession);
 
-        verify(mockMailboxManager).startProcessingRequest(mockMailboxSession);
-        verify(mockMailboxManager).endProcessingRequest(mockMailboxSession);
-        verify(mockMailboxManager).mailboxExists(inbox, mockMailboxSession);
-        verify(mockMailboxManager).getMailbox(inbox, mockMailboxSession);
-        verify(mockMailboxManager).copyMessages(MessageRange.range(MessageUid.of(5), MessageUid.of(6)), selected, inbox, mockMailboxSession);
-        verify(mockMailboxManager).copyMessages(MessageRange.range(MessageUid.of(1), MessageUid.of(3)), selected, inbox, mockMailboxSession);
-        verify(targetMessageManager).getMetaData(false, mockMailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN);
+        verify(mockMailboxManager).startProcessingRequest(mailboxSession);
+        verify(mockMailboxManager).endProcessingRequest(mailboxSession);
+        verify(mockMailboxManager).mailboxExists(inbox, mailboxSession);
+        verify(mockMailboxManager).getMailbox(inbox, mailboxSession);
+        verify(mockMailboxManager).copyMessages(MessageRange.range(MessageUid.of(5), MessageUid.of(6)), selected, inbox, mailboxSession);
+        verify(mockMailboxManager).copyMessages(MessageRange.range(MessageUid.of(1), MessageUid.of(3)), selected, inbox, mailboxSession);
+        verify(targetMessageManager).getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN);
         verify(mockResponder).respond(okResponse);
         verifyNoMoreInteractions(mockMailboxManager, targetMessageManager, mockResponder, mockNextProcessor);
     }
@@ -157,29 +152,25 @@ public class CopyProcessorTest {
     public void processShouldRespondNoOnUnExistingTargetMailbox() throws Exception {
         CopyRequest copyRequest = new CopyRequest(ImapCommand.anyStateCommand("Name"), new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
 
-        MailboxSession.User user = mock(MailboxSession.User.class);
-        when(user.getUserName()).thenReturn("username");
-        when(mockMailboxSession.getUser()).thenReturn(user);
-        when(mockMailboxSession.getSessionId()).thenReturn(42L);
         when(mockImapSession.getState()).thenReturn(ImapSessionState.SELECTED);
-        when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mockMailboxSession);
-        MailboxPath inbox = MailboxPath.inbox(mockMailboxSession);
+        when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
+        MailboxPath inbox = MailboxPath.inbox(mailboxSession);
         MailboxPath selected = new MailboxPath(inbox, "selected");
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
         when(mockImapSession.getSelected()).thenReturn(selectedMailbox);
-        when(mockMailboxManager.mailboxExists(inbox, mockMailboxSession)).thenReturn(false);
+        when(mockMailboxManager.mailboxExists(inbox, mailboxSession)).thenReturn(false);
 
         StatusResponse noResponse = mock(StatusResponse.class);
         when(mockStatusResponseFactory.taggedNo(any(String.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(noResponse);
 
         testee.process(copyRequest, mockResponder, mockImapSession);
 
-        verify(mockMailboxManager).startProcessingRequest(mockMailboxSession);
-        verify(mockMailboxManager).endProcessingRequest(mockMailboxSession);
-        verify(mockMailboxManager).mailboxExists(inbox, mockMailboxSession);
+        verify(mockMailboxManager).startProcessingRequest(mailboxSession);
+        verify(mockMailboxManager).endProcessingRequest(mailboxSession);
+        verify(mockMailboxManager).mailboxExists(inbox, mailboxSession);
         verify(mockResponder).respond(noResponse);
         verifyNoMoreInteractions(mockMailboxManager, mockResponder, mockNextProcessor);
     }
@@ -188,35 +179,31 @@ public class CopyProcessorTest {
     public void processShouldRespondNoOnMailboxException() throws Exception {
         CopyRequest copyRequest = new CopyRequest(ImapCommand.anyStateCommand("Name"), new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
 
-        MailboxSession.User user = mock(MailboxSession.User.class);
-        when(user.getUserName()).thenReturn("username");
-        when(mockMailboxSession.getUser()).thenReturn(user);
-        when(mockMailboxSession.getSessionId()).thenReturn(42L);
         when(mockImapSession.getState()).thenReturn(ImapSessionState.SELECTED);
-        when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mockMailboxSession);
-        MailboxPath inbox = MailboxPath.inbox(mockMailboxSession);
+        when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
+        MailboxPath inbox = MailboxPath.inbox(mailboxSession);
         MailboxPath selected = new MailboxPath(inbox, "selected");
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
         when(mockImapSession.getSelected()).thenReturn(selectedMailbox);
-        when(mockMailboxManager.mailboxExists(inbox, mockMailboxSession)).thenThrow(new MailboxException());
+        when(mockMailboxManager.mailboxExists(inbox, mailboxSession)).thenThrow(new MailboxException());
 
         StatusResponse noResponse = mock(StatusResponse.class);
         when(mockStatusResponseFactory.taggedNo(any(String.class), any(ImapCommand.class), any(HumanReadableText.class))).thenReturn(noResponse);
 
         testee.process(copyRequest, mockResponder, mockImapSession);
 
-        verify(mockMailboxManager).startProcessingRequest(mockMailboxSession);
-        verify(mockMailboxManager).endProcessingRequest(mockMailboxSession);
-        verify(mockMailboxManager).mailboxExists(inbox, mockMailboxSession);
+        verify(mockMailboxManager).startProcessingRequest(mailboxSession);
+        verify(mockMailboxManager).endProcessingRequest(mailboxSession);
+        verify(mockMailboxManager).mailboxExists(inbox, mailboxSession);
         verify(mockResponder).respond(noResponse);
         verifyNoMoreInteractions(mockMailboxManager, mockResponder, mockNextProcessor);
     }
 
     @Test
-    public void processShouldNotHandleMoveRequests() throws Exception {
+    public void processShouldNotHandleMoveRequests() {
         MoveRequest moveRequest = new MoveRequest(ImapCommand.anyStateCommand("Name"), new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
 
         testee.process(moveRequest, mockResponder, mockImapSession);

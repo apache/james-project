@@ -29,7 +29,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.ACLCommand;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.probe.ACLProbe;
+import org.apache.james.mailbox.probe.ACLProbe;
 import org.apache.james.utils.GuiceProbe;
 
 public class ACLProbeImpl implements GuiceProbe, ACLProbe {

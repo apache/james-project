@@ -47,10 +47,7 @@ public class JamesServerApplicationContext extends ClassPathXmlApplicationContex
         return resourceLoader;
     }
     
-    /**
-     * @see
-     * org.springframework.core.io.DefaultResourceLoader#getResource(java.lang.String)
-     */
+    @Override
     public Resource getResource(String fileURL) {
         // delegate the loading to the resourceloader
         Resource r = getResourceLoader().getResource(fileURL);
@@ -60,34 +57,22 @@ public class JamesServerApplicationContext extends ClassPathXmlApplicationContex
         return r;
     }
 
-    /**
-     * @see
-     * org.apache.james.container.spring.resource.JamesResourceLoader#getAbsoluteDirectory()
-     */
+    @Override
     public String getAbsoluteDirectory() {
         return getResourceLoader().getAbsoluteDirectory();
     }
 
-    /**
-     * @see
-     * org.apache.james.container.spring.resource.JamesResourceLoader#getConfDirectory()
-     */
+    @Override
     public String getConfDirectory() {
         return getResourceLoader().getConfDirectory();
     }
 
-    /**
-     * @see
-     * org.apache.james.container.spring.resource.JamesResourceLoader#getVarDirectory()
-     */
+    @Override
     public String getVarDirectory() {
         return getResourceLoader().getVarDirectory();
     }
 
-    /**
-     * @see
-     * org.apache.james.container.spring.resource.JamesResourceLoader#getRootDirectory()
-     */
+    @Override
     public String getRootDirectory() {
         return getResourceLoader().getRootDirectory();
     }

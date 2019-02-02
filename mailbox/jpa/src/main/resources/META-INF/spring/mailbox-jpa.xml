@@ -32,19 +32,16 @@
     <bean id="jpa-mailboxIdFactory" class="org.apache.james.mailbox.jpa.JPAId.Factory" />
 
 
-    <bean id="jpa-mailboxmanager" class="org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager" init-method="init">
+    <bean id="jpa-mailboxmanager" class="org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager">
         <constructor-arg index="0" ref="jpa-sessionMapperFactory"/>
-        <constructor-arg index="1" ref="authenticator"/>
-        <constructor-arg index="2" ref="authorizator"/>
-        <constructor-arg index="3" ref="messageParser"/>
-        <constructor-arg index="4" ref="messageIdFactory"/>
-        <constructor-arg index="5" ref="delegating-listener"/>
-        <constructor-arg index="6" ref="dispatcher"/>
-        <constructor-arg index="7" ref="storeMailboxAnnotationManager"/>
-        <constructor-arg index="8" ref="storeRightManager" />
-        <property name="quotaManager" ref="quotaManager"/>
-        <property name="quotaRootResolver" ref="quotaRootResolver"/>
-        <property name="quotaUpdater" ref="quotaUpdater"/>
+        <constructor-arg index="1" ref="sessionProvider"/>
+        <constructor-arg index="2" ref="messageParser"/>
+        <constructor-arg index="3" ref="messageIdFactory" />
+        <constructor-arg index="4" ref="event-bus" />
+        <constructor-arg index="5" ref="storeMailboxAnnotationManager" />
+        <constructor-arg index="6" ref="storeRightManager" />
+        <constructor-arg index="7" ref="quotaComponents" />
+        <constructor-arg index="8" ref="indexer" />
     </bean>
     
     <bean id ="jpa-subscriptionManager" class="org.apache.james.mailbox.jpa.JPASubscriptionManager">
@@ -78,6 +75,9 @@
         <property name="url" value="${database.url}" />
         <property name="username" value="${database.username}" />
         <property name="password" value="${database.password}" />
+        <property name="testOnBorrow" value="${datasource.testOnBorrow:false}" />
+        <property name="validationQueryTimeout" value="${datasource.validationQueryTimeoutSec:-1}" />
+        <property name="validationQuery" value="${datasource.validationQuery:#{null}}" />
     </bean>
     <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
         <property name="dataSource" ref="datasource"/>
@@ -92,8 +92,12 @@
 
     <bean id="jpa-mailbox-id-deserializer" class="org.apache.james.mailbox.jpa.JPAMailboxIdDeserializer"/>
 
-    <bean id="jpaMaxQuotaManager" class="org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaManager">
+    <bean id="jpa-per-user-max-quota-dao" class="org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaDAO">
         <constructor-arg index="0" ref="entityManagerFactory"/>
+    </bean>
+
+    <bean id="jpaMaxQuotaManager" class="org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaManager">
+        <constructor-arg index="0" ref="jpa-per-user-max-quota-dao"/>
     </bean>
     <bean id="jpaCurrentQuotaManager" class="org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager">
         <constructor-arg index="0" ref="entityManagerFactory"/>

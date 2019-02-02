@@ -39,6 +39,7 @@ public class UserRepositoryAuthenticator implements Authenticator {
         this.repos = repos;
     }
 
+    @Override
     public boolean isAuthentic(String userid, CharSequence passwd) throws MailboxException {
         try {
             return repos.test(userid, passwd.toString());

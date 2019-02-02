@@ -55,6 +55,7 @@ public class UnknownRequestProcessor implements ImapProcessor {
         return result;
     }
 
+    @Override
     public void process(ImapMessage message, Responder responder, ImapSession session) {
         final ImapResponseMessage response = process(message);
         responder.respond(response);

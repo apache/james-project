@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.impl;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
@@ -48,8 +48,8 @@ public class MailetConfigImplTest {
         config.setConfiguration(builder);
 
         String param = config.getInitParameterNames().next();
-        assertEquals("mail.debug", param);
-        assertEquals("true", config.getInitParameter(param));
+        assertThat(param).isEqualTo("mail.debug");
+        assertThat(config.getInitParameter(param)).isEqualTo("true");
     }
 
     @Test
@@ -59,8 +59,8 @@ public class MailetConfigImplTest {
         config.setConfiguration(builder);
 
         String param = config.getInitParameterNames().next();
-        assertEquals("mail.debug", param);
-        assertEquals("true", config.getInitParameter(param));
+        assertThat(param).isEqualTo("mail.debug");
+        assertThat(config.getInitParameter(param)).isEqualTo("true");
     }
 
     // See JAMES-1232
@@ -71,8 +71,8 @@ public class MailetConfigImplTest {
         config.setConfiguration(builder);
 
         String param = config.getInitParameterNames().next();
-        assertEquals("whatever", param);
-        assertEquals("value1,value2", config.getInitParameter(param));
+        assertThat(param).isEqualTo("whatever");
+        assertThat(config.getInitParameter(param)).isEqualTo("value1,value2");
     }
 
     @Test
@@ -84,14 +84,14 @@ public class MailetConfigImplTest {
         config.setConfiguration(builder);
 
         String param = config.getInitParameterNames().next();
-        assertEquals("whatever", param);
-        assertEquals(" some text ", config.getInitParameter(param));
+        assertThat(param).isEqualTo("whatever");
+        assertThat(config.getInitParameter(param)).isEqualTo(" some text ");
 
         List<String> params = new ArrayList<>();
         Iterator<String> iter = config.getInitParameterNames();
         while (iter.hasNext()) {
             params.add(iter.next());
         }
-        assertEquals(params.size(), 1);
+        assertThat(1).isEqualTo(params.size());
     }
 }

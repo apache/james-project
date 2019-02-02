@@ -31,6 +31,7 @@ import org.apache.mailet.base.GenericRecipientMatcher;
  */
 public class RecipientIsLocal extends GenericRecipientMatcher {
 
+    @Override
     public boolean matchRecipient(MailAddress recipient) {
         MailetContext mailetContext = getMailetContext();
         //This might change after startup

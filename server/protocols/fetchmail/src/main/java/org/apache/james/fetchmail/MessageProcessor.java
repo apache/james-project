@@ -292,9 +292,8 @@ public class MessageProcessor extends ProcessorAbstract {
 
     /**
      * Method process attempts to deliver a fetched message.
-     *
-     * @see org.apache.james.fetchmail.ProcessorAbstract#process()
      */
+    @Override
     public void process() throws MessagingException {
         // Log delivery attempt
         LOGGER.debug("Attempting delivery of message with id. {}", getMessageIn().getMessageID());
@@ -629,7 +628,7 @@ public class MessageProcessor extends ProcessorAbstract {
             StringBuilder messageBuffer = new StringBuilder("Created mail with name: ");
             messageBuffer.append(mail.getName());
             messageBuffer.append(", sender: ");
-            messageBuffer.append(mail.getSender());
+            messageBuffer.append(mail.getMaybeSender());
             messageBuffer.append(", recipients: ");
             for (Object o : mail.getRecipients()) {
                 messageBuffer.append(o);

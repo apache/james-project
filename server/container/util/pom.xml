@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-server</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -34,17 +34,58 @@
 
     <dependencies>
         <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>apache-mime4j-dom</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.dpaukov</groupId>
+            <artifactId>combinatoricslib3</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.fge</groupId>
+            <artifactId>throwing-lambdas</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.steveash.guavate</groupId>
+            <artifactId>guavate</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ibm.icu</groupId>
+            <artifactId>icu4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.nurkiewicz.asyncretry</groupId>
+            <artifactId>asyncretry</artifactId>
         </dependency>
         <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>nl.jqno.equalsverifier</groupId>
+            <artifactId>equalsverifier</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
@@ -52,8 +93,34 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>backport-util-concurrent</groupId>
+            <artifactId>backport-util-concurrent</artifactId>
+            <version>3.1</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

@@ -25,6 +25,7 @@
         <constructor-arg index="0" ref="embeddedActiveMQ"/>
         <constructor-arg index="1" ref="rawMailQueueItemDecoratorFactory"/>
         <constructor-arg index="2" ref="metricFactory"/>
+        <constructor-arg index="3" ref="gaugeRegistry"/>
     </bean>
 
     <bean id="rawMailQueueItemDecoratorFactory" class="org.apache.james.queue.api.RawMailQueueItemDecoratorFactory"/>

@@ -107,6 +107,7 @@
                     </item>
                     <item name="2. Packaging" href="/server/packaging.html" />
                     <item name="3. Install James" href="/server/install.html" collapse="true">
+                        <item name="Cassandra-RabbitMQ-Swift-guice" href="/server/install/guice-cassandra-rabbitmq.html" />
                         <item name="Cassandra-guice" href="/server/install/guice-cassandra.html" />
                         <item name="JPA-guice" href="/server/install/guice-jpa.html" />
                         <item name="JPA-SMTP-guice" href="/server/install/guice-jpa-smtp.html" />
@@ -123,6 +124,7 @@
                         <item name="SMTP LMTP" href="/server/config-smtp-lmtp.html" />
                         <item name="POP3" href="/server/config-pop3.html" />
                         <item name="IMAP4" href="/server/config-imap4.html" />
+                        <item name="JMAP" href="/server/config-jmap.html" />
                         <item name="Mailet Container" href="/server/config-mailetcontainer.html" />
                         <item name="FetchMail" href="/server/config-fetchmail.html" />
                         <item name="SSL/TLS" href="/server/config-ssl-tls.html" />
@@ -134,6 +136,7 @@
                         <item name="Spring JPA Postgres" href="/server/config-spring-jpa-postgres.html" />
                         <item name="Quota" href="/server/config-quota.html" />
                         <item name="Events" href="/server/config-events.html" />
+                        <item name="Additional mailbox listeners" href="/server/config-listeners.html" />
                     </item>
                     <item name="5. Manage" href="/server/manage.html" collapse="true" >
                         <item name="WebAdmin" href="/server/manage-webadmin.html" />
@@ -199,8 +202,6 @@
                     <item name="Mailbox Cassandra" href="/mailbox/mailbox-cassandra.html" />
                     <item name="Mailbox Maildir" href="/mailbox/mailbox-maildir.html" />
                     <item name="Mailbox JPA" href="/mailbox/mailbox-jpa.html" />
-                    <item name="Mailbox JCR" href="/mailbox/mailbox-jcr.html" />
-                    <item name="Mailbox HBase" href="/mailbox/mailbox-hbase.html" />
                 </item>
                 <item name="Wiring" href="/mailbox/mailbox-spring.html" />
                 <item name="Download releases" href="http://james.apache.org/download.cgi" />

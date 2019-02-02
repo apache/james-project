@@ -72,7 +72,7 @@ public class SetMailboxesCreationProcessorTest {
         assertThat(setMailboxesResponse.getCreated()).isEmpty();
         assertThat(setMailboxesResponse.getNotCreated()).containsEntry(mailboxCreationId, 
                 SetError.builder()
-                    .type("anErrorOccurred")
+                    .type(SetError.Type.ERROR)
                     .description("An error occurred when creating the mailbox '1'")
                     .build());
     }

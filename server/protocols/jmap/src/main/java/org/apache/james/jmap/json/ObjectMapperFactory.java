@@ -20,13 +20,18 @@
 package org.apache.james.jmap.json;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Set;
 
 import javax.inject.Inject;
 
 import org.apache.james.jmap.model.mailbox.Rights;
+import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mdn.action.mode.DispositionActionMode;
+import org.apache.james.mdn.sending.mode.DispositionSendingMode;
+import org.apache.james.mdn.type.DispositionType;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -44,7 +49,9 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 public class ObjectMapperFactory {
@@ -70,7 +77,17 @@ public class ObjectMapperFactory {
         mailboxIdModule.addKeySerializer(MessageId.class, new MessageIdKeySerializer());
         mailboxIdModule.addKeyDeserializer(Rights.Username.class, new UsernameKeyDeserializer());
         mailboxIdModule.addDeserializer(Rights.Right.class, new RightDeserializer());
-        jacksonModules = JACKSON_BASE_MODULES.add(mailboxIdModule).build();
+
+        SimpleModule mdnModule = new SimpleModule();
+        mailboxIdModule.addDeserializer(DispositionActionMode.class, new MDNActionModeDeserializer());
+        mailboxIdModule.addDeserializer(DispositionSendingMode.class, new MDNSendingModeDeserializer());
+        mailboxIdModule.addDeserializer(DispositionType.class, new MDNTypeDeserializer());
+
+        mailboxIdModule.setMixInAnnotation(Role.class, RoleMixIn.class);
+
+        jacksonModules = JACKSON_BASE_MODULES.add(mailboxIdModule)
+            .add(mdnModule)
+            .build();
     }
 
     public ObjectMapper forParsing() {
@@ -83,6 +100,48 @@ public class ObjectMapperFactory {
         return new ObjectMapper()
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .registerModules(jacksonModules);
+    }
+
+    public static class MDNActionModeDeserializer extends JsonDeserializer<DispositionActionMode> {
+        private static final ImmutableList<String> ALLOWED_VALUES = Arrays.stream(DispositionActionMode.values())
+            .map(DispositionActionMode::getValue)
+            .collect(Guavate.toImmutableList());
+
+        @Override
+        public DispositionActionMode deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+            String value = jsonParser.getValueAsString();
+            return DispositionActionMode.fromString(value)
+                .orElseThrow(() -> new IllegalStateException(
+                    String.format("Unrecognized MDN Disposition action mode %s. Should be one of %s", value, ALLOWED_VALUES)));
+        }
+    }
+
+    public static class MDNSendingModeDeserializer extends JsonDeserializer<DispositionSendingMode> {
+        private static final ImmutableList<String> ALLOWED_VALUES = Arrays.stream(DispositionSendingMode.values())
+            .map(DispositionSendingMode::getValue)
+            .collect(Guavate.toImmutableList());
+
+        @Override
+        public DispositionSendingMode deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+            String value = jsonParser.getValueAsString();
+            return DispositionSendingMode.fromString(value)
+                .orElseThrow(() -> new IllegalStateException(
+                    String.format("Unrecognized MDN Disposition sending mode %s. Should be one of %s", value, ALLOWED_VALUES)));
+        }
+    }
+
+    public static class MDNTypeDeserializer extends JsonDeserializer<DispositionType> {
+        private static final ImmutableList<String> ALLOWED_VALUES = Arrays.stream(DispositionType.values())
+            .map(DispositionType::getValue)
+            .collect(Guavate.toImmutableList());
+
+        @Override
+        public DispositionType deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+            String value = jsonParser.getValueAsString();
+            return DispositionType.fromString(value)
+                .orElseThrow(() -> new IllegalStateException(
+                    String.format("Unrecognized MDN Disposition type %s. Should be one of %s", value, ALLOWED_VALUES)));
+        }
     }
 
     public static class MailboxIdDeserializer extends JsonDeserializer<MailboxId> {
@@ -108,7 +167,7 @@ public class ObjectMapperFactory {
 
     public static class UsernameKeyDeserializer extends KeyDeserializer {
         @Override
-        public Object deserializeKey(String key, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        public Object deserializeKey(String key, DeserializationContext ctxt) {
             return new Rights.Username(key);
         }
     }
@@ -132,7 +191,7 @@ public class ObjectMapperFactory {
         }
 
         @Override
-        public Object deserializeKey(String key, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        public Object deserializeKey(String key, DeserializationContext ctxt) {
             return factory.fromString(key);
         }
     }
@@ -166,7 +225,7 @@ public class ObjectMapperFactory {
         }
 
         @Override
-        public Object deserializeKey(String key, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        public Object deserializeKey(String key, DeserializationContext ctxt) {
             return factory.fromString(key);
         }
     }

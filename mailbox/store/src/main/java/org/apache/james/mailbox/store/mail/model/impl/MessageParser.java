@@ -53,13 +53,6 @@ import com.google.common.collect.ImmutableList;
 
 public class MessageParser {
 
-    private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
-        .setMaxContentLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxHeaderLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxLineLen(-1)
-        .build();
     private static final String TEXT_MEDIA_TYPE = "text";
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String CONTENT_ID = "Content-ID";
@@ -68,7 +61,11 @@ public class MessageParser {
     private static final List<String> ATTACHMENT_CONTENT_DISPOSITIONS = ImmutableList.of(
             ContentDispositionField.DISPOSITION_TYPE_ATTACHMENT.toLowerCase(Locale.US),
             ContentDispositionField.DISPOSITION_TYPE_INLINE.toLowerCase(Locale.US));
-    private static final ImmutableList<String> ATTACHMENT_CONTENT_TYPES = ImmutableList.of("application/pgp-signature");
+    private static final String TEXT_CALENDAR = "text/calendar";
+    private static final ImmutableList<String> ATTACHMENT_CONTENT_TYPES = ImmutableList.of(
+        "application/pgp-signature",
+        "message/disposition-notification",
+        TEXT_CALENDAR);
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageParser.class);
 
     private final Cid.CidParser cidParser;
@@ -81,7 +78,7 @@ public class MessageParser {
 
     public List<MessageAttachment> retrieveAttachments(InputStream fullContent) throws MimeException, IOException {
         DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
-        defaultMessageBuilder.setMimeEntityConfig(MIME_ENTITY_CONFIG);
+        defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
         defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT);
         Message message = defaultMessageBuilder.parseMessage(fullContent);
         Body body = message.getBody();
@@ -193,17 +190,18 @@ public class MessageParser {
         if (context == Context.BODY && isTextPart(part)) {
             return false;
         }
-        return attachmentDispositionCriterion(part) || attachmentContentTypeCriterion(part);
+        return attachmentDispositionCriterion(part) || attachmentContentTypeCriterion(part) || hadCID(part);
     }
 
     private boolean isTextPart(Entity part) {
         return getContentTypeField(part)
+            .filter(header -> !ATTACHMENT_CONTENT_TYPES.contains(header.getMimeType()))
             .map(ContentTypeField::getMediaType)
             .map(TEXT_MEDIA_TYPE::equals)
             .orElse(false);
     }
 
-    private Boolean attachmentContentTypeCriterion(Entity part) {
+    private boolean attachmentContentTypeCriterion(Entity part) {
         return getContentTypeField(part)
             .map(ContentTypeField::getMimeType)
             .map(dispositionType -> dispositionType.toLowerCase(Locale.US))
@@ -211,12 +209,16 @@ public class MessageParser {
             .orElse(false);
     }
 
-    private Boolean attachmentDispositionCriterion(Entity part) {
+    private boolean attachmentDispositionCriterion(Entity part) {
         return getContentDispositionField(part)
             .map(ContentDispositionField::getDispositionType)
             .map(dispositionType -> dispositionType.toLowerCase(Locale.US))
             .map(ATTACHMENT_CONTENT_DISPOSITIONS::contains)
             .orElse(false);
+    }
+
+    private boolean hadCID(Entity part) {
+        return readHeader(part, CONTENT_ID, ContentIdField.class).isPresent();
     }
 
     private byte[] getBytes(Body body) throws IOException {

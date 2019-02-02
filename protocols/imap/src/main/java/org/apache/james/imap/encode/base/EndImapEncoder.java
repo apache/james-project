@@ -36,11 +36,7 @@ import org.slf4j.LoggerFactory;
 public class EndImapEncoder implements ImapEncoder {
     private static final Logger LOGGER = LoggerFactory.getLogger(EndImapEncoder.class);
 
-    /**
-     * @see
-     * org.apache.james.imap.encode.ImapEncoder#encode(org.apache.james.imap.api.ImapMessage, org.apache.james.imap.encode.ImapResponseComposer,
-     * org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     public void encode(ImapMessage message, ImapResponseComposer composer, ImapSession session) throws IOException {
         LOGGER.warn("Unknown message {}", message);
         LOGGER.debug("Chain end reached for {}", message);

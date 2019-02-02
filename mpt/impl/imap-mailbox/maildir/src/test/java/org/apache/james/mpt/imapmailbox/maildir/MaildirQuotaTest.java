@@ -22,13 +22,13 @@ package org.apache.james.mpt.imapmailbox.maildir;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.maildir.host.MaildirHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.QuotaTest;
-import org.junit.After;
 import org.junit.Before;
 
 public class MaildirQuotaTest extends QuotaTest {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = new MaildirHostSystem();
@@ -38,11 +38,6 @@ public class MaildirQuotaTest extends QuotaTest {
     @Override
     protected ImapHostSystem createImapHostSystem() {
         return system;
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
     }
     
 }

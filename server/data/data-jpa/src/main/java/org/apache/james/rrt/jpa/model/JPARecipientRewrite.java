@@ -28,6 +28,8 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
+import org.apache.james.core.Domain;
+
 import com.google.common.base.Objects;
 
 /**
@@ -37,12 +39,10 @@ import com.google.common.base.Objects;
 @Entity(name = "JamesRecipientRewrite")
 @Table(name = JPARecipientRewrite.JAMES_RECIPIENT_REWRITE)
 @NamedQueries({ 
-    @NamedQuery(name = "selectMappings", query = "SELECT rrt FROM JamesRecipientRewrite rrt WHERE (rrt.user LIKE :user OR rrt.user='*') and (rrt.domain like :domain or rrt.domain='*') ORDER BY rrt.domain DESC"),
-    @NamedQuery(name = "selectExactMappings", query = "SELECT rrt FROM JamesRecipientRewrite rrt WHERE (rrt.user LIKE :user) and (rrt.domain like :domain) ORDER BY rrt.domain DESC"),
-        @NamedQuery(name = "selectUserDomainMapping", query = "SELECT rrt FROM JamesRecipientRewrite rrt WHERE rrt.user=:user AND rrt.domain=:domain"), 
-        @NamedQuery(name = "selectAllMappings", query = "SELECT rrt FROM JamesRecipientRewrite rrt"),
-        @NamedQuery(name = "deleteMapping", query = "DELETE FROM JamesRecipientRewrite rrt WHERE rrt.user=:user AND rrt.domain=:domain AND rrt.targetAddress=:targetAddress"),
-        @NamedQuery(name = "updateMapping", query = "UPDATE JamesRecipientRewrite rrt SET rrt.targetAddress=:targetAddress WHERE rrt.user=:user AND rrt.domain=:domain") })
+    @NamedQuery(name = "selectUserDomainMapping", query = "SELECT rrt FROM JamesRecipientRewrite rrt WHERE rrt.user=:user AND rrt.domain=:domain"),
+    @NamedQuery(name = "selectAllMappings", query = "SELECT rrt FROM JamesRecipientRewrite rrt"),
+    @NamedQuery(name = "deleteMapping", query = "DELETE FROM JamesRecipientRewrite rrt WHERE rrt.user=:user AND rrt.domain=:domain AND rrt.targetAddress=:targetAddress"),
+    @NamedQuery(name = "updateMapping", query = "UPDATE JamesRecipientRewrite rrt SET rrt.targetAddress=:targetAddress WHERE rrt.user=:user AND rrt.domain=:domain") })
 @IdClass(JPARecipientRewrite.RecipientRewriteTableId.class)
 public class JPARecipientRewrite {
 
@@ -114,9 +114,9 @@ public class JPARecipientRewrite {
      * @param user
      *            , domain and their associated targetAddress
      */
-    public JPARecipientRewrite(String user, String domain, String targetAddress) {
+    public JPARecipientRewrite(String user, Domain domain, String targetAddress) {
         this.user = user;
-        this.domain = domain;
+        this.domain = domain.asString();
         this.targetAddress = targetAddress;
     }
 

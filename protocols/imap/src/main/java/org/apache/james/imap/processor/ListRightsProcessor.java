@@ -126,12 +126,7 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.imap.processor.CapabilityImplementingProcessor#
-     * getImplementedCapabilities(org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     public List<String> getImplementedCapabilities(ImapSession session) {
         return CAPABILITIES;
     }

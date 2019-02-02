@@ -18,9 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.lmtp;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -46,7 +44,6 @@ import org.apache.james.protocols.smtp.MailEnvelope;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
-import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MessageHook;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.junit.Ignore;
@@ -105,20 +102,20 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
             SMTPClient client = createClient();
             InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
             client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-            assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).isTrue();
             
             client.helo("localhost");
-            assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).isTrue();
 
             client.mail(SENDER);
-            assertTrue("Reply=" + client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).describedAs("Reply=" + client.getReplyString()).isTrue();
             
             client.quit();
-            assertTrue("Reply=" + client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).describedAs("Reply=" + client.getReplyString()).isTrue();
             client.disconnect();
 
             Iterator<MailEnvelope> queued = hook.getQueued().iterator();
-            assertFalse(queued.hasNext());
+            assertThat(queued.hasNext()).isFalse();
 
         } finally {
             if (server != null) {
@@ -140,22 +137,22 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
             SMTPClient client = createClient();
             InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
             client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-            assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).isTrue();
             
             client.helo("localhost");
-            assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).isTrue();
 
             client.setSender(SENDER);
-            assertTrue("Reply=" + client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).describedAs("Reply=" + client.getReplyString()).isTrue();
 
             client.rcpt(RCPT1);
-            assertTrue("Reply=" + client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).describedAs("Reply=" + client.getReplyString()).isTrue();
             client.quit();
-            assertTrue("Reply=" + client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).describedAs("Reply=" + client.getReplyString()).isTrue();
             client.disconnect();
 
             Iterator<MailEnvelope> queued = hook.getQueued().iterator();
-            assertFalse(queued.hasNext());
+            assertThat(queued.hasNext()).isFalse();
 
         } finally {
             if (server != null) {
@@ -176,17 +173,17 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
             SMTPClient client = createClient();
             InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
             client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-            assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).isTrue();
             
             client.sendCommand("HELO localhost");
-            assertTrue(SMTPReply.isNegativePermanent(client.getReplyCode()));
+            assertThat(SMTPReply.isNegativePermanent(client.getReplyCode())).isTrue();
             
             client.quit();
-            assertTrue("Reply=" + client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).describedAs("Reply=" + client.getReplyString()).isTrue();
             client.disconnect();
 
             Iterator<MailEnvelope> queued = hook.getQueued().iterator();
-            assertFalse(queued.hasNext());
+            assertThat(queued.hasNext()).isFalse();
 
         } finally {
             if (server != null) {
@@ -207,39 +204,39 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
             SMTPClient client = createClient();
             InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
             client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-            assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).isTrue();
             
             client.helo("localhost");
-            assertTrue(SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).isTrue();
 
             client.setSender(SENDER);
-            assertTrue("Reply=" + client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).describedAs("Reply=" + client.getReplyString()).isTrue();
 
             client.addRecipient(RCPT1);
-            assertTrue("Reply=" + client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).describedAs("Reply=" + client.getReplyString()).isTrue();
 
             client.addRecipient(RCPT2);
-            assertTrue("Reply=" + client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).describedAs("Reply=" + client.getReplyString()).isTrue();
 
-            assertTrue(client.sendShortMessageData(MSG1));
+            assertThat(client.sendShortMessageData(MSG1)).isTrue();
 
             int[] replies = ((LMTPClient)client).getReplies();
             
-            assertEquals("Expected two replies",2, replies.length);
+            assertThat(replies.length).describedAs("Expected two replies").isEqualTo(2);
             
-            assertTrue(SMTPReply.isNegativePermanent(replies[0]));
-            assertTrue(SMTPReply.isPositiveCompletion(replies[1]));
+            assertThat(SMTPReply.isNegativePermanent(replies[0])).isTrue();
+            assertThat(SMTPReply.isPositiveCompletion(replies[1])).isTrue();
 
             client.quit();
-            assertTrue("Reply=" + client.getReplyString(), SMTPReply.isPositiveCompletion(client.getReplyCode()));
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).describedAs("Reply=" + client.getReplyString()).isTrue();
             client.disconnect();
 
             Iterator<MailEnvelope> queued = deliverHook.getDelivered().iterator();
-            assertTrue(queued.hasNext());
+            assertThat(queued.hasNext()).isTrue();
             
             MailEnvelope env = queued.next();
             checkEnvelope(env, SENDER, Arrays.asList(RCPT1, RCPT2), MSG1);
-            assertFalse(queued.hasNext());
+            assertThat(queued.hasNext()).isFalse();
 
         } finally {
             if (server != null) {
@@ -249,6 +246,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
         
     }
     
+    @Override
     protected SMTPClient createClient() {
         return new LMTPClientImpl();
     }
@@ -285,6 +283,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
             return sendCommand("LHLO", hostname);
         }
 
+        @Override
         public int[] getReplies() throws IOException {
             int[] codes = new int[replies.size()];
             for (int i = 0; i < codes.length; i++) {
@@ -315,11 +314,8 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
         public MessageHookAdapter(MessageHook hook) {
             this.hook = hook;
         }
-        
-        /*
-         * (non-Javadoc)
-         * @see org.apache.james.protocols.lmtp.hook.DeliverToRecipientHook#deliver(org.apache.james.protocols.smtp.SMTPSession, org.apache.james.protocols.smtp.MailAddress, org.apache.james.protocols.smtp.MailEnvelope)
-         */
+
+        @Override
         public HookResult deliver(SMTPSession session, MailAddress recipient, MailEnvelope envelope) {
             if (result == null) {
                 result = hook.onMessage(session, envelope);
@@ -341,17 +337,14 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
     private final class TestDeliverHook implements DeliverToRecipientHook {
         
         private final List<MailEnvelope> delivered = new ArrayList<>();
-        
-        /*
-         * (non-Javadoc)
-         * @see org.apache.james.protocols.lmtp.hook.DeliverToRecipientHook#deliver(org.apache.james.protocols.smtp.SMTPSession, org.apache.james.protocols.smtp.MailAddress, org.apache.james.protocols.smtp.MailEnvelope)
-         */
+
+        @Override
         public HookResult deliver(SMTPSession session, MailAddress recipient, MailEnvelope envelope) {
             if (RCPT1.equals(recipient.toString())) {
-                return new HookResult(HookReturnCode.DENY);
+                return HookResult.DENY;
             } else {
                 delivered.add(envelope);
-                return new HookResult(HookReturnCode.OK);
+                return HookResult.OK;
             }
         }
         

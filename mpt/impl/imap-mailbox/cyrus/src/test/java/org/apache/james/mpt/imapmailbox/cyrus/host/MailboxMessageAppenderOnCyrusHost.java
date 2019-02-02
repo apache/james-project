@@ -35,6 +35,7 @@ public class MailboxMessageAppenderOnCyrusHost implements MailboxMessageAppender
         this.hostSystem = hostSystem;
     }
 
+    @Override
     public void fillMailbox(MailboxPath mailboxPath) {
         String mailboxName = hostSystem.createMailboxStringFromMailboxPath(mailboxPath);
         ProtocolSession protocolSession = hostSystem.logAndGetAdminProtocolSession(new ProtocolSession());

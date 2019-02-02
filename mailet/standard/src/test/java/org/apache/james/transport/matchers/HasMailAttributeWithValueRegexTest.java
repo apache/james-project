@@ -20,37 +20,39 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import java.util.Collection;
 
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
+import org.junit.jupiter.api.Test;
+import org.opentest4j.AssertionFailedError;
 
-import junit.framework.AssertionFailedError;
-
-public class HasMailAttributeWithValueRegexTest extends
-        AbstractHasMailAttributeTest {
+public class HasMailAttributeWithValueRegexTest extends AbstractHasMailAttributeTest {
 
     private String regex = ".*";
-
-    public HasMailAttributeWithValueRegexTest() {
-        super();
-    }
 
     private void setRegex(String regex) {
         this.regex = regex;
     }
 
+    @Override
     protected String getHasMailAttribute() {
         return MAIL_ATTRIBUTE_NAME + ", " + regex;
     }
 
+    @Override
     protected GenericMatcher createMatcher() {
         return new HasMailAttributeWithValueRegex();
     }
 
-    // test if the mail attribute was matched
+    @Override
+    @Test
     public void testAttributeIsMatched() throws MessagingException {
         init();
         setRegex(".*");
@@ -59,12 +61,12 @@ public class HasMailAttributeWithValueRegexTest extends
         Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
 
         assertNotNull(matchedRecipients);
-        assertEquals(matchedRecipients.size(), mockedMail.getRecipients()
-                .size());
+        assertThat(mockedMail.getRecipients()
+                .size()).isEqualTo(matchedRecipients.size());
     }
 
-    // test if the mail attribute was not matched
-    public void testHeaderIsNotMatched() throws MessagingException {
+    @Test
+    void testHeaderIsNotMatched() throws MessagingException {
         setRegex("\\d");
         setupAll();
 
@@ -73,8 +75,8 @@ public class HasMailAttributeWithValueRegexTest extends
         assertNull(matchedRecipients);
     }
 
-    // test if an exception was thrown cause the regex was invalid
-    public void testHeaderIsNotMatchedCauseValue() throws MessagingException {
+    @Test
+    void testHeaderIsNotMatchedCauseValue() throws MessagingException {
 
         String invalidRegex = "(!(";
         String regexException = null;
@@ -94,14 +96,15 @@ public class HasMailAttributeWithValueRegexTest extends
         assertNull(matchedRecipients);
         
         try {
-            assertEquals(exception, regexException);
+            assertThat(regexException).isEqualTo(exception);
         } catch (AssertionFailedError e) {
             // NOTE the expected exception changes when the project is built/run
             // against non java 1.4 jvm. 
-            assertEquals(exception + " (org.apache.oro.text.regex.MalformedPatternException: Unmatched parentheses.)", regexException);
+            assertThat(regexException).isEqualTo(exception + " (org.apache.oro.text.regex.MalformedPatternException: Unmatched parentheses.)");
         }
     }
 
+    @Override
     protected String getMatcherName() {
         return "HasMailAttributeWithValueRegex";
     }

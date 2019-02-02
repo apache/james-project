@@ -71,6 +71,11 @@ public class UserMailboxesRoutes implements Routes {
     }
 
     @Override
+    public String getBasePath() {
+        return USER_MAILBOXES_BASE;
+    }
+
+    @Override
     public void define(Service service) {
         this.service = service;
 

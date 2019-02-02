@@ -61,7 +61,7 @@ public class MailQueueItemDTOTest {
                 .collect(Guavate.toImmutableList());
 
         softly.assertThat(mailQueueItemDTO.getName()).isEqualTo(mail.getName());
-        softly.assertThat(mailQueueItemDTO.getSender()).isEqualTo(mail.getSender().asString());
+        softly.assertThat(mailQueueItemDTO.getSender()).isEqualTo(mail.getMaybeSender().get().asString());
         softly.assertThat(mailQueueItemDTO.getRecipients()).isEqualTo(expectedRecipients);
         softly.assertThat(mailQueueItemDTO.getNextDelivery()).contains(date);
     }

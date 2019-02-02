@@ -19,8 +19,10 @@
 
 package org.apache.james.modules.server;
 
+import java.io.FileNotFoundException;
 import java.util.List;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.adapter.mailbox.MailboxCopierManagement;
 import org.apache.james.adapter.mailbox.MailboxCopierManagementMBean;
 import org.apache.james.adapter.mailbox.MailboxManagerManagement;
@@ -34,9 +36,8 @@ import org.apache.james.domainlist.api.DomainListManagementMBean;
 import org.apache.james.domainlist.lib.DomainListManagement;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.copier.MailboxCopier;
-import org.apache.james.mailbox.copier.MailboxCopierImpl;
 import org.apache.james.mailbox.indexer.ReIndexer;
-import org.apache.james.mailbox.indexer.ReIndexerImpl;
+import org.apache.james.mailbox.tools.copier.MailboxCopierImpl;
 import org.apache.james.mailetcontainer.api.jmx.MailSpoolerMBean;
 import org.apache.james.mailetcontainer.impl.JamesMailSpooler;
 import org.apache.james.rrt.api.RecipientRewriteTableManagementMBean;
@@ -47,17 +48,23 @@ import org.apache.james.user.api.UsersRepositoryManagementMBean;
 import org.apache.james.user.lib.UsersRepositoryManagement;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceMailboxManagerResolver;
+import org.apache.james.utils.PropertiesProvider;
+import org.apache.mailbox.tools.indexer.ReIndexerImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 public class JMXServerModule extends AbstractModule {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JMXServerModule.class);
 
     private static final String JMX_COMPONENT_DOMAINLIST = "org.apache.james:type=component,name=domainlist";
     private static final String JMX_COMPONENT_USERS_REPOSITORY = "org.apache.james:type=component,name=usersrepository";
@@ -93,6 +100,17 @@ public class JMXServerModule extends AbstractModule {
         bind(SieveRepositoryManagementMBean.class).to(SieveRepositoryManagement.class);
         Multibinder<ConfigurationPerformer> configurationMultibinder = Multibinder.newSetBinder(binder(), ConfigurationPerformer.class);
         configurationMultibinder.addBinding().to(JMXModuleConfigurationPerformer.class);
+    }
+
+    @Provides
+    @Singleton
+    public JmxConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+        try {
+            return JmxConfiguration.fromProperties(propertiesProvider.getConfiguration("jmx"));
+        } catch (FileNotFoundException e) {
+            LOGGER.warn("Could not locate configuration file for JMX. Defaults to rmi://127.0.0.1:9999");
+            return JmxConfiguration.DEFAULT_CONFIGURATION;
+        }
     }
 
     @Singleton
@@ -142,7 +160,7 @@ public class JMXServerModule extends AbstractModule {
                 jmxServer.register(JMX_COMPONENT_QUOTA, quotaManagementMBean);
                 jmxServer.register(JMX_COMPONENT_SIEVE, sieveRepositoryManagementMBean);
             } catch (Exception e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

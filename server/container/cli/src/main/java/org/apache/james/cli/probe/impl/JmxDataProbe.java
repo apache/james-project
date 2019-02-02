@@ -44,6 +44,7 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
     private RecipientRewriteTableManagementMBean virtualUserTableProxy;
     private UsersRepositoryManagementMBean usersRepositoryProxy;
 
+    @Override
     public JmxDataProbe connect(JmxConnection jmxc) throws IOException {
         try {
             domainListProxy = jmxc.retrieveBean(DomainListManagementMBean.class, DOMAINLIST_OBJECT_NAME);
@@ -172,24 +173,24 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
     }
 
     @Override
-    public void addAddressMapping(String user, String domain, String toAddress) throws Exception {
+    public void addAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
                      .addContext(MDCBuilder.PROTOCOL, JMX)
                      .addContext(MDCBuilder.ACTION, "addAddressMapping")
                      .build()) {
-            virtualUserTableProxy.addAddressMapping(user, domain, toAddress);
+            virtualUserTableProxy.addAddressMapping(fromUser, fromDomain, toAddress);
         }
     }
 
     @Override
-    public void removeAddressMapping(String user, String domain, String fromAddress) throws Exception {
+    public void removeAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
                      .addContext(MDCBuilder.PROTOCOL, JMX)
                      .addContext(MDCBuilder.ACTION, "removeAddressMapping")
                      .build()) {
-            virtualUserTableProxy.removeAddressMapping(user, domain, fromAddress);
+            virtualUserTableProxy.removeAddressMapping(fromUser, fromDomain, toAddress);
         }
     }
 

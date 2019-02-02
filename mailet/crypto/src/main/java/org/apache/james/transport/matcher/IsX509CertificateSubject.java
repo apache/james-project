@@ -52,6 +52,7 @@ public class IsX509CertificateSubject extends GenericMatcher {
     protected String sourceAttribute;
     protected String check;
     
+    @Override
     public void init() throws MessagingException {
         String condition = getCondition();
         if (condition == null || !condition.contains(";")) {
@@ -63,6 +64,7 @@ public class IsX509CertificateSubject extends GenericMatcher {
         check = condition.substring(pos + 1, condition.length());
     }
     
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         List<X509Certificate> certificates;

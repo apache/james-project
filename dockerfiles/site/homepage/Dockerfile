@@ -1,8 +1,8 @@
-FROM ruby:2.1
+FROM ruby:2.3
 
 RUN apt-get update \
   && apt-get install -y \
-    node \
+    nodejs \
     python-pygments \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/

@@ -20,182 +20,179 @@
 package org.apache.james.util.concurrency;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.Duration;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 public class ConcurrentTestRunnerTest {
-
-    public static final ConcurrentTestRunner.BiConsumer EMPTY_BI_CONSUMER = (threadNumber, step) -> { };
-    public static final int DEFAULT_AWAIT_TIME = 100;
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+    public static final ConcurrentTestRunner.ConcurrentOperation NOOP = (threadNumber, step) -> { };
+    public static final Duration DEFAULT_AWAIT_TIME = Duration.ofMillis(100);
 
     @Test
-    public void constructorShouldThrowOnNegativeThreadCount() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        int operationCount = 1;
-        int threadCount = -1;
-        new ConcurrentTestRunner(threadCount, operationCount, EMPTY_BI_CONSUMER);
+    void constructorShouldThrowOnNegativeThreadCount() {
+        assertThatThrownBy(() ->
+            ConcurrentTestRunner.builder()
+                .operation(NOOP)
+                .threadCount(-1)
+                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void constructorShouldThrowOnNegativeOperationCount() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        int operationCount = -1;
-        int threadCount = 1;
-        new ConcurrentTestRunner(threadCount, operationCount, EMPTY_BI_CONSUMER);
+    void constructorShouldThrowOnNegativeOperationCount() {
+        assertThatThrownBy(() ->
+            ConcurrentTestRunner.builder()
+                .operation(NOOP)
+                .threadCount(1)
+                .operationCount(-1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void constructorShouldThrowOnZeroThreadCount() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        int operationCount = 1;
-        int threadCount = 0;
-        new ConcurrentTestRunner(threadCount, operationCount, EMPTY_BI_CONSUMER);
+    void constructorShouldThrowOnZeroThreadCount() {
+        assertThatThrownBy(() ->
+            ConcurrentTestRunner.builder()
+                .operation(NOOP)
+                .threadCount(0)
+                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void constructorShouldThrowOnZeroOperationCount() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        int operationCount = 0;
-        int threadCount = 1;
-        new ConcurrentTestRunner(threadCount, operationCount, EMPTY_BI_CONSUMER);
+    void constructorShouldThrowOnZeroOperationCount() {
+        assertThatThrownBy(() ->
+            ConcurrentTestRunner.builder()
+                .operation(NOOP)
+                .threadCount(1)
+                .operationCount(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void constructorShouldThrowOnNullBiConsumer() {
-        expectedException.expect(NullPointerException.class);
-
-        int operationCount = 1;
-        int threadCount = 1;
-        new ConcurrentTestRunner(threadCount, operationCount, null);
+    void constructorShouldThrowOnNullBiConsumer() {
+        assertThatThrownBy(() ->
+            ConcurrentTestRunner.builder()
+                .operation(null)
+                .threadCount(1)
+                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void awaitTerminationShouldReturnTrueWhenFinished() throws Exception {
-        int operationCount = 1;
-        int threadCount = 1;
-
-        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount, EMPTY_BI_CONSUMER)
-            .run();
-
-        assertThat(concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)).isTrue();
+    void awaitTerminationShouldNotThrowWhenFinished() {
+        assertThatCode(() ->  ConcurrentTestRunner.builder()
+                .operation(NOOP)
+                .threadCount(1)
+                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME))
+            .doesNotThrowAnyException();
     }
 
     @Test
-    public void awaitTerminationShouldReturnFalseWhenNotFinished() throws Exception {
-        int operationCount = 1;
-        int threadCount = 1;
-        final int sleepDelay = 50;
-
-        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            (threadNumber, step) -> Thread.sleep(sleepDelay))
-            .run();
-
-        assertThat(concurrentTestRunner.awaitTermination(sleepDelay / 2, TimeUnit.MILLISECONDS)).isFalse();
+    void awaitTerminationShouldThrowWhenNotFinished() {
+        assertThatThrownBy(() -> ConcurrentTestRunner.builder()
+                .operation((threadNumber, step) -> Thread.sleep(50))
+                .threadCount(1)
+                .runSuccessfullyWithin(Duration.ofMillis(25)))
+            .isInstanceOf(ConcurrentTestRunner.NotTerminatedException.class);
     }
 
     @Test
-    public void runShouldPerformAllOperations() throws Exception {
-        int operationCount = 2;
-        int threadCount = 2;
-        final ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
+    void runShouldPerformAllOperations() {
+        ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
 
-        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            (threadNumber, step) -> queue.add(threadNumber + ":" + step))
-            .run();
+        assertThatCode(() -> ConcurrentTestRunner.builder()
+                .operation((threadNumber, step) -> queue.add(threadNumber + ":" + step))
+                .threadCount(2)
+                .operationCount(2)
+                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME))
+            .doesNotThrowAnyException();
 
-        assertThat(concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(queue).containsOnly("0:0", "0:1", "1:0", "1:1");
     }
 
     @Test
-    public void runShouldNotThrowOnExceptions() throws Exception {
-        int operationCount = 2;
-        int threadCount = 2;
+    void operationCountShouldDefaultToOne() {
+        ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
 
-        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            (threadNumber, step) -> {
-                throw new RuntimeException();
-            })
-            .run();
-
-        assertThat(concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)).isTrue();
+        assertThatCode(() -> ConcurrentTestRunner.builder()
+                .operation((threadNumber, step) -> queue.add(threadNumber + ":" + step))
+                .threadCount(2)
+                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME))
+            .doesNotThrowAnyException();
     }
 
     @Test
-    public void noExceptionsShouldNotThrowWhenNoExceptionGenerated() throws Exception {
-        int operationCount = 2;
-        int threadCount = 2;
-
-        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount, EMPTY_BI_CONSUMER)
-            .run();
-
-        concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS);
-
-        concurrentTestRunner.assertNoException();
+    void runShouldNotThrowOnExceptions() {
+        assertThatCode(() -> ConcurrentTestRunner.builder()
+                .operation((threadNumber, step) -> {
+                    throw new RuntimeException();
+                })
+                .threadCount(2)
+                .operationCount(2)
+                .runAcceptingErrorsWithin(DEFAULT_AWAIT_TIME))
+            .doesNotThrowAnyException();
     }
 
     @Test
-    public void assertNoExceptionShouldThrowOnExceptions() throws Exception {
-        int operationCount = 2;
-        int threadCount = 2;
-
-        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            (threadNumber, step) -> {
-                throw new RuntimeException();
-            })
-            .run();
-        concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS);
-
-        expectedException.expect(ExecutionException.class);
-        concurrentTestRunner.assertNoException();
+    void noExceptionsShouldNotThrowWhenNoExceptionGenerated() throws Exception {
+        ConcurrentTestRunner.builder()
+            .operation(NOOP)
+            .threadCount(2)
+            .operationCount(2)
+            .runSuccessfullyWithin(DEFAULT_AWAIT_TIME)
+            .assertNoException();
     }
 
     @Test
-    public void runShouldPerformAllOperationsEvenOnExceptions() throws Exception {
-        int operationCount = 2;
-        int threadCount = 2;
-        final ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
+    void assertNoExceptionShouldThrowOnExceptions() throws Exception {
+        assertThatThrownBy(() ->
+                ConcurrentTestRunner.builder()
+                    .operation((threadNumber, step) -> {
+                        throw new RuntimeException();
+                    })
+                    .threadCount(2)
+                    .operationCount(2)
+                    .runSuccessfullyWithin(DEFAULT_AWAIT_TIME)
+                    .assertNoException())
+            .isInstanceOf(ExecutionException.class);
+    }
 
-        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            (threadNumber, step) -> {
+    @Test
+    void runShouldPerformAllOperationsEvenOnExceptions() throws Exception {
+        ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
+
+        ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> {
                 queue.add(threadNumber + ":" + step);
                 throw new RuntimeException();
             })
-            .run();
+            .threadCount(2)
+            .operationCount(2)
+            .runAcceptingErrorsWithin(DEFAULT_AWAIT_TIME);
 
-        assertThat(concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(queue).containsOnly("0:0", "0:1", "1:0", "1:1");
     }
 
     @Test
-    public void runShouldPerformAllOperationsEvenOnOccasionalExceptions() throws Exception {
-        int operationCount = 2;
-        int threadCount = 2;
-        final ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
+    void runShouldPerformAllOperationsEvenOnOccasionalExceptions() throws Exception {
+        ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
 
-        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            (threadNumber, step) -> {
+        ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> {
                 queue.add(threadNumber + ":" + step);
                 if ((threadNumber + step) % 2 == 0) {
                     throw new RuntimeException();
                 }
             })
-            .run();
+            .threadCount(2)
+            .operationCount(2)
+            .runAcceptingErrorsWithin(DEFAULT_AWAIT_TIME);
 
-        assertThat(concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(queue).containsOnly("0:0", "0:1", "1:0", "1:1");
     }
 }

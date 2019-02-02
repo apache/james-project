@@ -68,9 +68,6 @@ public abstract class LifeCycleStageModule extends LifeCycleModule {
         return stagerType;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected final void configure() {
         if (bindings != null) {

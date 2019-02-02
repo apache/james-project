@@ -142,10 +142,6 @@ public class SearchCommandParser extends AbstractUidCommandParser {
             // Just consume the [<entry-name> <entry-type-req>] and ignore it
             // See RFC4551 3.4. MODSEQ Search Criterion in SEARCH
             request.consumeQuoted();
-            /*
-             * (non-Javadoc)
-             * @see org.apache.james.imap.decode.ImapRequestLineReader.CharacterValidator#isValid(char)
-             */
             request.consumeWord(chr -> true);
             return SearchKey.buildModSeq(request.number());
         }
@@ -972,6 +968,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         return options;
     }
     
+    @Override
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, boolean useUids, ImapSession session) throws DecodingException {
         try {
             SearchKey recent = null;

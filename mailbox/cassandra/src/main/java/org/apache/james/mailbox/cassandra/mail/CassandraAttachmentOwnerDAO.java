@@ -28,7 +28,6 @@ import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentOwnerT
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentOwnerTable.OWNER;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentOwnerTable.TABLE_NAME;
 
-import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -42,8 +41,7 @@ import org.apache.james.mailbox.store.mail.model.Username;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import com.github.steveash.guavate.Guavate;
-import com.google.common.collect.ImmutableList;
+import reactor.core.publisher.Mono;
 
 public class CassandraAttachmentOwnerDAO {
 
@@ -75,14 +73,14 @@ public class CassandraAttachmentOwnerDAO {
                 .where(eq(ID, bindMarker(ID))));
     }
 
-    public CompletableFuture<Void> addOwner(AttachmentId attachmentId, Username owner) {
-        return executor.executeVoid(
+    public Mono<Void> addOwner(AttachmentId attachmentId, Username owner) {
+        return executor.executeVoidReactor(
             addStatement.bind()
                 .setUUID(ID, attachmentId.asUUID())
                 .setString(OWNER, owner.getValue()));
     }
 
-    public CompletableFuture<Collection<Username>> retrieveOwners(AttachmentId attachmentId) {
+    public CompletableFuture<Stream<Username>> retrieveOwners(AttachmentId attachmentId) {
         return executor.execute(
             selectStatement.bind()
                 .setUUID(ID, attachmentId.asUUID()))
@@ -90,9 +88,8 @@ public class CassandraAttachmentOwnerDAO {
             .thenApply(this::toOwners);
     }
 
-    private ImmutableList<Username> toOwners(Stream<Row> stream) {
+    private Stream<Username> toOwners(Stream<Row> stream) {
         return stream.map(row -> row.getString(OWNER))
-            .map(Username::fromRawValue)
-            .collect(Guavate.toImmutableList());
+            .map(Username::fromRawValue);
     }
 }

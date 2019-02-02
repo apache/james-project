@@ -30,6 +30,7 @@ Feature: Alternative authentication mechanism for getting attachment via a POST 
     When "username@domain.tld" asks for a token for attachment "123"
     Then the user should receive a not found response
 
+  @BasicFeature
   Scenario: Asking for an attachment access token with a previously stored blobId
     Given "username@domain.tld" mailbox "INBOX" contains a message "1" with an attachment "2"
     When "username@domain.tld" asks for a token for attachment "2"

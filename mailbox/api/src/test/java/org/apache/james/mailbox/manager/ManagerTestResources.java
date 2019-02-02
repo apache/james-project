@@ -21,10 +21,13 @@ package org.apache.james.mailbox.manager;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 
 import javax.mail.Flags;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -65,18 +68,20 @@ public class ManagerTestResources<T extends MailboxManager> {
 
     public ManagerTestResources(IntegrationResources<T> integrationResources) throws Exception {
         this.integrationResources = integrationResources;
-        maxQuotaManager = integrationResources.createMaxQuotaManager();
         groupMembershipResolver = integrationResources.createGroupMembershipResolver();
         mailboxManager = integrationResources.createMailboxManager(groupMembershipResolver);
-        quotaRootResolver = integrationResources.createQuotaRootResolver(mailboxManager);
-        quotaManager = integrationResources.createQuotaManager(maxQuotaManager, mailboxManager);
+
+        maxQuotaManager = integrationResources.retrieveMaxQuotaManager(mailboxManager);
+        quotaRootResolver = integrationResources.retrieveQuotaRootResolver(mailboxManager);
+        quotaManager = integrationResources.retrieveQuotaManager(mailboxManager);
+
         integrationResources.init();
         session = mailboxManager.login(USER, USER_PASS);
         inbox = MailboxPath.inbox(session);
         subFolder = new MailboxPath(inbox, "INBOX.SUB");
 
-        maxQuotaManager.setDefaultMaxMessage(1000);
-        maxQuotaManager.setDefaultMaxStorage(1000000);
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(1000));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1000000));
     }
 
     public void createMailboxes() throws MailboxException {
@@ -139,7 +144,7 @@ public class ManagerTestResources<T extends MailboxManager> {
     }
 
     public MessageUid appendMessage(MessageManager messageManager, MailboxSession session, Flags flags) throws MailboxException, UnsupportedEncodingException {
-        return messageManager.appendMessage(new ByteArrayInputStream(MockMail.MAIL_TEXT_PLAIN.getBytes("UTF-8")),
+        return messageManager.appendMessage(new ByteArrayInputStream(MockMail.MAIL_TEXT_PLAIN.getBytes(StandardCharsets.UTF_8)),
             Calendar.getInstance().getTime(), session, true, flags).getUid();
     }
 

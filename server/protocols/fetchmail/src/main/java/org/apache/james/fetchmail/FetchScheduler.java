@@ -87,10 +87,7 @@ public class FetchScheduler implements FetchSchedulerMBean, Configurable {
         this.domainList = domainList;
     }
 
-    /**
-     * @see
-     * org.apache.james.lifecycle.api.Configurable#configure(org.apache.commons.configuration.HierarchicalConfiguration)
-     */
+    @Override
     public final void configure(HierarchicalConfiguration config) throws ConfigurationException {
         this.conf = config;
     }
@@ -149,6 +146,7 @@ public class FetchScheduler implements FetchSchedulerMBean, Configurable {
      *
      * @return is the service enabled.
      */
+    @Override
     public final boolean isEnabled() {
         return enabled;
     }

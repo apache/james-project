@@ -18,11 +18,12 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -30,7 +31,8 @@ import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.smtpserver.fastfail.ValidRcptMX;
 import org.junit.Test;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
+import com.google.common.collect.ImmutableList;
 
 public class ValidRcptMXTest {
 
@@ -82,8 +84,8 @@ public class ValidRcptMXTest {
         ValidRcptMX handler = new ValidRcptMX();
         handler.setDNSService(dns);
         handler.setBannedNetworks(ImmutableList.of(bannedAddress), dns);
-        int rCode = handler.doRcpt(session, null, mailAddress).getResult();
+        HookReturnCode rCode = handler.doRcpt(session, MaybeSender.nullSender(), mailAddress).getResult();
 
-        assertEquals("Reject", rCode, HookReturnCode.DENY);
+        assertThat(HookReturnCode.deny()).describedAs("Reject").isEqualTo(rCode);
     }
 }

@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Properties;
 
+import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.assertj.core.data.MapEntry;
@@ -519,7 +520,7 @@ public class RemoteDeliveryConfigurationTest {
     public void getHeloNameProviderShouldCallDomainListByDefault() throws Exception {
         DomainList domainList = mock(DomainList.class);
         String value = "value";
-        when(domainList.getDefaultDomain()).thenReturn(value);
+        when(domainList.getDefaultDomain()).thenReturn(Domain.of(value));
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();

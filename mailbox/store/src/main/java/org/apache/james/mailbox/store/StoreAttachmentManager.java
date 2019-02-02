@@ -24,6 +24,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -38,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Throwables;
 
 public class StoreAttachmentManager implements AttachmentManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreAttachmentManager.class);
@@ -91,7 +91,7 @@ public class StoreAttachmentManager implements AttachmentManager {
                 || isReferencedInUserMessages(attachmentId, mailboxSession);
         } catch (MailboxException e) {
             LOGGER.warn("Error while checking attachment related accessible message ids", e);
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -106,7 +106,7 @@ public class StoreAttachmentManager implements AttachmentManager {
         Collection<Username> explicitOwners = attachmentMapperFactory.getAttachmentMapper(mailboxSession)
             .getOwners(attachmentId);
         return explicitOwners.stream()
-            .anyMatch(username -> mailboxSession.getUser().isSameUser(username.getValue()));
+            .anyMatch(username -> mailboxSession.getUser().equals(User.fromUsername(username.getValue())));
     }
 
     private Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {

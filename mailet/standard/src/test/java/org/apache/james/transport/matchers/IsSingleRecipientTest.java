@@ -29,14 +29,14 @@ import javax.mail.MessagingException;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class IsSingleRecipientTest {
 
     private Matcher matcher;
 
-    @Before
+    @BeforeEach
     public void setUp() throws MessagingException {
         matcher = new IsSingleRecipient();
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()

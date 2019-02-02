@@ -20,7 +20,7 @@
 package org.apache.james.jmap.methods;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -28,8 +28,8 @@ import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
 import org.apache.james.jmap.model.UpdateMessagePatch;
-import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.SystemMailboxesProvider;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
@@ -50,12 +50,14 @@ public class SetMessagesUpdateProcessorTest {
         SystemMailboxesProvider systemMailboxesProvider = null;
         MailboxId.Factory mailboxIdFactory = null;
         MessageSender messageSender = null;
+        ReferenceUpdater referenceUpdater = null;
         SetMessagesUpdateProcessor sut = new SetMessagesUpdateProcessor(updatePatchConverter,
             messageIdManager,
             systemMailboxesProvider,
             mailboxIdFactory,
             messageSender,
-            new NoopMetricFactory());
+            new NoopMetricFactory(),
+            referenceUpdater);
         SetMessagesRequest requestWithEmptyUpdate = SetMessagesRequest.builder().build();
 
         SetMessagesResponse result = sut.process(requestWithEmptyUpdate, null);
@@ -83,12 +85,14 @@ public class SetMessagesUpdateProcessorTest {
         SystemMailboxesProvider systemMailboxesProvider = null;
         MailboxId.Factory mailboxIdFactory = null;
         MessageSender messageSender = null;
+        ReferenceUpdater referenceUpdater = null;
         SetMessagesUpdateProcessor sut = new SetMessagesUpdateProcessor(mockConverter,
             messageIdManager,
             systemMailboxesProvider,
             mailboxIdFactory,
             messageSender,
-            new NoopMetricFactory());
+            new NoopMetricFactory(),
+            referenceUpdater);
         MessageId requestMessageId = TestMessageId.of(1);
         SetMessagesRequest requestWithInvalidUpdate = SetMessagesRequest.builder()
                 .update(ImmutableMap.of(requestMessageId, JsonNodeFactory.instance.objectNode()))

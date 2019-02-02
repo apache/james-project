@@ -40,12 +40,10 @@ public class JamesRcptCmdHandler extends RcptCmdHandler {
         this.domainList = domainList;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.MailCmdHandler#getDefaultDomain()
-     */
+    @Override
     public String getDefaultDomain() {
         try {
-            return domainList.getDefaultDomain();
+            return domainList.getDefaultDomain().name();
         } catch (DomainListException e) {
             return super.getDefaultDomain();
         }

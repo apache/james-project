@@ -32,7 +32,7 @@ public class ParserUtils {
             try {
                 return Long.parseLong(args.substring(1, args.length() - 2));
             } catch (NumberFormatException e) {
-                throw new ArgumentException("Size is not a long : " + e.getMessage());
+                throw new ArgumentException("Size is not a long : " + e.getMessage(), e);
             }
         }
         throw new ArgumentException(args + " is an invalid size literal : it should be at least 4 char looking like {_+}");

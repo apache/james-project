@@ -35,6 +35,7 @@ Feature: Copy message and sharing
     Then the mailbox "shared" has 1 message
     And the mailbox "shared" has 1 unseen message
 
+  @BasicFeature
   Scenario: Copy message should update the total and the unread counts when asked by sharer / sharee view
     Given "alice@domain.tld" copies "m1" from mailbox "INBOX" to mailbox "shared"
     When "bob@domain.tld" lists mailboxes

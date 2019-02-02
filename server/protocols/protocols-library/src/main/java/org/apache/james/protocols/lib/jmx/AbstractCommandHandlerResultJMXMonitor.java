@@ -41,13 +41,7 @@ public abstract class AbstractCommandHandlerResultJMXMonitor<S extends ProtocolS
     private final Map<String, AbstractCommandHandlerStats> cStats = new HashMap<>();
     private String jmxName;
 
-    /**
-     * @see
-     * org.apache.james.protocols.api.handler.ProtocolHandlerResultHandler#onResponse(
-     * org.apache.james.protocols.api.ProtocolSession,
-     * org.apache.james.protocols.api.Response, long,
-     * org.apache.james.protocols.api.handler.ProtocolHandler)
-     */
+    @Override
     public Response onResponse(ProtocolSession session, Response response, long executionTime, ProtocolHandler handler) {
         if (handler instanceof CommandHandler) {
             String name = handler.getClass().getName();
@@ -59,20 +53,14 @@ public abstract class AbstractCommandHandlerResultJMXMonitor<S extends ProtocolS
         return response;
     }
 
-    /**
-     * @see
-     * org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
-     */
+    @Override
     public List<Class<?>> getMarkerInterfaces() {
         List<Class<?>> marker = new ArrayList<>();
         marker.add(CommandHandler.class);
         return marker;
     }
 
-    /**
-     * @see
-     * org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
-     */
+    @Override
     @SuppressWarnings({ "unchecked", "rawtypes", "unlikely-arg-type" })
     public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
         if (interfaceName.equals(CommandHandler.class)) {

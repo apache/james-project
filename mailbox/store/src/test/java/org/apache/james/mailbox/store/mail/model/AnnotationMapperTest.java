@@ -26,7 +26,6 @@ import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
-import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -51,20 +50,18 @@ public abstract class AnnotationMapperTest {
     private static final MailboxAnnotation PRIVATE_GRANDCHILD_ANNOTATION = MailboxAnnotation.newInstance(PRIVATE_GRANDCHILD_KEY, "My private comment");
 
     private AnnotationMapper annotationMapper;
-    private MapperProvider mapperProvider;
     private MailboxId mailboxId;
 
     @Rule
     public ExpectedException expected = ExpectedException.none();
 
-    protected abstract MapperProvider createMapperProvider();
+    protected abstract AnnotationMapper createAnnotationMapper();
+
+    protected abstract MailboxId generateMailboxId();
 
     public void setUp() throws Exception {
-        mapperProvider = createMapperProvider();
-        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.ANNOTATION));
-
-        this.annotationMapper = mapperProvider.createAnnotationMapper();
-        this.mailboxId = mapperProvider.generateId();
+        this.annotationMapper = createAnnotationMapper();
+        this.mailboxId = generateMailboxId();
     }
 
     @Test

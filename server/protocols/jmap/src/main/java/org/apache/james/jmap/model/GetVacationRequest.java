@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.model;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.JmapFieldNotSupportedException;
 import org.apache.james.jmap.methods.JmapRequest;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
 @JsonDeserialize(builder = GetVacationRequest.Builder.class)
 public class GetVacationRequest implements JmapRequest {
+    private static final String ISSUER = "GetVacationRequest";
 
     public static Builder builder() {
         return new Builder();
@@ -36,7 +37,7 @@ public class GetVacationRequest implements JmapRequest {
     public static class Builder {
 
         public Builder accountId(String accountId) {
-            throw new NotImplementedException();
+            throw new JmapFieldNotSupportedException(ISSUER, "accountId");
         }
 
         public GetVacationRequest build() {

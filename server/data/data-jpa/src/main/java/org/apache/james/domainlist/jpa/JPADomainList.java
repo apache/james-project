@@ -20,7 +20,6 @@ package org.apache.james.domainlist.jpa;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -31,6 +30,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 import javax.persistence.PersistenceUnit;
 
+import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.jpa.model.JPADomain;
@@ -38,6 +38,7 @@ import org.apache.james.domainlist.lib.AbstractDomainList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -77,13 +78,19 @@ public class JPADomainList extends AbstractDomainList {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected List<String> getDomainListInternal() throws DomainListException {
-        List<String> domains = new ArrayList<>();
+    protected List<Domain> getDomainListInternal() throws DomainListException {
+        List<Domain> domains = new ArrayList<>();
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
             transaction.begin();
-            domains = entityManager.createNamedQuery("listDomainNames").getResultList();
+            List<String> resultList = entityManager
+                    .createNamedQuery("listDomainNames")
+                    .getResultList();
+            domains = resultList
+                    .stream()
+                    .map(domainAsString -> Domain.of(domainAsString))
+                    .collect(Guavate.toImmutableList());
             transaction.commit();
         } catch (PersistenceException e) {
             LOGGER.error("Failed to list domains", e);
@@ -96,13 +103,12 @@ public class JPADomainList extends AbstractDomainList {
     }
 
     @Override
-    protected boolean containsDomainInternal(String domain) throws DomainListException {
-        String lowerCasedDomain = domain.toLowerCase(Locale.US);
+    protected boolean containsDomainInternal(Domain domain) throws DomainListException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
             transaction.begin();
-            boolean result = containsDomainInternal(lowerCasedDomain, entityManager);
+            boolean result = containsDomainInternal(domain, entityManager);
             transaction.commit();
             return result;
         } catch (PersistenceException e) {
@@ -115,45 +121,43 @@ public class JPADomainList extends AbstractDomainList {
     }
 
     @Override
-    public void addDomain(String domain) throws DomainListException {
-        String lowerCasedDomain = domain.toLowerCase(Locale.US);
+    public void addDomain(Domain domain) throws DomainListException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
             transaction.begin();
-            if (containsDomainInternal(lowerCasedDomain, entityManager)) {
+            if (containsDomainInternal(domain, entityManager)) {
                 transaction.commit();
-                throw new DomainListException(lowerCasedDomain + " already exists.");
+                throw new DomainListException(domain.name() + " already exists.");
             }
-            JPADomain jpaDomain = new JPADomain(lowerCasedDomain);
+            JPADomain jpaDomain = new JPADomain(domain);
             entityManager.persist(jpaDomain);
             transaction.commit();
         } catch (PersistenceException e) {
             LOGGER.error("Failed to save domain", e);
             rollback(transaction);
-            throw new DomainListException("Unable to add domain " + domain, e);
+            throw new DomainListException("Unable to add domain " + domain.name(), e);
         } finally {
             entityManager.close();
         }
     }
 
     @Override
-    public void removeDomain(String domain) throws DomainListException {
-        String lowerCasedDomain = domain.toLowerCase(Locale.US);
+    public void removeDomain(Domain domain) throws DomainListException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
             transaction.begin();
-            if (!containsDomainInternal(lowerCasedDomain, entityManager)) {
+            if (!containsDomainInternal(domain, entityManager)) {
                 transaction.commit();
-                throw new DomainListException(domain + " was not found.");
+                throw new DomainListException(domain.name() + " was not found.");
             }
-            entityManager.createNamedQuery("deleteDomainByName").setParameter("name", lowerCasedDomain).executeUpdate();
+            entityManager.createNamedQuery("deleteDomainByName").setParameter("name", domain.asString()).executeUpdate();
             transaction.commit();
         } catch (PersistenceException e) {
             LOGGER.error("Failed to remove domain", e);
             rollback(transaction);
-            throw new DomainListException("Unable to remove domain " + domain, e);
+            throw new DomainListException("Unable to remove domain " + domain.name(), e);
         } finally {
             entityManager.close();
         }
@@ -165,10 +169,10 @@ public class JPADomainList extends AbstractDomainList {
         }
     }
 
-    private boolean containsDomainInternal(String domain, EntityManager entityManager) {
+    private boolean containsDomainInternal(Domain domain, EntityManager entityManager) {
         try {
             return entityManager.createNamedQuery("findDomainByName")
-                .setParameter("name", domain)
+                .setParameter("name", domain.asString())
                 .getSingleResult() != null;
         } catch (NoResultException e) {
             LOGGER.debug("No domain found", e);

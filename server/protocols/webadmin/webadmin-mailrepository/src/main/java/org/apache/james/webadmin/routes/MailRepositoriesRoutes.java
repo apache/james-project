@@ -19,19 +19,26 @@
 
 package org.apache.james.webadmin.routes;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.james.mailrepository.api.MailKey;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.task.Task;
@@ -42,6 +49,9 @@ import org.apache.james.util.streams.Offset;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.ExtendedMailRepositoryResponse;
+import org.apache.james.webadmin.dto.InaccessibleFieldException;
+import org.apache.james.webadmin.dto.MailDto;
+import org.apache.james.webadmin.dto.MailDto.AdditionalField;
 import org.apache.james.webadmin.dto.TaskIdDto;
 import org.apache.james.webadmin.service.MailRepositoryStoreService;
 import org.apache.james.webadmin.service.ReprocessingAllMailsTask;
@@ -50,9 +60,11 @@ import org.apache.james.webadmin.service.ReprocessingService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.eclipse.jetty.http.HttpStatus;
 
-import com.google.common.base.Strings;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Splitter;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -61,10 +73,11 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.jaxrs.PATCH;
+import spark.HaltException;
 import spark.Request;
 import spark.Service;
 
-@Api(tags = "MailRepositories")
+@Api(tags = "MailRepositories", consumes = "application/json")
 @Path("/mailRepositories")
 @Produces("application/json")
 public class MailRepositoriesRoutes implements Routes {
@@ -86,8 +99,15 @@ public class MailRepositoriesRoutes implements Routes {
     }
 
     @Override
+    public String getBasePath() {
+        return MAIL_REPOSITORIES;
+    }
+
+    @Override
     public void define(Service service) {
         this.service = service;
+
+        definePutMailRepository();
 
         defineGetMailRepositories();
 
@@ -106,8 +126,43 @@ public class MailRepositoriesRoutes implements Routes {
         defineReprocessOne();
     }
 
+    @PUT
+    @Path("/{encodedPath}")
+    @ApiOperation(value = "Create a repository")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+                required = true, 
+                dataType = "String", 
+                name = "protocol", 
+                paramType = "query",
+                example = "?protocol=file",
+                value = "Specify the storage protocol to use"),
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The repository is created"),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
+    })
+    public void definePutMailRepository() {
+        service.put(MAIL_REPOSITORIES + "/:encodedPath", (request, response) -> {
+            MailRepositoryPath path = decodedRepositoryPath(request);
+            String protocol = request.queryParams("protocol");
+            try {
+                repositoryStoreService.createMailRepository(path, protocol);
+                response.status(HttpStatus.NO_CONTENT_204);
+                return Constants.EMPTY_BODY;
+            } catch (MailRepositoryStore.MailRepositoryStoreException e) {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                    .type(ErrorResponder.ErrorType.SERVER_ERROR)
+                    .cause(e)
+                    .message(String.format("Error while creating a mail repository with path '%s' and protocol '%s'", path.asString(), protocol))
+                    .haltError();
+            }
+        }, jsonTransformer);
+    }
+
     @GET
-    @Path("/{encodedUrl}/mails")
+    @Path("/{encodedPath}/mails")
     @ApiOperation(value = "Listing all mails in a repository")
     @ApiImplicitParams({
         @ApiImplicitParam(
@@ -134,19 +189,13 @@ public class MailRepositoriesRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineListMails() {
-        service.get(MAIL_REPOSITORIES + "/:encodedUrl/mails", (request, response) -> {
-            Offset offset = Offset.from(assertPositiveInteger(request, "offset"));
-            Limit limit = Limit.from(assertPositiveInteger(request, "limit")
-                .map(value -> assertNotZero(value, "limit")));
-            String encodedUrl = request.params("encodedUrl");
-            String url = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.displayName());
+        service.get(MAIL_REPOSITORIES + "/:encodedPath/mails", (request, response) -> {
+            Offset offset = ParametersExtractor.extractOffset(request);
+            Limit limit = ParametersExtractor.extractLimit(request);
+            MailRepositoryPath path = decodedRepositoryPath(request);
             try {
-                return repositoryStoreService.listMails(url, offset, limit)
-                    .orElseThrow(() -> ErrorResponder.builder()
-                            .statusCode(HttpStatus.NOT_FOUND_404)
-                            .type(ErrorType.NOT_FOUND)
-                            .message("The repository " + encodedUrl + "(decoded value: '" + url + "') does not exist")
-                            .haltError());
+                return repositoryStoreService.listMails(path, offset, limit)
+                    .orElseThrow(() -> repositoryNotFound(request.params("encodedPath"), path));
 
             } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
                 throw ErrorResponder.builder()
@@ -167,41 +216,113 @@ public class MailRepositoriesRoutes implements Routes {
     })
     public void defineGetMailRepositories() {
         service.get(MAIL_REPOSITORIES,
-            (request, response) -> repositoryStoreService.listMailRepositories(),
+            (request, response) -> repositoryStoreService.listMailRepositories().collect(Guavate.toImmutableList()),
             jsonTransformer);
     }
 
-    @Path("/{encodedUrl}/mails/{mailKey}")
-    @ApiOperation(value = "Retrieving a specific mail details")
+    @GET
+    @Produces("application/json, message/rfc822")
+    @Path("/{encodedPath}/mails/{mailKey}")
+    @ApiOperation(value = "Retrieving a specific mail details (this endpoint can accept both \"application/json\" or \"message/rfc822\")")
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.OK_200, message = "The list of all mails in a repository", response = List.class),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
         @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Not found - Could not retrieve the given mail.")
     })
     public void defineGetMail() {
-        service.get(MAIL_REPOSITORIES + "/:encodedUrl/mails/:mailKey", (request, response) -> {
-            String url = decodedRepositoryUrl(request);
-            String mailKey = request.params("mailKey");
-            try {
-                return repositoryStoreService.retrieveMail(url, mailKey)
-                    .orElseThrow(() -> ErrorResponder.builder()
-                        .statusCode(HttpStatus.NOT_FOUND_404)
-                        .type(ErrorResponder.ErrorType.NOT_FOUND)
-                        .message("Could not retrieve " + mailKey)
-                        .haltError());
-            } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                    .type(ErrorResponder.ErrorType.SERVER_ERROR)
-                    .cause(e)
-                    .message("Error while retrieving mail")
-                    .haltError();
-            }
-        }, jsonTransformer);
+        service.get(MAIL_REPOSITORIES + "/:encodedPath/mails/:mailKey", Constants.JSON_CONTENT_TYPE,
+            (request, response) ->
+                getMailAsJson(decodedRepositoryPath(request), new MailKey(request.params("mailKey")), request),
+            jsonTransformer);
+
+        service.get(MAIL_REPOSITORIES + "/:encodedPath/mails/:mailKey", Constants.RFC822_CONTENT_TYPE,
+            (request, response) -> writeMimeMessage(
+                getMailAsMimeMessage(
+                    decodedRepositoryPath(request),
+                    new MailKey(request.params("mailKey"))),
+                response.raw()));
+    }
+
+    private Object writeMimeMessage(MimeMessage mimeMessage, HttpServletResponse rawResponse) throws MessagingException, IOException {
+        rawResponse.setContentType(Constants.RFC822_CONTENT_TYPE);
+        rawResponse.setHeader("Content-Length", String.valueOf(computeExactSize(mimeMessage)));
+        mimeMessage.writeTo(rawResponse.getOutputStream());
+        return rawResponse;
+    }
+
+    private long computeExactSize(MimeMessage mimeMessage) throws IOException, MessagingException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        mimeMessage.writeTo(byteArrayOutputStream);
+        return byteArrayOutputStream.size();
+    }
+
+    private MimeMessage getMailAsMimeMessage(MailRepositoryPath path, MailKey mailKey) {
+        try {
+            return repositoryStoreService.retrieveMessage(path, mailKey)
+                .orElseThrow(mailNotFoundError(mailKey));
+        } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
+            throw internalServerError(e);
+        }
+    }
+
+    private MailDto getMailAsJson(MailRepositoryPath path, MailKey mailKey, Request request) {
+        try {
+            return repositoryStoreService.retrieveMail(path, mailKey, extractAdditionalFields(request.queryParamOrDefault("additionalFields", "")))
+                .orElseThrow(mailNotFoundError(mailKey));
+        } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
+            throw internalServerError(e);
+        } catch (IllegalArgumentException e) {
+            throw invalidField(e);
+        } catch (InaccessibleFieldException e) {
+            throw inaccessibleField(e);
+        }
+    }
+
+    private HaltException inaccessibleField(InaccessibleFieldException e) {
+        return ErrorResponder.builder()
+            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+            .type(ErrorType.SERVER_ERROR)
+            .cause(e)
+            .message("The field '" + e.getField().getName() + "' requested in additionalFields parameter can't be accessed")
+            .haltError();
+    }
+
+    private HaltException invalidField(IllegalArgumentException e) {
+        return ErrorResponder.builder()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .type(ErrorType.INVALID_ARGUMENT)
+            .cause(e)
+            .message("The field '" + e.getMessage() + "' can't be requested in additionalFields parameter")
+            .haltError();
+    }
+
+    private Supplier<HaltException> mailNotFoundError(MailKey mailKey) {
+        return () -> ErrorResponder.builder()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .type(ErrorResponder.ErrorType.NOT_FOUND)
+            .message("Could not retrieve " + mailKey.asString())
+            .haltError();
+    }
+
+    private HaltException repositoryNotFound(String encodedPath, MailRepositoryPath path) {
+        return ErrorResponder.builder()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .type(ErrorType.NOT_FOUND)
+            .message("The repository '" + encodedPath + "' (decoded value: '" + path.asString() + "') does not exist")
+            .haltError();
+    }
+
+    private HaltException internalServerError(Exception e) {
+        return ErrorResponder.builder()
+            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+            .type(ErrorResponder.ErrorType.SERVER_ERROR)
+            .cause(e)
+            .message("Error while retrieving mail")
+            .haltError();
     }
 
     @GET
-    @Path("/{encodedUrl}")
+    @Path("/{encodedPath}")
     @ApiOperation(value = "Reading the information of a repository, such as size (can take some time to compute)")
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.OK_200, message = "The repository information", response = List.class),
@@ -209,18 +330,13 @@ public class MailRepositoriesRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
     })
     public void defineGetMailRepository() {
-        service.get(MAIL_REPOSITORIES + "/:encodedUrl", (request, response) -> {
-            String encodedUrl = request.params("encodedUrl");
-            String url = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.displayName());
+        service.get(MAIL_REPOSITORIES + "/:encodedPath", (request, response) -> {
+            MailRepositoryPath path = decodedRepositoryPath(request);
             try {
-                long size = repositoryStoreService.size(url)
-                    .orElseThrow(() -> ErrorResponder.builder()
-                            .statusCode(HttpStatus.NOT_FOUND_404)
-                            .type(ErrorType.NOT_FOUND)
-                            .message("The repository " + encodedUrl + "(decoded value: '" + url + "') does not exist")
-                            .haltError());
-                return new ExtendedMailRepositoryResponse(url, size);
-            } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
+                long size = repositoryStoreService.size(path)
+                    .orElseThrow(() -> repositoryNotFound(request.params("encodedPath"), path));
+                return new ExtendedMailRepositoryResponse(path, size);
+            } catch (MailRepositoryStore.MailRepositoryStoreException e) {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                     .type(ErrorResponder.ErrorType.SERVER_ERROR)
@@ -232,19 +348,19 @@ public class MailRepositoriesRoutes implements Routes {
     }
 
     @DELETE
-    @Path("/{encodedUrl}/mails/{mailKey}")
+    @Path("/{encodedPath}/mails/{mailKey}")
     @ApiOperation(value = "Deleting a specific mail from that mailRepository")
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.OK_200, message = "Mail is no more stored in the repository", response = List.class),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
     })
     public void defineDeleteMail() {
-        service.delete(MAIL_REPOSITORIES + "/:encodedUrl/mails/:mailKey", (request, response) -> {
-            String url = decodedRepositoryUrl(request);
-            String mailKey = request.params("mailKey");
+        service.delete(MAIL_REPOSITORIES + "/:encodedPath/mails/:mailKey", (request, response) -> {
+            MailRepositoryPath path = decodedRepositoryPath(request);
+            MailKey mailKey = new MailKey(request.params("mailKey"));
             try {
                 response.status(HttpStatus.NO_CONTENT_204);
-                repositoryStoreService.deleteMail(url, mailKey);
+                repositoryStoreService.deleteMail(path, mailKey);
                 return Constants.EMPTY_BODY;
             } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
                 throw ErrorResponder.builder()
@@ -258,7 +374,7 @@ public class MailRepositoriesRoutes implements Routes {
     }
 
     @DELETE
-    @Path("/{encodedUrl}/mails")
+    @Path("/{encodedPath}/mails")
     @ApiOperation(value = "Deleting all mails in that mailRepository")
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.CREATED_201, message = "All mails are deleted", response = TaskIdDto.class),
@@ -266,10 +382,10 @@ public class MailRepositoriesRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - unknown action")
     })
     public void defineDeleteAll() {
-        service.delete(MAIL_REPOSITORIES + "/:encodedUrl/mails", (request, response) -> {
-            String url = decodedRepositoryUrl(request);
+        service.delete(MAIL_REPOSITORIES + "/:encodedPath/mails", (request, response) -> {
+            MailRepositoryPath path = decodedRepositoryPath(request);
             try {
-                Task task = repositoryStoreService.createClearMailRepositoryTask(url);
+                Task task = repositoryStoreService.createClearMailRepositoryTask(path);
                 TaskId taskId = taskManager.submit(task);
                 return TaskIdDto.respond(response, taskId);
             } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
@@ -284,7 +400,7 @@ public class MailRepositoriesRoutes implements Routes {
     }
 
     @PATCH
-    @Path("/{encodedUrl}/mails")
+    @Path("/{encodedPath}/mails")
     @ApiOperation(value = "Reprocessing all mails in that mailRepository")
     @ApiImplicitParams({
         @ApiImplicitParam(
@@ -318,7 +434,7 @@ public class MailRepositoriesRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - unknown action")
     })
     public void defineReprocessAll() {
-        service.patch(MAIL_REPOSITORIES + "/:encodedUrl/mails", (request, response) -> {
+        service.patch(MAIL_REPOSITORIES + "/:encodedPath/mails", (request, response) -> {
             Task task = toAllMailReprocessingTask(request);
             TaskId taskId = taskManager.submit(task);
             return TaskIdDto.respond(response, taskId);
@@ -326,17 +442,17 @@ public class MailRepositoriesRoutes implements Routes {
     }
 
     private Task toAllMailReprocessingTask(Request request) throws UnsupportedEncodingException, MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        String url = decodedRepositoryUrl(request);
+        MailRepositoryPath path = decodedRepositoryPath(request);
         enforceActionParameter(request);
         Optional<String> targetProcessor = Optional.ofNullable(request.queryParams("processor"));
         String targetQueue = Optional.ofNullable(request.queryParams("queue")).orElse(MailQueueFactory.SPOOL);
 
-        Long repositorySize = repositoryStoreService.size(url).orElse(0L);
-        return new ReprocessingAllMailsTask(reprocessingService, repositorySize, url, targetQueue, targetProcessor);
+        Long repositorySize = repositoryStoreService.size(path).orElse(0L);
+        return new ReprocessingAllMailsTask(reprocessingService, repositorySize, path, targetQueue, targetProcessor);
     }
 
     @PATCH
-    @Path("/{encodedUrl}/mails/{key}")
+    @Path("/{encodedPath}/mails/{key}")
     @ApiOperation(value = "Reprocessing a single mail in that mailRepository")
     @ApiImplicitParams({
         @ApiImplicitParam(
@@ -370,7 +486,7 @@ public class MailRepositoriesRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - unknown action")
     })
     public void defineReprocessOne() {
-        service.patch(MAIL_REPOSITORIES + "/:encodedUrl/mails/:key", (request, response) -> {
+        service.patch(MAIL_REPOSITORIES + "/:encodedPath/mails/:key", (request, response) -> {
             Task task = toOneMailReprocessingTask(request);
             TaskId taskId = taskManager.submit(task);
             return TaskIdDto.respond(response, taskId);
@@ -378,13 +494,13 @@ public class MailRepositoriesRoutes implements Routes {
     }
 
     private Task toOneMailReprocessingTask(Request request) throws UnsupportedEncodingException {
-        String url = decodedRepositoryUrl(request);
-        String key = request.params("key");
+        MailRepositoryPath path = decodedRepositoryPath(request);
+        MailKey key = new MailKey(request.params("key"));
         enforceActionParameter(request);
         Optional<String> targetProcessor = Optional.ofNullable(request.queryParams("processor"));
         String targetQueue = Optional.ofNullable(request.queryParams("queue")).orElse(MailQueueFactory.SPOOL);
 
-        return new ReprocessingOneMailTask(reprocessingService, url, targetQueue, key, targetProcessor);
+        return new ReprocessingOneMailTask(reprocessingService, path, targetQueue, key, targetProcessor);
     }
 
     private void enforceActionParameter(Request request) {
@@ -398,45 +514,18 @@ public class MailRepositoriesRoutes implements Routes {
         }
     }
 
-    private String decodedRepositoryUrl(Request request) throws UnsupportedEncodingException {
-        return URLDecoder.decode(request.params("encodedUrl"), StandardCharsets.UTF_8.displayName());
+    private Set<AdditionalField> extractAdditionalFields(String additionalFieldsParam) throws IllegalArgumentException {
+        return Splitter
+            .on(',')
+            .trimResults()
+            .omitEmptyStrings()
+            .splitToList(additionalFieldsParam)
+            .stream()
+            .map((field) -> AdditionalField.find(field).orElseThrow(() -> new IllegalArgumentException(field)))
+            .collect(Guavate.toImmutableSet());
     }
 
-    private Optional<Integer> assertPositiveInteger(Request request, String parameterName) {
-        try {
-            return Optional.ofNullable(request.queryParams(parameterName))
-                .filter(s -> !Strings.isNullOrEmpty(s))
-                .map(Integer::valueOf)
-                .map(value -> assertPositive(value, parameterName));
-        } catch (NumberFormatException e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .cause(e)
-                .message("Can not parse " + parameterName)
-                .haltError();
-        }
-    }
-
-    private int assertPositive(int value, String parameterName) {
-        if (value < 0) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message(parameterName + " can not be negative")
-                .haltError();
-        }
-        return value;
-    }
-
-    private int assertNotZero(int value, String parameterName) {
-        if (value == 0) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message(parameterName + " can not be equal to zero")
-                .haltError();
-        }
-        return value;
+    private MailRepositoryPath decodedRepositoryPath(Request request) throws UnsupportedEncodingException {
+        return MailRepositoryPath.fromEncoded(request.params("encodedPath"));
     }
 }

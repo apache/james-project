@@ -21,6 +21,7 @@ package org.apache.james.queue.activemq;
 import javax.inject.Inject;
 import javax.jms.ConnectionFactory;
 
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
@@ -35,13 +36,14 @@ public class ActiveMQMailQueueFactory extends JMSMailQueueFactory {
 
     private boolean useBlob = true;
 
-    public ActiveMQMailQueueFactory(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, MetricFactory metricFactory) {
-        super(connectionFactory, mailQueueItemDecoratorFactory, metricFactory);
+    public ActiveMQMailQueueFactory(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, MetricFactory metricFactory,
+                                    GaugeRegistry gaugeRegistry) {
+        super(connectionFactory, mailQueueItemDecoratorFactory, metricFactory, gaugeRegistry);
     }
 
     @Inject
-    public ActiveMQMailQueueFactory(EmbeddedActiveMQ embeddedActiveMQ, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, MetricFactory metricFactory) {
-        this(embeddedActiveMQ.getConnectionFactory(), mailQueueItemDecoratorFactory, metricFactory);
+    public ActiveMQMailQueueFactory(EmbeddedActiveMQ embeddedActiveMQ, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
+        this(embeddedActiveMQ.getConnectionFactory(), mailQueueItemDecoratorFactory, metricFactory, gaugeRegistry);
     }
 
     public void setUseBlobMessages(boolean useBlob) {
@@ -50,6 +52,6 @@ public class ActiveMQMailQueueFactory extends JMSMailQueueFactory {
 
     @Override
     protected ManageableMailQueue createMailQueue(String name) {
-        return new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, useBlob, metricFactory);
+        return new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, useBlob, metricFactory, gaugeRegistry);
     }
 }

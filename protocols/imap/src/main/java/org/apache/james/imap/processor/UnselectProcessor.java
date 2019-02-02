@@ -47,14 +47,7 @@ public class UnselectProcessor extends AbstractMailboxProcessor<UnselectRequest>
         super(UnselectRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.processor.AbstractMailboxProcessor
-     * #doProcess(org.apache.james.imap.api.message.request.ImapRequest,
-     * org.apache.james.imap.api.process.ImapSession, java.lang.String,
-     * org.apache.james.imap.api.ImapCommand,
-     * org.apache.james.imap.api.process.ImapProcessor.Responder)
-     */
+    @Override
     protected void doProcess(UnselectRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) {
         if (session.getSelected() != null) {
             session.deselect();
@@ -65,10 +58,7 @@ public class UnselectProcessor extends AbstractMailboxProcessor<UnselectRequest>
 
     }
 
-    /**
-     * @see org.apache.james.imap.processor.CapabilityImplementingProcessor
-     * #getImplementedCapabilities(org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     public List<String> getImplementedCapabilities(ImapSession session) {
         return UNSELECT;
     }

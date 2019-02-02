@@ -20,7 +20,7 @@
 package org.apache.james.mpt.managesieve.cassandra.host;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mpt.host.JamesManageSieveHostSystem;
 import org.apache.james.sieve.cassandra.CassandraActiveScriptDAO;
@@ -32,38 +32,42 @@ import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
+import org.apache.james.util.Host;
 
 public class CassandraHostSystem extends JamesManageSieveHostSystem {
-    
-    private final String cassandraHost;
-    private final int cassandraPort;
+    private final Host cassandraHost;
     private CassandraCluster cassandra;
 
-    public CassandraHostSystem(String cassandraHost, int cassandraPort) {
+    public CassandraHostSystem(Host cassandraHost) {
         this.cassandraHost = cassandraHost;
-        this.cassandraPort = cassandraPort;
     }
-    
+
     @Override
     public void beforeTest() throws Exception {
-        CassandraModuleComposite modules = new CassandraModuleComposite(
-                new CassandraSieveRepositoryModule(),
-                new CassandraUsersRepositoryModule());
-        cassandra = CassandraCluster.create(modules, cassandraHost, cassandraPort);
+        CassandraModule modules = CassandraModule.aggregateModules(
+            CassandraSieveRepositoryModule.MODULE,
+            CassandraUsersRepositoryModule.MODULE);
+        cassandra = CassandraCluster.create(modules, cassandraHost);
         super.beforeTest();
     }
 
-    protected SieveRepository createSieveRepository() throws Exception {
+    @Override
+    protected SieveRepository createSieveRepository() {
         return new CassandraSieveRepository(
             new CassandraSieveDAO(cassandra.getConf()),
             new CassandraSieveQuotaDAO(cassandra.getConf()),
             new CassandraActiveScriptDAO(cassandra.getConf()));
     }
 
+    @Override
     protected UsersRepository createUsersRepository() {
         CassandraUsersRepository cassandraUsersRepository = new CassandraUsersRepository(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         cassandraUsersRepository.setEnableVirtualHosting(false);
         return cassandraUsersRepository;
     }
 
+    @Override
+    public void afterTest() {
+        cassandra.close();
+    }
 }

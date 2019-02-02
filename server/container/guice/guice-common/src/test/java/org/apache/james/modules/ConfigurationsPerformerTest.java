@@ -32,7 +32,6 @@ import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationsPerformer;
 import org.junit.Test;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -79,7 +78,7 @@ public class ConfigurationsPerformerTest {
             try {
                 a.configure(null);
             } catch (ConfigurationException e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 
@@ -103,7 +102,7 @@ public class ConfigurationsPerformerTest {
             try {
                 b.configure(null);
             } catch (ConfigurationException e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 
@@ -197,7 +196,7 @@ public class ConfigurationsPerformerTest {
                 b.configure(null);
                 configured = true;
             } catch (ConfigurationException e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

@@ -23,7 +23,8 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Optional;
+
+import javax.inject.Inject;
 
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
@@ -38,20 +39,22 @@ import com.google.common.base.Preconditions;
 public class IndexCreationFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexCreationFactory.class);
-    private static final int DEFAULT_NB_SHARDS = 1;
-    private static final int DEFAULT_NB_REPLICA = 0;
     public static final String CASE_INSENSITIVE = "case_insensitive";
+    public static final String KEEP_MAIL_AND_URL = "keep_mail_and_url";
+    public static final String SNOWBALL_KEEP_MAIL_AND_URL = "snowball_keep_mail_and_token";
+    public static final String ENGLISH_SNOWBALL = "english_snowball";
 
     private IndexName indexName;
     private ArrayList<AliasName> aliases;
-    private Optional<Integer> nbShards;
-    private Optional<Integer> nbReplica;
+    private int nbShards;
+    private int nbReplica;
 
-    public IndexCreationFactory() {
+    @Inject
+    public IndexCreationFactory(ElasticSearchConfiguration configuration) {
         indexName = null;
         aliases = new ArrayList<>();
-        nbShards = Optional.empty();
-        nbReplica = Optional.empty();
+        nbShards = configuration.getNbShards();
+        nbReplica = configuration.getNbReplica();
     }
 
     public IndexCreationFactory useIndex(IndexName indexName) {
@@ -66,24 +69,10 @@ public class IndexCreationFactory {
         return this;
     }
 
-    public IndexCreationFactory nbShards(int nbShards) {
-        Preconditions.checkArgument(nbShards > 0, "You need the number of shards to be strictly positive");
-        this.nbShards = Optional.of(nbShards);
-        return this;
-    }
-
-    public IndexCreationFactory nbReplica(int nbReplica) {
-        Preconditions.checkArgument(nbReplica >= 0, "You need the number of replica to be positive");
-        this.nbReplica = Optional.of(nbReplica);
-        return this;
-    }
-
     public Client createIndexAndAliases(Client client) {
         Preconditions.checkNotNull(indexName);
         try {
-            createIndexIfNeeded(client, indexName, generateSetting(
-                nbShards.orElse(DEFAULT_NB_SHARDS),
-                nbReplica.orElse(DEFAULT_NB_REPLICA)));
+            createIndexIfNeeded(client, indexName, generateSetting(nbShards, nbReplica));
             aliases.forEach(alias -> createAliasIfNeeded(client, indexName, alias));
         } catch (IOException e) {
             LOGGER.error("Error while creating index : ", e);
@@ -134,6 +123,31 @@ public class IndexCreationFactory {
                             .field("tokenizer", "keyword")
                             .startArray("filter")
                                 .value("lowercase")
+                            .endArray()
+                        .endObject()
+                    .endObject()
+                    .startObject("analyzer")
+                        .startObject(KEEP_MAIL_AND_URL)
+                            .field("tokenizer", "uax_url_email")
+                            .startArray("filter")
+                                .value("lowercase")
+                                .value("stop")
+                            .endArray()
+                        .endObject()
+                    .endObject()
+                    .startObject("filter")
+                        .startObject(ENGLISH_SNOWBALL)
+                            .field("type", "snowball")
+                            .field("language", "English")
+                        .endObject()
+                    .endObject()
+                    .startObject("analyzer")
+                        .startObject(SNOWBALL_KEEP_MAIL_AND_URL)
+                        .field("tokenizer", "uax_url_email")
+                            .startArray("filter")
+                                .value("lowercase")
+                                .value("stop")
+                                .value(ENGLISH_SNOWBALL)
                             .endArray()
                         .endObject()
                     .endObject()

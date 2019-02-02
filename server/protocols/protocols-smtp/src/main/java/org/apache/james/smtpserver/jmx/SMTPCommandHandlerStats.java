@@ -47,33 +47,22 @@ public class SMTPCommandHandlerStats extends AbstractCommandHandlerStats impleme
         super(SMTPCommandHandlerStatsMBean.class, jmxPath, handlerName, commands);
     }
 
-    /**
-     * @see
-     * org.apache.james.smtpserver.jmx.SMTPCommandHandlerStatsMBean#getTemporaryError()
-     */
+    @Override
     public long getTemporaryError() {
         return temp.get();
     }
 
-    /**
-     * @see
-     * org.apache.james.smtpserver.jmx.SMTPCommandHandlerStatsMBean#getPermantError()
-     */
+    @Override
     public long getPermantError() {
         return perm.get();
     }
 
-    /**
-     * @see org.apache.james.smtpserver.jmx.SMTPCommandHandlerStatsMBean#getOk()
-     */
+    @Override
     public long getOk() {
         return ok.get();
     }
 
-    /**
-     * @see
-     * org.apache.james.protocols.lib.jmx.AbstractCommandHandlerStats#incrementStats(org.apache.james.protocols.api.Response)
-     */
+    @Override
     protected void incrementStats(Response response) {
         try {
             String code = response.getRetCode();

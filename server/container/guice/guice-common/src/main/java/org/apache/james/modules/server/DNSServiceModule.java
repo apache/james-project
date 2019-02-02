@@ -23,10 +23,9 @@ import java.util.List;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.dnsjava.DNSJavaService;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
-import org.apache.james.utils.ConfigurationProvider;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -56,12 +55,13 @@ public class DNSServiceModule extends AbstractModule {
             this.dnsService = dnsService;
         }
 
+        @Override
         public void initModule() {
             try {
                 dnsService.configure(configurationProvider.getConfiguration("dnsservice"));
                 dnsService.init();
             } catch (Exception e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

@@ -670,6 +670,10 @@ public class SearchQuery implements Serializable {
         }
     }
 
+    public static Criterion attachmentFileName(String fileName) {
+        return new TextCriterion(fileName, Scope.ATTACHMENT_FILE_NAME);
+    }
+
     public static Criterion hasAttachment() {
         return hasAttachment(true);
     }
@@ -757,6 +761,10 @@ public class SearchQuery implements Serializable {
      */
     public static Criterion all() {
         return AllCriterion.all();
+    }
+
+    public static Criterion mimeMessageID(String messageId) {
+        return new MimeMessageIDCriterion(messageId);
     }
 
     private final Set<MessageUid> recentMessageUids = new HashSet<>();
@@ -1073,17 +1081,11 @@ public class SearchQuery implements Serializable {
             return ALL;
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
         @Override
         public boolean equals(Object obj) {
             return obj instanceof AllCriterion;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
             return 1729;
@@ -1107,7 +1109,11 @@ public class SearchQuery implements Serializable {
         /** Full message content including headers and attachments */
         FULL,
         /** Attachment content */
-        ATTACHMENTS
+        ATTACHMENTS,
+
+        /** Attachment file name, specified on Content-Disposition
+         * header of mime body parts */
+        ATTACHMENT_FILE_NAME
     }
 
     /**
@@ -1163,6 +1169,44 @@ public class SearchQuery implements Serializable {
         public String toString() {
             return MoreObjects.toStringHelper(this)
                 .add("operator", operator)
+                .toString();
+        }
+    }
+
+    public static class MimeMessageIDCriterion extends Criterion {
+        private final String messageID;
+
+        public MimeMessageIDCriterion(String messageID) {
+            this.messageID = messageID;
+        }
+
+        public String getMessageID() {
+            return messageID;
+        }
+
+        public HeaderCriterion asHeaderCriterion() {
+            return new HeaderCriterion("Message-ID", new ContainsOperator(messageID));
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof MimeMessageIDCriterion) {
+                MimeMessageIDCriterion that = (MimeMessageIDCriterion) o;
+
+                return java.util.Objects.equals(this.messageID, that.messageID);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return java.util.Objects.hash(messageID);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("messageID", messageID)
                 .toString();
         }
     }

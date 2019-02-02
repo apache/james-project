@@ -26,7 +26,6 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.cli.util.OutputCapture;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
-import org.apache.james.modules.TestFilesystemModule;
 import org.apache.james.modules.protocols.SieveProbeImpl;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
@@ -53,8 +52,7 @@ public class SieveQuotaCommandsIntegrationTest {
     @Before
     public void setUp() throws Exception {
         guiceJamesServer = memoryJmap.jmapServer(new JMXServerModule(),
-            binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class)))
-            .overrideWith(new TestFilesystemModule(temporaryFolder));
+            binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class)));
         guiceJamesServer.start();
         outputCapture = new OutputCapture();
         sieveProbe = guiceJamesServer.getProbe(SieveProbeImpl.class);

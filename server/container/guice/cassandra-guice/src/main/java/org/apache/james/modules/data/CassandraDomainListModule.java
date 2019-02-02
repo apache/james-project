@@ -24,14 +24,15 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.cassandra.CassandraDomainList;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
-import org.apache.james.utils.ConfigurationProvider;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
@@ -42,28 +43,38 @@ public class CassandraDomainListModule extends AbstractModule {
     public void configure() {
         bind(CassandraDomainList.class).in(Scopes.SINGLETON);
         bind(DomainList.class).to(CassandraDomainList.class);
-        Multibinder.newSetBinder(binder(), CassandraModule.class).addBinding().to(org.apache.james.domainlist.cassandra.CassandraDomainListModule.class);
+        Multibinder.newSetBinder(binder(), CassandraModule.class).addBinding().toInstance(org.apache.james.domainlist.cassandra.CassandraDomainListModule.MODULE);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(CassandraDomainListConfigurationPerformer.class);
+    }
+
+    @Provides
+    @Singleton
+    public DomainListConfiguration provideDomainListConfiguration(ConfigurationProvider configurationProvider) {
+        try {
+            return DomainListConfiguration.from(configurationProvider.getConfiguration("domainlist"));
+        } catch (ConfigurationException e) {
+            throw new RuntimeException(e);
+        }
     }
     
     @Singleton
     public static class CassandraDomainListConfigurationPerformer implements ConfigurationPerformer {
 
-        private final ConfigurationProvider configurationProvider;
+        private final DomainListConfiguration configuration;
         private final CassandraDomainList cassandraDomainList;
 
         @Inject
-        public CassandraDomainListConfigurationPerformer(ConfigurationProvider configurationProvider, CassandraDomainList cassandraDomainList) {
-            this.configurationProvider = configurationProvider;
+        public CassandraDomainListConfigurationPerformer(DomainListConfiguration configuration, CassandraDomainList cassandraDomainList) {
+            this.configuration = configuration;
             this.cassandraDomainList = cassandraDomainList;
         }
 
         @Override
         public void initModule() {
             try {
-                cassandraDomainList.configure(configurationProvider.getConfiguration("domainlist"));
+                cassandraDomainList.configure(configuration);
             } catch (ConfigurationException e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

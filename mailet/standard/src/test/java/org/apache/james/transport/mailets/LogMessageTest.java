@@ -20,8 +20,8 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -32,29 +32,24 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.apache.mailet.base.test.MimeMessageUtil;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-public class LogMessageTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class LogMessageTest {
 
     private LogMessage mailet;
     private FakeMailContext mailContext;
     private Logger logger;
 
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         logger = mock(Logger.class);
         when(logger.isInfoEnabled()).thenReturn(true);
         mailContext = FakeMailContext.builder()
@@ -64,12 +59,12 @@ public class LogMessageTest {
     }
 
     @Test
-    public void getMailetInfoShouldReturnValue() {
+    void getMailetInfoShouldReturnValue() {
         assertThat(mailet.getMailetInfo()).isEqualTo("LogHeaders Mailet");
     }
 
     @Test
-    public void initShouldIgnoreExceptions() throws Exception {
+    void initShouldIgnoreExceptions() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("LogContext")
                 .mailetContext(mailContext)
@@ -79,7 +74,7 @@ public class LogMessageTest {
     }
 
     @Test
-    public void serviceShouldFailWhenMailHasNoStream() throws Exception {
+    public void serviceShouldNotFailWhenTextContent() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("LogContext")
                 .mailetContext(mailContext)
@@ -87,21 +82,17 @@ public class LogMessageTest {
         mailet.init(mailetConfig);
 
         mailet.service(FakeMail.builder()
-                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                    .addHeader("Date", "Tue, 16 Jan 2018 10:23:03 +0100")
-                    .setSubject("subject")
-                    .setText("This is a fake mail"))
-                .build());
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("Date", "Tue, 16 Jan 2018 10:23:03 +0100")
+                .setSubject("subject")
+                .setText("This is a fake mail"))
+            .build());
 
-        verify(logger).info("Logging mail {}", (Object) null);
-        verify(logger, times(2)).isInfoEnabled();
-        verify(logger).info("\n");
-        verify(logger).info("Subject: subject\n");
-        verify(logger).error(eq("Error logging message."), any(MessagingException.class));
+        verify(logger, times(0)).error(anyString(), any(MessagingException.class));
     }
 
     @Test
-    public void serviceShouldLog() throws Exception {
+    void serviceShouldLog() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("LogContext")
                 .mailetContext(mailContext)
@@ -120,7 +111,7 @@ public class LogMessageTest {
     }
 
     @Test
-    public void serviceShouldLogWhenExceptionOccured() throws Exception {
+    void serviceShouldLogWhenExceptionOccured() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("LogContext")
                 .mailetContext(mailContext)
@@ -142,7 +133,7 @@ public class LogMessageTest {
     }
 
     @Test
-    public void serviceShouldSetTheMailStateWhenPassThroughIsFalse() throws Exception {
+    void serviceShouldSetTheMailStateWhenPassThroughIsFalse() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("LogContext")
                 .mailetContext(mailContext)
@@ -157,7 +148,7 @@ public class LogMessageTest {
     }
 
     @Test
-    public void serviceShouldNotChangeTheMailStateWhenPassThroughIsTrue() throws Exception {
+    void serviceShouldNotChangeTheMailStateWhenPassThroughIsTrue() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("LogContext")
                 .mailetContext(mailContext)
@@ -173,7 +164,7 @@ public class LogMessageTest {
     }
 
     @Test
-    public void serviceShouldNotLogHeadersWhenFalse() throws Exception {
+    void serviceShouldNotLogHeadersWhenFalse() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("LogContext")
                 .mailetContext(mailContext)
@@ -190,7 +181,7 @@ public class LogMessageTest {
     }
 
     @Test
-    public void serviceShouldNotLogBodyWhenFalse() throws Exception {
+    void serviceShouldNotLogBodyWhenFalse() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("LogContext")
                 .mailetContext(mailContext)
@@ -209,7 +200,7 @@ public class LogMessageTest {
     }
 
     @Test
-    public void serviceShouldNotLogFullBodyWhenBodyMaxIsSet() throws Exception {
+    void serviceShouldNotLogFullBodyWhenBodyMaxIsSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("LogContext")
                 .mailetContext(mailContext)
@@ -229,7 +220,7 @@ public class LogMessageTest {
     }
 
     @Test
-    public void serviceShouldLogAdditionalCommentWhenCommentIsSet() throws Exception {
+    void serviceShouldLogAdditionalCommentWhenCommentIsSet() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("LogContext")
                 .mailetContext(mailContext)

@@ -60,6 +60,7 @@ public class ListCommandParser extends AbstractUidCommandParser {
     }
 
     private class ListCharValidator extends AtomCharValidator {
+        @Override
         public boolean isValid(char chr) {
             if (ImapRequestLineReader.isListWildcard(chr)) {
                 return true;
@@ -68,12 +69,7 @@ public class ListCommandParser extends AbstractUidCommandParser {
         }
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.decode.parser.AbstractUidCommandParser#decode(org.apache.james.imap.api.ImapCommand,
-     * org.apache.james.imap.decode.ImapRequestLineReader, java.lang.String,
-     * boolean, org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, boolean useUids, ImapSession session) throws DecodingException {
         String referenceName = request.mailbox();
         String mailboxPattern = listMailbox(request);

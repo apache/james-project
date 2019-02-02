@@ -62,20 +62,24 @@ public class SendMailHandler implements JamesMessageHook {
      * Adds header to the message
      *
      */
+    @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
-       
         LOGGER.debug("sending mail");
 
         try {
             queue.enQueue(mail);
-            LOGGER.info("Successfully spooled mail {} from {} on {} for {}", mail.getName(), mail.getSender(), session.getRemoteAddress().getAddress(), mail.getRecipients());
+            LOGGER.info("Successfully spooled mail {} from {} on {} for {}", mail.getName(), mail.getMaybeSender(), session.getRemoteAddress().getAddress(), mail.getRecipients());
         } catch (MessagingException me) {
             LOGGER.error("Unknown error occurred while processing DATA.", me);
-            return new HookResult(HookReturnCode.DENYSOFT, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Error processing message.");
+            return HookResult.builder()
+                .hookReturnCode(HookReturnCode.denySoft())
+                .smtpDescription(DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Error processing message.")
+                .build();
         }
-        
-        return new HookResult(HookReturnCode.OK, DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received");
-    
+        return HookResult.builder()
+            .hookReturnCode(HookReturnCode.ok())
+            .smtpDescription(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received")
+            .build();
     }
 
 }

@@ -19,7 +19,7 @@
 
 package org.apache.james.protocols.pop3;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.protocols.api.StartTlsResponse;
 import org.junit.Test;
@@ -33,7 +33,7 @@ public class POP3StartTlsResponseTest {
     @Test
     public void testImmutable() {
         POP3StartTlsResponse response = new POP3StartTlsResponse(POP3Response.OK_RESPONSE);
-        assertTrue(response instanceof StartTlsResponse);
-        assertTrue(response.immutable() instanceof StartTlsResponse);
+        assertThat(response).isInstanceOf(StartTlsResponse.class);
+        assertThat(response.immutable()).isInstanceOf(StartTlsResponse.class);
     }
 }

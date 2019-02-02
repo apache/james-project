@@ -23,15 +23,16 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.imap.IMAPClient;
+import org.awaitility.core.ConditionFactory;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.rules.ExternalResource;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
-import com.jayway.awaitility.core.ConditionFactory;
 
-public class IMAPMessageReader extends ExternalResource implements Closeable {
+public class IMAPMessageReader extends ExternalResource implements Closeable, AfterEachCallback {
 
     public static final String INBOX = "INBOX";
 
@@ -51,6 +52,11 @@ public class IMAPMessageReader extends ExternalResource implements Closeable {
         return this;
     }
 
+    public IMAPMessageReader disconnect() throws IOException {
+        imapClient.disconnect();
+        return this;
+    }
+
     public IMAPMessageReader login(String user, String password) throws IOException {
         imapClient.login(user, password);
         return this;
@@ -59,11 +65,6 @@ public class IMAPMessageReader extends ExternalResource implements Closeable {
     public IMAPMessageReader select(String mailbox) throws IOException {
         imapClient.select(mailbox);
         return this;
-    }
-
-    public boolean hasMessageCount(int numberOfMessages) throws IOException {
-        return imapClient.getReplyString()
-            .contains(numberOfMessages + " EXISTS");
     }
 
     public boolean hasAMessage() throws IOException {
@@ -75,6 +76,27 @@ public class IMAPMessageReader extends ExternalResource implements Closeable {
     public IMAPMessageReader awaitMessage(ConditionFactory conditionFactory) throws IOException {
         conditionFactory.until(this::hasAMessage);
         return this;
+    }
+
+    public IMAPMessageReader awaitMessageCount(ConditionFactory conditionFactory, int messageCount) {
+        conditionFactory.until(() -> {
+            try {
+                imapClient.fetch("1:*", "ALL");
+                return countFetchedEntries() == messageCount;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        return this;
+    }
+
+    private long countFetchedEntries() {
+        return Splitter.on("\n")
+            .trimResults()
+            .splitToList(imapClient.getReplyString())
+            .stream()
+            .filter(s -> s.startsWith("*"))
+            .count();
     }
 
     public IMAPMessageReader awaitNoMessage(ConditionFactory conditionFactory) throws IOException {
@@ -162,10 +184,32 @@ public class IMAPMessageReader extends ExternalResource implements Closeable {
 
     @Override
     protected void after() {
-        IOUtils.closeQuietly(this);
+        try {
+            this.close();
+        } catch (IOException e) {
+            //ignore exception during close
+        }
+    }
+
+    @Override
+    public void afterEach(ExtensionContext extensionContext) {
+        after();
     }
 
     public void copyFirstMessage(String destMailbox) throws IOException {
         imapClient.copy("1", destMailbox);
+    }
+
+    public void moveFirstMessage(String destMailbox) throws IOException {
+        imapClient.sendCommand("MOVE 1 " + destMailbox);
+    }
+
+    public void expunge() throws IOException {
+        imapClient.expunge();
+    }
+
+    public String getQuotaRoot(String mailbox) throws IOException {
+        imapClient.sendCommand("GETQUOTAROOT " + mailbox);
+        return imapClient.getReplyString();
     }
 }

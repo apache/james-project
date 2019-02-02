@@ -19,8 +19,7 @@
  */
 package org.apache.james.util.retry;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,165 +29,125 @@ import javax.naming.Context;
 import org.apache.james.util.retry.api.ExceptionRetryingProxy;
 import org.apache.james.util.retry.api.RetryHandler;
 import org.apache.james.util.retry.api.RetrySchedule;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-/**
- * <code>ExceptionRetryHandlerTest</code>
- */
 public class ExceptionRetryHandlerTest {
+    private static class TestRetryingProxy implements ExceptionRetryingProxy {
+
+        @Override
+        public Context getDelegate() {
+            return null;
+        }
+
+        @Override
+        public Context newDelegate() {
+            return null;
+        }
+
+        @Override
+        public void resetDelegate() {
+        }
+    }
 
     private Class<?>[] exceptionClasses = null;
     private ExceptionRetryingProxy proxy = null;
     private RetrySchedule schedule = null;
 
-    /**
-     * @see junit.framework.TestCase#setUp()
-     */
-    @Before
-    public void setUp() throws Exception {
-    exceptionClasses = new Class<?>[]{Exception.class};
-    proxy = new TestRetryingProxy();
-    schedule = new TestRetrySchedule();
+    @BeforeEach
+    void setUp() throws Exception {
+        exceptionClasses = new Class<?>[]{Exception.class};
+        proxy = new TestRetryingProxy();
+        schedule = i -> i;
     }
 
-    private class TestRetryingProxy implements ExceptionRetryingProxy {
-
-    /**
-     */
-    @Override
-    public Context getDelegate() {
-        return null;
-    }
-
-    /**
-     */
-    @Override
-    public Context newDelegate() throws Exception {
-        return null;
-    }
-
-    /**
-     */
-    @Override
-    public void resetDelegate() throws Exception {
-    }
-    }
-
-    private class TestRetrySchedule implements RetrySchedule {
-
-    /**
-     */
-    @Override
-    public long getInterval(int index) {
-        return index;
-    }
-    }
-
-    /**
-     * Test method for .
-     */
     @Test
-    public final void testExceptionRetryHandler() {
-    assertTrue(RetryHandler.class.isAssignableFrom(new ExceptionRetryHandler(
-        exceptionClasses, proxy, schedule, 0) {
-
-        @Override
-        public Object operation() throws Exception {
-        return null;
-        }
-    }.getClass()));
-    }
-
-    /**
-     * Test method for .
-     * @throws Exception 
-     */
-    @Test
-    public final void testPerform() throws Exception {
-    Object result = new ExceptionRetryHandler(
-        exceptionClasses, proxy, schedule, 0) {
-
-        @Override
-        public Object operation() throws Exception {
-        return "Hi!";
-        }
-    }.perform();
-    assertEquals("Hi!", result);
-
-    try {
-        new ExceptionRetryHandler(
+    void testExceptionRetryHandler() {
+        assertThat(RetryHandler.class.isAssignableFrom(new ExceptionRetryHandler(
             exceptionClasses, proxy, schedule, 0) {
 
-        @Override
-        public Object operation() throws Exception {
-            throw new Exception();
-        }
+            @Override
+            public Object operation() {
+                return null;
+            }
+        }.getClass())).isTrue();
+    }
+
+    @Test
+    void testPerform() throws Exception {
+        Object result = new ExceptionRetryHandler(
+            exceptionClasses, proxy, schedule, 0) {
+
+            @Override
+            public Object operation() {
+                return "Hi!";
+            }
         }.perform();
-    } catch (Exception ex) {
-        // no-op
-    }
-    assertEquals("Hi!", result);
+        assertThat(result).isEqualTo("Hi!");
+
+        try {
+            new ExceptionRetryHandler(
+                exceptionClasses, proxy, schedule, 0) {
+
+                @Override
+                public Object operation() throws Exception {
+                    throw new Exception();
+                }
+            }.perform();
+        } catch (Exception ex) {
+            // no-op
+        }
+        assertThat(result).isEqualTo("Hi!");
     }
 
-    /**
-     * Test method for .
-     */
     @Test
-    public final void testPostFailure() {
-    final List<Exception> results = new ArrayList<>();
-    RetryHandler handler = new ExceptionRetryHandler(
-        exceptionClasses, proxy, schedule, 7) {
+    void testPostFailure() {
+        final List<Exception> results = new ArrayList<>();
+        RetryHandler handler = new ExceptionRetryHandler(
+            exceptionClasses, proxy, schedule, 7) {
 
-        @Override
-        public void postFailure(Exception ex, int retryCount) {
-        super.postFailure(ex, retryCount);
-        results.add(ex);
+            @Override
+            public void postFailure(Exception ex, int retryCount) {
+                super.postFailure(ex, retryCount);
+                results.add(ex);
+            }
+
+            @Override
+            public Object operation() throws Exception {
+                throw new Exception();
+            }
+        };
+        try {
+            handler.perform();
+        } catch (Exception ex) {
+            // no-op
         }
-
-        @Override
-        public Object operation() throws Exception {
-        throw new Exception();
-        }
-    };
-    try {
-        handler.perform();
-    } catch (Exception ex) {
-        // no-op
-    }
-    assertEquals(7, results.size());
+        assertThat(results.size()).isEqualTo(7);
     }
 
-    /**
-     * Test method for .
-     * @throws Exception 
-     */
     @Test
-    public final void testOperation() throws Exception {
-    RetryHandler handler = new ExceptionRetryHandler(
-        exceptionClasses, proxy, schedule, 0) {
+    void testOperation() throws Exception {
+        RetryHandler handler = new ExceptionRetryHandler(
+            exceptionClasses, proxy, schedule, 0) {
 
-        @Override
-        public Object operation() throws Exception {
-        return "Hi!";
-        }
-    };
-    assertEquals("Hi!", handler.operation());
+            @Override
+            public Object operation() {
+                return "Hi!";
+            }
+        };
+        assertThat(handler.operation()).isEqualTo("Hi!");
     }
 
-    /**
-     * Test method for .
-     */
     @Test
-    public final void testGetRetryInterval() {
-    ExceptionRetryHandler handler = new ExceptionRetryHandler(
-        exceptionClasses, proxy, schedule, 0) {
+    void testGetRetryInterval() {
+        ExceptionRetryHandler handler = new ExceptionRetryHandler(
+            exceptionClasses, proxy, schedule, 0) {
 
-        @Override
-        public Object operation() throws Exception {
-        return null;
-        }
-    };
-    assertEquals(8, handler.getRetryInterval(8));
+            @Override
+            public Object operation() {
+                return null;
+            }
+        };
+        assertThat(handler.getRetryInterval(8)).isEqualTo(8);
     }
 }

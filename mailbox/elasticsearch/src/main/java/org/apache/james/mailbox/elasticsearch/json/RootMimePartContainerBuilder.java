@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.elasticsearch.json;
 
 import java.io.InputStream;
+import java.nio.charset.Charset;
 
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mime4j.stream.Field;
@@ -84,6 +85,12 @@ public class RootMimePartContainerBuilder implements MimePartContainerBuilder {
     @Override
     public MimePartContainerBuilder addContentDisposition(String contentDisposition) {
         LOGGER.warn("Trying to add content disposition to the Root MimePart container");
+        return this;
+    }
+
+    @Override
+    public MimePartContainerBuilder charset(Charset charset) {
+        LOGGER.warn("Trying to add content charset to the Root MimePart container");
         return this;
     }
 }

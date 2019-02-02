@@ -20,6 +20,7 @@
 package org.apache.james.jmap;
 
 import org.apache.james.jmap.json.ObjectMapperFactory;
+import org.apache.james.jmap.methods.GetFilterMethod;
 import org.apache.james.jmap.methods.GetMailboxesMethod;
 import org.apache.james.jmap.methods.GetMessageListMethod;
 import org.apache.james.jmap.methods.GetMessagesMethod;
@@ -29,6 +30,8 @@ import org.apache.james.jmap.methods.JmapRequestParserImpl;
 import org.apache.james.jmap.methods.JmapResponseWriter;
 import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.methods.SendMDNProcessor;
+import org.apache.james.jmap.methods.SetFilterMethod;
 import org.apache.james.jmap.methods.SetMailboxesCreationProcessor;
 import org.apache.james.jmap.methods.SetMailboxesDestructionProcessor;
 import org.apache.james.jmap.methods.SetMailboxesMethod;
@@ -67,6 +70,8 @@ public class MethodsModule extends AbstractModule {
         methods.addBinding().to(SetMailboxesMethod.class);
         methods.addBinding().to(GetVacationResponseMethod.class);
         methods.addBinding().to(SetVacationResponseMethod.class);
+        methods.addBinding().to(GetFilterMethod.class);
+        methods.addBinding().to(SetFilterMethod.class);
 
         Multibinder<SetMailboxesProcessor> setMailboxesProcessor =
             Multibinder.newSetBinder(binder(), SetMailboxesProcessor.class);
@@ -79,6 +84,7 @@ public class MethodsModule extends AbstractModule {
         setMessagesProcessors.addBinding().to(SetMessagesUpdateProcessor.class);
         setMessagesProcessors.addBinding().to(SetMessagesCreationProcessor.class);
         setMessagesProcessors.addBinding().to(SetMessagesDestructionProcessor.class);
+        setMessagesProcessors.addBinding().to(SendMDNProcessor.class);
     }
 
 }

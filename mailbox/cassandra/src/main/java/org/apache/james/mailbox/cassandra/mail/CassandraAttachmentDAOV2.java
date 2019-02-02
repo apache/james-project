@@ -32,8 +32,6 @@ import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Tabl
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.TYPE;
 
 import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
@@ -46,6 +44,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
+import reactor.core.publisher.Mono;
 
 public class CassandraAttachmentDAOV2 {
     public static class DAOAttachment {
@@ -150,16 +149,16 @@ public class CassandraAttachmentDAOV2 {
             .where(eq(ID_AS_UUID, bindMarker(ID_AS_UUID))));
     }
 
-    public CompletableFuture<Optional<DAOAttachment>> getAttachment(AttachmentId attachmentId) {
+    public Mono<DAOAttachment> getAttachment(AttachmentId attachmentId) {
         Preconditions.checkArgument(attachmentId != null);
-        return cassandraAsyncExecutor.executeSingleRow(
+        return cassandraAsyncExecutor.executeSingleRowReactor(
             selectStatement.bind()
                 .setUUID(ID_AS_UUID, attachmentId.asUUID()))
-            .thenApply(rowOptional -> rowOptional.map(row -> CassandraAttachmentDAOV2.fromRow(row, blobIdFactory)));
+            .map(row -> CassandraAttachmentDAOV2.fromRow(row, blobIdFactory));
     }
 
-    public CompletableFuture<Void> storeAttachment(DAOAttachment attachment) {
-        return cassandraAsyncExecutor.executeVoid(
+    public Mono<Void> storeAttachment(DAOAttachment attachment) {
+        return cassandraAsyncExecutor.executeVoidReactor(
             insertStatement.bind()
                 .setUUID(ID_AS_UUID, attachment.getAttachmentId().asUUID())
                 .setString(ID, attachment.getAttachmentId().getId())

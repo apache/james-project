@@ -35,7 +35,7 @@
        <!-- Configure this to bind to a specific inetaddress -->
        <!-- port 995 is the well-known/IANA registered port for POP3S  ie over SSL/TLS -->
        <!-- port 110 is the well-known/IANA registered port for Standard POP3 -->
-       <bind>0.0.0.0:1100</bind>
+       <bind>0.0.0.0:0</bind>
 
        <connectionBacklog>200</connectionBacklog>
 

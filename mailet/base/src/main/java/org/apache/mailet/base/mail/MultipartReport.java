@@ -26,6 +26,8 @@ import javax.activation.ActivationDataFlavor;
 import javax.activation.DataSource;
 import javax.mail.MessagingException;
 
+import org.apache.james.javax.MimeMultipartReport;
+
 
 /**
  * <p>Data Content Handler for...</p>
@@ -42,18 +44,13 @@ public class MultipartReport extends AbstractDataContentHandler {
         super();
     }
 
-    /**
-     * @see org.apache.mailet.base.mail.AbstractDataContentHandler#computeDataFlavor()
-     */
+    @Override
     protected ActivationDataFlavor computeDataFlavor() {
         return new ActivationDataFlavor(MimeMultipartReport.class,
                 "multipart/report", "Multipart Report");
     }
 
-    /**
-     * @see javax.activation.DataContentHandler#writeTo(java.lang.Object,
-     *      java.lang.String, java.io.OutputStream)
-     */
+    @Override
     public void writeTo(Object aPart, String aMimeType, OutputStream aStream)
             throws IOException {
         if (!(aPart instanceof MimeMultipartReport)) {
@@ -67,9 +64,7 @@ public class MultipartReport extends AbstractDataContentHandler {
         }
     }
 
-    /**
-     * @see org.apache.mailet.base.mail.AbstractDataContentHandler#computeContent(javax.activation.DataSource)
-     */
+    @Override
     protected Object computeContent(DataSource aDataSource)
             throws MessagingException {
         return new MimeMultipartReport(aDataSource);

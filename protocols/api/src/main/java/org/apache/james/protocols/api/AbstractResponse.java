@@ -52,9 +52,7 @@ public abstract class AbstractResponse implements Response {
         this.setRetCode(code);
         this.appendLine(description);
     }
-    
 
-    
     /**
      * Append the responseLine to the SMTPResponse
      * 
@@ -69,6 +67,7 @@ public abstract class AbstractResponse implements Response {
      * 
      * @return the SMTPCode
      */
+    @Override
     public String getRetCode() {
         return retCode;
     }
@@ -88,6 +87,7 @@ public abstract class AbstractResponse implements Response {
      * 
      * @return true if session is ended
      */
+    @Override
     public boolean isEndSession() {
         return endSession;
     }
@@ -101,9 +101,7 @@ public abstract class AbstractResponse implements Response {
         this.endSession = endSession;
     }
 
-    /**
-     * @see java.lang.Object#toString()
-     */
+    @Override
     public final String toString() {
         return getLines().toString();
     }
@@ -116,14 +114,17 @@ public abstract class AbstractResponse implements Response {
     public Response immutable() {
         return new Response() {
             
+            @Override
             public boolean isEndSession() {
                 return AbstractResponse.this.isEndSession();
             }
             
+            @Override
             public String getRetCode() {
                 return AbstractResponse.this.getRetCode();
             }
             
+            @Override
             public List<CharSequence> getLines() {
                 return AbstractResponse.this.getLines();
             }

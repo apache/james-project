@@ -54,6 +54,7 @@ public class ConfigurationBeanFactoryPostProcessor implements BeanFactoryPostPro
     /**
      * Parse the configuration file and depending on it register the beans
      */
+    @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
 
         ConfigurationProvider confProvider = beanFactory.getBean(ConfigurationProvider.class);

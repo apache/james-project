@@ -18,21 +18,14 @@
  ****************************************************************/
 package org.apache.james.pop3server;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Reader;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-
-import javax.mail.Flags;
 
 import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.pop3.POP3MessageInfo;
@@ -48,6 +41,7 @@ import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mime4j.dom.Message;
 import org.apache.james.pop3server.netty.POP3Server;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
@@ -112,8 +106,8 @@ public class POP3ServerTest {
         usersRepository.addUser("known", "test2");
 
         pop3Client.login("known", "test");
-        assertEquals(0, pop3Client.getState());
-        assertTrue(pop3Client.getReplyString().startsWith("-ERR"));
+        assertThat(pop3Client.getState()).isEqualTo(0);
+        assertThat(pop3Client.getReplyString().startsWith("-ERR")).isTrue();
     }
 
     @Test
@@ -125,8 +119,8 @@ public class POP3ServerTest {
         pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         pop3Client.login("unknown", "test");
-        assertEquals(0, pop3Client.getState());
-        assertTrue(pop3Client.getReplyString().startsWith("-ERR"));
+        assertThat(pop3Client.getState()).isEqualTo(0);
+        assertThat(pop3Client.getReplyString().startsWith("-ERR")).isTrue();
     }
 
     @Test
@@ -141,21 +135,21 @@ public class POP3ServerTest {
 
         // not authenticated
         POP3MessageInfo[] entries = pop3Client.listMessages();
-        assertNull(entries);
+        assertThat(entries).isNull();
 
         pop3Client.login("foo", "bar");
         System.err.println(pop3Client.getState());
-        assertEquals(1, pop3Client.getState());
+        assertThat(pop3Client.getState()).isEqualTo(1);
 
         entries = pop3Client.listMessages();
-        assertEquals(1, pop3Client.getState());
+        assertThat(pop3Client.getState()).isEqualTo(1);
 
-        assertNotNull(entries);
-        assertEquals(entries.length, 0);
+        assertThat(entries).isNotNull();
+        assertThat(0).isEqualTo(entries.length);
 
         POP3MessageInfo p3i = pop3Client.listMessage(1);
-        assertEquals(1, pop3Client.getState());
-        assertNull(p3i);
+        assertThat(pop3Client.getState()).isEqualTo(1);
+        assertThat(p3i).isNull();
     }
 
     // TODO: This currently fails with Async implementation because
@@ -187,9 +181,8 @@ public class POP3ServerTest {
         pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         pop3Client.sendCommand("unkn");
-        assertEquals(0, pop3Client.getState());
-        assertEquals("Expected -ERR as result for an unknown command", pop3Client.getReplyString().substring(0, 4),
-                "-ERR");
+        assertThat(pop3Client.getState()).isEqualTo(0);
+        assertThat("-ERR").describedAs("Expected -ERR as result for an unknown command").isEqualTo(pop3Client.getReplyString().substring(0, 4));
     }
 
     @Test
@@ -203,12 +196,12 @@ public class POP3ServerTest {
         pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         pop3Client.sendCommand("uidl");
-        assertEquals(0, pop3Client.getState());
+        assertThat(pop3Client.getState()).isEqualTo(0);
 
         pop3Client.login("foo", "bar");
 
         POP3MessageInfo[] list = pop3Client.listUniqueIdentifiers();
-        assertEquals("Found unexpected messages", 0, list.length);
+        assertThat(list.length).describedAs("Found unexpected messages").isEqualTo(0);
 
         pop3Client.disconnect();
         MailboxPath mailboxPath = MailboxPath.forUser("foo", "INBOX");
@@ -222,10 +215,10 @@ public class POP3ServerTest {
         pop3Client.login("foo", "bar");
 
         list = pop3Client.listUniqueIdentifiers();
-        assertEquals("Expected 2 messages, found: " + list.length, 2, list.length);
+        assertThat(list.length).describedAs("Expected 2 messages, found: " + list.length).isEqualTo(2);
 
         POP3MessageInfo p3i = pop3Client.listUniqueIdentifier(1);
-        assertNotNull(p3i);
+        assertThat(p3i).isNotNull();
 
         mailboxManager.deleteMailbox(mailboxPath, session);
 
@@ -242,47 +235,47 @@ public class POP3ServerTest {
         pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         pop3Client.sendCommand("noop");
-        assertEquals(0, pop3Client.getState());
-        assertEquals("-ERR", pop3Client.getReplyString().substring(0, 4));
+        assertThat(pop3Client.getState()).isEqualTo(0);
+        assertThat(pop3Client.getReplyString().substring(0, 4)).isEqualTo("-ERR");
 
         pop3Client.sendCommand("stat");
-        assertEquals(0, pop3Client.getState());
-        assertEquals("-ERR", pop3Client.getReplyString().substring(0, 4));
+        assertThat(pop3Client.getState()).isEqualTo(0);
+        assertThat(pop3Client.getReplyString().substring(0, 4)).isEqualTo("-ERR");
 
         pop3Client.sendCommand("pass");
-        assertEquals(0, pop3Client.getState());
-        assertEquals("-ERR", pop3Client.getReplyString().substring(0, 4));
+        assertThat(pop3Client.getState()).isEqualTo(0);
+        assertThat(pop3Client.getReplyString().substring(0, 4)).isEqualTo("-ERR");
 
         pop3Client.sendCommand("auth");
-        assertEquals(0, pop3Client.getState());
-        assertEquals("-ERR", pop3Client.getReplyString().substring(0, 4));
+        assertThat(pop3Client.getState()).isEqualTo(0);
+        assertThat(pop3Client.getReplyString().substring(0, 4)).isEqualTo("-ERR");
 
         pop3Client.sendCommand("rset");
-        assertEquals(0, pop3Client.getState());
-        assertEquals("-ERR", pop3Client.getReplyString().substring(0, 4));
+        assertThat(pop3Client.getState()).isEqualTo(0);
+        assertThat(pop3Client.getReplyString().substring(0, 4)).isEqualTo("-ERR");
 
         pop3Client.login("foo", "bar");
 
         POP3MessageInfo[] list = pop3Client.listUniqueIdentifiers();
-        assertEquals("Found unexpected messages", 0, list.length);
+        assertThat(list.length).describedAs("Found unexpected messages").isEqualTo(0);
 
         pop3Client.sendCommand("noop");
-        assertEquals(1, pop3Client.getState());
+        assertThat(pop3Client.getState()).isEqualTo(1);
 
         pop3Client.sendCommand("pass");
-        assertEquals(1, pop3Client.getState());
-        assertEquals("-ERR", pop3Client.getReplyString().substring(0, 4));
+        assertThat(pop3Client.getState()).isEqualTo(1);
+        assertThat(pop3Client.getReplyString().substring(0, 4)).isEqualTo("-ERR");
 
         pop3Client.sendCommand("auth");
-        assertEquals(1, pop3Client.getState());
-        assertEquals("-ERR", pop3Client.getReplyString().substring(0, 4));
+        assertThat(pop3Client.getState()).isEqualTo(1);
+        assertThat(pop3Client.getReplyString().substring(0, 4)).isEqualTo("-ERR");
 
         pop3Client.sendCommand("user");
-        assertEquals(1, pop3Client.getState());
-        assertEquals("-ERR", pop3Client.getReplyString().substring(0, 4));
+        assertThat(pop3Client.getState()).isEqualTo(1);
+        assertThat(pop3Client.getReplyString().substring(0, 4)).isEqualTo("-ERR");
 
         pop3Client.sendCommand("rset");
-        assertEquals(1, pop3Client.getState());
+        assertThat(pop3Client.getState()).isEqualTo(1);
         
     }
 
@@ -306,41 +299,41 @@ public class POP3ServerTest {
         setupTestMails(session, mailboxManager.getMailbox(mailboxPath, session));
 
         pop3Client.sendCommand("retr", "1");
-        assertEquals(0, pop3Client.getState());
-        assertEquals("-ERR", pop3Client.getReplyString().substring(0, 4));
+        assertThat(pop3Client.getState()).isEqualTo(0);
+        assertThat(pop3Client.getReplyString().substring(0, 4)).isEqualTo("-ERR");
 
         pop3Client.login("foo2", "bar2");
-        assertEquals(1, pop3Client.getState());
+        assertThat(pop3Client.getState()).isEqualTo(1);
 
         POP3MessageInfo[] entries = pop3Client.listMessages();
 
-        assertNotNull(entries);
-        assertEquals(2, entries.length);
-        assertEquals(1, pop3Client.getState());
+        assertThat(entries).isNotNull();
+        assertThat(entries.length).isEqualTo(2);
+        assertThat(pop3Client.getState()).isEqualTo(1);
 
         Reader r = pop3Client.retrieveMessageTop(entries[0].number, 0);
 
-        assertNotNull(r);
+        assertThat(r).isNotNull();
 
         r.close();
 
         Reader r2 = pop3Client.retrieveMessage(entries[0].number);
-        assertNotNull(r2);
+        assertThat(r2).isNotNull();
         r2.close();
 
         // existing message
         boolean deleted = pop3Client.deleteMessage(entries[0].number);
-        assertTrue(deleted);
+        assertThat(deleted).isTrue();
 
         // already deleted message
         deleted = pop3Client.deleteMessage(entries[0].number);
 
         // TODO: Understand why this fails...
-        assertFalse(deleted);
+        assertThat(deleted).isFalse();
 
         // unexisting message
         deleted = pop3Client.deleteMessage(10);
-        assertFalse(deleted);
+        assertThat(deleted).isFalse();
 
         pop3Client.logout();
         //m_pop3Protocol.disconnect();
@@ -348,26 +341,26 @@ public class POP3ServerTest {
         pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         pop3Client.login("foo2", "bar2");
-        assertEquals(1, pop3Client.getState());
+        assertThat(pop3Client.getState()).isEqualTo(1);
 
         entries = null;
 
         POP3MessageInfo stats = pop3Client.status();
-        assertEquals(1, stats.number);
-        assertEquals(5, stats.size);
+        assertThat(stats.number).isEqualTo(1);
+        assertThat(stats.size).isEqualTo(5);
 
         entries = pop3Client.listMessages();
 
-        assertNotNull(entries);
-        assertEquals(1, entries.length);
-        assertEquals(1, pop3Client.getState());
+        assertThat(entries).isNotNull();
+        assertThat(entries.length).isEqualTo(1);
+        assertThat(pop3Client.getState()).isEqualTo(1);
 
         // top without arguments
         pop3Client.sendCommand("top");
-        assertEquals("-ERR", pop3Client.getReplyString().substring(0, 4));
+        assertThat(pop3Client.getReplyString().substring(0, 4)).isEqualTo("-ERR");
 
         Reader r3 = pop3Client.retrieveMessageTop(entries[0].number, 0);
-        assertNotNull(r3);
+        assertThat(r3).isNotNull();
         r3.close();
         mailboxManager.deleteMailbox(mailboxPath, session);
     }
@@ -394,20 +387,22 @@ public class POP3ServerTest {
 
         int msgCount = 100;
         for (int i = 0; i < msgCount; i++) {
-            mailboxManager.getMailbox(mailboxPath, session).appendMessage(
-                    new ByteArrayInputStream(("Subject: test\r\n\r\n" + i).getBytes()),
-                    new Date(), session, true, new Flags());
+            mailboxManager.getMailbox(mailboxPath, session).appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setSubject("test")
+                    .setBody(String.valueOf(i), StandardCharsets.UTF_8)),
+                session);
         }
 
         pop3Client.login("foo2", "bar2");
-        assertEquals(1, pop3Client.getState());
+        assertThat(pop3Client.getState()).isEqualTo(1);
 
         POP3MessageInfo[] listEntries = pop3Client.listMessages();
         POP3MessageInfo[] uidlEntries = pop3Client.listUniqueIdentifiers();
         POP3MessageInfo statInfo = pop3Client.status();
-        assertEquals(msgCount, listEntries.length);
-        assertEquals(msgCount, uidlEntries.length);
-        assertEquals(msgCount, statInfo.number);
+        assertThat(listEntries.length).isEqualTo(msgCount);
+        assertThat(uidlEntries.length).isEqualTo(msgCount);
+        assertThat(statInfo.number).isEqualTo(msgCount);
 
         pop3Client.sendCommand("quit");
         pop3Client.disconnect();
@@ -415,7 +410,7 @@ public class POP3ServerTest {
         pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
         pop3Client.login("foo2", "bar2");
-        assertEquals(1, pop3Client.getState());
+        assertThat(pop3Client.getState()).isEqualTo(1);
 
         mailboxManager.deleteMailbox(mailboxPath, session);
 
@@ -445,50 +440,52 @@ public class POP3ServerTest {
 
         int msgCount = 100;
         for (int i = 0; i < msgCount; i++) {
-            mailboxManager.getMailbox(mailboxPath, session).appendMessage(
-                    new ByteArrayInputStream(("Subject: test\r\n\r\n" + i).getBytes()), new Date(), session, true, new Flags());
+            mailboxManager.getMailbox(mailboxPath, session).appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setSubject("test")
+                    .setBody(String.valueOf(i), StandardCharsets.UTF_8)), session);
         }
 
         pop3Client.login("foo2", "bar2");
-        assertEquals(1, pop3Client.getState());
+        assertThat(pop3Client.getState()).isEqualTo(1);
 
         POP3MessageInfo[] listEntries = pop3Client.listMessages();
         POP3MessageInfo[] uidlEntries = pop3Client.listUniqueIdentifiers();
         POP3MessageInfo statInfo = pop3Client.status();
-        assertEquals(msgCount, listEntries.length);
-        assertEquals(msgCount, uidlEntries.length);
-        assertEquals(msgCount, statInfo.number);
+        assertThat(listEntries.length).isEqualTo(msgCount);
+        assertThat(uidlEntries.length).isEqualTo(msgCount);
+        assertThat(statInfo.number).isEqualTo(msgCount);
 
         POP3Client pop3Protocol2 = new POP3Client();
         pop3Protocol2.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
         pop3Protocol2.login("foo2", "bar2");
-        assertEquals(1, pop3Protocol2.getState());
+        assertThat(pop3Protocol2.getState()).isEqualTo(1);
 
         POP3MessageInfo[] listEntries2 = pop3Protocol2.listMessages();
         POP3MessageInfo[] uidlEntries2 = pop3Protocol2.listUniqueIdentifiers();
         POP3MessageInfo statInfo2 = pop3Protocol2.status();
-        assertEquals(msgCount, listEntries2.length);
-        assertEquals(msgCount, uidlEntries2.length);
-        assertEquals(msgCount, statInfo2.number);
+        assertThat(listEntries2.length).isEqualTo(msgCount);
+        assertThat(uidlEntries2.length).isEqualTo(msgCount);
+        assertThat(statInfo2.number).isEqualTo(msgCount);
 
         pop3Client.deleteMessage(1);
         listEntries = pop3Client.listMessages();
         uidlEntries = pop3Client.listUniqueIdentifiers();
         statInfo = pop3Client.status();
-        assertEquals(msgCount - 1, listEntries.length);
-        assertEquals(msgCount - 1, uidlEntries.length);
-        assertEquals(msgCount - 1, statInfo.number);
+        assertThat(listEntries.length).isEqualTo(msgCount - 1);
+        assertThat(uidlEntries.length).isEqualTo(msgCount - 1);
+        assertThat(statInfo.number).isEqualTo(msgCount - 1);
 
         // even after the message was deleted it should get displayed in the
         // second connection
         listEntries2 = pop3Protocol2.listMessages();
         uidlEntries2 = pop3Protocol2.listUniqueIdentifiers();
         statInfo2 = pop3Protocol2.status();
-        assertEquals(msgCount, listEntries2.length);
-        assertEquals(msgCount, uidlEntries2.length);
-        assertEquals(msgCount, statInfo2.number);
+        assertThat(listEntries2.length).isEqualTo(msgCount);
+        assertThat(uidlEntries2.length).isEqualTo(msgCount);
+        assertThat(statInfo2.number).isEqualTo(msgCount);
 
-        assertTrue(pop3Client.logout());
+        assertThat(pop3Client.logout()).isTrue();
         pop3Client.disconnect();
 
         // even after the message was deleted and the session was quit it should
@@ -496,13 +493,13 @@ public class POP3ServerTest {
         listEntries2 = pop3Protocol2.listMessages();
         uidlEntries2 = pop3Protocol2.listUniqueIdentifiers();
         statInfo2 = pop3Protocol2.status();
-        assertEquals(msgCount, listEntries2.length);
-        assertEquals(msgCount, uidlEntries2.length);
-        assertEquals(msgCount, statInfo2.number);
+        assertThat(listEntries2.length).isEqualTo(msgCount);
+        assertThat(uidlEntries2.length).isEqualTo(msgCount);
+        assertThat(statInfo2.number).isEqualTo(msgCount);
 
         // This both should error and so return null
-        assertNull(pop3Protocol2.retrieveMessageTop(1, 100));
-        assertNull(pop3Protocol2.retrieveMessage(1));
+        assertThat(pop3Protocol2.retrieveMessageTop(1, 100)).isNull();
+        assertThat(pop3Protocol2.retrieveMessage(1)).isNull();
 
         pop3Protocol2.sendCommand("quit");
         pop3Protocol2.disconnect();
@@ -560,8 +557,8 @@ public class POP3ServerTest {
         usersRepository.addUser("foo", pass);
 
         pop3Client.login("foo", pass);
-        assertEquals(1, pop3Client.getState());
-        assertTrue(POP3BeforeSMTPHelper.isAuthorized("127.0.0.1"));
+        assertThat(pop3Client.getState()).isEqualTo(1);
+        assertThat(POP3BeforeSMTPHelper.isAuthorized("127.0.0.1")).isTrue();
 
     }
 
@@ -576,23 +573,23 @@ public class POP3ServerTest {
         String pass = "password";
         usersRepository.addUser("foo", pass);
 
-        assertEquals(POP3Reply.OK, pop3Client.sendCommand("CAPA"));
+        assertThat(pop3Client.sendCommand("CAPA")).isEqualTo(POP3Reply.OK);
 
         pop3Client.getAdditionalReply();
         pop3Client.getReplyString();
         List<String> replies = Arrays.asList(pop3Client.getReplyStrings());
 
-        assertTrue("contains USER", replies.contains("USER"));
+        assertThat(replies.contains("USER")).describedAs("contains USER").isTrue();
 
         pop3Client.login("foo", pass);
-        assertEquals(POP3Reply.OK, pop3Client.sendCommand("CAPA"));
+        assertThat(pop3Client.sendCommand("CAPA")).isEqualTo(POP3Reply.OK);
 
         pop3Client.getAdditionalReply();
         pop3Client.getReplyString();
         replies = Arrays.asList(pop3Client.getReplyStrings());
-        assertTrue("contains USER", replies.contains("USER"));
-        assertTrue("contains UIDL", replies.contains("UIDL"));
-        assertTrue("contains TOP", replies.contains("TOP"));
+        assertThat(replies.contains("USER")).describedAs("contains USER").isTrue();
+        assertThat(replies.contains("UIDL")).describedAs("contains UIDL").isTrue();
+        assertThat(replies.contains("TOP")).describedAs("contains TOP").isTrue();
         
     }
 
@@ -670,22 +667,22 @@ public class POP3ServerTest {
         out.write(bigMail);
         bigMail = null;
 
-        mailboxManager.getMailbox(mailboxPath, session).appendMessage(new ByteArrayInputStream(out.toByteArray()), new Date(),
-                session, false, new Flags());
+        mailboxManager.getMailbox(mailboxPath, session).appendMessage(MessageManager.AppendCommand.builder()
+                .build(out.toByteArray()), session);
         mailboxManager.startProcessingRequest(session);
 
         pop3Client.login("foo6", "bar6");
-        assertEquals(1, pop3Client.getState());
+        assertThat(pop3Client.getState()).isEqualTo(1);
 
         POP3MessageInfo[] entries = pop3Client.listMessages();
 
-        assertNotNull(entries);
-        assertEquals(1, entries.length);
-        assertEquals(1, pop3Client.getState());
+        assertThat(entries).isNotNull();
+        assertThat(entries.length).isEqualTo(1);
+        assertThat(pop3Client.getState()).isEqualTo(1);
 
         Reader r = pop3Client.retrieveMessage(entries[0].number);
 
-        assertNotNull(r);
+        assertThat(r).isNotNull();
         r.close();
         mailboxManager.deleteMailbox(mailboxPath, session);
 
@@ -735,9 +732,11 @@ public class POP3ServerTest {
     }
 
     private void setupTestMails(MailboxSession session, MessageManager mailbox) throws MailboxException {
-        mailbox.appendMessage(new ByteArrayInputStream(content), new Date(), session, true, new Flags());
+        mailbox.appendMessage(MessageManager.AppendCommand.builder()
+            .build(content), session);
         byte[] content2 = ("EMPTY").getBytes();
-        mailbox.appendMessage(new ByteArrayInputStream(content2), new Date(), session, true, new Flags());
+        mailbox.appendMessage(MessageManager.AppendCommand.builder()
+            .build(content2), session);
     }
 
 }

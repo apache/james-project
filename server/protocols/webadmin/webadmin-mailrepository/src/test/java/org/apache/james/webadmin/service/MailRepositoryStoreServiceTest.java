@@ -23,25 +23,32 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.stream.Stream;
 
+import javax.mail.internet.MimeMessage;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.james.mailrepository.api.MailKey;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
+import org.apache.james.server.core.MimeMessageInputStream;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.util.streams.Offset;
-import org.apache.james.webadmin.dto.MailKey;
-import org.apache.james.webadmin.dto.MailRepositoryResponse;
+import org.apache.james.webadmin.dto.MailKeyDTO;
+import org.apache.james.webadmin.dto.SingleMailRepositoryResponse;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class MailRepositoryStoreServiceTest {
-    private static final String FIRST_REPOSITORY = "url://repository";
-    private static final String SECOND_REPOSITORY = "url://repository2";
-    private static final String NAME_1 = "name1";
-    private static final String NAME_2 = "name2";
+    private static final MailRepositoryPath FIRST_REPOSITORY_PATH = MailRepositoryPath.from("repository");
+    private static final MailRepositoryPath SECOND_REPOSITORY_PATH = MailRepositoryPath.from("repository2");
+    private static final MailKey NAME_1 = new MailKey("name1");
+    private static final MailKey NAME_2 = new MailKey("name2");
 
     private MailRepositoryStore mailRepositoryStore;
     private MailRepositoryStoreService testee;
@@ -56,74 +63,119 @@ public class MailRepositoryStoreServiceTest {
 
     @Test
     public void listMailRepositoriesShouldReturnEmptyWhenEmpty() {
+        when(mailRepositoryStore.getPaths()).thenReturn(Stream.empty());
+
         assertThat(testee.listMailRepositories()).isEmpty();
     }
 
     @Test
     public void listMailRepositoriesShouldReturnOneRepositoryWhenOne() {
-        when(mailRepositoryStore.getUrls())
-            .thenReturn(ImmutableList.of(FIRST_REPOSITORY));
+        when(mailRepositoryStore.getPaths())
+            .thenReturn(Stream.of(FIRST_REPOSITORY_PATH));
         assertThat(testee.listMailRepositories())
-            .extracting(MailRepositoryResponse::getRepository)
-            .containsOnly(FIRST_REPOSITORY);
+            .extracting(SingleMailRepositoryResponse::getRepository)
+            .containsOnly(FIRST_REPOSITORY_PATH.asString());
     }
 
     @Test
     public void listMailRepositoriesShouldReturnTwoRepositoriesWhentwo() {
-        when(mailRepositoryStore.getUrls())
-            .thenReturn(ImmutableList.of(FIRST_REPOSITORY, SECOND_REPOSITORY));
+        when(mailRepositoryStore.getPaths())
+            .thenReturn(Stream.of(FIRST_REPOSITORY_PATH, SECOND_REPOSITORY_PATH));
         assertThat(testee.listMailRepositories())
-            .extracting(MailRepositoryResponse::getRepository)
-            .containsOnly(FIRST_REPOSITORY, SECOND_REPOSITORY);
+            .extracting(SingleMailRepositoryResponse::getRepository)
+            .containsOnly(FIRST_REPOSITORY_PATH.asString(), SECOND_REPOSITORY_PATH.asString());
     }
 
     @Test
     public void listMailsShouldThrowWhenMailRepositoryStoreThrows() throws Exception {
-        when(mailRepositoryStore.get(FIRST_REPOSITORY))
+        when(mailRepositoryStore.getByPath(FIRST_REPOSITORY_PATH))
             .thenThrow(new MailRepositoryStore.MailRepositoryStoreException("message"));
 
-        assertThatThrownBy(() -> testee.listMails(FIRST_REPOSITORY, Offset.none(), Limit.unlimited()))
+        assertThatThrownBy(() -> testee.listMails(FIRST_REPOSITORY_PATH, Offset.none(), Limit.unlimited()))
             .isInstanceOf(MailRepositoryStore.MailRepositoryStoreException.class);
     }
 
     @Test
     public void listMailsShouldReturnEmptyWhenMailRepositoryIsEmpty() throws Exception {
-        when(mailRepositoryStore.get(FIRST_REPOSITORY)).thenReturn(Optional.of(repository));
+        when(mailRepositoryStore.getByPath(FIRST_REPOSITORY_PATH)).thenReturn(Stream.of(repository));
 
-        assertThat(testee.listMails(FIRST_REPOSITORY, Offset.none(), Limit.unlimited()).get())
+        assertThat(testee.listMails(FIRST_REPOSITORY_PATH, Offset.none(), Limit.unlimited()).get())
             .isEmpty();
     }
 
     @Test
     public void listMailsShouldReturnContainedMailKeys() throws Exception {
-        when(mailRepositoryStore.get(FIRST_REPOSITORY)).thenReturn(Optional.of(repository));
+        when(mailRepositoryStore.getByPath(FIRST_REPOSITORY_PATH)).thenReturn(Stream.of(repository));
 
         repository.store(FakeMail.builder()
-            .name(NAME_1)
+            .name(NAME_1.asString())
             .build());
         repository.store(FakeMail.builder()
-            .name(NAME_2)
+            .name(NAME_2.asString())
             .build());
 
-        assertThat(testee.listMails(FIRST_REPOSITORY, Offset.none(), Limit.unlimited()).get())
-            .containsOnly(new MailKey(NAME_1), new MailKey(NAME_2));
+        assertThat(testee.listMails(FIRST_REPOSITORY_PATH, Offset.none(), Limit.unlimited()).get())
+            .containsOnly(new MailKeyDTO(NAME_1), new MailKeyDTO(NAME_2));
     }
 
     @Test
     public void listMailsShouldApplyLimitAndOffset() throws Exception {
-        when(mailRepositoryStore.get(FIRST_REPOSITORY)).thenReturn(Optional.of(repository));
+        when(mailRepositoryStore.getByPath(FIRST_REPOSITORY_PATH)).thenReturn(Stream.of(repository));
 
         repository.store(FakeMail.builder()
-            .name(NAME_1)
+            .name(NAME_1.asString())
             .build());
         repository.store(FakeMail.builder()
-            .name(NAME_2)
+            .name(NAME_2.asString())
             .build());
         repository.store(FakeMail.builder()
             .name("name3")
             .build());
 
-        assertThat(testee.listMails(FIRST_REPOSITORY, Offset.from(1), Limit.from(1)).get())
-            .containsOnly(new MailKey(NAME_2));
+        assertThat(testee.listMails(FIRST_REPOSITORY_PATH, Offset.from(1), Limit.from(1)).get())
+            .containsOnly(new MailKeyDTO(NAME_2));
+    }
+
+    @Test
+    public void retrieveMessageShouldThrownWhenUnknownRepository() throws Exception {
+        when(mailRepositoryStore.getByPath(FIRST_REPOSITORY_PATH)).thenReturn(Stream.of());
+
+        assertThatThrownBy(() -> testee.retrieveMessage(FIRST_REPOSITORY_PATH, NAME_1))
+            .isNotInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void retrieveMessageShouldThrowWhenMailRepositoryStoreThrows() throws Exception {
+        when(mailRepositoryStore.getByPath(FIRST_REPOSITORY_PATH))
+            .thenThrow(new MailRepositoryStore.MailRepositoryStoreException("message"));
+
+        assertThatThrownBy(() -> testee.retrieveMessage(FIRST_REPOSITORY_PATH, NAME_1))
+            .isInstanceOf(MailRepositoryStore.MailRepositoryStoreException.class);
+    }
+
+    @Test
+    public void retrieveMessageShouldReturnEmptyWhenMailNotFound() throws Exception {
+        when(mailRepositoryStore.getByPath(FIRST_REPOSITORY_PATH)).thenReturn(Stream.of(repository));
+
+        assertThat(testee.retrieveMessage(FIRST_REPOSITORY_PATH, NAME_1))
+            .isEmpty();
+    }
+
+    @Test
+    public void retrieveMessageShouldReturnTheMessageWhenMailExists() throws Exception {
+        when(mailRepositoryStore.getByPath(FIRST_REPOSITORY_PATH)).thenReturn(Stream.of(repository));
+
+        FakeMail mail = FakeMail.builder()
+            .name(NAME_1.asString())
+            .fileName("mail.eml")
+            .build();
+        repository.store(mail);
+
+        Optional<MimeMessage> mimeMessage = testee.retrieveMessage(FIRST_REPOSITORY_PATH, NAME_1);
+        assertThat(mimeMessage).isNotEmpty();
+
+        String eml = IOUtils.toString(new MimeMessageInputStream(mimeMessage.get()), StandardCharsets.UTF_8);
+        String expectedContent = ClassLoaderUtils.getSystemResourceAsString("mail.eml");
+        assertThat(eml).isEqualToNormalizingNewlines(expectedContent);
     }
 }

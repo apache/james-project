@@ -33,6 +33,7 @@ import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.transport.mailets.redirect.SpecialAddressKind;
+import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
@@ -94,8 +95,8 @@ public class SpecialAddressesUtils {
             case SENDER:
             case FROM:
             case REVERSE_PATH:
-                return Optional.ofNullable(mail.getSender())
-                    .map(sender -> ImmutableSet.of(sender))
+                return mail.getMaybeSender().asOptional()
+                    .map(ImmutableSet::of)
                     .orElse(ImmutableSet.of());
             case REPLY_TO:
                 return getReplyTosFromMail(mail);
@@ -125,11 +126,7 @@ public class SpecialAddressesUtils {
     }
 
     private Set<MailAddress> getSender(Mail mail) {
-        MailAddress sender = mail.getSender();
-        if (sender != null) {
-            return ImmutableSet.of(sender);
-        }
-        return ImmutableSet.of();
+        return OptionalUtils.toSet(mail.getMaybeSender().asOptional());
     }
 
     private Set<MailAddress> getReplyTos(InternetAddress[] replyToArray) {
@@ -185,9 +182,7 @@ public class SpecialAddressesUtils {
         switch (specialAddressKind) {
             case SENDER:
             case REVERSE_PATH:
-                return Optional.ofNullable(mail.getSender())
-                    .map(ImmutableSet::of)
-                    .orElse(ImmutableSet.of());
+                return getSender(mail);
             case FROM:
                 try {
                     InternetAddress[] fromArray = (InternetAddress[]) mail.getMessage().getFrom();
@@ -220,12 +215,8 @@ public class SpecialAddressesUtils {
         if (addresses != null) {
             return MailAddressUtils.from(addresses);
         } else {
-            MailAddress reversePath = mail.getSender();
-            if (reversePath != null) {
-                return ImmutableList.of(reversePath);
-            }
+            return mail.getMaybeSender().asList();
         }
-        return ImmutableList.of();
     }
 
     private List<MailAddress> toHeaders(Mail mail) {

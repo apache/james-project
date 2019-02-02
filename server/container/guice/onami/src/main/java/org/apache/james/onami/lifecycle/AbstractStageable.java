@@ -30,9 +30,6 @@ public abstract class AbstractStageable<S> extends AbstractBasicStageable<S> {
         super(object);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public final void stage(StageHandler stageHandler) {
         try {

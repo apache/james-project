@@ -19,12 +19,14 @@
 
 package org.apache.james.mailbox.store;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
-import org.msgpack.core.Preconditions;
+
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Preconditions;
 
 public class MessageBatcher {
 
@@ -34,20 +36,24 @@ public class MessageBatcher {
         List<MessageRange> execute(MessageRange messageRange) throws MailboxException;
     }
 
-    private final int moveBatchSize;
+    private final int batchSize;
 
-    public MessageBatcher(int moveBatchSize) {
-        Preconditions.checkArgument(moveBatchSize >= NO_BATCH_SIZE);
-        this.moveBatchSize = moveBatchSize;
+    public MessageBatcher(int batchSize) {
+        Preconditions.checkArgument(batchSize >= NO_BATCH_SIZE);
+        this.batchSize = batchSize;
+    }
+
+    public int getBatchSize() {
+        return batchSize;
     }
 
     public List<MessageRange> batchMessages(MessageRange set, BatchedOperation batchedOperation) throws MailboxException {
-        if (moveBatchSize > 0) {
-            List<MessageRange> movedRanges = new ArrayList<>();
-            for (MessageRange messageRange : set.split(moveBatchSize)) {
-                movedRanges.addAll(batchedOperation.execute(messageRange));
-            }
-            return movedRanges;
+        if (batchSize > 0) {
+            return set.split(batchSize)
+                .stream()
+                .flatMap(Throwing.function(range -> batchedOperation.execute(range)
+                                                                    .stream()))
+                .collect(Guavate.toImmutableList());
         } else {
             return batchedOperation.execute(set);
         }

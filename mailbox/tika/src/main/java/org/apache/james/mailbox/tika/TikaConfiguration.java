@@ -19,32 +19,82 @@
 
 package org.apache.james.mailbox.tika;
 
+import java.time.Duration;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.james.util.Port;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.primitives.Ints;
 
 public class TikaConfiguration {
 
-    public static Builder builder() {
-        return new Builder();
-    }
-
     public static class Builder {
-
+        private Optional<Boolean> isEnabled;
+        private Optional<Boolean> isCacheEnabled;
         private Optional<String> host;
         private Optional<Integer> port;
         private Optional<Integer> timeoutInMillis;
+        private Optional<Duration> cacheEvictionPeriod;
+        private Optional<Long> cacheWeightInBytes;
+        private ImmutableSet.Builder<String> contentTypeBlacklist;
 
         private Builder() {
+            isEnabled = Optional.empty();
+            isCacheEnabled = Optional.empty();
             host = Optional.empty();
             port = Optional.empty();
             timeoutInMillis = Optional.empty();
+            cacheEvictionPeriod = Optional.empty();
+            cacheWeightInBytes = Optional.empty();
+            contentTypeBlacklist = ImmutableSet.builder();
+        }
+
+        public Builder enable(Optional<Boolean> isEnabled) {
+            Preconditions.checkNotNull(isEnabled);
+            this.isEnabled = isEnabled;
+            return this;
+        }
+
+        public Builder enabled() {
+            this.isEnabled = Optional.of(true);
+            return this;
+        }
+
+        public Builder disabled() {
+            this.isEnabled = Optional.of(false);
+            return this;
+        }
+
+        public Builder cacheEnable(Optional<Boolean> isEnabled) {
+            Preconditions.checkNotNull(isEnabled);
+            this.isCacheEnabled = isEnabled;
+            return this;
+        }
+
+        public Builder cacheEnabled() {
+            this.isCacheEnabled = Optional.of(true);
+            return this;
+        }
+
+        public Builder cacheDisabled() {
+            this.isCacheEnabled = Optional.of(false);
+            return this;
         }
 
         public Builder host(String host) {
-            this.host = Optional.ofNullable(host);
+            Preconditions.checkNotNull(host);
+            this.host = Optional.of(host);
+            return this;
+        }
+
+        public Builder host(Optional<String> host) {
+            Preconditions.checkNotNull(host);
+            this.host = host;
             return this;
         }
 
@@ -53,29 +103,101 @@ public class TikaConfiguration {
             return this;
         }
 
+        public Builder port(Optional<Integer> port) {
+            Preconditions.checkNotNull(port);
+            this.port = port;
+            return this;
+        }
+
         public Builder timeoutInMillis(int timeoutInMillis) {
             this.timeoutInMillis = Optional.of(timeoutInMillis);
             return this;
         }
 
-        public TikaConfiguration build() {
-            Preconditions.checkState(host.isPresent(), "'host' is mandatory");
-            Preconditions.checkState(port.isPresent(), "'port' is mandatory");
-            Preconditions.checkState(timeoutInMillis.isPresent(), "'timeoutInMillis' is mandatory");
-            Port.assertValid(port.get());
+        public Builder timeoutInMillis(Optional<Integer> timeoutInMillis) {
+            Preconditions.checkNotNull(timeoutInMillis);
+            this.timeoutInMillis = timeoutInMillis;
+            return this;
+        }
 
-            return new TikaConfiguration(host.get(), port.get(), timeoutInMillis.get());
+        public Builder cacheEvictionPeriod(Duration duration) {
+            this.cacheEvictionPeriod = Optional.of(duration);
+            return this;
+        }
+
+        public Builder cacheEvictionPeriod(Optional<Duration> duration) {
+            this.cacheEvictionPeriod = duration;
+            return this;
+        }
+
+        public Builder cacheWeightInBytes(long weight) {
+            this.cacheWeightInBytes = Optional.of(weight);
+            return this;
+        }
+
+        public Builder cacheWeightInBytes(Optional<Long> weight) {
+            this.cacheWeightInBytes = weight;
+            return this;
+        }
+
+        public Builder contentTypeBlacklist(Set<String> contentTypeBlacklist) {
+            Preconditions.checkNotNull(contentTypeBlacklist);
+            this.contentTypeBlacklist.addAll(contentTypeBlacklist);
+            return this;
+        }
+
+        public TikaConfiguration build() {
+            port.ifPresent(Port::assertValid);
+
+            return new TikaConfiguration(
+                isEnabled.orElse(DEFAULT_DISABLED),
+                isCacheEnabled.orElse(DEFAULT_DISABLED),
+                host.orElse(DEFAULT_HOST),
+                port.orElse(DEFAULT_PORT),
+                timeoutInMillis.orElse(DEFAULT_TIMEOUT_IN_MS),
+                cacheEvictionPeriod.orElse(DEFAULT_CACHE_EVICTION_PERIOD),
+                cacheWeightInBytes.orElse(DEFAULT_CACHE_LIMIT_100_MB),
+                contentTypeBlacklist.build());
         }
     }
 
+    public static final long DEFAULT_CACHE_LIMIT_100_MB = 1024L * 1024L * 100L;
+    public static final Duration DEFAULT_CACHE_EVICTION_PERIOD = Duration.ofDays(1);
+    public static final boolean DEFAULT_DISABLED = false;
+    public static final String DEFAULT_HOST = "127.0.0.1";
+    public static final int DEFAULT_PORT = 9998;
+    public static final int DEFAULT_TIMEOUT_IN_MS = Ints.checkedCast(TimeUnit.SECONDS.toMillis(30));
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    private final boolean enabled;
+    private final boolean cacheEnabled;
     private final String host;
     private final int port;
     private final int timeoutInMillis;
+    private final Duration cacheEvictionPeriod;
+    private final long cacheWeightInBytes;
+    private final ImmutableSet<String> contentTypeBlacklist;
 
-    private TikaConfiguration(String host, int port, int timeoutInMillis) {
+    private TikaConfiguration(boolean enabled, boolean cacheEnabled, String host, int port, int timeoutInMillis, Duration cacheEvictionPeriod, long cacheWeightInBytes,  ImmutableSet<String> contentTypeBlacklist) {
+        this.enabled = enabled;
+        this.cacheEnabled = cacheEnabled;
         this.host = host;
         this.port = port;
         this.timeoutInMillis = timeoutInMillis;
+        this.cacheEvictionPeriod = cacheEvictionPeriod;
+        this.cacheWeightInBytes = cacheWeightInBytes;
+        this.contentTypeBlacklist = contentTypeBlacklist;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public boolean isCacheEnabled() {
+        return cacheEnabled;
     }
 
     public String getHost() {
@@ -89,4 +211,39 @@ public class TikaConfiguration {
     public int getTimeoutInMillis() {
         return timeoutInMillis;
     }
+
+    public Duration getCacheEvictionPeriod() {
+        return cacheEvictionPeriod;
+    }
+
+    public long getCacheWeightInBytes() {
+        return cacheWeightInBytes;
+    }
+
+    public ImmutableSet<String> getContentTypeBlacklist() {
+        return contentTypeBlacklist;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof TikaConfiguration) {
+            TikaConfiguration that = (TikaConfiguration) o;
+
+            return Objects.equals(this.enabled, that.enabled)
+                && Objects.equals(this.cacheEnabled, that.cacheEnabled)
+                && Objects.equals(this.port, that.port)
+                && Objects.equals(this.timeoutInMillis, that.timeoutInMillis)
+                && Objects.equals(this.cacheWeightInBytes, that.cacheWeightInBytes)
+                && Objects.equals(this.host, that.host)
+                && Objects.equals(this.cacheEvictionPeriod, that.cacheEvictionPeriod)
+                && Objects.equals(this.contentTypeBlacklist, that.contentTypeBlacklist);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(enabled, cacheEnabled, host, port, timeoutInMillis, cacheEvictionPeriod, cacheWeightInBytes, contentTypeBlacklist);
+    }
+
 }

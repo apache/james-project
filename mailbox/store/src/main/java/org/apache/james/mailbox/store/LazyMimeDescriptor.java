@@ -142,9 +142,6 @@ public class LazyMimeDescriptor implements MimeDescriptor {
         return Collections.EMPTY_LIST.iterator();
     }
 
-    /**
-     * Return null
-     */
     @Override
     public MimeDescriptor embeddedMessage() {
         return null;

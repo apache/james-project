@@ -19,17 +19,14 @@
 
 package org.apache.james.imap.encode;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.MailboxStatusResponse;
 import org.apache.james.mailbox.MessageUid;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,22 +38,19 @@ public class MailboxStatusResponseEncoderTest  {
 
     ByteImapResponseWriter writer = new ByteImapResponseWriter();
     ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
-    
-    private Mockery context = new JUnit4Mockery();
-    
+
     @Before
     public void setUp() throws Exception {
-        mockNextEncoder = context.mock(ImapEncoder.class);
+        mockNextEncoder = mock(ImapEncoder.class);
         encoder = new MailboxStatusResponseEncoder(mockNextEncoder);
     }
-    
 
     @Test
-    public void testIsAcceptable() throws Exception {
-        assertTrue(encoder.isAcceptable(new MailboxStatusResponse(null, null, null,
-                null, null, null, "mailbox")));
-        assertFalse(encoder.isAcceptable(context.mock(ImapMessage.class)));
-        assertFalse(encoder.isAcceptable(null));
+    public void testIsAcceptable() {
+        assertThat(encoder.isAcceptable(new MailboxStatusResponse(null, null, null,
+                null, null, null, "mailbox"))).isTrue();
+        assertThat(encoder.isAcceptable(mock(ImapMessage.class))).isFalse();
+        assertThat(encoder.isAcceptable(null)).isFalse();
     }
 
     @Test
@@ -70,6 +64,6 @@ public class MailboxStatusResponseEncoderTest  {
 
         encoder.encode(new MailboxStatusResponse(messages, recent, uidNext,
                 null, uidValidity, unseen, mailbox), composer, new FakeImapSession());
-        assertEquals("* STATUS \"A mailbox named desire\" (MESSAGES 2 RECENT 3 UIDNEXT 5 UIDVALIDITY 7 UNSEEN 11)\r\n", writer.getString());
+        assertThat(writer.getString()).isEqualTo("* STATUS \"A mailbox named desire\" (MESSAGES 2 RECENT 3 UIDNEXT 5 UIDVALIDITY 7 UNSEEN 11)\r\n");
     }
 }

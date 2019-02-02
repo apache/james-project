@@ -18,41 +18,56 @@
  ****************************************************************/
 
 package org.apache.james;
+
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
+
+import java.io.IOException;
+
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.server.core.configuration.Configuration;
+import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import com.google.inject.Module;
 
-
 public class CassandraJmapTestRule implements TestRule {
 
-    private static final int LIMIT_TO_3_MESSAGES = 3;
+    private static final int LIMIT_TO_10_MESSAGES = 10;
+    private final TemporaryFolder temporaryFolder;
 
     public static CassandraJmapTestRule defaultTestRule() {
         return new CassandraJmapTestRule(new EmbeddedElasticSearchRule());
     }
 
-    private GuiceModuleTestRule guiceModuleTestRule;
+    private final GuiceModuleTestRule guiceModuleTestRule;
 
     public CassandraJmapTestRule(GuiceModuleTestRule... guiceModuleTestRule) {
+        TempFilesystemTestRule tempFilesystemTestRule = new TempFilesystemTestRule();
+        this.temporaryFolder = tempFilesystemTestRule.getTemporaryFolder();
         this.guiceModuleTestRule =
                 AggregateGuiceModuleTestRule
                     .of(guiceModuleTestRule)
-                    .aggregate(new TempFilesystemTestRule());
+                    .aggregate(tempFilesystemTestRule);
     }
 
-    public GuiceJamesServer jmapServer(Module... additionals) {
-        return new GuiceJamesServer()
-            .combineWith(CassandraJamesServerMain.CASSANDRA_SERVER_MODULE, CassandraJamesServerMain.PROTOCOLS)
+    public GuiceJamesServer jmapServer(Module... additionals) throws IOException {
+        Configuration configuration = Configuration.builder()
+            .workingDirectory(temporaryFolder.newFolder())
+            .configurationFromClasspath()
+            .build();
+
+        return GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
             .overrideWith(new TestESMetricReporterModule())
             .overrideWith(guiceModuleTestRule.getModule())
+            .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()))
             .overrideWith(additionals);
     }
 

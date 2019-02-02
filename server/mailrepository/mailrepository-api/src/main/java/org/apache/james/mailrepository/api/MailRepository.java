@@ -44,7 +44,7 @@ public interface MailRepository {
      * @param mc
      *            the mail message to store
      */
-    void store(Mail mc) throws MessagingException;
+    MailKey store(Mail mc) throws MessagingException;
 
     /**
      * List string keys of messages in repository.
@@ -52,7 +52,7 @@ public interface MailRepository {
      * @return an <code>Iterator</code> over the list of keys in the repository
      * 
      */
-    Iterator<String> list() throws MessagingException;
+    Iterator<MailKey> list() throws MessagingException;
 
     /**
      * Retrieves a message given a key. At the moment, keys can be obtained from
@@ -62,7 +62,7 @@ public interface MailRepository {
      *            the key of the message to retrieve
      * @return the mail corresponding to this key, null if none exists
      */
-    Mail retrieve(String key) throws MessagingException;
+    Mail retrieve(MailKey key) throws MessagingException;
 
     /**
      * Removes a specified message
@@ -87,7 +87,7 @@ public interface MailRepository {
      * @param key
      *            the key of the message to be removed from the repository
      */
-    void remove(String key) throws MessagingException;
+    void remove(MailKey key) throws MessagingException;
 
     /**
      * Removes all mails from this repository
@@ -100,11 +100,11 @@ public interface MailRepository {
      * @deprecated This method is implementation dependent, it has been moved to org.apache.james.mailrepository.lib.AbstractMailRepository
      */
     @Deprecated
-    boolean lock(String key) throws MessagingException;
+    boolean lock(MailKey key) throws MessagingException;
 
     /**
      * @deprecated This method is implementation dependent, it has been moved to org.apache.james.mailrepository.lib.AbstractMailRepository
      */
     @Deprecated
-    boolean unlock(String key) throws MessagingException;
+    boolean unlock(MailKey key) throws MessagingException;
 }

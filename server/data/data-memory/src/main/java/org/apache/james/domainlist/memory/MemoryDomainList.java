@@ -21,10 +21,10 @@ package org.apache.james.domainlist.memory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainList;
@@ -33,7 +33,7 @@ import com.google.common.collect.ImmutableList;
 
 public class MemoryDomainList extends AbstractDomainList {
 
-    private final List<String> domains;
+    private final List<Domain> domains;
 
     @Inject
     public MemoryDomainList(DNSService dns) {
@@ -42,27 +42,27 @@ public class MemoryDomainList extends AbstractDomainList {
     }
 
     @Override
-    protected List<String> getDomainListInternal() throws DomainListException {
+    protected List<Domain> getDomainListInternal() {
         return ImmutableList.copyOf(domains);
     }
 
     @Override
-    protected boolean containsDomainInternal(String domain) throws DomainListException {
-        return domains.contains(domain.toLowerCase(Locale.US));
+    protected boolean containsDomainInternal(Domain domain) {
+        return domains.contains(domain);
     }
 
     @Override
-    public void addDomain(String domain) throws DomainListException {
+    public void addDomain(Domain domain) throws DomainListException {
         if (containsDomain(domain)) {
-            throw new DomainListException(domain.toLowerCase(Locale.US) + " already exists.");
+            throw new DomainListException(domain.name() + " already exists.");
         }
-        domains.add(domain.toLowerCase(Locale.US));
+        domains.add(domain);
     }
 
     @Override
-    public void removeDomain(String domain) throws DomainListException {
-        if (!domains.remove(domain.toLowerCase(Locale.US))) {
-            throw new DomainListException(domain.toLowerCase(Locale.US) + " was not found");
+    public void removeDomain(Domain domain) throws DomainListException {
+        if (!domains.remove(domain)) {
+            throw new DomainListException(domain.name() + " was not found");
         }
     }
 }

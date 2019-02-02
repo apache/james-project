@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - WebAdmin Configuration</title>
+ </properties>
+
+<body>
+
+  <section name="WebAdmin Configuration">
+
+    <p>Consult <a href="https://github.com/apache/james-project/server/container/guice/memory-guice/sample-configuration/webadmin.properties">webadmin.properties</a> in GIT to get some examples and hints.</p>
+
+    <p>Use this configuration to define the WebAdmin's responding host and port.</p>
+
+    <dl>
+        <dt><strong>enabled</strong></dt>
+        <dd>Define if WebAdmin is launched (default: false)</dd>
+        <dt><strong>port</strong></dt>
+        <dd>Define WebAdmin's port (default: 8080)</dd>
+        <dt><strong>host</strong></dt>
+        <dd>Define WebAdmin's host (default: localhost)</dd>
+        <dt><strong>cors.enable</strong></dt>
+        <dd>Allow the Cross-origin resource sharing (default: false)</dd>
+        <dt><strong>cors.origin</strong></dt>
+        <dd>Specify ths CORS origin (default: null)</dd>
+        <dt><strong>jwt.enable</strong></dt>
+        <dd>Allow JSON Web Token (default: false)</dd>
+        <dt><strong>https.enable</strong></dt>
+        <dd>Use https (default: false)</dd>
+        <dt><strong>https.keystore</strong></dt>
+        <dd>Specify a keystore file for https (default: null)</dd>
+        <dt><strong>https.password</strong></dt>
+        <dd>Specify the keystore password (default: null)</dd>
+        <dt><strong>https.trust.keystore</strong></dt>
+        <dd>Specify a truststore file for https (default: null)</dd>
+        <dt><strong>https.trust.password</strong></dt>
+        <dd>Specify the truststore password (default: null)</dd>
+    </dl>
+  </section>
+
+</body>
+
+</document>
+

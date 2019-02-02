@@ -25,28 +25,31 @@ import java.util.concurrent.TimeUnit;
 
 import org.rnorth.ducttape.unreliables.Unreliables;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.wait.WaitStrategy;
+import org.testcontainers.containers.wait.strategy.WaitStrategy;
+import org.testcontainers.containers.wait.strategy.WaitStrategyTarget;
 
 import com.google.common.primitives.Ints;
 
 public class CassandraWaitStrategy implements WaitStrategy {
 
     private static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(1);
-    private Duration timeout = DEFAULT_TIMEOUT;
+    private final GenericContainer<?> cassandraContainer;
+    private final Duration timeout;
 
-    public CassandraWaitStrategy() {
-        this(DEFAULT_TIMEOUT);
+    public CassandraWaitStrategy(GenericContainer<?> cassandraContainer) {
+        this(cassandraContainer, DEFAULT_TIMEOUT);
     }
 
-    public CassandraWaitStrategy(Duration timeout) {
+    public CassandraWaitStrategy(GenericContainer<?> cassandraContainer, Duration timeout) {
+        this.cassandraContainer = cassandraContainer;
         this.timeout = timeout;
     }
 
     @Override
-    public void waitUntilReady(@SuppressWarnings("rawtypes") GenericContainer container) {
+    public void waitUntilReady(WaitStrategyTarget waitStrategyTarget) {
         Unreliables.retryUntilTrue(Ints.checkedCast(timeout.getSeconds()), TimeUnit.SECONDS, () -> {
                 try {
-                    return container
+                    return cassandraContainer
                         .execInContainer("cqlsh", "-e", "show host")
                         .getStdout()
                         .contains("Connected to Test Cluster");
@@ -59,6 +62,6 @@ public class CassandraWaitStrategy implements WaitStrategy {
 
     @Override
     public WaitStrategy withStartupTimeout(Duration startupTimeout) {
-        return new CassandraWaitStrategy(startupTimeout);
+        return new CassandraWaitStrategy(cassandraContainer, startupTimeout);
     }
 }

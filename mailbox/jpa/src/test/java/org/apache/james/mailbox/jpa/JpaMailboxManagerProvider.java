@@ -26,21 +26,24 @@ import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-
-import com.google.common.base.Throwables;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
+import org.apache.james.metrics.api.NoopMetricFactory;
 
 public class JpaMailboxManagerProvider {
 
@@ -58,22 +61,18 @@ public class JpaMailboxManagerProvider {
 
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
-        StoreRightManager storeRightManager = new StoreRightManager(mf, aclResolver, groupMembershipResolver, mailboxEventDispatcher);
+
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
+        StoreRightManager storeRightManager = new StoreRightManager(mf, aclResolver, groupMembershipResolver, eventBus);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mf, storeRightManager,
             LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE);
-        OpenJPAMailboxManager openJPAMailboxManager = new OpenJPAMailboxManager(mf, noAuthenticator, noAuthorizator,
+        SessionProvider sessionProvider = new SessionProvider(noAuthenticator, noAuthorizator);
+        QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mf);
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mf, mf, new DefaultTextExtractor());
+
+        return new OpenJPAMailboxManager(mf, sessionProvider,
             messageParser, new DefaultMessageId.Factory(),
-            delegatingListener, mailboxEventDispatcher, annotationManager,
-            storeRightManager);
-
-        try {
-            openJPAMailboxManager.init();
-        } catch (MailboxException e) {
-            throw Throwables.propagate(e);
-        }
-
-        return openJPAMailboxManager;
+            eventBus, annotationManager,
+            storeRightManager, quotaComponents, index);
     }
 }

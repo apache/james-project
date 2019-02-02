@@ -38,6 +38,7 @@ class CorpusLoaderThread extends Thread {
     /**
      * Thread entry point.
      */
+    @Override
     public void run() {
         LOGGER.info("CorpusLoader thread started: will wake up every " + BayesianAnalysis.CORPUS_RELOAD_INTERVAL + " ms");
 

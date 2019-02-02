@@ -21,7 +21,7 @@ package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.BlobNotFoundException;
@@ -66,7 +67,7 @@ public class StoreBlobManagerTest {
     public void setUp() {
         attachmentManager = mock(AttachmentManager.class);
         messageIdManager = mock(MessageIdManager.class);
-        session = mock(MailboxSession.class);
+        session = MailboxSessionUtil.create("user");
 
         blobManager = new StoreBlobManager(attachmentManager, messageIdManager, new TestMessageId.Factory());
     }
@@ -82,7 +83,7 @@ public class StoreBlobManagerTest {
 
         assertThat(blobManager.retrieve(BLOB_ID_ATTACHMENT, session))
             .isEqualTo(Blob.builder()
-                .id(BLOB_ID_ATTACHMENT)
+                .id(BlobId.fromString("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"))
                 .contentType(CONTENT_TYPE)
                 .payload(BYTES)
                 .build());

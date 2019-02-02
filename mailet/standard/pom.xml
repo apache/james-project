@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-mailet</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
 
@@ -38,23 +38,33 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-mailet-base</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-mailet-base</artifactId>
-            <type>test-jar</type>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>apache-mailet-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-mime4j-dom</artifactId>
             <version>${apache-mime4j.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-util-java8</artifactId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-testing</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>javax-mail-extension</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -81,13 +91,13 @@
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>net.javacrumbs.json-unit</groupId>
+            <artifactId>json-unit-assertj</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>net.javacrumbs.json-unit</groupId>
-            <artifactId>json-unit-fluent</artifactId>
+            <groupId>nl.jqno.equalsverifier</groupId>
+            <artifactId>equalsverifier</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -109,6 +119,21 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
@@ -122,8 +147,16 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>maven-mailetdocs-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <reuseForks>true</reuseForks>
+                    <forkCount>1C</forkCount>
+                </configuration>
             </plugin>
         </plugins>
     </build>

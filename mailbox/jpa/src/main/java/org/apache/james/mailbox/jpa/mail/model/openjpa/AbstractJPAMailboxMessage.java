@@ -42,7 +42,6 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
@@ -58,8 +57,10 @@ import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.FlagsFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.comparator.UidComparator;
+import org.apache.james.mime4j.MimeException;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumn;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumns;
 import org.apache.openjpa.persistence.jdbc.Index;
@@ -330,34 +331,22 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
             .build();
     }
 
-    /**
-     * @see MailboxMessage#getModSeq()
-     */
+    @Override
     public long getModSeq() {
         return modSeq;
     }
 
-    /**
-     * @see MailboxMessage#setModSeq(long)
-     */
+    @Override
     public void setModSeq(long modSeq) {
         this.modSeq = modSeq;
     }
 
-    /**
-     * Gets the top level MIME content media type.
-     *
-     * @return top level MIME content media type, or null if default
-     */
+    @Override
     public String getMediaType() {
         return mediaType;
     }
 
-    /**
-     * Gets the MIME content subtype.
-     *
-     * @return the MIME content subtype, or null if default
-     */
+    @Override
     public String getSubType() {
         return subType;
     }
@@ -369,22 +358,17 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
      *
      * @return unmodifiable list of meta-data, not null
      */
+    @Override
     public List<Property> getProperties() {
         return new ArrayList<>(properties);
     }
 
-    /**
-     * Gets the number of CRLF in a textual document.
-     *
-     * @return CRLF count when document is textual, null otherwise
-     */
+    @Override
     public Long getTextualLineCount() {
         return textualLineCount;
     }
 
-    /**
-     * @see MailboxMessage#getFullContentOctets()
-     */
+    @Override
     public long getFullContentOctets() {
         return contentOctets;
     }
@@ -393,9 +377,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         return bodyStartOctet;
     }
 
-    /**
-     * @see MailboxMessage#getInternalDate()
-     */
+    @Override
     public Date getInternalDate() {
         return internalDate;
     }
@@ -527,7 +509,11 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
 
     @Override
     public List<MessageAttachment> getAttachments() {
-        throw new NotImplementedException("Attachments are not implemented");
+        try {
+            return new MessageParser().retrieveAttachments(getFullContent());
+        } catch (MimeException | IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

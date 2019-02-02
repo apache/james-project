@@ -22,11 +22,13 @@ package org.apache.james.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.server.core.JamesServerResourceLoader;
+import org.apache.james.server.core.configuration.Configuration;
+import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 
 public class FileConfigurationProviderTest {
 
@@ -34,19 +36,35 @@ public class FileConfigurationProviderTest {
     private static final String CONFIG_KEY_2 = "property";
     private static final String CONFIG_KEY_4 = "james";
     private static final String CONFIG_KEY_5 = "internal";
+    private static final String CONFIG_KEY_ENV = "env";
+    private static final String CONFIG_KEY_ENV_WITH_COMMA = "envWithComma";
+    private static final String CONFIG_KEY_NOT_ENV = "notEnv";
     private static final String VALUE_1 = "0";
     private static final String VALUE_2 = "awesome";
     private static final String VALUE_3 = "james";
+    private static final String VALUE_NOT_ENV = "${env:MY_NOT_IN_ENV_VAR}";
+    private static final String ENVIRONMENT_SET_VALUE = "testvalue";
+    private static final String ENVIRONMENT_WITH_COMMA = "testvalue,testvalue2,testvalue3";
     private static final String FAKE_CONFIG_KEY = "fake";
     private static final String ROOT_CONFIG_KEY = "test";
     private static final String CONFIG_SEPARATOR = ".";
 
     private FileConfigurationProvider configurationProvider;
 
+    @Rule
+    public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+
     @Before
     public void setUp() {
-        FileSystemImpl fileSystem = new FileSystemImpl(new JamesServerResourceLoader("../"));
-        configurationProvider = new FileConfigurationProvider(fileSystem, FileSystem.CLASSPATH_PROTOCOL);
+        environmentVariables.set("MY_ENV_VAR", ENVIRONMENT_SET_VALUE);
+        environmentVariables.set("MY_ENV_VAR_WITH_COMMA", ENVIRONMENT_WITH_COMMA);
+        environmentVariables.clear("MY_NOT_IN_ENV_VAR");
+        Configuration configuration = Configuration.builder()
+            .workingDirectory("../")
+            .configurationFromClasspath()
+            .build();
+        FileSystemImpl fileSystem = new FileSystemImpl(configuration.directories());
+        configurationProvider = new FileConfigurationProvider(fileSystem, configuration);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -74,7 +92,8 @@ public class FileConfigurationProviderTest {
         HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
         assertThat(hierarchicalConfiguration.getKeys()).containsOnly(CONFIG_KEY_1,
                 String.join(CONFIG_SEPARATOR, CONFIG_KEY_4, CONFIG_KEY_2),
-                String.join(CONFIG_SEPARATOR, CONFIG_KEY_4, CONFIG_KEY_5, CONFIG_KEY_2));
+                String.join(CONFIG_SEPARATOR, CONFIG_KEY_4, CONFIG_KEY_5, CONFIG_KEY_2),
+                CONFIG_KEY_ENV, CONFIG_KEY_ENV_WITH_COMMA, CONFIG_KEY_NOT_ENV);
         assertThat(hierarchicalConfiguration.getProperty(CONFIG_KEY_1)).isEqualTo(VALUE_1);
     }
 
@@ -106,7 +125,7 @@ public class FileConfigurationProviderTest {
 
     @Test
     public void getConfigurationShouldReturnDefaultOnNonExistingXMLFile() throws Exception {
-        assertThat(configurationProvider.getConfiguration(FAKE_CONFIG_KEY)).isEqualTo(FileConfigurationProvider.EMTY_CONFIGURATION);
+        assertThat(configurationProvider.getConfiguration(FAKE_CONFIG_KEY)).isEqualTo(FileConfigurationProvider.EMPTY_CONFIGURATION);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -114,4 +133,21 @@ public class FileConfigurationProviderTest {
         configurationProvider.getConfiguration(String.join(CONFIG_SEPARATOR, ROOT_CONFIG_KEY, FAKE_CONFIG_KEY));
     }
 
+    @Test
+    public void getConfigurationShouldNotReplaceEnvironmentVariableWhenNotSet() throws Exception {
+        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
+        assertThat(hierarchicalConfiguration.getString(CONFIG_KEY_NOT_ENV)).isEqualTo(VALUE_NOT_ENV);
+    }
+
+    @Test
+    public void getConfigurationShouldReplaceEnvironmentVariableWhenSet() throws Exception {
+        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
+        assertThat(hierarchicalConfiguration.getString(CONFIG_KEY_ENV)).isEqualTo(ENVIRONMENT_SET_VALUE);
+    }
+
+    @Test
+    public void getConfigurationShouldReplaceEnvironmentVariableWithoutSplittingThemWhenSet() throws Exception {
+        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
+        assertThat(hierarchicalConfiguration.getString(CONFIG_KEY_ENV_WITH_COMMA)).isEqualTo(ENVIRONMENT_WITH_COMMA);
+    }
 }

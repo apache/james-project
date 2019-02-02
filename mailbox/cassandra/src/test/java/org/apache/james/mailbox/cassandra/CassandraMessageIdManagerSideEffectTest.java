@@ -21,61 +21,46 @@ package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
-import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
+import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.AbstractMessageIdManagerSideEffectTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
 public class CassandraMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
 
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE, cassandraServer.getHost());
+    }
+
+    @Override
     @Before
     public void setUp() throws Exception {
-        CassandraModuleComposite modules = new CassandraModuleComposite(
-                new CassandraAclModule(),
-                new CassandraMailboxModule(),
-                new CassandraMessageModule(),
-                new CassandraMailboxCounterModule(),
-                new CassandraMailboxRecentsModule(),
-                new CassandraFirstUnseenModule(),
-                new CassandraDeletedMessageModule(),
-                new CassandraUidModule(),
-                new CassandraModSeqModule(),
-                new CassandraAttachmentModule(),
-                new CassandraAnnotationModule(),
-                new CassandraApplicableFlagsModule(),
-                new CassandraBlobModule());
-        cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
         super.setUp();
     }
     
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Override
-    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception {
-        return CassandraMessageIdManagerTestSystem.createTestingData(cassandra, quotaManager, dispatcher);
+    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, EventBus eventBus) {
+        return CassandraMessageIdManagerTestSystem.createTestingData(cassandra, quotaManager, eventBus);
     }
 }

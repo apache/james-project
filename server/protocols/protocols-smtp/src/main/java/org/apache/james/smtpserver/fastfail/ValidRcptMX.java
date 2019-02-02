@@ -27,7 +27,9 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
 import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
@@ -52,8 +54,6 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(ValidRcptMX.class);
 
     private DNSService dnsService = null;
-
-    private static final String LOCALHOST = "localhost";
 
     private NetMatcher bNetwork = null;
 
@@ -87,18 +87,19 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
         bNetwork = new NetMatcher(networks, dnsServer);
     }
 
-    public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+    @Override
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
 
-        String domain = rcpt.getDomain();
+        Domain domain = rcpt.getDomain();
 
         // Email should be deliver local
-        if (!domain.equals(LOCALHOST)) {
+        if (!domain.equals(Domain.LOCALHOST)) {
 
             Iterator<String> mx;
             try {
-                mx = dnsService.findMXRecords(domain).iterator();
+                mx = dnsService.findMXRecords(domain.name()).iterator();
             } catch (TemporaryResolutionException e1) {
-                return new HookResult(HookReturnCode.DENYSOFT);
+                return HookResult.DENYSOFT;
             }
 
             if (mx != null && mx.hasNext()) {
@@ -110,7 +111,12 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
 
                         // Check for invalid MX
                         if (bNetwork.matchInetNetwork(ip)) {
-                            return new HookResult(HookReturnCode.DENY, SMTPRetCode.AUTH_REQUIRED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " Invalid MX " + session.getRemoteAddress().getAddress().toString() + " for domain " + domain + ". Reject email");
+                            return HookResult.builder()
+                                .hookReturnCode(HookReturnCode.deny())
+                                .smtpReturnCode(SMTPRetCode.AUTH_REQUIRED)
+                                .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH)
+                                    + " Invalid MX " + session.getRemoteAddress().getAddress().toString() + " for domain " + domain.asString() + ". Reject email")
+                                .build();
                         }
                     } catch (UnknownHostException e) {
                         // Ignore this
@@ -118,7 +124,7 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
                 }
             }
         }
-        return new HookResult(HookReturnCode.DECLINED);
+        return HookResult.DECLINED;
     }
 
     @Override

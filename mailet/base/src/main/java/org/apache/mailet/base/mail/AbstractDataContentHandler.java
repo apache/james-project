@@ -63,9 +63,7 @@ public abstract class AbstractDataContentHandler implements DataContentHandler {
         fieldDataFlavor = aDataFlavor;
     }
 
-    /**
-     * @see javax.activation.DataContentHandler#getContent(javax.activation.DataSource)
-     */
+    @Override
     public Object getContent(DataSource aDataSource) throws IOException {
         Object content = null;
         try {
@@ -86,10 +84,7 @@ public abstract class AbstractDataContentHandler implements DataContentHandler {
     protected abstract Object computeContent(DataSource aDataSource)
             throws MessagingException;
 
-    /**
-     * @see javax.activation.DataContentHandler#getTransferData(java.awt.datatransfer.DataFlavor,
-     *      javax.activation.DataSource)
-     */
+    @Override
     public Object getTransferData(DataFlavor aDataFlavor, DataSource aDataSource)
             throws UnsupportedFlavorException, IOException {
         Object content = null;
@@ -99,9 +94,7 @@ public abstract class AbstractDataContentHandler implements DataContentHandler {
         return content;
     }
 
-    /**
-     * @see javax.activation.DataContentHandler#getTransferDataFlavors()
-     */
+    @Override
     public DataFlavor[] getTransferDataFlavors() {
         return new DataFlavor[]{getDataFlavor()};
     }

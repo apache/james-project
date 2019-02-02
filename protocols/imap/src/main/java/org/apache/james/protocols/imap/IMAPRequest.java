@@ -71,10 +71,7 @@ public class IMAPRequest implements Request {
         return tag;
     }
     
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.Request#getArgument()
-     */
+    @Override
     public String getArgument() {
         int tagOffeset = tag.length() + command.length() + 2;
         StringBuilder sb = new StringBuilder();
@@ -103,10 +100,7 @@ public class IMAPRequest implements Request {
         return sb.toString();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.Request#getCommand()
-     */
+    @Override
     public String getCommand() {
         return command;
     }
@@ -122,10 +116,12 @@ public class IMAPRequest implements Request {
             boolean first = true;
             Iterator<ByteBuffer> buffIt = lines.iterator();
 
+            @Override
             public boolean hasNext() {
                 return buffIt.hasNext();
             }
 
+            @Override
             public ByteBuffer next() {
                 ByteBuffer buf = buffIt.next();
                 buf.rewind();
@@ -138,6 +134,7 @@ public class IMAPRequest implements Request {
                 return buf;
             }
 
+            @Override
             public void remove() {
                 throw new UnsupportedOperationException();
             }

@@ -45,6 +45,7 @@ public abstract class AbstractChainedImapEncoder implements ImapEncoder {
      * Encode the {@link ImapMessage} if {@link #isAcceptable(ImapMessage)}
      * return true, if not pass it to the next encoder in the chain
      */
+    @Override
     public void encode(ImapMessage message, ImapResponseComposer composer, ImapSession session) throws IOException {
         final boolean isAcceptable = isAcceptable(message);
         if (isAcceptable) {

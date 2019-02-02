@@ -19,6 +19,10 @@
 
 package org.apache.james.user.jpa.model;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
+import java.util.function.Function;
+
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -28,8 +32,11 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.james.user.api.model.User;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 
 @Entity(name = "JamesUser")
 @Table(name = "JAMES_USER")
@@ -44,26 +51,39 @@ public class JPAUser implements User {
     /**
      * Hash password.
      * 
-     * @param username
-     *            not null
      * @param password
      *            not null
      * @return not null
      */
-    private static String hashPassword(String username, String password, String alg) {
-        String newPass;
-        if (alg == null || alg.equals("MD5")) {
-            newPass = DigestUtils.md5Hex(password);
-        } else if (alg.equals("NONE")) {
-            newPass = "password";
-        } else if (alg.equals("SHA-256")) {
-            newPass = DigestUtils.sha256Hex(password);
-        } else if (alg.equals("SHA-512")) {
-            newPass = DigestUtils.sha512Hex(password);
-        } else {
-            newPass = DigestUtils.sha1Hex(password);
+    @VisibleForTesting
+    static String hashPassword(String password, String alg) {
+        return chooseHashFunction(alg).apply(password);
+    }
+
+    interface PasswordHashFunction extends Function<String, String> {}
+
+    private static PasswordHashFunction chooseHashFunction(String nullableAlgorithm) {
+        String algorithm = Optional.ofNullable(nullableAlgorithm).orElse("MD5");
+        switch (algorithm) {
+            case "NONE":
+                return (password) -> "password";
+            default:
+                return (password) -> chooseHashing(algorithm).hashString(password, StandardCharsets.UTF_8).toString();
         }
-        return newPass;
+    }
+
+    @SuppressWarnings("deprecation")
+    private static HashFunction chooseHashing(String algorithm) {
+        switch (algorithm) {
+            case "MD5":
+                return Hashing.md5();
+            case "SHA-256":
+                return Hashing.sha256();
+            case "SHA-512":
+                return Hashing.sha512();
+            default:
+                return Hashing.sha1();
+        }
     }
 
     /** Prevents concurrent modification */
@@ -91,39 +111,33 @@ public class JPAUser implements User {
         super();
         this.name = userName;
         this.alg = alg;
-        this.password = hashPassword(userName, password, alg);
+        this.password = hashPassword(password, alg);
     }
 
-    /**
-     * @see org.apache.james.user.api.model.User#getUserName()
-     */
+    @Override
     public String getUserName() {
         return name;
     }
 
-    /**
-     * @see org.apache.james.user.api.model.User#setPassword(java.lang.String)
-     */
+    @Override
     public boolean setPassword(String newPass) {
         final boolean result;
         if (newPass == null) {
             result = false;
         } else {
-            password = hashPassword(name, newPass, alg);
+            password = hashPassword(newPass, alg);
             result = true;
         }
         return result;
     }
 
-    /**
-     * @see org.apache.james.user.api.model.User#verifyPassword(java.lang.String)
-     */
+    @Override
     public boolean verifyPassword(String pass) {
         final boolean result;
         if (pass == null) {
             result = password == null;
         } else {
-            result = password != null && password.equals(hashPassword(name, pass, alg));
+            result = password != null && password.equals(hashPassword(pass, alg));
         }
         return result;
     }

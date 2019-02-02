@@ -98,12 +98,13 @@ public class FilterConditionTest {
         Header header = Header.from(ImmutableList.of("name", "value"));
         Optional<String> hasKeyword = Optional.of("$Draft");
         Optional<String> notKeyword = Optional.of("$Flagged");
+        Optional<String> attachmentFileName = Optional.of("file.txt");
 
         FilterCondition expectedFilterCondition = new FilterCondition(Optional.of(ImmutableList.of("1")), Optional.of(ImmutableList.of("2")), Optional.of(before), Optional.of(after),
                 Optional.of(Number.fromLong(minSize)), Optional.of(Number.fromLong(maxSize)),
                 Optional.of(isFlagged), Optional.of(isUnread), Optional.of(isAnswered), Optional.of(isDraft), Optional.of(isForwarded), Optional.of(hasAttachment), Optional.of(text), Optional.of(from),
                 Optional.of(to), Optional.of(cc), Optional.of(bcc), Optional.of(subject), Optional.of(body), Optional.of(attachments), Optional.of(header),
-                hasKeyword, notKeyword);
+                hasKeyword, notKeyword, attachmentFileName);
 
         FilterCondition filterCondition = FilterCondition.builder()
                 .inMailboxes(Optional.of(ImmutableList.of("1")))
@@ -129,6 +130,7 @@ public class FilterConditionTest {
                 .header(header)
                 .hasKeyword(hasKeyword)
                 .notKeyword(notKeyword)
+                .attachmentFileName(attachmentFileName)
                 .build();
 
         assertThat(filterCondition).isEqualToComparingFieldByField(expectedFilterCondition);

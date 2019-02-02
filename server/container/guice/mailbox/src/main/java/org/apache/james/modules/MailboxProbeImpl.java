@@ -41,19 +41,15 @@ import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.Wildcard;
+import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.utils.GuiceProbe;
-
-import com.google.common.base.Throwables;
 
 public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
     private final MailboxManager mailboxManager;
     private final MailboxMapperFactory mailboxMapperFactory;
     private final SubscriptionManager subscriptionManager;
-    public static final boolean RECENT = true;
 
     @Inject
     private MailboxProbeImpl(MailboxManager mailboxManager, MailboxMapperFactory mailboxMapperFactory,
@@ -65,29 +61,32 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
 
     @Override
     public MailboxId createMailbox(String namespace, String user, String name) {
+        return createMailbox(new MailboxPath(namespace, user, name));
+    }
+
+    public MailboxId createMailbox(MailboxPath mailboxPath) {
         MailboxSession mailboxSession = null;
         try {
-            mailboxSession = mailboxManager.createSystemSession(user);
+            mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
             mailboxManager.startProcessingRequest(mailboxSession);
-            return mailboxManager.createMailbox(new MailboxPath(namespace, user, name), mailboxSession)
+            return mailboxManager.createMailbox(mailboxPath, mailboxSession)
                     .orElseThrow(() -> new MailboxException("mailbox name is probably empty"));
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             closeSession(mailboxSession);
         }
     }
 
-
     @Override
-    public Mailbox getMailbox(String namespace, String user, String name) {
+    public MailboxId getMailboxId(String namespace, String user, String name) {
         MailboxSession mailboxSession = null;
         try {
             mailboxSession = mailboxManager.createSystemSession(user);
             MailboxMapper mailboxMapper = mailboxMapperFactory.getMailboxMapper(mailboxSession);
-            return mailboxMapper.findMailboxByPath(new MailboxPath(namespace, user, name));
+            return mailboxMapper.findMailboxByPath(new MailboxPath(namespace, user, name)).getMailboxId();
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             closeSession(mailboxSession);
         }
@@ -99,7 +98,7 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
             try {
                 mailboxManager.logout(session, true);
             } catch (MailboxException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
     }
@@ -116,7 +115,7 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
                     .map(MailboxPath::getName)
                     .collect(Collectors.toList());
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             closeSession(mailboxSession);
         }
@@ -139,7 +138,7 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
             mailboxManager.startProcessingRequest(mailboxSession);
             mailboxManager.deleteMailbox(new MailboxPath(namespace, user, name), mailboxSession);
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             closeSession(mailboxSession);
         }
@@ -152,7 +151,9 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
 
         MessageManager messageManager = mailboxManager.getMailbox(new MailboxPath(namespace, user, name), mailboxSession);
         InputStream emlFileAsStream = new FileInputStream(emlPath);
-        messageManager.appendMessage(emlFileAsStream, new Date(), mailboxSession, RECENT, new Flags());
+        messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .recent()
+            .build(emlFileAsStream), mailboxSession);
 
         mailboxManager.endProcessingRequest(mailboxSession);
         mailboxSession.close();
@@ -165,6 +166,14 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
         return messageManager.appendMessage(message, internalDate, mailboxSession, isRecent, flags);
+    }
+
+    public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, MessageManager.AppendCommand appendCommand)
+            throws MailboxException {
+
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
+        MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
+        return messageManager.appendMessage(appendCommand, mailboxSession);
     }
 
     @Override

@@ -22,11 +22,13 @@ package org.apache.james.backends.cassandra.init;
 import java.util.Collection;
 import java.util.Optional;
 
+import org.apache.james.backends.cassandra.init.configuration.QueryLoggerConfiguration;
 import org.apache.james.util.Host;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PoolingOptions;
 import com.datastax.driver.core.QueryOptions;
 import com.datastax.driver.core.SocketOptions;
@@ -49,9 +51,6 @@ public class ClusterBuilder {
     private Optional<Integer> port;
     private Optional<Collection<Host>> servers;
 
-    private Optional<Integer> refreshSchemaIntervalMillis;
-    private boolean forTest;
-
     private Optional<QueryLoggerConfiguration> queryLogger;
     private Optional<Integer> readTimeoutMillis;
     private Optional<Integer> connectTimeoutMillis;
@@ -64,9 +63,6 @@ public class ClusterBuilder {
         host = Optional.empty();
         port = Optional.empty();
         servers = Optional.empty();
-
-        refreshSchemaIntervalMillis = Optional.empty();
-        forTest = false;
 
         queryLogger = Optional.empty();
         readTimeoutMillis = Optional.empty();
@@ -108,12 +104,6 @@ public class ClusterBuilder {
         return this;
     }
 
-    public ClusterBuilder refreshSchemaIntervalMillis(int refreshSchemaIntervalMillis) {
-        this.refreshSchemaIntervalMillis = Optional.of(refreshSchemaIntervalMillis);
-
-        return this;
-    }
-
     public ClusterBuilder servers(Host... servers) {
         this.servers = Optional.of(ImmutableList.copyOf(servers));
 
@@ -122,12 +112,6 @@ public class ClusterBuilder {
 
     public ClusterBuilder servers(Collection<Host> servers) {
         this.servers = Optional.of(servers);
-
-        return this;
-    }
-
-    public ClusterBuilder forTest() {
-        this.forTest = true;
 
         return this;
     }
@@ -152,7 +136,6 @@ public class ClusterBuilder {
         Preconditions.checkState(!(servers.isPresent() && host.isPresent()), "You can't specify a list of servers and a host at the same time");
         Preconditions.checkState(!(servers.isPresent() && port.isPresent()), "You can't specify a list of servers and a port at the same time");
         Preconditions.checkState(username.isPresent() == password.isPresent(), "If you specify username, you must specify password");
-        Preconditions.checkState(forTest == refreshSchemaIntervalMillis.isPresent(), "You can't specify refreshSchemaIntervalMillis for test");
 
         Cluster.Builder clusterBuilder = Cluster.builder();
         getServers().forEach(
@@ -163,10 +146,7 @@ public class ClusterBuilder {
             password.map(password ->
                 clusterBuilder.withCredentials(username, password)));
 
-        getRefreshSchemaIntervalMillis().map(refreshSchemaIntervalMillis ->
-            clusterBuilder.withQueryOptions(
-                new QueryOptions()
-                    .setRefreshSchemaIntervalMillis(refreshSchemaIntervalMillis)));
+        clusterBuilder.withQueryOptions(queryOptions());
 
         SocketOptions socketOptions = new SocketOptions();
         readTimeoutMillis.ifPresent(socketOptions::setReadTimeoutMillis);
@@ -185,8 +165,9 @@ public class ClusterBuilder {
         }
     }
 
-    private Optional<Integer> getRefreshSchemaIntervalMillis() {
-        return forTest ? Optional.of(0) : refreshSchemaIntervalMillis;
+    private QueryOptions queryOptions() {
+        return new QueryOptions()
+                .setConsistencyLevel(ConsistencyLevel.QUORUM);
     }
 
     private Collection<Host> getServers() {

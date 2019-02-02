@@ -19,14 +19,16 @@
 
 package org.apache.james.webadmin.routes;
 
-import static com.jayway.restassured.RestAssured.given;
-import static com.jayway.restassured.RestAssured.when;
-import static com.jayway.restassured.RestAssured.with;
+import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.when;
+import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -54,8 +56,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.http.ContentType;
+
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 
 public class CassandraMigrationRoutesTest {
     private static final SchemaVersion LATEST_VERSION = new SchemaVersion(3);
@@ -75,6 +78,7 @@ public class CassandraMigrationRoutesTest {
             .put(LATEST_VERSION, successfulMigration)
             .build();
         schemaVersionDAO = mock(CassandraSchemaVersionDAO.class);
+        when(schemaVersionDAO.updateVersion(any())).thenReturn(CompletableFuture.completedFuture(null));
 
         taskManager = new MemoryTaskManager();
         JsonTransformer jsonTransformer = new JsonTransformer();
@@ -166,7 +170,7 @@ public class CassandraMigrationRoutesTest {
             .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
             .containsEntry("type", "InvalidArgument")
             .containsEntry("message", "Invalid request for version upgrade")
-            .containsEntry("cause", "For input string: \"NonInt\"");
+            .containsEntry("details", "For input string: \"NonInt\"");
 
         verifyNoMoreInteractions(schemaVersionDAO);
     }
@@ -188,7 +192,7 @@ public class CassandraMigrationRoutesTest {
         .then()
             .body("status", is("completed"));
 
-        verify(schemaVersionDAO, times(2)).getCurrentSchemaVersion();
+        verify(schemaVersionDAO, atLeastOnce()).getCurrentSchemaVersion();
         verify(schemaVersionDAO, times(1)).updateVersion(eq(CURRENT_VERSION));
         verifyNoMoreInteractions(schemaVersionDAO);
     }
@@ -244,7 +248,7 @@ public class CassandraMigrationRoutesTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        verify(schemaVersionDAO, times(3)).getCurrentSchemaVersion();
+        verify(schemaVersionDAO, atLeastOnce()).getCurrentSchemaVersion();
         verify(schemaVersionDAO, times(1)).updateVersion(eq(CURRENT_VERSION));
         verify(schemaVersionDAO, times(1)).updateVersion(eq(LATEST_VERSION));
         verifyNoMoreInteractions(schemaVersionDAO);

@@ -34,16 +34,12 @@ public class BaseRequest implements Request {
         
     }
     
-    /**
-     * @see org.apache.james.protocols.api.Request#getArgument()
-     */
+    @Override
     public String getArgument() {
         return argument;
     }
 
-    /**
-     * @see org.apache.james.protocols.api.Request#getCommand()
-     */
+    @Override
     public String getCommand() {
         return command;
     }

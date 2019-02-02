@@ -24,8 +24,14 @@ import java.util.Objects;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.hash.Hashing;
 
 public class BlobId {
+    public static BlobId fromBytes(byte[] bytes) {
+        Preconditions.checkNotNull(bytes);
+        return new BlobId(Hashing.sha256().hashBytes(bytes).toString());
+    }
+
     public static BlobId fromString(String raw) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(raw));
         return new BlobId(raw);
@@ -55,7 +61,6 @@ public class BlobId {
     public final int hashCode() {
         return Objects.hash(id);
     }
-
 
     @Override
     public String toString() {

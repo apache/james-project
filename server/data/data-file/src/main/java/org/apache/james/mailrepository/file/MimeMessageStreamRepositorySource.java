@@ -73,22 +73,17 @@ public class MimeMessageStreamRepositorySource extends MimeMessageSource {
      * 
      * @return the String ID
      */
+    @Override
     public String getSourceId() {
         return repositoryName + "/" + key;
     }
 
-    /**
-     * Return the InputStream
-     * 
-     * @return stream return the InputStream
-     */
+    @Override
     public InputStream getInputStream() throws IOException {
         return sr.get(key);
     }
 
-    /**
-     * @see org.apache.james.server.core.MimeMessageSource#getMessageSize()
-     */
+    @Override
     public long getMessageSize() throws IOException {
         if (size == -1) {
             if (sr instanceof org.apache.james.repository.file.FilePersistentStreamRepository) {

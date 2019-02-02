@@ -39,17 +39,11 @@ public class POP3StreamResponse extends POP3Response implements StreamResponse {
         this.stream = stream;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.StreamResponse#getStream()
-     */
+    @Override
     public InputStream getStream() {
         return new SequenceInputStream(stream, new ByteArrayInputStream(".\r\n".getBytes()));
     }
 
-    /**
-     * Throws {@link UnsupportedOperationException}
-     */
     @Override
     public Response immutable() {
         throw new UnsupportedOperationException("POP3StreamResponse can only be used once, so its not supported to reuse it");

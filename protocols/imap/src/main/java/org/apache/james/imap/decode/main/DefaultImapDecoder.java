@@ -58,11 +58,7 @@ public class DefaultImapDecoder implements ImapDecoder {
         this.maxInvalidCommands = maxInvalidCommands;
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.decode.ImapDecoder#decode(org.apache.james.imap.decode.ImapRequestLineReader,
-     * org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     public ImapMessage decode(ImapRequestLineReader request, ImapSession session) {
         ImapMessage message;
         try {

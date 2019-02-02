@@ -35,18 +35,12 @@ import org.slf4j.LoggerFactory;
 public class FilePersistentObjectRepository extends AbstractFileRepository implements ObjectRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(FilePersistentObjectRepository.class);
 
-    /**
-     * @see
-     * org.apache.james.repository.file.AbstractFileRepository#getExtensionDecorator()
-     */
+    @Override
     protected String getExtensionDecorator() {
         return ".FileObjectStore";
     }
 
-    /**
-     * @see
-     * org.apache.james.repository.api.ObjectRepository#get(java.lang.String)
-     */
+    @Override
     public synchronized Object get(String key) {
         try {
             final InputStream inputStream = getInputStream(key);
@@ -66,15 +60,11 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
                 inputStream.close();
             }
         } catch (Throwable e) {
-            throw new RuntimeException("Exception caught while retrieving an object, cause: " + e.toString());
+            throw new RuntimeException("Exception caught while retrieving an object", e);
         }
     }
 
-    /**
-     * @see
-     * org.apache.james.repository.api.ObjectRepository#get(java.lang.String,
-     * java.lang.ClassLoader)
-     */
+    @Override
     public synchronized Object get(String key, ClassLoader classLoader) {
         try {
             final InputStream inputStream = getInputStream(key);
@@ -96,16 +86,12 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
                 inputStream.close();
             }
         } catch (Throwable e) {
-            throw new RuntimeException("Exception caught while retrieving an object: " + e);
+            throw new RuntimeException("Exception caught while retrieving an object", e);
         }
 
     }
 
-    /**
-     * @see
-     * org.apache.james.repository.api.ObjectRepository#put(java.lang.String,
-     * java.lang.Object)
-     */
+    @Override
     public synchronized void put(String key, Object value) {
         try (OutputStream outputStream = getOutputStream(key)) {
             final ObjectOutputStream stream = new ObjectOutputStream(outputStream);
@@ -114,7 +100,7 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
                 LOGGER.debug("storing object {} for key {}", value, key);
             }
         } catch (Exception e) {
-            throw new RuntimeException("Exception caught while storing an object: " + e);
+            throw new RuntimeException("Exception caught while storing an object", e);
         }
     }
 

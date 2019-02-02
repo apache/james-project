@@ -67,7 +67,7 @@ public class SetMailboxesMethod implements Method {
 
         SetMailboxesRequest setMailboxesRequest = (SetMailboxesRequest) request;
 
-        return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(),
+        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
             MDCBuilder.create()
                 .addContext(MDCBuilder.ACTION, "SET_MAILBOXES")
                 .addContext("create", setMailboxesRequest.getCreate())

@@ -24,18 +24,17 @@ import org.apache.mailet.base.GenericMatcher;
 
 public class HasMailAttributeTest extends AbstractHasMailAttributeTest {
 
-    public HasMailAttributeTest() {
-        super();
-    }
-
+    @Override
     protected GenericMatcher createMatcher() {
         return new HasMailAttribute();
     }
 
+    @Override
     protected String getHasMailAttribute() {
         return MAIL_ATTRIBUTE_NAME;
     }
 
+    @Override
     protected String getMatcherName() {
         return "HasMailAttribute";
     }

@@ -34,11 +34,11 @@ public interface IntegrationResources<T extends MailboxManager> {
 
     T createMailboxManager(GroupMembershipResolver groupMembershipResolver) throws MailboxException;
 
-    QuotaManager createQuotaManager(MaxQuotaManager maxQuotaManager, T mailboxManager) throws Exception;
+    QuotaManager retrieveQuotaManager(T mailboxManager) throws Exception;
 
-    MaxQuotaManager createMaxQuotaManager() throws Exception;
+    MaxQuotaManager retrieveMaxQuotaManager(T mailboxManager) throws Exception;
 
-    QuotaRootResolver createQuotaRootResolver(T mailboxManager) throws Exception;
+    QuotaRootResolver retrieveQuotaRootResolver(T mailboxManager) throws Exception;
 
     GroupMembershipResolver createGroupMembershipResolver() throws Exception;
 

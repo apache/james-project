@@ -30,11 +30,11 @@ Content-Disposition: attachment;
 UEsDBBQAAAgAAGJVK0pexjIMJwAAACcAAAAIAAAAbWltZXR5cGVhcHBsaWNhdGlvbi92bmQu
 dC54bWxQSwUGAAAAABEAEQBwBAAAjyUAAAAA
 --------------36566F1E9D791340FFB75FF8
-Content-Type: text/html; charset=UTF-8;
+Content-Type: application/vnd.oasis.opendocument.text;
  name="attachment2-nonIndexableAttachment.html"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment;
- filename="attachment2-nonIndexableAttachment.html"
+ filename="attachment2-nonIndexableAttachment.odt"
 
 PCFET0NUWVBFIGh0bWw+CjxodG1sIGNsYXNzPSJtb3ppbGxhIiBsYW5nPSJlbiI+PGhlYWQ+
 CI+PC9kaXY+PC9kaXY+PC9ib2R5PjwvaHRtbD4=

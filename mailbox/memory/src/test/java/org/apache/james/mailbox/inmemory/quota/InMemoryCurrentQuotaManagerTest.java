@@ -23,16 +23,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.apache.james.mailbox.MailboxManager;
+import java.util.Optional;
+
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
-import org.apache.james.mailbox.store.quota.QuotaRootImpl;
 import org.junit.Before;
 import org.junit.Test;
 
 public class InMemoryCurrentQuotaManagerTest {
 
-    public static final QuotaRoot QUOTA_ROOT = QuotaRootImpl.quotaRoot("benwa");
+    public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
 
     private InMemoryCurrentQuotaManager testee;
     private CurrentQuotaCalculator mockedCurrentQuotaCalculator;
@@ -40,8 +43,7 @@ public class InMemoryCurrentQuotaManagerTest {
     @Before
     public void setUp() throws Exception {
         mockedCurrentQuotaCalculator = mock(CurrentQuotaCalculator.class);
-        MailboxManager mockedMailboxManager = mock(MailboxManager.class);
-        testee = new InMemoryCurrentQuotaManager(mockedCurrentQuotaCalculator, mockedMailboxManager);
+        testee = new InMemoryCurrentQuotaManager(mockedCurrentQuotaCalculator, mock(SessionProvider.class));
     }
 
     @Test
@@ -49,7 +51,7 @@ public class InMemoryCurrentQuotaManagerTest {
         when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
             .thenReturn(new CurrentQuotaCalculator.CurrentQuotas(18, 512));
 
-        assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(18);
+        assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(QuotaCount.count(18));
     }
 
     @Test
@@ -57,7 +59,7 @@ public class InMemoryCurrentQuotaManagerTest {
         when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
             .thenReturn(new CurrentQuotaCalculator.CurrentQuotas(18, 512));
 
-        assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(512);
+        assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(QuotaSize.size(512));
     }
 
     @Test
@@ -67,8 +69,8 @@ public class InMemoryCurrentQuotaManagerTest {
 
         testee.increase(QUOTA_ROOT, 10, 100);
 
-        assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(28);
-        assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(612);
+        assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(QuotaCount.count(28));
+        assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(QuotaSize.size(612));
     }
 
     @Test(expected = IllegalArgumentException.class)

@@ -19,6 +19,10 @@
 
 package org.apache.james.utils;
 
+import java.util.Optional;
+
+import org.apache.james.util.OptionalUtils;
+
 import com.google.inject.Injector;
 
 public class GuiceGenericLoader<T> {
@@ -34,15 +38,24 @@ public class GuiceGenericLoader<T> {
 
 
     public T instanciate(String className) throws Exception {
-        Class<T> clazz = extendedClassLoader.locateClass(constructFullName(className));
+        Class<T> clazz = locateClass(className);
         return injector.getInstance(clazz);
     }
 
-    private String constructFullName(String name) {
-        if (! name.contains(".")) {
-            return defaultPackageName + name;
+    private Class<T> locateClass(String className) throws ClassNotFoundException {
+        return OptionalUtils.orSuppliers(
+                () -> tryLocateClass(className),
+                () -> tryLocateClass(defaultPackageName + className),
+                () -> tryLocateClass(defaultPackageName + "." + className))
+            .orElseThrow(() -> new ClassNotFoundException(className));
+    }
+
+    private Optional<Class<T>> tryLocateClass(String className) {
+        try {
+            return Optional.of(extendedClassLoader.locateClass(className));
+        } catch (ClassNotFoundException e) {
+            return Optional.empty();
         }
-        return name;
     }
 
 }

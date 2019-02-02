@@ -65,7 +65,7 @@ store
          mailetcontainer.xml configuration). Sub folders of 
          var/mail can be address-error, error, relay-denied, spam</p>
       
-       <p>The store folder contains the files related to database, jcr, activemq,... needed by James.
+       <p>The store folder contains the files related to database, activemq,... needed by James.
          James Server default settings comes with a embedded Derby database that stores the 
          users, domains and mailboxes (the user mails) (see store/derby folder).</p>
          
@@ -84,7 +84,7 @@ activemq
   +-spool
 </source>
           
-          <p>The activemq component is configured to use this folder
+          <p>The <a href="dev-activemq.html">activemq component</a> is configured to use this folder
              for queue (and topics if any) processing.</p>
      
 <source>
@@ -95,14 +95,6 @@ maildir
             mailboxes. Use var/store/maildir folder to contain the user's
             mails.</p>
 
-<source>
-jackrabbit
-</source>
-     
-         <p>You can configure James to use JCR (Java Content Repository, based
-            on Apache Jackrabbit) as storage for the user mailboxes. Use 
-            var/store/jackrabbit folder to contain the user's mails.</p>
- 
     </subsection>
 
     <subsection name="Monitor tmp Folder Usage">

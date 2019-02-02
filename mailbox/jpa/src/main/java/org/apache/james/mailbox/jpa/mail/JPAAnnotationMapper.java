@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
@@ -41,7 +42,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -128,7 +128,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
         } catch (NoResultException e) {
             LOGGER.debug("Mailbox annotation not found for ID {} and key {}", mailboxId.serialize(), key.asString());
         } catch (PersistenceException pe) {
-            throw Throwables.propagate(pe);
+            throw new RuntimeException(pe);
         }
     }
 
@@ -163,7 +163,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
             return ((Long)getEntityManager().createNamedQuery("countAnnotationsInMailbox")
                 .setParameter("idParam", jpaId.getRawId()).getSingleResult()).intValue();
         } catch (PersistenceException pe) {
-            throw Throwables.propagate(pe);
+            throw new RuntimeException(pe);
         }
     }
 }

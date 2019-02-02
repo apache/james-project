@@ -106,9 +106,7 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
         this.mailProcessor = mailProcessor;
     }
 
-    /**
-     * @see org.apache.james.lifecycle.api.Configurable#configure(org.apache.commons.configuration.HierarchicalConfiguration)
-     */
+    @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         numDequeueThreads = config.getInt("dequeueThreads", 2);
 
@@ -204,8 +202,6 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
      * <p/>
      * This implementation shuts down the LinearProcessors managed by this
      * JamesSpoolManager
-     *
-     * @see org.apache.james.lifecycle.api.Disposable#dispose()
      */
     @PreDestroy
     @Override

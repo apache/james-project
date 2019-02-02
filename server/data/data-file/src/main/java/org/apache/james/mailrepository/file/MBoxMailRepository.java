@@ -71,6 +71,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
@@ -115,7 +116,7 @@ import com.google.common.hash.Hashing;
  * suited to people who wish to use the mbox format for taking data out of James
  * and into something else (IMAP server or mail list displayer)
  *
- * @Depracted: See JAMES-2323
+ * @Deprecated: See JAMES-2323
  *
  * Will be removed in James 3.2.0 upcoming release.
  *
@@ -161,6 +162,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         MimeMessage messageAction(String messageSeparator, String bodyText, long messageStart);
     }
 
+    @Override
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
         /*
       The repository configuration
@@ -381,10 +383,12 @@ public class MBoxMailRepository implements MailRepository, Configurable {
                 ins.seek(messageStart - 1);
             }
             MessageAction op = new MessageAction() {
+                @Override
                 public boolean isComplete() {
                     return true;
                 }
 
+                @Override
                 public MimeMessage messageAction(String messageSeparator, String bodyText, long messageStart) {
                     if (key.equals(generateKeyValue(bodyText))) {
                         LOGGER.debug("{} Located message. Returning MIME message", this.getClass().getName());
@@ -432,10 +436,12 @@ public class MBoxMailRepository implements MailRepository, Configurable {
             }
             this.mList = new Hashtable<>((int) initialCapacity);
             this.parseMboxFile(ins, new MessageAction() {
+                @Override
                 public boolean isComplete() {
                     return false;
                 }
 
+                @Override
                 public MimeMessage messageAction(String messageSeparator, String bodyText, long messageStart) {
                     String key = generateKeyValue(bodyText);
                     mList.put(key, messageStart);
@@ -461,10 +467,8 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         }
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#store(Mail)
-     */
-    public void store(Mail mc) {
+    @Override
+    public MailKey store(Mail mc) {
         LOGGER.debug("Will store message to file {}", mboxFile);
 
         this.mList = null;
@@ -491,18 +495,16 @@ public class MBoxMailRepository implements MailRepository, Configurable {
             saveFile.writeBytes((fromHeader + "\n"));
             saveFile.writeBytes((message + "\n"));
             saveFile.close();
-
         } catch (FileNotFoundException e) {
             LOGGER.error("Unable to save(open) file (File not found) {}", mboxFile, e);
         } catch (IOException e) {
             LOGGER.error("Unable to write file (General I/O problem) {}", mboxFile, e);
         }
+        return MailKey.forMail(mc);
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#list()
-     */
-    public Iterator<String> list() {
+    @Override
+    public Iterator<MailKey> list() {
         ArrayList<String> keys = loadKeysAsArray();
 
         if (!keys.isEmpty()) {
@@ -516,7 +518,9 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         if (fifo) {
             Collections.sort(keys); // Keys is a HashSet; impose FIFO for apps that need it
         }
-        return keys.iterator();
+        return keys.stream()
+            .map(MailKey::new)
+            .iterator();
     }
 
     private ArrayList<String> loadKeysAsArray() {
@@ -524,29 +528,25 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         return new ArrayList<>(mList.keySet());
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#retrieve(String)
-     */
-    public Mail retrieve(String key) {
+    @Override
+    public Mail retrieve(MailKey key) throws MessagingException {
 
         loadKeys();
         MailImpl res;
 
-        MimeMessage foundMessage = findMessage(key);
+        MimeMessage foundMessage = findMessage(key.asString());
         if (foundMessage == null) {
             LOGGER.error("found message is null!");
             return null;
         }
         res = new MailImpl();
         res.setMessage(foundMessage);
-        res.setName(key);
+        res.setName(key.asString());
         LOGGER.debug("Retrieving entry for key {}", key);
         return res;
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#remove(Mail)
-     */
+    @Override
     public void remove(Mail mail) {
         ArrayList<Mail> remArray = new ArrayList<>();
         remArray.add(mail);
@@ -597,9 +597,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         }
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#remove(Collection)
-     */
+    @Override
     public void remove(final Collection<Mail> mails) {
         LOGGER.debug("Removing entry for key {}", mails);
         // The plan is as follows:
@@ -610,10 +608,12 @@ public class MBoxMailRepository implements MailRepository, Configurable {
             RandomAccessFile ins = new RandomAccessFile(mboxFile, "r"); // The source
             final RandomAccessFile outputFile = new RandomAccessFile(mboxFile + WORKEXT, "rw"); // The destination
             parseMboxFile(ins, new MessageAction() {
+                @Override
                 public boolean isComplete() {
                     return false;
                 }
 
+                @Override
                 public MimeMessage messageAction(String messageSeparator, String bodyText, long messageStart) {
                     // Write out the messages as we go, until we reach the key
                     // we want
@@ -671,10 +671,8 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         }
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#remove(String)
-     */
-    public void remove(String key) {
+    @Override
+    public void remove(MailKey key) throws MessagingException {
         loadKeys();
         try {
             lockMBox();
@@ -689,28 +687,24 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         unlockMBox();
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#lock(String)
-     */
-    public boolean lock(String key) {
-        return false;
-    }
-
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#unlock(String)
-     */
-    public boolean unlock(String key) {
+    @Override
+    public boolean lock(MailKey key) {
         return false;
     }
 
     @Override
-    public long size() throws MessagingException {
+    public boolean unlock(MailKey key) {
+        return false;
+    }
+
+    @Override
+    public long size() {
         return loadKeysAsArray().size();
     }
 
     @Override
     public void removeAll() throws MessagingException {
         ImmutableList.copyOf(list())
-            .forEach(Throwing.<String>consumer(this::remove).sneakyThrow());
+            .forEach(Throwing.<MailKey>consumer(this::remove).sneakyThrow());
     }
 }

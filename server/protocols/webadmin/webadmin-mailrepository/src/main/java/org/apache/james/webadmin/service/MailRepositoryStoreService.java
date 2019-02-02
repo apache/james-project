@@ -21,25 +21,35 @@ package org.apache.james.webadmin.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.task.Task;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.util.streams.Offset;
+import org.apache.james.webadmin.dto.InaccessibleFieldException;
 import org.apache.james.webadmin.dto.MailDto;
-import org.apache.james.webadmin.dto.MailKey;
-import org.apache.james.webadmin.dto.MailRepositoryResponse;
+import org.apache.james.webadmin.dto.MailDto.AdditionalField;
+import org.apache.james.webadmin.dto.MailKeyDTO;
+import org.apache.james.webadmin.dto.SingleMailRepositoryResponse;
 import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.mailet.Mail;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class MailRepositoryStoreService {
     private final MailRepositoryStore mailRepositoryStore;
@@ -49,56 +59,71 @@ public class MailRepositoryStoreService {
         this.mailRepositoryStore = mailRepositoryStore;
     }
 
-    public List<MailRepositoryResponse> listMailRepositories() {
-        return mailRepositoryStore.getUrls()
-            .stream()
-            .map(MailRepositoryResponse::new)
-            .collect(Guavate.toImmutableList());
+    public Stream<SingleMailRepositoryResponse> listMailRepositories() {
+        return mailRepositoryStore
+            .getPaths()
+            .map(SingleMailRepositoryResponse::new);
     }
 
-
-    public Optional<List<MailKey>> listMails(String url, Offset offset, Limit limit) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        Optional<MailRepository> mailRepository = Optional.ofNullable(getRepository(url));
-        ThrowingFunction<MailRepository, List<MailKey>> list = repository -> list(repository, offset, limit);
-        return mailRepository.map(Throwing.function(list).sneakyThrow());
+    public MailRepository createMailRepository(MailRepositoryPath repositoryPath, String protocol) throws MailRepositoryStore.MailRepositoryStoreException {
+        return mailRepositoryStore.create(MailRepositoryUrl.fromPathAndProtocol(repositoryPath, protocol));
     }
 
-    private List<MailKey> list(MailRepository mailRepository, Offset offset, Limit limit) throws MessagingException {
-        return limit.applyOnStream(
-                Iterators.toStream(mailRepository.list())
-                    .skip(offset.getOffset()))
-                .map(MailKey::new)
-                .collect(Guavate.toImmutableList());
+    public Optional<List<MailKeyDTO>> listMails(MailRepositoryPath path, Offset offset, Limit limit) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+        Optional<Stream<MailKeyDTO>> maybeMails = Optional.of(getRepositories(path)
+            .flatMap(Throwing.function((MailRepository repository) -> Iterators.toStream(repository.list())).sneakyThrow())
+            .map(MailKeyDTO::new)
+            .skip(offset.getOffset()));
+
+        return maybeMails.map(limit::applyOnStream)
+            .map(stream -> stream.collect(ImmutableList.toImmutableList()));
     }
 
-    public Optional<Long> size(String url) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        Optional<MailRepository> mailRepository = Optional.ofNullable(getRepository(url));
-        return mailRepository.map(Throwing.function(MailRepository::size).sneakyThrow());
+    public Optional<Long> size(MailRepositoryPath path) throws MailRepositoryStore.MailRepositoryStoreException {
+        return Optional.of(getRepositories(path)
+                .map(Throwing.function(MailRepository::size).sneakyThrow())
+                .mapToLong(Long::valueOf)
+                .sum());
     }
 
-    public Optional<MailDto> retrieveMail(String url, String mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        MailRepository mailRepository = getRepository(url);
-
-        return Optional.ofNullable(mailRepository.retrieve(mailKey))
-            .map(Throwing.function(MailDto::fromMail).sneakyThrow());
+    public Optional<MailDto> retrieveMail(MailRepositoryPath path, MailKey mailKey, Set<AdditionalField> additionalAttributes) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException, InaccessibleFieldException {
+        return fecthMail(path, mailKey)
+            .map(Throwing.function((Mail mail) -> MailDto.fromMail(mail, additionalAttributes)).sneakyThrow());
     }
 
-    public void deleteMail(String url, String mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        getRepository(url)
-            .remove(mailKey);
+    public Optional<MimeMessage> retrieveMessage(MailRepositoryPath path, MailKey mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+        return fecthMail(path, mailKey)
+            .map(Throwing.function(Mail::getMessage).sneakyThrow());
     }
 
-    public Task createClearMailRepositoryTask(String url) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        return new ClearMailRepositoryTask(getRepository(url), url);
+    public void deleteMail(MailRepositoryPath path, MailKey mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+        getRepositories(path)
+            .forEach(Throwing.consumer((MailRepository repository) -> repository.remove(mailKey)).sneakyThrow());
     }
 
-    public MailRepository getRepository(String url) throws MailRepositoryStore.MailRepositoryStoreException {
-        return mailRepositoryStore.get(url)
-            .orElseThrow(() -> ErrorResponder.builder()
+    public Task createClearMailRepositoryTask(MailRepositoryPath path) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+        return new ClearMailRepositoryTask(getRepositories(path).collect(Guavate.toImmutableList()), path);
+    }
+
+    public Stream<MailRepository> getRepositories(MailRepositoryPath path) throws MailRepositoryStore.MailRepositoryStoreException {
+        Stream<MailRepository> byPath = mailRepositoryStore.getByPath(path);
+        List<MailRepository> repositories = byPath.collect(Collectors.toList());
+        if (repositories.isEmpty()) {
+            ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .type(ErrorResponder.ErrorType.NOT_FOUND)
-                .message(url + "does not exist")
-                .haltError());
+                .message(path.asString() + " does not exist")
+                .haltError();
+        }
+
+        return repositories.stream();
     }
 
+    private Optional<Mail> fecthMail(MailRepositoryPath path, MailKey mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+        return getRepositories(path)
+                .map(Throwing.function((MailRepository repository) -> Optional.ofNullable(repository.retrieve(mailKey))).sneakyThrow())
+                .filter(Optional::isPresent)
+                .findFirst()
+                .orElse(Optional.empty());
+        }
 }

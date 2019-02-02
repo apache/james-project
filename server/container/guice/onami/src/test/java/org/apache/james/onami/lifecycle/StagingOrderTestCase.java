@@ -19,11 +19,12 @@
 
 package org.apache.james.onami.lifecycle;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 public class StagingOrderTestCase {
@@ -33,7 +34,7 @@ public class StagingOrderTestCase {
         DefaultStager<TestAnnotationA> stager = makeStager(order, DefaultStager.Order.FIRST_IN_FIRST_OUT);
         stager.stage();
 
-        Assert.assertEquals(Arrays.asList(1, 2, 3), order);
+        assertThat(order).isEqualTo(Arrays.asList(1, 2, 3));
     }
 
     @Test
@@ -42,7 +43,7 @@ public class StagingOrderTestCase {
         DefaultStager<TestAnnotationA> stager = makeStager(order, DefaultStager.Order.FIRST_IN_LAST_OUT);
         stager.stage();
 
-        Assert.assertEquals(Arrays.asList(3, 2, 1), order);
+        assertThat(order).isEqualTo(Arrays.asList(3, 2, 1));
     }
 
     private DefaultStager<TestAnnotationA> makeStager(final List<Integer> order, DefaultStager.Order stagingOrder) {

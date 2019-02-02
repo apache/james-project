@@ -19,13 +19,10 @@
 
 package org.apache.james.metrics.dropwizard;
 
-import java.util.function.Supplier;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
@@ -55,18 +52,8 @@ public class DropWizardMetricFactory implements MetricFactory {
         return new DropWizardTimeMetric(name, metricRegistry.timer(name).time());
     }
 
-    @Override
-    public <T> T withMetric(String name, Supplier<T> operation) {
-        TimeMetric timer = timer(name);
-        try {
-            return operation.get();
-        } finally {
-            timer.stopAndPublish();
-        }
-    }
-
     @PostConstruct
-    public void start() throws ConfigurationException {
+    public void start() {
         jmxReporter.start();
     }
 

@@ -136,6 +136,13 @@ public interface UsersRepository {
      * @throws UsersRepositoryException
      */
     String getUser(MailAddress mailAddress) throws UsersRepositoryException;
+
+    /**
+     * Returns one of the possible mail addresses to be used to send a mail to that user
+     *
+     * This makes sense as it handles virtual-hosting logic.
+     */
+    MailAddress getMailAddressFor(org.apache.james.core.User user) throws UsersRepositoryException;
     
     /**
      * Return true if the user is an admin for this repository

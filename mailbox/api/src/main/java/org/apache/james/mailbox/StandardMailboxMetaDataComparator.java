@@ -58,9 +58,7 @@ public class StandardMailboxMetaDataComparator implements Comparator<MailboxMeta
         return result;
     }
 
-    /**
-     * @see Comparator#compare(Object, Object)
-     */
+    @Override
     public int compare(MailboxMetaData one, MailboxMetaData two) {
         return order(one, two);
     }

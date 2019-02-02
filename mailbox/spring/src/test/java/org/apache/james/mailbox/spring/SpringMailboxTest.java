@@ -18,11 +18,11 @@
  ****************************************************************/
 package org.apache.james.mailbox.spring;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
-import org.apache.james.mailbox.copier.MailboxCopierImpl;
+import org.apache.james.mailbox.tools.copier.MailboxCopierImpl;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -37,8 +37,8 @@ public class SpringMailboxTest {
     
     @Test
     public void testGetBean() throws IOException {
-        assertEquals(AnonymousAuthenticator.class.getName(), springMailbox.getBean("authenticator").getClass().getName());
-        assertEquals(MailboxCopierImpl.class.getName(), springMailbox.getBean("mailboxcopier").getClass().getName());
+        assertThat(springMailbox.getBean("authenticator").getClass().getName()).isEqualTo(AnonymousAuthenticator.class.getName());
+        assertThat(springMailbox.getBean("mailboxcopier").getClass().getName()).isEqualTo(MailboxCopierImpl.class.getName());
     }
 
 }

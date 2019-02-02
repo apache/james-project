@@ -20,17 +20,17 @@
 package org.apache.james.mailets;
 
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
-import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
-import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.Bounce;
 import org.apache.james.transport.mailets.DSNBounce;
@@ -85,10 +85,10 @@ public class BounceIntegrationTest {
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(BOUNCE_RECEIVER, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(BOUNCE_RECEIVER, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -110,10 +110,10 @@ public class BounceIntegrationTest {
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(BOUNCE_RECEIVER, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(BOUNCE_RECEIVER, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -135,10 +135,10 @@ public class BounceIntegrationTest {
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage("any@" + DEFAULT_DOMAIN, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(BOUNCE_RECEIVER, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -161,10 +161,10 @@ public class BounceIntegrationTest {
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage("any@" + DEFAULT_DOMAIN, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(BOUNCE_RECEIVER, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -187,10 +187,10 @@ public class BounceIntegrationTest {
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage("any@" + DEFAULT_DOMAIN, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(BOUNCE_RECEIVER, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -212,10 +212,10 @@ public class BounceIntegrationTest {
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_RECEIVER, PASSWORD);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(BOUNCE_RECEIVER, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(BOUNCE_RECEIVER, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
@@ -237,10 +237,10 @@ public class BounceIntegrationTest {
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(POSTMASTER, PASSWORD);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage("any@" + DEFAULT_DOMAIN, RECIPIENT);
 
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(POSTMASTER, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);

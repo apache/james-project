@@ -23,14 +23,15 @@ import java.util.List;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.jpa.JPADomainList;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
-import org.apache.james.utils.ConfigurationProvider;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
@@ -43,25 +44,35 @@ public class JPADomainListModule extends AbstractModule {
         bind(DomainList.class).to(JPADomainList.class);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(JPADomainListConfigurationPerformer.class);
     }
+
+    @Provides
+    @Singleton
+    public DomainListConfiguration provideDomainListConfiguration(ConfigurationProvider configurationProvider) {
+        try {
+            return DomainListConfiguration.from(configurationProvider.getConfiguration("domainlist"));
+        } catch (ConfigurationException e) {
+            throw new RuntimeException(e);
+        }
+    }
     
     @Singleton
     public static class JPADomainListConfigurationPerformer implements ConfigurationPerformer {
 
-        private final ConfigurationProvider configurationProvider;
+        private final DomainListConfiguration configuration;
         private final JPADomainList jpaDomainList;
 
         @Inject
-        public JPADomainListConfigurationPerformer(ConfigurationProvider configurationProvider, JPADomainList jpaDomainList) {
-            this.configurationProvider = configurationProvider;
+        public JPADomainListConfigurationPerformer(DomainListConfiguration configuration, JPADomainList jpaDomainList) {
+            this.configuration = configuration;
             this.jpaDomainList = jpaDomainList;
         }
 
         @Override
         public void initModule() {
             try {
-                jpaDomainList.configure(configurationProvider.getConfiguration("domainlist"));
+                jpaDomainList.configure(configuration);
             } catch (ConfigurationException e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

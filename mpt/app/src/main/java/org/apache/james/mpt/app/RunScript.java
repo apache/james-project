@@ -28,6 +28,7 @@ import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.ExternalHostSystem;
 import org.apache.james.mpt.monitor.SystemLoggingMonitor;
 import org.apache.james.mpt.protocol.ProtocolSessionBuilder;
+import org.apache.james.util.Port;
 
 /**
  * Runs a single script.
@@ -37,12 +38,12 @@ class RunScript {
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
     
     private final File file;
-    private final int port;
+    private final Port port;
     private final String host;
     private final String shabang;
     private final SystemLoggingMonitor monitor;
     
-    public RunScript(File file, int port, String host, String shabang, boolean verbose) {
+    public RunScript(File file, Port port, String host, String shabang, boolean verbose) {
         super();
         this.file = file;
         this.port = port;
@@ -55,7 +56,7 @@ class RunScript {
      * Runs the script.
      */
     public void run() throws Exception {
-       System.out.println("Running " + file + " against " + host + ":"  + port + "...");
+       System.out.println("Running " + file + " against " + host + ":"  + port.getValue() + "...");
        
        final ExternalHostSystem host = new ExternalHostSystem(SUPPORTED_FEATURES, this.host, port, monitor, shabang, null);
        final ProtocolSessionBuilder builder = new ProtocolSessionBuilder();

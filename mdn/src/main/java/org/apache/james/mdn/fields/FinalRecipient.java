@@ -20,6 +20,7 @@
 package org.apache.james.mdn.fields;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.google.common.base.Preconditions;
 
@@ -31,19 +32,41 @@ import com.google.common.base.Preconditions;
 public class FinalRecipient implements Field {
     public static final String FIELD_NAME = "Final-Recipient";
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private Optional<AddressType> addressType;
+        private Text finalRecipient;
+
+        private Builder() {
+            addressType = Optional.empty();
+        }
+
+        public Builder addressType(AddressType addressType) {
+            this.addressType = Optional.of(addressType);
+            return this;
+        }
+
+        public Builder finalRecipient(Text finalRecipient) {
+            this.finalRecipient = finalRecipient;
+            return this;
+        }
+
+        public FinalRecipient build() {
+            Preconditions.checkNotNull(finalRecipient);
+
+            return new FinalRecipient(addressType.orElse(AddressType.RFC_822), finalRecipient);
+        }
+    }
+
     private final Text finalRecipient;
     private final AddressType addressType;
 
-    public FinalRecipient(AddressType addressType, Text finalRecipient) {
-        Preconditions.checkNotNull(finalRecipient);
-        Preconditions.checkNotNull(addressType);
-
+    private FinalRecipient(AddressType addressType, Text finalRecipient) {
         this.finalRecipient = finalRecipient;
         this.addressType = addressType;
-    }
-
-    public FinalRecipient(Text finalRecipient) {
-        this(AddressType.RFC_822, finalRecipient);
     }
 
     public Text getFinalRecipient() {

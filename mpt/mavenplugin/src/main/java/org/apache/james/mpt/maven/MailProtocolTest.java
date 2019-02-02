@@ -34,6 +34,7 @@ import org.apache.james.mpt.api.Monitor;
 import org.apache.james.mpt.host.ExternalHostSystem;
 import org.apache.james.mpt.protocol.ProtocolSessionBuilder;
 import org.apache.james.mpt.user.ScriptedUserAdder;
+import org.apache.james.util.Port;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
@@ -104,7 +105,7 @@ public class MailProtocolTest implements Monitor {
                 } else {
                     reader = new FileReader(addUser.getScriptFile());
                 }
-                final ScriptedUserAdder adder = new ScriptedUserAdder(addUser.getHost(), addUser.getPort(), this);
+                final ScriptedUserAdder adder = new ScriptedUserAdder(addUser.getHost(), addUser.getPort().orElseThrow(() -> new RuntimeException("Port should be set")), this);
                 adder.addUser(addUser.getUser(), addUser.getPasswd(), reader);
             } catch (Exception e) {
                 //getLog().error("Unable to add user", e);
@@ -116,7 +117,7 @@ public class MailProtocolTest implements Monitor {
         try {
             inputStream = new FileInputStream(scriptFile);
 
-            final ExternalHostSystem hostSystem = new ExternalHostSystem(SUPPORTED_FEATURES, host, port, this, shabang, null);
+            final ExternalHostSystem hostSystem = new ExternalHostSystem(SUPPORTED_FEATURES, host, new Port(port), this, shabang, null);
             final ProtocolSessionBuilder builder = new ProtocolSessionBuilder();
 
             builder.addProtocolLines(scriptFile.getName(), inputStream, runner.getTestElements());
@@ -150,7 +151,7 @@ public class MailProtocolTest implements Monitor {
                 throw new MojoFailureException("AddUser must contain the text of the script or a scriptFile");
             }
 
-            if (addUser.getPort() <= 0) {
+            if (! addUser.getPort().isPresent()) {
                 throw new MojoFailureException("'port' attribute must be set on AddUser to the port against which the script should run.");
             }
 
@@ -162,29 +163,20 @@ public class MailProtocolTest implements Monitor {
     }
 
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mpt.Monitor#debug(char)
-     */
+    @Override
     public void debug(char character) {
         //getLog().debug("'" + character + "'");
         // do nothing by default
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mpt.Monitor#debug(java.lang.String)
-     */
+    @Override
     public void debug(String message) {
         //getLog().debug(message);
         // do nothing by default
 
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mpt.Monitor#note(java.lang.String)
-     */
+    @Override
     public void note(String message) {
         //getLog().debug(message);
         System.out.println(message);

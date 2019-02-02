@@ -22,6 +22,7 @@ package org.apache.james.modules.server;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.SimpleRegistry;
@@ -40,19 +41,23 @@ import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.impl.camel.CamelCompositeProcessor;
 import org.apache.james.mailetcontainer.impl.camel.CamelMailetProcessor;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.transport.mailets.RemoveMimeHeader;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.utils.ConfigurationPerformer;
-import org.apache.james.utils.ConfigurationProvider;
 import org.apache.james.utils.GuiceMailetLoader;
 import org.apache.james.utils.GuiceMatcherLoader;
+import org.apache.james.utils.GuiceProbe;
+import org.apache.james.utils.MailetConfigurationOverride;
+import org.apache.james.utils.SpoolerProbe;
+import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetContext;
+import org.apache.mailet.Matcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -64,6 +69,12 @@ import com.google.inject.multibindings.Multibinder;
 public class CamelMailetContainerModule extends AbstractModule {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CamelMailetContainerModule.class);
+
+    public static final TransportProcessorCheck.Impl BCC_Check = new TransportProcessorCheck.Impl(
+        All.class,
+        RemoveMimeHeader.class,
+        pair -> pair.getMailet().getMailetConfig().getInitParameter("name").equals("bcc"),
+        "Should be configured to remove Bcc header");
 
     @Override
     protected void configure() {
@@ -78,10 +89,12 @@ public class CamelMailetContainerModule extends AbstractModule {
         bind(MailetLoader.class).to(GuiceMailetLoader.class);
         bind(MatcherLoader.class).to(GuiceMatcherLoader.class);
 
+        Multibinder.newSetBinder(binder(), MailetConfigurationOverride.class);
+        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SpoolerProbe.class);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MailetModuleConfigurationPerformer.class);
 
         Multibinder<CamelMailetContainerModule.TransportProcessorCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), CamelMailetContainerModule.TransportProcessorCheck.class);
-        transportProcessorChecks.addBinding().to(BccMailetCheck.class);
+        transportProcessorChecks.addBinding().toInstance(BCC_Check);
     }
 
     @Provides
@@ -137,7 +150,7 @@ public class CamelMailetContainerModule extends AbstractModule {
                 configureJamesSpooler();
                 configureMailetContext();
             } catch (Exception e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
 
         }
@@ -211,18 +224,39 @@ public class CamelMailetContainerModule extends AbstractModule {
     @FunctionalInterface
     public interface TransportProcessorCheck {
         void check(List<MatcherMailetPair> pairs) throws ConfigurationException;
-    }
-    
-    public static class BccMailetCheck implements CamelMailetContainerModule.TransportProcessorCheck {
-        @Override
-        public void check(List<MatcherMailetPair> pairs) throws ConfigurationException {
-            Preconditions.checkNotNull(pairs);
-            pairs.stream()
-                .filter(pair -> pair.getMailet().getClass().equals(RemoveMimeHeader.class))
-                .filter(pair -> pair.getMatcher().getClass().equals(All.class))
-                .filter(pair -> pair.getMailet().getMailetConfig().getInitParameter("name").equals("bcc"))
-                .findAny()
-                .orElseThrow(() -> new ConfigurationException("Missing RemoveMimeHeader in mailets configuration (mailetcontainer -> processors -> transport). Should be configured to remove Bcc header"));
+
+        class Impl implements TransportProcessorCheck {
+            private final Class<? extends Matcher> matcherClass;
+            private final Class<? extends Mailet> mailetClass;
+            private final Optional<Predicate<? super MatcherMailetPair>> additionalFilter;
+            private final Optional<String> additionalErrorMessage;
+
+            public Impl(Class<? extends Matcher> matcherClass, Class<? extends Mailet> mailetClass) {
+                this(matcherClass, mailetClass, Optional.empty(), Optional.empty());
+            }
+
+            public Impl(Class<? extends Matcher> matcherClass, Class<? extends Mailet> mailetClass, Predicate<? super MatcherMailetPair> additionalFilter, String additionalErrorMessage) {
+                this(matcherClass, mailetClass, Optional.of(additionalFilter), Optional.of(additionalErrorMessage));
+            }
+
+            private Impl(Class<? extends Matcher> matcherClass, Class<? extends Mailet> mailetClass, Optional<Predicate<? super MatcherMailetPair>> additionalFilter, Optional<String> additionalErrorMessage) {
+                this.matcherClass = matcherClass;
+                this.mailetClass = mailetClass;
+                this.additionalFilter = additionalFilter;
+                this.additionalErrorMessage = additionalErrorMessage;
+            }
+
+            @Override
+            public void check(List<MatcherMailetPair> pairs) throws ConfigurationException {
+                Preconditions.checkNotNull(pairs);
+                pairs.stream()
+                    .filter(pair -> pair.getMailet().getClass().equals(mailetClass))
+                    .filter(pair -> pair.getMatcher().getClass().equals(matcherClass))
+                    .filter(additionalFilter.orElse(any -> true))
+                    .findAny()
+                    .orElseThrow(() -> new ConfigurationException("Missing " + mailetClass.getName() + " in mailets configuration (mailetcontainer -> processors -> transport). " +
+                        additionalErrorMessage.orElse("")));
+            }
         }
     }
 

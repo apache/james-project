@@ -19,8 +19,8 @@
 
 package org.apache.james.queue.library;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -29,7 +29,6 @@ import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,7 +56,7 @@ public class AbstractMailQueueFactoryTest {
     @Test
     public void destroyShouldRegisterManageableQueues() throws Exception {
         abstractMailQueueFactory.createQueue(QUEUE_1);
-        verify(mBeanServer).registerMBean(any(MailQueue.class), eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1)));
+        verify(mBeanServer).registerMBean(any(MailQueueManagement.class), eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1)));
     }
 
     @Test

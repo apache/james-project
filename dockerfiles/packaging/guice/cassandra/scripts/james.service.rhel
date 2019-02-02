@@ -1,8 +1,8 @@
 [Unit]
 Description=James stands for Java Apache Mail Enterprise Server! It has a modular architecture based on a rich set of modern and efficient components which provides at the end complete, stable, secure and extendable Mail Servers running on the JVM.
 Documentation=http://james.apache.org
-Wants=network-online.target cassandra.service elasticsearch.service
-After=network-online.target cassandra.service elasticsearch.service
+Wants=network-online.target cassandra.service elasticsearch.service rabbitmq.service
+After=network-online.target cassandra.service elasticsearch.service rabbitmq.service
 
 [Service]
 Environment=WORKING_DIRECTORY=/var/lib/james

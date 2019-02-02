@@ -53,6 +53,7 @@ public class StartTlsCmdHandler implements CommandHandler<SMTPSession>, EhloExte
     private static final Response SYNTAX_ERROR = new SMTPResponse("501 " + DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " Syntax error (no parameters allowed) with STARTTLS command").immutable();
     private static final Response NOT_SUPPORTED = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_COMMAND_UNRECOGNIZED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_CMD) + " Command " + COMMAND_NAME + " unrecognized.").immutable();
 
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }
@@ -72,6 +73,7 @@ public class StartTlsCmdHandler implements CommandHandler<SMTPSession>, EhloExte
      * message-specific, but not authenticated user, state.
      * 
      */
+    @Override
     public Response onCommand(SMTPSession session, Request request) {
         if (session.isStartTLSSupported()) {
             if (session.isTLSStarted()) {
@@ -90,9 +92,7 @@ public class StartTlsCmdHandler implements CommandHandler<SMTPSession>, EhloExte
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.esmtp.EhloExtension#getImplementedEsmtpFeatures(org.apache.james.protocols.smtp.SMTPSession)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public List<String> getImplementedEsmtpFeatures(SMTPSession session) {
         // SMTP STARTTLS

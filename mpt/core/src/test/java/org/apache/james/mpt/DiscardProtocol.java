@@ -30,8 +30,9 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.james.util.Port;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Simple <a href='http://tools.ietf.org/html/rfc863'>RFC 863</a> implementation.
@@ -44,10 +45,10 @@ public class DiscardProtocol {
     
     private static final int IDLE_TIMEOUT = 120000;
 
-    private static final Log LOG = LogFactory.getLog(DiscardProtocol.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DiscardProtocol.class);
     
     /** Serve on this port */
-    private int port;
+    private Port port;
     
     /** 
      * Queues requests for recordings.
@@ -80,7 +81,7 @@ public class DiscardProtocol {
             if (socket == null) {
                 socket = ServerSocketChannel.open();
                 socket.socket().bind(new InetSocketAddress(0));
-                port = socket.socket().getLocalPort();
+                port = new Port(socket.socket().getLocalPort());
                 // only going to record a single conversation
                 socket.configureBlocking(false);
                 
@@ -93,7 +94,7 @@ public class DiscardProtocol {
         }
     }
     
-    public int getPort() {
+    public Port getPort() {
         return port;
     }
     
@@ -134,6 +135,7 @@ public class DiscardProtocol {
     }
     
     private final class SocketMonitor implements Runnable {
+        @Override
         public void run() {
             try {
                 long lastConnection = System.currentTimeMillis();
@@ -160,7 +162,7 @@ public class DiscardProtocol {
                     }
                 }
             } catch (Exception e) {
-                LOG.fatal("Cannot accept connection", e);
+                LOG.error("Cannot accept connection", e);
                 abort();
             }
         }
@@ -209,10 +211,11 @@ public class DiscardProtocol {
             this.socketChannel = socketChannel;
         }
 
+        @Override
         public void run() {
             try {
                 if (socketChannel == null) {
-                    LOG.fatal("Socket channel must be set before instance is run.");
+                    LOG.error("Socket channel must be set before instance is run.");
                 } else {
                     try {
                         while (!socketChannel.finishConnect()) {
@@ -228,7 +231,7 @@ public class DiscardProtocol {
                         }
                         
                     } catch (Exception e) {
-                        LOG.fatal("Socket communication failed", e);
+                        LOG.error("Socket communication failed", e);
                         aborted = true;
                         
                     // Tidy up
@@ -269,6 +272,7 @@ public class DiscardProtocol {
         /**
          * Blocks until connection is complete (closed)
          */
+        @Override
         public synchronized String complete() throws Exception {
             if (aborted) {
                 throw new Exception("Aborted");

@@ -13,6 +13,7 @@
    "mailboxId" : "18",
    "date" : "2016-12-07T11:51:51+0100",
    "size" : 25,
+   "mimeMessageID": "1480502737913",
    "properties" : [
       {
          "value" : "plain",

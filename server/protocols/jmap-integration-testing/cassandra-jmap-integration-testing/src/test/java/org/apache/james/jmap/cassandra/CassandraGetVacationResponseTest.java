@@ -19,31 +19,26 @@
 
 package org.apache.james.jmap.cassandra;
 
+import java.io.IOException;
+
 import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.backends.cassandra.ContainerLifecycleConfiguration;
 import org.apache.james.jmap.methods.integration.GetVacationResponseTest;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.rules.TestRule;
 
 public class CassandraGetVacationResponseTest extends GetVacationResponseTest {
 
     @ClassRule
     public static DockerCassandraRule cassandra = new DockerCassandraRule();
 
-    public static ContainerLifecycleConfiguration cassandraLifecycleConfiguration = ContainerLifecycleConfiguration.withDefaultIterationsBetweenRestart().container(cassandra.getRawContainer()).build();
-
     @Rule
     public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
-
-    @Rule
-    public TestRule cassandraLifecycleTestRule = cassandraLifecycleConfiguration.asTestRule();
     
     @Override
-    protected GuiceJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) {
+    protected GuiceJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) throws IOException {
         return rule.jmapServer(cassandra.getModule())
                 .overrideWith(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
     }

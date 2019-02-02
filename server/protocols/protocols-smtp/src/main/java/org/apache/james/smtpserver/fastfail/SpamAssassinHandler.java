@@ -19,11 +19,13 @@
 
 package org.apache.james.smtpserver.fastfail;
 
+import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -31,7 +33,8 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.smtpserver.JamesMessageHook;
-import org.apache.james.util.scanner.SpamAssassinInvoker;
+import org.apache.james.spamassassin.SpamAssassinInvoker;
+import org.apache.james.spamassassin.SpamAssassinResult;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +71,8 @@ import org.slf4j.LoggerFactory;
 public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(SpamAssassinHandler.class);
 
+    private final MetricFactory metricFactory;
+
     /** The port spamd is listen on */
     private int spamdPort = 783;
 
@@ -76,6 +81,11 @@ public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
 
     /** The hits on which the message get rejected */
     private double spamdRejectionHits = 0.0;
+
+    @Inject
+    public SpamAssassinHandler(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
+    }
 
     /**
      * Set the host the spamd daemon is running at
@@ -108,26 +118,23 @@ public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
 
     }
 
-    /**
-     * @see org.apache.james.smtpserver.JamesMessageHook#onMessage(org.apache.james.protocols.smtp.SMTPSession,
-     *      org.apache.mailet.Mail)
-     */
+    @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
 
         try {
             MimeMessage message = mail.getMessage();
-            SpamAssassinInvoker sa = new SpamAssassinInvoker(spamdHost, spamdPort);
-            sa.scanMail(message);
+            SpamAssassinInvoker sa = new SpamAssassinInvoker(metricFactory, spamdHost, spamdPort);
+            SpamAssassinResult result = sa.scanMail(message);
 
             // Add the headers
-            for (String key : sa.getHeadersAsAttribute().keySet()) {
-                mail.setAttribute(key, sa.getHeadersAsAttribute().get(key));
+            for (String key : result.getHeadersAsAttribute().keySet()) {
+                mail.setAttribute(key, result.getHeadersAsAttribute().get(key));
             }
 
             // Check if rejectionHits was configured
             if (spamdRejectionHits > 0) {
                 try {
-                    double hits = Double.parseDouble(sa.getHits());
+                    double hits = Double.parseDouble(result.getHits());
 
                     // if the hits are bigger the rejectionHits reject the
                     // message
@@ -136,7 +143,11 @@ public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
                         LOGGER.info(buffer);
 
                         // Message reject .. abort it!
-                        return new HookResult(HookReturnCode.DENY, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_OTHER) + " This message reach the spam hits treshold. Please contact the Postmaster if the email is not SPAM. Message rejected");
+                        return HookResult.builder()
+                            .hookReturnCode(HookReturnCode.deny())
+                            .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_OTHER)
+                                + " This message reach the spam hits treshold. Please contact the Postmaster if the email is not SPAM. Message rejected")
+                            .build();
                     }
                 } catch (NumberFormatException e) {
                     // hits unknown
@@ -145,7 +156,7 @@ public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
         } catch (MessagingException e) {
             LOGGER.error(e.getMessage());
         }
-        return new HookResult(HookReturnCode.DECLINED);
+        return HookResult.DECLINED;
     }
 
     @Override

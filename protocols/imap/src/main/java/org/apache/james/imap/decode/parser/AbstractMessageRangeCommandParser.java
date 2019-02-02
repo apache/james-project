@@ -33,6 +33,7 @@ public abstract class AbstractMessageRangeCommandParser extends AbstractUidComma
         super(command);
     }
 
+    @Override
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, boolean useUids, ImapSession session) throws DecodingException {
         IdRange[] idSet = request.parseIdRange(session);
         String mailboxName = request.mailbox();

@@ -52,6 +52,7 @@ public class HasHeaderWithPrefix extends GenericMatcher {
         }
     }
 
+    @Override
     public String getMatcherInfo() {
         return "HasHeaderWithPrefix Matcher";
     }

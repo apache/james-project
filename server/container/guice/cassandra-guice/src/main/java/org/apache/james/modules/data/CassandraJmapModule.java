@@ -20,11 +20,15 @@
 package org.apache.james.modules.data;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
+import org.apache.james.jmap.api.filtering.FilteringManagement;
+import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.cassandra.access.CassandraAccessModule;
 import org.apache.james.jmap.cassandra.access.CassandraAccessTokenRepository;
+import org.apache.james.jmap.cassandra.filtering.FilteringRuleSetDefineDTOModules;
 import org.apache.james.jmap.cassandra.vacation.CassandraNotificationRegistry;
 import org.apache.james.jmap.cassandra.vacation.CassandraNotificationRegistryModule;
 import org.apache.james.jmap.cassandra.vacation.CassandraVacationModule;
@@ -32,7 +36,6 @@ import org.apache.james.jmap.cassandra.vacation.CassandraVacationRepository;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
-
 import com.google.inject.multibindings.Multibinder;
 
 public class CassandraJmapModule extends AbstractModule {
@@ -48,9 +51,16 @@ public class CassandraJmapModule extends AbstractModule {
         bind(CassandraNotificationRegistry.class).in(Scopes.SINGLETON);
         bind(NotificationRegistry.class).to(CassandraNotificationRegistry.class);
 
+        bind(EventSourcingFilteringManagement.class).in(Scopes.SINGLETON);
+        bind(FilteringManagement.class).to(EventSourcingFilteringManagement.class);
+
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().to(CassandraAccessModule.class);
-        cassandraDataDefinitions.addBinding().to(CassandraVacationModule.class);
-        cassandraDataDefinitions.addBinding().to(CassandraNotificationRegistryModule.class);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraAccessModule.MODULE);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraVacationModule.MODULE);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraNotificationRegistryModule.MODULE);
+
+        @SuppressWarnings("rawtypes")
+        Multibinder<EventDTOModule> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), EventDTOModule.class);
+        eventDTOModuleBinder.addBinding().toInstance(FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED);
     }
 }

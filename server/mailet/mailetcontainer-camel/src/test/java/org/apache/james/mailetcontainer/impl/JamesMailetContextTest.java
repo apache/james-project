@@ -20,29 +20,30 @@
 package org.apache.james.mailetcontainer.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.lib.AbstractDomainList;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.memory.MemoryUsersRepository;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
-import org.apache.mailet.base.test.MimeMessageUtil;
+import org.apache.mailet.base.MailAddressFixture;
+import org.apache.mailet.base.test.FakeMail;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
 import org.junit.Rule;
@@ -52,9 +53,9 @@ import org.mockito.ArgumentCaptor;
 import com.google.common.collect.ImmutableList;
 
 public class JamesMailetContextTest {
-    public static final String DOMAIN_COM = "domain.com";
+    public static final Domain DOMAIN_COM = Domain.of("domain.com");
     public static final String USERNAME = "user";
-    public static final String USERMAIL = USERNAME + "@" + DOMAIN_COM;
+    public static final String USERMAIL = USERNAME + "@" + DOMAIN_COM.name();
     public static final String PASSWORD = "password";
     public static final DNSService DNS_SERVICE = null;
 
@@ -71,10 +72,10 @@ public class JamesMailetContextTest {
     @SuppressWarnings("unchecked")
     public void setUp() throws Exception {
         domainList = new MemoryDomainList(DNS_SERVICE);
-        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
-        domainList.configure(configuration);
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false)
+            .build());
 
         usersRepository = MemoryUsersRepository.withVirtualHosting();
         usersRepository.setDomainList(domainList);
@@ -115,11 +116,12 @@ public class JamesMailetContextTest {
 
     @Test
     public void isLocalUserShouldReturnTrueWhenUsedWithLocalPartAndUserExistOnDefaultDomain() throws Exception {
-        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
-        when(configuration.getString(eq("defaultDomain"), any(String.class)))
-            .thenReturn(DOMAIN_COM);
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false)
+            .defaultDomain(DOMAIN_COM)
+            .build());
 
-        domainList.configure(configuration);
         usersRepository.addUser(USERMAIL, PASSWORD);
 
         assertThat(testee.isLocalUser(USERNAME)).isTrue();
@@ -127,11 +129,12 @@ public class JamesMailetContextTest {
 
     @Test
     public void isLocalUserShouldReturnFalseWhenUsedWithLocalPartAndUserDoNotExistOnDefaultDomain() throws Exception {
-        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
-        when(configuration.getString(eq("defaultDomain"), any(String.class)))
-            .thenReturn("any");
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false)
+            .defaultDomain(Domain.of("any"))
+            .build());
 
-        domainList.configure(configuration);
         domainList.addDomain(DOMAIN_COM);
         usersRepository.addUser(USERMAIL, PASSWORD);
 
@@ -175,6 +178,29 @@ public class JamesMailetContextTest {
         mail.setRecipients(ImmutableList.of(mailAddress));
         mail.setMessage(MimeMessageUtil.defaultMimeMessage());
         testee.bounce(mail, "message");
+    }
+
+    @Test
+    public void bouncingToNullSenderShouldBeANoop() throws Exception {
+        MailImpl mail = new MailImpl();
+        mail.setSender(MailAddress.nullSender());
+        mail.setRecipients(ImmutableList.of(mailAddress));
+        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+
+        testee.bounce(mail, "message");
+
+        verifyZeroInteractions(spoolMailQueue);
+    }
+
+    @Test
+    public void bouncingToNoSenderShouldBeANoop() throws Exception {
+        MailImpl mail = new MailImpl();
+        mail.setRecipients(ImmutableList.of(mailAddress));
+        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+
+        testee.bounce(mail, "message");
+
+        verifyZeroInteractions(spoolMailQueue);
     }
 
     @Test
@@ -316,5 +342,49 @@ public class JamesMailetContextTest {
         verifyNoMoreInteractions(spoolMailQueue);
 
         assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(otherState);
+    }
+
+    @Test
+    public void sendMailForMailShouldEnqueueEmailWithOtherStateWhenSpecified() throws Exception {
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .addFrom(mailAddress.asString())
+            .addToRecipient(mailAddress.asString())
+            .setText("Simple text")
+            .build();
+
+        String otherState = "other";
+        testee.sendMail(FakeMail.builder()
+            .sender(MailAddressFixture.SENDER)
+            .recipient(MailAddressFixture.RECIPIENT1)
+            .mimeMessage(message)
+            .state(otherState)
+            .build());
+
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture());
+        verifyNoMoreInteractions(spoolMailQueue);
+
+        assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(otherState);
+    }
+
+    @Test
+    public void sendMailForMailShouldEnqueueEmailWithDefaults() throws Exception {
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .addFrom(mailAddress.asString())
+            .addToRecipient(mailAddress.asString())
+            .setText("Simple text")
+            .build();
+
+        testee.sendMail(FakeMail.builder()
+            .sender(MailAddressFixture.SENDER)
+            .recipient(MailAddressFixture.RECIPIENT1)
+            .mimeMessage(message)
+            .build());
+
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture());
+        verifyNoMoreInteractions(spoolMailQueue);
+
+        assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(Mail.DEFAULT);
     }
 }

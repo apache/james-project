@@ -44,6 +44,7 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import reactor.core.publisher.Mono;
 
 public class CassandraAttachmentMessageIdDAO {
 
@@ -91,8 +92,8 @@ public class CassandraAttachmentMessageIdDAO {
         return messageIdFactory.fromString(row.getString(MESSAGE_ID));
     }
 
-    public CompletableFuture<Void> storeAttachmentForMessageId(AttachmentId attachmentId, MessageId ownerMessageId) {
-        return cassandraAsyncExecutor.executeVoid(
+    public Mono<Void> storeAttachmentForMessageId(AttachmentId attachmentId, MessageId ownerMessageId) {
+        return cassandraAsyncExecutor.executeVoidReactor(
             insertStatement.bind()
                 .setUUID(ATTACHMENT_ID_AS_UUID, attachmentId.asUUID())
                 .setString(ATTACHMENT_ID, attachmentId.getId())

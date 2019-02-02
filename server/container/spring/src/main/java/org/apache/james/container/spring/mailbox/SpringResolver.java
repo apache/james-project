@@ -31,11 +31,7 @@ public class SpringResolver implements MailboxManagerResolver, ApplicationContex
     
     private ApplicationContext context;
 
-    /**
-     * @see
-     * org.springframework.context.ApplicationContextAware#setApplicationContext
-     * (org.springframework.context.ApplicationContext)
-     */
+    @Override
     public void setApplicationContext(ApplicationContext context) {
         this.context = context;
     }

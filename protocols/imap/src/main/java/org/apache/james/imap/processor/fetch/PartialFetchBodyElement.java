@@ -46,16 +46,12 @@ final class PartialFetchBodyElement implements BodyElement {
         name = delegate.getName() + "<" + firstOctet + ">";
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.BodyElement#getName()
-     */
+    @Override
     public String getName() {
         return name;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.Literal#size()
-     */
+    @Override
     public long size() throws IOException {
         final long size = delegate.size();
         final long lastOctet = this.numberOfOctets + firstOctet;
@@ -70,9 +66,7 @@ final class PartialFetchBodyElement implements BodyElement {
         return result;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.Literal#getInputStream()
-     */
+    @Override
     public InputStream getInputStream() throws IOException {
         return new LimitingInputStream(delegate.getInputStream(), firstOctet, size());
     }
@@ -112,9 +106,7 @@ final class PartialFetchBodyElement implements BodyElement {
             }
         }
 
-        /**
-         * @see java.io.FilterInputStream#read()
-         */
+        @Override
         public int read() throws IOException {
             checkOffset();
             if (pos >= length) {
@@ -124,16 +116,12 @@ final class PartialFetchBodyElement implements BodyElement {
             return super.read();
         }
 
-        /**
-         * @see java.io.FilterInputStream#read(byte[])
-         */
+        @Override
         public int read(byte[] b) throws IOException {
             return read(b, 0, b.length);
         }
 
-        /**
-         * @see java.io.FilterInputStream#read(byte[], int, int)
-         */
+        @Override
         public int read(byte[] b, int off, int len) throws IOException {
             checkOffset();
 
@@ -153,16 +141,12 @@ final class PartialFetchBodyElement implements BodyElement {
 
         }
 
-        /**
-         * Throws {@link IOException}
-         */
+        @Override
         public long skip(long n) throws IOException {
             throw new IOException("Not implemented");
         }
 
-        /**
-         * @see java.io.FilterInputStream#available()
-         */
+        @Override
         public int available() throws IOException {
             // Correctly calculate in available bytes.
             // See IMAP-295
@@ -179,10 +163,12 @@ final class PartialFetchBodyElement implements BodyElement {
             }
         }
 
+        @Override
         public void mark(int readlimit) {
             // Don't do anything.
         }
 
+        @Override
         public void reset() throws IOException {
             throw new IOException("mark not supported");
         }
@@ -190,6 +176,7 @@ final class PartialFetchBodyElement implements BodyElement {
         /**
          * Return false as mark is not supported
          */
+        @Override
         public boolean markSupported() {
             return false;
         }

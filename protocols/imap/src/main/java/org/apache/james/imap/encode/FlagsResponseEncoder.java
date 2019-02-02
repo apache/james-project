@@ -34,10 +34,12 @@ public class FlagsResponseEncoder extends AbstractChainedImapEncoder {
         super(next);
     }
 
+    @Override
     public boolean isAcceptable(ImapMessage message) {
         return message instanceof FlagsResponse;
     }
 
+    @Override
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
         final FlagsResponse flagsResponse = (FlagsResponse) acceptableMessage;
         final Flags flags = flagsResponse.getFlags();

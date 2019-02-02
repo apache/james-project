@@ -57,10 +57,7 @@ public class IMAPCommandDispatcher extends CommandDispatcher<IMAPSession> {
 
                 }
 
-                /*
-                 * (non-Javadoc)
-                 * @see org.apache.james.protocols.api.handler.MultiLineHandler#isReady(org.apache.james.protocols.api.ProtocolSession, java.nio.ByteBuffer)
-                 */
+                @Override
                 protected boolean isReady(IMAPSession session, ByteBuffer line) {
                     long bytesRead = (Long) session.setAttachment(BYTES_READ, null, State.Transaction);
                     bytesRead += line.remaining();

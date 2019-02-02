@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -60,10 +61,32 @@ public class MimeMessageBuilder {
             this.name = name;
             this.value = value;
         }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof Header) {
+                Header header = (Header) o;
+
+                return Objects.equals(this.name, header.name)
+                    && Objects.equals(this.value, header.value);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(name, value);
+        }
     }
 
     public static class MultipartBuilder {
         private ImmutableList.Builder<BodyPart> bodyParts = ImmutableList.builder();
+        private Optional<String> subType = Optional.empty();
+
+        public MultipartBuilder subType(String subType) {
+            this.subType = Optional.of(subType);
+            return this;
+        }
 
         public MultipartBuilder addBody(BodyPart bodyPart) {
             this.bodyParts.add(bodyPart);
@@ -72,6 +95,17 @@ public class MimeMessageBuilder {
 
         public MultipartBuilder addBody(BodyPartBuilder bodyPart) throws IOException, MessagingException {
             this.bodyParts.add(bodyPart.build());
+            return this;
+        }
+
+        public MultipartBuilder addBody(MimeMessageBuilder builder) throws IOException, MessagingException {
+            return addBody(builder.build());
+        }
+
+        public MultipartBuilder addBody(MimeMessage mimeMessage) throws IOException, MessagingException {
+            MimeBodyPart mimeBodyPart = new MimeBodyPart();
+            mimeBodyPart.setContent(mimeMessage, "message/rfc822");
+            this.bodyParts.add(mimeBodyPart);
             return this;
         }
 
@@ -89,6 +123,7 @@ public class MimeMessageBuilder {
 
         public MimeMultipart build() throws MessagingException {
             MimeMultipart multipart = new MimeMultipart();
+            subType.ifPresent(Throwing.consumer(multipart::setSubType));
             List<BodyPart> bodyParts = this.bodyParts.build();
             for (BodyPart bodyPart : bodyParts) {
                 multipart.addBodyPart(bodyPart);
@@ -376,12 +411,20 @@ public class MimeMessageBuilder {
         if (!bccAddresses.isEmpty()) {
             mimeMessage.setRecipients(Message.RecipientType.BCC, bccAddresses.toArray(new InternetAddress[bccAddresses.size()]));
         }
+
+        MimeMessage wrappedMessage = MimeMessageWrapper.wrap(mimeMessage);
+
         List<Header> headerList = headers.build();
         for (Header header: headerList) {
-            mimeMessage.addHeader(header.name, header.value);
+            if (header.name.equals("Message-ID") || header.name.equals("Date")) {
+                wrappedMessage.setHeader(header.name, header.value);
+            } else {
+                wrappedMessage.addHeader(header.name, header.value);
+            }
         }
-        mimeMessage.saveChanges();
-        return mimeMessage;
+        wrappedMessage.saveChanges();
+
+        return wrappedMessage;
     }
 
 }

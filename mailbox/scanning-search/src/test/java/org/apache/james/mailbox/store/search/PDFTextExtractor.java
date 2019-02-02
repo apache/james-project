@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store.search;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
@@ -43,7 +44,7 @@ public class PDFTextExtractor implements TextExtractor {
         if (isPDF(contentType)) {
             return extractTextFromPDF(inputStream);
         }
-        return new ParsedContent(IOUtils.toString(inputStream, StandardCharsets.UTF_8), ImmutableMap.of());
+        return new ParsedContent(Optional.ofNullable(IOUtils.toString(inputStream, StandardCharsets.UTF_8)), ImmutableMap.of());
     }
 
     private boolean isPDF(String contentType) {
@@ -52,8 +53,8 @@ public class PDFTextExtractor implements TextExtractor {
 
     private ParsedContent extractTextFromPDF(InputStream inputStream) throws IOException {
         return new ParsedContent(
-            new PDFTextStripper().getText(
-                PDDocument.load(inputStream)),
-            ImmutableMap.of());
+                Optional.ofNullable(new PDFTextStripper().getText(
+                        PDDocument.load(inputStream))),
+                ImmutableMap.of());
     }
 }

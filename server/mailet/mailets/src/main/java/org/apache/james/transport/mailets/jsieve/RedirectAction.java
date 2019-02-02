@@ -18,13 +18,10 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.jsieve;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.server.core.MailImpl;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionRedirect;
 import org.apache.mailet.Mail;
@@ -39,6 +36,7 @@ import org.slf4j.LoggerFactory;
 public class RedirectAction implements MailAction {
     private static final Logger LOGGER = LoggerFactory.getLogger(RedirectAction.class.getName());
 
+    @Override
     public void execute(Action action, Mail mail, ActionContext context)
             throws MessagingException {
         if (action instanceof ActionRedirect) {
@@ -58,10 +56,13 @@ public class RedirectAction implements MailAction {
      */
     public void execute(ActionRedirect anAction, Mail aMail, ActionContext context) throws MessagingException {
         ActionUtils.detectAndHandleLocalLooping(aMail, context, "redirect");
-        Collection<MailAddress> recipients = new ArrayList<>(1);
-        recipients.add(new MailAddress(new InternetAddress(anAction.getAddress())));
-        MailAddress sender = aMail.getSender();
-        context.post(sender, recipients, aMail.getMessage());
+
+        context.post(MailImpl.builder()
+            .sender(aMail.getMaybeSender())
+            .recipient(new MailAddress(anAction.getAddress()))
+            .mimeMessage(aMail.getMessage())
+            .build());
+
         LOGGER.debug("Redirected Message ID: {} to \"{}\"", aMail.getMessage().getMessageID(), anAction.getAddress());
         DiscardAction.removeRecipient(aMail, context);
     }

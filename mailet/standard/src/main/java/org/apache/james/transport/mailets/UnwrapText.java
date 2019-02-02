@@ -59,19 +59,17 @@ public class UnwrapText extends GenericMailet {
     
     private int quotewidth;
     
-    /**
-     * returns a String describing this mailet.
-     * 
-     * @return A desciption of this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "UnwrapText";
     }
 
+    @Override
     public void init() throws MailetException {
         quotewidth = Integer.parseInt(getInitParameter(PARAMETER_NAME_QUOTEWIDTH, "-10"));
     }
 
+    @Override
     public void service(Mail mail) throws MailetException {
         try {
             // TODO replace non standard quotes (at least "> " with ">", otherwise the widely used  "> > >" will not work.

@@ -34,6 +34,7 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.sql.DataSource;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.transport.mailets.WhiteListManager;
@@ -131,22 +132,21 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
         super.init();
     }
 
+    @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         // check if it's a local sender
-        MailAddress senderMailAddress = mail.getSender();
-        if (senderMailAddress == null) {
+        if (!mail.hasSender()) {
             return null;
         }
+        MailAddress senderMailAddress = mail.getMaybeSender().get();
         if (getMailetContext().isLocalEmail(senderMailAddress)) {
             // is a local sender, so return
             return null;
         }
 
         String senderUser = senderMailAddress.getLocalPart();
-        String senderHost = senderMailAddress.getDomain();
 
         senderUser = senderUser.toLowerCase(Locale.US);
-        senderHost = senderHost.toLowerCase(Locale.US);
 
         Collection<MailAddress> recipients = mail.getRecipients();
 
@@ -154,7 +154,7 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
 
         for (MailAddress recipientMailAddress : recipients) {
             String recipientUser = recipientMailAddress.getLocalPart().toLowerCase(Locale.US);
-            String recipientHost = recipientMailAddress.getDomain().toLowerCase(Locale.US);
+            Domain recipientHost = recipientMailAddress.getDomain();
 
             if (!getMailetContext().isLocalServer(recipientHost)) {
                 // not a local recipient, so skip

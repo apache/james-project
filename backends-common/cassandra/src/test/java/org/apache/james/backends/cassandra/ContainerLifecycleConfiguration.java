@@ -24,9 +24,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.rules.TestRule;
 import org.junit.runners.model.Statement;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.shaded.com.google.common.base.Preconditions;
+
+import com.google.common.base.Preconditions;
 
 public class ContainerLifecycleConfiguration {
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static Builder withDefaultIterationsBetweenRestart() {
         return new Builder();

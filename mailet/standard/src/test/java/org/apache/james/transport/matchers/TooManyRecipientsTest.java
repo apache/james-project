@@ -20,6 +20,7 @@
 package org.apache.james.transport.matchers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Collection;
 
@@ -28,76 +29,71 @@ import javax.mail.MessagingException;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class TooManyRecipientsTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class TooManyRecipientsTest {
 
     private TooManyRecipients testee;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         testee = new TooManyRecipients();
     }
 
     @Test
-    public void initShouldThrowOnAbsentCondition() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        testee.init(FakeMatcherConfig.builder()
-            .matcherName("matcherName")
-            .build());
+    void initShouldThrowOnAbsentCondition() {
+        assertThatThrownBy(() ->
+            testee.init(FakeMatcherConfig.builder()
+                .matcherName("matcherName")
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void initShouldThrowOnInvalidCondition() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        testee.init(FakeMatcherConfig.builder()
-            .condition("a")
-            .matcherName("matcherName")
-            .build());
+    void initShouldThrowOnInvalidCondition() {
+        assertThatThrownBy(() ->
+            testee.init(FakeMatcherConfig.builder()
+                .condition("a")
+                .matcherName("matcherName")
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void initShouldThrowOnEmptyCondition() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        testee.init(FakeMatcherConfig.builder()
-            .condition("")
-            .matcherName("matcherName")
-            .build());
+    void initShouldThrowOnEmptyCondition() {
+        assertThatThrownBy(() ->
+            testee.init(FakeMatcherConfig.builder()
+                .condition("")
+                .matcherName("matcherName")
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void initShouldThrowOnZeroCondition() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        testee.init(FakeMatcherConfig.builder()
-            .condition("0")
-            .matcherName("matcherName")
-            .build());
+    void initShouldThrowOnZeroCondition() {
+        assertThatThrownBy(() ->
+            testee.init(FakeMatcherConfig.builder()
+                .condition("0")
+                .matcherName("matcherName")
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void initShouldThrowOnNegativeCondition() throws Exception {
-        expectedException.expect(MessagingException.class);
-
-        testee.init(FakeMatcherConfig.builder()
-            .condition("-10")
-            .matcherName("matcherName")
-            .build());
+    void initShouldThrowOnNegativeCondition() {
+        assertThatThrownBy(() ->
+            testee.init(FakeMatcherConfig.builder()
+                .condition("-10")
+                .matcherName("matcherName")
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void matchShouldReturnNoRecipientWhenMailHaveNoRecipient() throws Exception {
+    void matchShouldReturnNoRecipientWhenMailHaveNoRecipient() throws Exception {
         testee.init(FakeMatcherConfig.builder()
             .condition("3")
             .matcherName("matcherName")
@@ -109,7 +105,7 @@ public class TooManyRecipientsTest {
     }
 
     @Test
-    public void matchShouldAcceptMailsUnderLimit() throws Exception {
+    void matchShouldAcceptMailsUnderLimit() throws Exception {
         testee.init(FakeMatcherConfig.builder()
             .condition("3")
             .matcherName("matcherName")
@@ -126,7 +122,7 @@ public class TooManyRecipientsTest {
 
 
     @Test
-    public void matchShouldAcceptMailsAtLimit() throws Exception {
+    void matchShouldAcceptMailsAtLimit() throws Exception {
         testee.init(FakeMatcherConfig.builder()
             .condition("3")
             .matcherName("matcherName")
@@ -142,7 +138,7 @@ public class TooManyRecipientsTest {
     }
 
     @Test
-    public void matchShouldRejectMailsOverLimit() throws Exception {
+    void matchShouldRejectMailsOverLimit() throws Exception {
         testee.init(FakeMatcherConfig.builder()
             .condition("3")
             .matcherName("matcherName")

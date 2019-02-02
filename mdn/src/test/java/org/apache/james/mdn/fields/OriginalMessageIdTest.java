@@ -35,7 +35,6 @@ public class OriginalMessageIdTest {
     @Test
     public void shouldMatchBeanContract() throws Exception {
         EqualsVerifier.forClass(OriginalMessageId.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

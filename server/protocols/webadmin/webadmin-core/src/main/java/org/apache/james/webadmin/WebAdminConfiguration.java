@@ -36,6 +36,13 @@ public class WebAdminConfiguration {
         .disabled()
         .build();
 
+    public static final WebAdminConfiguration TEST_CONFIGURATION = WebAdminConfiguration.builder()
+        .enabled()
+        .corsDisabled()
+        .host("127.0.0.1")
+        .port(new RandomPortSupplier())
+        .build();
+
     public static Builder builder() {
         return new Builder();
     }

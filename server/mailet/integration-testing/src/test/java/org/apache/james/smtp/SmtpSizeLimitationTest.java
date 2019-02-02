@@ -22,14 +22,16 @@ package org.apache.james.smtp;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
-import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.SMTPSendingException;
+import org.apache.james.utils.SmtpSendingStep;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -70,10 +72,11 @@ public class SmtpSizeLimitationTest {
             .doNotVerifyIdentity()
             .withMaxMessageSizeInKb(10));
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .authenticate(USER, PASSWORD)
-            .sendMessageWithHeaders(USER, USER, Strings.repeat("Long message", 1024))
-            .awaitSentFail(awaitAtMostOneMinute);
+        assertThatThrownBy(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .authenticate(USER, PASSWORD)
+                .sendMessageWithHeaders(USER, USER, Strings.repeat("Long message", 1024)))
+            .isEqualTo(new SMTPSendingException(SmtpSendingStep.Data, "500 Line length exceeded. See RFC 2821 #4.5.3.1.\n"));
     }
 
     @Test
@@ -82,9 +85,8 @@ public class SmtpSizeLimitationTest {
             .doNotVerifyIdentity()
             .withMaxMessageSizeInKb(10));
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(USER, PASSWORD)
-            .sendMessageWithHeaders(USER, USER,"Short message")
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessageWithHeaders(USER, USER,"Short message");
     }
 }

@@ -19,34 +19,36 @@
 
 package org.apache.james.webadmin.service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
 import javax.mail.MessagingException;
 
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
-import com.google.common.base.Throwables;
+import com.github.fge.lambdas.Throwing;
 
 public class ClearMailRepositoryTask implements Task {
 
     public static final String TYPE = "clearMailRepository";
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
-        private final String repositoryUrl;
+        private final MailRepositoryPath repositoryPath;
         private final Supplier<Long> countSupplier;
         private final long initialCount;
 
-        public AdditionalInformation(String repositoryUrl, Supplier<Long> countSupplier) {
-            this.repositoryUrl = repositoryUrl;
+        public AdditionalInformation(MailRepositoryPath repositoryPath, Supplier<Long> countSupplier) {
+            this.repositoryPath = repositoryPath;
             this.initialCount = countSupplier.get();
             this.countSupplier = countSupplier;
         }
 
-        public String getRepositoryUrl() {
-            return repositoryUrl;
+        public String getRepositoryPath() {
+            return repositoryPath.asString();
         }
 
         public long getRemainingCount() {
@@ -58,23 +60,27 @@ public class ClearMailRepositoryTask implements Task {
         }
     }
 
-    private final MailRepository mailRepository;
+    private final List<MailRepository> mailRepositories;
     private final AdditionalInformation additionalInformation;
 
-    public ClearMailRepositoryTask(MailRepository mailRepository, String url) {
-        this.mailRepository = mailRepository;
-        this.additionalInformation = new AdditionalInformation(url, this::getRemainingSize);
+    public ClearMailRepositoryTask(List<MailRepository> mailRepositories, MailRepositoryPath path) {
+        this.mailRepositories = mailRepositories;
+        this.additionalInformation = new AdditionalInformation(path, this::getRemainingSize);
     }
 
     @Override
     public Result run() {
         try {
-            mailRepository.removeAll();
+            removeAllInAllRepositories();
             return Result.COMPLETED;
         } catch (MessagingException e) {
             LOGGER.error("Encountered error while clearing repository", e);
             return Result.PARTIAL;
         }
+    }
+
+    private void removeAllInAllRepositories() throws MessagingException {
+        mailRepositories.forEach(Throwing.consumer(MailRepository::removeAll));
     }
 
     @Override
@@ -88,10 +94,10 @@ public class ClearMailRepositoryTask implements Task {
     }
 
     public long getRemainingSize() {
-        try {
-            return mailRepository.size();
-        } catch (MessagingException e) {
-            throw Throwables.propagate(e);
-        }
+        return mailRepositories
+                .stream()
+                .map(Throwing.function(MailRepository::size).sneakyThrow())
+                .mapToLong(Long::valueOf)
+                .sum();
     }
 }

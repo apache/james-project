@@ -48,6 +48,7 @@ public enum MailboxProperty implements Property {
         this.fieldName = fieldName;
     }
 
+    @Override
     public String asFieldName() {
         return fieldName;
     }

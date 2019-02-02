@@ -26,6 +26,33 @@ import org.apache.james.rrt.lib.Mappings;
 
 public interface DataProbe {
 
+    class FluentDataProbe {
+
+        private final DataProbe dataProbe;
+
+        private FluentDataProbe(DataProbe dataProbe) {
+            this.dataProbe = dataProbe;
+        }
+
+        public DataProbe getDataProbe() {
+            return dataProbe;
+        }
+
+        public FluentDataProbe addUser(String userName, String password) throws Exception {
+            dataProbe.addUser(userName, password);
+            return this;
+        }
+
+        public FluentDataProbe addDomain(String domain) throws Exception {
+            dataProbe.addDomain(domain);
+            return this;
+        }
+    }
+
+    default FluentDataProbe fluent() {
+        return new FluentDataProbe(this);
+    }
+
     void addUser(String userName, String password) throws Exception;
 
     void removeUser(String username) throws Exception;
@@ -48,14 +75,13 @@ public interface DataProbe {
 
     Mappings listUserDomainMappings(String user, String domain) throws Exception;
 
-    void addAddressMapping(String user, String domain, String toAddress) throws Exception;
+    void addAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception;
 
-    void removeAddressMapping(String user, String domain, String fromAddress) throws Exception;
+    void removeAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception;
 
     void addRegexMapping(String user, String domain, String regex) throws Exception;
 
     void removeRegexMapping(String user, String domain, String regex) throws Exception;
 
     void addDomainAliasMapping(String aliasDomain, String deliveryDomain) throws Exception;
-
 }

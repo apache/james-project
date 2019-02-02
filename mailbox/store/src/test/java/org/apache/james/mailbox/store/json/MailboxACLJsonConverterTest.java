@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.store.json;
 
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.mailbox.model.MailboxACL.Right.CreateMailbox;
 import static org.apache.james.mailbox.model.MailboxACL.Right.DeleteMailbox;
 import static org.apache.james.mailbox.model.MailboxACL.Right.DeleteMessages;
@@ -81,36 +81,36 @@ public class MailboxACLJsonConverterTest {
     @Test
     public void emptyACLShouldBeWellSerialized() throws Exception {
         assertThatJson(MailboxACLJsonConverter.toJson(MailboxACL.EMPTY))
-            .isEqualTo("{\"entries\":{}}")
-            .when(Option.IGNORING_ARRAY_ORDER);
+            .when(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo("{\"entries\":{}}");
     }
 
     @Test
     public void singleUserEntryACLShouldBeWellSerialized() throws Exception {
         assertThatJson(MailboxACLJsonConverter.toJson(new ACLMapBuilder().addSingleUserEntryToMap().buildAsACL()))
-            .isEqualTo("{\"entries\":{\"-user\":\"klprstwx\"}}")
-            .when(Option.IGNORING_ARRAY_ORDER);
+            .when(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo("{\"entries\":{\"-user\":\"klprstwx\"}}");
     }
 
     @Test
     public void singleGroupEntryACLShouldBeWellSerialized() throws Exception {
         assertThatJson(MailboxACLJsonConverter.toJson(new ACLMapBuilder().addSingleGroupEntryToMap().buildAsACL()))
-            .isEqualTo("{\"entries\":{\"-$group\":\"lprstwx\"}}")
-            .when(Option.IGNORING_ARRAY_ORDER);
+            .when(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo("{\"entries\":{\"-$group\":\"lprstwx\"}}");
     }
 
     @Test
     public void singleSpecialEntryACLShouldBeWellSerialized() throws Exception {
         assertThatJson(MailboxACLJsonConverter.toJson(new ACLMapBuilder().addSingleSpecialEntryToMap().buildAsACL()))
-            .isEqualTo("{\"entries\":{\"-special\":\"lpstwx\"}}")
-            .when(Option.IGNORING_ARRAY_ORDER);
+            .when(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo("{\"entries\":{\"-special\":\"lpstwx\"}}");
     }
 
     @Test
     public void multipleEntriesACLShouldBeWellSerialized() throws Exception {
         assertThatJson(MailboxACLJsonConverter.toJson(new ACLMapBuilder().addSingleUserEntryToMap().addSingleGroupEntryToMap().buildAsACL()))
-            .isEqualTo("{\"entries\":{\"-user\":\"klprstwx\",\"-$group\":\"lprstwx\"}}")
-            .when(Option.IGNORING_ARRAY_ORDER);
+            .when(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo("{\"entries\":{\"-user\":\"klprstwx\",\"-$group\":\"lprstwx\"}}");
     }
 
     @Test

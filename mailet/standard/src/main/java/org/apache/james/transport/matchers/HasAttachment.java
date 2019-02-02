@@ -45,6 +45,7 @@ public class HasAttachment extends GenericMatcher {
      * Either every recipient is matching or neither of them.
      * @throws MessagingException if no attachment is found and at least one exception was thrown
      */
+    @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         
         Exception anException = null;

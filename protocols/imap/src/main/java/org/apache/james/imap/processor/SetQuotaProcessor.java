@@ -40,6 +40,7 @@ import org.apache.james.util.MDCBuilder;
 public class SetQuotaProcessor extends AbstractMailboxProcessor<SetQuotaRequest> implements CapabilityImplementingProcessor {
     private static final List<String> CAPABILITIES = Collections.singletonList(ImapConstants.SUPPORTS_QUOTA);
 
+    @Override
     public List<String> getImplementedCapabilities(ImapSession session) {
         return CAPABILITIES;
     }

@@ -23,14 +23,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.backends.cassandra.init.CassandraConfiguration;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.cassandra.CassandraBlobId;
+import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -38,21 +39,22 @@ import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraAttachmentFallbackTest {
-    public static final AttachmentId ATTACHMENT_ID_1 = AttachmentId.from("id1");
-    public static final AttachmentId ATTACHMENT_ID_2 = AttachmentId.from("id2");
-    private static final CassandraBlobId.Factory BLOB_ID_FACTORY = new CassandraBlobId.Factory();
+import com.google.common.collect.ImmutableList;
 
-    @ClassRule
-    public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+class CassandraAttachmentFallbackTest {
+    private static final AttachmentId ATTACHMENT_ID_1 = AttachmentId.from("id1");
+    private static final AttachmentId ATTACHMENT_ID_2 = AttachmentId.from("id2");
+    private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
-    private CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
+        CassandraModule.aggregateModules(
+            CassandraAttachmentModule.MODULE,
+            CassandraBlobModule.MODULE));
 
     private CassandraAttachmentDAOV2 attachmentDAOV2;
     private CassandraAttachmentDAO attachmentDAO;
@@ -60,17 +62,9 @@ public class CassandraAttachmentFallbackTest {
     private CassandraBlobsDAO blobsDAO;
     private CassandraAttachmentMessageIdDAO attachmentMessageIdDAO;
 
-    @Before
-    public void setUp() throws Exception {
-        CassandraModuleComposite compositeModule = new CassandraModuleComposite(
-            new CassandraAttachmentModule(),
-            new CassandraBlobModule());
 
-        cassandra = CassandraCluster.create(
-            compositeModule,
-            cassandraServer.getIp(),
-            cassandraServer.getBindingPort());
-
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         attachmentDAOV2 = new CassandraAttachmentDAOV2(BLOB_ID_FACTORY, cassandra.getConf());
         attachmentDAO = new CassandraAttachmentDAO(cassandra.getConf(),
             CassandraUtils.WITH_DEFAULT_CONFIGURATION,
@@ -81,25 +75,20 @@ public class CassandraAttachmentFallbackTest {
         attachmentMapper = new CassandraAttachmentMapper(attachmentDAO, attachmentDAOV2, blobsDAO, attachmentMessageIdDAO, ownerDAO);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        cassandra.close();
-    }
-
     @Test
-    public void getAttachmentShouldThrowWhenAbsentFromV1AndV2() throws Exception {
+    void getAttachmentShouldThrowWhenAbsentFromV1AndV2() {
         assertThatThrownBy(() -> attachmentMapper.getAttachment(ATTACHMENT_ID_1))
             .isInstanceOf(AttachmentNotFoundException.class);
     }
 
     @Test
-    public void getAttachmentsShouldReturnEmptyWhenAbsentFromV1AndV2() throws Exception {
+    void getAttachmentsShouldReturnEmptyWhenAbsentFromV1AndV2() {
         assertThat(attachmentMapper.getAttachments(ImmutableList.of(ATTACHMENT_ID_1)))
             .isEmpty();
     }
 
     @Test
-    public void getAttachmentShouldReturnV2WhenPresentInV1AndV2() throws Exception {
+    void getAttachmentShouldReturnV2WhenPresentInV1AndV2() throws Exception {
         Attachment attachment = Attachment.builder()
             .attachmentId(ATTACHMENT_ID_1)
             .type("application/json")
@@ -111,8 +100,8 @@ public class CassandraAttachmentFallbackTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        BlobId blobId = blobsDAO.save(attachment.getBytes()).join();
-        attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).join();
+        BlobId blobId = blobsDAO.save(attachment.getBytes()).block();
+        attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).block();
         attachmentDAO.storeAttachment(otherAttachment).join();
 
         assertThat(attachmentMapper.getAttachment(ATTACHMENT_ID_1))
@@ -120,7 +109,7 @@ public class CassandraAttachmentFallbackTest {
     }
 
     @Test
-    public void getAttachmentShouldReturnV1WhenV2Absent() throws Exception {
+    void getAttachmentShouldReturnV1WhenV2Absent() throws Exception {
         Attachment attachment = Attachment.builder()
             .attachmentId(ATTACHMENT_ID_1)
             .type("application/json")
@@ -134,7 +123,7 @@ public class CassandraAttachmentFallbackTest {
     }
 
     @Test
-    public void getAttachmentsShouldReturnV2WhenV2AndV1() throws Exception {
+    void getAttachmentsShouldReturnV2WhenV2AndV1() throws Exception {
         Attachment attachment = Attachment.builder()
             .attachmentId(ATTACHMENT_ID_1)
             .type("application/json")
@@ -146,8 +135,8 @@ public class CassandraAttachmentFallbackTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        BlobId blobId = blobsDAO.save(attachment.getBytes()).join();
-        attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).join();
+        BlobId blobId = blobsDAO.save(attachment.getBytes()).block();
+        attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).block();
         attachmentDAO.storeAttachment(otherAttachment).join();
 
         assertThat(attachmentMapper.getAttachments(ImmutableList.of(ATTACHMENT_ID_1)))
@@ -155,7 +144,7 @@ public class CassandraAttachmentFallbackTest {
     }
 
     @Test
-    public void getAttachmentsShouldReturnV1WhenV2Absent() throws Exception {
+    void getAttachmentsShouldReturnV1WhenV2Absent() throws Exception {
         Attachment attachment = Attachment.builder()
             .attachmentId(ATTACHMENT_ID_1)
             .type("application/json")
@@ -169,7 +158,7 @@ public class CassandraAttachmentFallbackTest {
     }
 
     @Test
-    public void getAttachmentsShouldCombineElementsFromV1AndV2() throws Exception {
+    void getAttachmentsShouldCombineElementsFromV1AndV2() throws Exception {
         Attachment attachment = Attachment.builder()
             .attachmentId(ATTACHMENT_ID_1)
             .type("application/json")
@@ -181,11 +170,12 @@ public class CassandraAttachmentFallbackTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        BlobId blobId = blobsDAO.save(attachment.getBytes()).join();
-        attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).join();
+        BlobId blobId = blobsDAO.save(attachment.getBytes()).block();
+        attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).block();
         attachmentDAO.storeAttachment(otherAttachment).join();
 
-        assertThat(attachmentMapper.getAttachments(ImmutableList.of(ATTACHMENT_ID_1, ATTACHMENT_ID_2)))
-            .containsExactly(attachment, otherAttachment);
+        List<Attachment> attachments = attachmentMapper.getAttachments(ImmutableList.of(ATTACHMENT_ID_1, ATTACHMENT_ID_2));
+        assertThat(attachments)
+            .containsExactlyInAnyOrder(attachment, otherAttachment);
     }
 }

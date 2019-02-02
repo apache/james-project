@@ -132,6 +132,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
         folder.setMessageNameStrictParse(isMessageNameStrictParse());
         try {
             Mailbox loadedMailbox = new SimpleMailbox(mailboxPath, folder.getUidValidity());
+            loadedMailbox.setMailboxId(folder.readMailboxId());
             loadedMailbox.setACL(folder.getACL(session));
             return loadedMailbox;
         } catch (IOException e) {

@@ -32,6 +32,7 @@ public abstract class AbstractBeanFactory implements BeanFactoryAware {
 
     private ConfigurableListableBeanFactory beanFactory;
 
+    @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
         this.beanFactory = (ConfigurableListableBeanFactory) beanFactory;
     }

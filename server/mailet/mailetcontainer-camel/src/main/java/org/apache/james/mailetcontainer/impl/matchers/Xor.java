@@ -42,6 +42,7 @@ import com.google.common.collect.Sets;
  */
 public class Xor extends GenericCompositeMatcher {
 
+    @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         Collection<MailAddress> finalResult = null;
         boolean first = true;

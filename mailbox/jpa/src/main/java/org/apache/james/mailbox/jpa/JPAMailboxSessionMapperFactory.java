@@ -22,7 +22,7 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.JPAAnnotationMapper;
@@ -68,7 +68,7 @@ public class JPAMailboxSessionMapperFactory extends MailboxSessionMapperFactory 
 
     @Override
     public MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override

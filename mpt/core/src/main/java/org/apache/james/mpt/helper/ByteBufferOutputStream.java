@@ -44,6 +44,7 @@ public class ByteBufferOutputStream extends OutputStream {
         ascii.newEncoder().encode(CharBuffer.wrap(message), buffer, true);
     }
 
+    @Override
     public void write(int b) throws IOException {
         buffer.put((byte) b);
         if (b == '\n' && matchPlus && matchCR && matchLF) {

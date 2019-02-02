@@ -37,14 +37,12 @@ public class POP3BeforeSMTPHandler implements ConnectHandler<SMTPSession>, Confi
     /** The time after which ipAddresses should be handled as expired */
     private long expireTime = POP3BeforeSMTPHelper.EXPIRE_TIME;
 
-    /*
-     * 
-     */
+    @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         try {
             setExpireTime(config.getString("expireTime", null));
         } catch (NumberFormatException e) {
-            throw new ConfigurationException("Please configure a valid expireTime: " + e.getMessage());
+            throw new ConfigurationException("Please configure a valid expireTime", e);
         }
     }
 
@@ -60,9 +58,7 @@ public class POP3BeforeSMTPHandler implements ConnectHandler<SMTPSession>, Confi
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.ConnectHandler#onConnect(org.apache.james.protocols.api.ProtocolSession)
-     */
+    @Override
     public Response onConnect(SMTPSession session) {
 
         // some kind of random cleanup process

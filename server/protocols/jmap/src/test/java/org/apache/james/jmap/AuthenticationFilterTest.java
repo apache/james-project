@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.jmap;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -92,7 +92,7 @@ public class AuthenticationFilterTest {
         when(mockedRequest.getHeader("Authorization"))
             .thenReturn(TOKEN);
 
-        accessTokenRepository.addToken("user@domain.tld", token);
+        accessTokenRepository.addToken("user@domain.tld", token).join();
 
         AuthenticationFilter sut = new AuthenticationFilter(ImmutableList.of(new FakeAuthenticationStrategy(true)), new NoopMetricFactory());
         sut.doFilter(mockedRequest, mockedResponse, filterChain);
@@ -106,7 +106,7 @@ public class AuthenticationFilterTest {
         when(mockedRequest.getHeader("Authorization"))
             .thenReturn(TOKEN);
 
-        accessTokenRepository.addToken("user@domain.tld", token);
+        accessTokenRepository.addToken("user@domain.tld", token).join();
 
         AuthenticationFilter sut = new AuthenticationFilter(ImmutableList.of(new FakeAuthenticationStrategy(false), new FakeAuthenticationStrategy(true)), new NoopMetricFactory());
         sut.doFilter(mockedRequest, mockedResponse, filterChain);

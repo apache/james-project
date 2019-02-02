@@ -22,6 +22,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
@@ -43,103 +44,59 @@ import org.slf4j.LoggerFactory;
 public class ValidRcptHandler extends AbstractValidRcptHandler implements ProtocolHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(ValidRcptHandler.class);
 
-    private UsersRepository users;
+    private final UsersRepository users;
+    private final RecipientRewriteTable recipientRewriteTable;
+    private final DomainList domains;
 
-    private RecipientRewriteTable vut;
+    private boolean supportsRecipientRewriteTable = true;
 
-    private boolean useVut = true;
-
-    private DomainList domains;
-
-    /**
-     * Gets the users repository.
-     * 
-     * @return the users
-     */
-    public final UsersRepository getUsers() {
-        return users;
-    }
-
-    /**
-     * Sets the users repository.
-     * 
-     * @param users
-     *            the users to set
-     */
     @Inject
-    public final void setUsersRepository(UsersRepository users) {
+    public ValidRcptHandler(UsersRepository users, RecipientRewriteTable recipientRewriteTable, DomainList domains) {
         this.users = users;
-    }
-
-    /**
-     * Sets the virtual user table store.
-     * 
-     * @param vut
-     *            the tableStore to set
-     */
-    @Inject
-    public final void setRecipientRewriteTable(RecipientRewriteTable vut) {
-        this.vut = vut;
-    }
-
-    @Inject
-    public void setDomainList(DomainList domains) {
+        this.recipientRewriteTable = recipientRewriteTable;
         this.domains = domains;
     }
-    
-    public void setRecipientRewriteTableSupport(boolean useVut) {
-        this.useVut = useVut;
+
+    public void setSupportsRecipientRewriteTable(boolean supportsRecipientRewriteTable) {
+        this.supportsRecipientRewriteTable = supportsRecipientRewriteTable;
     }
 
     @Override
     protected boolean isValidRecipient(SMTPSession session, MailAddress recipient) {
-
-        String username = recipient.toString();
-
-        // check if the server use virtualhosting, if not use only the localpart
-        // as username
         try {
-            if (!users.supportVirtualHosting()) {
-                username = recipient.getLocalPart();
-            }
+            String username = users.getUser(recipient);
 
             if (users.contains(username)) {
                 return true;
             } else {
-
-                if (useVut) {
-                    LOGGER.debug("Unknown user {} check if it's an alias", username);
-
-                    try {
-                        Mappings targetString = vut.getMappings(recipient.getLocalPart(), recipient.getDomain());
-
-                        if (targetString != null && !targetString.isEmpty()) {
-                            return true;
-                        }
-                    } catch (ErrorMappingException e) {
-                        return false;
-                    } catch (RecipientRewriteTableException e) {
-                        LOGGER.info("Unable to access RecipientRewriteTable", e);
-                        return false;
-                    }
-                }
-
-                return false;
+                return supportsRecipientRewriteTable && isRedirected(recipient, username);
             }
         } catch (UsersRepositoryException e) {
             LOGGER.info("Unable to access UsersRepository", e);
             return false;
-
         }
     }
 
-    /**
-     * @see
-     * org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler
-     * #isLocalDomain(org.apache.james.protocols.smtp.SMTPSession,
-     * java.lang.String)
-     */
-    protected boolean isLocalDomain(SMTPSession session, String domain) {
+    private boolean isRedirected(MailAddress recipient, String username) {
+        LOGGER.debug("Unknown user {} check if it's an alias", username);
+
+        try {
+            Mappings targetString = recipientRewriteTable.getResolvedMappings(recipient.getLocalPart(), recipient.getDomain());
+
+            if (!targetString.isEmpty()) {
+                return true;
+            }
+        } catch (ErrorMappingException e) {
+            return true;
+        } catch (RecipientRewriteTableException e) {
+            LOGGER.info("Unable to access RecipientRewriteTable", e);
+            return false;
+        }
+        return false;
+    }
+
+    @Override
+    protected boolean isLocalDomain(SMTPSession session, Domain domain) {
         try {
             return domains.containsDomain(domain);
         } catch (DomainListException e) {
@@ -150,8 +107,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
 
     @Override
     public void init(Configuration config) throws ConfigurationException {
-        setRecipientRewriteTableSupport(config.getBoolean("enableRecipientRewriteTable", true));
-        
+        setSupportsRecipientRewriteTable(config.getBoolean("enableRecipientRewriteTable", true));
     }
 
     @Override

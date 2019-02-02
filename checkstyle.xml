@@ -31,6 +31,10 @@
   <property name="charset" value="UTF-8"/>
   <property name="fileExtensions" value="java, properties, xml"/>
   <module name="TreeWalker">
+    <module name="IllegalImport">
+      <property name="regexp" value="true"/>
+      <property name="illegalPkgs" value=".*\.shaded\..*" />
+    </module>
     <module name="OuterTypeFilename"/>
     <module name="IllegalTokenText">
       <property name="tokens" value="STRING_LITERAL, CHAR_LITERAL"/>

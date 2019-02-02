@@ -24,10 +24,11 @@ import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.cassandra.init.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
+import reactor.core.publisher.Flux;
 
 public class CassandraUtils {
 
@@ -38,6 +39,10 @@ public class CassandraUtils {
     @Inject
     public CassandraUtils(CassandraConfiguration cassandraConfiguration) {
         this.cassandraConfiguration = cassandraConfiguration;
+    }
+
+    public Flux<Row> convertToFlux(ResultSet resultSet) {
+        return Flux.fromIterable(resultSet);
     }
 
     public Stream<Row> convertToStream(ResultSet resultSet) {

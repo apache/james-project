@@ -51,6 +51,7 @@ public class ExtensionFileFilter implements FilenameFilter {
         extensions = new String[] { extension };
     }
 
+    @Override
     public boolean accept(File file, String name) {
         return Arrays.stream(extensions).anyMatch(name::endsWith);
     }

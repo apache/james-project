@@ -43,6 +43,7 @@ public class StatusResponseEncoder extends AbstractChainedImapEncoder {
         this.localizer = localizer;
     }
 
+    @Override
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
         StatusResponse response = (StatusResponse) acceptableMessage;
         final Type serverResponseType = response.getServerResponseType();
@@ -126,6 +127,7 @@ public class StatusResponseEncoder extends AbstractChainedImapEncoder {
         return result;
     }
 
+    @Override
     protected boolean isAcceptable(ImapMessage message) {
         return (message instanceof StatusResponse);
     }

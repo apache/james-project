@@ -21,7 +21,9 @@ package org.apache.james.backends.cassandra.init;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraType;
+import org.apache.james.backends.cassandra.components.CassandraType.InitializationStatus;
 
+import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.Session;
 import com.google.common.collect.ImmutableList;
 
@@ -34,8 +36,14 @@ public class CassandraTypesCreator {
         this.session = session;
     }
 
-    public void initializeTypes() {
-        types.forEach((type) -> session.execute(type.getCreateStatement()));
-    }
+    public InitializationStatus initializeTypes() {
+        KeyspaceMetadata keyspaceMetadata = session.getCluster()
+                .getMetadata()
+                .getKeyspace(session.getLoggedKeyspace());
 
+        return types.stream()
+                .map(type -> type.initialize(keyspaceMetadata, session))
+                .reduce((left, right) -> left.reduce(right))
+                .orElse(InitializationStatus.ALREADY_DONE);
+    }
 }

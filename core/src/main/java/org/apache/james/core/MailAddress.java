@@ -17,13 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-
 package org.apache.james.core;
 
 import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A representation of an email address.
@@ -62,6 +66,7 @@ import javax.mail.internet.InternetAddress;
  * @version 1.0
  */
 public class MailAddress implements java.io.Serializable {
+    public static final Logger LOGGER = LoggerFactory.getLogger(MailAddress.class);
     /**
      * We hardcode the serialVersionUID
      * This version (2779163542539434916L) retains compatibility back to
@@ -73,21 +78,28 @@ public class MailAddress implements java.io.Serializable {
     private static final char[] SPECIAL =
             {'<', '>', '(', ')', '[', ']', '\\', '.', ',', ';', ':', '@', '\"'};
 
+    public static final String NULL_SENDER_AS_STRING = "<>";
+
     private static final MailAddress NULL_SENDER = new MailAddress() {
 
         @Override
-        public String getDomain() {
-            return "";
+        public Domain getDomain() {
+            throw new IllegalStateException("NULL sender '<>' do not have domain part");
         }
 
         @Override
         public String getLocalPart() {
-            return "";
+            throw new IllegalStateException("NULL sender '<>' do not have local part");
         }
 
         @Override
         public String toString() {
             return "";
+        }
+
+        @Override
+        public String asString() {
+            return NULL_SENDER_AS_STRING;
         }
 
         @Override
@@ -97,16 +109,36 @@ public class MailAddress implements java.io.Serializable {
 
     };
 
-
     public static MailAddress nullSender() {
         return NULL_SENDER;
     }
 
-    private String localPart = null;
-    private String domain = null;
+    /**
+     * Prefer using {@link MaybeSender#getMailSender(String)}
+     */
+    @Deprecated
+    public static  MailAddress getMailSender(String sender) {
+        if (sender == null || sender.trim().length() <= 0) {
+            return null;
+        }
+        if (sender.equals(MailAddress.NULL_SENDER_AS_STRING)) {
+            return MailAddress.nullSender();
+        }
+        try {
+            return new MailAddress(sender);
+        } catch (AddressException e) {
+            // Should never happen as long as the user does not modify the header by himself
+            LOGGER.error("Unable to parse the sender address {}, so we fallback to a null sender", sender, e);
+            return MailAddress.nullSender();
+        }
+    }
+
+    private final String localPart;
+    private final Domain domain;
 
     private MailAddress() {
-
+        localPart = null;
+        domain = null;
     }
 
     /**
@@ -200,7 +232,7 @@ public class MailAddress implements java.io.Serializable {
         }
 
         localPart = localPartSB.toString();
-        domain = domainSB.toString();
+        domain = Domain.of(domainSB.toString());
     }
 
     private int parseUnquotedLocalPartOrThrowException(StringBuffer localPartSB, String address, int pos)
@@ -237,6 +269,10 @@ public class MailAddress implements java.io.Serializable {
         this(new InternetAddress(localPart + "@" + domain));
     }
 
+    public MailAddress(String localPart, Domain domain) throws AddressException {
+        this(new InternetAddress(localPart + "@" + domain.name()));
+    }
+
     /**
      * Constructs a MailAddress from an InternetAddress, using only the
      * email address portion (an "addr-spec", not "name-addr", as
@@ -259,7 +295,7 @@ public class MailAddress implements java.io.Serializable {
      */
     @Deprecated
     public String getHost() {
-        return getDomain();
+        return domain.asString();
     }
 
     /**
@@ -270,11 +306,8 @@ public class MailAddress implements java.io.Serializable {
      *         have been stripped returning the raw IP address.
      * @since Mailet API 2.4
      */
-    public String getDomain() {
-        if (!(domain.startsWith("[") && domain.endsWith("]"))) {
-            return domain;
-        }
-        return domain.substring(1, domain.length() - 1);
+    public Domain getDomain() {
+        return domain;
     }
 
     /**
@@ -305,12 +338,14 @@ public class MailAddress implements java.io.Serializable {
     }
 
     public String asString() {
-        return localPart + "@" + domain;
+        return localPart + "@" + domain.asString();
     }
 
     @Override
     public String toString() {
-        return localPart + "@" + domain;
+        return localPart + "@" + Optional.ofNullable(domain)
+            .map(Domain::asString)
+            .orElse("");
     }
     
     public String asPrettyString() {
@@ -343,17 +378,37 @@ public class MailAddress implements java.io.Serializable {
      * @returns true if the given object is equal to this one, false otherwise
      */
     @Override
-    public boolean equals(Object obj) {
+    public final boolean equals(Object obj) {
         if (obj == null) {
             return false;
         } else if (obj instanceof String) {
             String theString = (String) obj;
             return toString().equalsIgnoreCase(theString);
         } else if (obj instanceof MailAddress) {
-            MailAddress addr = (MailAddress) obj;
-            return getLocalPart().equalsIgnoreCase(addr.getLocalPart()) && getDomain().equalsIgnoreCase(addr.getDomain());
+            MailAddress that = (MailAddress) obj;
+            boolean bothNullSender = this.isNullSender() && that.isNullSender();
+            boolean onlyOneIsNullSender = isNullSender() ^ that.isNullSender();
+
+            if (bothNullSender) {
+                return true;
+            }
+            if (onlyOneIsNullSender) {
+                return false;
+            }
+            return equalsIgnoreCase(getLocalPart(), that.getLocalPart())
+                && Objects.equals(getDomain(), that.getDomain());
         }
         return false;
+    }
+
+    private boolean equalsIgnoreCase(String a, String b) {
+        if (a == null ^ b == null) {
+            return false;
+        }
+        if (a == null) {
+            return true;
+        }
+        return a.equalsIgnoreCase(b);
     }
 
     /**
@@ -366,7 +421,7 @@ public class MailAddress implements java.io.Serializable {
      * @return the hashcode.
      */
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return toString().toLowerCase(Locale.US).hashCode();
     }
 
@@ -615,8 +670,9 @@ public class MailAddress implements java.io.Serializable {
     /**
      * Return <code>true</code> if the {@link MailAddress} should represent a null sender (<>)
      *
-     * @return nullsender
+     * @Deprecated You should use an Optional&lt;MailAddress&gt; representation of a MailAddress rather than relying on a NULL object
      */
+    @Deprecated
     public boolean isNullSender() {
         return false;
     }

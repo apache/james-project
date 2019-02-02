@@ -19,14 +19,16 @@
 
 package org.apache.james;
 
+import java.io.IOException;
+
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
-import org.apache.james.modules.TestFilesystemModule;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.server.core.configuration.Configuration;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -36,19 +38,22 @@ import com.google.inject.Module;
 
 public class MemoryJmapTestRule implements TestRule {
 
-    private static final int LIMIT_TO_3_MESSAGES = 3;
+    private static final int LIMIT_TO_10_MESSAGES = 10;
     
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    public GuiceJamesServer jmapServer(Module... modules) {
-        return new GuiceJamesServer()
+    public GuiceJamesServer jmapServer(Module... modules) throws IOException {
+        Configuration configuration = Configuration.builder()
+            .workingDirectory(temporaryFolder.newFolder())
+            .configurationFromClasspath()
+            .build();
+        return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-            .overrideWith(modules)
-            .overrideWith(new TestFilesystemModule(temporaryFolder),
-                new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
             .overrideWith(binder -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(binder -> binder.bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class));
+            .overrideWith(binder -> binder.bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class))
+            .overrideWith(modules);
     }
 
     @Override

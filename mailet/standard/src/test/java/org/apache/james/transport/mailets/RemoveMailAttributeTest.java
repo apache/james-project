@@ -20,53 +20,57 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.MessagingException;
 
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class RemoveMailAttributeTest {
+class RemoveMailAttributeTest {
 
-    private static final String ATTRIBUTE_1 = "attribute1";
-    private static final String ATTRIBUTE_2 = "attribute2";
-    private static final String ATTRIBUTE_3 = "attribute3";
-    private static final String VALUE_1 = "value1";
-    private static final String VALUE_2 = "value2";
-    private static final String VALUE_3 = "value3";
+    private static final AttributeName ATTRIBUTE_1 = AttributeName.of("attribute1");
+    private static final AttributeName ATTRIBUTE_2 = AttributeName.of("attribute2");
+    private static final AttributeName ATTRIBUTE_3 = AttributeName.of("attribute3");
+    private static final Attribute VALUE_1 = new Attribute(ATTRIBUTE_1, AttributeValue.of("value1"));
+    private static final Attribute VALUE_2 = new Attribute(ATTRIBUTE_2, AttributeValue.of("value2"));
+    private static final Attribute VALUE_3 = new Attribute(ATTRIBUTE_3, AttributeValue.of("value3"));
     private static final String ATTRIBUTE1_ATTRIBUTE2 = "attribute1, attribute2";
     private Mailet removeMailet;
 
-    @Before
-    public void setup() throws Exception {
+    @BeforeEach
+    void setup() {
         removeMailet = new RemoveMailAttribute();
     }
 
     @Test
-    public void getMailetInfoShouldReturnCorrectInformation() throws Exception {
+    void getMailetInfoShouldReturnCorrectInformation() {
         assertThat(removeMailet.getMailetInfo()).isEqualTo("Remove Mail Attribute Mailet");
     }
 
-    @Test(expected = MailetException.class)
-    public void initShouldThrowExceptionIfMailetConfigDoesNotContainAttribute() throws MessagingException {
+    @Test
+    void initShouldThrowExceptionIfMailetConfigDoesNotContainAttribute() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .build();
-        removeMailet.init(mailetConfig);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void serviceShouldThrowExceptionWithMailNull() throws MessagingException {
-        removeMailet.service(null);
+        assertThatThrownBy(() -> removeMailet.init(mailetConfig)).isInstanceOf(MailetException.class);
     }
 
     @Test
-    public void serviceShouldDoNothingWhenMailHasEmptyAttribute() throws MessagingException {
+    void serviceShouldThrowExceptionWithMailNull() {
+        assertThatThrownBy(() -> removeMailet.service(null)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void serviceShouldDoNothingWhenMailHasEmptyAttribute() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty(RemoveMailAttribute.MAILET_NAME_PARAMETER, ATTRIBUTE1_ATTRIBUTE2)
@@ -76,11 +80,11 @@ public class RemoveMailAttributeTest {
         Mail mail = FakeMail.builder().build();
         removeMailet.service(mail);
 
-        assertThat(mail.getAttributeNames()).isEmpty();
+        assertThat(mail.attributes()).isEmpty();
     }
 
     @Test
-    public void serviceShouldDoNothingWhenMailDoNotMatchAttribute() throws MessagingException {
+    void serviceShouldDoNothingWhenMailDoNotMatchAttribute() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty(RemoveMailAttribute.MAILET_NAME_PARAMETER, ATTRIBUTE1_ATTRIBUTE2)
@@ -88,33 +92,33 @@ public class RemoveMailAttributeTest {
         removeMailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder()
-            .attribute(ATTRIBUTE_3, VALUE_3)
+            .attribute(VALUE_3)
             .build();
         removeMailet.service(mail);
 
-        assertThat(mail.getAttributeNames()).containsExactly(ATTRIBUTE_3);
+        assertThat(mail.attributes()).containsExactly(VALUE_3);
     }
 
     @Test
-    public void serviceShouldRemoveSpecifiedAttribute() throws MessagingException {
+    void serviceShouldRemoveSpecifiedAttribute() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
-                .setProperty(RemoveMailAttribute.MAILET_NAME_PARAMETER, ATTRIBUTE_1)
+                .setProperty(RemoveMailAttribute.MAILET_NAME_PARAMETER, ATTRIBUTE_1.asString())
                 .build();
         removeMailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder()
-            .attribute(ATTRIBUTE_1, VALUE_1)
-            .attribute(ATTRIBUTE_2, VALUE_2)
-            .attribute(ATTRIBUTE_3, VALUE_3)
+            .attribute(VALUE_1)
+            .attribute(VALUE_2)
+            .attribute(VALUE_3)
             .build();
         removeMailet.service(mail);
 
-        assertThat(mail.getAttributeNames()).containsOnly(ATTRIBUTE_2, ATTRIBUTE_3);
+        assertThat(mail.attributes()).containsOnly(VALUE_2, VALUE_3);
     }
 
     @Test
-    public void serviceShouldRemoveSpecifiedAttributes() throws MessagingException {
+    void serviceShouldRemoveSpecifiedAttributes() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty(RemoveMailAttribute.MAILET_NAME_PARAMETER, ATTRIBUTE1_ATTRIBUTE2)
@@ -122,12 +126,12 @@ public class RemoveMailAttributeTest {
         removeMailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder()
-            .attribute(ATTRIBUTE_1, VALUE_1)
-            .attribute(ATTRIBUTE_2, VALUE_2)
-            .attribute(ATTRIBUTE_3, VALUE_3)
+            .attribute(VALUE_1)
+            .attribute(VALUE_2)
+            .attribute(VALUE_3)
             .build();
         removeMailet.service(mail);
 
-        assertThat(mail.getAttributeNames()).containsExactly(ATTRIBUTE_3);
+        assertThat(mail.attributes()).containsExactly(VALUE_3);
     }
 }

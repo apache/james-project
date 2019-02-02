@@ -20,8 +20,9 @@
 package org.apache.james;
 
 import org.apache.james.modules.MailboxModule;
+import org.apache.james.modules.activemq.ActiveMQQueueModule;
 import org.apache.james.modules.data.JPADataModule;
-import org.apache.james.modules.data.SieveFileRepositoryModule;
+import org.apache.james.modules.data.SieveJPARepositoryModules;
 import org.apache.james.modules.mailbox.DefaultEventModule;
 import org.apache.james.modules.mailbox.JPAMailboxModule;
 import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
@@ -31,7 +32,6 @@ import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
-import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
 import org.apache.james.modules.server.ElasticSearchMetricReporterModule;
@@ -41,8 +41,12 @@ import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
+import org.apache.james.modules.server.ReIndexingModule;
+import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
+import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
+import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -55,7 +59,9 @@ public class JPAJamesServerMain {
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
-        new SwaggerRoutesModule());
+        new SwaggerRoutesModule(),
+        new SieveRoutesModule(),
+        new ReIndexingModule());
 
     public static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),
@@ -65,7 +71,7 @@ public class JPAJamesServerMain {
         new ProtocolHandlerModule(),
         new SMTPServerModule(),
         WEBADMIN);
-    
+
     public static final Module JPA_SERVER_MODULE = Modules.combine(
         new ActiveMQQueueModule(),
         new DefaultProcessorsConfigurationProviderModule(),
@@ -73,16 +79,23 @@ public class JPAJamesServerMain {
         new JPADataModule(),
         new JPAMailboxModule(),
         new MailboxModule(),
+        new LuceneSearchMailboxModule(),
         new NoJwtModule(),
         new RawPostDequeueDecoratorModule(),
-        new SieveFileRepositoryModule(),
-        new DefaultEventModule());
+        new SieveJPARepositoryModules(),
+        new DefaultEventModule(),
+        new SpamAssassinListenerModule());
+
+    public static final Module JPA_MODULE_AGGREGATE = Modules.combine(JPA_SERVER_MODULE, PROTOCOLS);
 
     public static void main(String[] args) throws Exception {
-        GuiceJamesServer server = new GuiceJamesServer()
-                    .combineWith(JPA_SERVER_MODULE, PROTOCOLS,
-                            new JMXServerModule(), 
-                            new LuceneSearchMailboxModule());
+        Configuration configuration = Configuration.builder()
+            .useWorkingDirectoryEnvProperty()
+            .build();
+
+        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
+                    .combineWith(JPA_MODULE_AGGREGATE,
+                            new JMXServerModule());
         server.start();
     }
 

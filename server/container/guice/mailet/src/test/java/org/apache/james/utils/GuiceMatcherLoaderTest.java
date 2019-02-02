@@ -57,6 +57,19 @@ public class GuiceMatcherLoaderTest {
     }
 
     @Test
+    public void getMatcherShouldLoadClassWhenInSubPackageFromDefaultPackage() throws Exception {
+        GuiceMatcherLoader guiceMailetLoader = new GuiceMatcherLoader(injector,
+            new ExtendedClassLoader(THROWING_FILE_SYSTEM));
+
+        Matcher matcher = guiceMailetLoader.getMatcher(FakeMatcherConfig.builder()
+            .matcherName("sub.TestMatcher")
+            .mailetContext(FakeMailContext.defaultContext())
+            .build());
+
+        assertThat(matcher).isInstanceOf(All.class);
+    }
+
+    @Test
     public void getMatcherShouldThrowOnBadType() throws Exception {
         GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(injector,
             new ExtendedClassLoader(THROWING_FILE_SYSTEM));

@@ -72,6 +72,7 @@ public class SMTPChannelUpstreamHandler extends BasicChannelUpstreamHandler {
      * 
      * @param ctx
      */
+    @Override
     protected void cleanup(ChannelHandlerContext ctx) {
         // Make sure we dispose everything on exit on session close
         SMTPSession smtpSession = (SMTPSession) ctx.getAttachment();

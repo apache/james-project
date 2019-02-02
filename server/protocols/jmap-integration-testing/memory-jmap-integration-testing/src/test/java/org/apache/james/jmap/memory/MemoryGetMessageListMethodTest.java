@@ -19,10 +19,15 @@
 
 package org.apache.james.jmap.memory;
 
+import java.io.IOException;
+
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.jmap.methods.integration.GetMessageListMethodTest;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.Ignore;
 import org.junit.Rule;
+import org.junit.Test;
 
 public class MemoryGetMessageListMethodTest extends GetMessageListMethodTest {
 
@@ -30,12 +35,18 @@ public class MemoryGetMessageListMethodTest extends GetMessageListMethodTest {
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 
     @Override
-    protected GuiceJamesServer createJmapServer() {
-        return memoryJmap.jmapServer();
+    protected GuiceJamesServer createJmapServer() throws IOException {
+        return memoryJmap.jmapServer(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES));
     }
     
     @Override
     protected void await() {
 
+    }
+
+    @Override
+    @Ignore("This feature is not supported by MessageSearchIndex implementation binded in the Memory product")
+    @Test
+    public void getMessageListShouldIncludeMessagesWhenTextFilterMatchesBodyWithStemming() {
     }
 }

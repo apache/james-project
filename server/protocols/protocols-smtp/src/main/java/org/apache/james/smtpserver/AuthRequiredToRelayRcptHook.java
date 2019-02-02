@@ -22,6 +22,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.protocols.smtp.core.AbstractAuthRequiredToRelayRcptHook;
@@ -45,10 +46,8 @@ public class AuthRequiredToRelayRcptHook extends AbstractAuthRequiredToRelayRcpt
 
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractAuthRequiredToRelayRcptHook#isLocalDomain(java.lang.String)
-     */
-    protected boolean isLocalDomain(String domain) {
+    @Override
+    protected boolean isLocalDomain(Domain domain) {
         try {
             return domains.containsDomain(domain);
         } catch (DomainListException e) {

@@ -19,10 +19,11 @@
 
 package org.apache.james.jmap.cassandra;
 
+import java.io.IOException;
+
 import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.backends.cassandra.ContainerLifecycleConfiguration;
 import org.apache.james.jmap.methods.integration.SetMessagesMethodTest;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
@@ -30,23 +31,17 @@ import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
 
 public class CassandraSetMessagesMethodTest extends SetMessagesMethodTest {
 
     @ClassRule
     public static DockerCassandraRule cassandra = new DockerCassandraRule();
 
-    public static ContainerLifecycleConfiguration cassandraLifecycleConfiguration = ContainerLifecycleConfiguration.withDefaultIterationsBetweenRestart().container(cassandra.getRawContainer()).build();
-
     @Rule
     public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
 
-    @Rule
-    public TestRule cassandraLifecycleTestRule = cassandraLifecycleConfiguration.asTestRule();
-
     @Override
-    protected GuiceJamesServer createJmapServer() {
+    protected GuiceJamesServer createJmapServer() throws IOException {
         return rule.jmapServer(cassandra.getModule());
     }
 
@@ -60,11 +55,10 @@ public class CassandraSetMessagesMethodTest extends SetMessagesMethodTest {
         return new CassandraMessageId.Factory().generate();
     }
 
-    @Ignore("JAMES-2221 Temporally ignored failed test")
+    @Ignore("Temporally ignored CI failing test")
     @Override
     @Test
-    public void attachmentsShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesTextAttachment() throws Exception {
+    public void setMessagesWithABigBodyShouldReturnCreatedMessageWhenSendingMessage() {
 
     }
-    
 }

@@ -22,6 +22,7 @@ package org.apache.james.protocols.smtp.hook;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.MailEnvelope;
 import org.apache.james.protocols.smtp.SMTPSession;
 
@@ -47,31 +48,35 @@ public class SimpleHook implements HeloHook, MailHook, RcptHook, MessageHook {
     /**
      * Return {@link HookResult} with {@link HookReturnCode#OK}
      */
+    @Override
     public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
-        return new HookResult(HookReturnCode.OK);
+        return HookResult.OK;
     }
 
     /**
      * Return {@link HookResult} with {@link HookReturnCode#DECLINED}
      */
-    public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
-        return new HookResult(HookReturnCode.DECLINED);
-
-    }
-
-    /**
-     * Return {@link HookResult} with {@link HookReturnCode#DECLINED}
-     */
-    public HookResult doMail(SMTPSession session, MailAddress sender) {
-        return new HookResult(HookReturnCode.DECLINED);
+    @Override
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
+        return HookResult.DECLINED;
 
     }
 
     /**
      * Return {@link HookResult} with {@link HookReturnCode#DECLINED}
      */
+    @Override
+    public HookResult doMail(SMTPSession session, MaybeSender sender) {
+        return HookResult.DECLINED;
+
+    }
+
+    /**
+     * Return {@link HookResult} with {@link HookReturnCode#DECLINED}
+     */
+    @Override
     public HookResult doHelo(SMTPSession session, String helo) {
-        return new HookResult(HookReturnCode.DECLINED);
+        return HookResult.DECLINED;
     }
 
 }

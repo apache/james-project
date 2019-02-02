@@ -84,6 +84,7 @@ public abstract class AbstractImapRequestHandler {
      */
     public static final class SilentResponder implements Responder {
 
+        @Override
         public void respond(ImapResponseMessage message) {
             // Swallow
         }

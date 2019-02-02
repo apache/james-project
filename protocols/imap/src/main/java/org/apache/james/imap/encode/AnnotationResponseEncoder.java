@@ -39,6 +39,7 @@ public class AnnotationResponseEncoder extends AbstractChainedImapEncoder {
         super(next);
     }
 
+    @Override
     protected void doEncode(ImapMessage acceptableMessage, final ImapResponseComposer composer, ImapSession session) throws IOException {
 
         AnnotationResponse response = (AnnotationResponse) acceptableMessage;
@@ -71,6 +72,7 @@ public class AnnotationResponseEncoder extends AbstractChainedImapEncoder {
         }
     }
 
+    @Override
     public boolean isAcceptable(ImapMessage message) {
         return message instanceof AnnotationResponse;
     }

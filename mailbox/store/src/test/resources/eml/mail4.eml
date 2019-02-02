@@ -37,8 +37,8 @@ Received: from arcas.apache.org (HELO arcas.apache.org) (140.211.11.28)
 Date: Fri, 15 May 2015 06:35:59 +0000 (UTC)
 From: "Eric Charles (JIRA)" <mailet-api@james.apache.org>
 To: "zzz" <mailet-api@james.apache.org>
-Cc: any@any.com
-Bcc: any@any.com
+Cc: monkey@any.com
+Bcc: monkey@any.com
 Message-ID: <JIRA.12825882.1430301328000.124152.1431671759942@Atlassian.JIRA>
 In-Reply-To: <JIRA.12825882.1430301328000@Atlassian.JIRA>
 References: <JIRA.12825882.1430301328000@Atlassian.JIRA> <JIRA.12825882.1430301328925@arcas>

@@ -21,7 +21,9 @@ package org.apache.james.junit;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -35,7 +37,8 @@ public class ExecutorExtension implements ParameterResolver, BeforeEachCallback,
 
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
-        executorService = Executors.newWorkStealingPool();
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        executorService = Executors.newCachedThreadPool(threadFactory);
     }
 
     @Override

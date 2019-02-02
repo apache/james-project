@@ -22,9 +22,10 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.rules.ExternalResource;
-import org.testcontainers.containers.wait.Wait;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 import com.google.common.primitives.Ints;
 
@@ -38,7 +39,7 @@ public class TikaContainer extends ExternalResource {
     public TikaContainer() {
         tika = new SwarmGenericContainer(Images.TIKA)
                 .withExposedPorts(DEFAULT_TIKA_PORT)
-                .waitingFor(Wait.forHttp("/tika"))
+                .waitingFor(Wait.forHttp("/tika").withRateLimiter(RateLimiters.TWENTIES_PER_SECOND))
                 .withStartupTimeout(Duration.ofSeconds(30));
     }
 
@@ -47,7 +48,7 @@ public class TikaContainer extends ExternalResource {
         start();
     }
 
-    public void start() throws Exception {
+    public void start() {
         tika.start();
     }
 

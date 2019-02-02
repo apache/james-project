@@ -78,9 +78,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
         }
     }
     
-    /**
-     * @see org.apache.james.mailbox.store.mail.MailboxMapper#save(Mailbox)
-     */
+    @Override
     public MailboxId save(Mailbox mailbox) throws MailboxException {
         try {
             if (isPathAlreadyUsedByAnotherMailbox(mailbox)) {
@@ -109,9 +107,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
         }
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxByPath(MailboxPath)
-     */
+    @Override
     public Mailbox findMailboxByPath(MailboxPath mailboxPath) throws MailboxException, MailboxNotFoundException {
         try {
             if (mailboxPath.getUser() == null) {
@@ -147,9 +143,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
         } 
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MailboxMapper#delete(Mailbox)
-     */
+    @Override
     public void delete(Mailbox mailbox) throws MailboxException {
         try {  
             JPAId mailboxId = (JPAId) mailbox.getMailboxId();
@@ -161,9 +155,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
         } 
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxWithPathLike(MailboxPath)
-     */
+    @Override
     public List<Mailbox> findMailboxWithPathLike(MailboxPath path) throws MailboxException {
         try {
             if (path.getUser() == null) {
@@ -199,9 +191,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
         } 
     }
     
-    /**
-     * @see org.apache.james.mailbox.store.mail.MailboxMapper#hasChildren(Mailbox, char)
-     */
+    @Override
     public boolean hasChildren(Mailbox mailbox, char delimiter) throws MailboxException,
             MailboxNotFoundException {
         final String name = mailbox.getName() + delimiter + SQL_WILDCARD_CHAR; 
@@ -214,9 +204,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
         return numberOfChildMailboxes != null && numberOfChildMailboxes > 0;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MailboxMapper#list()
-     */
+    @Override
     public List<Mailbox> list() throws MailboxException {
         try {
             return getEntityManager().createNamedQuery("listMailboxes", Mailbox.class).getResultList();

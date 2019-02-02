@@ -49,6 +49,7 @@ public class RestrictingRMISocketFactory extends RMISocketFactory {
      * the given port. The address can be specified by the System Property
      * james.jmx.address. If none is given it will use localhost
      */
+    @Override
     public ServerSocket createServerSocket(int port) throws IOException {
         ServerSocket socket = new ServerSocket();
         socket.bind(new InetSocketAddress(address, port));
@@ -59,6 +60,7 @@ public class RestrictingRMISocketFactory extends RMISocketFactory {
     /**
      * Create a new {@link Socket} for the given host and port
      */
+    @Override
     public Socket createSocket(String host, int port) throws IOException {
         return new Socket(host, port);
     }

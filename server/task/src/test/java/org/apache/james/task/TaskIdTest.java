@@ -28,7 +28,6 @@ public class TaskIdTest {
     @Test
     public void taskIdShouldMatchBeanContract() {
         EqualsVerifier.forClass(TaskId.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 }

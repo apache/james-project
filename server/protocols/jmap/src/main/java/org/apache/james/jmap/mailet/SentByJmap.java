@@ -31,6 +31,7 @@ import org.apache.mailet.base.GenericMatcher;
 import com.google.common.collect.ImmutableList;
 
 public class SentByJmap extends GenericMatcher {
+    @Override
     public Collection<MailAddress> match(Mail mail) {
         String authUser = (String) mail.getAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE);
         if (authUser != null) {

@@ -54,15 +54,9 @@ public class ClusterWithKeyspaceCreatedFactory {
         }
         
         public Cluster clusterWithInitializedKeyspace() {
-            if (isKeyspacePresent(cluster, keyspace)) {
-                createKeyspace(cluster, keyspace, replicationFactor, durableWrites);
-            }
+            createKeyspace(cluster, keyspace, replicationFactor, durableWrites);
             return cluster;
         }
-    }
-
-    private static boolean isKeyspacePresent(Cluster cluster, String keyspace) {
-        return cluster.getMetadata().getKeyspace(keyspace) == null;
     }
 
     private static void createKeyspace(Cluster cluster, String keyspace, int replicationFactor, boolean durableWrites) {

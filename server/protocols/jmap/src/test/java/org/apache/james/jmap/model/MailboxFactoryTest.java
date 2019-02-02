@@ -24,15 +24,17 @@ import java.util.Optional;
 
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.MailboxNamespace;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.manager.ManagerTestResources;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.SimpleMailboxMetaData;
+import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
 import org.junit.Rule;
@@ -46,7 +48,7 @@ public class MailboxFactoryTest {
     @Rule
     public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
 
-    private MailboxManager mailboxManager;
+    private StoreMailboxManager mailboxManager;
     private MailboxSession mailboxSession;
     private MailboxSession otherMailboxSession;
     private String user;
@@ -57,11 +59,14 @@ public class MailboxFactoryTest {
     public void setup() throws Exception {
         InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
         mailboxManager = inMemoryIntegrationResources.createMailboxManager(inMemoryIntegrationResources.createGroupMembershipResolver());
+        QuotaRootResolver quotaRootResolver = mailboxManager.getQuotaComponents().getQuotaRootResolver();
+        QuotaManager quotaManager = mailboxManager.getQuotaComponents().getQuotaManager();
+
         user = ManagerTestResources.USER;
         otherUser = ManagerTestResources.OTHER_USER;
         mailboxSession = mailboxManager.login(user, ManagerTestResources.USER_PASS);
         otherMailboxSession = mailboxManager.login(otherUser, ManagerTestResources.OTHER_USER_PASS);
-        sut = new MailboxFactory(mailboxManager);
+        sut = new MailboxFactory(mailboxManager, quotaManager, quotaRootResolver);
     }
 
 
@@ -166,7 +171,7 @@ public class MailboxFactoryTest {
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
         Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath,
-            Optional.of(ImmutableList.of(new SimpleMailboxMetaData(parentMailboxPath, parentId, DELIMITER))),
+            Optional.of(ImmutableList.of(MailboxMetaData.unselectableMailbox(parentMailboxPath, parentId, DELIMITER))),
             mailboxSession);
         assertThat(id).contains(parentId);
     }

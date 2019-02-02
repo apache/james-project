@@ -29,14 +29,38 @@ import com.google.common.base.Preconditions;
  * https://tools.ietf.org/html/rfc8098#section-3.3
  */
 public class ExtensionField implements Field {
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private String fieldName;
+        private String rawValue;
+
+        public Builder fieldName(String fieldName) {
+            this.fieldName = fieldName;
+            return this;
+        }
+
+        public Builder rawValue(String rawValue) {
+            this.rawValue = rawValue;
+            return this;
+        }
+
+        public ExtensionField build() {
+            Preconditions.checkNotNull(fieldName);
+            Preconditions.checkNotNull(rawValue);
+            Preconditions.checkState(!fieldName.contains("\n"), "Field name can not be multiline");
+
+            return new ExtensionField(fieldName, rawValue);
+        }
+    }
+
     private final String fieldName;
     private final String rawValue;
 
-    public ExtensionField(String fieldName, String rawValue) {
-        Preconditions.checkNotNull(fieldName);
-        Preconditions.checkNotNull(rawValue);
-        Preconditions.checkArgument(!fieldName.contains("\n"), "Field name can not be multiline");
-
+    private ExtensionField(String fieldName, String rawValue) {
         this.fieldName = fieldName;
         this.rawValue = rawValue;
     }

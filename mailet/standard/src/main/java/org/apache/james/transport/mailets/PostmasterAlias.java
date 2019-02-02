@@ -46,6 +46,7 @@ public class PostmasterAlias extends GenericMailet {
      *
      * @throws MessagingException if an error is encountered while modifying the message
      */
+    @Override
     public void service(Mail mail) throws MessagingException {
         Collection<MailAddress> postmasterAliases = mail.getRecipients()
             .stream()
@@ -69,11 +70,7 @@ public class PostmasterAlias extends GenericMailet {
             && !getMailetContext().isLocalEmail(addr);
     }
 
-    /**
-     * Return a string describing this mailet.
-     *
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "Postmaster aliasing mailet";
     }

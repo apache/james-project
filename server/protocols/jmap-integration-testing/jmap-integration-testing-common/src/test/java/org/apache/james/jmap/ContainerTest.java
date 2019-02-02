@@ -27,10 +27,11 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.Rule;
 import org.junit.Test;
-import org.testcontainers.containers.wait.HttpWaitStrategy;
+import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 
 public class ContainerTest {
 
@@ -38,7 +39,9 @@ public class ContainerTest {
     public SwarmGenericContainer container = new SwarmGenericContainer(Images.NGINX)
         .withAffinityToContainer()
         .withExposedPorts(80)
-        .waitingFor(new HttpWaitStrategy().forStatusCode(200));
+        .waitingFor(new HttpWaitStrategy()
+            .forStatusCode(200)
+            .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
 
     @Test
     public void containerShouldBeReachableOnExposedPort() throws IOException, URISyntaxException {

@@ -20,9 +20,7 @@
 package org.apache.james.backends.es;
 
 import java.util.concurrent.ExecutorService;
-
-import javax.inject.Inject;
-import javax.inject.Named;
+import java.util.concurrent.Future;
 
 import org.apache.james.backends.es.search.ScrollIterable;
 import org.elasticsearch.action.ListenableActionFuture;
@@ -37,22 +35,16 @@ import org.elasticsearch.search.SearchHit;
 import com.google.common.annotations.VisibleForTesting;
 
 public class DeleteByQueryPerformer {
-    public static final int DEFAULT_BATCH_SIZE = 100;
     public static final TimeValue TIMEOUT = new TimeValue(60000);
 
     private final Client client;
     private final ExecutorService executor;
     private final int batchSize;
-    private final AliasName aliasName;
+    private final WriteAliasName aliasName;
     private final TypeName typeName;
 
-    @Inject
-    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, @Named(ElasticSearchConstants.WRITE_ALIAS) AliasName aliasName, TypeName typeName) {
-        this(client, executor, DEFAULT_BATCH_SIZE, aliasName, typeName);
-    }
-
     @VisibleForTesting
-    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, int batchSize, AliasName aliasName, TypeName typeName) {
+    public DeleteByQueryPerformer(Client client, ExecutorService executor, int batchSize, WriteAliasName aliasName, TypeName typeName) {
         this.client = client;
         this.executor = executor;
         this.batchSize = batchSize;
@@ -60,11 +52,11 @@ public class DeleteByQueryPerformer {
         this.typeName = typeName;
     }
 
-    public void perform(QueryBuilder queryBuilder) {
-        executor.execute(() -> doDeleteByQuery(queryBuilder));
+    public Future<Void> perform(QueryBuilder queryBuilder) {
+        return executor.submit(() -> doDeleteByQuery(queryBuilder));
     }
 
-    protected void doDeleteByQuery(QueryBuilder queryBuilder) {
+    protected Void doDeleteByQuery(QueryBuilder queryBuilder) {
         new ScrollIterable(client,
             client.prepareSearch(aliasName.getValue())
                 .setTypes(typeName.getValue())
@@ -73,7 +65,9 @@ public class DeleteByQueryPerformer {
                 .setQuery(queryBuilder)
                 .setSize(batchSize))
             .stream()
-            .forEach(searchResponse -> deleteRetrievedIds(client, searchResponse));
+            .map(searchResponse -> deleteRetrievedIds(client, searchResponse))
+            .forEach(ListenableActionFuture::actionGet);
+        return null;
     }
 
     private ListenableActionFuture<BulkResponse> deleteRetrievedIds(Client client, SearchResponse searchResponse) {

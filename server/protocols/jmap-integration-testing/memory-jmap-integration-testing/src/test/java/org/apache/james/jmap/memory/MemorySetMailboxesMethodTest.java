@@ -19,10 +19,11 @@
 
 package org.apache.james.jmap.memory;
 
+import java.io.IOException;
+
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.jmap.methods.integration.SetMailboxesMethodTest;
-import org.junit.Ignore;
 import org.junit.Rule;
 
 public class MemorySetMailboxesMethodTest extends SetMailboxesMethodTest {
@@ -31,21 +32,11 @@ public class MemorySetMailboxesMethodTest extends SetMailboxesMethodTest {
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 
     @Override
-    protected GuiceJamesServer createJmapServer() {
+    protected GuiceJamesServer createJmapServer() throws IOException {
         return memoryJmap.jmapServer();
     }
     
     @Override
     protected void await() {
-    }
-
-    @Ignore
-    @Override
-    public void setMailboxesShouldNotCreateWhenOverLimitName() {
-    }
-
-    @Ignore
-    @Override
-    public void setMailboxesShouldNotUpdateMailboxWhenOverLimitName() {
     }
 }

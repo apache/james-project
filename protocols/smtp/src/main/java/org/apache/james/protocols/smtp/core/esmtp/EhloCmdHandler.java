@@ -97,26 +97,19 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
 
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
-     */
+    @Override
     public List<Class<?>> getMarkerInterfaces() {
         List<Class<?>> classes = super.getMarkerInterfaces();
         classes.add(EhloExtension.class);
         return classes;
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class,
-     *      java.util.List)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public void wireExtensions(Class<?> interfaceName, List<?> extension) {
         super.wireExtensions(interfaceName, extension);
@@ -144,21 +137,15 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#doCoreCmd(org.apache.james.protocols.smtp.SMTPSession,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     protected Response doCoreCmd(SMTPSession session, String command,
-            String parameters) {
+                                 String parameters) {
         return doEHLO(session, parameters);
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#doFilterChecks(org.apache.james.protocols.smtp.SMTPSession,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     protected Response doFilterChecks(SMTPSession session, String command,
-            String parameters) {
+                                      String parameters) {
         session.resetState();
 
         if (parameters == null) {
@@ -170,25 +157,19 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#getHookInterface()
-     */
+    @Override
     protected Class<HeloHook> getHookInterface() {
         return HeloHook.class;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     protected HookResult callHook(HeloHook rawHook, SMTPSession session, String parameters) {
         return rawHook.doHelo(session, parameters);
     }
 
 
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.esmtp.EhloExtension#getImplementedEsmtpFeatures(org.apache.james.protocols.smtp.SMTPSession)
-     */
+    @Override
     public List<String> getImplementedEsmtpFeatures(SMTPSession session) {
         return ESMTP_FEATURES;
     }

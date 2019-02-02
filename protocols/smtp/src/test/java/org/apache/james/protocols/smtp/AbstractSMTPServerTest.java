@@ -26,10 +26,10 @@ import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.configuration.Configuration;
@@ -37,6 +37,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPReply;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
@@ -48,7 +49,6 @@ import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
-import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailHook;
 import org.apache.james.protocols.smtp.hook.MessageHook;
 import org.apache.james.protocols.smtp.hook.RcptHook;
@@ -100,15 +100,14 @@ public abstract class AbstractSMTPServerTest {
             server = createServer(createProtocol(hook));
             server.bind();
 
-            final ProtocolServer finalServer = server;
-            final InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
-            final String mailContent = CharStreams.toString(new InputStreamReader(ClassLoader.getSystemResourceAsStream("a50.eml"), StandardCharsets.US_ASCII));
-            int threadCount = 4;
-            int updateCount = 1;
-            assertThat(new ConcurrentTestRunner(threadCount, updateCount,
-                (threadNumber, step) -> send(finalServer, bindedAddress, mailContent)).run()
-                .awaitTermination(1, TimeUnit.MINUTES))
-                .isTrue();
+            ProtocolServer finalServer = server;
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            String mailContent = CharStreams.toString(new InputStreamReader(ClassLoader.getSystemResourceAsStream("a50.eml"), StandardCharsets.US_ASCII));
+
+            ConcurrentTestRunner.builder()
+                .operation((threadNumber, step) -> send(finalServer, bindedAddress, mailContent))
+                .threadCount(4)
+                .runSuccessfullyWithin(Duration.ofMinutes(1));
 
             Iterator<MailEnvelope> queued = hook.getQueued().iterator();
             assertThat(queued.hasNext()).isTrue();
@@ -499,8 +498,9 @@ public abstract class AbstractSMTPServerTest {
 
             }
 
+            @Override
             public HookResult doHelo(SMTPSession session, String helo) {
-                return new HookResult(HookReturnCode.DENY);
+                return HookResult.DENY;
             }
         };
         
@@ -546,8 +546,9 @@ public abstract class AbstractSMTPServerTest {
 
             }
 
+            @Override
             public HookResult doHelo(SMTPSession session, String helo) {
-                return new HookResult(HookReturnCode.DENYSOFT);
+                return HookResult.DENYSOFT;
             }
         };
         
@@ -592,8 +593,9 @@ public abstract class AbstractSMTPServerTest {
 
             }
 
-            public HookResult doMail(SMTPSession session, MailAddress sender) {
-                return new HookResult(HookReturnCode.DENY);
+            @Override
+            public HookResult doMail(SMTPSession session, MaybeSender sender) {
+                return HookResult.DENY;
             }
         };
         
@@ -641,8 +643,9 @@ public abstract class AbstractSMTPServerTest {
 
             }
 
-            public HookResult doMail(SMTPSession session, MailAddress sender) {
-                return new HookResult(HookReturnCode.DENYSOFT);
+            @Override
+            public HookResult doMail(SMTPSession session, MaybeSender sender) {
+                return HookResult.DENYSOFT;
             }
         };
         
@@ -691,11 +694,12 @@ public abstract class AbstractSMTPServerTest {
 
             }
 
-            public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+            @Override
+            public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
                 if (RCPT1.equals(rcpt.toString())) {
-                    return new HookResult(HookReturnCode.DENY);
+                    return HookResult.DENY;
                 } else {
-                    return new HookResult(HookReturnCode.DECLINED);
+                    return HookResult.DECLINED;
                 }
             }
 
@@ -754,11 +758,12 @@ public abstract class AbstractSMTPServerTest {
 
             }
 
-            public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+            @Override
+            public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
                 if (RCPT1.equals(rcpt.toString())) {
-                    return new HookResult(HookReturnCode.DENYSOFT);
+                    return HookResult.DENYSOFT;
                 } else {
-                    return new HookResult(HookReturnCode.DECLINED);
+                    return HookResult.DECLINED;
                 }
             }
 
@@ -852,8 +857,9 @@ public abstract class AbstractSMTPServerTest {
 
             }
 
+            @Override
             public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
-                return new HookResult(HookReturnCode.DENY);
+                return HookResult.DENY;
             }
 
 
@@ -915,8 +921,9 @@ public abstract class AbstractSMTPServerTest {
 
             }
 
+            @Override
             public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
-                return new HookResult(HookReturnCode.DENYSOFT);
+                return HookResult.DENYSOFT;
             }
 
 
@@ -977,6 +984,7 @@ public abstract class AbstractSMTPServerTest {
 
             }
 
+            @Override
             public Response onConnect(SMTPSession session) {
                 return new SMTPResponse("554", "Bye Bye");
             }
@@ -1019,6 +1027,7 @@ public abstract class AbstractSMTPServerTest {
 
             }
 
+            @Override
             public Response onConnect(SMTPSession session) {
                 return new SMTPResponse("451", "Bye Bye");
             }
@@ -1061,6 +1070,7 @@ public abstract class AbstractSMTPServerTest {
 
             }
 
+            @Override
             public void onDisconnect(SMTPSession session) {
                 called.set(true);
             }
@@ -1105,7 +1115,7 @@ public abstract class AbstractSMTPServerTest {
     }
     
     protected static void checkEnvelope(MailEnvelope env, String sender, List<String> recipients, String msg) throws IOException {
-        assertThat(env.getSender().toString()).isEqualTo(sender);
+        assertThat(env.getMaybeSender().asString()).isEqualTo(sender);
 
         List<MailAddress> envRecipients = env.getRecipients();
         assertThat(envRecipients.size()).isEqualTo(recipients.size());

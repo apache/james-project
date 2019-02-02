@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-james-mpt</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -38,11 +38,11 @@ to the library requiring no extra coding.</description>
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mpt-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mpt-core</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -153,14 +153,6 @@ to the library requiring no extra coding.</description>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
-                <configuration>
-                    <reportPlugins combine.children="append">
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-plugin-plugin</artifactId>
-                        </plugin>
-                    </reportPlugins>
-                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -208,4 +200,13 @@ to the library requiring no extra coding.</description>
             </build>
         </profile>
     </profiles>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </reporting>
 </project>

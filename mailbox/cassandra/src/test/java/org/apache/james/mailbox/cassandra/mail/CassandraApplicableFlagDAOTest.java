@@ -24,95 +24,87 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.Flags;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableSet;
 
-public class CassandraApplicableFlagDAOTest {
+class CassandraApplicableFlagDAOTest {
 
-    public static final String USER_FLAG = "User Flag";
-    public static final String USER_FLAG2 = "User Flag 2";
-    public static final CassandraId CASSANDRA_ID = CassandraId.timeBased();
+    private static final String USER_FLAG = "User Flag";
+    private static final String USER_FLAG2 = "User Flag 2";
+    private static final CassandraId CASSANDRA_ID = CassandraId.timeBased();
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraApplicableFlagsModule.MODULE);
 
     private CassandraApplicableFlagDAO testee;
 
-    @Before
-    public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(new CassandraApplicableFlagsModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         testee = new CassandraApplicableFlagDAO(cassandra.getConf());
     }
 
-    @After
-    public void tearDown() throws Exception {
-        cassandra.close();
+    @Test
+    void updateApplicableFlagsShouldReturnEmptyByDefault() {
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).hasElement().block())
+            .isFalse();
     }
 
     @Test
-    public void updateApplicableFlagsShouldReturnEmptyByDefault() throws Exception {
-        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
-            .isEmpty();
+    void updateApplicableFlagsShouldSupportEmptyUserFlags() {
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of()).block();
+
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).hasElement().block())
+            .isFalse();
     }
 
     @Test
-    public void updateApplicableFlagsShouldSupportEmptyUserFlags() throws Exception {
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of()).join();
+    void updateApplicableFlagsShouldUpdateUserFlag() {
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).block();
 
-        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
-            .isEmpty();
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).block())
+            .isEqualTo(new Flags(USER_FLAG));
     }
 
     @Test
-    public void updateApplicableFlagsShouldUpdateUserFlag() throws Exception {
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).join();
+    void updateApplicableFlagsShouldUnionUserFlags() {
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).block();
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG2)).block();
 
-        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
-            .contains(new Flags(USER_FLAG));
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).block())
+            .isEqualTo(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
     }
 
     @Test
-    public void updateApplicableFlagsShouldUnionUserFlags() throws Exception {
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).join();
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG2)).join();
+    void updateApplicableFlagsShouldBeIdempotent() {
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).block();
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).block();
 
-        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
-            .contains(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).block())
+            .isEqualTo(new Flags(USER_FLAG));
     }
 
     @Test
-    public void updateApplicableFlagsShouldBeIdempotent() throws Exception {
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).join();
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).join();
+    void updateApplicableFlagsShouldSkipAlreadyStoredFlagsWhenAddingFlag() {
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).block();
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG, USER_FLAG2)).block();
 
-        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
-            .contains(new Flags(USER_FLAG));
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).block())
+            .isEqualTo(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
     }
 
     @Test
-    public void updateApplicableFlagsShouldSkipAlreadyStoredFlagsWhenAddingFlag() throws Exception {
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).join();
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG, USER_FLAG2)).join();
+    void updateApplicableFlagsShouldUpdateMultiFlags() {
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG, USER_FLAG2)).block();
 
-        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
-            .contains(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
-    }
-
-    @Test
-    public void updateApplicableFlagsShouldUpdateMultiFlags() throws Exception {
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG, USER_FLAG2)).join();
-
-        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
-            .contains(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).block())
+            .isEqualTo(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
     }
 
 }

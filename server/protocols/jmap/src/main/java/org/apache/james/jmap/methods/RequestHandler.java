@@ -30,7 +30,8 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.core.User;
+import org.apache.james.jmap.JmapFieldNotSupportedException;
 import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
 import org.apache.james.mailbox.MailboxSession;
@@ -58,7 +59,7 @@ public class RequestHandler {
         Optional<MailboxSession> mailboxSession = Optional.ofNullable(request.getMailboxSession());
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.USER, mailboxSession.map(MailboxSession::getUser).map(MailboxSession.User::getUserName))
+                     .addContext(MDCBuilder.USER, mailboxSession.map(MailboxSession::getUser).map(User::asString))
                      .addContext(MDCBuilder.SESSION_ID, mailboxSession.map(MailboxSession::getSessionId))
                      .addContext(MDCBuilder.ACTION, request.getMethodName().getName())
                      .build()) {
@@ -77,24 +78,28 @@ public class RequestHandler {
                         return method.process(jmapRequest, request.getClientId(), mailboxSession);
                     } catch (IOException e) {
                         LOGGER.error("Error occured while parsing the request.", e);
-                        if (e.getCause() instanceof NotImplementedException) {
-                            return errorNotImplemented(request);
+                        if (e.getCause() instanceof JmapFieldNotSupportedException) {
+                            return errorNotImplemented((JmapFieldNotSupportedException) e.getCause(), request);
                         }
-                        return error(request, ErrorResponse.builder()
-                                                        .type("invalidArguments")
-                                                        .description(e.getMessage())
-                                                        .build());
-                    } catch (NotImplementedException e) {
-                        return errorNotImplemented(request);
+                        return error(request, generateInvalidArgumentError(e.getMessage()));
+                    } catch (JmapFieldNotSupportedException e) {
+                        return errorNotImplemented(e, request);
                     }
                 };
     }
 
-    private Stream<JmapResponse> errorNotImplemented(AuthenticatedProtocolRequest request) {
+    public ErrorResponse generateInvalidArgumentError(String description) {
+        return ErrorResponse.builder()
+            .type("invalidArguments")
+            .description(description)
+            .build();
+    }
+
+    private Stream<JmapResponse> errorNotImplemented(JmapFieldNotSupportedException error, AuthenticatedProtocolRequest request) {
         return Stream.of(
                 JmapResponse.builder()
                     .clientId(request.getClientId())
-                    .error("Not yet implemented")
+                    .error(generateInvalidArgumentError("The field '" + error.getField() + "' of '" + error.getIssuer() + "' is not supported"))
                     .build());
     }
 

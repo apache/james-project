@@ -47,6 +47,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.MessageRangeException;
@@ -61,28 +62,22 @@ import com.google.common.collect.ImmutableList;
 
 abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequest> extends AbstractMailboxProcessor<M> implements PermitEnableCapabilityProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSelectionProcessor.class);
-
-    final StatusResponseFactory statusResponseFactory;
-
-    private final boolean openReadOnly;
     private static final List<String> CAPS = ImmutableList.of(ImapConstants.SUPPORTS_QRESYNC, ImapConstants.SUPPORTS_CONDSTORE);
 
+    private final StatusResponseFactory statusResponseFactory;
+    private final boolean openReadOnly;
+    private final EventBus eventBus;
     
     public AbstractSelectionProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, boolean openReadOnly,
-            MetricFactory metricFactory) {
+                                      MetricFactory metricFactory, EventBus eventBus) {
         super(acceptableClass, next, mailboxManager, statusResponseFactory, metricFactory);
         this.statusResponseFactory = statusResponseFactory;
         this.openReadOnly = openReadOnly;
 
+        this.eventBus = eventBus;
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.processor.AbstractMailboxProcessor#doProcess(org.apache.james.imap.api.message.request.ImapRequest,
-     * org.apache.james.imap.api.process.ImapSession, java.lang.String,
-     * org.apache.james.imap.api.ImapCommand,
-     * org.apache.james.imap.api.process.ImapProcessor.Responder)
-     */
+    @Override
     protected void doProcess(M request, ImapSession session, String tag, ImapCommand command, Responder responder) {
         final String mailboxName = request.getMailboxName();
         try {
@@ -413,7 +408,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
             if (currentMailbox != null) {
                 getStatusResponseFactory().untaggedOk(HumanReadableText.QRESYNC_CLOSED, ResponseCode.closed());
             }
-            session.selected(new SelectedMailboxImpl(getMailboxManager(),  session, mailboxPath));
+            session.selected(new SelectedMailboxImpl(getMailboxManager(), eventBus, session, mailboxPath));
 
             sessionMailbox = session.getSelected();
             
@@ -434,23 +429,17 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
         }
     }
 
-    /**
-     * @see org.apache.james.imap.processor.CapabilityImplementingProcessor#getImplementedCapabilities(org.apache.james.imap.api.process.ImapSession)
-     */
-    public List<String> getImplementedCapabilities(ImapSession session) {        
+    @Override
+    public List<String> getImplementedCapabilities(ImapSession session) {
         return CAPS;
     }
 
-    /**
-     * @see org.apache.james.imap.processor.PermitEnableCapabilityProcessor#getPermitEnableCapabilities(org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     public List<String> getPermitEnableCapabilities(ImapSession session) {
         return CAPS;
     }
 
-    /**
-     * @see org.apache.james.imap.processor.PermitEnableCapabilityProcessor#enable(org.apache.james.imap.api.ImapMessage, org.apache.james.imap.api.process.ImapProcessor.Responder, org.apache.james.imap.api.process.ImapSession, java.lang.String)
-     */
+    @Override
     public void enable(ImapMessage message, Responder responder, ImapSession session, String capability) throws EnableException {
 
         if (EnableProcessor.getEnabledCapabilities(session).contains(capability) == false) {

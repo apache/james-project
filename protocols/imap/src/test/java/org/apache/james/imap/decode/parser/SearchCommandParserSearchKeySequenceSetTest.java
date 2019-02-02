@@ -19,41 +19,31 @@
 
 package org.apache.james.imap.decode.parser;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 
 import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.SearchKey;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.mailbox.MessageUid;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
 public class SearchCommandParserSearchKeySequenceSetTest {
 
     SearchCommandParser parser;
-
-
     ImapCommand command;
 
-    ImapMessage message;
-
-    private Mockery mockery = new JUnit4Mockery();
-    
     @Before
     public void setUp() throws Exception {
         parser = new SearchCommandParser();
         command = ImapCommand.anyStateCommand("Command");
-        message = mockery.mock(ImapMessage.class);
     }
     
     @Test
@@ -144,6 +134,6 @@ public class SearchCommandParserSearchKeySequenceSetTest {
                 new ByteArrayOutputStream());
 
         final SearchKey searchKey = parser.searchKey(null, reader, null, false);
-        assertEquals(key, searchKey);
+        assertThat(searchKey).isEqualTo(key);
     }
 }

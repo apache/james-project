@@ -272,6 +272,39 @@ public class HeaderCollectionTest {
         assertThat(headerCollection.getSubjectSet()).containsOnly("A fantastic ElasticSearch module will be available soon for JAMES");
     }
 
+    @Test
+    public void getMessageIDShouldReturnMessageIdValue() {
+        String messageID = "<abc@123>";
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Message-ID", messageID))
+            .build();
+
+        assertThat(headerCollection.getMessageID())
+            .contains(messageID);
+    }
+
+    @Test
+    public void getMessageIDShouldReturnLatestEncounteredMessageIdValue() {
+        String messageID = "<abc@123>";
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Message-ID", "<other@toto.com>"))
+            .add(new FieldImpl("Message-ID", messageID))
+            .build();
+
+        assertThat(headerCollection.getMessageID())
+            .contains(messageID);
+    }
+
+    @Test
+    public void getMessageIDShouldReturnEmptyWhenNoMessageId() {
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Other", "value"))
+            .build();
+
+        assertThat(headerCollection.getMessageID())
+            .isEmpty();
+    }
+
     @Test(expected = NullPointerException.class)
     public void nullFieldShouldThrow() {
         HeaderCollection.builder().add(null).build();

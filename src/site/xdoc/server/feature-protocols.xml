@@ -41,6 +41,8 @@
       
       <p>The Apache James Server is implemented as a complete collection of servers and related components that, taken together,
       provide an email solution.  These components are described below.</p>
+
+      <p>Note that each protocol can specify its TLS settings and keys in an independent way.</p>
   
     </subsection>
     

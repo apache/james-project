@@ -31,6 +31,7 @@ import org.apache.james.jmap.methods.ValidationResult;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -107,8 +108,7 @@ public class UpdateMessagePatch {
         }
 
         private Optional<Keywords> creationKeywords() {
-            return keywords.map(map -> Keywords.factory()
-                    .throwOnImapNonExposedKeywords()
+            return keywords.map(map -> Keywords.strictFactory()
                     .fromMap(map));
         }
 
@@ -153,5 +153,15 @@ public class UpdateMessagePatch {
             .orElse(keywords
                 .map(keyword -> keyword.asFlagsWithRecentAndDeletedFrom(currentFlags))
                 .orElse(currentFlags));
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("mailboxIds", mailboxIds)
+            .add("keywords", keywords)
+            .add("oldKeywords", oldKeywords)
+            .add("validationErrors", validationErrors)
+            .toString();
     }
 }

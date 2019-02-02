@@ -25,7 +25,9 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.User;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
@@ -41,10 +43,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
     private boolean virtualHosting;
     private Optional<String> administratorId;
 
-    /**
-     * @see
-     * org.apache.james.lifecycle.api.Configurable#configure(org.apache.commons.configuration.HierarchicalConfiguration)
-     */
+    @Override
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
 
         virtualHosting = configuration.getBoolean("enableVirtualHosting", getDefaultVirtualHostingValue());
@@ -70,13 +69,13 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
     }
 
     protected void isValidUsername(String username) throws UsersRepositoryException {
-        int i = username.indexOf("@");
+        User user = User.fromUsername(username);
         if (supportVirtualHosting()) {
             // need a @ in the username
-            if (i == -1) {
+            if (!user.hasDomainPart()) {
                 throw new UsersRepositoryException("Given Username needs to contain a @domainpart");
             } else {
-                String domain = username.substring(i + 1);
+                Domain domain = user.getDomainPart().get();
                 try {
                     if (!domainList.containsDomain(domain)) {
                         throw new UsersRepositoryException("Domain does not exist in DomainList");
@@ -87,16 +86,13 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
             }
         } else {
             // @ only allowed when virtualhosting is supported
-            if (i != -1) {
+            if (user.hasDomainPart()) {
                 throw new UsersRepositoryException("Given Username contains a @domainpart but virtualhosting support is disabled");
             }
         }
     }
 
-    /**
-     * @see org.apache.james.user.api.UsersRepository#addUser(java.lang.String,
-     * java.lang.String)
-     */
+    @Override
     public void addUser(String username, String password) throws UsersRepositoryException {
 
         if (!contains(username)) {
@@ -108,9 +104,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
 
     }
 
-    /**
-     * @see org.apache.james.user.api.UsersRepository#supportVirtualHosting()
-     */
+    @Override
     public boolean supportVirtualHosting() {
         return virtualHosting;
     }
@@ -149,5 +143,17 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
     @Override
     public boolean isReadOnly() {
         return false;
+    }
+
+    @Override
+    public MailAddress getMailAddressFor(User user) throws UsersRepositoryException {
+        try {
+            if (supportVirtualHosting()) {
+                return new MailAddress(user.asString());
+            }
+            return new MailAddress(user.getLocalPart(), domainList.getDefaultDomain());
+        } catch (Exception e) {
+            throw new UsersRepositoryException("Failed to compute mail address associated with the user", e);
+        }
     }
 }

@@ -19,12 +19,11 @@
 package org.apache.james.jmap.methods;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayInputStream;
-import java.util.Date;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -37,18 +36,22 @@ import org.apache.james.jmap.model.GetMailboxesResponse;
 import org.apache.james.jmap.model.MailboxFactory;
 import org.apache.james.jmap.model.Number;
 import org.apache.james.jmap.model.mailbox.Mailbox;
-import org.apache.james.jmap.model.mailbox.Role;
 import org.apache.james.jmap.model.mailbox.SortOrder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
+import org.apache.james.mime4j.dom.Message;
 import org.assertj.core.groups.Tuple;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,7 +63,7 @@ public class GetMailboxesMethodTest {
     private static final String USERNAME = "username@domain.tld";
     private static final String USERNAME2 = "username2@domain.tld";
 
-    private MailboxManager mailboxManager;
+    private StoreMailboxManager mailboxManager;
     private GetMailboxesMethod getMailboxesMethod;
     private ClientId clientId;
     private MailboxFactory mailboxFactory;
@@ -71,13 +74,15 @@ public class GetMailboxesMethodTest {
         InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
         GroupMembershipResolver groupMembershipResolver = inMemoryIntegrationResources.createGroupMembershipResolver();
         mailboxManager = inMemoryIntegrationResources.createMailboxManager(groupMembershipResolver);
-        mailboxFactory = new MailboxFactory(mailboxManager);
+        QuotaRootResolver quotaRootResolver = mailboxManager.getQuotaComponents().getQuotaRootResolver();
+        QuotaManager quotaManager = mailboxManager.getQuotaComponents().getQuotaManager();
+        mailboxFactory = new MailboxFactory(mailboxManager, quotaManager, quotaRootResolver);
 
         getMailboxesMethod = new GetMailboxesMethod(mailboxManager, mailboxFactory, new DefaultMetricFactory());
     }
 
     @Test
-    public void getMailboxesShouldReturnEmptyListWhenNoMailboxes() throws Exception {
+    public void getMailboxesShouldReturnEmptyListWhenNoMailboxes() {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
@@ -105,7 +110,7 @@ public class GetMailboxesMethodTest {
         
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
-        MailboxSession session = new MockMailboxSession(USERNAME);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
         
         List<JmapResponse> getMailboxesResponse = testee.process(getMailboxesRequest, clientId, session).collect(Collectors.toList());
         
@@ -119,13 +124,20 @@ public class GetMailboxesMethodTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void getMailboxesShouldReturnMailboxesWhenAvailable() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "name");
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
-        messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, new Flags());
-        messageManager.appendMessage(new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, new Flags());
+        messageManager.appendMessage(MessageManager.AppendCommand.from(
+            Message.Builder.of()
+                .setSubject("test")
+                .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
+        messageManager.appendMessage(MessageManager.AppendCommand.from(
+            Message.Builder.of()
+                .setSubject("test2")
+                .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
 
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
@@ -143,6 +155,7 @@ public class GetMailboxesMethodTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void getMailboxesShouldReturnOnlyMailboxesOfCurrentUserWhenAvailable() throws Exception {
         MailboxPath mailboxPathToReturn = MailboxPath.forUser(USERNAME, "mailboxToReturn");
         MailboxPath mailboxPathtoSkip = MailboxPath.forUser(USERNAME2, "mailboxToSkip");
@@ -230,6 +243,7 @@ public class GetMailboxesMethodTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void getMailboxesShouldReturnMailboxesWithSortOrder() throws Exception {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "INBOX"), mailboxSession);
@@ -265,6 +279,7 @@ public class GetMailboxesMethodTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void getMailboxesShouldReturnEmptyMailboxByDefault() throws MailboxException {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "name");
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
@@ -286,13 +301,19 @@ public class GetMailboxesMethodTest {
     }
 
     @Test
-    public void getMailboxesShouldReturnCorrectTotalMessagesCount() throws MailboxException {
+    public void getMailboxesShouldReturnCorrectTotalMessagesCount() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "name");
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
-        messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, new Flags());
-        messageManager.appendMessage(new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, new Flags());
+        messageManager.appendMessage(MessageManager.AppendCommand.from(
+            Message.Builder.of()
+                .setSubject("test")
+                .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
+        messageManager.appendMessage(MessageManager.AppendCommand.from(
+            Message.Builder.of()
+                .setSubject("test2")
+                .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
 
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
@@ -310,7 +331,7 @@ public class GetMailboxesMethodTest {
     }
 
     @Test
-    public void getMailboxesShouldReturnCorrectUnreadMessagesCount() throws MailboxException {
+    public void getMailboxesShouldReturnCorrectUnreadMessagesCount() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "name");
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
@@ -318,9 +339,21 @@ public class GetMailboxesMethodTest {
         Flags defaultUnseenFlag = new Flags();
         Flags readMessageFlag = new Flags();
         readMessageFlag.add(Flags.Flag.SEEN);
-        messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, defaultUnseenFlag);
-        messageManager.appendMessage(new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, defaultUnseenFlag);
-        messageManager.appendMessage(new ByteArrayInputStream("Subject: test3\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, readMessageFlag);
+        messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .withFlags(defaultUnseenFlag)
+            .build(Message.Builder.of()
+                .setSubject("test")
+                .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
+        messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .withFlags(defaultUnseenFlag)
+            .build(Message.Builder.of()
+                .setSubject("test2")
+                .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
+        messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .withFlags(readMessageFlag)
+            .build(Message.Builder.of()
+                .setSubject("test3")
+                .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
@@ -337,6 +370,7 @@ public class GetMailboxesMethodTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void getMailboxesShouldReturnMailboxesWithRoles() throws Exception {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "INBOX"), mailboxSession);

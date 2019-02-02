@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.ArrayList;
 
@@ -30,14 +31,12 @@ import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class MailAttributesListToMimeHeadersTest {
+class MailAttributesListToMimeHeadersTest {
 
     private static final String VALUE_1_1 = "test1.1";
     private static final String VALUE_1_2 = "test1.2";
@@ -51,40 +50,36 @@ public class MailAttributesListToMimeHeadersTest {
     private static final String HEADER_NAME1 = "JUNIT";
     private static final String HEADER_NAME2 = "JUNIT2";
 
-    @Rule public ExpectedException expectedException = ExpectedException.none();
-
     private Mailet mailet;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         mailet = new MailAttributesListToMimeHeaders();
     }
 
     @Test
-    public void shouldThrowMessagingExceptionIfMappingIsNotGiven() throws MessagingException {
-        expectedException.expect(MessagingException.class);
-
+    void shouldThrowMessagingExceptionIfMappingIsNotGiven() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .mailetName("Test")
             .build();
 
-        mailet.init(mailetConfig);
+        assertThatThrownBy(() -> mailet.init(mailetConfig))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void shouldThrowMessagingExceptionIfMappingIsEmpty() throws MessagingException {
-        expectedException.expect(MessagingException.class);
-
+    void shouldThrowMessagingExceptionIfMappingIsEmpty() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .mailetName("Test")
             .setProperty("simplemmapping", "")
             .build();
 
-        mailet.init(mailetConfig);
+        assertThatThrownBy(() -> mailet.init(mailetConfig))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void shouldIgnoreAttributeOfMappingThatDoesNotExistOnTheMessage() throws MessagingException {
+    void shouldIgnoreAttributeOfMappingThatDoesNotExistOnTheMessage() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .mailetName("Test")
             .setProperty("simplemapping",
@@ -106,7 +101,7 @@ public class MailAttributesListToMimeHeadersTest {
     }
 
     @Test
-    public void shouldWorkWithMappingWithASingleBinding() throws MessagingException {
+    void shouldWorkWithMappingWithASingleBinding() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .mailetName("Test")
             .setProperty("simplemapping",
@@ -127,7 +122,7 @@ public class MailAttributesListToMimeHeadersTest {
     }
 
     @Test
-    public void shouldIgnoreNullValueInsideList() throws MessagingException {
+    void shouldIgnoreNullValueInsideList() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .mailetName("Test")
             .setProperty("simplemapping",
@@ -136,7 +131,7 @@ public class MailAttributesListToMimeHeadersTest {
 
         mailet.init(mailetConfig);
 
-        ArrayList<String> listWithNull = new ArrayList<String>();
+        ArrayList<String> listWithNull = new ArrayList<>();
         listWithNull.add("1");
         listWithNull.add(null);
         listWithNull.add("2");
@@ -152,7 +147,7 @@ public class MailAttributesListToMimeHeadersTest {
     }
 
     @Test
-    public void shouldPutAttributesIntoHeadersWhenMappingDefined() throws MessagingException {
+    void shouldPutAttributesIntoHeadersWhenMappingDefined() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("simplemapping",
@@ -179,7 +174,7 @@ public class MailAttributesListToMimeHeadersTest {
     }
 
     @Test
-    public void shouldNotRemovePreviousAttributeValueWhenAttributeAlreadyPresent() throws MessagingException {
+    void shouldNotRemovePreviousAttributeValueWhenAttributeAlreadyPresent() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("simplemapping", MAIL_ATTRIBUTE_NAME1 + "; " + HEADER_NAME1)
@@ -200,7 +195,7 @@ public class MailAttributesListToMimeHeadersTest {
     }
 
     @Test
-    public void shouldFilterAttributeOfWrongClass() throws MessagingException {
+    void shouldFilterAttributeOfWrongClass() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .mailetName("Test")
             .setProperty("simplemapping",
@@ -224,7 +219,7 @@ public class MailAttributesListToMimeHeadersTest {
 
 
     @Test
-    public void shouldFilterAttributeElementsOfWrongClass() throws MessagingException {
+    void shouldFilterAttributeElementsOfWrongClass() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .mailetName("Test")
             .setProperty("simplemapping", MAIL_ATTRIBUTE_NAME1 + "; " + HEADER_NAME1)
@@ -244,37 +239,34 @@ public class MailAttributesListToMimeHeadersTest {
 
 
     @Test
-    public void shouldThrowAtInitWhenNoSemicolumnInConfigurationEntry() throws MessagingException {
-        expectedException.expect(IllegalArgumentException.class);
-
+    void shouldThrowAtInitWhenNoSemicolumnInConfigurationEntry() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("simplemapping", "invalidConfigEntry")
                 .build();
 
-        mailet.init(mailetConfig);
+        assertThatThrownBy(() -> mailet.init(mailetConfig))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void shouldThrowAtInitWhenTwoSemicolumnsInConfigurationEntry() throws MessagingException {
-        expectedException.expect(IllegalArgumentException.class);
-
+    void shouldThrowAtInitWhenTwoSemicolumnsInConfigurationEntry() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("simplemapping", "first;second;third")
                 .build();
 
-        mailet.init(mailetConfig);
+        assertThatThrownBy(() -> mailet.init(mailetConfig))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void shouldThrowAtInitWhenNoConfigurationEntry() throws MessagingException {
-        expectedException.expect(MessagingException.class);
-
+    void shouldThrowAtInitWhenNoConfigurationEntry() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .build();
 
-        mailet.init(mailetConfig);
+        assertThatThrownBy(() -> mailet.init(mailetConfig))
+            .isInstanceOf(MessagingException.class);
     }
 }

@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-james-mailbox</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -33,47 +33,51 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        <!-- TODO: enable after fix maibox-hbase -->
-        <!--<dependency>-->
-        <!--<groupId>${project.groupId}</groupId>-->
-        <!--<artifactId>apache-james-mailbox-hbase</artifactId>-->
-        <!--</dependency>-->
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-jcr</artifactId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-mailbox-event-memory</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-jpa</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-lucene</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-maildir</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-memory</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-store</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-james-mailbox-tool</artifactId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-mailbox-tools-copier</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-mailbox-tools-indexer</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>commons-dbcp</groupId>
@@ -84,10 +88,6 @@
                     <artifactId>xercesImpl</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>javax.jcr</groupId>
-            <artifactId>jcr</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -113,50 +113,17 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase</artifactId>
-            <type>test-jar</type>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.jruby</groupId>
-                    <artifactId>jruby-complete</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
-        <!--
-                JCR temporary desactivated because jackrabbit still uses lucene 2
-                <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-core</artifactId>
-                <version>2.4.1</version>
-                <scope>test</scope>
-                </dependency>
-                <dependency>
-                <groupId>org.apache.jackrabbit</groupId>
-                <artifactId>jackrabbit-core</artifactId>
-                </dependency>
-                <dependency>
-                <groupId>org.apache.jackrabbit</groupId>
-                <artifactId>jackrabbit-jcr-commons</artifactId>
-                </dependency>
-            -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>

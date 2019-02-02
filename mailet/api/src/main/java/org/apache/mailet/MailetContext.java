@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 
@@ -227,12 +228,12 @@ public interface MailetContext {
 
     /**
      * Checks if a host name is local, i.e. this server is the
-     * final delivery destination for messages sent to this host.
+     * final delivery destination for messages sent to this domain.
      *
-     * @param hostname the host name to check
+     * @param domain the domain name to check
      * @return true if server is local, false otherwise
      */
-    boolean isLocalServer(String hostname);
+    boolean isLocalServer(Domain domain);
 
     /**
      * Checks if a user account is local, i.e. the account exists locally
@@ -271,7 +272,7 @@ public interface MailetContext {
      * @return the sorted mail-handling hostnames for the domain
      * @deprecated use the generic dnsLookup method
      */
-    Collection<String> getMailServers(String domain);
+    Collection<String> getMailServers(Domain domain);
 
     /**
      * Returns the SMTP host addresses specified as mail handlers for
@@ -287,7 +288,7 @@ public interface MailetContext {
      * @since Mailet API v2.3
      * @deprecated use the generic dnsLookup method
      */
-    Iterator<HostAddress> getSMTPHostAddresses(String domain);
+    Iterator<HostAddress> getSMTPHostAddresses(Domain domain);
 
     /**
      * Sends an outgoing message to the top of this mailet container's root queue.

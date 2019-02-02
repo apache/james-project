@@ -22,8 +22,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.core.User;
+import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.sieverepository.api.ScriptContent;
+import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.ScriptSummary;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.DuplicateException;
@@ -31,20 +39,18 @@ import org.apache.james.sieverepository.api.exception.IsActiveException;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
-import org.joda.time.DateTime;
 import org.junit.Test;
 
 public abstract class AbstractSieveRepositoryTest {
 
-    protected static final String USER = "test";
-    protected static final String SCRIPT_NAME = "script";
-    protected static final String SCRIPT_CONTENT = "Hello World";
+    protected static final User USER = User.fromUsername("test");
+    protected static final ScriptName SCRIPT_NAME = new ScriptName("script");
+    protected static final ScriptContent SCRIPT_CONTENT = new ScriptContent("Hello World");
 
-    private static final String OTHER_SCRIPT_NAME = "other_script";
-    private static final String OTHER_SCRIPT_CONTENT = "Other script content";
-    private static final long DEFAULT_QUOTA = Long.MAX_VALUE - 1L;
-    private static final long USER_QUOTA = Long.MAX_VALUE / 2;
-    private static final String UTF8_ENCODING = "UTF-8";
+    private static final ScriptName OTHER_SCRIPT_NAME = new ScriptName("other_script");
+    private static final ScriptContent OTHER_SCRIPT_CONTENT = new ScriptContent("Other script content");
+    private static final QuotaSize DEFAULT_QUOTA = QuotaSize.size(Long.MAX_VALUE - 1L);
+    private static final QuotaSize USER_QUOTA = QuotaSize.size(Long.MAX_VALUE / 2);
 
     protected SieveRepository sieveRepository;
 
@@ -68,7 +74,7 @@ public abstract class AbstractSieveRepositoryTest {
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
         sieveRepository.setActive(USER, SCRIPT_NAME);
         assertThat(sieveRepository.getActivationDateForActiveScript(USER)).isNotNull();
-        assertThat(sieveRepository.getActivationDateForActiveScript(USER)).isNotEqualTo(new DateTime(0L));
+        assertThat(sieveRepository.getActivationDateForActiveScript(USER)).isNotEqualTo(ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC));
     }
 
     @Test(expected = ScriptNotFoundException.class)
@@ -79,40 +85,40 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test
     public void haveSpaceShouldNotThrowWhenUserDoesNotHaveQuota() throws Exception {
-        sieveRepository.haveSpace(USER, SCRIPT_NAME, DEFAULT_QUOTA + 1L);
+        sieveRepository.haveSpace(USER, SCRIPT_NAME, DEFAULT_QUOTA.asLong() + 1L);
     }
 
     @Test
     public void haveSpaceShouldNotThrowWhenQuotaIsNotReached() throws Exception {
-        sieveRepository.setQuota(DEFAULT_QUOTA);
-        sieveRepository.haveSpace(USER, SCRIPT_NAME, DEFAULT_QUOTA);
+        sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
+        sieveRepository.haveSpace(USER, SCRIPT_NAME, DEFAULT_QUOTA.asLong());
     }
 
     @Test(expected = QuotaExceededException.class)
     public void haveSpaceShouldThrowWhenQuotaIsExceed() throws Exception {
-        sieveRepository.setQuota(DEFAULT_QUOTA);
-        sieveRepository.haveSpace(USER, SCRIPT_NAME, DEFAULT_QUOTA + 1);
+        sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
+        sieveRepository.haveSpace(USER, SCRIPT_NAME, DEFAULT_QUOTA.asLong() + 1);
     }
 
     @Test
     public void haveSpaceShouldNotThrowWhenAttemptToReplaceOtherScript() throws Exception {
         sieveRepository.setQuota(USER, USER_QUOTA);
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.haveSpace(USER, SCRIPT_NAME, USER_QUOTA);
+        sieveRepository.haveSpace(USER, SCRIPT_NAME, USER_QUOTA.asLong());
     }
 
     @Test(expected = QuotaExceededException.class)
     public void haveSpaceShouldThrowWhenAttemptToReplaceOtherScriptWithTooLargeScript() throws Exception {
         sieveRepository.setQuota(USER, USER_QUOTA);
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.haveSpace(USER, SCRIPT_NAME, USER_QUOTA + 1);
+        sieveRepository.haveSpace(USER, SCRIPT_NAME, USER_QUOTA.asLong() + 1);
     }
 
     @Test(expected = QuotaExceededException.class)
     public void haveSpaceShouldTakeAlreadyExistingScriptsIntoAccount() throws Exception {
         sieveRepository.setQuota(USER, USER_QUOTA);
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.haveSpace(USER, OTHER_SCRIPT_NAME, USER_QUOTA - 1);
+        sieveRepository.haveSpace(USER, OTHER_SCRIPT_NAME, USER_QUOTA.asLong() - 1);
     }
 
     @Test
@@ -120,7 +126,7 @@ public abstract class AbstractSieveRepositoryTest {
         sieveRepository.setQuota(USER, USER_QUOTA);
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
         sieveRepository.setActive(USER, SCRIPT_NAME);
-        sieveRepository.haveSpace(USER, SCRIPT_NAME, USER_QUOTA);
+        sieveRepository.haveSpace(USER, SCRIPT_NAME, USER_QUOTA.asLong());
     }
 
     @Test
@@ -156,15 +162,15 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test(expected = QuotaExceededException.class)
     public void putScriptShouldThrowWhenScriptTooBig() throws Exception {
-        sieveRepository.setQuota(SCRIPT_CONTENT.length() - 1);
+        sieveRepository.setDefaultQuota(QuotaSize.size(SCRIPT_CONTENT.length() - 1));
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
     }
 
     @Test(expected = QuotaExceededException.class)
     public void putScriptShouldThrowWhenQuotaChangedInBetween() throws Exception {
-        sieveRepository.setQuota(SCRIPT_CONTENT.length());
+        sieveRepository.setDefaultQuota(QuotaSize.size(SCRIPT_CONTENT.length()));
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.setQuota(SCRIPT_CONTENT.length() - 1);
+        sieveRepository.setDefaultQuota(QuotaSize.size(SCRIPT_CONTENT.length() - 1));
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
     }
 
@@ -258,13 +264,13 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test(expected = QuotaNotFoundException.class)
     public void getQuotaShouldThrowIfQuotaNotFound() throws Exception {
-        sieveRepository.getQuota();
+        sieveRepository.getDefaultQuota();
     }
 
     @Test
     public void getQuotaShouldWork() throws Exception {
-        sieveRepository.setQuota(DEFAULT_QUOTA);
-        assertThat(sieveRepository.getQuota()).isEqualTo(DEFAULT_QUOTA);
+        sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
+        assertThat(sieveRepository.getDefaultQuota()).isEqualTo(DEFAULT_QUOTA);
     }
 
     @Test
@@ -275,18 +281,18 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test
     public void hasQuotaShouldReturnFalseWhenRepositoryDoesNotHaveQuota() throws Exception {
-        assertThat(sieveRepository.hasQuota()).isFalse();
+        assertThat(sieveRepository.hasDefaultQuota()).isFalse();
     }
 
     @Test
     public void hasQuotaShouldReturnTrueWhenRepositoryHaveQuota() throws Exception {
-        sieveRepository.setQuota(DEFAULT_QUOTA);
-        assertThat(sieveRepository.hasQuota()).isTrue();
+        sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
+        assertThat(sieveRepository.hasDefaultQuota()).isTrue();
     }
 
     @Test
     public void hasQuotaShouldReturnFalseWhenUserDoesNotHaveQuota() throws Exception {
-        assertThat(sieveRepository.hasQuota()).isFalse();
+        assertThat(sieveRepository.hasDefaultQuota()).isFalse();
     }
 
     @Test
@@ -307,9 +313,9 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test
     public void removeQuotaShouldWorkOnRepositories() throws Exception {
-        sieveRepository.setQuota(DEFAULT_QUOTA);
+        sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
         sieveRepository.removeQuota();
-        assertThat(sieveRepository.hasQuota()).isFalse();
+        assertThat(sieveRepository.hasDefaultQuota()).isFalse();
     }
 
     @Test
@@ -321,7 +327,7 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test(expected = QuotaNotFoundException.class)
     public void removeQuotaShouldWorkOnUsersWithGlobalQuota() throws Exception {
-        sieveRepository.setQuota(DEFAULT_QUOTA);
+        sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
         sieveRepository.setQuota(USER, USER_QUOTA);
         sieveRepository.removeQuota(USER);
         sieveRepository.getQuota(USER);
@@ -329,8 +335,8 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test
     public void setQuotaShouldWork() throws Exception {
-        sieveRepository.setQuota(DEFAULT_QUOTA);
-        assertThat(sieveRepository.getQuota()).isEqualTo(DEFAULT_QUOTA);
+        sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
+        assertThat(sieveRepository.getDefaultQuota()).isEqualTo(DEFAULT_QUOTA);
     }
 
     @Test
@@ -339,8 +345,15 @@ public abstract class AbstractSieveRepositoryTest {
         assertThat(sieveRepository.getQuota(USER)).isEqualTo(DEFAULT_QUOTA);
     }
 
-    protected String getScriptContent(InputStream inputStream) throws IOException {
-        return IOUtils.toString(inputStream, UTF8_ENCODING);
+    @Test
+    public void setQuotaShouldOverrideExistingQuota() throws Exception {
+        sieveRepository.setQuota(USER, USER_QUOTA);
+        sieveRepository.setQuota(USER, QuotaSize.size(USER_QUOTA.asLong() - 1));
+        assertThat(sieveRepository.getQuota(USER)).isEqualTo(QuotaSize.size(USER_QUOTA.asLong() - 1));
+    }
+
+    protected ScriptContent getScriptContent(InputStream inputStream) throws IOException {
+        return new ScriptContent(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
     }
 
     protected abstract SieveRepository createSieveRepository() throws Exception;

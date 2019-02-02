@@ -51,6 +51,7 @@ public abstract class GenericMatcher implements Matcher, MatcherConfig {
      * Called by the mailet container to indicate to a matcher that the
      * matcher is being taken out of service.
      */
+    @Override
     public void destroy() {
         //Do nothing
     }
@@ -64,6 +65,7 @@ public abstract class GenericMatcher implements Matcher, MatcherConfig {
      *
      * @return String a String containing the value of the initalization parameter
      */
+    @Override
     public String getCondition() {
         return config.getCondition();
     }
@@ -73,6 +75,7 @@ public abstract class GenericMatcher implements Matcher, MatcherConfig {
      *
      * @return MatcherConfig the MatcherConfig object that initialized this matcher
      */
+    @Override
     public MatcherConfig getMatcherConfig() {
         return config;
     }
@@ -83,6 +86,7 @@ public abstract class GenericMatcher implements Matcher, MatcherConfig {
      *
      * @return MailetContext the MailetContext object passed to this matcher by the init method
      */
+    @Override
     public MailetContext getMailetContext() {
         return getMatcherConfig().getMailetContext();
     }
@@ -94,6 +98,7 @@ public abstract class GenericMatcher implements Matcher, MatcherConfig {
      *
      * @return String information about this matcher, by default an empty string
      */
+    @Override
     public String getMatcherInfo() {
         return "";
     }
@@ -103,6 +108,7 @@ public abstract class GenericMatcher implements Matcher, MatcherConfig {
      *
      * @return the name of this matcher instance
      */
+    @Override
     public String getMatcherName() {
         return config.getMatcherName();
     }
@@ -121,6 +127,7 @@ public abstract class GenericMatcher implements Matcher, MatcherConfig {
      * @throws MessagingException
      *          if an exception occurs that interrupts the matcher's normal operation
      */
+    @Override
     public void init(MatcherConfig newConfig) throws MessagingException {
         config = newConfig;
         init();
@@ -178,5 +185,6 @@ public abstract class GenericMatcher implements Matcher, MatcherConfig {
      * @throws javax.mail.MessagingException - if an exception occurs that interferes with the mailet's normal operation
      *          occurred
      */
+    @Override
     public abstract Collection<MailAddress> match(Mail mail) throws MessagingException;
 }

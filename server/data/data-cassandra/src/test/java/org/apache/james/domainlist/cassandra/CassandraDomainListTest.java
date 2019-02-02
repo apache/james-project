@@ -24,24 +24,36 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.AbstractDomainListTest;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
 public class CassandraDomainListTest extends AbstractDomainListTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
 
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(CassandraDomainListModule.MODULE, cassandraServer.getHost());
+    }
+
+    @Override
     @Before
     public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(new CassandraDomainListModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         super.setUp();
     }
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Override

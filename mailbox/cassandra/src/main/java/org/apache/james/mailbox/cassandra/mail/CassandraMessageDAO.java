@@ -46,7 +46,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -55,12 +54,12 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.ObjectStore;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Attachments;
@@ -76,8 +75,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
-import org.apache.james.util.CompletableFutureUtil;
-import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.streams.JamesCollectors;
 import org.apache.james.util.streams.Limit;
 
@@ -95,6 +92,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Bytes;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class CassandraMessageDAO {
     public static final long DEFAULT_LONG_VALUE = 0L;
@@ -102,7 +101,7 @@ public class CassandraMessageDAO {
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final CassandraTypesProvider typesProvider;
-    private final ObjectStore objectStore;
+    private final BlobStore blobStore;
     private final BlobId.Factory blobIdFactory;
     private final CassandraConfiguration configuration;
     private final CassandraUtils cassandraUtils;
@@ -117,12 +116,12 @@ public class CassandraMessageDAO {
     private final Cid.CidParser cidParser;
 
     @Inject
-    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, ObjectStore objectStore,
+    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, BlobStore blobStore,
                                BlobId.Factory blobIdFactory, CassandraConfiguration cassandraConfiguration,
             CassandraUtils cassandraUtils, CassandraMessageId.Factory messageIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.typesProvider = typesProvider;
-        this.objectStore = objectStore;
+        this.blobStore = blobStore;
         this.blobIdFactory = blobIdFactory;
         this.configuration = cassandraConfiguration;
         this.cassandraUtils = cassandraUtils;
@@ -139,9 +138,9 @@ public class CassandraMessageDAO {
     }
 
     @VisibleForTesting
-    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, ObjectStore objectStore,
+    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, BlobStore blobStore,
                                BlobId.Factory blobIdFactory, CassandraUtils cassandraUtils, CassandraMessageId.Factory messageIdFactory) {
-        this(session, typesProvider, objectStore,  blobIdFactory, CassandraConfiguration.DEFAULT_CONFIGURATION, cassandraUtils, messageIdFactory);
+        this(session, typesProvider, blobStore,  blobIdFactory, CassandraConfiguration.DEFAULT_CONFIGURATION, cassandraUtils, messageIdFactory);
     }
 
     private PreparedStatement prepareSelect(Session session, String[] fields) {
@@ -184,10 +183,11 @@ public class CassandraMessageDAO {
         try {
             byte[] headerContent = IOUtils.toByteArray(message.getHeaderContent());
             byte[] bodyContent = IOUtils.toByteArray(message.getBodyContent());
-            return CompletableFutureUtil.combine(
-                objectStore.save(headerContent),
-                objectStore.save(bodyContent),
-                Pair::of);
+
+            CompletableFuture<BlobId> bodyFuture = blobStore.save(bodyContent).toFuture();
+            CompletableFuture<BlobId> headerFuture = blobStore.save(headerContent).toFuture();
+
+            return headerFuture.thenCombine(bodyFuture, Pair::of);
         } catch (IOException e) {
             throw new MailboxException("Error saving mail content", e);
         }
@@ -233,42 +233,36 @@ public class CassandraMessageDAO {
             .collect(Guavate.toImmutableList());
     }
 
-    public CompletableFuture<Stream<MessageResult>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
-        return CompletableFutureUtil.chainAll(
-                limit.applyOnStream(messageIds.stream().distinct())
-                    .collect(JamesCollectors.chunker(configuration.getMessageReadChunkSize())),
-            ids -> rowToMessages(fetchType, ids))
-            .thenApply(stream -> stream.flatMap(Function.identity()));
+    public Flux<MessageResult> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
+        return Flux.fromStream(limit.applyOnStream(messageIds.stream().distinct())
+            .collect(JamesCollectors.chunker(configuration.getMessageReadChunkSize())))
+            .flatMap(ids -> rowToMessages(fetchType, ids));
     }
 
-    private CompletableFuture<Stream<MessageResult>> rowToMessages(FetchType fetchType, Collection<ComposedMessageIdWithMetaData> ids) {
-        return FluentFutureStream.of(
-            ids.stream()
-                .map(id -> retrieveRow(id, fetchType)
-                    .thenCompose((ResultSet resultSet) -> message(resultSet, id, fetchType))))
-            .completableFuture();
+    private Flux<MessageResult> rowToMessages(FetchType fetchType, Collection<ComposedMessageIdWithMetaData> ids) {
+        return Flux.fromIterable(ids)
+            .flatMap(id -> retrieveRow(id, fetchType)
+                .flatMap(resultSet -> message(resultSet, id, fetchType)));
     }
 
-    private CompletableFuture<ResultSet> retrieveRow(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
+    private Mono<ResultSet> retrieveRow(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId.getComposedMessageId().getMessageId();
 
-        return cassandraAsyncExecutor.execute(retrieveSelect(fetchType)
+        return cassandraAsyncExecutor.executeReactor(retrieveSelect(fetchType)
             .bind()
             .setUUID(MESSAGE_ID, cassandraMessageId.get()));
     }
 
-    private CompletableFuture<MessageResult>
+    private Mono<MessageResult>
     message(ResultSet rows,ComposedMessageIdWithMetaData messageIdWithMetaData, FetchType fetchType) {
         ComposedMessageId messageId = messageIdWithMetaData.getComposedMessageId();
 
         if (rows.isExhausted()) {
-            return CompletableFuture.completedFuture(notFound(messageIdWithMetaData));
+            return Mono.just(notFound(messageIdWithMetaData));
         }
 
         Row row = rows.one();
-        CompletableFuture<byte[]> contentFuture = buildContentRetriever(fetchType).apply(row);
-
-        return contentFuture.thenApply(content -> {
+        return buildContentRetriever(fetchType, row).map(content -> {
             MessageWithoutAttachment messageWithoutAttachment =
                 new MessageWithoutAttachment(
                     messageId.getMessageId(),
@@ -340,39 +334,37 @@ public class CassandraMessageDAO {
             .setUUID(MESSAGE_ID, messageId.get()));
     }
 
-    private Function<Row, CompletableFuture<byte[]>> buildContentRetriever(FetchType fetchType) {
+    private Mono<byte[]> buildContentRetriever(FetchType fetchType, Row row) {
         switch (fetchType) {
             case Full:
-                return this::getFullContent;
+                return getFullContent(row);
             case Headers:
-                return this::getHeaderContent;
+                return getHeaderContent(row);
             case Body:
-                return row -> getBodyContent(row)
-                    .thenApply(data -> Bytes.concat(new byte[row.getInt(BODY_START_OCTET)], data));
+                return getBodyContent(row)
+                    .map(data -> Bytes.concat(new byte[row.getInt(BODY_START_OCTET)], data));
             case Metadata:
-                return row -> CompletableFuture.completedFuture(EMPTY_BYTE_ARRAY);
+                return Mono.just(EMPTY_BYTE_ARRAY);
             default:
                 throw new RuntimeException("Unknown FetchType " + fetchType);
         }
     }
 
-    private CompletableFuture<byte[]> getFullContent(Row row) {
-        return CompletableFutureUtil.combine(
-            getHeaderContent(row),
-            getBodyContent(row),
-            Bytes::concat);
+    private Mono<byte[]> getFullContent(Row row) {
+        return getHeaderContent(row)
+            .zipWith(getBodyContent(row), Bytes::concat);
     }
 
-    private CompletableFuture<byte[]> getBodyContent(Row row) {
+    private Mono<byte[]> getBodyContent(Row row) {
         return getFieldContent(BODY_CONTENT, row);
     }
 
-    private CompletableFuture<byte[]> getHeaderContent(Row row) {
+    private Mono<byte[]> getHeaderContent(Row row) {
         return getFieldContent(HEADER_CONTENT, row);
     }
 
-    private CompletableFuture<byte[]> getFieldContent(String field, Row row) {
-        return objectStore.read(blobIdFactory.from(row.getString(field)));
+    private Mono<byte[]> getFieldContent(String field, Row row) {
+        return blobStore.readBytes(blobIdFactory.from(row.getString(field)));
     }
 
     public static MessageResult notFound(ComposedMessageIdWithMetaData id) {

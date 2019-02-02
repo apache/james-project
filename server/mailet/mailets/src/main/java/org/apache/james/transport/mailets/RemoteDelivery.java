@@ -21,15 +21,16 @@ package org.apache.james.transport.mailets;
 
 import java.net.UnknownHostException;
 import java.util.Collection;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -42,6 +43,7 @@ import org.apache.james.transport.mailets.remote.delivery.Bouncer;
 import org.apache.james.transport.mailets.remote.delivery.DeliveryRunnable;
 import org.apache.james.transport.mailets.remote.delivery.RemoteDeliveryConfiguration;
 import org.apache.james.transport.mailets.remote.delivery.RemoteDeliverySocketFactory;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
@@ -154,6 +156,7 @@ public class RemoteDelivery extends GenericMailet {
         this.startThreads = startThreads;
     }
 
+    @Override
     public void init() throws MessagingException {
         configuration = new RemoteDeliveryConfiguration(getMailetConfig(), domainList);
         queue = queueFactory.createQueue(configuration.getOutGoingQueueName());
@@ -170,7 +173,8 @@ public class RemoteDelivery extends GenericMailet {
     }
 
     private void initDeliveryThreads() {
-        executor = Executors.newFixedThreadPool(configuration.getWorkersThreadCount());
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        executor = Executors.newFixedThreadPool(configuration.getWorkersThreadCount(), threadFactory);
         for (int a = 0; a < configuration.getWorkersThreadCount(); a++) {
             executor.execute(
                 new DeliveryRunnable(queue,
@@ -203,7 +207,7 @@ public class RemoteDelivery extends GenericMailet {
                 serviceWithGateway(mail);
             }
         } else {
-            LOGGER.debug("Mail {} from {} has no recipients and can not be remotely delivered", mail.getName(), mail.getSender());
+            LOGGER.debug("Mail {} from {} has no recipients and can not be remotely delivered", mail.getName(), mail.getMaybeSender());
         }
         mail.setState(Mail.GHOST);
     }
@@ -221,18 +225,18 @@ public class RemoteDelivery extends GenericMailet {
 
     private void serviceNoGateway(Mail mail) {
         String mailName = mail.getName();
-        Map<String, Collection<MailAddress>> targets = groupByServer(mail.getRecipients());
-        for (Map.Entry<String, Collection<MailAddress>> entry : targets.entrySet()) {
+        Map<Domain, Collection<MailAddress>> targets = groupByServer(mail.getRecipients());
+        for (Map.Entry<Domain, Collection<MailAddress>> entry : targets.entrySet()) {
             serviceSingleServer(mail, mailName, entry);
         }
     }
 
-    private void serviceSingleServer(Mail mail, String originalName, Map.Entry<String, Collection<MailAddress>> entry) {
+    private void serviceSingleServer(Mail mail, String originalName, Map.Entry<Domain, Collection<MailAddress>> entry) {
         if (configuration.isDebug()) {
             LOGGER.debug("Sending mail to {} on host {}", entry.getValue(), entry.getKey());
         }
         mail.setRecipients(entry.getValue());
-        mail.setName(originalName + NAME_JUNCTION + entry.getKey());
+        mail.setName(originalName + NAME_JUNCTION + entry.getKey().name());
         try {
             queue.enQueue(mail);
         } catch (MailQueueException e) {
@@ -240,11 +244,11 @@ public class RemoteDelivery extends GenericMailet {
         }
     }
 
-    private Map<String, Collection<MailAddress>> groupByServer(Collection<MailAddress> recipients) {
+    private Map<Domain, Collection<MailAddress>> groupByServer(Collection<MailAddress> recipients) {
         // Must first organize the recipients into distinct servers (name made case insensitive)
-        HashMultimap<String, MailAddress> groupByServerMultimap = HashMultimap.create();
+        HashMultimap<Domain, MailAddress> groupByServerMultimap = HashMultimap.create();
         for (MailAddress recipient : recipients) {
-            groupByServerMultimap.put(recipient.getDomain().toLowerCase(Locale.US), recipient);
+            groupByServerMultimap.put(recipient.getDomain(), recipient);
         }
         return groupByServerMultimap.asMap();
     }
@@ -258,7 +262,7 @@ public class RemoteDelivery extends GenericMailet {
     public synchronized void destroy() {
         if (startThreads == ThreadState.START_THREADS) {
             isDestroyed.set(true);
-            executor.shutdown();
+            executor.shutdownNow();
             notifyAll();
         }
     }

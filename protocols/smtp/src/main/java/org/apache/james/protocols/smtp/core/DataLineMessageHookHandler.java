@@ -41,7 +41,6 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
-import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MessageHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,10 +70,7 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
 
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.smtp.core.DataLineFilter#onLine(org.apache.james.protocols.smtp.SMTPSession, java.nio.ByteBuffer, org.apache.james.protocols.api.handler.LineHandler)
-     */
+    @Override
     public Response onLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
         MailEnvelopeImpl env = (MailEnvelopeImpl) session.getAttachment(DataCmdHandler.MAILENV, ProtocolSession.State.Transaction);
         OutputStream out = env.getMessageOutputStream();
@@ -156,15 +152,13 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
             }
 
             // Not queue the message!
-            return AbstractHookableCmdHandler.calcDefaultSMTPResponse(new HookResult(HookReturnCode.DENY));
+            return AbstractHookableCmdHandler.calcDefaultSMTPResponse(HookResult.DECLINED);
         }
         
         return null;
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
-     */
+    @Override
     @SuppressWarnings("rawtypes")
     public void wireExtensions(Class interfaceName, List extension) throws WiringException {
         if (MessageHook.class.equals(interfaceName)) {
@@ -181,6 +175,7 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
         }
     }
     
+    @Override
     public List<Class<?>> getMarkerInterfaces() {
         List<Class<?>> classes = new LinkedList<>();
         classes.add(MessageHook.class);

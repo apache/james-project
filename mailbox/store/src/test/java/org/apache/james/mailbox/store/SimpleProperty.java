@@ -36,14 +36,17 @@ public class SimpleProperty implements Property {
         this.value = value;
     }
 
+    @Override
     public String getLocalName() {
         return localName;
     }
 
+    @Override
     public String getNamespace() {
         return namespace;
     }
 
+    @Override
     public String getValue() {
         return value;
     }

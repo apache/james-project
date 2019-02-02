@@ -19,14 +19,20 @@
 
 package org.apache.james.mailbox;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedCriteriaException;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -39,6 +45,8 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.message.DefaultMessageWriter;
 
 /**
  * Interface which represent a Mailbox
@@ -142,6 +150,114 @@ public interface MessageManager {
      */
     ComposedMessageId appendMessage(InputStream msgIn, Date internalDate, MailboxSession mailboxSession, boolean isRecent, Flags flags) throws MailboxException;
 
+    class AppendCommand {
+
+        public static AppendCommand from(Message.Builder builder) throws IOException {
+            return builder().build(builder);
+        }
+
+        public static AppendCommand from(Message message) throws IOException {
+            return builder().build(message);
+        }
+
+        public static AppendCommand from(InputStream message) {
+            return builder().build(message);
+        }
+
+        public static class Builder {
+            private Optional<Date> internalDate;
+            private Optional<Boolean> isRecent;
+            private Optional<Flags> flags;
+
+            private Builder() {
+                this.internalDate = Optional.empty();
+                this.isRecent = Optional.empty();
+                this.flags = Optional.empty();
+            }
+
+            public Builder withFlags(Flags flags) {
+                this.flags = Optional.of(flags);
+                return this;
+            }
+
+            public Builder withInternalDate(Date date) {
+                this.internalDate = Optional.of(date);
+                return this;
+            }
+
+            public Builder isRecent(boolean recent) {
+                this.isRecent = Optional.of(recent);
+                return this;
+            }
+
+            public Builder recent() {
+                return isRecent(true);
+            }
+
+            public Builder notRecent() {
+                return isRecent(false);
+            }
+
+            public AppendCommand build(InputStream msgIn) {
+                return new AppendCommand(
+                    msgIn,
+                    internalDate.orElse(new Date()),
+                    isRecent.orElse(true),
+                    flags.orElse(new Flags()));
+            }
+
+            public AppendCommand build(byte[] msgIn) {
+                return build(new ByteArrayInputStream(msgIn));
+            }
+
+            public AppendCommand build(String msgIn) {
+                return build(msgIn.getBytes(StandardCharsets.UTF_8));
+            }
+
+            public AppendCommand build(Message message) throws IOException {
+                return build(DefaultMessageWriter.asBytes(message));
+            }
+
+            public AppendCommand build(Message.Builder messageBuilder) throws IOException {
+                return build(messageBuilder.build());
+            }
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        private final InputStream msgIn;
+        private final Date internalDate;
+        private final boolean isRecent;
+        private final Flags flags;
+
+        private AppendCommand(InputStream msgIn, Date internalDate, boolean isRecent, Flags flags) {
+            this.msgIn = msgIn;
+            this.internalDate = internalDate;
+            this.isRecent = isRecent;
+            this.flags = flags;
+        }
+
+        public InputStream getMsgIn() {
+            return msgIn;
+        }
+
+        public Date getInternalDate() {
+            return internalDate;
+        }
+
+        public boolean isRecent() {
+            return isRecent;
+        }
+
+        public Flags getFlags() {
+            return flags;
+        }
+    }
+
+    ComposedMessageId appendMessage(AppendCommand appendCommand, MailboxSession session) throws MailboxException;
+
     /**
      * Gets messages in the given range. The messages may get fetched under
      * the-hood in batches so the caller should check if
@@ -159,6 +275,7 @@ public interface MessageManager {
      */
     MessageResultIterator getMessages(MessageRange set, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException;
 
+    EnumSet<MessageCapabilities> getSupportedMessageCapabilities();
 
     /**
      * Gets the id of the referenced mailbox

@@ -20,6 +20,7 @@
 package org.apache.james.transport.matchers;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.mail.MessagingException;
@@ -46,13 +47,14 @@ import com.google.common.base.Strings;
  */
 public class SenderIs extends GenericMatcher {
 
-    private Set<MailAddress> senders;
+    private Set<Optional<MailAddress>> senders;
 
     @VisibleForTesting
-    Set<MailAddress> getSenders() {
+    Set<Optional<MailAddress>> getSenders() {
         return senders;
     }
 
+    @Override
     public void init() throws javax.mail.MessagingException {
         if (Strings.isNullOrEmpty(getCondition())) {
             throw new MessagingException("SenderIs should have at least one address as parameter");
@@ -63,8 +65,9 @@ public class SenderIs extends GenericMatcher {
         }
     }
 
+    @Override
     public Collection<MailAddress> match(Mail mail) {
-        if (senders.contains(mail.getSender())) {
+        if (senders.contains(mail.getMaybeSender().asOptional())) {
             return mail.getRecipients();
         } else {
             return null;

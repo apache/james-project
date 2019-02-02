@@ -32,6 +32,7 @@ public class TestPassCmdHandler extends AbstractPassCmdHandler {
         mailboxes.put(username, mailbox);
     }
     
+    @Override
     protected Mailbox auth(POP3Session session, String username, String password) throws Exception {
         return mailboxes.get(username);
     }

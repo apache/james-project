@@ -30,10 +30,10 @@ import org.junit.rules.TemporaryFolder;
 
 public class IndexCreationFactoryTest {
     public static final IndexName INDEX_NAME = new IndexName("index");
-    public static final AliasName ALIAS_NAME = new AliasName("alias");
+    public static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, INDEX_NAME);
+    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
 
     @Rule
     public RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
@@ -43,7 +43,7 @@ public class IndexCreationFactoryTest {
     @Before
     public void setUp() {
         clientProvider = new TestingClientProvider(embeddedElasticSearch.getNode());
-        new IndexCreationFactory()
+        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(clientProvider.get());
@@ -51,7 +51,7 @@ public class IndexCreationFactoryTest {
 
     @Test
     public void createIndexAndAliasShouldNotThrowWhenCalledSeveralTime() {
-        new IndexCreationFactory()
+        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(clientProvider.get());
@@ -60,7 +60,7 @@ public class IndexCreationFactoryTest {
     @Test
     public void useIndexShouldThrowWhenNull() {
         assertThatThrownBy(() ->
-            new IndexCreationFactory()
+            new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
                 .useIndex(null))
             .isInstanceOf(NullPointerException.class);
     }
@@ -68,32 +68,8 @@ public class IndexCreationFactoryTest {
     @Test
     public void addAliasShouldThrowWhenNull() {
         assertThatThrownBy(() ->
-            new IndexCreationFactory()
+            new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
                 .addAlias(null))
             .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    public void nbReplicaShouldThrowWhenNegative() {
-        assertThatThrownBy(() ->
-            new IndexCreationFactory()
-                .nbReplica(-1))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    public void nbShardsShouldThrowWhenNegative() {
-        assertThatThrownBy(() ->
-            new IndexCreationFactory()
-                .nbShards(-1))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    public void nbShardsShouldThrowWhenZero() {
-        assertThatThrownBy(() ->
-            new IndexCreationFactory()
-                .nbShards(0))
-            .isInstanceOf(IllegalArgumentException.class);
     }
 }

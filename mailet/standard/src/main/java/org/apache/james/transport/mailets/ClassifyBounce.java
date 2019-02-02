@@ -52,9 +52,7 @@ public class ClassifyBounce extends GenericMailet {
      */
     private String headerName;
 
-    /**
-     * Initialize the mailet.
-     */
+    @Override
     public void init() throws MessagingException {
         headerName = getInitParameter("headerName");
 
@@ -70,6 +68,7 @@ public class ClassifyBounce extends GenericMailet {
      * @param mail the mail being processed
      * @throws MessagingException if an error arises during message processing
      */
+    @Override
     public void service(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
         Classifier classifier = new Classifier(message);
@@ -80,11 +79,7 @@ public class ClassifyBounce extends GenericMailet {
         //}
     }
 
-    /**
-     * Return a string describing this mailet.
-     *
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "SetMimeHeader Mailet";
     }
@@ -96,7 +91,7 @@ public class ClassifyBounce extends GenericMailet {
             try {
                 text = getRawText(message.getContent());
             } catch (IOException e) {
-                throw (new MessagingException("Unable to extract message body. [" + e.getClass().getName() + "] " + e.getMessage()));
+                throw (new MessagingException("Unable to extract message body.",  e));
             }
         }
 

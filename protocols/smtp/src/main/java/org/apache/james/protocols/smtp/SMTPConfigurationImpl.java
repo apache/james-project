@@ -39,10 +39,7 @@ public class SMTPConfigurationImpl extends ProtocolConfigurationImpl implements 
         setSoftwareName("JAMES SMTP Protocols Server");
     }
     
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.smtp.SMTPConfiguration#getMaxMessageSize()
-     */
+    @Override
     public long getMaxMessageSize() {
         return maxMessageSize;
     }
@@ -50,6 +47,7 @@ public class SMTPConfigurationImpl extends ProtocolConfigurationImpl implements 
     /**
      * Return <code>false</code>
      */
+    @Override
     public boolean isRelayingAllowed(String remoteIP) {
         return false;
     }
@@ -57,6 +55,7 @@ public class SMTPConfigurationImpl extends ProtocolConfigurationImpl implements 
     /**
      * Return <code>false</code>
      */
+    @Override
     public boolean isAuthRequired(String remoteIP) {
         return false;
     }
@@ -66,19 +65,13 @@ public class SMTPConfigurationImpl extends ProtocolConfigurationImpl implements 
     }
     
     
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.smtp.SMTPConfiguration#useHeloEhloEnforcement()
-     */
+    @Override
     public boolean useHeloEhloEnforcement() {
         return enforceHeloEhlo;
     }
     
     
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.smtp.SMTPConfiguration#useAddressBracketsEnforcement()
-     */
+    @Override
     public boolean useAddressBracketsEnforcement() {
         return bracketsEnforcement;
     }

@@ -115,9 +115,7 @@ public class DefaultImapEncoderFactory implements ImapEncoderFactory {
         this.neverAddBodyStructureExtensions = neverAddBodyStructureExtensions;
     }
 
-    /**
-     * @see org.apache.james.imap.encode.ImapEncoderFactory#buildImapEncoder()
-     */
+    @Override
     public ImapEncoder buildImapEncoder() {
         return createDefaultEncoder(localizer, neverAddBodyStructureExtensions);
     }

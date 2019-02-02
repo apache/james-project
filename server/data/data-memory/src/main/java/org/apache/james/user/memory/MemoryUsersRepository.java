@@ -102,7 +102,7 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
 
     @Override
     public boolean test(String name, final String password) throws UsersRepositoryException {
-        return Optional.ofNullable(userByName.get(name))
+        return Optional.ofNullable(userByName.get(org.apache.james.core.User.fromUsername(name).asString()))
             .map(user -> user.verifyPassword(password))
             .orElse(false);
     }

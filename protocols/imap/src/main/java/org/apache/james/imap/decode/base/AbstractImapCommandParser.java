@@ -52,17 +52,12 @@ public abstract class AbstractImapCommandParser implements MessagingImapCommandP
         return command;
     }
 
-    /**
-     * @see org.apache.james.imap.decode.MessagingImapCommandParser#getStatusResponseFactory()
-     */
+    @Override
     public final StatusResponseFactory getStatusResponseFactory() {
         return statusResponseFactory;
     }
 
-    /**
-     * @see org.apache.james.imap.decode.MessagingImapCommandParser#setStatusResponseFactory
-     * (org.apache.james.imap.api.message.response.StatusResponseFactory)
-     */
+    @Override
     public final void setStatusResponseFactory(StatusResponseFactory statusResponseFactory) {
         this.statusResponseFactory = statusResponseFactory;
     }
@@ -74,6 +69,7 @@ public abstract class AbstractImapCommandParser implements MessagingImapCommandP
      *            <code>ImapRequestLineReader</code>, not null
      * @return <code>ImapCommandMessage</code>, not null
      */
+    @Override
     public final ImapMessage parse(ImapRequestLineReader request, String tag, ImapSession session) {
         ImapMessage result;
         if (!command.validForState(session.getState())) {

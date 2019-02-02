@@ -55,9 +55,7 @@ public class StlsCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
 
     }
 
-    /**
-     * @see CommandHandler#onCommand(org.apache.james.protocols.api.ProtocolSession, Request)
-     */
+    @Override
     public Response onCommand(POP3Session session, Request request) {
         // check if starttls is supported, the state is the right one and it was
         // not started before
@@ -68,9 +66,7 @@ public class StlsCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
         }
     }
 
-    /**
-     * @see org.apache.james.pop3server.core.CapaCapability#getImplementedCapabilities(org.apache.james.pop3server.POP3Session)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public Set<String> getImplementedCapabilities(POP3Session session) {
         if (session.isStartTLSSupported() && session.getHandlerState() == POP3Session.AUTHENTICATION_READY) {
@@ -80,9 +76,7 @@ public class StlsCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }

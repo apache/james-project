@@ -25,7 +25,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.mpt.protocol.ProtocolSession.TimerCommand;
 
 /**
@@ -53,6 +52,7 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
      *            The name of the protocol session file.
      * @return The ProtocolSession
      */
+    @Override
     public ProtocolSession buildProtocolSession(String fileName) throws Exception {
         ProtocolSession session = new ProtocolSession();
         addTestFile(fileName, session);
@@ -70,15 +70,11 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
      */
     public void addTestFile(String fileName, ProtocolSession session) throws Exception {
         // Need to find local resource.
-        InputStream is = this.getClass().getResourceAsStream(fileName);
-        if (is == null) {
-            throw new Exception("Test Resource '" + fileName + "' not found.");
-        }
-
-        try {
+        try (InputStream is = this.getClass().getResourceAsStream(fileName)) {
+            if (is == null) {
+                throw new Exception("Test Resource '" + fileName + "' not found.");
+            }
             addProtocolLinesFromStream(is, session, fileName);
-        } finally {
-            IOUtils.closeQuietly(is);
         }
     }
 
@@ -95,8 +91,8 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
      */
     public void addProtocolLinesFromStream(InputStream is, ProtocolSession session, String fileName) throws Exception {
         int sessionNumber = -1;
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        try {
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
             String next;
             int lineNumber = -1;
             String lastClientMsg = "";
@@ -138,6 +134,8 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
                     }
                 } else if (next.startsWith(REINIT)) {
                     session.reinit(sessionNumber);
+                }  else if (next.startsWith(AWAIT)) {
+                    session.await(sessionNumber);
                 } else if (next.startsWith(OPEN_UNORDERED_BLOCK_TAG)) {
                     List<String> unorderedLines = new ArrayList<>(5);
                     next = reader.readLine();
@@ -186,8 +184,6 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
                 }
                 lineNumber++;
             }
-        } finally {
-            IOUtils.closeQuietly(reader);
         }
     }
 

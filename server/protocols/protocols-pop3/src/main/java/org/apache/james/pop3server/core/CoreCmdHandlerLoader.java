@@ -92,8 +92,7 @@ public class CoreCmdHandlerLoader implements HandlersPackage {
         commands.add(COMMANDHANDLERRESULTLOGGER);
     }
 
-    /**
-     */
+    @Override
     public List<String> getHandlers() {
         return commands;
     }

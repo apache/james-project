@@ -28,24 +28,18 @@
      -->
 
     <import resource="classpath:META-INF/spring/mailbox-locker.xml"/>
-    <!-- TODO: fix dependency issues with lucene and JCR and re-enable -->
     <import resource="classpath:META-INF/spring/mailbox-jpa.xml"/>
 
     <import resource="classpath:META-INF/spring/mailbox-index-lucene.xml" />
 <!--    <import resource="classpath:META-INF/spring/mailbox-elasticsearch.xml"/> -->
 
-    <!-- TODO: update spring context creation to match new Jackrabbit version -->
-    <!--<import resource="classpath:META-INF/spring/mailbox-jcr.xml" />-->
-
     <import resource="classpath:META-INF/spring/mailbox-maildir.xml"/>
     <import resource="classpath:META-INF/spring/mailbox-memory.xml"/>
-    <!-- TODO: Fix hbase build and re-enable -->
-    <!--<import resource="classpath:META-INF/spring/mailbox-hbase.xml" />-->
 
     <!-- 
       Mailbox Copier
      -->
-    <bean id="mailboxcopier" class="org.apache.james.mailbox.copier.MailboxCopierImpl"/>
+    <bean id="mailboxcopier" class="org.apache.james.mailbox.tools.copier.MailboxCopierImpl"/>
 
     <!-- 
       Mailbox ACL Resolver
@@ -69,8 +63,21 @@
         <constructor-arg index="0" ref="messageMapperFactory" />
         <constructor-arg index="1" ref="aclResolver" />
         <constructor-arg index="2" ref="groupMembershipResolver" />
-        <constructor-arg index="3" ref="dispatcher" />
+        <constructor-arg index="3" ref="event-bus" />
     </bean>
 
+    <bean id="sessionProvider" class="org.apache.james.mailbox.store.SessionProvider" >
+        <constructor-arg index="0" ref="authenticator" />
+        <constructor-arg index="1" ref="authorizator" />
+    </bean>
+
+    <bean id="mailbox-init" class="org.apache.james.mailbox.spring.MailboxInitializer" init-method="init">
+        <constructor-arg index="0" ref="sessionProvider" />
+        <constructor-arg index="1" ref="event-bus" />
+        <constructor-arg index="2" ref="indexer" />
+        <constructor-arg index="3" ref="quotaUpdater" />
+        <constructor-arg index="4" ref="mailboxmanager" />
+        <constructor-arg index="5" ref="messageMapperFactory" />
+    </bean>
 
 </beans>

@@ -36,8 +36,7 @@ public class JMXHandlersLoader implements HandlersPackage {
         handlers.add(HookResultJMXMonitor.class.getName());
     }
 
-    /**
-     */
+    @Override
     public List<String> getHandlers() {
         return handlers;
     }

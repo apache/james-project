@@ -22,6 +22,6 @@ package org.apache.james.webadmin.utils;
 public class JsonExtractException extends Exception {
 
     public JsonExtractException(Throwable throwable) {
-        super(throwable);
+        super(throwable.getMessage(), throwable);
     }
 }

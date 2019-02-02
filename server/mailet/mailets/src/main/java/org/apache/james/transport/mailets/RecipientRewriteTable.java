@@ -32,8 +32,22 @@ import com.google.common.base.Preconditions;
 /**
  * Mailet which should get used when using RecipientRewriteTable-Store to
  * implementations for mappings of forwards and aliases.
+ *
+ * By specifying an 'errorProcessor' you can specify your logic upon RecipientRewriteTable failures.
+ *
+ * Exemple:
+ *
+ * <pre>
+ * <code>
+ *  &lt;mailet match=&quot;All&quot; class=&quot;RecipientRewriteTable&quot;&gt;
+ *    &lt;errorProcessor&gt;x@rrt-errors&lt;/errorProcessor&gt;
+ *  &lt;/mailet&gt;
+ * </code>
+ * </pre>
  */
 public class RecipientRewriteTable extends GenericMailet {
+    public static final String ERROR_PROCESSOR = "errorProcessor";
+
     private final org.apache.james.rrt.api.RecipientRewriteTable virtualTableStore;
     private final DomainList domainList;
     private RecipientRewriteTableProcessor processor;
@@ -52,7 +66,8 @@ public class RecipientRewriteTable extends GenericMailet {
 
     @Override
     public void init() throws MessagingException {
-        processor = new RecipientRewriteTableProcessor(virtualTableStore, domainList, getMailetContext());
+        String errorProcessor = getInitParameter(ERROR_PROCESSOR, Mail.ERROR);
+        processor = new RecipientRewriteTableProcessor(virtualTableStore, domainList, getMailetContext(), errorProcessor);
     }
 
 

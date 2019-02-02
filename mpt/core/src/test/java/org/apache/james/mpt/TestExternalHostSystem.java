@@ -19,6 +19,12 @@
 
 package org.apache.james.mpt;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+
 import org.apache.james.mpt.api.Continuation;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
@@ -27,11 +33,11 @@ import org.apache.james.mpt.api.UserAdder;
 import org.apache.james.mpt.host.ExternalHostSystem;
 import org.apache.james.mpt.monitor.NullMonitor;
 import org.apache.james.mpt.session.ExternalSessionFactory;
-import org.jmock.Mock;
-import org.jmock.MockObjectTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-public class TestExternalHostSystem extends MockObjectTestCase {
-
+public class TestExternalHostSystem {
     
     private static final String USER = "USER NAME";
 
@@ -41,46 +47,41 @@ public class TestExternalHostSystem extends MockObjectTestCase {
 
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
 
-    
     private DiscardProtocol protocol;
-    
     private DiscardProtocol.Record record;
-
     private Continuation continuation;
-
     private UserAdder userAdder;
 
-    private Mock mockUserAdder;
-    
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         protocol = new DiscardProtocol();
         protocol.start();
         record = protocol.recordNext();
-        continuation = (Continuation) mock(Continuation.class).proxy();
-        mockUserAdder = mock(UserAdder.class);
-        userAdder = (UserAdder) mockUserAdder.proxy();
+        continuation = mock(Continuation.class);
+        userAdder = mock(UserAdder.class);
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() {
         protocol.stop();
-        super.tearDown();
     }
-    
+
+    @Test
     public void testWrite() throws Exception {
         Session session = newSession(SHABANG);
         final String in = "Hello, World";
         session.writeLine(in);
         session.stop();
-        assertEquals(in + "\r\n", record.complete());
+
+        assertThat(record.complete()).isEqualTo(in + "\r\n");
     }
-    
+
+    @Test
     public void testAddUser() throws Exception {
-        mockUserAdder.expects(once()).method("addUser").with(eq(USER), eq(PASSWORD));
         ExternalHostSystem system = buildSystem(SHABANG);
         system.addUser(USER, PASSWORD);
+        verify(userAdder, times(1)).addUser(USER, PASSWORD);
+        verifyNoMoreInteractions(userAdder);
     }
 
     private Session newSession(String shabang) throws Exception {

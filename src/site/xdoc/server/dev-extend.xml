@@ -58,6 +58,9 @@
   <subsection name="Mailbox Listeners">
   
     <p>See the <a href="http://james.apache.org/mailbox">mailbox</a> project for more information.</p>
+
+    <p>See the <a href="http://james.apache.org/server/config-listeners.html">mailbox listeners</a> for configuring
+          additional mailbox listeners.</p>
   
   </subsection>
  

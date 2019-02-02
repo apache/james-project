@@ -57,9 +57,7 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
         needsCommandInjectionDetection = false;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.SMTPSession#isRelayingAllowed()
-     */
+    @Override
     public boolean isRelayingAllowed() {
         return relayingAllowed;
     }
@@ -77,10 +75,7 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
         }
     }
 
-    /**
-    /**
-     * @see org.apache.james.protocols.smtp.SMTPSession#getRcptCount()
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public int getRcptCount() {
         int count = 0;
@@ -93,16 +88,12 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
         return count;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.SMTPSession#isAuthSupported()
-     */
+    @Override
     public boolean isAuthSupported() {
         return getConfiguration().isAuthRequired(getRemoteAddress().getAddress().getHostAddress());
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.SMTPSession#setRelayingAllowed(boolean)
-     */
+    @Override
     public void setRelayingAllowed(boolean relayingAllowed) {
         this.relayingAllowed = relayingAllowed;
     }

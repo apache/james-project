@@ -20,8 +20,8 @@
 package org.apache.james.imap.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -43,10 +43,10 @@ import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.message.request.SetAnnotationRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -91,7 +91,7 @@ public class SetAnnotationProcessorTest {
         mockResponder = mock(ImapProcessor.Responder.class);
         mockImapSession = mock(ImapSession.class);
 
-        mockMailboxSession = new MockMailboxSession("username");
+        mockMailboxSession = MailboxSessionUtil.create("username");
         inbox = MailboxPath.inbox(mockMailboxSession);
         mailboxAnnotations = ImmutableList.of(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/key"), "anyValue"));
         request = new SetAnnotationRequest(TAG, ImapCommand.anyStateCommand("Name"), ImapConstants.INBOX_NAME, mailboxAnnotations);

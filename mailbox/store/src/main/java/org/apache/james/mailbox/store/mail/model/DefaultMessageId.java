@@ -22,6 +22,11 @@ public class DefaultMessageId implements MessageId {
     }
 
     @Override
+    public boolean isSerializable() {
+        return false;
+    }
+
+    @Override
     public String serialize() {
         throw new IllegalStateException("Capabilities should prevent calling this method");
     }
@@ -34,5 +39,10 @@ public class DefaultMessageId implements MessageId {
     @Override
     public final int hashCode() {
         throw new IllegalStateException("Capabilities should prevent calling this method");
+    }
+
+    @Override
+    public String toString() {
+        return "DefaultMessageId{}";
     }
 }

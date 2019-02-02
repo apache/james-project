@@ -37,6 +37,7 @@ public class FileIntoAction implements MailAction {
 
     private static final char HIERARCHY_DELIMITER = '.';
 
+    @Override
     public void execute(Action action, Mail mail, ActionContext context) throws MessagingException {
         if (action instanceof ActionFileInto) {
             final ActionFileInto fileIntoAction = (ActionFileInto) action;

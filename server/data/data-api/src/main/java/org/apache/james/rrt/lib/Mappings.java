@@ -21,6 +21,7 @@
 package org.apache.james.rrt.lib;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.james.rrt.lib.Mapping.Type;
 
@@ -49,4 +50,6 @@ public interface Mappings extends Iterable<Mapping> {
     Optional<Mappings> toOptional();
 
     Mappings union(Mappings mappings);
+
+    Stream<Mapping> asStream();
 }

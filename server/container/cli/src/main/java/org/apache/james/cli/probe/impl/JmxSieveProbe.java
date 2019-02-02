@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import javax.management.MalformedObjectNameException;
 
-import org.apache.james.mailbox.store.probe.SieveProbe;
+import org.apache.james.probe.SieveProbe;
 import org.apache.james.sieverepository.api.SieveRepositoryManagementMBean;
 
 public class JmxSieveProbe implements SieveProbe, JmxProbe {
@@ -32,6 +32,7 @@ public class JmxSieveProbe implements SieveProbe, JmxProbe {
     
     private SieveRepositoryManagementMBean sieveRepositoryManagement;
     
+    @Override
     public JmxSieveProbe connect(JmxConnection jmxc) throws IOException {
         try {
             sieveRepositoryManagement = jmxc.retrieveBean(SieveRepositoryManagementMBean.class, SIEVEMANAGER_OBJECT_NAME);
@@ -73,6 +74,12 @@ public class JmxSieveProbe implements SieveProbe, JmxProbe {
 
     @Override
     public void addActiveSieveScript(String user, String name, String script) throws Exception {
+        sieveRepositoryManagement.addActiveSieveScript(user, name, script);
     }
-    
+
+    @Override
+    public void addActiveSieveScriptFromFile(String user, String name, String path) throws Exception {
+        sieveRepositoryManagement.addActiveSieveScriptFromFile(user, name, path);
+    }
+
 }

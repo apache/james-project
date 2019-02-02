@@ -28,10 +28,10 @@ import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.NameType;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
-import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -47,18 +47,15 @@ public abstract class MailboxMapperACLTest {
 
     @Rule
     public ExpectedException expected = ExpectedException.none();
-    private MailboxMapper mailboxMapper;
-    private MapperProvider mapperProvider;
 
-    protected abstract MapperProvider createMapperProvider();
+    private MailboxMapper mailboxMapper;
+
+    protected abstract MailboxMapper createMailboxMapper();
+
+    protected abstract MailboxId generateId();
 
     public void setUp() throws Exception {
-        this.mapperProvider = createMapperProvider();
-        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.MAILBOX));
-        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.ACL_STORAGE));
-
-        this.mailboxMapper = mapperProvider.createMailboxMapper();
-
+        mailboxMapper = createMailboxMapper();
         MailboxPath benwaInboxPath = MailboxPath.forUser("benwa", "INBOX");
         benwaInboxMailbox = createMailbox(benwaInboxPath);
         mailboxMapper.save(benwaInboxMailbox);
@@ -239,7 +236,7 @@ public abstract class MailboxMapperACLTest {
 
     private SimpleMailbox createMailbox(MailboxPath mailboxPath) {
         SimpleMailbox mailbox = new SimpleMailbox(mailboxPath, UID_VALIDITY);
-        mailbox.setMailboxId(mapperProvider.generateId());
+        mailbox.setMailboxId(generateId());
         return mailbox;
     }
 

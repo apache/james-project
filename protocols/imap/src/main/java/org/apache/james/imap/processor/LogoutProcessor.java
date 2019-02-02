@@ -44,6 +44,7 @@ public class LogoutProcessor extends AbstractMailboxProcessor<LogoutRequest> {
         super(LogoutRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
+    @Override
     protected void doProcess(LogoutRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         try {
@@ -52,7 +53,7 @@ public class LogoutProcessor extends AbstractMailboxProcessor<LogoutRequest> {
             bye(responder);
             okComplete(command, tag, responder);
         } catch (MailboxException e) {
-            LOGGER.error("Logout failed for user {}", mailboxSession.getUser().getUserName(), e);
+            LOGGER.error("Logout failed for user {}", mailboxSession.getUser().asString(), e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

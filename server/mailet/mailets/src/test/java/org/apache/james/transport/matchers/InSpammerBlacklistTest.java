@@ -18,9 +18,7 @@
  ****************************************************************/
 package org.apache.james.transport.matchers;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -82,8 +80,8 @@ public class InSpammerBlacklistTest {
 
         Collection<MailAddress> matchedRecipients = matcher.match(mail);
 
-        assertNotNull(matchedRecipients);
-        assertEquals(matchedRecipients.size(), mail.getRecipients().size());
+        assertThat(matchedRecipients).isNotNull();
+        assertThat(matchedRecipients.size()).isEqualTo(mail.getRecipients().size());
     }
 
     @Test
@@ -93,6 +91,6 @@ public class InSpammerBlacklistTest {
 
         Collection<MailAddress> matchedRecipients = matcher.match(mail);
 
-        assertNull(matchedRecipients);
+        assertThat(matchedRecipients).isNull();
     }
 }

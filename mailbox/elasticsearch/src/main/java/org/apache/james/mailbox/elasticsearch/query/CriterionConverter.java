@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.elasticsearch.query;
 
+import static org.apache.james.backends.es.NodeMappingFactory.RAW;
+import static org.apache.james.backends.es.NodeMappingFactory.SPLIT_EMAIL;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
@@ -81,6 +83,7 @@ public class CriterionConverter {
             criterion -> dateRangeFilter(JsonMessageConstants.DATE, criterion.getOperator()));
 
         registerCriterionConverter(SearchQuery.AttachmentCriterion.class, this::convertAttachmentCriterion);
+        registerCriterionConverter(SearchQuery.MimeMessageIDCriterion.class, this::convertMimeMessageIDCriterion);
     }
     
     @SuppressWarnings("unchecked")
@@ -122,6 +125,10 @@ public class CriterionConverter {
         return termQuery(JsonMessageConstants.HAS_ATTACHMENT, criterion.getOperator().isSet());
     }
 
+    private QueryBuilder convertMimeMessageIDCriterion(SearchQuery.MimeMessageIDCriterion criterion) {
+        return termQuery(JsonMessageConstants.MIME_MESSAGE_ID, criterion.getMessageID());
+    }
+
     private QueryBuilder convertCustomFlagCriterion(SearchQuery.CustomFlagCriterion criterion) {
         QueryBuilder termQueryBuilder = termQuery(JsonMessageConstants.USER_FLAGS, criterion.getFlag());
         if (criterion.getOperator().isSet()) {
@@ -136,13 +143,24 @@ public class CriterionConverter {
         case BODY:
             return boolQuery()
                     .should(matchQuery(JsonMessageConstants.TEXT_BODY, textCriterion.getOperator().getValue()))
+                    .should(matchQuery(JsonMessageConstants.TEXT_BODY + "." + SPLIT_EMAIL,
+                        textCriterion.getOperator().getValue()))
+                    .should(matchQuery(JsonMessageConstants.HTML_BODY + "." + SPLIT_EMAIL,
+                        textCriterion.getOperator().getValue()))
                     .should(matchQuery(JsonMessageConstants.HTML_BODY, textCriterion.getOperator().getValue()));
         case TEXT:
             return boolQuery()
-                    .should(matchQuery(JsonMessageConstants.TEXT, textCriterion.getOperator().getValue()));
+                    .should(matchQuery(JsonMessageConstants.TEXT, textCriterion.getOperator().getValue()))
+                    .should(matchQuery(JsonMessageConstants.TEXT + "." + SPLIT_EMAIL,
+                        textCriterion.getOperator().getValue()));
         case FULL:
             return boolQuery()
                     .should(matchQuery(JsonMessageConstants.TEXT_BODY, textCriterion.getOperator().getValue()))
+                    .should(matchQuery(JsonMessageConstants.TEXT_BODY + "." + SPLIT_EMAIL,
+                        textCriterion.getOperator().getValue()))
+                    .should(matchQuery(JsonMessageConstants.HTML_BODY + "." + SPLIT_EMAIL,
+                        textCriterion.getOperator().getValue()))
+                    .should(matchQuery(JsonMessageConstants.HTML_BODY, textCriterion.getOperator().getValue()))
                     .should(matchQuery(JsonMessageConstants.HTML_BODY, textCriterion.getOperator().getValue()))
                     .should(matchQuery(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT,
                         textCriterion.getOperator().getValue()));
@@ -150,6 +168,10 @@ public class CriterionConverter {
             return boolQuery()
                     .should(matchQuery(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT,
                         textCriterion.getOperator().getValue()));
+        case ATTACHMENT_FILE_NAME:
+            return boolQuery()
+                .should(termQuery(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILENAME,
+                    textCriterion.getOperator().getValue()));
         }
         throw new RuntimeException("Unknown SCOPE for text criterion");
     }
@@ -255,7 +277,8 @@ public class CriterionConverter {
     private QueryBuilder manageAddressFields(String headerName, String value) {
         return nestedQuery(getFieldNameFromHeaderName(headerName), boolQuery()
             .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.NAME, value))
-            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS, value)));
+            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS, value))
+            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS + "." + RAW, value)));
     }
 
     private String getFieldNameFromHeaderName(String headerName) {

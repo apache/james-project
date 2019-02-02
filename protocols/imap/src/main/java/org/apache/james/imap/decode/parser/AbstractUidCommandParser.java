@@ -32,6 +32,7 @@ abstract class AbstractUidCommandParser extends AbstractImapCommandParser {
         super(command);
     }
 
+    @Override
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, ImapSession session) throws DecodingException {
         return decode(command, request, tag, false, session);
     }

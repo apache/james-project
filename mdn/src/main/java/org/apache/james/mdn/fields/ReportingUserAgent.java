@@ -36,22 +36,42 @@ public class ReportingUserAgent implements Field {
     private final String userAgentName;
     private final Optional<String> userAgentProduct;
 
-    public ReportingUserAgent(String userAgentName) {
-        this(userAgentName, Optional.empty());
+    public static Builder builder() {
+        return new Builder();
     }
 
-    public ReportingUserAgent(String userAgentName, String userAgentProduct) {
-        this(userAgentName, Optional.of(userAgentProduct));
+    public static class Builder {
+
+        private String userAgentName;
+        private Optional<String> userAgentProduct;
+
+        private Builder() {
+            userAgentProduct = Optional.empty();
+        }
+
+        public Builder userAgentName(String userAgentName) {
+            this.userAgentName = userAgentName;
+            return this;
+        }
+
+        public Builder userAgentProduct(String userAgentProduct) {
+            this.userAgentProduct = Optional.of(userAgentProduct);
+            return this;
+        }
+
+        public ReportingUserAgent build() {
+            Preconditions.checkNotNull(userAgentName);
+            Preconditions.checkNotNull(userAgentProduct);
+            Preconditions.checkState(!userAgentName.contains("\n"), "Name should not contain line break");
+            String trimmedName = userAgentName.trim();
+            Preconditions.checkState(!trimmedName.isEmpty(), "Name should not be empty");
+
+            return new ReportingUserAgent(trimmedName, userAgentProduct);
+        }
     }
 
-    public ReportingUserAgent(String userAgentName, Optional<String> userAgentProduct) {
-        Preconditions.checkNotNull(userAgentName);
-        Preconditions.checkNotNull(userAgentProduct);
-        Preconditions.checkArgument(!userAgentName.contains("\n"), "Name should not contain line break");
-        String trimmedName = userAgentName.trim();
-        Preconditions.checkArgument(!trimmedName.isEmpty(), "Name should not be empty");
-
-        this.userAgentName = trimmedName;
+    private ReportingUserAgent(String userAgentName, Optional<String> userAgentProduct) {
+        this.userAgentName = userAgentName;
         this.userAgentProduct = userAgentProduct
             .map(String::trim)
             .filter(IS_EMPTY.negate());

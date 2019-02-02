@@ -19,6 +19,8 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.IOException;
 import java.util.Properties;
 
@@ -32,10 +34,9 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.junit.jupiter.api.Test;
 
-import junit.framework.TestCase;
-
-public class OnlyTextTest extends TestCase {
+class OnlyTextTest {
 
     /**
      * Test method for
@@ -45,7 +46,8 @@ public class OnlyTextTest extends TestCase {
      * @throws MessagingException
      * @throws IOException
      */
-    public void testService() throws MessagingException, IOException {
+    @Test
+    void testService() throws MessagingException, IOException {
         Mailet mailet;
         FakeMailetConfig mci;
         MimeMessage message;
@@ -69,8 +71,8 @@ public class OnlyTextTest extends TestCase {
                 .build();
         mailet.service(mail);
 
-        assertEquals("prova", mail.getMessage().getSubject());
-        assertEquals("Questa è una prova", mail.getMessage().getContent());
+        assertThat(mail.getMessage().getSubject()).isEqualTo("prova");
+        assertThat(mail.getMessage().getContent()).isEqualTo("Questa è una prova");
 
         // -----------------
 
@@ -96,9 +98,9 @@ public class OnlyTextTest extends TestCase {
                 .build();
         mailet.service(mail);
 
-        assertEquals("prova", mail.getMessage().getSubject());
-        assertEquals("Questo è un part interno1", mail.getMessage()
-                .getContent());
+        assertThat(mail.getMessage().getSubject()).isEqualTo("prova");
+        assertThat(mail.getMessage()
+                .getContent()).isEqualTo("Questo è un part interno1");
 
         // -----------------
 
@@ -129,9 +131,9 @@ public class OnlyTextTest extends TestCase {
                 .build();
         mailet.service(mail);
 
-        assertEquals("prova", mail.getMessage().getSubject());
-        assertEquals("Questo è un part interno1", mail.getMessage()
-                .getContent());
+        assertThat(mail.getMessage().getSubject()).isEqualTo("prova");
+        assertThat(mail.getMessage()
+                .getContent()).isEqualTo("Questo è un part interno1");
 
         // ---------------------
 
@@ -146,10 +148,10 @@ public class OnlyTextTest extends TestCase {
                 .build();
         mailet.service(mail);
 
-        assertEquals("prova", mail.getMessage().getSubject());
-        assertEquals("Questa è una prova\ndi html\n", mail.getMessage()
-                .getContent());
-        assertTrue(mail.getMessage().isMimeType("text/plain"));
+        assertThat(mail.getMessage().getSubject()).isEqualTo("prova");
+        assertThat(mail.getMessage()
+                .getContent()).isEqualTo("Questa è una prova\ndi html\n");
+        assertThat(mail.getMessage().isMimeType("text/plain")).isTrue();
 
         // -----------------
 
@@ -171,13 +173,14 @@ public class OnlyTextTest extends TestCase {
                 .build();
         mailet.service(mail);
 
-        assertEquals("prova", mail.getMessage().getSubject());
-        assertEquals("Questa è una prova\ndi html\n", mail.getMessage()
-                .getContent());
-        assertTrue(mail.getMessage().isMimeType("text/plain"));
+        assertThat(mail.getMessage().getSubject()).isEqualTo("prova");
+        assertThat(mail.getMessage()
+                .getContent()).isEqualTo("Questa è una prova\ndi html\n");
+        assertThat(mail.getMessage().isMimeType("text/plain")).isTrue();
     }
 
-    public void testHtml2Text() throws MessagingException {
+    @Test
+    void testHtml2Text() throws MessagingException {
         OnlyText mailet = new OnlyText();
         mailet.init(FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -185,14 +188,10 @@ public class OnlyTextTest extends TestCase {
 
         String html;
         html = "<b>Prova di html</b><br /><p>Un paragrafo</p><LI>e ci mettiamo anche una lista</LI><br>";
-        assertEquals(
-                "Prova di html\nUn paragrafo\n\n* e ci mettiamo anche una lista\n",
-                mailet.html2Text(html));
+        assertThat(mailet.html2Text(html)).isEqualTo("Prova di html\nUn paragrafo\n\n* e ci mettiamo anche una lista\n");
 
         html = "<b>Vediamo invece come andiamo con gli entities</b><br />&egrave;&agrave; &amp;grave;<br>";
-        assertEquals(
-                "Vediamo invece come andiamo con gli entities\nèà &grave;\n",
-                mailet.html2Text(html));
+        assertThat(mailet.html2Text(html)).isEqualTo("Vediamo invece come andiamo con gli entities\nèà &grave;\n");
     }
 
 }

@@ -28,7 +28,6 @@ import java.util.HashSet;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -68,9 +67,7 @@ public class HeadersToHTTP extends GenericMailet {
     private String parameterValue = null;
     private boolean passThrough = true;
 
-    /**
-     * Initialize the mailet.
-     */
+    @Override
     public void init() throws MessagingException {
 
         passThrough = (getInitParameter("passThrough", "true").compareToIgnoreCase("true") == 0);
@@ -109,6 +106,7 @@ public class HeadersToHTTP extends GenericMailet {
      *            the mail being processed
      * 
      */
+    @Override
     public void service(Mail mail) {
         try {
             LOGGER.debug("{} HeadersToHTTP: Starting", mail.getName());
@@ -142,18 +140,13 @@ public class HeadersToHTTP extends GenericMailet {
 
     private String httpPost(HashSet<NameValuePair> pairs) throws IOException {
 
-        CloseableHttpClient client = null;
-        CloseableHttpResponse clientResponse = null;
-        try {
-            client = HttpClientBuilder.create().build();
+        try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
             HttpUriRequest request = RequestBuilder.post(url).addParameters(pairs.toArray(new NameValuePair[0])).build();
-            clientResponse = client.execute(request);
-            String result = clientResponse.getStatusLine().getStatusCode() + ": " + clientResponse.getStatusLine();
-            LOGGER.debug("HeadersToHTTP: {}", result);
-            return result;
-        } finally {
-            IOUtils.closeQuietly(clientResponse);
-            IOUtils.closeQuietly(client);
+            try (CloseableHttpResponse clientResponse = client.execute(request)) {
+                String result = clientResponse.getStatusLine().getStatusCode() + ": " + clientResponse.getStatusLine();
+                LOGGER.debug("HeadersToHTTP: {}", result);
+                return result;
+            }
         }
     }
 
@@ -187,11 +180,7 @@ public class HeadersToHTTP extends GenericMailet {
         return pairs;
     }
 
-    /**
-     * Return a string describing this mailet.
-     * 
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "HTTP POST serialised message";
     }

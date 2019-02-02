@@ -25,12 +25,15 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -61,7 +64,7 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
     }
 
     @Override
-    public void setPassword(String userName, String password) throws Exception {
+    public void setPassword(String userName, String password) {
         throw new NotImplementedException();
     }
 
@@ -72,63 +75,73 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
 
     @Override
     public void addDomain(String domain) throws Exception {
-        domainList.addDomain(domain);
+        domainList.addDomain(Domain.of(domain));
     }
-
 
     @Override
     public boolean containsDomain(String domain) throws Exception {
-        return domainList.containsDomain(domain);
+        return domainList.containsDomain(Domain.of(domain));
     }
 
     @Override
     public String getDefaultDomain() throws Exception {
-        return domainList.getDefaultDomain();
+        return domainList.getDefaultDomain().name();
     }
 
     @Override
     public void removeDomain(String domain) throws Exception {
-        domainList.removeDomain(domain);
+        domainList.removeDomain(Domain.of(domain));
     }
 
     @Override
     public List<String> listDomains() throws Exception {
-        return domainList.getDomains();
+        return domainList.getDomains().stream().map(Domain::name).collect(Guavate.toImmutableList());
     }
 
     @Override
     public Map<String, Mappings> listMappings() throws Exception {
-        return recipientRewriteTable.getAllMappings();
+        return recipientRewriteTable.getAllMappings()
+            .entrySet()
+            .stream()
+            .collect(
+                Guavate.toImmutableMap(
+                    entry -> entry.getKey().asString(),
+                    Map.Entry::getValue));
+
     }
 
     @Override
-    public Mappings listUserDomainMappings(String user, String domain) throws Exception {
+    public Mappings listUserDomainMappings(String user, String domain) {
         throw new NotImplementedException();
     }
 
     @Override
-    public void addAddressMapping(String user, String domain, String toAddress) throws Exception {
-        recipientRewriteTable.addAddressMapping(user, domain, toAddress);
+    public void addAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception {
+        MappingSource source = MappingSource.fromUser(fromUser, fromDomain);
+        recipientRewriteTable.addAddressMapping(source, toAddress);
     }
 
     @Override
-    public void removeAddressMapping(String user, String domain, String fromAddress) throws Exception {
-        recipientRewriteTable.removeAddressMapping(user, domain, fromAddress);
+    public void removeAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception {
+        MappingSource source = MappingSource.fromUser(fromUser, fromDomain);
+        recipientRewriteTable.removeAddressMapping(source, toAddress);
     }
 
     @Override
     public void addRegexMapping(String user, String domain, String regex) throws Exception {
-        recipientRewriteTable.addRegexMapping(user, domain, regex);
+        MappingSource source = MappingSource.fromUser(user, domain);
+        recipientRewriteTable.addRegexMapping(source, regex);
     }
 
 
     @Override
     public void removeRegexMapping(String user, String domain, String regex) throws Exception {
-        recipientRewriteTable.removeRegexMapping(user, domain, regex);
+        MappingSource source = MappingSource.fromUser(user, domain);
+        recipientRewriteTable.removeRegexMapping(source, regex);
     }
 
     @Override
     public void addDomainAliasMapping(String aliasDomain, String deliveryDomain) throws Exception {
-        recipientRewriteTable.addAliasDomainMapping(aliasDomain, deliveryDomain);
+        recipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(Domain.of(aliasDomain)), Domain.of(deliveryDomain));
     }
 }

@@ -53,12 +53,14 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
         super(SetAnnotationRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
+    @Override
     public List<String> getImplementedCapabilities(ImapSession session) {
         return ImmutableList.of(ImapConstants.SUPPORTS_ANNOTATION);
     }
 
+    @Override
     protected void doProcess(SetAnnotationRequest message, ImapSession session, String tag, ImapCommand command,
-            Responder responder) {
+                             Responder responder) {
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         final String mailboxName = message.getMailboxName();

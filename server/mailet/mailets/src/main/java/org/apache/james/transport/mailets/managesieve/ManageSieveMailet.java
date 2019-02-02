@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Locale;
 import java.util.Scanner;
 
 import javax.inject.Inject;
@@ -46,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 
 /**
  * <code>ManageSieveMailet</code> interprets mail from a local sender as
@@ -123,11 +121,11 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
     @Override
     public void service(Mail mail) throws MessagingException {
         // Sanity checks
-        if (mail.getSender() == null) {
+        if (!mail.hasSender()) {
             LOGGER.error("Sender is null");
             return;
         }
-        if (!getMailetContext().isLocalServer(mail.getSender().getDomain().toLowerCase(Locale.US))) {
+        if (!getMailetContext().isLocalServer(mail.getMaybeSender().get().getDomain())) {
             LOGGER.error("Sender not local");
             return;
         }
@@ -139,8 +137,11 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
         } else {
             session.setState(Session.State.UNAUTHENTICATED);
         }
-        session.setUser(mail.getSender().getLocalPart() + '@' + (mail.getSender().getDomain() == null ? "localhost" : mail.getSender().getDomain()));
-        getMailetContext().sendMail(mail.getRecipients().iterator().next(), Lists.newArrayList(mail.getSender()),transcoder.execute(session, mail.getMessage()));
+        session.setUser(mail.getMaybeSender().get().asString());
+        getMailetContext().sendMail(
+            mail.getRecipients().iterator().next(),
+            mail.getMaybeSender().asList(),
+            transcoder.execute(session, mail.getMessage()));
         mail.setState(Mail.GHOST);
         
         // And tidy up
@@ -181,6 +182,7 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
         }
     }
 
+    @Override
     @VisibleForTesting
     public String getHelp() throws MessagingException {
         if (null == help) {

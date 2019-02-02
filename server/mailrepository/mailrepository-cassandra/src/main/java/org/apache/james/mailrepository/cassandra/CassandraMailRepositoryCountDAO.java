@@ -35,10 +35,12 @@ import java.util.concurrent.CompletableFuture;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import reactor.core.publisher.Mono;
 
 public class CassandraMailRepositoryCountDAO {
 
@@ -74,19 +76,19 @@ public class CassandraMailRepositoryCountDAO {
             .where(eq(REPOSITORY_NAME, bindMarker(REPOSITORY_NAME))));
     }
 
-    public CompletableFuture<Void> increment(String url) {
-        return executor.executeVoid(increment.bind()
-            .setString(REPOSITORY_NAME, url));
+    public Mono<Void> increment(MailRepositoryUrl url) {
+        return executor.executeVoidReactor(increment.bind()
+            .setString(REPOSITORY_NAME, url.asString()));
     }
 
-    public CompletableFuture<Void> decrement(String url) {
-        return executor.executeVoid(decrement.bind()
-            .setString(REPOSITORY_NAME, url));
+    public Mono<Void> decrement(MailRepositoryUrl url) {
+        return executor.executeVoidReactor(decrement.bind()
+            .setString(REPOSITORY_NAME, url.asString()));
     }
 
-    public CompletableFuture<Long> getCount(String url) {
+    public CompletableFuture<Long> getCount(MailRepositoryUrl url) {
         return executor.executeSingleRow(select.bind()
-                .setString(REPOSITORY_NAME, url))
+                .setString(REPOSITORY_NAME, url.asString()))
             .thenApply(this::toCount);
     }
 

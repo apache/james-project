@@ -149,15 +149,10 @@
     </bean>
 
     <!-- Event system -->
-    <bean class="org.apache.james.container.spring.bean.factorypostprocessor.EventsConfigurationBeanFactoryPostProcessor"/>
-    <bean id="dispatcher" class="org.apache.james.mailbox.store.event.MailboxEventDispatcher">
-        <constructor-arg index="0" ref="delegating-listener"/>
-    </bean>
-
     <import resource="classpath:META-INF/spring/event-system.xml"/>
 
     <!-- Mailbox Copier -->
-    <bean id="mailboxcopier" class="org.apache.james.mailbox.copier.MailboxCopierImpl"/>
+    <bean id="mailboxcopier" class="org.apache.james.mailbox.tools.copier.MailboxCopierImpl"/>
 
     <bean id="mailboxmanagerresolver" class="org.apache.james.container.spring.mailbox.SpringResolver" />
 
@@ -181,6 +176,9 @@
         <property name="url" value="${database.url}"/>
         <property name="username" value="${database.username}"/>
         <property name="password" value="${database.password}"/>
+        <property name="testOnBorrow" value="${datasource.testOnBorrow:false}" />
+        <property name="validationQueryTimeout" value="${datasource.validationQueryTimeoutSec:-1}" />
+        <property name="validationQuery" value="${datasource.validationQuery:#{null}}" />
         <!--The value for maxActive should always be larger than the number of spooler threads. The-->
         <!--reason is that a spooler thread normally requires 1 connection to process a mail, however-->
         <!--sometimes OpenJPA requires 1 connection to finish the processing on top of that. If-->
@@ -285,6 +283,9 @@
     <bean id="quotamanagermanagement" class="org.apache.james.adapter.mailbox.QuotaManagement"/>
     <bean id="reindexermanagement" class="org.apache.james.adapter.mailbox.ReIndexerManagement"/>
     <bean id="sievemanagerbean" class="org.apache.james.sieverepository.lib.SieveRepositoryManagement"/>
+
+
+    <bean id="taskManager" class="org.apache.james.task.MemoryTaskManager"/>
     <!--
         <bean id="james23importermanagement" class="org.apache.james.container.spring.tool.James23ImporterManagement" />
     -->
@@ -301,6 +302,10 @@
     -->
 
     <bean id="metricFactory" class="org.apache.james.metrics.dropwizard.DropWizardMetricFactory">
+        <constructor-arg index="0" ref="metricRegistry"/>
+    </bean>
+
+    <bean id="gaugeRegistry" class="org.apache.james.metrics.dropwizard.DropWizardGaugeRegistry">
         <constructor-arg index="0" ref="metricRegistry"/>
     </bean>
 

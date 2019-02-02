@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-server</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -34,68 +34,77 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>apache-mailet-base</artifactId>
-            <type>test-jar</type>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>apache-mailet-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-mailet-crypto</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-mailet-icalendar</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-memory</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-dnsservice-api</artifactId>
-            <type>test-jar</type>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-dnsservice-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-guice-activemq</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-jmap</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-mailetcontainer-camel</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-mailets</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-memory-guice</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-testing</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-util-java8</artifactId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>javax-mail-extension</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-util</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-webadmin-core</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -108,7 +117,6 @@
         <dependency>
             <groupId>com.github.spullara.mustache.java</groupId>
             <artifactId>compiler</artifactId>
-            <version>0.9.5</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -120,13 +128,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.jayway.restassured</groupId>
-            <artifactId>rest-assured</artifactId>
+            <groupId>com.rabbitmq</groupId>
+            <artifactId>amqp-client</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.rabbitmq</groupId>
-            <artifactId>amqp-client</artifactId>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -136,7 +144,7 @@
         </dependency>
         <dependency>
             <groupId>net.javacrumbs.json-unit</groupId>
-            <artifactId>json-unit-fluent</artifactId>
+            <artifactId>json-unit-assertj</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -160,13 +168,26 @@
         <dependency>
             <groupId>org.xmlunit</groupId>
             <artifactId>xmlunit-core</artifactId>
-            <version>2.5.1</version>
+            <version>2.6.0</version>
         </dependency>
         <dependency>
             <groupId>org.xmlunit</groupId>
             <artifactId>xmlunit-matchers</artifactId>
-            <version>2.5.1</version>
+            <version>2.6.0</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <reuseForks>false</reuseForks>
+                    <forkCount>1C</forkCount>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

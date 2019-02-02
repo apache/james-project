@@ -19,20 +19,25 @@
 
 package org.apache.james.mailbox.inmemory;
 
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerStressTest;
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.events.EventBus;
 import org.junit.Before;
 
-public class MemoryMailboxManagerStressTest extends MailboxManagerStressTest {
+public class MemoryMailboxManagerStressTest extends MailboxManagerStressTest<InMemoryMailboxManager> {
     
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
     }
     
     @Override
-    protected MailboxManager provideManager() throws MailboxException {
+    protected InMemoryMailboxManager provideManager() {
         return MemoryMailboxManagerProvider.provideMailboxManager();
+    }
+
+    @Override
+    protected EventBus retrieveEventBus(InMemoryMailboxManager mailboxManager) {
+        return mailboxManager.getEventBus();
     }
 }

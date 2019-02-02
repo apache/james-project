@@ -20,7 +20,10 @@ package org.apache.james.rrt.cassandra;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
 
@@ -39,8 +42,10 @@ public class CassandraStepdefs {
 
     @Before
     public void setup() throws Throwable {
-        cassandra = CassandraCluster.create(new CassandraRRTModule(), RewriteTablesTest.cassandraServer.getIp(), RewriteTablesTest.cassandraServer.getBindingPort());
-        mainStepdefs.rewriteTable = getRecipientRewriteTable(); 
+        cassandra = CassandraCluster.create(
+            CassandraModule.aggregateModules(CassandraRRTModule.MODULE, CassandraSchemaVersionModule.MODULE),
+            RewriteTablesTest.cassandraServer.getHost());
+        mainStepdefs.rewriteTable = getRecipientRewriteTable();
     }
 
     @After
@@ -49,7 +54,10 @@ public class CassandraStepdefs {
     }
 
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
-        CassandraRecipientRewriteTable rrt = new CassandraRecipientRewriteTable(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        CassandraRecipientRewriteTable rrt = new CassandraRecipientRewriteTable(
+            new CassandraRecipientRewriteTableDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
+            new CassandraMappingsSourcesDAO(cassandra.getConf()),
+            new CassandraSchemaVersionDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION));
         rrt.configure(new DefaultConfigurationBuilder());
         return rrt;
     }

@@ -21,134 +21,122 @@ package org.apache.james.sieve.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
-
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.core.User;
+import org.apache.james.core.quota.QuotaSize;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraSieveQuotaDAOTest {
+class CassandraSieveQuotaDAOTest {
+    private static final User USER = User.fromUsername("user");
+    private static final QuotaSize QUOTA_SIZE = QuotaSize.size(15L);
 
-    public static final String USER = "user";
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSieveRepositoryModule.MODULE);
 
-    
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
     private CassandraSieveQuotaDAO sieveQuotaDAO;
 
-    @Before
-    public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(new CassandraSieveRepositoryModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         sieveQuotaDAO = new CassandraSieveQuotaDAO(cassandra.getConf());
     }
 
-    @After
-    public void tearDown() {
-        cassandra.close();
+    @Test
+    void getQuotaShouldReturnEmptyByDefault() {
+        assertThat(sieveQuotaDAO.getQuota().join())
+            .isEmpty();
     }
 
     @Test
-    public void getQuotaShouldReturnEmptyByDefault() {
-        assertThat(sieveQuotaDAO.getQuota().join().isPresent())
-            .isFalse();
+    void getQuotaUserShouldReturnEmptyByDefault() {
+        assertThat(sieveQuotaDAO.getQuota(USER).join())
+            .isEmpty();
     }
 
     @Test
-    public void getQuotaUserShouldReturnEmptyByDefault() {
-        assertThat(sieveQuotaDAO.getQuota(USER).join().isPresent())
-            .isFalse();
+    void getQuotaShouldReturnStoredValue() {
+        sieveQuotaDAO.setQuota(QUOTA_SIZE).join();
+
+        assertThat(sieveQuotaDAO.getQuota().join())
+            .contains(QUOTA_SIZE);
     }
 
     @Test
-    public void getQuotaShouldReturnStoredValue() {
-        long quota = 15L;
-        sieveQuotaDAO.setQuota(quota).join();
+    void getQuotaUserShouldReturnStoredValue() {
+        sieveQuotaDAO.setQuota(USER, QUOTA_SIZE).join();
 
-        Optional<Long> actual = sieveQuotaDAO.getQuota().join();
-        assertThat(actual.isPresent()).isTrue();
-        assertThat(actual.get()).isEqualTo(quota);
+        assertThat(sieveQuotaDAO.getQuota(USER).join())
+            .contains(QUOTA_SIZE);
     }
 
     @Test
-    public void getQuotaUserShouldReturnStoredValue() {
-        long quota = 15L;
-        sieveQuotaDAO.setQuota(USER, quota).join();
-
-        Optional<Long> actual = sieveQuotaDAO.getQuota(USER).join();
-        assertThat(actual.isPresent()).isTrue();
-        assertThat(actual.get()).isEqualTo(quota);
-    }
-
-    @Test
-    public void removeQuotaShouldDeleteQuota() {
-        sieveQuotaDAO.setQuota(15L).join();
+    void removeQuotaShouldDeleteQuota() {
+        sieveQuotaDAO.setQuota(QUOTA_SIZE).join();
 
         sieveQuotaDAO.removeQuota().join();
 
-        Optional<Long> actual = sieveQuotaDAO.getQuota().join();
-        assertThat(actual.isPresent()).isFalse();
+        assertThat(sieveQuotaDAO.getQuota().join())
+            .isEmpty();
     }
 
     @Test
-    public void removeQuotaUserShouldDeleteQuotaUser() {
-        sieveQuotaDAO.setQuota(USER, 15L).join();
+    void removeQuotaUserShouldDeleteQuotaUser() {
+        sieveQuotaDAO.setQuota(USER, QUOTA_SIZE).join();
 
         sieveQuotaDAO.removeQuota(USER).join();
 
-        Optional<Long> actual = sieveQuotaDAO.getQuota(USER).join();
-        assertThat(actual.isPresent()).isFalse();
+        assertThat(sieveQuotaDAO.getQuota(USER).join())
+            .isEmpty();
     }
 
     @Test
-    public void removeQuotaShouldWorkWhenNoneStore() {
+    void removeQuotaShouldWorkWhenNoneStore() {
         sieveQuotaDAO.removeQuota().join();
 
-        Optional<Long> actual = sieveQuotaDAO.getQuota().join();
-        assertThat(actual.isPresent()).isFalse();
+        assertThat(sieveQuotaDAO.getQuota().join())
+            .isEmpty();
     }
 
     @Test
-    public void removeQuotaUserShouldWorkWhenNoneStore() {
+    void removeQuotaUserShouldWorkWhenNoneStore() {
         sieveQuotaDAO.removeQuota(USER).join();
 
-        Optional<Long> actual = sieveQuotaDAO.getQuota(USER).join();
-        assertThat(actual.isPresent()).isFalse();
+        assertThat(sieveQuotaDAO.getQuota(USER).join())
+            .isEmpty();
     }
 
     @Test
-    public void spaceUsedByShouldReturnZeroByDefault() {
+    void spaceUsedByShouldReturnZeroByDefault() {
         assertThat(sieveQuotaDAO.spaceUsedBy(USER).join()).isEqualTo(0);
     }
 
     @Test
-    public void spaceUsedByShouldReturnStoredValue() {
+    void spaceUsedByShouldReturnStoredValue() {
         long spaceUsed = 18L;
 
-        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).join();
+        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).block();
 
         assertThat(sieveQuotaDAO.spaceUsedBy(USER).join()).isEqualTo(spaceUsed);
     }
 
     @Test
-    public void updateSpaceUsedShouldBeAdditive() {
+    void updateSpaceUsedShouldBeAdditive() {
         long spaceUsed = 18L;
 
-        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).join();
-        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).join();
+        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).block();
+        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).block();
 
         assertThat(sieveQuotaDAO.spaceUsedBy(USER).join()).isEqualTo(2 * spaceUsed);
     }
 
     @Test
-    public void updateSpaceUsedShouldWorkWithNegativeValues() {
+    void updateSpaceUsedShouldWorkWithNegativeValues() {
         long spaceUsed = 18L;
 
-        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).join();
-        sieveQuotaDAO.updateSpaceUsed(USER, -1 * spaceUsed).join();
+        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).block();
+        sieveQuotaDAO.updateSpaceUsed(USER, -1 * spaceUsed).block();
 
         assertThat(sieveQuotaDAO.spaceUsedBy(USER).join()).isEqualTo(0L);
     }

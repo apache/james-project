@@ -1,0 +1,5 @@
+require ["reject"];
+
+if size :over 100K {
+   reject "Email too big";
+}

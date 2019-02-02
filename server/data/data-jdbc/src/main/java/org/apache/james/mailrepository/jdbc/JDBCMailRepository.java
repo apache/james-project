@@ -33,6 +33,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,8 +52,10 @@ import javax.sql.DataSource;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.lib.AbstractMailRepository;
 import org.apache.james.repository.file.FilePersistentStreamRepository;
 import org.apache.james.server.core.MailImpl;
@@ -161,6 +164,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
         this.fileSystem = fileSystem;
     }
 
+    @Override
     protected void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
         super.doConfigure(configuration);
         LOGGER.debug("{}.configure()", getClass().getName());
@@ -372,9 +376,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
         }
     }
 
-    /**
-     * @see org.apache.james.mailrepository.lib.AbstractMailRepository#internalStore(Mail)
-     */
+    @Override
     protected void internalStore(Mail mc) throws IOException, MessagingException {
         Connection conn = null;
         try {
@@ -433,10 +435,10 @@ public class JDBCMailRepository extends AbstractMailRepository {
                     updateMessage = conn.prepareStatement(sqlQueries.getSqlString("updateMessageSQL", true));
                     updateMessage.setString(1, mc.getState());
                     updateMessage.setString(2, mc.getErrorMessage());
-                    if (mc.getSender() == null) {
+                    if (mc.getMaybeSender().isNullSender()) {
                         updateMessage.setNull(3, java.sql.Types.VARCHAR);
                     } else {
-                        updateMessage.setString(3, mc.getSender().toString());
+                        updateMessage.setString(3, mc.getMaybeSender().get().toString());
                     }
                     StringBuilder recipients = new StringBuilder();
                     for (Iterator<MailAddress> i = mc.getRecipients().iterator(); i.hasNext();) {
@@ -527,10 +529,10 @@ public class JDBCMailRepository extends AbstractMailRepository {
                     insertMessage.setString(2, repositoryName);
                     insertMessage.setString(3, mc.getState());
                     insertMessage.setString(4, mc.getErrorMessage());
-                    if (mc.getSender() == null) {
-                        insertMessage.setNull(5, java.sql.Types.VARCHAR);
+                    if (mc.getMaybeSender().isNullSender()) {
+                        insertMessage.setNull(5, Types.VARCHAR);
                     } else {
-                        insertMessage.setString(5, mc.getSender().toString());
+                        insertMessage.setString(5, mc.getMaybeSender().get().toString());
                     }
                     StringBuilder recipients = new StringBuilder();
                     for (Iterator<MailAddress> i = mc.getRecipients().iterator(); i.hasNext();) {
@@ -542,12 +544,18 @@ public class JDBCMailRepository extends AbstractMailRepository {
                     insertMessage.setString(6, recipients.toString());
                     insertMessage.setString(7, mc.getRemoteHost());
                     insertMessage.setString(8, mc.getRemoteAddr());
-                    insertMessage.setTimestamp(9, new java.sql.Timestamp(mc.getLastUpdated().getTime()));
+                    if (mc.getPerRecipientSpecificHeaders().getHeadersByRecipient().isEmpty()) {
+                        insertMessage.setNull(9, Types.BLOB);
+                    } else {
+                        byte[] bytes = SerializationUtils.serialize(mc.getPerRecipientSpecificHeaders());
+                        insertMessage.setBinaryStream(9, new ByteArrayInputStream(bytes), bytes.length);
+                    }
+                    insertMessage.setTimestamp(10, new java.sql.Timestamp(mc.getLastUpdated().getTime()));
 
-                    insertMessage.setBinaryStream(10, is, (int) is.getSize());
+                    insertMessage.setBinaryStream(11, is, (int) is.getSize());
 
                     // Store attributes
-                    if (numberOfParameters > 10) {
+                    if (numberOfParameters > 11) {
                         ByteArrayOutputStream baos = new ByteArrayOutputStream();
                         ObjectOutputStream oos = new ObjectOutputStream(baos);
                         try {
@@ -563,7 +571,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
                             }
                             oos.flush();
                             ByteArrayInputStream attrInputStream = new ByteArrayInputStream(baos.toByteArray());
-                            insertMessage.setBinaryStream(11, attrInputStream, baos.size());
+                            insertMessage.setBinaryStream(12, attrInputStream, baos.size());
                         } finally {
                             try {
                                 if (oos != null) {
@@ -591,11 +599,9 @@ public class JDBCMailRepository extends AbstractMailRepository {
         }
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#retrieve(String)
-     */
+    @Override
     @SuppressWarnings("unchecked")
-    public Mail retrieve(String key) throws MessagingException {
+    public Mail retrieve(MailKey key) throws MessagingException {
         if (DEEP_DEBUG) {
             System.err.println("retrieving " + key);
         }
@@ -609,7 +615,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
             }
 
             retrieveMessage = conn.prepareStatement(sqlQueries.getSqlString("retrieveMessageSQL", true));
-            retrieveMessage.setString(1, key);
+            retrieveMessage.setString(1, key.asString());
             retrieveMessage.setString(2, repositoryName);
             rsMessage = retrieveMessage.executeQuery();
             if (DEEP_DEBUG) {
@@ -628,7 +634,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
                 try {
                     retrieveMessageAttr = conn.prepareStatement(retrieveMessageAttrSql);
 
-                    retrieveMessageAttr.setString(1, key);
+                    retrieveMessageAttr.setString(1, key.asString());
                     retrieveMessageAttr.setString(2, repositoryName);
                     rsMessageAttr = retrieveMessageAttr.executeQuery();
 
@@ -665,7 +671,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
 
             MailImpl mc = new MailImpl();
             mc.setAttributesRaw(attributes);
-            mc.setName(key);
+            mc.setName(key.asString());
             mc.setState(rsMessage.getString(1));
             mc.setErrorMessage(rsMessage.getString(2));
             String sender = rsMessage.getString(3);
@@ -682,9 +688,15 @@ public class JDBCMailRepository extends AbstractMailRepository {
             mc.setRecipients(recipients);
             mc.setRemoteHost(rsMessage.getString(5));
             mc.setRemoteAddr(rsMessage.getString(6));
-            mc.setLastUpdated(rsMessage.getTimestamp(7));
+            try (InputStream is = rsMessage.getBinaryStream(7)) {
+                if (is != null) {
+                    mc.addAllSpecificHeaderForRecipient(SerializationUtils.deserialize(is));
+                }
+            }
 
-            MimeMessageJDBCSource source = new MimeMessageJDBCSource(this, key, sr);
+            mc.setLastUpdated(rsMessage.getTimestamp(8));
+
+            MimeMessageJDBCSource source = new MimeMessageJDBCSource(this, key.asString(), sr);
             MimeMessageCopyOnWriteProxy message = new MimeMessageCopyOnWriteProxy(source);
             mc.setMessage(message);
             return mc;
@@ -701,21 +713,19 @@ public class JDBCMailRepository extends AbstractMailRepository {
         }
     }
 
-    /**
-     * @see org.apache.james.mailrepository.lib.AbstractMailRepository#internalRemove(String)
-     */
-    protected void internalRemove(String key) throws MessagingException {
+    @Override
+    protected void internalRemove(MailKey key) throws MessagingException {
         Connection conn = null;
         PreparedStatement removeMessage = null;
         try {
             conn = datasource.getConnection();
             removeMessage = conn.prepareStatement(sqlQueries.getSqlString("removeMessageSQL", true));
-            removeMessage.setString(1, key);
+            removeMessage.setString(1, key.asString());
             removeMessage.setString(2, repositoryName);
             removeMessage.execute();
 
             if (sr != null) {
-                sr.remove(key);
+                sr.remove(key.asString());
             }
         } catch (Exception me) {
             throw new MessagingException("Exception while removing mail: " + me.getMessage(), me);
@@ -725,11 +735,20 @@ public class JDBCMailRepository extends AbstractMailRepository {
         }
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#list()
-     */
-    public Iterator<String> list() throws MessagingException {
-        // System.err.println("listing messages");
+    @Override
+    public long size() throws MessagingException {
+        try (Connection conn = datasource.getConnection();
+             PreparedStatement count = conn.prepareStatement(sqlQueries.getSqlString("countMessagesSQL", true));
+             ResultSet resultSet = count.executeQuery()) {
+
+            return resultSet.next() ? resultSet.getLong(1) : 0;
+        } catch (Exception e) {
+            throw new MessagingException("Exception while fetching size: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public Iterator<MailKey> list() throws MessagingException {
         Connection conn = null;
         PreparedStatement listMessages = null;
         ResultSet rsListMessages = null;
@@ -743,7 +762,9 @@ public class JDBCMailRepository extends AbstractMailRepository {
             while (rsListMessages.next() && !Thread.currentThread().isInterrupted()) {
                 messageList.add(rsListMessages.getString(1));
             }
-            return messageList.iterator();
+            return messageList.stream()
+                .map(MailKey::new)
+                .iterator();
         } catch (Exception me) {
             throw new MessagingException("Exception while listing mail: " + me.getMessage(), me);
         } finally {
@@ -764,9 +785,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
         return datasource.getConnection();
     }
 
-    /**
-     * @see java.lang.Object#equals(Object)
-     */
+    @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof JDBCMailRepository)) {
             return false;
@@ -777,11 +796,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
         return ((repository.tableName.equals(tableName)) || ((repository.tableName != null) && repository.tableName.equals(tableName))) && ((repository.repositoryName.equals(repositoryName)) || ((repository.repositoryName != null) && repository.repositoryName.equals(repositoryName)));
     }
 
-    /**
-     * Provide a hash code that is consistent with equals for this class
-     * 
-     * @return the hash code
-     */
+    @Override
     public int hashCode() {
         int result = 17;
         if (tableName != null) {

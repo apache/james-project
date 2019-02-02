@@ -36,6 +36,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.lib.AbstractMailRepository;
 import org.apache.james.repository.file.FilePersistentObjectRepository;
 import org.apache.james.repository.file.FilePersistentStreamRepository;
@@ -124,7 +125,7 @@ public class FileMailRepository extends AbstractMailRepository {
             Collection<String> strandedStreams = (Collection<String>) streamKeys.clone();
             strandedStreams.removeAll(objectKeys);
             for (Object strandedStream : strandedStreams) {
-                String key = (String) strandedStream;
+                MailKey key = new MailKey((String) strandedStream);
                 remove(key);
             }
 
@@ -132,7 +133,7 @@ public class FileMailRepository extends AbstractMailRepository {
             Collection<String> strandedObjects = (Collection<String>) objectKeys.clone();
             strandedObjects.removeAll(streamKeys);
             for (Object strandedObject : strandedObjects) {
-                String key = (String) strandedObject;
+                MailKey key = new MailKey((String) strandedObject);
                 remove(key);
             }
 
@@ -218,11 +219,11 @@ public class FileMailRepository extends AbstractMailRepository {
     }
 
     @Override
-    public Mail retrieve(String key) throws MessagingException {
+    public Mail retrieve(MailKey key) throws MessagingException {
         try {
             Mail mc;
             try {
-                mc = (Mail) objectRepository.get(key);
+                mc = (Mail) objectRepository.get(key.asString());
             } catch (RuntimeException re) {
                 if (re.getCause() instanceof Error) {
                     LOGGER.warn("Error when retrieving mail, not deleting: {}", re, re);
@@ -232,7 +233,7 @@ public class FileMailRepository extends AbstractMailRepository {
                 }
                 return null;
             }
-            MimeMessageStreamRepositorySource source = new MimeMessageStreamRepositorySource(streamRepository, destination, key);
+            MimeMessageStreamRepositorySource source = new MimeMessageStreamRepositorySource(streamRepository, destination, key.asString());
             mc.setMessage(new MimeMessageCopyOnWriteProxy(source));
 
             return mc;
@@ -243,16 +244,16 @@ public class FileMailRepository extends AbstractMailRepository {
     }
 
     @Override
-    protected void internalRemove(String key) throws MessagingException {
+    protected void internalRemove(MailKey key) throws MessagingException {
         if (keys != null) {
-            keys.remove(key);
+            keys.remove(key.asString());
         }
-        streamRepository.remove(key);
-        objectRepository.remove(key);
+        streamRepository.remove(key.asString());
+        objectRepository.remove(key.asString());
     }
 
     @Override
-    public Iterator<String> list() {
+    public Iterator<MailKey> list() {
         // Fix ConcurrentModificationException by cloning
         // the keyset before getting an iterator
         final ArrayList<String> clone;
@@ -270,6 +271,8 @@ public class FileMailRepository extends AbstractMailRepository {
             Collections.sort(clone); // Keys is a HashSet; impose FIFO for apps
         }
         // that need it
-        return clone.iterator();
+        return clone.stream()
+            .map(MailKey::new)
+            .iterator();
     }
 }

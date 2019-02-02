@@ -23,6 +23,7 @@ import javax.inject.Inject;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.jspf.core.DNSService;
 import org.apache.james.jspf.core.exceptions.SPFErrorConstants;
 import org.apache.james.jspf.executor.SPFResult;
@@ -109,17 +110,17 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
      * @param session
      *            SMTP session object
      */
-    private void doSPFCheck(SMTPSession session, MailAddress sender) {
+    private void doSPFCheck(SMTPSession session, MaybeSender sender) {
         String heloEhlo = (String) session.getAttachment(SMTPSession.CURRENT_HELO_NAME, State.Transaction);
 
         // We have no Sender or HELO/EHLO yet return false
-        if (sender == null || heloEhlo == null) {
+        if (sender.isNullSender() || heloEhlo == null) {
             LOGGER.info("No Sender or HELO/EHLO present");
         } else {
 
             String ip = session.getRemoteAddress().getAddress().getHostAddress();
 
-            SPFResult result = spf.checkSPF(ip, sender.toString(), heloEhlo);
+            SPFResult result = spf.checkSPF(ip, sender.asString(), heloEhlo);
 
             String spfResult = result.getResult();
 
@@ -128,7 +129,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
             // Store the header
             session.setAttachment(SPF_HEADER, result.getHeaderText(), State.Transaction);
 
-            LOGGER.info("Result for {} - {} - {} = {}", ip, sender, heloEhlo, spfResult);
+            LOGGER.info("Result for {} - {} - {} = {}", ip, sender.asString(), heloEhlo, spfResult);
 
             // Check if we should block!
             if ((spfResult.equals(SPFErrorConstants.FAIL_CONV)) || (spfResult.equals(SPFErrorConstants.SOFTFAIL_CONV) && blockSoftFail) || (spfResult.equals(SPFErrorConstants.PERM_ERROR_CONV) && blockPermError)) {
@@ -147,25 +148,31 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
 
     }
 
-    /**
-     */
-    public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+    @Override
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
         if (!session.isRelayingAllowed()) {
             // Check if session is blocklisted
             if (session.getAttachment(SPF_BLOCKLISTED, State.Transaction) != null) {
-                return new HookResult(HookReturnCode.DENY, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " " + session.getAttachment(SPF_TEMPBLOCKLISTED, State.Transaction));
+
+                return HookResult.builder()
+                    .hookReturnCode(HookReturnCode.deny())
+                    .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " " + session.getAttachment(SPF_TEMPBLOCKLISTED, State.Transaction))
+                    .build();
             } else if (session.getAttachment(SPF_TEMPBLOCKLISTED, State.Transaction) != null) {
-                return new HookResult(HookReturnCode.DENYSOFT, SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.NETWORK_DIR_SERVER) + " " + "Temporarily rejected: Problem on SPF lookup");
+                return HookResult.builder()
+                    .hookReturnCode(HookReturnCode.denySoft())
+                    .smtpReturnCode(SMTPRetCode.LOCAL_ERROR)
+                    .smtpDescription(DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.NETWORK_DIR_SERVER) + " Temporarily rejected: Problem on SPF lookup")
+                    .build();
             }
         }
-        return new HookResult(HookReturnCode.DECLINED);
+        return HookResult.DECLINED;
     }
 
-    /**
-     */
-    public HookResult doMail(SMTPSession session, MailAddress sender) {
+    @Override
+    public HookResult doMail(SMTPSession session, MaybeSender sender) {
         doSPFCheck(session, sender);
-        return new HookResult(HookReturnCode.DECLINED);
+        return HookResult.DECLINED;
     }
 
     /**
@@ -183,123 +190,88 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
             this.serviceLog = FALLBACK_LOG;
         }
 
-        /**
-         * @see org.apache.james.jspf.core.Logger#debug(String)
-         */
+        @Override
         public void debug(String message) {
             serviceLog.debug(message);
         }
 
-        /**
-         * @see org.apache.james.jspf.core.Logger#debug(String, Throwable)
-         */
+        @Override
         public void debug(String message, Throwable t) {
             serviceLog.debug(message, t);
         }
 
-        /**
-         * @see org.apache.james.jspf.core.Logger#error(String)
-         */
+        @Override
         public void error(String message) {
             serviceLog.error(message);
         }
 
-        /**
-         * @see org.apache.james.jspf.core.Logger#error(String, Throwable)
-         */
+        @Override
         public void error(String message, Throwable t) {
             serviceLog.error(message, t);
         }
 
-        /**
-         * @see org.apache.james.jspf.core.Logger#fatalError(String)
-         */
+        @Override
         public void fatalError(String message) {
             serviceLog.error(message);
         }
 
-        /**
-         * @see org.apache.james.jspf.core.Logger#fatalError(String, Throwable)
-         */
+        @Override
         public void fatalError(String message, Throwable t) {
             serviceLog.error(message, t);
         }
 
-        /**
-         * @see org.apache.james.jspf.core.Logger#info(String)
-         */
+        @Override
         public void info(String message) {
             serviceLog.info(message);
         }
 
-        /**
-         * @see org.apache.james.jspf.core.Logger#info(String, Throwable)
-         */
+        @Override
         public void info(String message, Throwable t) {
             serviceLog.info(message, t);
         }
 
-        /**
-         * @see org.apache.james.jspf.core.Logger#isDebugEnabled()
-         */
+        @Override
         public boolean isDebugEnabled() {
             return serviceLog.isDebugEnabled();
         }
 
-        /**
-         * @see org.apache.james.jspf.core.Logger#isErrorEnabled()
-         */
+        @Override
         public boolean isErrorEnabled() {
             return serviceLog.isErrorEnabled();
         }
 
-        /**
-         * @see org.apache.james.jspf.core.Logger#isFatalErrorEnabled()
-         */
+        @Override
         public boolean isFatalErrorEnabled() {
             return serviceLog.isErrorEnabled();
         }
 
-        /**
-         * @see org.apache.james.jspf.core.Logger#isInfoEnabled()
-         */
+        @Override
         public boolean isInfoEnabled() {
             return serviceLog.isInfoEnabled();
         }
 
-        /**
-         * @see org.apache.james.jspf.core.Logger#isWarnEnabled()
-         */
+        @Override
         public boolean isWarnEnabled() {
             return serviceLog.isWarnEnabled();
         }
 
-        /**
-         * @see org.apache.james.jspf.core.Logger#warn(String)
-         */
+        @Override
         public void warn(String message) {
             serviceLog.warn(message);
         }
 
-        /**
-         * @see org.apache.james.jspf.core.Logger#warn(String, Throwable)
-         */
+        @Override
         public void warn(String message, Throwable t) {
             serviceLog.warn(message, t);
         }
 
-        /**
-         * @see org.apache.james.jspf.core.Logger#getChildLogger(String)
-         */
+        @Override
         public org.apache.james.jspf.core.Logger getChildLogger(String name) {
             return this;
         }
     }
 
-    /**
-     * @see org.apache.james.smtpserver.JamesMessageHook#onMessage(org.apache.james.protocols.smtp.SMTPSession,
-     *      org.apache.mailet.Mail)
-     */
+    @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
         // Store the spf header as attribute for later using
         mail.setAttribute(SPF_HEADER_MAIL_ATTRIBUTE_NAME, (String) session.getAttachment(SPF_HEADER, State.Transaction));

@@ -32,6 +32,7 @@ Feature: Download endpoint and shared mailbox
     When "bob@domain.tld" downloads "a1"
     Then the user should be authorized
 
+  @BasicFeature
   Scenario: Bob can download attachment of another user when shared mailbox
     When "bob@domain.tld" downloads "a1"
     Then he can read that blob

@@ -41,14 +41,14 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void idleKeepAliveShouldBeDefaultValueWhenNoSetting() throws Exception {
+    public void idleKeepAliveShouldBeDefaultValueWhenNoSetting() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder().build();
 
         assertThat(imapConfiguration.getIdleTimeInterval()).isEqualTo(ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS);
     }
 
     @Test
-    public void idleKeepAliveShouldReturnSetValue() throws Exception {
+    public void idleKeepAliveShouldReturnSetValue() {
         long idleValue  = 1;
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .idleTimeInterval(idleValue)
@@ -58,7 +58,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void idleKeepAliveShouldThrowWhenRezo() throws Exception {
+    public void idleKeepAliveShouldThrowWhenRezo() {
         expectedException.expect(IllegalArgumentException.class);
 
         ImapConfiguration.builder()
@@ -67,7 +67,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void idleKeepAliveShouldThrowWhenNegative() throws Exception {
+    public void idleKeepAliveShouldThrowWhenNegative() {
         expectedException.expect(IllegalArgumentException.class);
 
         ImapConfiguration.builder()
@@ -76,14 +76,14 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void millisecondsShouldBeDefaultValueWhenNoSetting() throws Exception {
+    public void millisecondsShouldBeDefaultValueWhenNoSetting() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder().build();
 
         assertThat(imapConfiguration.getIdleTimeIntervalUnit()).isEqualTo(ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_UNIT);
     }
 
     @Test
-    public void millisecondsShouldReturnSetValue() throws Exception {
+    public void millisecondsShouldReturnSetValue() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .idleTimeIntervalUnit(TimeUnit.MINUTES)
                 .build();
@@ -92,7 +92,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void disabledCapsShouldBeEmptyAsDefault() throws Exception {
+    public void disabledCapsShouldBeEmptyAsDefault() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .build();
 
@@ -100,7 +100,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void disabledCapsShouldReturnSetValue() throws Exception {
+    public void disabledCapsShouldReturnSetValue() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .disabledCaps(ImmutableSet.of("AnyValue"))
                 .build();
@@ -109,7 +109,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void disabledCapsShouldReturnMultipleSetValues() throws Exception {
+    public void disabledCapsShouldReturnMultipleSetValues() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .disabledCaps(ImmutableSet.of("AnyValue", "OtherValue"))
                 .build();
@@ -118,7 +118,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void disabledCapsShouldReturnMultipleSetValuesWithNormalizeValue() throws Exception {
+    public void disabledCapsShouldReturnMultipleSetValuesWithNormalizeValue() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .disabledCaps(ImmutableSet.of("   AnyValue   ", "  OtherValue   "))
                 .build();
@@ -127,7 +127,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void disabledCapsFromStringArrayShouldReturnMultipleSetValuesWithNormalizeValue() throws Exception {
+    public void disabledCapsFromStringArrayShouldReturnMultipleSetValuesWithNormalizeValue() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .disabledCaps("   AnyValue   ", "  OtherValue   ")
                 .build();
@@ -136,7 +136,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void disabledCapShouldReturnMultipleStringWithNormalizeValue() throws Exception {
+    public void disabledCapShouldReturnMultipleStringWithNormalizeValue() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .disabledCap("   AnyValue   ")
                 .build();
@@ -145,7 +145,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void idleShouldEnableByDefault() throws Exception {
+    public void idleShouldEnableByDefault() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .build();
 
@@ -153,7 +153,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void idleShouldBeDisable() throws Exception {
+    public void idleShouldBeDisable() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .enableIdle(false)
                 .build();

@@ -23,9 +23,10 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-project</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
     </parent>
 
+    <groupId>org.apache.james.protocols</groupId>
     <artifactId>protocols</artifactId>
     <packaging>pom</packaging>
 
@@ -44,101 +45,12 @@
         <module>smtp</module>
     </modules>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>apache-james-mailbox-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>apache-james-mailbox-api</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>apache-james-mailbox-store</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>apache-jsieve-core</artifactId>
-                <version>${jsieve.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>apache-mime4j-core</artifactId>
-                <version>${apache-mime4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>apache-mime4j-dom</artifactId>
-                <version>${apache-mime4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>james-core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>james-server-data-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>james-server-util</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>james-server-util-java8</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.james</groupId>
-                <artifactId>metrics-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-clean-plugin</artifactId>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <!-- just delete the bin directory -->
-                            <directory>bin</directory>
-                            <followSymlinks>false</followSymlinks>
-                        </fileset>
-                    </filesets>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

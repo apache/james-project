@@ -28,6 +28,12 @@ layout: default
   <div class="apache_ref_mobile">
     <a href="https://www.apache.org" alt="apache foundation link">The Apache Software Foundation</a>
   </div>
+  <div class="apache_ref_left">
+    <a href="https://www.apache.org/events/current-event.html" alt="apache foundation event"><img src="https://www.apache.org/events/current-event-234x60.png" title="apache foundation event logo"/></a>
+  </div>
+  <div class="apache_ref_left_mobile">
+    <a href="https://www.apache.org/events/current-event.html" alt="apache foundation event"><img src="https://www.apache.org/events/current-event-234x60.png" title="apache foundation event logo"/></a>
+  </div>
 
   <!-- Header -->
     <header id="header" class="alt">
@@ -80,6 +86,11 @@ layout: default
               <a href="images/james-general-architecture.png" data-lightbox="james-schema" data-title="James General architecture" alt="James General architecture" class="james-schema" ><span class="fa fa-sitemap"></span>james general architecture<span class="fa fa-long-arrow-right"></span></a>
               <a href="images/james-smtp-relay.png" data-lightbox="james-schema" data-title="James SMTP relay" alt="James SMTP relay" class="james-schema"><span class="fa fa-sitemap"></span>using james as smtp relay<span class="fa fa-long-arrow-right"></span></a>
               <a href="images/james-imap-server.png" data-lightbox="james-schema" data-title="James IMAP server" alt="James IMAP server" class="james-schema"><span class="fa fa-sitemap"></span>using james as an imap server<span class="fa fa-long-arrow-right"></span></a><br/><br/>
+
+              <a href="howTo/index.html" data-title="How To" alt="How To" class="james-schema">
+                <span class="fa fa-sitemap"></span>Click here to see how-tos for some James features<span class="fa fa-long-arrow-right"></span>
+              </a>
+
               <h2 class="big-h2"><span class="fa fa-wrench"></span> <span>James is a <b>living Open Source project</b> (all developments and implementations are based on open technical standards), any function which is not already available from <b>can be developed!</b></span></h2>
             </div>
           </div>
@@ -94,14 +105,14 @@ layout: default
             <ul class="james-ul no-padding">
               <li class="post-template"><span class="long-arrow-right">&#8594;</span><span><b>
 WHAT WILL YOU TRY:</b><br>
-              <span>Here you will try James server v 3.0 thanks to an image.This James image has a default configuration
+              <span>Here you will try James server v 3.2.0 thanks to an image.This James image has a default configuration
                 using JPA (hsqldb) and Lucene. It also includes a default domain named james.local and three default users:
                 user01, user02, user03, with their default password being <i>1234</i>.<br>
                 <i>Note: this James server will respond to IMAP port 143 and SMTP port 25.</i></span></span>
               </li>
               <li class="post-template"><span class="long-arrow-right">&#8594;</span><span><b>STEPS YOU HAVE TO FOLLOW:</b><br>
                 Pull and run the James image with the following single command:<br><br>
-                <code class="highlighter-rouge">docker run -p "25:25" -p "143:143" linagora/james-jpa-sample</code>
+                <code class="highlighter-rouge">docker run -p "25:25" -p "143:143" linagora/james-jpa-sample:3.2.0</code>
 
                 <br><br>
                 Then, connect this image with for instance, Thunderbird.<br>
@@ -310,7 +321,7 @@ WHAT WILL YOU TRY:</b><br>
                   <li class="james-use-case-li center-icon"><span class="icon fa-arrow-right"></span>To allow email interactions with the platform</li>
                   <li class="james-use-case-li center-icon"><span class="icon fa-arrow-right"></span>To use the&nbsp;<a href="https://jmap.io/" class="comm">JMAP</a>&nbsp;protocol (the browser interacts directly with the mail server)</li>
                 </ul>
-                <p>Our deployment currently allows serving a hundred user over JMAP, SMTP and IMAP.</p>
+                <p>Our deployment currently allows serving a hundred users over JMAP, SMTP and IMAP.</p>
               </div>
           </div>
         </section>

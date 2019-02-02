@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class SentByMailet extends GenericMatcher {
 
+    @Override
     public Collection<MailAddress> match(Mail mail) {
         String authUser = (String) mail.getAttribute(Mail.SENT_BY_MAILET);
         if (authUser != null) {

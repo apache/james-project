@@ -23,11 +23,8 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.apache.james.backends.es.AliasName;
-import org.apache.james.backends.es.ElasticSearchConstants;
+import org.apache.james.backends.es.ReadAliasName;
 import org.apache.james.backends.es.TypeName;
 import org.apache.james.backends.es.search.ScrollIterable;
 import org.apache.james.mailbox.MessageUid;
@@ -51,9 +48,10 @@ import org.slf4j.LoggerFactory;
 
 public class ElasticSearchSearcher {
 
+    public static final int DEFAULT_SEARCH_SIZE = 100;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchSearcher.class);
     private static final TimeValue TIMEOUT = new TimeValue(60000);
-    private static final int DEFAULT_SIZE = 100;
 
     private final Client client;
     private final QueryConverter queryConverter;
@@ -63,16 +61,9 @@ public class ElasticSearchSearcher {
     private final AliasName aliasName;
     private final TypeName typeName;
 
-    @Inject
-    public ElasticSearchSearcher(Client client, QueryConverter queryConverter,
-                                 MailboxId.Factory mailboxIdFactory, MessageId.Factory messageIdFactory,
-                                 @Named(ElasticSearchConstants.READ_ALIAS) AliasName aliasName, TypeName typeName) {
-        this(client, queryConverter, DEFAULT_SIZE, mailboxIdFactory, messageIdFactory, aliasName, typeName);
-    }
-
     public ElasticSearchSearcher(Client client, QueryConverter queryConverter, int size,
                                  MailboxId.Factory mailboxIdFactory, MessageId.Factory messageIdFactory,
-                                 AliasName aliasName, TypeName typeName) {
+                                 ReadAliasName aliasName, TypeName typeName) {
         this.client = client;
         this.queryConverter = queryConverter;
         this.size = size;

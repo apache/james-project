@@ -31,14 +31,12 @@ import org.junit.Test;
 public abstract class MailboxWithLongNameError implements ImapTestConstants {
 
     protected abstract ImapHostSystem createImapHostSystem();
-    
-    private ImapHostSystem system;
+
     private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
     @Before
     public void setUp() throws Exception {
-        system = createImapHostSystem();
-        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", createImapHostSystem())
                 .withUser(USER, PASSWORD)
                 .withLocale(Locale.US);
         BasicImapCommands.welcome(simpleScriptedTestProtocol);

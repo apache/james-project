@@ -56,54 +56,47 @@ public class HookStats extends StandardMBean implements HookStatsMBean, Disposab
         mbeanserver.registerMBean(this, baseObjectName);
     }
 
-    public void increment(int code) {
-        if ((code & HookReturnCode.OK) == HookReturnCode.OK) {
-            ok.incrementAndGet();
+    public void increment(HookReturnCode code) {
+        switch (code.getAction()) {
+            case DECLINED:
+                declined.incrementAndGet();
+                break;
+            case DENY:
+                deny.incrementAndGet();
+                break;
+            case DENYSOFT:
+                denysoft.incrementAndGet();
+                break;
+            case OK:
+                ok.incrementAndGet();
+                break;
+            case NONE:
+                break;
         }
-        if ((code & HookReturnCode.DECLINED) == HookReturnCode.DECLINED) {
-            declined.incrementAndGet();
-        }
-        if ((code & HookReturnCode.DENYSOFT) == HookReturnCode.DENYSOFT) {
-            denysoft.incrementAndGet();
-        }
-        if ((code & HookReturnCode.DENY) == HookReturnCode.DENY) {
-            deny.incrementAndGet();
-        }
-
         all.incrementAndGet();
     }
 
-    /**
-     * @see org.apache.james.smtpserver.jmx.HookStatsMBean#getOk()
-     */
+    @Override
     public long getOk() {
         return ok.get();
     }
 
-    /**
-     * @see org.apache.james.smtpserver.jmx.HookStatsMBean#getDeclined()
-     */
+    @Override
     public long getDeclined() {
         return declined.get();
     }
 
-    /**
-     * @see org.apache.james.smtpserver.jmx.HookStatsMBean#getDeny()
-     */
+    @Override
     public long getDeny() {
         return deny.get();
     }
 
-    /**
-     * @see org.apache.james.smtpserver.jmx.HookStatsMBean#getDenysoft()
-     */
+    @Override
     public long getDenysoft() {
         return denysoft.get();
     }
 
-    /**
-     * @see org.apache.james.lifecycle.api.Disposable#dispose()
-     */
+    @Override
     public void dispose() {
         try {
             mbeanserver.unregisterMBean(new ObjectName(name));
@@ -112,16 +105,12 @@ public class HookStats extends StandardMBean implements HookStatsMBean, Disposab
         }
     }
 
-    /**
-     * @see org.apache.james.smtpserver.jmx.HookStatsMBean#getName()
-     */
+    @Override
     public String getName() {
         return hookname;
     }
 
-    /**
-     * @see org.apache.james.smtpserver.jmx.HookStatsMBean#getAll()
-     */
+    @Override
     public long getAll() {
         return all.get();
     }

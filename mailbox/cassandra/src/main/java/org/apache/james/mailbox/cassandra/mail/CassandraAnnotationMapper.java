@@ -33,6 +33,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
+
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraAnnotationTable;
@@ -54,11 +56,13 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
     private final Session session;
     private final CassandraUtils cassandraUtils;
 
+    @Inject
     public CassandraAnnotationMapper(Session session, CassandraUtils cassandraUtils) {
         this.session = session;
         this.cassandraUtils = cassandraUtils;
     }
 
+    @Override
     public List<MailboxAnnotation> getAllAnnotations(MailboxId mailboxId) {
         CassandraId cassandraId = (CassandraId)mailboxId;
         return cassandraUtils.convertToStream(session.execute(getStoredAnnotationsQuery(cassandraId)))
@@ -66,6 +70,7 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
             .collect(Collectors.toList());
     }
 
+    @Override
     public List<MailboxAnnotation> getAnnotationsByKeys(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
         CassandraId cassandraId = (CassandraId)mailboxId;
         return cassandraUtils.convertToStream(session.execute(getStoredAnnotationsQueryForKeys(cassandraId, keys)))
@@ -73,6 +78,7 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
             .collect(Collectors.toList());
     }
 
+    @Override
     public List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
         CassandraId cassandraId = (CassandraId)mailboxId;
         return keys.stream()
@@ -80,6 +86,7 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
             .collect(Guavate.toImmutableList());
     }
 
+    @Override
     public List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
         CassandraId cassandraId = (CassandraId)mailboxId;
         return keys.stream()
@@ -87,12 +94,14 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
             .collect(Guavate.toImmutableList());
     }
 
+    @Override
     public void deleteAnnotation(MailboxId mailboxId, MailboxAnnotationKey key) {
         session.execute(delete().from(CassandraAnnotationTable.TABLE_NAME)
             .where(eq(CassandraAnnotationTable.MAILBOX_ID, ((CassandraId) mailboxId).asUuid()))
             .and(eq(CassandraAnnotationTable.KEY, key.asString())));
     }
 
+    @Override
     public void insertAnnotation(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
         Preconditions.checkArgument(!mailboxAnnotation.isNil());
         session.execute(insertInto(CassandraAnnotationTable.TABLE_NAME)

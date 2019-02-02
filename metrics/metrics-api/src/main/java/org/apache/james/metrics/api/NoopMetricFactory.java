@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.metrics.api;
 
-import java.util.function.Supplier;
-
 public class NoopMetricFactory implements MetricFactory {
 
     @Override
@@ -36,7 +34,14 @@ public class NoopMetricFactory implements MetricFactory {
         @Override
         public void decrement() {
         }
-        
+
+        @Override
+        public void add(int value) {
+        }
+
+        @Override
+        public void remove(int value) {
+        }
     }
 
     @Override
@@ -58,8 +63,4 @@ public class NoopMetricFactory implements MetricFactory {
         }
     }
 
-    @Override
-    public <T> T withMetric(String name, Supplier<T> operation) {
-        return operation.get();
-    }
 }

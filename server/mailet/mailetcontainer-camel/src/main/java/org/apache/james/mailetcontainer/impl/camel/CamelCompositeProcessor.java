@@ -69,16 +69,15 @@ public class CamelCompositeProcessor extends AbstractStateCompositeProcessor imp
         this.mailetContext = mailetContext;
     }
 
+    @Override
     @PostConstruct
     public void init() throws Exception {
-        super.init();
-
         // Make sure the camel context get started
         // See https://issues.apache.org/jira/browse/JAMES-1069
         if (getCamelContext().getStatus().isStopped()) {
             getCamelContext().start();
         }
-
+        super.init();
     }
 
     @PreDestroy
@@ -88,24 +87,17 @@ public class CamelCompositeProcessor extends AbstractStateCompositeProcessor imp
         }
     }
 
-    /**
-     * @see org.apache.camel.CamelContextAware#getCamelContext()
-     */
+    @Override
     public CamelContext getCamelContext() {
         return camelContext;
     }
 
-    /**
-     * @see org.apache.camel.CamelContextAware#setCamelContext(org.apache.camel.CamelContext)
-     */
+    @Override
     public void setCamelContext(CamelContext camelContext) {
         this.camelContext = camelContext;
     }
 
-    /**
-     * @see org.apache.james.mailetcontainer.lib.AbstractStateCompositeProcessor
-     * #createMailProcessor(java.lang.String, org.apache.commons.configuration.HierarchicalConfiguration)
-     */
+    @Override
     protected MailProcessor createMailProcessor(String name, HierarchicalConfiguration config) throws Exception {
         CamelMailetProcessor processor = new CamelMailetProcessor(metricFactory);
         try {

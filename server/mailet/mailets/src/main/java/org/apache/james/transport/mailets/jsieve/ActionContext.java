@@ -18,14 +18,12 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.jsieve;
 
-import java.util.Collection;
+import java.time.ZonedDateTime;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
-import org.joda.time.DateTime;
 
 /**
  * Provides context for action execution.
@@ -35,12 +33,12 @@ public interface ActionContext {
     /**
      * @return Date the script was activated
      */
-    DateTime getScriptActivationDate();
+    ZonedDateTime getScriptActivationDate();
 
     /**
      * @return Date the script is currently interpreted
      */
-    DateTime getScriptInterpretationDate();
+    ZonedDateTime getScriptInterpretationDate();
 
     /**
      * @return Recipient receiving the given eMail
@@ -60,12 +58,10 @@ public interface ActionContext {
 
     /**
      * Posts the given mail.
-     * @param sender possibly null
-     * @param recipients not null
      * @param mail not null
      * @throws MessagingException when mail cannot be posted
      */
-    public void post(MailAddress sender, Collection<MailAddress> recipients, MimeMessage mail) throws MessagingException;
+    public void post(Mail mail) throws MessagingException;
 
     /**
      * Gets name (including version) of this server.

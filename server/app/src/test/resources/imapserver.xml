@@ -37,7 +37,7 @@
        <!-- port 993 is the well-known/IANA registered port for IMAPS  ie over SSL/TLS -->
        <!-- Please NOTE: you should add this IP also to your RemoteAddrNotInNetwork -->
        <!-- in order to avoid relay check for locally generated bounces -->
-       <bind>0.0.0.0:1433</bind>
+       <bind>0.0.0.0:0</bind>
 
        <connectionBacklog>200</connectionBacklog>
 

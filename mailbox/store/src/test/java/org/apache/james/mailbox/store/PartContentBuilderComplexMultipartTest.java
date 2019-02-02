@@ -19,8 +19,8 @@
 
 package org.apache.james.mailbox.store;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -186,8 +186,8 @@ public class PartContentBuilderComplexMultipartTest {
     private void check(String full, String body, String contentType,
             int[] position) throws Exception {
         checkContentType(contentType, position);
-        assertEquals(body, bodyContent(position));
-        assertEquals(full, fullContent(position));
+        assertThat(bodyContent(position)).isEqualTo(body);
+        assertThat(fullContent(position)).isEqualTo(full);
     }
 
     private String fullContent(int[] position) throws Exception {
@@ -203,10 +203,10 @@ public class PartContentBuilderComplexMultipartTest {
     private void checkContentType(String contentType, int[] position)
             throws Exception {
         List<Header> headers = headers(position);
-        assertEquals(1, headers.size());
+        assertThat(headers.size()).isEqualTo(1);
         ResultHeader header = (ResultHeader) headers.get(0);
-        assertEquals(CONTENT_TYPE, header.getName());
-        assertEquals(contentType, header.getValue());
+        assertThat(header.getName()).isEqualTo(CONTENT_TYPE);
+        assertThat(header.getValue()).isEqualTo(contentType);
     }
 
     private List<Header> headers(int[] position) throws Exception {

@@ -21,6 +21,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -29,24 +30,20 @@ import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class AddSubjectPrefixTest {
+class AddSubjectPrefixTest {
 
-    @Rule public ExpectedException expectedException = ExpectedException.none();
-    
     private Mailet mailet;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         mailet = new AddSubjectPrefix();
     }
     
     @Test
-    public void shouldAddPrefixToSubject() throws MessagingException {
+    void shouldAddPrefixToSubject() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("subjectPrefix", "JUNIT")
@@ -63,7 +60,7 @@ public class AddSubjectPrefixTest {
 
     
     @Test
-    public void shouldAddPrefixToEncodedSubject() throws MessagingException {
+    void shouldAddPrefixToEncodedSubject() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("subjectPrefix", "Русский")
@@ -82,7 +79,7 @@ public class AddSubjectPrefixTest {
 
     
     @Test
-    public void shouldDefinePrefixAsSubjectWhenNoSubject() throws MessagingException {
+    void shouldDefinePrefixAsSubjectWhenNoSubject() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("subjectPrefix", "JUNIT")
@@ -99,7 +96,7 @@ public class AddSubjectPrefixTest {
     }
 
     @Test
-    public void shouldDefinePrefixAsSubjectWhenEmptySubject() throws MessagingException {
+    void shouldDefinePrefixAsSubjectWhenEmptySubject() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("subjectPrefix", "JUNIT")
@@ -115,14 +112,13 @@ public class AddSubjectPrefixTest {
     }
     
     @Test
-    public void shouldThrowWhenEmptyPrefix() throws MessagingException {
+    void shouldThrowWhenEmptyPrefix() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("subjectPrefix", "")
                 .build();
 
-        expectedException.expect(MessagingException.class);
-
-        mailet.init(mailetConfig);
+        assertThatThrownBy(() -> mailet.init(mailetConfig))
+            .isInstanceOf(MessagingException.class);
     }
 }

@@ -53,6 +53,7 @@ public class AggregateMailetdocsReport extends AbstractMailetdocsReport {
      * within subprojects.
      * @param project not null
      */
+    @Override
     protected final List<MailetMatcherDescriptor> buildDescriptors(MavenProject project) {
         final DefaultDescriptorsExtractor extractor = new DefaultDescriptorsExtractor();
         if (project.isExecutionRoot()) {

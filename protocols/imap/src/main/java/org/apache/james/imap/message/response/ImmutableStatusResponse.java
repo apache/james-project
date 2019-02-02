@@ -23,10 +23,10 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 
+import com.google.common.base.MoreObjects;
+
 /**
  * Immutable status response. Suitable for unpooled usage.
- * 
- * @see StatusResponse
  */
 public class ImmutableStatusResponse implements StatusResponse {
 
@@ -49,38 +49,39 @@ public class ImmutableStatusResponse implements StatusResponse {
         this.command = command;
     }
 
-    /**
-     * @see StatusResponse#getResponseCode()
-     */
+    @Override
     public ResponseCode getResponseCode() {
         return responseCode;
     }
 
-    /**
-     * @see StatusResponse#getServerResponseType()
-     */
+    @Override
     public Type getServerResponseType() {
         return serverResponseType;
     }
 
-    /**
-     * @see StatusResponse#getTag()
-     */
+    @Override
     public String getTag() {
         return tag;
     }
 
-    /**
-     * @see StatusResponse#getTextKey()
-     */
+    @Override
     public HumanReadableText getTextKey() {
         return textKey;
     }
 
-    /**
-     * @see StatusResponse#getCommand()
-     */
+    @Override
     public ImapCommand getCommand() {
         return command;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("responseCode", responseCode)
+            .add("serverResponseType", serverResponseType)
+            .add("tag", tag)
+            .add("textKey", textKey)
+            .add("command", command)
+            .toString();
     }
 }

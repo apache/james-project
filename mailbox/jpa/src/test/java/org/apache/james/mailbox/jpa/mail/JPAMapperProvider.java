@@ -24,13 +24,12 @@ import java.util.Random;
 
 import javax.persistence.EntityManagerFactory;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
-import org.apache.james.mailbox.jpa.JPAMailboxFixture;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
@@ -63,7 +62,7 @@ public class JPAMapperProvider implements MapperProvider {
         EntityManagerFactory entityManagerFactory = jpaTestCluster.getEntityManagerFactory();
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
 
-        JPAMessageMapper messageMapper = new JPAMessageMapper(new MockMailboxSession("benwa"), 
+        JPAMessageMapper messageMapper = new JPAMessageMapper(MailboxSessionUtil.create("benwa"),
             new JPAUidProvider(locker, entityManagerFactory), 
             new JPAModSeqProvider(locker, entityManagerFactory), 
             entityManagerFactory);
@@ -73,7 +72,7 @@ public class JPAMapperProvider implements MapperProvider {
 
     @Override
     public AttachmentMapper createAttachmentMapper() throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
@@ -92,38 +91,33 @@ public class JPAMapperProvider implements MapperProvider {
     }
 
     @Override
-    public void clearMapper() throws MailboxException {
-        jpaTestCluster.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
-    }
-
-    @Override
     public boolean supportPartialAttachmentFetch() {
         return false;
     }
 
     @Override
     public List<Capabilities> getSupportedCapabilities() {
-        return ImmutableList.of(Capabilities.ANNOTATION, Capabilities.MAILBOX, Capabilities.MESSAGE);
+        return ImmutableList.of(Capabilities.ANNOTATION, Capabilities.MAILBOX, Capabilities.MESSAGE, Capabilities.MOVE);
     }
 
     @Override
     public MessageIdMapper createMessageIdMapper() throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
     public MessageUid generateMessageUid() {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
     public long generateModSeq(Mailbox mailbox) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
     public long highestModSeq(Mailbox mailbox) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
 }

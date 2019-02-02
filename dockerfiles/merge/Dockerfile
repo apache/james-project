@@ -1,4 +1,4 @@
-FROM debian:8.1
+FROM debian:8.11
 
 RUN apt-get update
 RUN apt-get install -y git

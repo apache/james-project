@@ -37,6 +37,7 @@ public class MailboxStatusResponseEncoder extends AbstractChainedImapEncoder imp
         super(next);
     }
 
+    @Override
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
         MailboxStatusResponse response = (MailboxStatusResponse) acceptableMessage;
         Long messages = response.getMessages();
@@ -91,6 +92,7 @@ public class MailboxStatusResponseEncoder extends AbstractChainedImapEncoder imp
         composer.end();
     }
 
+    @Override
     protected boolean isAcceptable(ImapMessage message) {
         return message != null && message instanceof MailboxStatusResponse;
     }

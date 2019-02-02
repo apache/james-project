@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Optional;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -36,9 +37,10 @@ import org.junit.Test;
 
 public abstract class AbstractUsersRepositoryTest {
 
-    private static final String DOMAIN = "domain"; 
+    private static final Domain DOMAIN = Domain.of("domain");
 
-    protected AbstractUsersRepository usersRepository; 
+    protected AbstractUsersRepository usersRepository;
+    private SimpleDomainList domainList;
 
     /**
      * Create the repository to be tested.
@@ -55,7 +57,7 @@ public abstract class AbstractUsersRepositoryTest {
     
     public void setUp() throws Exception { 
         this.usersRepository = getUsersRepository();
-        SimpleDomainList domainList = new SimpleDomainList();
+        domainList = new SimpleDomainList();
         domainList.addDomain(DOMAIN);
         usersRepository.setDomainList(domainList);
         user1 = login("username");
@@ -68,9 +70,9 @@ public abstract class AbstractUsersRepositoryTest {
         disposeUsersRepository();
     }
     
-    private String login(String login) throws UsersRepositoryException {
+    private String login(String login) {
         if (usersRepository.supportVirtualHosting()) {
-            return login + '@' + DOMAIN;
+            return login + '@' + DOMAIN.name();
         } else {
             return login;
         }
@@ -191,6 +193,20 @@ public abstract class AbstractUsersRepositoryTest {
         assertThat(actual).isTrue();
     }
     
+    @Test
+    public void testShouldReturnTrueWhenAUserHasACorrectPasswordAndOtherCaseInDomain() throws Exception { 
+        usersRepository.setEnableVirtualHosting(true);
+
+        domainList.addDomain(Domain.of("jAmEs.oRg"));
+        String username = "myuser";
+        String password = "password";
+        usersRepository.addUser(username + "@jAmEs.oRg", password);
+
+        boolean actual = usersRepository.test(username + "@james.org", password);
+
+        assertThat(actual).isTrue();
+    }
+
     @Test
     public void testShouldReturnFalseWhenAUserHasAnIncorrectPassword() throws UsersRepositoryException { 
         //Given
@@ -343,5 +359,30 @@ public abstract class AbstractUsersRepositoryTest {
         usersRepository.setAdministratorId(Optional.of(admin));
 
         assertThat(usersRepository.isAdministrator(user1)).isFalse();
+    }
+
+    @Test
+    public void getMailAddressForShouldBeIdentityWhenVirtualHosting() throws Exception {
+        usersRepository.setEnableVirtualHosting(true);
+
+        // Some implementations do not support changing virtual hosting value
+        Assume.assumeTrue(usersRepository.supportVirtualHosting());
+
+        String username = "user@domain";
+        assertThat(usersRepository.getMailAddressFor(org.apache.james.core.User.fromUsername(username)))
+            .isEqualTo(username);
+    }
+
+    @Test
+    public void getMailAddressForShouldAppendDefaultDomainWhenNoVirtualHosting() throws Exception {
+        usersRepository.setEnableVirtualHosting(false);
+        usersRepository.setDomainList(domainList);
+
+        // Some implementations do not support changing virtual hosting value
+        Assume.assumeFalse(usersRepository.supportVirtualHosting());
+
+        String username = "user";
+        assertThat(usersRepository.getMailAddressFor(org.apache.james.core.User.fromUsername(username)))
+            .isEqualTo(new MailAddress(username, domainList.getDefaultDomain()));
     }
 }

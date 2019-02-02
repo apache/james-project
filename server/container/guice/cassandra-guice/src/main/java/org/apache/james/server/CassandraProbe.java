@@ -21,20 +21,18 @@ package org.apache.james.server;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.backends.cassandra.init.CassandraSessionConfiguration;
-import org.apache.james.modules.mailbox.ResilientClusterProvider;
+import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.utils.GuiceProbe;
 
 public class CassandraProbe implements GuiceProbe {
-    private final CassandraSessionConfiguration configuration;
+    private final ClusterConfiguration clusterConfiguration;
 
     @Inject
-    public CassandraProbe(CassandraSessionConfiguration configuration) {
-        this.configuration = configuration;
+    public CassandraProbe(ClusterConfiguration configuration) {
+        this.clusterConfiguration = configuration;
     }
 
-    public String getKeyspace() throws ConfigurationException {
-        return configuration.getConfiguration().getString(ResilientClusterProvider.CASSANDRA_KEYSPACE);
+    public String getKeyspace() {
+        return clusterConfiguration.getKeyspace();
     }
 }

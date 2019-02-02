@@ -45,6 +45,7 @@ import javax.mail.internet.MimeUtility;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.james.javax.MultipartUtil;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.mailet.Mail;
@@ -239,11 +240,6 @@ public class StripAttachment extends GenericMailet {
         }
     }
 
-    /**
-     * returns a String describing this mailet.
-     * 
-     * @return A desciption of this mailet
-     */
     @Override
     public String getMailetInfo() {
         return "StripAttachment";
@@ -276,7 +272,7 @@ public class StripAttachment extends GenericMailet {
             Multipart multipart = (Multipart) part.getContent();
             boolean atLeastOneRemoved = false;
             boolean subpartHasBeenChanged = false;
-            List<BodyPart> bodyParts = retrieveBodyParts(multipart);
+            List<BodyPart> bodyParts = MultipartUtil.retrieveBodyParts(multipart);
             for (BodyPart bodyPart: bodyParts) {
                 if (isMultipart(bodyPart)) {
                     if (processMultipartPartMessage(bodyPart, mail)) {
@@ -304,14 +300,6 @@ public class StripAttachment extends GenericMailet {
         if (part instanceof Message) {
             ((Message) part).saveChanges();
         }
-    }
-
-    private List<BodyPart> retrieveBodyParts(Multipart multipart) throws MessagingException {
-        ImmutableList.Builder<BodyPart> builder = ImmutableList.builder();
-        for (int i = 0; i < multipart.getCount(); i++) {
-            builder.add(multipart.getBodyPart(i));
-        }
-        return builder.build();
     }
 
     private boolean shouldBeRemoved(BodyPart bodyPart, Mail mail) throws MessagingException, Exception {
@@ -377,11 +365,19 @@ public class StripAttachment extends GenericMailet {
         }
     }
 
-    private String getFilename(BodyPart bodyPart) throws UnsupportedEncodingException, MessagingException {
-        String fileName = bodyPart.getFileName();
-        if (fileName != null) {
-            return renameWithConfigurationPattern(decodeFilename(fileName));
+    @VisibleForTesting String getFilename(BodyPart bodyPart) {
+        try {
+            String fileName = bodyPart.getFileName();
+            if (fileName != null) {
+                return renameWithConfigurationPattern(decodeFilename(fileName));
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Unparsable filename, using a random filename instead.", e);
         }
+        return randomFilename();
+    }
+
+    private String randomFilename() {
         return UUID.randomUUID().toString();
     }
 

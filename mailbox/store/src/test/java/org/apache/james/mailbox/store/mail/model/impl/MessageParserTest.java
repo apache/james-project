@@ -21,12 +21,22 @@ package org.apache.james.mailbox.store.mail.model.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mdn.MDN;
+import org.apache.james.mdn.MDNReport;
+import org.apache.james.mdn.action.mode.DispositionActionMode;
+import org.apache.james.mdn.fields.Disposition;
+import org.apache.james.mdn.fields.ReportingUserAgent;
+import org.apache.james.mdn.sending.mode.DispositionSendingMode;
+import org.apache.james.mdn.type.DispositionType;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -209,7 +219,7 @@ public class MessageParserTest {
     public void getAttachementsShouldRetrieveAttachmentsWhenSomeAreInTheMultipartAlternative() throws Exception {
         List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/invitationEmailFromOP.eml"));
         
-        assertThat(attachments).hasSize(6);
+        assertThat(attachments).hasSize(7);
     }
 
     @Test
@@ -217,6 +227,13 @@ public class MessageParserTest {
         List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/unknownDisposition.eml"));
 
         assertThat(attachments).hasSize(0);
+    }
+
+    @Test
+    public void getAttachmentsShouldConsiderNoContentDispositionAsAttachmentsWhenCID() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/noContentDispositionWithCID.eml"));
+
+        assertThat(attachments).hasSize(1);
     }
 
     @Test
@@ -256,6 +273,16 @@ public class MessageParserTest {
     }
 
     @Test
+    public void getAttachmentsShouldConsiderICSAsAttachments() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(
+            ClassLoader.getSystemResourceAsStream("eml/calendar.eml"));
+
+        assertThat(attachments)
+            .hasSize(1)
+            .allMatch(messageAttachment -> messageAttachment.getAttachment().getType().equals("text/calendar"));
+    }
+
+    @Test
     public void gpgSignatureShouldBeConsideredAsAnAttachment() throws Exception {
         List<MessageAttachment> attachments = testee.retrieveAttachments(
             ClassLoader.getSystemResourceAsStream("eml/signedMessage.eml"));
@@ -265,5 +292,29 @@ public class MessageParserTest {
             .allMatch(Optional::isPresent)
             .extracting(Optional::get)
             .containsOnly("message suivi", "signature.asc");
+    }
+
+    @Test
+    public void mdnReportShouldBeConsideredAsAttachmentWhenDispositionContentType() throws Exception {
+        Message message = MDN.builder()
+            .humanReadableText("A little test")
+            .report(MDNReport.builder()
+                .dispositionField(Disposition.builder()
+                    .actionMode(DispositionActionMode.Automatic)
+                    .sendingMode(DispositionSendingMode.Automatic)
+                    .type(DispositionType.Processed)
+                    .build())
+                .originalMessageIdField("zeugzev@domain.tld")
+                .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("Thunderbird").build())
+                .finalRecipientField("user@domain.tld")
+                .originalRecipientField("user@domain.tld")
+                .build())
+            .build()
+            .asMime4JMessageBuilder()
+            .build();
+
+        List<MessageAttachment> result = testee.retrieveAttachments(new ByteArrayInputStream(DefaultMessageWriter.asBytes(message)));
+        assertThat(result).hasSize(1)
+            .allMatch(attachment -> attachment.getAttachment().getType().equals(MDN.DISPOSITION_CONTENT_TYPE));
     }
 }

@@ -25,13 +25,13 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.apache.james.mailet.MailetMatcherDescriptor.Type;
+import org.apache.mailet.ExcludeFromDocumentation;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.Matcher;
@@ -40,7 +40,8 @@ import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 
-import com.thoughtworks.qdox.JavaDocBuilder;
+import com.thoughtworks.qdox.JavaProjectBuilder;
+import com.thoughtworks.qdox.model.JavaAnnotation;
 import com.thoughtworks.qdox.model.JavaClass;
 
 /**
@@ -67,7 +68,7 @@ public class DefaultDescriptorsExtractor {
     }
 
     public DefaultDescriptorsExtractor extract(MavenProject project, Log log) {
-        final JavaClass[] classes = javaClasses(project);
+        final Collection<JavaClass> classes = javaClasses(project);
 
         final URLClassLoader classLoader = classLoader(project, log);
         logProjectDependencies(project, log);
@@ -98,6 +99,11 @@ public class DefaultDescriptorsExtractor {
             log.debug("Class: " + nameOfNextClass);
         }
         
+        if (isExcludedFromDocumentation(nextClass)) {
+            log.debug(nameOfNextClass + " is excluded from documentation");
+            return;
+        }
+        
         try {
             final Class<?> klass = classLoader.loadClass(nameOfNextClass);
 
@@ -119,11 +125,11 @@ public class DefaultDescriptorsExtractor {
             }
 
         } catch (NoClassDefFoundError | ClassNotFoundException e) {
-            log.error("NotFound: " + e.getMessage());
+            log.error("NotFound", e);
         } catch (SecurityException e) {
-            log.error("SE: " + e.getMessage());
+            log.error("Security exception", e);
         } catch (IllegalArgumentException e) {
-            log.error("IAE2: " + e.getMessage());
+            log.error("IllegalArgumentException", e);
         }
 
         logInterfacesImplemented(log, nextClass);
@@ -182,14 +188,22 @@ public class DefaultDescriptorsExtractor {
 
 
     private boolean isExperimental(JavaClass javaClass) {
-        return Stream.of(javaClass.getAnnotations())
-            .anyMatch(annotation -> annotation.getType().getValue()
+        return javaClass.getAnnotations()
+            .stream()
+            .anyMatch((JavaAnnotation annotation) -> annotation.getType().getCanonicalName()
                     .equals(Experimental.class.getName()));
+    }
+    
+    private boolean isExcludedFromDocumentation(JavaClass javaClass) {
+        return javaClass.getAnnotations()
+            .stream()
+            .anyMatch((JavaAnnotation annotation) -> annotation.getType().getCanonicalName()
+                    .equals(ExcludeFromDocumentation.class.getName()));
     }
 
     private void handleInfoLoadFailure(Log log, String nameOfClass,
             final Type type, Exception e) {
-        log.info("Cannot load " + type + " info for " + nameOfClass + ": " + e.getMessage());
+        log.info("Cannot load " + type + " info for " + nameOfClass, e);
         log.debug(e);
     }
 
@@ -252,8 +266,8 @@ public class DefaultDescriptorsExtractor {
 
 
     @SuppressWarnings("unchecked")
-    private JavaClass[] javaClasses(MavenProject project) {
-        JavaDocBuilder builder = new JavaDocBuilder();
+    private Collection<JavaClass> javaClasses(MavenProject project) {
+        JavaProjectBuilder builder = new JavaProjectBuilder();
         for (String s : (Iterable<String>) project.getCompileSourceRoots()) {
             builder.addSourceTree(new File(s));
         }
@@ -286,9 +300,8 @@ public class DefaultDescriptorsExtractor {
 
     private List<JavaClass> getAllInterfacesQdox(JavaClass javaClass) {
         List<JavaClass> res = new LinkedList<>();
-        if (javaClass.getImplementedInterfaces() != null) {
-            JavaClass[] interfaces = javaClass.getImplementedInterfaces();
-            Collections.addAll(res, interfaces);
+        if (javaClass.getInterfaces() != null) {
+            res.addAll(javaClass.getInterfaces());
         }
         if (javaClass.getSuperJavaClass() != null) {
             res.addAll(getAllInterfacesQdox(javaClass.getSuperJavaClass()));

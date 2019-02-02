@@ -79,20 +79,19 @@ public class InstrumentationMailet implements Mailet {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Mail named: " + mail.getName());
 
-            for (Iterator<String> it = mail.getAttributeNames(); it.hasNext();) {
-                String attributeName = it.next();
-                LOGGER.info("Attribute " + attributeName);
-            }
+            mail.attributeNames()
+                .forEach(attributeName -> LOGGER.info("Attribute " + attributeName));
+
             LOGGER.info("Message size: " + mail.getMessageSize());
             LOGGER.info("Last updated: " + mail.getLastUpdated());
             LOGGER.info("Remote Address: " + mail.getRemoteAddr());
             LOGGER.info("Remote Host: " + mail.getRemoteHost());
             LOGGER.info("State: " + mail.getState());
-            LOGGER.info("Sender host: " + mail.getSender().getDomain());
-            LOGGER.info("Sender user: " + mail.getSender().getLocalPart());
+            LOGGER.info("Sender host: " + mail.getMaybeSender().asOptional().map(mailAddress -> mailAddress.getDomain().name()));
+            LOGGER.info("Sender user: " + mail.getMaybeSender().asOptional().map(MailAddress::getLocalPart));
             Collection<MailAddress> recipients = mail.getRecipients();
             for (MailAddress address : recipients) {
-                LOGGER.info("Recipient: " + address.getLocalPart() + "@" + address.getDomain());
+                LOGGER.info("Recipient: " + address.getLocalPart() + "@" + address.getDomain().name());
             }
 
             LOGGER.info("Subject: " + message.getSubject());

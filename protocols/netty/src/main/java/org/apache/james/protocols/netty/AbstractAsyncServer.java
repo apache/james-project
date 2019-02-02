@@ -23,8 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import org.apache.james.protocols.api.ProtocolServer;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelPipelineFactory;
@@ -86,10 +88,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     }
     
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolServer#bind()
-     */
+    @Override
     public synchronized void bind() throws Exception {
         if (started) {
             throw new IllegalStateException("Server running already");
@@ -130,10 +129,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     }
     
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolServer#unbind()
-     */
+    @Override
     public synchronized void unbind() {
         if (started == false) {
             return;
@@ -147,10 +143,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         started = false;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolServer#getListenAddresses()
-     */
+    @Override
     public synchronized List<InetSocketAddress> getListenAddresses() {
         ImmutableList.Builder<InetSocketAddress> builder = ImmutableList.builder();
         for (Channel channel : ImmutableList.copyOf(channels.iterator())) {
@@ -194,19 +187,13 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     }
     
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolServer#getBacklog()
-     */
+    @Override
     public int getBacklog() {
         return backlog;
     }
     
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolServer#getTimeout()
-     */
+    @Override
     public int getTimeout() {
         return timeout;
     }
@@ -218,7 +205,8 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
      * @return bossExecutor
      */
     protected Executor createBossExecutor() {
-        return Executors.newCachedThreadPool();
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        return Executors.newCachedThreadPool(threadFactory);
     }
 
     /**
@@ -227,14 +215,12 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
      * @return workerExecutor
      */
     protected Executor createWorkerExecutor() {
-        return Executors.newCachedThreadPool();
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        return Executors.newCachedThreadPool(threadFactory);
     }
     
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolServer#isBound()
-     */
+    @Override
     public boolean isBound() {
         return started;
     }

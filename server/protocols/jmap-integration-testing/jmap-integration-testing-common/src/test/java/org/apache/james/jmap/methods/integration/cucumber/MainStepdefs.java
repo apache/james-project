@@ -19,23 +19,19 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.probe.ACLProbe;
-import org.apache.james.mailbox.store.probe.MailboxProbe;
+import org.apache.james.mailbox.probe.ACLProbe;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.MessageIdProbe;
 
 import com.github.steveash.guavate.Guavate;
@@ -49,7 +45,7 @@ public class MainStepdefs {
 
     public GuiceJamesServer jmapServer;
     public DataProbe dataProbe;
-    public MailboxProbe mailboxProbe;
+    public MailboxProbeImpl mailboxProbe;
     public ACLProbe aclProbe;
     public MessageIdProbe messageIdProbe;
     public Runnable awaitMethod = () -> { };
@@ -62,16 +58,7 @@ public class MainStepdefs {
         aclProbe = jmapServer.getProbe(ACLProbeImpl.class);
         messageIdProbe = jmapServer.getProbe(MessageIdProbe.class);
     }
-    
 
-    public URIBuilder baseUri() {
-        return new URIBuilder()
-                .setScheme("http")
-                .setHost("localhost")
-                .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
-                .setCharset(StandardCharsets.UTF_8);
-    }
-    
     public void tearDown() {
         jmapServer.stop();
     }
@@ -81,9 +68,7 @@ public class MainStepdefs {
     }
 
     public MailboxId getMailboxId(String namespace, String username, String mailbox) {
-        return mailboxProbe
-            .getMailbox(namespace, username, mailbox)
-            .getMailboxId();
+        return mailboxProbe.getMailboxId(namespace, username, mailbox);
     }
     
     public String getMailboxIds(String username, List<String> mailboxes) {

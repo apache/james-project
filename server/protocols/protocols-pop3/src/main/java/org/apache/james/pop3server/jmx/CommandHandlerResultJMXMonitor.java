@@ -31,10 +31,7 @@ import org.apache.james.protocols.pop3.POP3Session;
  */
 public class CommandHandlerResultJMXMonitor extends AbstractCommandHandlerResultJMXMonitor<POP3Session> implements ProtocolHandler {
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.AbstractCommandHandlerResultJMXMonitor
-     * #createCommandHandlerStats(org.apache.james.protocols.api.CommandHandler)
-     */
+    @Override
     protected AbstractCommandHandlerStats createCommandHandlerStats(CommandHandler<POP3Session> handler) throws Exception {
         Collection<String> col = handler.getImplCommands();
         String cName = handler.getClass().getName();

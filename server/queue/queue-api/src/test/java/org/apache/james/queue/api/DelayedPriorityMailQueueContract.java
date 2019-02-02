@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 
 public interface DelayedPriorityMailQueueContract extends DelayedMailQueueContract, PriorityMailQueueContract {
 
+    @Override
     MailQueue getMailQueue();
 
     @Test

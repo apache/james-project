@@ -64,10 +64,7 @@ public class CompareNumericHeaderValue extends GenericMatcher {
     
     private Double headerValue;
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMatcher#init()
-     */
+    @Override
     public void init() throws MessagingException {
         StringTokenizer st = new StringTokenizer(getCondition(), " \t", false);
         if (st.hasMoreTokens()) {
@@ -115,10 +112,7 @@ public class CompareNumericHeaderValue extends GenericMatcher {
     }
 
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMatcher#match(org.apache.mailet.Mail)
-     */
+    @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         if (headerName == null) {
             // should never get here

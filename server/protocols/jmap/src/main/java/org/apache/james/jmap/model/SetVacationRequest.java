@@ -21,7 +21,7 @@ package org.apache.james.jmap.model;
 
 import java.util.Map;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.JmapFieldNotSupportedException;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.methods.JmapRequest;
 
@@ -33,6 +33,7 @@ import com.google.common.collect.Maps;
 
 @JsonDeserialize(builder = SetVacationRequest.Builder.class)
 public class SetVacationRequest implements JmapRequest {
+    private static final String ISSUER = "SetVacationRequest";
 
     public static Builder builder() {
         return new Builder();
@@ -45,7 +46,7 @@ public class SetVacationRequest implements JmapRequest {
 
         public Builder accountId(String accountId) {
             if (accountId != null) {
-                throw new NotImplementedException();
+                throw new JmapFieldNotSupportedException(ISSUER, "accountId");
             }
             return this;
         }

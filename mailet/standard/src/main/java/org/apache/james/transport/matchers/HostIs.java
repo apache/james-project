@@ -17,15 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.transport.matchers;
 
 import java.util.Collection;
-import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericRecipientMatcher;
 
@@ -34,25 +32,19 @@ import org.apache.mailet.base.GenericRecipientMatcher;
  */
 public class HostIs extends GenericRecipientMatcher {
 
-    private Collection<String> hosts;
+    private Collection<Domain> hosts;
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMatcher#init()
-     */
+    @Override
     public void init() {
         StringTokenizer st = new StringTokenizer(getCondition(), ", ", false);
         hosts = new Vector<>();
         while (st.hasMoreTokens()) {
-            hosts.add(st.nextToken().toLowerCase(Locale.US));
+            hosts.add(Domain.of(st.nextToken()));
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericRecipientMatcher#matchRecipient(org.apache.mailet.MailAddress)
-     */
+    @Override
     public boolean matchRecipient(MailAddress recipient) {
-        return hosts.contains(recipient.getDomain().toLowerCase(Locale.US));
+        return hosts.contains(recipient.getDomain());
     }
 }

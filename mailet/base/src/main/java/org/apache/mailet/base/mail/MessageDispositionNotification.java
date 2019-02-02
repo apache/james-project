@@ -53,17 +53,13 @@ public class MessageDispositionNotification extends AbstractDataContentHandler {
         super();
     }
 
-    /**
-     * @see org.apache.mailet.base.mail.AbstractDataContentHandler#computeDataFlavor()
-     */
+    @Override
     protected ActivationDataFlavor computeDataFlavor() {
         return new ActivationDataFlavor(String.class,
                 "message/disposition-notification", "Message String");
     }
 
-    /**
-     * @see org.apache.mailet.base.mail.AbstractDataContentHandler#computeContent(javax.activation.DataSource)
-     */
+    @Override
     protected Object computeContent(DataSource aDataSource)
             throws MessagingException {
         String encoding = getCharacterSet(aDataSource.getContentType());
@@ -100,10 +96,7 @@ public class MessageDispositionNotification extends AbstractDataContentHandler {
         return content;
     }
 
-    /**
-     * @see javax.activation.DataContentHandler#writeTo(java.lang.Object,
-     *      java.lang.String, java.io.OutputStream)
-     */
+    @Override
     public void writeTo(Object aPart, String aMimeType, OutputStream aStream)
             throws IOException {
         if (!(aPart instanceof String)) {

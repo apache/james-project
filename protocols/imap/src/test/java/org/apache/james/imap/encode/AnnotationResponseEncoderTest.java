@@ -58,7 +58,7 @@ public class AnnotationResponseEncoderTest {
 
     @Test
     public void encodingShouldWellFormEmptyRequest() throws Exception {
-        AnnotationResponse response = new AnnotationResponse(null, ImmutableList.<MailboxAnnotation>of());
+        AnnotationResponse response = new AnnotationResponse(null, ImmutableList.of());
 
         encoder.encode(response, composer, imapSession);
 
@@ -67,7 +67,7 @@ public class AnnotationResponseEncoderTest {
 
     @Test
     public void encodingShouldWellFormWhenEmptyReturnedAnnotation() throws Exception {
-        AnnotationResponse response = new AnnotationResponse("INBOX", ImmutableList.<MailboxAnnotation>of());
+        AnnotationResponse response = new AnnotationResponse("INBOX", ImmutableList.of());
 
         encoder.encode(response, composer, imapSession);
 

@@ -39,6 +39,7 @@ public class ContinuationResponseEncoder extends AbstractChainedImapEncoder {
         this.localizer = localizer;
     }
 
+    @Override
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
 
         ContinuationResponse response = (ContinuationResponse) acceptableMessage;
@@ -51,6 +52,7 @@ public class ContinuationResponseEncoder extends AbstractChainedImapEncoder {
         return localizer.localize(text, new Locales(new ArrayList<>(), null));
     }
 
+    @Override
     protected boolean isAcceptable(ImapMessage message) {
         return (message instanceof ContinuationResponse);
     }

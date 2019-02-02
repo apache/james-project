@@ -36,14 +36,14 @@ import org.apache.mailet.MailetContext;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class SenderIsLocalTest {
 
     private Matcher matcher;
 
-    @Before
+    @BeforeEach
     public void setUp() throws MessagingException {
         MailetContext mailContext = mock(MailetContext.class);
         when(mailContext.isLocalEmail(ANY_AT_JAMES)).thenReturn(true);
@@ -90,6 +90,31 @@ public class SenderIsLocalTest {
         //Given
         Mail mail = FakeMail.builder()
             .sender(ANY_AT_JAMES2)
+            .recipient(ANY_AT_JAMES)
+            .build();
+        //When
+        Collection<MailAddress> actual = matcher.match(mail);
+        //Then
+        assertThat(actual).isNull();
+    }
+
+    @Test
+    public void shouldNotMatchWhenNullSender() throws MessagingException {
+        //Given
+        Mail mail = FakeMail.builder()
+            .sender(MailAddress.nullSender())
+            .recipient(ANY_AT_JAMES)
+            .build();
+        //When
+        Collection<MailAddress> actual = matcher.match(mail);
+        //Then
+        assertThat(actual).isNull();
+    }
+
+    @Test
+    public void shouldNotMatchWhenNoSender() throws MessagingException {
+        //Given
+        Mail mail = FakeMail.builder()
             .recipient(ANY_AT_JAMES)
             .build();
         //When

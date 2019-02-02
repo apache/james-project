@@ -37,13 +37,6 @@ import org.apache.mailet.Mail;
 
 public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailDetector {
 
-    private static final MimeConfig MIME_ENTITY_CONFIG = MimeConfig.custom()
-        .setMaxContentLen(-1)
-        .setMaxHeaderCount(-1)
-        .setMaxHeaderLen(-1)
-        .setMaxLineLen(-1)
-        .build();
-
     private static final String[] MAILING_LIST_HEADERS = new String[] {
             "List-Help",
             "List-Subscribe",
@@ -53,30 +46,30 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
             "List-Id",
             "List-Archive" };
 
+    @Override
     public boolean isAutomaticallySent(Mail mail) throws MessagingException {
-        return mail.getSender() == null ||
+        return !mail.hasSender() ||
             isMailingList(mail) ||
             isAutoSubmitted(mail) ||
             isMdnSentAutomatically(mail);
     }
 
+    @Override
     public boolean isMailingList(Mail mail) throws MessagingException {
         return senderIsMailingList(mail)
             || headerIsMailingList(mail);
     }
 
     private boolean senderIsMailingList(Mail mail) {
-        MailAddress sender = mail.getSender();
-        if (sender == null) {
-            return false;
-        }
-
-        String localPart = sender.getLocalPart();
-        return localPart.startsWith("owner-")
-            || localPart.endsWith("-request")
-            || localPart.equalsIgnoreCase("MAILER-DAEMON")
-            || localPart.equalsIgnoreCase("LISTSERV")
-            || localPart.equalsIgnoreCase("majordomo");
+        return mail.getMaybeSender()
+            .asOptional()
+            .map(MailAddress::getLocalPart)
+            .map(localPart ->  localPart.startsWith("owner-")
+                || localPart.endsWith("-request")
+                || localPart.equalsIgnoreCase("MAILER-DAEMON")
+                || localPart.equalsIgnoreCase("LISTSERV")
+                || localPart.equalsIgnoreCase("majordomo"))
+            .orElse(false);
     }
 
     private boolean headerIsMailingList(Mail mail) throws MessagingException {
@@ -85,6 +78,7 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
             .hasMoreElements();
     }
 
+    @Override
     public boolean isAutoSubmitted(Mail mail) throws MessagingException {
         String[] headers = mail.getMessage().getHeader(AUTO_SUBMITTED_HEADER);
         if (headers != null) {
@@ -94,9 +88,10 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
         return false;
     }
 
+    @Override
     public boolean isMdnSentAutomatically(Mail mail) throws MessagingException {
         ResultCollector resultCollector = new ResultCollector(false);
-        MimeStreamParser parser = new MimeStreamParser(MIME_ENTITY_CONFIG);
+        MimeStreamParser parser = new MimeStreamParser(MimeConfig.PERMISSIVE);
         parser.setContentHandler(createMdnContentHandler(resultCollector));
         try {
             parser.parse(mail.getMessage().getInputStream());
@@ -113,12 +108,13 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
             @Override
             public void body(BodyDescriptor bodyDescriptor, InputStream inputStream) throws MimeException, IOException {
                 if (bodyDescriptor.getMimeType().equalsIgnoreCase("message/disposition-notification")) {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        if (line.startsWith("Disposition:")) {
-                            if (line.contains("MDN-sent-automatically") || line.contains("automatic-action")) {
-                                resultCollector.setResult(true);
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            if (line.startsWith("Disposition:")) {
+                                if (line.contains("MDN-sent-automatically") || line.contains("automatic-action")) {
+                                    resultCollector.setResult(true);
+                                }
                             }
                         }
                     }

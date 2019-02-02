@@ -19,13 +19,13 @@
 
 package org.apache.james.backends.cassandra;
 
+import org.apache.james.util.Host;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
-import org.testcontainers.containers.GenericContainer;
 
 public class DockerCassandraExtension implements BeforeAllCallback, AfterAllCallback, ParameterResolver {
 
@@ -37,13 +37,13 @@ public class DockerCassandraExtension implements BeforeAllCallback, AfterAllCall
     }
 
     @Override
-    public void beforeAll(ExtensionContext context) throws Exception {
+    public void beforeAll(ExtensionContext context) {
         cassandraContainer.start();
-        dockerCassandra = DockerCassandra.from(cassandraContainer.getRawContainer());
+        dockerCassandra = new DockerCassandra(cassandraContainer);
     }
 
     @Override
-    public void afterAll(ExtensionContext context) throws Exception {
+    public void afterAll(ExtensionContext context) {
         cassandraContainer.stop();
     }
 
@@ -56,29 +56,24 @@ public class DockerCassandraExtension implements BeforeAllCallback, AfterAllCall
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         return dockerCassandra;
     }
+
+    public DockerCassandra getDockerCassandra() {
+        return dockerCassandra;
+    }
     
     public static class DockerCassandra {
-        
-        private static final int CASSANDRA_PORT = 9042;
+        private final DockerCassandraRule container;
 
-        public static DockerCassandra from(GenericContainer<?> cassandraContainer) {
-            return new DockerCassandra(cassandraContainer.getContainerIpAddress(), cassandraContainer.getMappedPort(CASSANDRA_PORT));
+        private DockerCassandra(DockerCassandraRule container) {
+            this.container = container;
         }
 
-        private final String ip;
-        private final int bindingPort;
-
-        private DockerCassandra(String ip, int bindingPort) {
-            this.ip = ip;
-            this.bindingPort = bindingPort;
+        public Host getHost() {
+            return container.getHost();
         }
 
-        public String getIp() {
-            return ip;
-        }
-    
-        public int getBindingPort() {
-            return bindingPort;
+        public DockerCassandraRule getContainer() {
+            return container;
         }
     }
 

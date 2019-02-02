@@ -66,7 +66,7 @@ public class SimpleMailStore implements MailStore {
             return this;
         }
 
-        public SimpleMailStore build() throws MessagingException {
+        public SimpleMailStore build() {
             Preconditions.checkNotNull(usersRepos);
             Preconditions.checkNotNull(folder);
             Preconditions.checkNotNull(mailboxAppender);
@@ -96,7 +96,7 @@ public class SimpleMailStore implements MailStore {
 
         metric.increment();
         LOGGER.info("Local delivered mail {} successfully from {} to {} in folder {} with composedMessageId {}", mail.getName(),
-            DeliveryUtils.prettyPrint(mail.getSender()), DeliveryUtils.prettyPrint(recipient), locatedFolder, composedMessageId);
+            mail.getMaybeSender().asString(), recipient.asPrettyString(), locatedFolder, composedMessageId);
     }
 
     private String locateFolder(String username, Mail mail) {
@@ -106,7 +106,7 @@ public class SimpleMailStore implements MailStore {
         return folder;
     }
 
-    private String computeUsername(MailAddress recipient) throws MessagingException {
+    private String computeUsername(MailAddress recipient) {
         try {
             return usersRepository.getUser(recipient);
         } catch (UsersRepositoryException e) {

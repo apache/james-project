@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.memory;
 
+import java.io.IOException;
 import java.util.Random;
 
 import org.apache.james.GuiceJamesServer;
@@ -36,7 +37,7 @@ public class MemorySetMessagesMethodTest extends SetMessagesMethodTest {
     private Random random = new Random();
     
     @Override
-    protected GuiceJamesServer createJmapServer() {
+    protected GuiceJamesServer createJmapServer() throws IOException {
         return memoryJmap.jmapServer();
     }
     
@@ -48,4 +49,5 @@ public class MemorySetMessagesMethodTest extends SetMessagesMethodTest {
     protected MessageId randomMessageId() {
         return new InMemoryMessageId.Factory().fromString(String.valueOf(random.nextInt(100000) + 100));
     }
+
 }

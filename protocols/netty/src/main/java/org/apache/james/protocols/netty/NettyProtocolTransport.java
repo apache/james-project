@@ -53,38 +53,28 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
         this.engine = engine;
     }
 
-    /**
-     * @see org.apache.james.protocols.api.ProtocolTransport#getRemoteAddress()
-     */
+    @Override
     public InetSocketAddress getRemoteAddress() {
         return (InetSocketAddress) channel.getRemoteAddress();
     }
 
-    /**
-     * @see org.apache.james.protocols.api.ProtocolTransport#getId()
-     */
+    @Override
     public String getId() {
         return Integer.toString(channel.getId());
     }
 
-    /**
-     * @see org.apache.james.protocols.api.ProtocolTransport#isTLSStarted()
-     */
+    @Override
     public boolean isTLSStarted() {
         return channel.getPipeline().get(SslHandler.class) != null;
     }
 
-    /**
-     * @see org.apache.james.protocols.api.ProtocolTransport#isStartTLSSupported()
-     */
+    @Override
     public boolean isStartTLSSupported() {
         return engine != null;
     }
 
 
-    /**
-     * @see org.apache.james.protocols.api.ProtocolTransport#popLineHandler()
-     */
+    @Override
     public void popLineHandler() {
         if (lineHandlerCount > 0) {
             channel.getPipeline().remove("lineHandler" + lineHandlerCount);
@@ -92,9 +82,7 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.api.ProtocolTransport#getPushedLineHandlerCount()
-     */
+    @Override
     public int getPushedLineHandlerCount() {
         return lineHandlerCount;
     }
@@ -164,30 +152,22 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
         channel.write(new ChunkedStream(in));
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolTransport#setReadable(boolean)
-     */
+    @Override
     public void setReadable(boolean readable) {
         channel.setReadable(readable);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolTransport#isReadable()
-     */
+    @Override
     public boolean isReadable() {
         return channel.isReadable();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolTransport#getLocalAddress()
-     */
+    @Override
     public InetSocketAddress getLocalAddress() {
         return (InetSocketAddress) channel.getLocalAddress();
     }
 
+    @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void pushLineHandler(LineHandler<? extends ProtocolSession> overrideCommandHandler, ProtocolSession session) {
         lineHandlerCount++;

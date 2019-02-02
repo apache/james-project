@@ -149,6 +149,7 @@ public class BayesianAnalysisFeeder extends GenericMailet {
      * 
      * @return a string describing this mailet
      */
+    @Override
     public String getMailetInfo() {
         return "BayesianAnalysisFeeder Mailet";
     }
@@ -197,6 +198,7 @@ public class BayesianAnalysisFeeder extends GenericMailet {
      * @throws MessagingException
      *             if a problem arises
      */
+    @Override
     public void init() throws MessagingException {
         String repositoryPath = getInitParameter("repositoryPath");
 
@@ -238,6 +240,7 @@ public class BayesianAnalysisFeeder extends GenericMailet {
      * @param mail
      *            The Mail message to be scanned.
      */
+    @Override
     public void service(Mail mail) {
         boolean dbUpdated = false;
 

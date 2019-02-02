@@ -53,15 +53,12 @@ public class OnlyText extends GenericMailet {
     private String optionsNotextProcessor = null;
     private final HashMap<String, String> charMap = new HashMap<>();
 
-    /**
-     * returns a String describing this mailet.
-     *
-     * @return A desciption of this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "OnlyText";
     }
 
+    @Override
     public void init() throws MailetException {
         optionsNotextProcessor = getInitParameter(PARAMETER_NAME_NOTEXT_PROCESSOR);
         initEntityTable();
@@ -96,6 +93,7 @@ public class OnlyText extends GenericMailet {
 
     }
 
+    @Override
     public void service(Mail mail) throws MailetException {
         try {
             Object content = mail.getMessage().getContent();

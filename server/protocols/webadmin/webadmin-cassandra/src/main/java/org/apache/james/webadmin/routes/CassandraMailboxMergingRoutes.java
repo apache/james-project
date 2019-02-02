@@ -80,10 +80,14 @@ public class CassandraMailboxMergingRoutes implements Routes {
     }
 
     @Override
+    public String getBasePath() {
+        return BASE;
+    }
+
+    @Override
     public void define(Service service) {
         service.post(BASE, this::mergeMailboxes, jsonTransformer);
     }
-
 
     @POST
     @ApiOperation("Triggers the merge of 2 mailboxes. Old mailbox Id will no more be accessible, rights and messages will be merged.")
@@ -111,7 +115,7 @@ public class CassandraMailboxMergingRoutes implements Routes {
             CassandraId originId = mailboxIdFactory.fromString(mailboxMergingRequest.getMergeOrigin());
             CassandraId destinationId = mailboxIdFactory.fromString(mailboxMergingRequest.getMergeDestination());
 
-            long totalMessagesToMove = counterDAO.countMessagesInMailbox(originId).join().orElse(0L);
+            long totalMessagesToMove = counterDAO.countMessagesInMailbox(originId).defaultIfEmpty(0L).block();
             MailboxMergingTask task = new MailboxMergingTask(mailboxMergingTaskRunner, totalMessagesToMove, originId, destinationId);
             TaskId taskId = taskManager.submit(task);
             return TaskIdDto.respond(response, taskId);

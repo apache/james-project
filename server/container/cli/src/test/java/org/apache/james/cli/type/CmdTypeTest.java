@@ -145,23 +145,23 @@ public class CmdTypeTest {
     }
 
     @Test
-    public void lookupSetDefaultMaxStorageQuotaShouldReturnEnumValue() {
-        assertThat(CmdType.lookup("setdefaultmaxstoragequota")).isEqualTo(CmdType.SETDEFAULTMAXSTORAGEQUOTA);
+    public void lookupSetGlobalMaxStorageQuotaShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("setglobalmaxstoragequota")).isEqualTo(CmdType.SETGLOBALMAXSTORAGEQUOTA);
     }
 
     @Test
-    public void lookupSetDefaultMaxMessageCountQuotaShouldReturnEnumValue() {
-        assertThat(CmdType.lookup("setdefaultmaxmessagecountquota")).isEqualTo(CmdType.SETDEFAULTMAXMESSAGECOUNTQUOTA);
+    public void lookupSetGlobalMaxMessageCountQuotaShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("setglobalmaxmessagecountquota")).isEqualTo(CmdType.SETGLOBALMAXMESSAGECOUNTQUOTA);
     }
 
     @Test
-    public void lookupGetDefaultMaxStorageQuotaShouldReturnEnumValue() {
-        assertThat(CmdType.lookup("getdefaultmaxstoragequota")).isEqualTo(CmdType.GETDEFAULTMAXSTORAGEQUOTA);
+    public void lookupGetGlobalMaxStorageQuotaShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("getglobalmaxstoragequota")).isEqualTo(CmdType.GETGLOBALMAXSTORAGEQUOTA);
     }
 
     @Test
-    public void lookupGetDefaultMaxMessageCountQuotaShouldReturnEnumValue() {
-        assertThat(CmdType.lookup("getdefaultmaxmessagecountquota")).isEqualTo(CmdType.GETDEFAULTMAXMESSAGECOUNTQUOTA);
+    public void lookupGetGlobalMaxMessageCountQuotaShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("getglobalmaxmessagecountquota")).isEqualTo(CmdType.GETGLOBALMAXMESSAGECOUNTQUOTA);
     }
 
     @Test
@@ -232,6 +232,11 @@ public class CmdTypeTest {
     @Test
     public void lookupRemoveSieveUserQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("removesieveuserquota")).isEqualTo(CmdType.REMOVESIEVEUSERQUOTA);
+    }
+
+    @Test
+    public void addSieveScriptShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("addactivesievescript")).isEqualTo(CmdType.ADDACTIVESIEVESCRIPT);
     }
 
     @Test 

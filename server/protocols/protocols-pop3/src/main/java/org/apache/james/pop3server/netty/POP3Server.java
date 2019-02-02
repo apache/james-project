@@ -46,9 +46,7 @@ public class POP3Server extends AbstractProtocolAsyncServer implements POP3Serve
         return 110;
     }
 
-    /**
-     * @see POP3ServerMBean#getServiceType()
-     */
+    @Override
     public String getServiceType() {
         return "POP3 Service";
     }
@@ -60,6 +58,7 @@ public class POP3Server extends AbstractProtocolAsyncServer implements POP3Serve
 
         /**
          */
+        @Override
         public String getHelloName() {
             return POP3Server.this.getHelloName();
         }

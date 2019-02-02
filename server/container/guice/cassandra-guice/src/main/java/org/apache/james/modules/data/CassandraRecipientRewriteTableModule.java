@@ -26,10 +26,9 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.cassandra.CassandraRRTModule;
 import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTable;
+import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
-import org.apache.james.utils.ConfigurationProvider;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -44,7 +43,7 @@ public class CassandraRecipientRewriteTableModule extends AbstractModule {
         bind(CassandraRecipientRewriteTable.class).in(Scopes.SINGLETON);
         bind(RecipientRewriteTable.class).to(CassandraRecipientRewriteTable.class);
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().to(CassandraRRTModule.class);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraRRTModule.MODULE);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(CassandraRecipientRewriteTablePerformer.class);
     }
 
@@ -65,7 +64,7 @@ public class CassandraRecipientRewriteTableModule extends AbstractModule {
             try {
                 recipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable"));
             } catch (ConfigurationException e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

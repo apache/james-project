@@ -36,4 +36,8 @@ public interface SieveRepositoryManagementMBean {
 
     void removeQuota(String user) throws SieveRepositoryException;
 
+    void addActiveSieveScript(String userName, String scriptName, String script) throws SieveRepositoryException;
+
+    void addActiveSieveScriptFromFile(String userName, String scriptName, String scriptPath) throws SieveRepositoryException;
+
 }

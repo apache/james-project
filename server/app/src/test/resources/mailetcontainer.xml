@@ -417,7 +417,9 @@ Regards, Postmaster XXX.YYY
          -->
 
        <!--  The RecipientRewriteTable will use the definitions found in recipientrewritetablexml -->
-         <mailet match="All" class="RecipientRewriteTable" />
+        <mailet match="All" class="RecipientRewriteTable">
+            <errorProcessor>rrt-error</errorProcessor>
+        </mailet>
         
          <!-- Place a copy in the user Sent folder -->
          <mailet match="SenderIsLocal" class="ToSenderFolder">
@@ -674,6 +676,17 @@ Regards, Postmaster XXX.YYY
             -->
         </mailet>
     </processor>
+
+      <processor state="rrt-error" enableJmx="false">
+          <mailet match="All" class="ToRepository">
+              <repositoryPath>file://var/mail/rrt-error/</repositoryPath>
+              <passThrough>true</passThrough>
+          </mailet>
+          <mailet match="IsSenderInRRTLoop" class="Null"/>
+          <mailet match="All" class="Bounce">
+              <notice>We were unable to deliver the attached message to the following recipients due to an address rewriting issue.</notice>
+          </mailet>
+      </processor>
 
   </processors>
 

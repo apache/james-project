@@ -80,10 +80,7 @@ public abstract class AbstractApopCmdHandler extends AbstractPassCmdHandler {
     }
 
     
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.pop3.core.AbstractPassCmdHandler#auth(org.apache.james.protocols.pop3.POP3Session, java.lang.String, java.lang.String)
-     */
+    @Override
     protected final Mailbox auth(POP3Session session, String username, String password) throws Exception {
         return auth(session, (String)session.getAttachment(POP3Session.APOP_TIMESTAMP, State.Connection), username, password);
     }
