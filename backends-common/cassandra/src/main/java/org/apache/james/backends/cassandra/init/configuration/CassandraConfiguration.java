@@ -25,7 +25,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.Configuration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -227,7 +227,7 @@ public class CassandraConfiguration {
         return new Builder();
     }
 
-    public static CassandraConfiguration from(PropertiesConfiguration propertiesConfiguration) {
+    public static CassandraConfiguration from(Configuration propertiesConfiguration) {
         return builder()
             .aclMaxRetry(Optional.ofNullable(
                 propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_ACL, null)))

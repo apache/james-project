@@ -19,13 +19,19 @@
 
 package org.apache.james.backends.cassandra.init;
 
+import java.util.stream.Stream;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraTable;
+import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
@@ -44,15 +50,30 @@ public class SessionWithInitializedTablesFactory implements Provider<Session> {
     private Session createSession(Cluster cluster, String keyspace) {
         Session session = cluster.connect(keyspace);
         try {
-            new CassandraTypesCreator(module, session)
-                .initializeTypes();
-            new CassandraTableManager(module, session)
-                .ensureAllTables();
+            if (allOperationsAreFullyPerformed(session)) {
+                new CassandraSchemaVersionDAO(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION)
+                        .updateVersion(CassandraSchemaVersionManager.MAX_VERSION);
+            }
             return session;
         } catch (Exception e) {
             session.close();
             throw e;
         }
+    }
+
+    private boolean allOperationsAreFullyPerformed(Session session) {
+        Stream<Boolean> operations = Stream.of(createTypes(session), createTables(session));
+        return operations.allMatch(updated -> updated);
+    }
+
+    private boolean createTypes(Session session) {
+        return new CassandraTypesCreator(module, session)
+                .initializeTypes() == CassandraType.InitializationStatus.FULL;
+    }
+
+    private boolean createTables(Session session) {
+        return new CassandraTableManager(module, session)
+            .initializeTables() == CassandraTable.InitializationStatus.FULL;
     }
 
     @Override

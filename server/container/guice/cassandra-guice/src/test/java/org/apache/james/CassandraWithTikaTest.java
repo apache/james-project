@@ -19,28 +19,23 @@
 
 package org.apache.james;
 
-import java.io.IOException;
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 
-import org.junit.ClassRule;
-import org.junit.Rule;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraWithTikaTest extends AbstractJamesServerTest {
+class CassandraWithTikaTest implements JamesServerContract {
+    private static final int LIMIT_TO_10_MESSAGES = 10;
 
-    @ClassRule
-    public static final DockerCassandraRule cassandra = new DockerCassandraRule();
-    @ClassRule
-    public static final GuiceTikaRule guiceTikaRule = new GuiceTikaRule();
-
-    @Rule
-    public CassandraJmapTestRule cassandraJmap = CassandraJmapTestRule.defaultTestRule();
-
-    @Override
-    protected GuiceJamesServer createJamesServer() throws IOException {
-        return cassandraJmap.jmapServer(guiceTikaRule.getModule(), cassandra.getModule(), DOMAIN_LIST_CONFIGURATION_MODULE);
-    }
-
-    @Override
-    protected void clean() {
-    }
-
+    @RegisterExtension
+    static JamesServerExtension testExtension =
+        new JamesServerExtensionBuilder()
+            .extension(new CassandraExtension())
+            .extension(new  TikaExtension())
+            .extension(new EmbeddedElasticSearchExtension())
+            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
+            .build();
 }

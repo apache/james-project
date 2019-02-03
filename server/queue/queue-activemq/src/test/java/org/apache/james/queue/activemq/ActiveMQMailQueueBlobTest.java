@@ -30,10 +30,13 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.api.GaugeRegistry;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.DelayedPriorityMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueMetricContract;
+import org.apache.james.queue.api.MailQueueMetricExtension;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.PriorityManageableMailQueueContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
@@ -49,7 +52,8 @@ import org.slf4j.LoggerFactory;
 
 @ExtendWith(BrokerExtension.class)
 @Tag(BrokerExtension.STATISTICS)
-public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueContract, DelayedPriorityMailQueueContract, PriorityManageableMailQueueContract {
+public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueContract, DelayedPriorityMailQueueContract, PriorityManageableMailQueueContract,
+    MailQueueMetricContract {
 
     static final String BASE_DIR = "file://target/james-test";
     static final boolean USE_BLOB = true;
@@ -58,7 +62,7 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
     MyFileSystem fileSystem;
 
     @BeforeEach
-    public void setUp(BrokerService broker) {
+    public void setUp(BrokerService broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
         fileSystem = new MyFileSystem();
         ActiveMQConnectionFactory connectionFactory = createConnectionFactory();
         FileSystemBlobTransferPolicy policy = new FileSystemBlobTransferPolicy();
@@ -67,9 +71,10 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
         connectionFactory.setBlobTransferPolicy(policy);
 
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
-        NoopMetricFactory metricFactory = new NoopMetricFactory();
+        MetricFactory metricFactory = metricTestSystem.getSpyMetricFactory();
+        GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
         String queueName = BrokerExtension.generateRandomQueueName(broker);
-        mailQueue = new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, USE_BLOB, metricFactory);
+        mailQueue = new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, USE_BLOB, metricFactory, gaugeRegistry);
     }
 
     @AfterEach
@@ -115,6 +120,13 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
     @Disabled("JAMES-2312 JMS clear mailqueue can ommit some messages" +
         "Random test failing around 1% of the time")
     public void clearShouldRemoveAllElements() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2544 Mixing concurrent ack/nack might lead to a deadlock")
+    public void concurrentEnqueueDequeueWithAckNackShouldNotFail() {
 
     }
 

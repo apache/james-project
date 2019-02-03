@@ -23,8 +23,4 @@ public class MappingAlreadyExistsException extends RecipientRewriteTableExceptio
     public MappingAlreadyExistsException(String msg) {
         super(msg);
     }
-
-    public MappingAlreadyExistsException(String msg, Throwable t) {
-        super(msg, t);
-    }
 }

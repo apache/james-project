@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.decode.parser;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
@@ -170,7 +170,7 @@ public class SearchCommandParserCharsetTest {
                         term), BYTES_UTF8_NON_ASCII_SEARCH_TERM)),
                 new ByteArrayOutputStream());
         final SearchKey searchKey = parser.searchKey(null, reader, null, true);
-        assertEquals(key, searchKey);
+        assertThat(searchKey).isEqualTo(key);
     }
 
     private void checkValid(String input, SearchKey key, boolean isFirst,
@@ -180,7 +180,7 @@ public class SearchCommandParserCharsetTest {
                 new ByteArrayOutputStream());
 
         final SearchKey searchKey = parser.searchKey(null, reader, null, isFirst);
-        assertEquals(key, searchKey);
+        assertThat(searchKey).isEqualTo(key);
     }
 
 }

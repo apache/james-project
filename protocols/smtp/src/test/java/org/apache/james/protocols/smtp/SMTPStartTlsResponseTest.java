@@ -19,7 +19,7 @@
 
 package org.apache.james.protocols.smtp;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.protocols.api.StartTlsResponse;
 import org.junit.Test;
@@ -32,7 +32,7 @@ public class SMTPStartTlsResponseTest {
     @Test
     public void testImmutable() {
         SMTPStartTlsResponse response = new SMTPStartTlsResponse("554", "Reject");
-        assertTrue(response instanceof StartTlsResponse);
-        assertTrue(response.immutable() instanceof StartTlsResponse);
+        assertThat(response).isInstanceOf(StartTlsResponse.class);
+        assertThat(response.immutable()).isInstanceOf(StartTlsResponse.class);
     }
 }

@@ -28,59 +28,40 @@ import java.util.UUID;
 import java.util.stream.IntStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.util.CompletableFutureUtil;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.utils.UUIDs;
 
-public class PaggingTest {
+class PaggingTest {
     
     private static final String TABLE_NAME = "test";
     private static final String ID = "id";
     private static final String CLUSTERING = "clustering";
     private static final UUID UUID = UUIDs.timeBased();
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.table(TABLE_NAME)
+        .comment("Testing table")
+        .statement(statement -> statement
+            .addPartitionKey(ID, DataType.timeuuid())
+            .addClusteringColumn(CLUSTERING, DataType.bigint()))
+        .build());
+
     private CassandraAsyncExecutor executor;
 
-    @BeforeClass
-    public static void setUpClass() {
-        CassandraModule modules = CassandraModule.table(TABLE_NAME)
-            .comment("Testing table")
-            .statement(statement -> statement
-                .addPartitionKey(ID, DataType.timeuuid())
-                .addClusteringColumn(CLUSTERING, DataType.bigint()))
-            .build();
-        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         executor = new CassandraAsyncExecutor(cassandra.getConf());
     }
 
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void pagingShouldWork() {
+    void pagingShouldWork() {
         int fetchSize = 200;
         int size = 2 * fetchSize + 50;
 

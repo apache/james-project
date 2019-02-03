@@ -19,24 +19,29 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import static org.apache.james.mailbox.cassandra.GhostMailbox.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.GhostMailbox.MAILBOX_NAME;
 import static org.apache.james.mailbox.cassandra.GhostMailbox.TYPE;
 
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.Event;
+import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.MailboxListener;
 
 /**
  * See https://issues.apache.org/jira/browse/MAILBOX-322 for reading about the Ghost mailbox bug.
  *
  * This class logs mailboxes writes in order to give context to analyse ghost mailbox bug.
  */
-public class MailboxOperationLoggingListener implements MailboxListener {
+public class MailboxOperationLoggingListener implements MailboxListener.GroupMailboxListener {
+    private static class MailboxOperationLoggingListenerGroup extends Group {}
+
     public static final String ADDED = "Added";
     public static final String REMOVED = "Removed";
+    private static final Group GROUP = new MailboxOperationLoggingListenerGroup();
 
     @Override
-    public ListenerType getType() {
-        return ListenerType.ONCE;
+    public Group getDefaultGroup() {
+        return GROUP;
     }
 
     @Override
@@ -44,25 +49,22 @@ public class MailboxOperationLoggingListener implements MailboxListener {
         if (event instanceof MailboxRenamed) {
             MailboxRenamed mailboxRenamed = (MailboxRenamed) event;
             GhostMailbox.logger()
+                .addField(MAILBOX_ID, mailboxRenamed.getMailboxId())
                 .addField(MAILBOX_NAME, mailboxRenamed.getNewPath())
                 .addField(TYPE, ADDED)
-                .log(logger -> logger.info("Mailbox renamed event"));
-            GhostMailbox.logger()
-                .addField(MAILBOX_NAME, mailboxRenamed.getMailboxPath())
-                .addField(TYPE, REMOVED)
                 .log(logger -> logger.info("Mailbox renamed event"));
         }
         if (event instanceof MailboxDeletion) {
             MailboxDeletion mailboxDeletion = (MailboxDeletion) event;
             GhostMailbox.logger()
-                .addField(MAILBOX_NAME, mailboxDeletion.getMailboxPath())
+                .addField(MAILBOX_ID, mailboxDeletion.getMailboxId())
                 .addField(TYPE, REMOVED)
                 .log(logger -> logger.info("Mailbox deleted event"));
         }
         if (event instanceof MailboxAdded) {
             MailboxAdded mailboxAdded = (MailboxAdded) event;
             GhostMailbox.logger()
-                .addField(MAILBOX_NAME, mailboxAdded.getMailboxPath())
+                .addField(MAILBOX_ID, mailboxAdded.getMailboxId())
                 .addField(TYPE, ADDED)
                 .log(logger -> logger.info("Mailbox added event"));
         }

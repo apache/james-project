@@ -58,7 +58,7 @@ public class ProcessRedirectNotify {
 
             if (mailet.getInitParameters().isDebug()) {
                 LOGGER.debug("New mail - sender: {}, recipients: {}, name: {}, remoteHost: {}, remoteAddr: {}, state: {}, lastUpdated: {}, errorMessage: {}",
-                        newMail.getSender(), newMail.getRecipients(), newMail.getName(), newMail.getRemoteHost(), newMail.getRemoteAddr(), newMail.getState(), newMail.getLastUpdated(), newMail.getErrorMessage());
+                        newMail.getMaybeSender(), newMail.getRecipients(), newMail.getName(), newMail.getRemoteHost(), newMail.getRemoteAddr(), newMail.getState(), newMail.getLastUpdated(), newMail.getErrorMessage());
             }
 
             // Create the message
@@ -72,6 +72,7 @@ public class ProcessRedirectNotify {
             // Set additional headers
 
             mailModifier.setRecipients(mailet.getRecipients(originalMail));
+
             mailModifier.setTo(mailet.getTo(originalMail));
             mailModifier.setSubjectPrefix(originalMail);
             mailModifier.setReplyTo(mailet.getReplyTo(originalMail));
@@ -86,10 +87,12 @@ public class ProcessRedirectNotify {
 
             if (senderDomainIsValid(newMail)) {
                 // Send it off...
-                mailet.getMailetContext().sendMail(newMail);
+                if (!newMail.getRecipients().isEmpty()) {
+                    mailet.getMailetContext().sendMail(newMail);
+                }
             } else {
                 throw new MessagingException(mailet.getMailetName() + " mailet cannot forward " + originalMail.getName() + ". " +
-                        "Invalid sender domain for " + newMail.getSender() + ". " +
+                        "Invalid sender domain for " + newMail.getMaybeSender().asString() + ". " +
                         "Consider using the Resend mailet " + "using a different sender.");
             }
 
@@ -174,9 +177,9 @@ public class ProcessRedirectNotify {
     @SuppressWarnings("deprecation")
     private boolean senderDomainIsValid(Mail mail) throws MessagingException {
         return !mailet.getInitParameters().getFakeDomainCheck()
-                || mail.getSender() == null
+                || !mail.hasSender()
                 || !mailet.getMailetContext()
-            .getMailServers(mail.getSender()
+            .getMailServers(mail.getMaybeSender().get()
                 .getDomain())
             .isEmpty();
     }

@@ -20,10 +20,11 @@
 package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -31,25 +32,19 @@ public class HostTest {
 
     private static final int DEFAULT_PORT = 154;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
-    public void parseConfStringShouldParseConfWithIpAndPort() {
-        //Given
+    void parseConfStringShouldParseConfWithIpAndPort() {
         int expectedPort = 44;
         String expectedIp = "142.145.254.111";
         String ipAndPort = expectedIp + ":" + 44;
 
-        //When
         Host actual = Host.parseConfString(ipAndPort);
 
-        //Then
         assertThat(actual).isEqualTo(new Host(expectedIp, expectedPort));
     }
 
     @Test
-    public void parseConfStringShouldParseConfWithHostanmeAndPort() {
+    void parseConfStringShouldParseConfWithHostanmeAndPort() {
         int expectedPort = 44;
         String host = "host";
 
@@ -59,98 +54,72 @@ public class HostTest {
     }
 
     @Test
-    public void parseConfStringShouldParseConfWithHostOnlyWhenDefaultPortIsProvided() {
-        //Given
+    void parseConfStringShouldParseConfWithHostOnlyWhenDefaultPortIsProvided() {
         String ipAndPort = "142.145.254.111";
         String expectedIp = "142.145.254.111";
 
-        //When
         Host actual = Host.parseConfString(ipAndPort, DEFAULT_PORT);
 
-        //Then
         assertThat(actual).isEqualTo(new Host(expectedIp, DEFAULT_PORT));
     }
 
     @Test
-    public void parseConfStringShouldFailWhenConfigIsAnEmptyString() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        //Given
-        String ipAndPort = "";
-
-        //When
-        Host.parseConfString(ipAndPort);
+    void parseConfStringShouldFailWhenConfigIsAnEmptyString() {
+        assertThatIllegalArgumentException()
+            .isThrownBy(() -> Host.parseConfString(""));
     }
 
     @Test
-    public void parseConfStringShouldFailWhenOnlyHostnameAndNoDefaultPort() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        //Given
-        String hostname = "hostnameOnly";
-
-        //When
-        Host.parseConfString(hostname);
+    void parseConfStringShouldFailWhenOnlyHostnameAndNoDefaultPort() {
+        assertThatIllegalArgumentException()
+            .isThrownBy(() -> Host.parseConfString("hostnameOnly"));
     }
 
     @Test
-    public void parseConfStringShouldFailWhenNegativePort() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        Host.parseConfString("host:-1");
+    void parseConfStringShouldFailWhenNegativePort() {
+        assertThatIllegalArgumentException()
+            .isThrownBy(() -> Host.parseConfString("host:-1"));
     }
 
     @Test
-    public void parseConfStringShouldFailWhenZeroPort() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        Host.parseConfString("host:0");
+    void parseConfStringShouldFailWhenZeroPort() {
+        assertThatIllegalArgumentException()
+            .isThrownBy(() -> Host.parseConfString("host:0"));
     }
 
     @Test
-    public void parseConfStringShouldFailWhenTooHighPort() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        Host.parseConfString("host:65536");
+    void parseConfStringShouldFailWhenTooHighPort() {
+        assertThatIllegalArgumentException()
+            .isThrownBy(() -> Host.parseConfString("host:65536"));
     }
 
     @Test
-    public void parseConfStringShouldFailWhenConfigIsANullString() {
-        expectedException.expect(NullPointerException.class);
-
-        //Given
-        String ipAndPort = null;
-
-        //When
-        Host.parseConfString(ipAndPort);
+    void parseConfStringShouldFailWhenConfigIsANullString() {
+        assertThatNullPointerException()
+            .isThrownBy(() -> Host.parseConfString(null));
     }
 
 
     @Test
-    public void parseConfStringShouldFailWhenConfigIsInvalid() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        //Given
-        String ipAndPort = "10.10.10.10:42:43";
-
-        //When
-        Host.parseConfString(ipAndPort);
+    void parseConfStringShouldFailWhenConfigIsInvalid() {
+        assertThatIllegalArgumentException()
+            .isThrownBy(() -> Host.parseConfString("10.10.10.10:42:43"));
     }
 
     @Test
-    public void parseHostsShouldParseEmptyString() {
+    void parseHostsShouldParseEmptyString() {
         assertThat(Host.parseHosts(""))
             .isEmpty();
     }
 
     @Test
-    public void parseHostsShouldParseMonoHost() {
+    void parseHostsShouldParseMonoHost() {
         assertThat(Host.parseHosts("localhost:9200"))
             .containsOnly(new Host("localhost", 9200));
     }
 
     @Test
-    public void parseHostsShouldParseMultiHosts() {
+    void parseHostsShouldParseMultiHosts() {
         assertThat(Host.parseHosts("localhost:9200,server:9155"))
             .containsOnly(
                 new Host("localhost", 9200),
@@ -158,7 +127,7 @@ public class HostTest {
     }
 
     @Test
-    public void parseHostsShouldNotFailOnMultiComma() {
+    void parseHostsShouldNotFailOnMultiComma() {
         assertThat(Host.parseHosts("localhost:9200,,server:9155"))
             .containsOnly(
                 new Host("localhost", 9200),
@@ -166,21 +135,20 @@ public class HostTest {
     }
 
     @Test
-    public void parseHostsShouldFailOnInvalidHost() {
-        expectedException.expect(NumberFormatException.class);
-
-        Host.parseHosts("localhost:invalid,,server:9155");
+    void parseHostsShouldFailOnInvalidHost() {
+        assertThatThrownBy(() -> Host.parseHosts("localhost:invalid,,server:9155"))
+            .isInstanceOf(NumberFormatException.class);
     }
 
     @Test
-    public void parseHostsShouldSwallowDuplicates() {
+    void parseHostsShouldSwallowDuplicates() {
         assertThat(Host.parseHosts("localhost:9200,localhost:9200"))
             .containsOnly(
                 new Host("localhost", 9200));
     }
 
     @Test
-    public void parseHostsShouldNotSwallowSameAddressDifferentPort() {
+    void parseHostsShouldNotSwallowSameAddressDifferentPort() {
         assertThat(Host.parseHosts("localhost:9200,localhost:9155"))
             .containsOnly(
                 new Host("localhost", 9200),
@@ -188,7 +156,7 @@ public class HostTest {
     }
 
     @Test
-    public void parseHostsShouldNotSwallowSamePortDifferentAddress() {
+    void parseHostsShouldNotSwallowSamePortDifferentAddress() {
         assertThat(Host.parseHosts("localhost:9200,abcd:9200"))
             .containsOnly(
                 new Host("localhost", 9200),
@@ -196,7 +164,7 @@ public class HostTest {
     }
 
     @Test
-    public void parseHostsShouldHandleDefaultPort() {
+    void parseHostsShouldHandleDefaultPort() {
         int defaultPort = 155;
 
         assertThat(Host.parseHosts("localhost:9200,abcd", defaultPort))
@@ -206,14 +174,13 @@ public class HostTest {
     }
 
     @Test
-    public void parseHostsShouldThrowOnAbsentPortWhenNoDefaultPort() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        Host.parseHosts("localhost:9200,abcd");
+    void parseHostsShouldThrowOnAbsentPortWhenNoDefaultPort() {
+        assertThatIllegalArgumentException()
+            .isThrownBy(() -> Host.parseHosts("localhost:9200,abcd"));
     }
 
     @Test
-    public void hostShouldRespectBeanContract() {
+    void hostShouldRespectBeanContract() {
         EqualsVerifier.forClass(Host.class).verify();
     }
 }

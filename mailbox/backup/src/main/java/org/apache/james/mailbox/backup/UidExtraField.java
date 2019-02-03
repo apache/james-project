@@ -25,7 +25,7 @@ import org.apache.commons.compress.archivers.zip.ZipShort;
 
 public class UidExtraField extends LongExtraField {
 
-    public static final ZipShort ID = new ZipShort(0x6B61); // "ak" in little-endian
+    public static final ZipShort ID_AK = new ZipShort(0x6B61); // "ak" in little-endian
 
     public UidExtraField() {
         super();
@@ -41,6 +41,6 @@ public class UidExtraField extends LongExtraField {
 
     @Override
     public ZipShort getHeaderId() {
-        return ID;
+        return ID_AK;
     }
 }

@@ -34,8 +34,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -186,10 +186,9 @@ public class CachingTextExtractorTest {
     @RepeatedTest(10)
     void concurrentValueComputationShouldNotLeadToDuplicatedBackendAccess() throws Exception {
         ConcurrentTestRunner.builder()
+            .operation((a, b) -> textExtractor.extractContent(INPUT_STREAM.get(), CONTENT_TYPE))
             .threadCount(10)
-            .build((a, b) -> textExtractor.extractContent(INPUT_STREAM.get(), CONTENT_TYPE))
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         verify(wrappedTextExtractor, times(1)).extractContent(any(), any());
     }

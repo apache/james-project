@@ -19,8 +19,6 @@
 
 package org.apache.james.metrics.dropwizard;
 
-import java.util.function.Supplier;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
@@ -52,16 +50,6 @@ public class DropWizardMetricFactory implements MetricFactory {
     @Override
     public TimeMetric timer(String name) {
         return new DropWizardTimeMetric(name, metricRegistry.timer(name).time());
-    }
-
-    @Override
-    public <T> T withMetric(String name, Supplier<T> operation) {
-        TimeMetric timer = timer(name);
-        try {
-            return operation.get();
-        } finally {
-            timer.stopAndPublish();
-        }
     }
 
     @PostConstruct

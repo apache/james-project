@@ -91,7 +91,7 @@ public class MailDelivrer {
     private ExecutionResult tryDeliver(Mail mail) throws MessagingException {
         if (mail.getRecipients().isEmpty()) {
             LOGGER.info("No recipients specified... not sure how this could have happened.");
-            return ExecutionResult.permanentFailure(new Exception("No recipients specified for " + mail.getName() + " sent by " + mail.getSender()));
+            return ExecutionResult.permanentFailure(new Exception("No recipients specified for " + mail.getName() + " sent by " + mail.getMaybeSender().asString()));
         }
         if (configuration.isDebug()) {
             LOGGER.debug("Attempting to deliver {}", mail.getName());

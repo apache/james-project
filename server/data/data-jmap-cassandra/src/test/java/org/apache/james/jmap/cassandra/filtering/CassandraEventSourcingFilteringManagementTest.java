@@ -19,10 +19,11 @@
 
 package org.apache.james.jmap.cassandra.filtering;
 
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreExtension;
 import org.apache.james.jmap.api.filtering.FilteringManagementContract;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(CassandraFilteringExtension.class)
-public class CassandraEventSourcingFilteringManagementTest implements FilteringManagementContract {
-
+class CassandraEventSourcingFilteringManagementTest implements FilteringManagementContract {
+    @RegisterExtension
+    static CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED);
 }

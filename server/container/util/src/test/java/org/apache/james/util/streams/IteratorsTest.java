@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.stream.Stream;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.UnmodifiableIterator;
@@ -32,7 +32,7 @@ import com.google.common.collect.UnmodifiableIterator;
 public class IteratorsTest {
 
     @Test
-    public void toStreamShouldReturnEmptyStreamWhenEmptyIterator() {
+    void toStreamShouldReturnEmptyStreamWhenEmptyIterator() {
         //Given
         UnmodifiableIterator<String> emptyIterator = ImmutableList.<String>of().iterator();
 
@@ -44,7 +44,7 @@ public class IteratorsTest {
     }
 
     @Test
-    public void toStreamShouldReturnSameContent() {
+    void toStreamShouldReturnSameContent() {
         //Given
         UnmodifiableIterator<String> iterator = ImmutableList.of("a", "b", "c").iterator();
 

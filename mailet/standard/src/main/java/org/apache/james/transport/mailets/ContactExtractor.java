@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
-import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -101,11 +100,11 @@ public class ContactExtractor extends GenericMailet implements Mailet {
     }
 
     @VisibleForTesting
-    Optional<String> extractContacts(Mail mail) throws MessagingException, IOException {
+    Optional<String> extractContacts(Mail mail) throws MessagingException {
         ImmutableList<String> allRecipients = getAllRecipients(mail.getMessage());
 
         if (hasRecipient(allRecipients)) {
-            return Optional.of(mail.getSender())
+            return mail.getMaybeSender().asOptional()
                 .map(MailAddress::asString)
                 .map(sender -> new ExtractedContacts(sender, allRecipients))
                 .map(Throwing.function(extractedContacts -> objectMapper.writeValueAsString(extractedContacts)));

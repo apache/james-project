@@ -30,7 +30,7 @@ import com.google.inject.util.Modules;
 
 public class CassandraLdapJamesServerMain {
 
-    public static final Module cassandraLdapServerModule = Modules.override(ALL_BUT_JMX_CASSANDRA_MODULE)
+    public static final Module MODULES = Modules.override(ALL_BUT_JMX_CASSANDRA_MODULE)
         .with(new LdapUsersRepositoryModule());
 
     public static void main(String[] args) throws Exception {
@@ -39,7 +39,7 @@ public class CassandraLdapJamesServerMain {
             .build();
 
         GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(cassandraLdapServerModule, new JMXServerModule());
+            .combineWith(MODULES, new JMXServerModule());
 
         server.start();
     }

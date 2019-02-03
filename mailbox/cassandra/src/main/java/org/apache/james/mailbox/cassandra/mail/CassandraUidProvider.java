@@ -30,13 +30,11 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable.
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable.TABLE_NAME;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -47,13 +45,13 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
-import com.google.common.annotations.VisibleForTesting;
+import reactor.core.publisher.Mono;
 
 public class CassandraUidProvider implements UidProvider {
     private static final String CONDITION = "Condition";
 
     private final CassandraAsyncExecutor executor;
-    private final FunctionRunnerWithRetry runner;
+    private final long maxUidRetries;
     private final PreparedStatement insertStatement;
     private final PreparedStatement updateStatement;
     private final PreparedStatement selectStatement;
@@ -61,15 +59,10 @@ public class CassandraUidProvider implements UidProvider {
     @Inject
     public CassandraUidProvider(Session session, CassandraConfiguration cassandraConfiguration) {
         this.executor = new CassandraAsyncExecutor(session);
-        this.runner = new FunctionRunnerWithRetry(cassandraConfiguration.getUidMaxRetry());
+        this.maxUidRetries = cassandraConfiguration.getUidMaxRetry();
         this.selectStatement = prepareSelect(session);
         this.updateStatement = prepareUpdate(session);
         this.insertStatement = prepareInsert(session);
-    }
-
-    @VisibleForTesting
-    public CassandraUidProvider(Session session) {
-        this(session, CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareSelect(Session session) {
@@ -101,66 +94,56 @@ public class CassandraUidProvider implements UidProvider {
     public MessageUid nextUid(MailboxSession session, MailboxId mailboxId) throws MailboxException {
         CassandraId cassandraId = (CassandraId) mailboxId;
         return nextUid(cassandraId)
-        .join()
-        .orElseThrow(() -> new MailboxException("Error during Uid update"));
+            .blockOptional()
+            .orElseThrow(() -> new MailboxException("Error during Uid update"));
     }
 
-    public CompletableFuture<Optional<MessageUid>> nextUid(CassandraId cassandraId) {
-        return findHighestUid(cassandraId)
-            .thenCompose(optional -> {
-                if (optional.isPresent()) {
-                    return tryUpdateUid(cassandraId, optional);
-                }
-                return tryInsert(cassandraId);
-            })
-            .thenCompose(optional -> {
-                if (optional.isPresent()) {
-                    return CompletableFuture.completedFuture(optional);
-                }
-                return runner.executeAsyncAndRetrieveObject(
-                    () -> findHighestUid(cassandraId)
-                        .thenCompose(readUid -> tryUpdateUid(cassandraId, readUid)));
-            });
+    public Mono<MessageUid> nextUid(CassandraId cassandraId) {
+        Mono<MessageUid> updateUid = findHighestUid(cassandraId)
+            .flatMap(messageUid -> tryUpdateUid(cassandraId, messageUid));
+
+        return updateUid
+            .switchIfEmpty(tryInsert(cassandraId))
+            .switchIfEmpty(updateUid)
+            .single()
+            .retry(maxUidRetries);
     }
 
     @Override
     public Optional<MessageUid> lastUid(MailboxSession mailboxSession, Mailbox mailbox) throws MailboxException {
-        return findHighestUid((CassandraId) mailbox.getMailboxId()).join();
+        return findHighestUid((CassandraId) mailbox.getMailboxId())
+                .blockOptional();
     }
 
-    private CompletableFuture<Optional<MessageUid>> findHighestUid(CassandraId mailboxId) {
-        return executor.executeSingleRow(
+    private Mono<MessageUid> findHighestUid(CassandraId mailboxId) {
+        return Mono.defer(() -> executor.executeSingleRowReactor(
             selectStatement.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid()))
-            .thenApply(optional -> optional.map(row -> MessageUid.of(row.getLong(NEXT_UID))));
+            .map(row -> MessageUid.of(row.getLong(NEXT_UID))));
     }
 
-    private CompletableFuture<Optional<MessageUid>> tryUpdateUid(CassandraId mailboxId, Optional<MessageUid> uid) {
-        if (uid.isPresent()) {
-            MessageUid nextUid = uid.get().next();
-            return executor.executeReturnApplied(
+    private Mono<MessageUid> tryUpdateUid(CassandraId mailboxId, MessageUid uid) {
+        MessageUid nextUid = uid.next();
+        return Mono.defer(() -> executor.executeReturnApplied(
                 updateStatement.bind()
-                    .setUUID(MAILBOX_ID, mailboxId.asUuid())
-                    .setLong(CONDITION, uid.get().asLong())
-                    .setLong(NEXT_UID, nextUid.asLong()))
-                .thenApply(success -> successToUid(nextUid, success));
-        } else {
-            return tryInsert(mailboxId);
-        }
+                        .setUUID(MAILBOX_ID, mailboxId.asUuid())
+                        .setLong(CONDITION, uid.asLong())
+                        .setLong(NEXT_UID, nextUid.asLong()))
+                .flatMap(success -> successToUid(nextUid, success)));
     }
 
-    private CompletableFuture<Optional<MessageUid>> tryInsert(CassandraId mailboxId) {
-        return executor.executeReturnApplied(
+    private Mono<MessageUid> tryInsert(CassandraId mailboxId) {
+        return Mono.defer(() -> executor.executeReturnApplied(
             insertStatement.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid()))
-            .thenApply(success -> successToUid(MessageUid.MIN_VALUE, success));
+            .flatMap(success -> successToUid(MessageUid.MIN_VALUE, success)));
     }
 
-    private Optional<MessageUid> successToUid(MessageUid uid, Boolean success) {
+    private Mono<MessageUid> successToUid(MessageUid uid, Boolean success) {
         if (success) {
-            return Optional.of(uid);
+            return Mono.just(uid);
         }
-        return Optional.empty();
+        return Mono.empty();
     }
 
 }

@@ -20,7 +20,7 @@
 
 package org.apache.james.transport.matchers;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -61,8 +61,8 @@ public class HasMailAttributeWithValueRegexTest extends AbstractHasMailAttribute
         Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
 
         assertNotNull(matchedRecipients);
-        assertEquals(matchedRecipients.size(), mockedMail.getRecipients()
-                .size());
+        assertThat(mockedMail.getRecipients()
+                .size()).isEqualTo(matchedRecipients.size());
     }
 
     @Test
@@ -96,11 +96,11 @@ public class HasMailAttributeWithValueRegexTest extends AbstractHasMailAttribute
         assertNull(matchedRecipients);
         
         try {
-            assertEquals(exception, regexException);
+            assertThat(regexException).isEqualTo(exception);
         } catch (AssertionFailedError e) {
             // NOTE the expected exception changes when the project is built/run
             // against non java 1.4 jvm. 
-            assertEquals(exception + " (org.apache.oro.text.regex.MalformedPatternException: Unmatched parentheses.)", regexException);
+            assertThat(regexException).isEqualTo(exception + " (org.apache.oro.text.regex.MalformedPatternException: Unmatched parentheses.)");
         }
     }
 

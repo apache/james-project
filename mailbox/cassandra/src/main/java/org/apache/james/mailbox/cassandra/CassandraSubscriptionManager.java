@@ -39,6 +39,6 @@ public class CassandraSubscriptionManager extends StoreSubscriptionManager {
 
     @Override
     protected Subscription createSubscription(MailboxSession session, String mailbox) {
-        return new SimpleSubscription(session.getUser().getUserName(), mailbox);
+        return new SimpleSubscription(session.getUser().asString(), mailbox);
     }
 }

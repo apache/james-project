@@ -17,8 +17,6 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.transport.matchers;
 
 import java.util.ArrayList;
@@ -27,6 +25,7 @@ import java.util.Collection;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
@@ -57,7 +56,7 @@ public abstract class AbstractQuotaMatcher extends GenericMatcher {
     @Override
     public final Collection<MailAddress> match(Mail mail) throws MessagingException {
         Collection<MailAddress> matching = null;
-        if (isSenderChecked(mail.getSender())) {
+        if (isSenderChecked(mail.getMaybeSender())) {
             matching = new ArrayList<>();
             for (MailAddress recipient : mail.getRecipients()) {
                 if (isRecipientChecked(recipient) && isOverQuota(recipient, mail)) {
@@ -97,9 +96,15 @@ public abstract class AbstractQuotaMatcher extends GenericMatcher {
      * to its check.
      *
      * @param sender the sender to check
-     */    
-    protected boolean isSenderChecked(MailAddress sender) throws MessagingException {
-        return !(sender == null || getMailetContext().getPostmaster().equals(sender));
+     */
+    private boolean isSenderChecked(MaybeSender sender) {
+        return sender.asOptional()
+            .filter(mailAddress -> !isPostmaster(mailAddress))
+            .isPresent();
+    }
+
+    private boolean isPostmaster(MailAddress mailAddress) {
+        return getMailetContext().getPostmaster().equals(mailAddress);
     }
 
     /** 
@@ -111,7 +116,7 @@ public abstract class AbstractQuotaMatcher extends GenericMatcher {
      * @param recipient the recipient to check
      */    
     protected boolean isRecipientChecked(MailAddress recipient) throws MessagingException {
-        return !(getMailetContext().getPostmaster().equals(recipient));
+        return !(isPostmaster(recipient));
     }
 
     /** 

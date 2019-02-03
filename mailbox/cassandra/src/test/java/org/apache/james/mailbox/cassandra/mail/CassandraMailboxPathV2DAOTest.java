@@ -19,11 +19,12 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 
 public class CassandraMailboxPathV2DAOTest extends CassandraMailboxPathDAOTest {
     @Override
-    CassandraMailboxPathDAO testee() {
+    CassandraMailboxPathDAO testee(CassandraCluster cassandra) {
         return new CassandraMailboxPathV2DAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 }

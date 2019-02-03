@@ -61,8 +61,10 @@ public class CommonServicesModule extends AbstractModule {
         install(new DropWizardMetricsModule());
         install(new TaskManagerModule());
         install(new CleanupTaskModule());
+        install(new MimeMessageModule());
 
         bind(FileSystem.class).toInstance(fileSystem);
+        bind(Configuration.class).toInstance(configuration);
 
         bind(ConfigurationProvider.class).toInstance(new FileConfigurationProvider(fileSystem, configuration));
 

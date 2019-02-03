@@ -19,7 +19,7 @@
 
 package org.apache.james.protocols.api;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -206,7 +206,7 @@ public class AbstractProtocolTransportTest {
         }
         latch.await();
         
-        assertEquals(messages.size(), writtenMessages.size());
+        assertThat(writtenMessages.size()).isEqualTo(messages.size());
         
         for (int i = 0; i < messages.size(); i++) {
             Response response = messages.get(i);
@@ -216,9 +216,9 @@ public class AbstractProtocolTransportTest {
     
     private void checkBytesEquals(byte[] expected, byte[] received) throws UnsupportedEncodingException {
         
-        assertEquals("'" + new String(expected, US_ASCII) + "'=>'" + new String(received, US_ASCII) + "'", expected.length, received.length - 2);
+        assertThat(received.length - 2).describedAs("'" + new String(expected, US_ASCII) + "'=>'" + new String(received, US_ASCII) + "'").isEqualTo(expected.length);
         for (int i = 0; i < expected.length; i++) {
-            assertEquals("'" + new String(expected, US_ASCII) + "'=>'" + new String(received, US_ASCII) + "'", expected[i], received[i]);
+            assertThat(received[i]).describedAs("'" + new String(expected, US_ASCII) + "'=>'" + new String(received, US_ASCII) + "'").isEqualTo(expected[i]);
         }
     }
     

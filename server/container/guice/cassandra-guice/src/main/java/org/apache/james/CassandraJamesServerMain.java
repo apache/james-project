@@ -20,6 +20,7 @@
 package org.apache.james;
 
 import org.apache.james.modules.MailboxModule;
+import org.apache.james.modules.activemq.ActiveMQQueueModule;
 import org.apache.james.modules.data.CassandraDLPConfigurationStoreModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
 import org.apache.james.modules.data.CassandraJmapModule;
@@ -28,6 +29,7 @@ import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
 import org.apache.james.modules.data.CassandraSieveRepositoryModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.eventstore.CassandraEventStoreModule;
+import org.apache.james.modules.mailbox.BlobStoreAPIModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
 import org.apache.james.modules.mailbox.CassandraObjectStoreModule;
 import org.apache.james.modules.mailbox.CassandraQuotaMailingModule;
@@ -42,7 +44,7 @@ import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
-import org.apache.james.modules.server.ActiveMQQueueModule;
+import org.apache.james.modules.server.CassandraDataRoutesModules;
 import org.apache.james.modules.server.CassandraRoutesModule;
 import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
@@ -51,7 +53,9 @@ import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
-import org.apache.james.modules.server.SieveQuotaRoutesModule;
+import org.apache.james.modules.server.MessageIdReIndexingModule;
+import org.apache.james.modules.server.ReIndexingModule;
+import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
@@ -64,6 +68,7 @@ public class CassandraJamesServerMain {
 
     public static final Module WEBADMIN = Modules.combine(
         new CassandraRoutesModule(),
+        new CassandraDataRoutesModules(),
         new DataRoutesModules(),
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),
@@ -71,7 +76,9 @@ public class CassandraJamesServerMain {
         new SwaggerRoutesModule(),
         new WebAdminServerModule(),
         new DLPRoutesModule(),
-        new SieveQuotaRoutesModule());
+        new SieveRoutesModule(),
+        new ReIndexingModule(),
+        new MessageIdReIndexingModule());
 
     public static final Module PROTOCOLS = Modules.combine(
         new CassandraJmapModule(),
@@ -94,6 +101,7 @@ public class CassandraJamesServerMain {
         new CassandraEventStoreModule(),
         new CassandraMailRepositoryModule(),
         new CassandraMetricsModule(),
+        new BlobStoreAPIModule(),
         new CassandraObjectStoreModule(),
         new CassandraRecipientRewriteTableModule(),
         new CassandraSessionModule(),

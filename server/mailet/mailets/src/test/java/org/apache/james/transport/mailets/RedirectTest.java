@@ -385,12 +385,13 @@ public class RedirectTest {
 
 
         FakeMail mail = FakeMail.builder()
-                .name(MAILET_NAME)
-                .sender(MailAddressFixture.ANY_AT_JAMES)
-                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                    .setSubject("My subject")
-                    .setText("content"))
-                .build();
+            .name(MAILET_NAME)
+            .recipient(MailAddressFixture.RECIPIENT1)
+            .sender(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setSubject("My subject")
+                .setText("content"))
+            .build();
 
         redirect.service(mail);
 
@@ -411,6 +412,7 @@ public class RedirectTest {
         FakeMail mail = FakeMail.builder()
             .name(MAILET_NAME)
             .sender(MailAddressFixture.ANY_AT_JAMES)
+            .recipient(MailAddressFixture.RECIPIENT1)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addHeader("Message-ID", messageId)
                 .setSubject("My subject")
@@ -437,6 +439,7 @@ public class RedirectTest {
         FakeMail mail = FakeMail.builder()
             .name(MAILET_NAME)
             .sender(MailAddressFixture.ANY_AT_JAMES)
+            .recipient(MailAddressFixture.RECIPIENT1)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addHeader("Message-ID", messageId)
                 .setSubject("My subject")

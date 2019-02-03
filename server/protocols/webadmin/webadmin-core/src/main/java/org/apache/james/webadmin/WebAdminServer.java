@@ -154,12 +154,24 @@ public class WebAdminServer implements Configurable {
                 .cause(ex)
                 .asString());
         });
+
+        service.exception(IllegalArgumentException.class, (ex, req, res) -> {
+            LOGGER.info("Invalid arguments supplied in the user request", ex);
+            res.status(BAD_REQUEST_400);
+            res.body(ErrorResponder.builder()
+                .statusCode(BAD_REQUEST_400)
+                .type(INVALID_ARGUMENT)
+                .message("Invalid arguments supplied in the user request")
+                .cause(ex)
+                .asString());
+        });
     }
 
     @PreDestroy
     public void destroy() {
         if (configuration.isEnabled()) {
             service.stop();
+            service.awaitStop();
             LOGGER.info("Web admin server stopped");
         }
     }

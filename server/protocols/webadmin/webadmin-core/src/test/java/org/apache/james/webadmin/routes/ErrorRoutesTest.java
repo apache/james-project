@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import static io.restassured.RestAssured.when;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.apache.james.webadmin.routes.ErrorRoutes.INTERNAL_SERVER_ERROR;
+import static org.apache.james.webadmin.routes.ErrorRoutes.INVALID_ARGUMENT_EXCEPTION;
 import static org.apache.james.webadmin.routes.ErrorRoutes.JSON_EXTRACT_EXCEPTION;
 import static org.apache.james.webadmin.utils.ErrorResponder.ErrorType.INVALID_ARGUMENT;
 import static org.apache.james.webadmin.utils.ErrorResponder.ErrorType.SERVER_ERROR;
@@ -35,8 +36,8 @@ import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.ErrorResponder;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import io.restassured.RestAssured;
@@ -44,10 +45,10 @@ import io.restassured.RestAssured;
 public class ErrorRoutesTest {
     private static final String NOT_FOUND = "notFound";
 
-    private static WebAdminServer webAdminServer;
+    private WebAdminServer webAdminServer;
 
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new NoopMetricFactory(),
                 new ErrorRoutes());
@@ -60,8 +61,8 @@ public class ErrorRoutesTest {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
-    @AfterClass
-    public static void tearDown() {
+    @After
+    public void tearDown() {
         webAdminServer.destroy();
     }
 
@@ -88,7 +89,7 @@ public class ErrorRoutesTest {
     }
 
     @Test
-    public void defineJsonExtractExceptionShouldReturnBadRequestJsonFormat() throws InterruptedException {
+    public void defineJsonExtractExceptionShouldReturnBadRequestJsonFormat() {
         when()
             .get(JSON_EXTRACT_EXCEPTION)
         .then()
@@ -97,5 +98,17 @@ public class ErrorRoutesTest {
             .body("type", equalTo(INVALID_ARGUMENT.getType()))
             .body("message", equalTo("JSON payload of the request is not valid"))
             .body("details", containsString("Unrecognized token 'a': was expecting ('true', 'false' or 'null')"));
+    }
+
+    @Test
+    public void defineIllegalExceptionShouldReturnBadRequestJsonFormat() {
+        when()
+            .get(INVALID_ARGUMENT_EXCEPTION)
+        .then()
+            .statusCode(BAD_REQUEST_400)
+            .body("statusCode", equalTo(BAD_REQUEST_400))
+            .body("type", equalTo(INVALID_ARGUMENT.getType()))
+            .body("message", equalTo("Invalid arguments supplied in the user request"))
+            .body("details", containsString("Argument is non valid"));
     }
 }

@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.decode.parser;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -192,6 +192,6 @@ public class SearchCommandParserTopLevelAndTest {
                 new ByteArrayInputStream(input.getBytes("US-ASCII")),
                 new ByteArrayOutputStream());
 
-        assertEquals(input, key, parser.decode(null, reader));
+        assertThat(parser.decode(null, reader)).describedAs(input).isEqualTo(key);
     }
 }

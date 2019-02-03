@@ -24,7 +24,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.store.StoreMailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 
@@ -43,9 +42,9 @@ public abstract class AbstractLockingUidProvider implements UidProvider {
     }
     
     @Override
-    public MessageUid nextUid(final MailboxSession session, final Mailbox mailbox) throws MailboxException {
+    public MessageUid nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
         boolean writeLock = true;
-        return locker.executeWithLock(session, new StoreMailboxPath(mailbox),
+        return locker.executeWithLock(session, mailbox.generateAssociatedPath(),
             () -> lockedNextUid(session, mailbox),
             writeLock);
     }
@@ -56,7 +55,7 @@ public abstract class AbstractLockingUidProvider implements UidProvider {
     protected abstract MessageUid lockedNextUid(MailboxSession session, Mailbox mailbox) throws MailboxException;
 
     @Override
-    public MessageUid nextUid(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+    public MessageUid nextUid(MailboxSession session, MailboxId mailboxId) {
         throw new NotImplementedException("Not implemented");
     }
 }

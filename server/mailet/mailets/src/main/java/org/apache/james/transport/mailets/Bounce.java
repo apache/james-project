@@ -237,11 +237,11 @@ public class Bounce extends GenericMailet implements RedirectNotify {
 
     @Override
     public void service(Mail originalMail) throws MessagingException {
-        if (originalMail.getSender() == null) {
+        if (!originalMail.hasSender()) {
             passThrough(originalMail);
         } else {
             if (getInitParameters().isDebug()) {
-                LOGGER.debug("Processing a bounce request for a message with a reverse path.  The bounce will be sent to {}", originalMail.getSender());
+                LOGGER.debug("Processing a bounce request for a message with a reverse path.  The bounce will be sent to {}", originalMail.getMaybeSender());
             }
             ProcessRedirectNotify.from(this).process(originalMail);
         }

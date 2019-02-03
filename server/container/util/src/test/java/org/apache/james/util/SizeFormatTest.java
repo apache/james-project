@@ -22,66 +22,66 @@ package org.apache.james.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SizeFormatTest {
 
     @Test
-    public void formatShouldThrowWhenNegative() {
+    void formatShouldThrowWhenNegative() {
         assertThatThrownBy(() -> SizeFormat.format(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void formatShouldAcceptZero() {
+    void formatShouldAcceptZero() {
         assertThat(SizeFormat.format(0))
             .isEqualTo("0 bytes");
     }
 
     @Test
-    public void formatShouldUseByteWhenAlmostKiB() {
+    void formatShouldUseByteWhenAlmostKiB() {
         assertThat(SizeFormat.format(1023))
             .isEqualTo("1023 bytes");
     }
 
     @Test
-    public void formatShouldUseKiBWhenExactlyOneKiB() {
+    void formatShouldUseKiBWhenExactlyOneKiB() {
         assertThat(SizeFormat.format(1024))
             .isEqualTo("1 KiB");
     }
 
     @Test
-    public void formatShouldHaveTwoDigitPrecision() {
+    void formatShouldHaveTwoDigitPrecision() {
         assertThat(SizeFormat.format(1024 + 100))
             .isEqualTo("1.09 KiB");
     }
 
     @Test
-    public void formatShouldBeExpressedInKiBWhenAlmostMiB() {
+    void formatShouldBeExpressedInKiBWhenAlmostMiB() {
         assertThat(SizeFormat.format(1024 * 1024 - 1))
             .isEqualTo("1023.99 KiB");
     }
 
     @Test
-    public void formatShouldKeepTwoDigitPrecisionWhenRoundingDown() {
+    void formatShouldKeepTwoDigitPrecisionWhenRoundingDown() {
         assertThat(SizeFormat.format(2 * 1024 * 1024 - 1))
             .isEqualTo("1.99 MiB");
     }
 
     @Test
-    public void formatShouldUseMiBWhenExactlyOneMiB() {
+    void formatShouldUseMiBWhenExactlyOneMiB() {
         assertThat(SizeFormat.format(1024 * 1024))
             .isEqualTo("1 MiB");
     }
 
     @Test
-    public void formatShouldUseGiBWhenExactlyOneGiB() {
+    void formatShouldUseGiBWhenExactlyOneGiB() {
         assertThat(SizeFormat.format(1024 * 1024 * 1024))
             .isEqualTo("1 GiB");
     }
 
     @Test
-    public void formatShouldUseTiBWhenExactlyOneTiB() {
+    void formatShouldUseTiBWhenExactlyOneTiB() {
         assertThat(SizeFormat.format(1024L * 1024L * 1024L * 1024L))
             .isEqualTo("1 TiB");
     }

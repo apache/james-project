@@ -44,7 +44,6 @@ import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SMTPSendingException;
 import org.apache.james.utils.SmtpSendingStep;
-import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -110,8 +109,7 @@ public class SmtpAuthorizedAddressesTest {
             .sendMessage(FROM, TO);
 
         awaitAtMostOneMinute
-            .pollDelay(Duration.ONE_HUNDRED_MILLISECONDS)
-            .until(() -> fakeSmtp.isReceived(response -> response
+            .untilAsserted(() -> fakeSmtp.assertEmailReceived(response -> response
                 .body("", hasSize(1))
                 .body("[0].from", equalTo(FROM))
                 .body("[0].subject", equalTo("test"))));
@@ -140,8 +138,7 @@ public class SmtpAuthorizedAddressesTest {
             .sendMessage(FROM, TO);
 
         awaitAtMostOneMinute
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
-            .until(() -> fakeSmtp.isReceived(response -> response
+            .untilAsserted(() -> fakeSmtp.assertEmailReceived(response -> response
                 .body("", hasSize(1))
                 .body("[0].from", equalTo(FROM))
                 .body("[0].subject", equalTo("test"))));

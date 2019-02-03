@@ -103,7 +103,7 @@ public class MatcherSplitter {
                          .addContext("state", mail.getState())
                          .addContext("mail", mail.getName())
                          .addContext("recipients", ImmutableList.copyOf(mail.getRecipients()))
-                         .addContext("sender", mail.getSender())
+                         .addContext("sender", mail.getMaybeSender())
                          .build()) {
                 // call the matcher
                 matchedRcpts = matcher.match(mail);

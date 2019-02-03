@@ -26,6 +26,7 @@ import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import java.util.concurrent.Executors;
 
 import org.apache.james.backends.es.utils.TestingClientProvider;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -57,11 +58,13 @@ public class ElasticSearchIndexerTest {
     public void setup() {
         node = embeddedElasticSearch.getNode();
         TestingClientProvider clientProvider = new TestingClientProvider(node);
-        new IndexCreationFactory()
+        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(clientProvider.get());
-        testee = new ElasticSearchIndexer(clientProvider.get(), Executors.newSingleThreadExecutor(), ALIAS_NAME, TYPE_NAME, MINIMUM_BATCH_SIZE);
+        testee = new ElasticSearchIndexer(clientProvider.get(),
+            Executors.newSingleThreadExecutor(NamedThreadFactory.withClassName(getClass())),
+            ALIAS_NAME, TYPE_NAME, MINIMUM_BATCH_SIZE);
     }
     
     @Test

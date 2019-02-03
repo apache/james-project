@@ -44,8 +44,7 @@
             <p>
                 Some MailboxListener allows you to specify if you want to run them synchronously or asynchronously. To do so,
                 for MailboxListener that supports this, you can use the <b>async</b> attribute (optional, per mailet default) to govern the execution mode.
-                If <b>true</b> the execution will be scheduled by a FixedThreadPool whose size is defined by the <b>poolSize</b>
-                attribute (optional, default to 8). If <b>false</b>, the execution is synchronous, on the current thread.
+                If <b>true</b> the execution will be scheduled in a reactor elastic scheduler. If <b>false</b>, the execution is synchronous.
             </p>
 
             <ul>

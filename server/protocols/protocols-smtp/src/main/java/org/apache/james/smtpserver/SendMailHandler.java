@@ -68,7 +68,7 @@ public class SendMailHandler implements JamesMessageHook {
 
         try {
             queue.enQueue(mail);
-            LOGGER.info("Successfully spooled mail {} from {} on {} for {}", mail.getName(), mail.getSender(), session.getRemoteAddress().getAddress(), mail.getRecipients());
+            LOGGER.info("Successfully spooled mail {} from {} on {} for {}", mail.getName(), mail.getMaybeSender(), session.getRemoteAddress().getAddress(), mail.getRecipients());
         } catch (MessagingException me) {
             LOGGER.error("Unknown error occurred while processing DATA.", me);
             return HookResult.builder()

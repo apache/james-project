@@ -234,6 +234,11 @@ public class CmdTypeTest {
         assertThat(CmdType.lookup("removesieveuserquota")).isEqualTo(CmdType.REMOVESIEVEUSERQUOTA);
     }
 
+    @Test
+    public void addSieveScriptShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("addactivesievescript")).isEqualTo(CmdType.ADDACTIVESIEVESCRIPT);
+    }
+
     @Test 
     public void lookupEmptyStringShouldReturnNull() {
         assertThat(CmdType.lookup("")).isNull();

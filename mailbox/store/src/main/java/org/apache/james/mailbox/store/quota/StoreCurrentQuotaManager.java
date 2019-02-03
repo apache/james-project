@@ -19,14 +19,11 @@
 
 package org.apache.james.mailbox.store.quota;
 
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 
 public interface StoreCurrentQuotaManager extends CurrentQuotaManager {
-
-    MailboxListener.ListenerType getAssociatedListenerType();
 
     void increase(QuotaRoot quotaRoot, long count, long size) throws MailboxException;
 

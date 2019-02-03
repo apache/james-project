@@ -79,7 +79,10 @@ public class IsInWhiteList extends AbstractSQLWhitelistMatcher {
 
     @Override
     protected boolean matchedWhitelist(MailAddress recipientMailAddress, Mail mail) throws MessagingException {
-        MailAddress senderMailAddress = mail.getSender();
+        if (!mail.hasSender()) {
+            return true;
+        }
+        MailAddress senderMailAddress = mail.getMaybeSender().get();
         String senderUser = senderMailAddress.getLocalPart().toLowerCase(Locale.US);
         Domain senderHost = senderMailAddress.getDomain();
 

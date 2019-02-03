@@ -19,9 +19,9 @@
 
 package org.apache.james.webadmin.dto;
 
-import java.util.List;
-
-import org.apache.james.dlp.api.DLPConfigurationItem;
+import org.apache.james.dlp.api.DLPRules;
+import org.apache.james.dlp.api.DLPRules.DuplicateRulesIdsException;
+import org.apache.james.util.streams.Iterables;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -32,12 +32,11 @@ import com.google.common.collect.ImmutableList;
 
 public class DLPConfigurationDTO {
 
-    public static DLPConfigurationDTO toDTO(List<DLPConfigurationItem> dlpConfigurations) {
+    public static DLPConfigurationDTO toDTO(DLPRules dlpConfigurations) {
         Preconditions.checkNotNull(dlpConfigurations);
 
         return new DLPConfigurationDTO(
-            dlpConfigurations
-                .stream()
+            Iterables.toStream(dlpConfigurations)
                 .map(DLPConfigurationItemDTO::toDTO)
                 .collect(Guavate.toImmutableList()));
     }
@@ -55,10 +54,9 @@ public class DLPConfigurationDTO {
     }
 
     @JsonIgnore
-    public List<DLPConfigurationItem> toDLPConfigurations() {
-        return rules
-            .stream()
+    public DLPRules toDLPConfiguration() throws DuplicateRulesIdsException {
+        return new DLPRules(rules.stream()
             .map(DLPConfigurationItemDTO::toDLPConfiguration)
-            .collect(Guavate.toImmutableList());
+            .collect(Guavate.toImmutableList()));
     }
 }

@@ -37,11 +37,11 @@ import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
-import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.Role;
+import org.apache.james.mailbox.SystemMailboxesProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.Attachment;
@@ -84,7 +84,7 @@ public class SendMDNProcessor implements SetMessagesProcessor {
 
     @Override
     public SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession) {
-        return metricFactory.withMetric(JMAP_PREFIX + "SendMDN",
+        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + "SendMDN",
             () -> handleMDNCreation(request, mailboxSession));
     }
 
@@ -189,7 +189,7 @@ public class SendMDNProcessor implements SetMessagesProcessor {
 
 
     private MessageManager getOutbox(MailboxSession mailboxSession) throws MailboxException {
-        return systemMailboxesProvider.getMailboxByRole(Role.OUTBOX, mailboxSession)
+        return systemMailboxesProvider.getMailboxByRole(Role.OUTBOX, mailboxSession.getUser())
             .findAny()
             .orElseThrow(() -> new IllegalStateException("User don't have an Outbox"));
     }

@@ -22,12 +22,13 @@ package org.apache.james.mailbox.inmemory.mail;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
@@ -42,7 +43,7 @@ import com.google.common.collect.ImmutableList;
 
 public class InMemoryMapperProvider implements MapperProvider {
 
-    private static final MockMailboxSession MAILBOX_SESSION = new MockMailboxSession("user");
+    private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create("user");
 
     private final Random random;
     private final MessageId.Factory messageIdFactory;
@@ -64,7 +65,7 @@ public class InMemoryMapperProvider implements MapperProvider {
 
     @Override
     public MessageMapper createMessageMapper() throws MailboxException {
-        return inMemoryMailboxSessionMapperFactory.createMessageMapper(new MockMailboxSession("user"));
+        return inMemoryMailboxSessionMapperFactory.createMessageMapper(MailboxSessionUtil.create("user"));
     }
 
     @Override

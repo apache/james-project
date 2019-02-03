@@ -231,7 +231,7 @@ class DomainMappingsRoutesTest {
 
             recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(alias));
 
-            Assumptions.assumeTrue(recipientRewriteTable.getUserDomainMappings(mappingSource) != null);
+            Assumptions.assumeTrue(recipientRewriteTable.getStoredMappings(mappingSource) != null);
 
             given()
                 .body("to.com")
@@ -247,7 +247,7 @@ class DomainMappingsRoutesTest {
         void getSpecificDomainMappingShouldRespondWithNotFoundWhenHasNoAliases() throws RecipientRewriteTableException {
             String domain = "from.com";
 
-            when(recipientRewriteTable.getUserDomainMappings(any())).thenReturn(MappingsImpl.empty());
+            when(recipientRewriteTable.getStoredMappings(any())).thenReturn(MappingsImpl.empty());
 
             when()
                 .get(domain)
@@ -263,7 +263,7 @@ class DomainMappingsRoutesTest {
         void getSpecificDomainMappingShouldRespondWithNotFoundWhenHasEmptyAliases() throws RecipientRewriteTableException {
             String domain = "from.com";
 
-            when(recipientRewriteTable.getUserDomainMappings(any())).thenReturn(MappingsImpl.empty());
+            when(recipientRewriteTable.getStoredMappings(any())).thenReturn(MappingsImpl.empty());
 
             when()
                 .get(domain)
@@ -306,7 +306,7 @@ class DomainMappingsRoutesTest {
             String aliasDomain = "a.com";
             Mappings mappings = MappingsImpl.fromMappings(Mapping.domain(Domain.of(aliasDomain)));
 
-            when(recipientRewriteTable.getUserDomainMappings(any())).thenReturn(mappings);
+            when(recipientRewriteTable.getStoredMappings(any())).thenReturn(mappings);
 
             List<String> body =
             when()

@@ -22,7 +22,7 @@ package org.apache.james.backends.cassandra.init.configuration;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.Configuration;
 
 import com.datastax.driver.core.PerHostPercentileTracker;
 import com.datastax.driver.core.QueryLogger;
@@ -108,7 +108,7 @@ public class QueryLoggerConfiguration {
         return new Builder();
     }
 
-    public static QueryLoggerConfiguration from(PropertiesConfiguration configuration) {
+    public static QueryLoggerConfiguration from(Configuration configuration) {
         QueryLoggerConfiguration.Builder builder = QueryLoggerConfiguration.builder();
 
         Optional<Long> constantThreshold = getOptionalIntegerFromConf(configuration, "cassandra.query.logger.constant.threshold")
@@ -142,11 +142,11 @@ public class QueryLoggerConfiguration {
         return builder.build();
     }
 
-    private static Optional<Integer> getOptionalIntegerFromConf(PropertiesConfiguration configuration, String key) {
+    private static Optional<Integer> getOptionalIntegerFromConf(Configuration configuration, String key) {
         return Optional.ofNullable(configuration.getInteger(key, null));
     }
 
-    private static Optional<Double> getOptionalDoubleFromConf(PropertiesConfiguration configuration, String key) {
+    private static Optional<Double> getOptionalDoubleFromConf(Configuration configuration, String key) {
         return Optional.ofNullable(configuration.getDouble(key, null));
     }
 

@@ -18,8 +18,7 @@
  ****************************************************************/
 package org.apache.james.dnsservice.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -72,12 +71,12 @@ public class AbstractDNSServiceTest {
     @Test
     public void testLocalhost() throws UnknownHostException {
 
-        assertEquals("localhost/127.0.0.1", DNS_SERVER.getByName("localhost").toString());
+        assertThat(DNS_SERVER.getByName("localhost").toString()).isEqualTo("localhost/127.0.0.1");
 
         String localHost = DNS_SERVER.getHostName(InetAddress.getByName("127.0.0.1"));
         // We only can check if the returned localhost is not empty. Its value
         // depends on the hosts file.
-        assertTrue(localHost.length() > 0);
+        assertThat(localHost.length() > 0).isTrue();
     }
 
     /**
@@ -89,6 +88,6 @@ public class AbstractDNSServiceTest {
     @Ignore(value = "It requires internet connection!")
     public void testApache() throws UnknownHostException {
         //TODO: move to some sort of Live tests
-        assertEquals(true, DNS_SERVER.getByName("www.apache.org").toString().startsWith("www.apache.org"));
+        assertThat(DNS_SERVER.getByName("www.apache.org").toString().startsWith("www.apache.org")).isTrue();
     }
 }

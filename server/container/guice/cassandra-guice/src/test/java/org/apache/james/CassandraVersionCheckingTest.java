@@ -18,7 +18,9 @@
  ****************************************************************/
 package org.apache.james;
 
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -33,129 +35,93 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
+import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraVersionCheckingTest {
-
+class CassandraVersionCheckingTest {
+    private static final int LIMIT_TO_10_MESSAGES = 10;
     private static final String LOCAL_HOST = "127.0.0.1";
     private static final SchemaVersion MIN_VERSION = new SchemaVersion(2);
     private static final SchemaVersion MAX_VERSION = new SchemaVersion(4);
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    private static CassandraSchemaVersionDAO versionDAO = mock(CassandraSchemaVersionDAO.class);
 
-    @Rule
-    public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+        .extension(new EmbeddedElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(binder -> binder.bind(CassandraSchemaVersionDAO.class)
+                .toInstance(versionDAO))
+            .overrideWith(binder -> binder.bind(CassandraSchemaVersionManager.class)
+                .toInstance(new CassandraSchemaVersionManager(versionDAO, MIN_VERSION, MAX_VERSION))))
+        .disableAutoStart()
+        .build();
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    private GuiceJamesServer jamesServer;
     private SocketChannel socketChannel;
-    private CassandraSchemaVersionDAO versionDAO;
 
-    @Before
-    public void setUp() throws IOException {
+    @BeforeEach
+    void setUp() throws IOException {
         socketChannel = SocketChannel.open();
-        versionDAO = mock(CassandraSchemaVersionDAO.class);
     }
 
-    @After
-    public void tearDown() throws IOException {
+    @AfterEach
+    void tearDown() throws IOException {
         socketChannel.close();
-        if (jamesServer != null) {
-            jamesServer.stop();
-        }
     }
 
     @Test
-    public void serverShouldStartSuccessfullyWhenMaxVersion() throws Exception {
+    void serverShouldStartSuccessfullyWhenMaxVersion(GuiceJamesServer server) throws Exception {
         when(versionDAO.getCurrentSchemaVersion())
             .thenReturn(CompletableFuture.completedFuture(Optional.of(MAX_VERSION)));
 
-        jamesServer = cassandraJmapTestRule.jmapServer(
-            cassandra.getModule(),
-            binder -> binder.bind(CassandraSchemaVersionDAO.class)
-                .toInstance(versionDAO),
-            binder -> binder.bind(CassandraSchemaVersionManager.class)
-                .toInstance(new CassandraSchemaVersionManager(versionDAO, MIN_VERSION, MAX_VERSION)));
-
-        assertThatServerStartCorrectly();
+        assertThatServerStartCorrectly(server);
     }
 
     @Test
-    public void serverShouldStartSuccessfullyWhenBetweenMinAndMaxVersion() throws Exception {
+    void serverShouldStartSuccessfullyWhenBetweenMinAndMaxVersion(GuiceJamesServer server) throws Exception {
         when(versionDAO.getCurrentSchemaVersion())
             .thenReturn(CompletableFuture.completedFuture(Optional.of(MIN_VERSION.next())));
 
-        jamesServer = cassandraJmapTestRule.jmapServer(
-            cassandra.getModule(),
-            binder -> binder.bind(CassandraSchemaVersionDAO.class)
-                .toInstance(versionDAO),
-            binder -> binder.bind(CassandraSchemaVersionManager.class)
-                .toInstance(new CassandraSchemaVersionManager(versionDAO, MIN_VERSION, MAX_VERSION)));
-
-        assertThatServerStartCorrectly();
+        assertThatServerStartCorrectly(server);
     }
 
     @Test
-    public void serverShouldStartSuccessfullyWhenMinVersion() throws Exception {
+    void serverShouldStartSuccessfullyWhenMinVersion(GuiceJamesServer server) throws Exception {
         when(versionDAO.getCurrentSchemaVersion())
             .thenReturn(CompletableFuture.completedFuture(Optional.of(MIN_VERSION)));
 
-        jamesServer = cassandraJmapTestRule.jmapServer(
-            cassandra.getModule(),
-            binder -> binder.bind(CassandraSchemaVersionDAO.class)
-                .toInstance(versionDAO),
-            binder -> binder.bind(CassandraSchemaVersionManager.class)
-                .toInstance(new CassandraSchemaVersionManager(versionDAO, MIN_VERSION, MAX_VERSION)));
-
-        assertThatServerStartCorrectly();
+        assertThatServerStartCorrectly(server);
     }
 
     @Test
-    public void serverShouldNotStartWhenUnderMinVersion() throws Exception {
+    void serverShouldNotStartWhenUnderMinVersion(GuiceJamesServer server) {
         when(versionDAO.getCurrentSchemaVersion())
             .thenReturn(CompletableFuture.completedFuture(Optional.of(MIN_VERSION.previous())));
 
-        jamesServer = cassandraJmapTestRule.jmapServer(
-            cassandra.getModule(),
-            binder -> binder.bind(CassandraSchemaVersionDAO.class)
-                .toInstance(versionDAO),
-            binder -> binder.bind(CassandraSchemaVersionManager.class)
-                .toInstance(new CassandraSchemaVersionManager(versionDAO, MIN_VERSION, MAX_VERSION)));
-
-        expectedException.expect(IllegalStateException.class);
-
-        jamesServer.start();
+        assertThatThrownBy(server::start).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void serverShouldNotStartWhenAboveMaxVersion() throws Exception {
+    void serverShouldNotStartWhenAboveMaxVersion(GuiceJamesServer server) {
         when(versionDAO.getCurrentSchemaVersion())
             .thenReturn(CompletableFuture.completedFuture(Optional.of(MAX_VERSION.next())));
 
-        jamesServer = cassandraJmapTestRule.jmapServer(
-            cassandra.getModule(),
-            binder -> binder.bind(CassandraSchemaVersionDAO.class)
-                .toInstance(versionDAO),
-            binder -> binder.bind(CassandraSchemaVersionManager.class)
-                .toInstance(new CassandraSchemaVersionManager(versionDAO, MIN_VERSION, MAX_VERSION)));
-
-        expectedException.expect(IllegalStateException.class);
-
-        jamesServer.start();
+        assertThatThrownBy(server::start).isInstanceOf(IllegalStateException.class);
     }
 
-    private void assertThatServerStartCorrectly() throws Exception {
-        jamesServer.start();
-        socketChannel.connect(new InetSocketAddress(LOCAL_HOST, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort()));
+    private void assertThatServerStartCorrectly(GuiceJamesServer server) throws Exception {
+        server.start();
+        socketChannel.connect(new InetSocketAddress(LOCAL_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort()));
         assertThat(getServerConnectionResponse(socketChannel))
             .startsWith("* OK JAMES IMAP4rev1 Server");
     }
@@ -167,5 +133,4 @@ public class CassandraVersionCheckingTest {
 
         return new String(bytes, Charset.forName("UTF-8"));
     }
-
 }

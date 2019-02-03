@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.List;
 
 import org.apache.james.core.Domain;
-import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 
@@ -56,6 +55,10 @@ public class RewriteTablesStepdefs {
     @Given("store \"([^\"]*)\" address mapping for user \"([^\"]*)\" at domain \"([^\"]*)\"")
     public void storeAddressMappingForUserAtDomain(String address, String user, String domain) throws Throwable {
         MappingSource source = MappingSource.fromUser(user, domain);
+        storeAddressMappingForUserAtDomain(address, source);
+    }
+
+    private void storeAddressMappingForUserAtDomain(String address, MappingSource source) throws RecipientRewriteTableException {
         rewriteTable.addAddressMapping(source, address);
     }
 
@@ -67,7 +70,7 @@ public class RewriteTablesStepdefs {
 
     @Given("store \"([^\"]*)\" address mapping as wildcard for domain \"([^\"]*)\"")
     public void storeAddressMappingAsWildcardAtDomain(String address, String domain) throws Throwable {
-        storeAddressMappingForUserAtDomain(address, RecipientRewriteTable.WILDCARD, domain);
+        storeAddressMappingForUserAtDomain(address, MappingSource.fromDomain(Domain.of(domain)));
     }
 
     @Given("store \"([^\"]*)\" alias domain mapping for domain \"([^\"]*)\"")
@@ -79,6 +82,12 @@ public class RewriteTablesStepdefs {
     public void storeForwardMappingForUserAtDomain(String address, String user, String domain) throws Throwable {
         MappingSource source = MappingSource.fromUser(user, domain);
         rewriteTable.addForwardMapping(source, address);
+    }
+
+    @Given("store user \"([^\"]*)\" alias mapping for alias \"([^\"]*)\" at domain \"([^\"]*)\"")
+    public void storeAliasMappingForUserAtDomain(String user, String address, String domain) throws Throwable {
+        MappingSource source = MappingSource.fromUser(address, domain);
+        rewriteTable.addAliasMapping(source, user);
     }
 
     @Given("store \"([^\"]*)\" group mapping for user \"([^\"]*)\" at domain \"([^\"]*)\"")
@@ -106,6 +115,10 @@ public class RewriteTablesStepdefs {
     @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes a address mapping \"([^\"]*)\"")
     public void userAtDomainRemovesAddressMapping(String user, String domain, String address) throws Throwable {
         MappingSource source = MappingSource.fromUser(user, domain);
+        userAtDomainRemovesAddressMapping(address, source);
+    }
+
+    private void userAtDomainRemovesAddressMapping(String address, MappingSource source) throws RecipientRewriteTableException {
         rewriteTable.removeAddressMapping(source, address);
     }
 
@@ -121,6 +134,12 @@ public class RewriteTablesStepdefs {
         rewriteTable.removeForwardMapping(source, address);
     }
 
+    @When("alias \"([^\"]*)\" at domain \"([^\"]*)\" removes an alias mapping \"([^\"]*)\"")
+    public void userAtDomainRemovesAliasMapping(String user, String domain, String address) throws Throwable {
+        MappingSource source = MappingSource.fromUser(user, domain);
+        rewriteTable.removeAliasMapping(source, address);
+    }
+
     @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes a group mapping \"([^\"]*)\"")
     public void userAtDomainRemovesGroupMapping(String user, String domain, String address) throws Throwable {
         MappingSource source = MappingSource.fromUser(user, domain);
@@ -129,7 +148,7 @@ public class RewriteTablesStepdefs {
 
     @When("wildcard address mapping \"([^\"]*)\" at domain \"([^\"]*)\" is removed")
     public void removeWildcardAddressMappingAtDomain(String address, String domain) throws Throwable {
-        userAtDomainRemovesAddressMapping(RecipientRewriteTable.WILDCARD, domain, address);
+        userAtDomainRemovesAddressMapping(address, MappingSource.fromDomain(Domain.of(domain)));
     }
 
     @When("alias domain mapping \"([^\"]*)\" for \"([^\"]*)\" domain is removed")
@@ -144,12 +163,17 @@ public class RewriteTablesStepdefs {
 
     @Then("mappings for user \"([^\"]*)\" at domain \"([^\"]*)\" should be empty")
     public void assertMappingsIsEmpty(String user, String domain) throws Throwable {
-        assertThat(rewriteTable.getMappings(user, Domain.of(domain))).isNullOrEmpty();
+        assertThat(rewriteTable.getResolvedMappings(user, Domain.of(domain))).isNullOrEmpty();
     }
 
     @Then("mappings for user \"([^\"]*)\" at domain \"([^\"]*)\" should contain only \"([^\"]*)\"")
     public void assertMappingsForUser(String user, String domain, List<String> mappings) throws Throwable {
-        assertThat(rewriteTable.getMappings(user, Domain.of(domain)).asStrings()).containsOnlyElementsOf(mappings);
+        assertThat(rewriteTable.getResolvedMappings(user, Domain.of(domain)).asStrings()).containsOnlyElementsOf(mappings);
+    }
+
+    @Then("mappings for alias \"([^\"]*)\" at domain \"([^\"]*)\" should contain only \"([^\"]*)\"")
+    public void assertMappingsForAlias(String alias, String domain, List<String> mappings) throws Throwable {
+        assertThat(rewriteTable.getResolvedMappings(alias, Domain.of(domain)).asStrings()).containsOnlyElementsOf(mappings);
     }
 
     @Then("a \"([^\"]*)\" exception should have been thrown")
@@ -159,7 +183,7 @@ public class RewriteTablesStepdefs {
 
     @Then("retrieving mappings for user \"([^\"]*)\" at domain \"([^\"]*)\" should raise an ErrorMappingException with message \"([^\"]*)\"")
     public void retrievingMappingsForUserAtDomainShouldRaiseAnException(String user, String domain, String message) throws Exception {
-        assertThatThrownBy(() -> rewriteTable.getMappings(user, Domain.of(domain)))
+        assertThatThrownBy(() -> rewriteTable.getResolvedMappings(user, Domain.of(domain)))
             .isInstanceOf(ErrorMappingException.class)
             .hasMessage(message);
     }

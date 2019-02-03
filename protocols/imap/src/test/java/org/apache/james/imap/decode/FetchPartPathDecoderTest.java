@@ -19,9 +19,8 @@
 
 package org.apache.james.imap.decode;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -42,77 +41,77 @@ public class FetchPartPathDecoderTest {
 
     @Test
     public void testShouldDetectText() throws Exception {
-        assertEquals(FetchPartPathDecoder.TEXT, decoder.decode("TEXT"));
-        assertEquals(FetchPartPathDecoder.TEXT, decoder.decode("3.TEXT"));
-        assertEquals(FetchPartPathDecoder.TEXT, decoder.decode("3.1.TEXT"));
-        assertEquals(FetchPartPathDecoder.TEXT, decoder
-                .decode("3.2.5.7.8.TEXT"));
+        assertThat(decoder.decode("TEXT")).isEqualTo(FetchPartPathDecoder.TEXT);
+        assertThat(decoder.decode("3.TEXT")).isEqualTo(FetchPartPathDecoder.TEXT);
+        assertThat(decoder.decode("3.1.TEXT")).isEqualTo(FetchPartPathDecoder.TEXT);
+        assertThat(decoder
+                .decode("3.2.5.7.8.TEXT")).isEqualTo(FetchPartPathDecoder.TEXT);
     }
 
     @Test
     public void testShouldDetectHeader() throws Exception {
-        assertEquals(FetchPartPathDecoder.HEADER, decoder.decode("HEADER"));
-        assertEquals(FetchPartPathDecoder.HEADER, decoder.decode("4.HEADER"));
-        assertEquals(FetchPartPathDecoder.HEADER, decoder.decode("10.1.HEADER"));
-        assertEquals(FetchPartPathDecoder.HEADER, decoder
-                .decode("8.3.5.11.HEADER"));
+        assertThat(decoder.decode("HEADER")).isEqualTo(FetchPartPathDecoder.HEADER);
+        assertThat(decoder.decode("4.HEADER")).isEqualTo(FetchPartPathDecoder.HEADER);
+        assertThat(decoder.decode("10.1.HEADER")).isEqualTo(FetchPartPathDecoder.HEADER);
+        assertThat(decoder
+                .decode("8.3.5.11.HEADER")).isEqualTo(FetchPartPathDecoder.HEADER);
     }
 
     @Test
     public void testShouldDetectHeaderFields() throws Exception {
-        assertEquals(FetchPartPathDecoder.HEADER_FIELDS, decoder
-                .decode("HEADER.FIELDS ()"));
-        assertEquals(FetchPartPathDecoder.HEADER_FIELDS, decoder
-                .decode("4.HEADER.FIELDS ()"));
-        assertEquals(FetchPartPathDecoder.HEADER_FIELDS, decoder
-                .decode("10.1.HEADER.FIELDS ()"));
-        assertEquals(FetchPartPathDecoder.HEADER_FIELDS, decoder
-                .decode("8.3.5.11.HEADER.FIELDS ()"));
+        assertThat(decoder
+                .decode("HEADER.FIELDS ()")).isEqualTo(FetchPartPathDecoder.HEADER_FIELDS);
+        assertThat(decoder
+                .decode("4.HEADER.FIELDS ()")).isEqualTo(FetchPartPathDecoder.HEADER_FIELDS);
+        assertThat(decoder
+                .decode("10.1.HEADER.FIELDS ()")).isEqualTo(FetchPartPathDecoder.HEADER_FIELDS);
+        assertThat(decoder
+                .decode("8.3.5.11.HEADER.FIELDS ()")).isEqualTo(FetchPartPathDecoder.HEADER_FIELDS);
     }
 
     @Test
     public void testShouldDetectHeaderFieldsNot() throws Exception {
-        assertEquals(FetchPartPathDecoder.HEADER_NOT_FIELDS, decoder
-                .decode("HEADER.FIELDS.NOT ()"));
-        assertEquals(FetchPartPathDecoder.HEADER_NOT_FIELDS, decoder
-                .decode("4.HEADER.FIELDS.NOT ()"));
-        assertEquals(FetchPartPathDecoder.HEADER_NOT_FIELDS, decoder
-                .decode("10.1.HEADER.FIELDS.NOT ()"));
-        assertEquals(FetchPartPathDecoder.HEADER_NOT_FIELDS, decoder
-                .decode("8.3.5.11.HEADER.FIELDS.NOT ()"));
+        assertThat(decoder
+                .decode("HEADER.FIELDS.NOT ()")).isEqualTo(FetchPartPathDecoder.HEADER_NOT_FIELDS);
+        assertThat(decoder
+                .decode("4.HEADER.FIELDS.NOT ()")).isEqualTo(FetchPartPathDecoder.HEADER_NOT_FIELDS);
+        assertThat(decoder
+                .decode("10.1.HEADER.FIELDS.NOT ()")).isEqualTo(FetchPartPathDecoder.HEADER_NOT_FIELDS);
+        assertThat(decoder
+                .decode("8.3.5.11.HEADER.FIELDS.NOT ()")).isEqualTo(FetchPartPathDecoder.HEADER_NOT_FIELDS);
     }
 
     @Test
     public void testShouldDetectMime() throws Exception {
-        assertEquals(FetchPartPathDecoder.MIME, decoder.decode("MIME"));
-        assertEquals(FetchPartPathDecoder.MIME, decoder.decode("6.MIME"));
-        assertEquals(FetchPartPathDecoder.MIME, decoder.decode("2.88.MIME"));
-        assertEquals(FetchPartPathDecoder.MIME, decoder
-                .decode("32.3.15.11.MIME"));
+        assertThat(decoder.decode("MIME")).isEqualTo(FetchPartPathDecoder.MIME);
+        assertThat(decoder.decode("6.MIME")).isEqualTo(FetchPartPathDecoder.MIME);
+        assertThat(decoder.decode("2.88.MIME")).isEqualTo(FetchPartPathDecoder.MIME);
+        assertThat(decoder
+                .decode("32.3.15.11.MIME")).isEqualTo(FetchPartPathDecoder.MIME);
     }
 
     @Test
     public void testShouldDetectContent() throws Exception {
-        assertEquals(FetchPartPathDecoder.CONTENT, decoder.decode("34"));
-        assertEquals(FetchPartPathDecoder.CONTENT, decoder.decode("6"));
-        assertEquals(FetchPartPathDecoder.CONTENT, decoder.decode("9.88"));
-        assertEquals(FetchPartPathDecoder.CONTENT, decoder.decode("17.3.15.11"));
+        assertThat(decoder.decode("34")).isEqualTo(FetchPartPathDecoder.CONTENT);
+        assertThat(decoder.decode("6")).isEqualTo(FetchPartPathDecoder.CONTENT);
+        assertThat(decoder.decode("9.88")).isEqualTo(FetchPartPathDecoder.CONTENT);
+        assertThat(decoder.decode("17.3.15.11")).isEqualTo(FetchPartPathDecoder.CONTENT);
     }
 
     @Test
     public void testShouldIgnoreCase() throws Exception {
-        assertEquals(FetchPartPathDecoder.MIME, decoder.decode("6.MIME"));
-        assertEquals(FetchPartPathDecoder.MIME, decoder.decode("6.mime"));
-        assertEquals(FetchPartPathDecoder.MIME, decoder.decode("6.miME"));
-        assertEquals(FetchPartPathDecoder.MIME, decoder.decode("6.MIme"));
-        assertEquals(FetchPartPathDecoder.HEADER, decoder.decode("6.HEADER"));
-        assertEquals(FetchPartPathDecoder.HEADER, decoder.decode("6.header"));
-        assertEquals(FetchPartPathDecoder.HEADER, decoder.decode("6.HEadER"));
-        assertEquals(FetchPartPathDecoder.HEADER, decoder.decode("6.heADEr"));
-        assertEquals(FetchPartPathDecoder.TEXT, decoder.decode("6.TEXT"));
-        assertEquals(FetchPartPathDecoder.TEXT, decoder.decode("6.text"));
-        assertEquals(FetchPartPathDecoder.TEXT, decoder.decode("6.TExt"));
-        assertEquals(FetchPartPathDecoder.TEXT, decoder.decode("6.teXT"));
+        assertThat(decoder.decode("6.MIME")).isEqualTo(FetchPartPathDecoder.MIME);
+        assertThat(decoder.decode("6.mime")).isEqualTo(FetchPartPathDecoder.MIME);
+        assertThat(decoder.decode("6.miME")).isEqualTo(FetchPartPathDecoder.MIME);
+        assertThat(decoder.decode("6.MIme")).isEqualTo(FetchPartPathDecoder.MIME);
+        assertThat(decoder.decode("6.HEADER")).isEqualTo(FetchPartPathDecoder.HEADER);
+        assertThat(decoder.decode("6.header")).isEqualTo(FetchPartPathDecoder.HEADER);
+        assertThat(decoder.decode("6.HEadER")).isEqualTo(FetchPartPathDecoder.HEADER);
+        assertThat(decoder.decode("6.heADEr")).isEqualTo(FetchPartPathDecoder.HEADER);
+        assertThat(decoder.decode("6.TEXT")).isEqualTo(FetchPartPathDecoder.TEXT);
+        assertThat(decoder.decode("6.text")).isEqualTo(FetchPartPathDecoder.TEXT);
+        assertThat(decoder.decode("6.TExt")).isEqualTo(FetchPartPathDecoder.TEXT);
+        assertThat(decoder.decode("6.teXT")).isEqualTo(FetchPartPathDecoder.TEXT);
     }
 
     @Test
@@ -191,10 +190,10 @@ public class FetchPartPathDecoderTest {
         base = base + ')';
         decoder.decode(base);
         Collection<String> results = decoder.getNames();
-        assertNotNull(results);
+        assertThat(results).isNotNull();
         Iterator<String> it = results.iterator();
         for (String name : names) {
-            assertEquals(name, it.next());
+            assertThat(it.next()).isEqualTo(name);
         }
     }
 
@@ -220,10 +219,10 @@ public class FetchPartPathDecoderTest {
     private void checkPath(int[] expected, String encoded) throws Exception {
         decoder.decode(encoded);
         final int[] path = decoder.getPath();
-        assertNotNull(path);
-        assertEquals(expected.length, path.length);
+        assertThat(path).isNotNull();
+        assertThat(path.length).isEqualTo(expected.length);
         for (int i = 0; i < expected.length; i++) {
-            assertEquals(expected[i], path[i]);
+            assertThat(path[i]).isEqualTo(expected[i]);
         }
     }
 }

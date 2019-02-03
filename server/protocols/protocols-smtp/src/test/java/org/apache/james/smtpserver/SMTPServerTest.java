@@ -19,7 +19,7 @@
 package org.apache.james.smtpserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -344,7 +344,7 @@ public class SMTPServerTest {
         }
 
         if (sender != null) {
-            assertThat(mailData.getSender().toString())
+            assertThat(mailData.getMaybeSender().asString())
                 .as("sender verfication")
                 .isEqualTo(sender);
         }
@@ -1436,6 +1436,7 @@ public class SMTPServerTest {
             .isEqualTo(503);
     }
 
+    @Test
     public void testHandleMessageSizeLimitExceeded() throws Exception {
         smtpConfiguration.setMaxMessageSize(1); // set message limit to 1kb
         init(smtpConfiguration);

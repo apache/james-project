@@ -21,8 +21,10 @@ package org.apache.james.dlp.api;
 
 import static org.apache.james.dlp.api.DLPFixture.RULE;
 import static org.apache.james.dlp.api.DLPFixture.RULE_2;
+import static org.apache.james.dlp.api.DLPFixture.RULE_UPDATED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.Domain;
 import org.junit.jupiter.api.Test;
@@ -41,10 +43,9 @@ public interface DLPConfigurationStoreContract {
 
     @Test
     default void listShouldReturnExistingEntries(DLPConfigurationStore dlpConfigurationStore) {
-        dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
-        dlpConfigurationStore.store(Domain.LOCALHOST, RULE_2);
+        dlpConfigurationStore.store(Domain.LOCALHOST, RULE, RULE_2);
 
-        assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).containsOnly(RULE_2);
+        assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).containsOnly(RULE, RULE_2);
     }
 
     @Test
@@ -57,8 +58,7 @@ public interface DLPConfigurationStoreContract {
 
     @Test
     default void clearShouldRemoveAllEnriesOfADomain(DLPConfigurationStore dlpConfigurationStore) {
-        dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
-        dlpConfigurationStore.store(Domain.LOCALHOST, RULE_2);
+        dlpConfigurationStore.store(Domain.LOCALHOST, RULE, RULE_2);
 
         dlpConfigurationStore.clear(Domain.LOCALHOST);
 
@@ -83,20 +83,58 @@ public interface DLPConfigurationStoreContract {
 
     @Test
     default void clearShouldOnlyRemovePreviouslyExistingEntries(DLPConfigurationStore dlpConfigurationStore) {
-        dlpConfigurationStore.store(Domain.LOCALHOST, ImmutableList.of(RULE, RULE_2));
+        dlpConfigurationStore.store(Domain.LOCALHOST, RULE, RULE_2);
 
         dlpConfigurationStore.clear(Domain.LOCALHOST);
 
-        dlpConfigurationStore.store(Domain.LOCALHOST, ImmutableList.of(RULE));
+        dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
 
         assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).containsOnly(RULE);
     }
 
     @Test
     default void storeShouldOverwritePreviouslyStoredEntries(DLPConfigurationStore dlpConfigurationStore) {
-        dlpConfigurationStore.store(Domain.LOCALHOST, ImmutableList.of(RULE, RULE_2));
-        dlpConfigurationStore.store(Domain.LOCALHOST, ImmutableList.of(RULE));
+        dlpConfigurationStore.store(Domain.LOCALHOST, RULE, RULE_2);
+        dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
 
         assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).containsOnly(RULE);
+    }
+
+    @Test
+    default void storeShouldBeAbleToAddRules(DLPConfigurationStore dlpConfigurationStore) {
+        dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
+        dlpConfigurationStore.store(Domain.LOCALHOST, RULE, RULE_2);
+
+        assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).containsOnly(RULE, RULE_2);
+    }
+
+    @Test
+    default void storeShouldRejectDuplicateIds(DLPConfigurationStore dlpConfigurationStore) {
+        assertThatThrownBy(() -> dlpConfigurationStore.store(Domain.LOCALHOST, RULE, RULE))
+            .isInstanceOf(DLPRules.DuplicateRulesIdsException.class);
+    }
+
+    @Test
+    default void storeShouldUpdate(DLPConfigurationStore dlpConfigurationStore) {
+        dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
+        dlpConfigurationStore.store(Domain.LOCALHOST, RULE_UPDATED);
+
+        assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).containsOnly(RULE_UPDATED);
+    }
+
+    @Test
+    default void storingSameRuleShouldBeIdempotent(DLPConfigurationStore dlpConfigurationStore) {
+        dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
+        dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
+
+        assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).containsOnly(RULE);
+    }
+
+    @Test
+    default void storeShouldClearRulesWhenEmpty(DLPConfigurationStore dlpConfigurationStore) {
+        dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
+        dlpConfigurationStore.store(Domain.LOCALHOST, new DLPRules(ImmutableList.of()));
+
+        assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).isEmpty();
     }
 }

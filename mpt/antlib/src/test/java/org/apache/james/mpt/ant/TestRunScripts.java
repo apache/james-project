@@ -19,6 +19,8 @@
 
 package org.apache.james.mpt.ant;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStream;
@@ -28,10 +30,11 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.Resource;
 import org.apache.tools.ant.types.resources.StringResource;
 import org.apache.tools.ant.types.resources.Union;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-import junit.framework.TestCase;
-
-public class TestRunScripts extends TestCase {
+public class TestRunScripts {
 
     private static final String SCRIPT = "A script";
 
@@ -43,9 +46,8 @@ public class TestRunScripts extends TestCase {
     
     MailProtocolTestTask subject;
     
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         fakeServer = new DiscardProtocol();
         fakeServer.start();
         record = fakeServer.recordNext();
@@ -60,12 +62,12 @@ public class TestRunScripts extends TestCase {
         subject.setProject(new Project());
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @After
+    public void tearDown() throws Exception {
         fakeServer.stop();
     }
 
+    @Test
     public void testIgnoreUnsupportedResource() throws Exception {
         final Resource unsupportedResource = new StringResource() {
             @Override
@@ -76,15 +78,17 @@ public class TestRunScripts extends TestCase {
         stubResourceCollection.add(unsupportedResource);
         subject.add(stubResourceCollection);
         subject.execute();
-        assertEquals(SCRIPT + "\r\n", record.complete());
+        assertThat(record.complete()).isEqualTo(SCRIPT + "\r\n");
     }
-    
+
+    @Test
     public void testRunOneScriptFromCollection() throws Exception {
         subject.add(stubResourceCollection);
         subject.execute();
-        assertEquals(SCRIPT + "\r\n", record.complete());
+        assertThat(record.complete()).isEqualTo(SCRIPT + "\r\n");
     }
-    
+
+    @Test
     public void testRunOneScriptFromAttribute() throws Exception {
         final File file = File.createTempFile("Test", "mpt");
         file.deleteOnExit();
@@ -93,6 +97,6 @@ public class TestRunScripts extends TestCase {
         writer.close();
         subject.setScript(file);
         subject.execute();
-        assertEquals(SCRIPT + "\r\n", record.complete());
+        assertThat(record.complete()).isEqualTo(SCRIPT + "\r\n");
     }
 }

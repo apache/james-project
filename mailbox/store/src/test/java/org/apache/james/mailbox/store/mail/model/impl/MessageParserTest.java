@@ -230,6 +230,13 @@ public class MessageParserTest {
     }
 
     @Test
+    public void getAttachmentsShouldConsiderNoContentDispositionAsAttachmentsWhenCID() throws Exception {
+        List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/noContentDispositionWithCID.eml"));
+
+        assertThat(attachments).hasSize(1);
+    }
+
+    @Test
     public void getAttachmentsShouldRetrieveAttachmentsWhenNoCidForInlined() throws Exception {
         List<MessageAttachment> attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachmentWithNoCid.eml"));
 

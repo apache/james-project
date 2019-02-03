@@ -18,9 +18,7 @@
  ****************************************************************/
 package org.apache.james.dnsservice.library;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.InetAddress;
 import java.util.Arrays;
@@ -48,17 +46,17 @@ public class MXHostAddressIteratorTest {
 
         MXHostAddressIterator it = new MXHostAddressIterator(Arrays.asList("localhost", "localhost2").iterator(), dns, false);
         for (int i = 0; i < 4; i++) {
-            assertTrue(it.hasNext());
-            assertNotNull(it.next());
+            assertThat(it.hasNext()).isTrue();
+            assertThat(it.next()).isNotNull();
         }
-        assertFalse(it.hasNext());
+        assertThat(it.hasNext()).isFalse();
 
         it = new MXHostAddressIterator(Arrays.asList("localhost", "localhost2").iterator(), dns, true);
         for (int i = 0; i < 2; i++) {
-            assertTrue(it.hasNext());
-            assertNotNull(it.next());
+            assertThat(it.hasNext()).isTrue();
+            assertThat(it.next()).isNotNull();
         }
-        assertFalse(it.hasNext());
+        assertThat(it.hasNext()).isFalse();
     }
 
     @Test
@@ -66,6 +64,6 @@ public class MXHostAddressIteratorTest {
 
         // See JAMES-1271
         MXHostAddressIterator it = new MXHostAddressIterator(Arrays.asList("localhost").iterator(), new InMemoryDNSService(), false);
-        assertFalse(it.hasNext());
+        assertThat(it.hasNext()).isFalse();
     }
 }

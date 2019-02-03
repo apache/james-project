@@ -19,13 +19,11 @@
 
 package org.apache.james.transport.matchers.dlp;
 
-import java.util.stream.Stream;
-
 import javax.inject.Inject;
 
 import org.apache.james.core.Domain;
-import org.apache.james.dlp.api.DLPConfigurationItem;
 import org.apache.james.dlp.api.DLPConfigurationStore;
+import org.apache.james.dlp.api.DLPRules;
 
 public interface DlpRulesLoader {
 
@@ -45,7 +43,7 @@ public interface DlpRulesLoader {
           return toRules(configurationStore.list(domain));
         }
 
-        private DlpDomainRules toRules(Stream<DLPConfigurationItem> items) {
+        private DlpDomainRules toRules(DLPRules items) {
             DlpDomainRules.DlpDomainRulesBuilder builder = DlpDomainRules.builder();
             items.forEach(item ->
                 item.getTargets().list().forEach(type ->

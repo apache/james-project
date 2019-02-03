@@ -22,7 +22,7 @@ package org.apache.james.modules.server;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.Configuration;
 import org.apache.james.util.Host;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -38,7 +38,7 @@ public class JmxConfiguration {
     public static final JmxConfiguration DEFAULT_CONFIGURATION = new JmxConfiguration(ENABLED, Optional.of(Host.from(LOCALHOST, DEFAULT_PORT)));
     public static final JmxConfiguration DISABLED = new JmxConfiguration(!ENABLED, Optional.empty());
 
-    public static JmxConfiguration fromProperties(PropertiesConfiguration configuration) {
+    public static JmxConfiguration fromProperties(Configuration configuration) {
         boolean jmxEnabled = configuration.getBoolean("jmx.enabled", true);
         if (!jmxEnabled) {
             return DISABLED;

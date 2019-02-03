@@ -25,7 +25,6 @@ import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
@@ -43,7 +42,6 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
-import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -107,8 +105,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .sendMessage(FROM, RECIPIENT);
 
         awaitAtMostOneMinute
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
-            .until(this::messageIsReceivedByTheSmtpServer);
+            .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
     @Test
@@ -127,7 +124,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
-        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
+        awaitAtMostOneMinute.untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
     @Test
@@ -147,8 +144,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .sendMessage(FROM, RECIPIENT);
 
         awaitAtMostOneMinute
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
-            .until(this::messageIsReceivedByTheSmtpServer);
+            .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
     @Test
@@ -168,8 +164,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .sendMessage(FROM, RECIPIENT);
 
         awaitAtMostOneMinute
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
-            .until(this::messageIsReceivedByTheSmtpServer);
+            .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
     @Test
@@ -194,8 +189,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
-        assertThat(fakeSmtp.isReceived(response -> response.body("", hasSize(0))))
-            .isTrue();
+        fakeSmtp.assertEmailReceived(response -> response.body("", hasSize(0)));
     }
 
     @Test
@@ -250,8 +244,8 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .awaitMessage(awaitAtMostOneMinute);
     }
 
-    private boolean messageIsReceivedByTheSmtpServer() {
-        return fakeSmtp.isReceived(response -> response
+    private void assertMessageReceivedByTheSmtpServer() {
+        fakeSmtp.assertEmailReceived(response -> response
             .body("", hasSize(1))
             .body("[0].from", equalTo(FROM))
             .body("[0].subject", equalTo("test")));

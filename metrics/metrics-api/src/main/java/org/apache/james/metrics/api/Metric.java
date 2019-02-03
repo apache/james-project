@@ -28,5 +28,4 @@ public interface Metric {
     void add(int value);
 
     void remove(int value);
-
 }

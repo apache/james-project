@@ -18,14 +18,13 @@
  ****************************************************************/
 package org.apache.james.protocols.pop3.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import junit.framework.TestCase;
-
-
-public abstract class AbstractInputStreamTest extends TestCase {
+public abstract class AbstractInputStreamTest {
 
     protected void checkRead(InputStream in, String expected) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -35,7 +34,7 @@ public abstract class AbstractInputStreamTest extends TestCase {
         }
         in.close();
         out.close();        
-        assertEquals(expected, new String(out.toByteArray()));
+        assertThat(new String(out.toByteArray())).isEqualTo(expected);
 
         
         
@@ -53,7 +52,7 @@ public abstract class AbstractInputStreamTest extends TestCase {
        
         in.close();
         out.close();
-        assertEquals(expected, new String(out.toByteArray()));
+        assertThat(new String(out.toByteArray())).isEqualTo(expected);
         
         
     }

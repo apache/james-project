@@ -178,11 +178,6 @@
         <td><a href="config-system.html">System Configuration</a></td>
         <td>Deprecated</td>
       </tr>
-      <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/jcr-repository.xml">jcr-repository.xml</a></td>
-        <td><a href="config-system.html">System Configuration</a></td>
-        <td></td>
-      </tr>
       
     </table>
     

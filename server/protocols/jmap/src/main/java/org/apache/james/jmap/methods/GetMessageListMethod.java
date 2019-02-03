@@ -94,7 +94,7 @@ public class GetMessageListMethod implements Method {
 
         GetMessageListRequest messageListRequest = (GetMessageListRequest) request;
 
-        return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(), MDCBuilder.create()
+        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(), MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "GET_MESSAGE_LIST")
             .addContext("accountId", messageListRequest.getAccountId())
             .addContext("limit", messageListRequest.getLimit())

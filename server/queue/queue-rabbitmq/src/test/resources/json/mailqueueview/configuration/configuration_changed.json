@@ -1,0 +1,8 @@
+{
+  "type": "cassandra-mail-queue-view-configuration",
+  "eventId": 0,
+  "aggregateKey": "aggKey",
+  "bucketCount": 1,
+  "updateBrowseStartPace": 1000,
+  "sliceWindow": 3600.000000000
+}

@@ -27,7 +27,7 @@ public class MaildirMailboxIdDeserializer implements MailboxIdDeserializer {
     @Override
     public MaildirId deserialize(String serializedMailboxId) throws MailboxIdDeserialisationException {
         try {
-            return MaildirId.of(Integer.valueOf(serializedMailboxId));
+            return MaildirId.fromString(serializedMailboxId);
         } catch (Exception e) {
             throw new MailboxIdDeserialisationException("Can not deserialize " + serializedMailboxId, e);
         }

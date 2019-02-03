@@ -30,9 +30,10 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
@@ -41,6 +42,7 @@ import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import io.restassured.RestAssured;
 
@@ -78,16 +80,13 @@ public abstract class ProvisioningTest {
     public void provisionMailboxesShouldNotDuplicateMailboxByName() throws Exception {
         String token = authenticateJamesUser(baseUri(jmapServer), USER, PASSWORD).serialize();
 
-        boolean termination = ConcurrentTestRunner.builder()
-            .threadCount(10)
-            .build((a, b) -> with()
+        ConcurrentTestRunner.builder()
+            .operation((a, b) -> with()
                 .header("Authorization", token)
                 .body("[[\"getMailboxes\", {}, \"#0\"]]")
                 .post("/jmap"))
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES);
-
-        assertThat(termination).isTrue();
+            .threadCount(10)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         given()
             .header("Authorization", token)
@@ -101,6 +100,7 @@ public abstract class ProvisioningTest {
             .body(ARGUMENTS + ".list.name", hasItems(DefaultMailboxes.DEFAULT_MAILBOXES.toArray()));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void provisionMailboxesShouldSubscribeToThem() throws Exception {
         String token = authenticateJamesUser(baseUri(jmapServer), USER, PASSWORD).serialize();

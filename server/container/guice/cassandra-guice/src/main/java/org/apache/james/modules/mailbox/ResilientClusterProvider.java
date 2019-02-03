@@ -30,7 +30,7 @@ import javax.inject.Singleton;
 import org.apache.james.backends.cassandra.init.ClusterBuilder;
 import org.apache.james.backends.cassandra.init.ClusterWithKeyspaceCreatedFactory;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
-import org.apache.james.utils.RetryExecutorUtil;
+import org.apache.james.util.retry.RetryExecutorUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

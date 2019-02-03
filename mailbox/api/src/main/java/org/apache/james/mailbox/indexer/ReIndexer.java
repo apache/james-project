@@ -19,13 +19,25 @@
 
 package org.apache.james.mailbox.indexer;
 
+import org.apache.james.core.User;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.task.Task;
 
 public interface ReIndexer {
 
-    void reIndex(MailboxPath path) throws MailboxException;
+    Task reIndex(User user) throws MailboxException;
 
-    void reIndex() throws MailboxException;
+    Task reIndex(MailboxPath path) throws MailboxException;
+
+    Task reIndex(MailboxId mailboxId) throws MailboxException;
+
+    Task reIndex() throws MailboxException;
+
+    Task reIndex(MailboxPath path, MessageUid uid) throws MailboxException;
+
+    Task reIndex(MailboxId mailboxId, MessageUid uid) throws MailboxException;
 
 }

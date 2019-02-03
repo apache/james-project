@@ -108,8 +108,7 @@ public class UpdateMessagePatch {
         }
 
         private Optional<Keywords> creationKeywords() {
-            return keywords.map(map -> Keywords.factory()
-                    .throwOnImapNonExposedKeywords()
+            return keywords.map(map -> Keywords.strictFactory()
                     .fromMap(map));
         }
 

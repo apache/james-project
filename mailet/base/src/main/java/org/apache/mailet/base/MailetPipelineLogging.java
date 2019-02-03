@@ -19,19 +19,31 @@
 
 package org.apache.mailet.base;
 
+import java.util.Optional;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
+
 public class MailetPipelineLogging {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailetPipelineLogging.class);
 
     public static void logBeginOfMailetProcess(Mailet mailet, Mail mail) {
-        LOGGER.debug("Mail: {} Entering mailet: {}", mail.getState(), mailet.getMailetInfo());
+        LOGGER.debug("Mail: {} Entering mailet: {}", mail.getState(), getMailetInfo(mailet));
     }
 
+
     public static void logEndOfMailetProcess(Mailet mailet, Mail mail) {
-        LOGGER.debug("Mail: {} End of mailet: {}", mail.getState(), mailet.getMailetInfo());
+        LOGGER.debug("Mail: {} End of mailet: {}", mail.getState(), getMailetInfo(mailet));
+    }
+
+    @VisibleForTesting
+    static String getMailetInfo(Mailet mailet) {
+        return Optional.ofNullable(Strings.emptyToNull(mailet.getMailetInfo()))
+                    .orElse(mailet.getClass().getSimpleName());
     }
 }

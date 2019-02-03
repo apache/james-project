@@ -34,7 +34,7 @@ public class DockerCassandraRule implements TestRule {
     }
 
     public void start() {
-
+        DockerCassandraSingleton.singleton.start();
     }
 
     public void stop() {

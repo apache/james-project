@@ -20,20 +20,21 @@
 package org.apache.james.mailrepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
@@ -43,9 +44,12 @@ import org.apache.james.utils.DiscreteDistribution;
 import org.apache.james.utils.DiscreteDistribution.DistributionEntry;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
+import org.apache.mailet.base.MailAddressFixture;
+import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.runnable.ThrowingRunnable;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Strings;
@@ -83,18 +87,18 @@ public interface MailRepositoryContract {
     }
 
     default void checkMailEquality(Mail actual, Mail expected) {
-        assertAll(
-            () -> assertThat(actual.getMessage().getContent()).isEqualTo(expected.getMessage().getContent()),
-            () -> assertThat(actual.getMessageSize()).isEqualTo(expected.getMessageSize()),
-            () -> assertThat(actual.getName()).isEqualTo(expected.getName()),
-            () -> assertThat(actual.getState()).isEqualTo(expected.getState()),
-            () -> assertThat(actual.getAttribute(TEST_ATTRIBUTE)).isEqualTo(expected.getAttribute(TEST_ATTRIBUTE)),
-            () -> assertThat(actual.getErrorMessage()).isEqualTo(expected.getErrorMessage()),
-            () -> assertThat(actual.getRemoteHost()).isEqualTo(expected.getRemoteHost()),
-            () -> assertThat(actual.getRemoteAddr()).isEqualTo(expected.getRemoteAddr()),
-            () -> assertThat(actual.getLastUpdated()).isEqualTo(expected.getLastUpdated()),
-            () -> assertThat(actual.getPerRecipientSpecificHeaders()).isEqualTo(expected.getPerRecipientSpecificHeaders())
-        );
+        assertSoftly(Throwing.consumer(softly -> {
+            softly.assertThat(actual.getMessage().getContent()).isEqualTo(expected.getMessage().getContent());
+            softly.assertThat(actual.getMessageSize()).isEqualTo(expected.getMessageSize());
+            softly.assertThat(actual.getName()).isEqualTo(expected.getName());
+            softly.assertThat(actual.getState()).isEqualTo(expected.getState());
+            softly.assertThat(actual.getAttribute(TEST_ATTRIBUTE)).isEqualTo(expected.getAttribute(TEST_ATTRIBUTE));
+            softly.assertThat(actual.getErrorMessage()).isEqualTo(expected.getErrorMessage());
+            softly.assertThat(actual.getRemoteHost()).isEqualTo(expected.getRemoteHost());
+            softly.assertThat(actual.getRemoteAddr()).isEqualTo(expected.getRemoteAddr());
+            softly.assertThat(actual.getLastUpdated()).isEqualTo(expected.getLastUpdated());
+            softly.assertThat(actual.getPerRecipientSpecificHeaders()).isEqualTo(expected.getPerRecipientSpecificHeaders());
+        }));
     }
 
     MailRepository retrieveRepository() throws Exception;
@@ -133,6 +137,21 @@ public interface MailRepositoryContract {
         testee.remove(MAIL_1);
 
         assertThat(testee.size()).isEqualTo(0L);
+    }
+
+    @Test
+    default void storeRegularMailShouldNotFailWhenNullSender() throws Exception {
+        MailRepository testee = retrieveRepository();
+        Mail mail = FakeMail.builder()
+            .sender(MailAddress.nullSender())
+            .recipient(MailAddressFixture.RECIPIENT1)
+            .name(MAIL_1.asString())
+            .mimeMessage(generateMailContent("String body"))
+            .build();
+
+        testee.store(mail);
+
+        assertThat(testee.retrieve(MAIL_1).getMaybeSender()).isEqualTo(MaybeSender.nullSender());
     }
 
     @Test
@@ -400,18 +419,33 @@ public interface MailRepositoryContract {
         assertThat(testee.retrieve(MAIL_1)).satisfies(actual -> checkMailEquality(actual, mail));
     }
 
+
+    @Test
+    default void storingMessageWithPerRecipientHeadersShouldAllowMultipleHeadersPerUser() throws Exception {
+
+        MailRepository testee = retrieveRepository();
+        Mail mail = createMail(MAIL_1);
+        MailAddress recipient1 = new MailAddress("rec1@domain.com");
+        mail.addSpecificHeaderForRecipient(PerRecipientHeaders.Header.builder().name("foo").value("bar").build(), recipient1);
+        mail.addSpecificHeaderForRecipient(PerRecipientHeaders.Header.builder().name("fizz").value("buzz").build(), recipient1);
+        testee.store(mail);
+
+        assertThat(testee.list()).hasSize(1).containsOnly(MAIL_1);
+        assertThat(testee.retrieve(MAIL_1)).satisfies(actual -> checkMailEquality(actual, mail));
+    }
+
     @RepeatedTest(100)
     default void storingAndRemovingMessagesConcurrentlyShouldLeadToConsistentResult() throws Exception {
         MailRepository testee = retrieveRepository();
         int nbKeys = 20;
         ConcurrentHashMap.KeySetView<MailKey, Boolean> expectedResult = ConcurrentHashMap.newKeySet();
-        List<Object> locks = IntStream.range(0, 10)
+        List<Object> locks = IntStream.range(0, nbKeys)
             .boxed()
             .collect(Guavate.toImmutableList());
 
         Random random = new Random();
         ThrowingRunnable add = () -> {
-            int keyIndex = computeKeyIndex(nbKeys, random.nextInt());
+            int keyIndex = computeKeyIndex(nbKeys, Math.abs(random.nextInt()));
             MailKey key =  computeKey(keyIndex);
             synchronized (locks.get(keyIndex)) {
                 testee.store(createMail(key));
@@ -420,7 +454,7 @@ public interface MailRepositoryContract {
         };
 
         ThrowingRunnable remove = () -> {
-            int keyIndex = computeKeyIndex(nbKeys, random.nextInt());
+            int keyIndex = computeKeyIndex(nbKeys, Math.abs(random.nextInt()));
             MailKey key =  computeKey(keyIndex);
             synchronized (locks.get(keyIndex)) {
                 testee.remove(key);
@@ -434,11 +468,10 @@ public interface MailRepositoryContract {
                 new DistributionEntry<>(remove, 0.75)));
 
         ConcurrentTestRunner.builder()
+            .operation((a, b) -> distribution.sample().run())
             .threadCount(10)
             .operationCount(10)
-            .build((a, b) -> distribution.sample().run())
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         assertThat(testee.list()).containsOnlyElementsOf(expectedResult);
     }

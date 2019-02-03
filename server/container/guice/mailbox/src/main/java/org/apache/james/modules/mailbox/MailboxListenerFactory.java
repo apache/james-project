@@ -23,7 +23,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.MailboxListener;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Injector;

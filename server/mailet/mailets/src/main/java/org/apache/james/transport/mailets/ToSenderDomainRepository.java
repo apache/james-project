@@ -24,6 +24,8 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import org.apache.james.core.Domain;
+import org.apache.james.core.MailAddress;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
@@ -89,7 +91,13 @@ public class ToSenderDomainRepository extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        MailRepositoryUrl repositoryUrl = MailRepositoryUrl.from(urlPrefix + mail.getSender().getDomain().asString());
+        String domain = mail.getMaybeSender()
+            .asOptional()
+            .map(MailAddress::getDomain)
+            .map(Domain::asString)
+            .orElse("");
+
+        MailRepositoryUrl repositoryUrl = MailRepositoryUrl.from(urlPrefix + domain);
         store(mail, repositoryUrl);
         if (!passThrough) {
             mail.setState(Mail.GHOST);

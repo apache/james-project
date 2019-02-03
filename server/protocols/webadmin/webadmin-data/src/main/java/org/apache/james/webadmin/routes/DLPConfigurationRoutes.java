@@ -24,8 +24,6 @@ import static org.apache.james.webadmin.Constants.EMPTY_BODY;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
-import java.util.List;
-
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -35,18 +33,20 @@ import javax.ws.rs.Produces;
 
 import org.apache.james.core.Domain;
 import org.apache.james.dlp.api.DLPConfigurationItem;
+import org.apache.james.dlp.api.DLPConfigurationItem.Id;
 import org.apache.james.dlp.api.DLPConfigurationStore;
+import org.apache.james.dlp.api.DLPRules;
+import org.apache.james.dlp.api.DLPRules.DuplicateRulesIdsException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.DLPConfigurationDTO;
+import org.apache.james.webadmin.dto.DLPConfigurationItemDTO;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-
-import com.github.steveash.guavate.Guavate;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -71,6 +71,9 @@ public class DLPConfigurationRoutes implements Routes {
 
     private static final String DOMAIN_NAME = ":senderDomain";
     private static final String SPECIFIC_DLP_RULE_DOMAIN = BASE_PATH + SEPARATOR + DOMAIN_NAME;
+
+    private static final String RULE_ID_NAME = ":ruleId";
+    private static final String RULE_SPECIFIC_PATH = SPECIFIC_DLP_RULE_DOMAIN + SEPARATOR + "rules" + SEPARATOR + RULE_ID_NAME;
 
     private final JsonTransformer jsonTransformer;
     private final DLPConfigurationStore dlpConfigurationStore;
@@ -98,6 +101,8 @@ public class DLPConfigurationRoutes implements Routes {
         defineList(service);
 
         defineClear(service);
+
+        defineFetch(service);
     }
 
     @PUT
@@ -122,16 +127,30 @@ public class DLPConfigurationRoutes implements Routes {
             Domain senderDomain = parseDomain(request);
             DLPConfigurationDTO dto = jsonExtractor.parse(request.body());
 
-            dlpConfigurationStore.store(senderDomain, dto.toDLPConfigurations());
+            DLPRules rules = constructRules(dto);
+
+            dlpConfigurationStore.store(senderDomain, rules);
 
             response.status(HttpStatus.NO_CONTENT_204);
             return EMPTY_BODY;
         });
     }
 
+    private DLPRules constructRules(DLPConfigurationDTO dto) {
+        try {
+            return dto.toDLPConfiguration();
+        } catch (DuplicateRulesIdsException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("'id' duplicates are not allowed in DLP rules")
+                .haltError();
+        }
+    }
+
     @GET
     @Path("/{senderDomain}")
-    @ApiOperation(value = "Return a DLP configuration for given senderDomain")
+    @ApiOperation(value = "Return a DLP configuration for a given senderDomain")
     @ApiImplicitParams({
         @ApiImplicitParam(required = true, dataType = "string", name = "senderDomain", paramType = "path")
     })
@@ -148,9 +167,7 @@ public class DLPConfigurationRoutes implements Routes {
     public void defineList(Service service) {
         service.get(SPECIFIC_DLP_RULE_DOMAIN, (request, response) -> {
             Domain senderDomain = parseDomain(request);
-            List<DLPConfigurationItem> dlpConfigurations = dlpConfigurationStore
-                .list(senderDomain)
-                .collect(Guavate.toImmutableList());
+            DLPRules dlpConfigurations = dlpConfigurationStore.list(senderDomain);
 
             DLPConfigurationDTO dto = DLPConfigurationDTO.toDTO(dlpConfigurations);
             response.status(HttpStatus.OK_200);
@@ -182,6 +199,38 @@ public class DLPConfigurationRoutes implements Routes {
 
             response.status(HttpStatus.NO_CONTENT_204);
             return EMPTY_BODY;
+        }, jsonTransformer);
+    }
+
+    @GET
+    @Path("/{senderDomain}/rules/{ruleId}")
+    @ApiOperation(value = "Return a DLP rule for a given senderDomain and a ruleId")
+    @ApiImplicitParams({
+        @ApiImplicitParam(required = true, dataType = "string", name = "senderDomain", paramType = "path"),
+        @ApiImplicitParam(required = true, dataType = "string", name = "ruleId", paramType = "path")
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.OK_200, message = "OK. DLP rule is returned", response = DLPConfigurationItemDTO.class),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid senderDomain in request",
+            response = ErrorResponder.ErrorDetail.class),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The domain and/or the rule does not exist.",
+            response = ErrorResponder.ErrorDetail.class),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+            message = "Internal server error - Something went bad on the server side.",
+            response = ErrorResponder.ErrorDetail.class)
+    })
+    public void defineFetch(Service service) {
+        service.get(RULE_SPECIFIC_PATH, (request, response) -> {
+            Domain senderDomain = parseDomain(request);
+            Id ruleId = DLPConfigurationItem.Id.of(request.params(RULE_ID_NAME));
+            DLPConfigurationItem dlpConfigurationItem = dlpConfigurationStore
+                .fetch(senderDomain, ruleId)
+                .orElseThrow(() -> notFound("There is no rule '" + ruleId.asString() + "' for '" + senderDomain.asString() + "' managed by this James server"));
+
+            DLPConfigurationItemDTO dto = DLPConfigurationItemDTO.toDTO(dlpConfigurationItem);
+            response.status(HttpStatus.OK_200);
+            response.header(CONTENT_TYPE, JSON_CONTENT_TYPE);
+            return dto;
         }, jsonTransformer);
     }
 

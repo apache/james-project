@@ -125,7 +125,7 @@ public class FileConfigurationProviderTest {
 
     @Test
     public void getConfigurationShouldReturnDefaultOnNonExistingXMLFile() throws Exception {
-        assertThat(configurationProvider.getConfiguration(FAKE_CONFIG_KEY)).isEqualTo(FileConfigurationProvider.EMTY_CONFIGURATION);
+        assertThat(configurationProvider.getConfiguration(FAKE_CONFIG_KEY)).isEqualTo(FileConfigurationProvider.EMPTY_CONFIGURATION);
     }
 
     @Test(expected = IllegalArgumentException.class)

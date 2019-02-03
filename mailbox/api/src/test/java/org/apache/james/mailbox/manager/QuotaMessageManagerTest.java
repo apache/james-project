@@ -103,14 +103,14 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
         } catch (OverQuotaException overQuotaException) {
             // Silent these exception as we don't want it to disturb the test
         }
-        QuotaCount maxMessageCount = QuotaCount.count(20L);
+        QuotaCount maxMessageCount = QuotaCount.count(15L);
         maxQuotaManager.setMaxMessage(quotaRootResolver.getQuotaRoot(inbox), maxMessageCount);
         mailboxManager.copyMessages(MessageRange.all(), inbox, subFolder, session);
     }
 
     @Test(expected = OverQuotaException.class)
     public void testCopyOverQuotaSize() throws Exception {
-        QuotaSize maxQuotaSize = QuotaSize.size(20L * MockMail.MAIL_TEXT_PLAIN.length());
+        QuotaSize maxQuotaSize = QuotaSize.size(15L * MockMail.MAIL_TEXT_PLAIN.length());
         maxQuotaManager.setMaxStorage(quotaRootResolver.getQuotaRoot(inbox), maxQuotaSize);
         try {
             resources.fillMailbox();
@@ -122,7 +122,7 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
 
     @Test
     public void testRetrievalOverMaxMessage() throws Exception {
-        QuotaCount maxMessageCount = QuotaCount.count(8L);
+        QuotaCount maxMessageCount = QuotaCount.count(15L);
         maxQuotaManager.setMaxMessage(quotaRootResolver.getQuotaRoot(inbox), maxMessageCount);
         try {
             resources.fillMailbox();
@@ -136,7 +136,7 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
 
     @Test
     public void testRetrievalOverMaxStorage() throws Exception {
-        QuotaSize maxQuotaSize = QuotaSize.size(8 * MockMail.MAIL_TEXT_PLAIN.length() + 1);
+        QuotaSize maxQuotaSize = QuotaSize.size(15 * MockMail.MAIL_TEXT_PLAIN.getBytes(StandardCharsets.UTF_8).length + 1);
         maxQuotaManager.setMaxStorage(quotaRootResolver.getQuotaRoot(inbox), maxQuotaSize);
         try {
             resources.fillMailbox();
@@ -180,8 +180,8 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
         Quota<QuotaCount> messageQuota = resources.getQuotaManager().getMessageQuota(quotaRoot);
         Quota<QuotaSize> storageQuota = resources.getQuotaManager().getStorageQuota(quotaRoot);
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(messageQuota.getUsed()).isEqualTo(QuotaCount.count(32));
-            softly.assertThat(storageQuota.getUsed()).isEqualTo(QuotaSize.size(7904));
+            softly.assertThat(messageQuota.getUsed()).isEqualTo(QuotaCount.count(16));
+            softly.assertThat(storageQuota.getUsed()).isEqualTo(QuotaSize.size(16 * 247));
         });
     }
 }

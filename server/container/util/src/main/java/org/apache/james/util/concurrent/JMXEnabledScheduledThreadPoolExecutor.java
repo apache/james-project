@@ -50,7 +50,7 @@ public class JMXEnabledScheduledThreadPoolExecutor extends ScheduledThreadPoolEx
     }
 
     public JMXEnabledScheduledThreadPoolExecutor(int corePoolSize, String jmxPath, String name) {
-        super(corePoolSize, new NamedThreadFactory(name));
+        super(corePoolSize, NamedThreadFactory.withName(name));
 
         this.jmxPath = jmxPath;
         registerMBean();

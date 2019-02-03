@@ -19,35 +19,30 @@
 package org.apache.james.util.concurrent;
 
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * ThreadPool which use name and a counter for thread names
- */
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 public class NamedThreadFactory implements ThreadFactory {
 
     public final String name;
-    private final AtomicLong count = new AtomicLong();
-    private final int priority;
+    private final ThreadFactory threadFactory;
 
-    public NamedThreadFactory(String name, int priority) {
-        if (priority > Thread.MAX_PRIORITY || priority < Thread.MIN_PRIORITY) {
-            throw new IllegalArgumentException("Priority must be <= " + Thread.MAX_PRIORITY + " and >=" + Thread.MIN_PRIORITY);
-        }
-        this.name = name;
-        this.priority = priority;
+    public static NamedThreadFactory withClassName(Class<?> clazz) {
+        return new NamedThreadFactory(clazz.getName());
     }
 
-    public NamedThreadFactory(String name) {
-        this(name, Thread.NORM_PRIORITY);
+    public static NamedThreadFactory withName(String name) {
+        return new NamedThreadFactory(name);
+    }
+
+    private NamedThreadFactory(String name) {
+        this.name = name;
+        this.threadFactory = new ThreadFactoryBuilder().setNameFormat(name + "-%d").build();
     }
 
     @Override
     public Thread newThread(Runnable r) {
-        Thread t = new Thread(r);
-        t.setName(name + "-" + count.incrementAndGet());
-        t.setPriority(priority);
-        return t;
+        return threadFactory.newThread(r);
     }
 
     public String getName() {
@@ -56,7 +51,7 @@ public class NamedThreadFactory implements ThreadFactory {
 
     @Override
     public String toString() {
-        return "NamedTreadFactory: " + getName();
+        return "NamedThreadFactory: " + getName();
     }
 
 }

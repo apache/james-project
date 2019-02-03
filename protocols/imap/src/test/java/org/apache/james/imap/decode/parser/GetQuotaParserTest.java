@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.decode.parser;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -44,6 +44,6 @@ public class GetQuotaParserTest {
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
         GetQuotaRequest request = (GetQuotaRequest) parser.decode(command, lineReader, "A003", null);
         GetQuotaRequest expected = new GetQuotaRequest("A003", command, "quotaRoot");
-        assertEquals(expected.getQuotaRoot(), request.getQuotaRoot());
+        assertThat(request.getQuotaRoot()).isEqualTo(expected.getQuotaRoot());
     }
 }

@@ -45,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 
 /**
  * <code>ManageSieveMailet</code> interprets mail from a local sender as
@@ -122,11 +121,11 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
     @Override
     public void service(Mail mail) throws MessagingException {
         // Sanity checks
-        if (mail.getSender() == null || mail.getSender().isNullSender()) {
+        if (!mail.hasSender()) {
             LOGGER.error("Sender is null");
             return;
         }
-        if (!getMailetContext().isLocalServer(mail.getSender().getDomain())) {
+        if (!getMailetContext().isLocalServer(mail.getMaybeSender().get().getDomain())) {
             LOGGER.error("Sender not local");
             return;
         }
@@ -138,8 +137,11 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
         } else {
             session.setState(Session.State.UNAUTHENTICATED);
         }
-        session.setUser(mail.getSender().asString());
-        getMailetContext().sendMail(mail.getRecipients().iterator().next(), Lists.newArrayList(mail.getSender()),transcoder.execute(session, mail.getMessage()));
+        session.setUser(mail.getMaybeSender().get().asString());
+        getMailetContext().sendMail(
+            mail.getRecipients().iterator().next(),
+            mail.getMaybeSender().asList(),
+            transcoder.execute(session, mail.getMessage()));
         mail.setState(Mail.GHOST);
         
         // And tidy up

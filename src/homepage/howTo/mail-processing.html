@@ -72,7 +72,7 @@ layout: default
               Hence, we can arrange James standard components listed <a href="/server/dev-provided-mailets.html">here</a> to achieve basic logic. But what if our goals are more
               complex? What if we need our own processing components?</p>
 
-              <p>This page will propose a 'hands on practice' how-to using James 3.1.0. We will implement a custom mailet and a custom matcher,
+              <p>This page will propose a 'hands on practice' how-to using James 3.2.0. We will implement a custom mailet and a custom matcher,
               then deploy it in a James server.</p>
 
               <p>We need to choose our use case. We will, when a mail is delayed over one day, write a mail to the original sender
@@ -224,8 +224,8 @@ layout: default
 
             <pre><code>docker run -p "25:25" -p "143:143" \
                    -v "$PWD/src/main/resources/mailetcontainer.xml:/root/conf/mailetcontainer.xml" \
-                   -v "$PWD/target/custom-mailets-3.1.0-SNAPSHOT.jar:/root/extensions-jars/custom-mailets.jar" \
-            linagora/james-jpa-sample:latest</code></pre>
+                   -v "$PWD/target/custom-mailets-3.2.0-SNAPSHOT.jar:/root/extensions-jars/custom-mailets.jar" \
+            linagora/james-jpa-sample:3.2.0</code></pre>
 
             </div>
               <footer class="major">

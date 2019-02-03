@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.inmemory;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -27,5 +29,10 @@ public class InMemoryMessageIdTest {
     @Test
     public void shouldRespectJavaBeanContract() {
         EqualsVerifier.forClass(InMemoryMessageId.class).verify();
+    }
+
+    @Test
+    public void shouldBeSerializable() {
+        assertThat(new InMemoryMessageId.Factory().generate().isSerializable()).isTrue();
     }
 }

@@ -18,6 +18,32 @@
  ****************************************************************/
 package org.apache.james.core.healthcheck;
 
+import com.google.common.base.Preconditions;
+
 public enum ResultStatus {
-    HEALTHY, DEGRADED, UNHEALTHY;
+    HEALTHY("healthy"), 
+    DEGRADED("degraded"), 
+    UNHEALTHY("unhealthy");
+    
+    private final String value;
+    
+    ResultStatus(String value) {
+        this.value = value;
+    }
+    
+    public String getValue() {
+        return value;
+    }
+
+    public static ResultStatus merge(ResultStatus resultStatus1, ResultStatus resultStatus2) {
+        Preconditions.checkNotNull(resultStatus1);
+        Preconditions.checkNotNull(resultStatus2);
+        if (resultStatus1 == UNHEALTHY || resultStatus2 == UNHEALTHY) {
+            return UNHEALTHY;
+        }
+        if (resultStatus1 == DEGRADED || resultStatus2 == DEGRADED) {
+            return DEGRADED;
+        }
+        return HEALTHY;
+    }
 }

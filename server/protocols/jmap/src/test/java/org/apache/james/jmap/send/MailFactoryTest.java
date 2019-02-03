@@ -30,6 +30,7 @@ import java.util.Collection;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.jmap.model.Envelope;
 import org.apache.james.jmap.model.Keyword;
 import org.apache.james.jmap.model.Keywords;
@@ -73,7 +74,7 @@ public class MailFactoryTest {
         
         message = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
-                .keywords(Keywords.factory().from(Keyword.SEEN))
+                .keywords(Keywords.strictFactory().from(Keyword.SEEN))
                 .size(content.length())
                 .internalDate(Instant.now())
                 .sharedContent(new SharedByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)))
@@ -116,7 +117,7 @@ public class MailFactoryTest {
         Mail actual = testee.build(message, envelope);
         
         assertThat(actual.getName()).isEqualTo(expectedName);
-        assertThat(actual.getSender()).isEqualTo(expectedSender);
+        assertThat(actual.getMaybeSender()).isEqualTo(MaybeSender.of(expectedSender));
         assertThat(actual.getRecipients()).containsAll(expectedRecipients);
     }
 }

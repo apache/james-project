@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.james.mailet.MailetMatcherDescriptor.Type;
+import org.apache.mailet.ExcludeFromDocumentation;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.Matcher;
@@ -96,6 +97,11 @@ public class DefaultDescriptorsExtractor {
         final String nameOfNextClass = nextClass.getFullyQualifiedName();
         if (log.isDebugEnabled()) {
             log.debug("Class: " + nameOfNextClass);
+        }
+        
+        if (isExcludedFromDocumentation(nextClass)) {
+            log.debug(nameOfNextClass + " is excluded from documentation");
+            return;
         }
         
         try {
@@ -186,6 +192,13 @@ public class DefaultDescriptorsExtractor {
             .stream()
             .anyMatch((JavaAnnotation annotation) -> annotation.getType().getCanonicalName()
                     .equals(Experimental.class.getName()));
+    }
+    
+    private boolean isExcludedFromDocumentation(JavaClass javaClass) {
+        return javaClass.getAnnotations()
+            .stream()
+            .anyMatch((JavaAnnotation annotation) -> annotation.getType().getCanonicalName()
+                    .equals(ExcludeFromDocumentation.class.getName()));
     }
 
     private void handleInfoLoadFailure(Log log, String nameOfClass,

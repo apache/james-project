@@ -37,7 +37,9 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class MailModifier {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailModifier.class);
@@ -108,7 +110,9 @@ public class MailModifier {
 
     public void setRecipients(List<MailAddress> recipients) {
         if (!recipients.isEmpty()) {
-            mail.setRecipients(recipients);
+            mail.setRecipients(recipients
+                .stream()
+                .collect(ImmutableList.toImmutableList()));
             if (mailet.getInitParameters().isDebug()) {
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("recipients set to: {}", (Object) recipients.toArray());
@@ -140,18 +144,21 @@ public class MailModifier {
      * the "Reply-To:" header. If the requested value is null does nothing.</p>
      */
     public void setReplyTo(Optional<MailAddress> optionalReplyTo) throws MessagingException {
-        if (optionalReplyTo.isPresent()) {
-            MailAddress replyTo = optionalReplyTo.get();
-            if (replyTo.equals(SpecialAddress.NULL)) {
-                mail.getMessage().setReplyTo(null);
-                if (mailet.getInitParameters().isDebug()) {
-                    LOGGER.debug("replyTo set to: null");
-                }
-            } else {
-                mail.getMessage().setReplyTo(new InternetAddress[] { replyTo.toInternetAddress() });
-                if (mailet.getInitParameters().isDebug()) {
-                    LOGGER.debug("replyTo set to: {}", replyTo);
-                }
+        optionalReplyTo.ifPresent(Throwing
+            .consumer((MailAddress address) -> setReplyTo(address))
+            .sneakyThrow());
+    }
+
+    private void setReplyTo(MailAddress replyTo) throws MessagingException {
+        if (replyTo.equals(SpecialAddress.NULL)) {
+            mail.getMessage().setReplyTo(null);
+            if (mailet.getInitParameters().isDebug()) {
+                LOGGER.debug("replyTo set to: null");
+            }
+        } else {
+            mail.getMessage().setReplyTo(new InternetAddress[] { replyTo.toInternetAddress() });
+            if (mailet.getInitParameters().isDebug()) {
+                LOGGER.debug("replyTo set to: {}", replyTo);
             }
         }
     }

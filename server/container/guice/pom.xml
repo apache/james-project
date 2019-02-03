@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-server</artifactId>
-        <version>3.2.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -33,8 +33,12 @@
     <name>Apache James :: Server :: Guice</name>
 
     <modules>
+        <module>blob-api-guice</module>
+        <module>blob-objectstorage-guice</module>
         <module>cassandra-guice</module>
         <module>cassandra-ldap-guice</module>
+        <module>cassandra-rabbitmq-guice</module>
+        <module>cassandra-rabbitmq-ldap-guice</module>
         <module>configuration</module>
         <module>custom-mailets</module>
         <module>es-metric-reporter</module>
@@ -60,15 +64,25 @@
         <module>protocols/smtp</module>
         <module>protocols/webadmin</module>
         <module>protocols/webadmin-cassandra</module>
+        <module>protocols/webadmin-cassandra-data</module>
         <module>protocols/webadmin-data</module>
         <module>protocols/webadmin-mailbox</module>
         <module>protocols/webadmin-mailqueue</module>
         <module>protocols/webadmin-mailrepository</module>
         <module>protocols/webadmin-swagger</module>
+        <module>activemq</module>
+        <module>rabbitmq</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-cassandra-ldap-guice</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-configuration</artifactId>
@@ -132,6 +146,16 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-activemq</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-rabbitmq</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-smtp</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -143,6 +167,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-webadmin-cassandra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-webadmin-cassandra-data</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

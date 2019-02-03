@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.encode;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
@@ -44,7 +44,7 @@ public class QuotaResponseEncoderTest {
         QuotaResponseEncoder encoder = new QuotaResponseEncoder(new EndImapEncoder());
         encoder.encode(response, composer, null);
         String responseString = byteImapResponseWriter.getString();
-        assertEquals("* QUOTA root (MESSAGE 231 1024)\r\n", responseString);
+        assertThat(responseString).isEqualTo("* QUOTA root (MESSAGE 231 1024)\r\n");
     }
 
     @Test
@@ -56,7 +56,7 @@ public class QuotaResponseEncoderTest {
         QuotaResponseEncoder encoder = new QuotaResponseEncoder(new EndImapEncoder());
         encoder.encode(response, composer, null);
         String responseString = byteImapResponseWriter.getString();
-        assertEquals("* QUOTA root (STORAGE 231 1024)\r\n", responseString);
+        assertThat(responseString).isEqualTo("* QUOTA root (STORAGE 231 1024)\r\n");
     }
 
 }

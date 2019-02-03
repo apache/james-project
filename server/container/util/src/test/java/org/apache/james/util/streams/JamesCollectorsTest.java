@@ -20,24 +20,20 @@
 package org.apache.james.util.streams;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class JamesCollectorsTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
-    public void chunkerShouldAcceptEmptyStrem() {
+    void chunkerShouldAcceptEmptyStrem() {
         Stream<Integer> emptyStream = Stream.of();
 
         assertThat(emptyStream.collect(JamesCollectors.chunker(10))
@@ -46,21 +42,19 @@ public class JamesCollectorsTest {
     }
 
     @Test
-    public void chunkerShouldThrowOnZeroChunkSize() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        JamesCollectors.chunker(0);
+    void chunkerShouldThrowOnZeroChunkSize() {
+        assertThatIllegalArgumentException()
+            .isThrownBy(() -> JamesCollectors.chunker(0));
     }
 
     @Test
-    public void chunkerShouldThrowOnNegativeChunkSize() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        JamesCollectors.chunker(-1);
+    void chunkerShouldThrowOnNegativeChunkSize() {
+        assertThatIllegalArgumentException()
+            .isThrownBy(() -> JamesCollectors.chunker(-1));
     }
 
     @Test
-    public void chunkerShouldChunkMonoValueStreams() {
+    void chunkerShouldChunkMonoValueStreams() {
         Stream<Integer> monoValueStream = Stream.of(1);
 
         List<List<Integer>> values = monoValueStream.collect(JamesCollectors.chunker(10))
@@ -71,7 +65,7 @@ public class JamesCollectorsTest {
     }
 
     @Test
-    public void chunkerShouldChunkStreamsSmallerThanChunkSize() {
+    void chunkerShouldChunkStreamsSmallerThanChunkSize() {
         Stream<Integer> stream = Stream.of(1, 2);
 
         List<List<Integer>> values = stream.collect(JamesCollectors.chunker(3))
@@ -82,7 +76,7 @@ public class JamesCollectorsTest {
     }
 
     @Test
-    public void chunkerShouldChunkStreamsAsBigAsChunkSize() {
+    void chunkerShouldChunkStreamsAsBigAsChunkSize() {
         Stream<Integer> stream = Stream.of(1, 2, 3);
 
         List<List<Integer>> values = stream.collect(JamesCollectors.chunker(3))
@@ -93,7 +87,7 @@ public class JamesCollectorsTest {
     }
 
     @Test
-    public void chunkerShouldChunkStreamsBiggerThanChunkSize() {
+    void chunkerShouldChunkStreamsBiggerThanChunkSize() {
         Stream<Integer> stream = Stream.of(1, 2, 3, 4);
 
         List<List<Integer>> values = stream.collect(JamesCollectors.chunker(3))
@@ -106,7 +100,7 @@ public class JamesCollectorsTest {
     }
 
     @Test
-    public void chunkerShouldChunkInSeveralBuckets() {
+    void chunkerShouldChunkInSeveralBuckets() {
         Stream<Integer> stream = Stream.of(1, 2, 3, 4, 5, 6, 7);
 
         List<List<Integer>> values = stream.collect(JamesCollectors.chunker(3))

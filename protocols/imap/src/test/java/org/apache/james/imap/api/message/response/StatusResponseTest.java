@@ -20,7 +20,6 @@
 package org.apache.james.imap.api.message.response;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -29,12 +28,10 @@ public class StatusResponseTest  {
 
     @Test
     public void testResponseCodeExtension() {
-        assertEquals("Preserve names beginning with X", "XEXTENSION",
-                StatusResponse.ResponseCode.createExtension("XEXTENSION")
-                        .getCode());
-        assertEquals("Correct other names", "XEXTENSION",
-                StatusResponse.ResponseCode.createExtension("EXTENSION")
-                        .getCode());
+        assertThat(StatusResponse.ResponseCode.createExtension("XEXTENSION")
+                        .getCode()).describedAs("Preserve names beginning with X").isEqualTo("XEXTENSION");
+        assertThat(StatusResponse.ResponseCode.createExtension("EXTENSION")
+                        .getCode()).describedAs("Correct other names").isEqualTo("XEXTENSION");
     }
 
     @Test

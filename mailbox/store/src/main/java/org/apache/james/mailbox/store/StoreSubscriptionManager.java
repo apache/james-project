@@ -54,7 +54,7 @@ public class StoreSubscriptionManager implements SubscriptionManager {
         final SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
         try {
             mapper.execute(Mapper.toTransaction(() -> {
-                Subscription subscription = mapper.findMailboxSubscriptionForUser(session.getUser().getUserName(), mailbox);
+                Subscription subscription = mapper.findMailboxSubscriptionForUser(session.getUser().asString(), mailbox);
                 if (subscription == null) {
                     Subscription newSubscription = createSubscription(session, mailbox);
                     mapper.save(newSubscription);
@@ -75,13 +75,13 @@ public class StoreSubscriptionManager implements SubscriptionManager {
      * @return subscription 
      */
     protected Subscription createSubscription(MailboxSession session, String mailbox) {
-        return new SimpleSubscription(session.getUser().getUserName(), mailbox);
+        return new SimpleSubscription(session.getUser().asString(), mailbox);
     }
 
     @Override
     public Collection<String> subscriptions(MailboxSession session) throws SubscriptionException {
         return mapperFactory.getSubscriptionMapper(session)
-            .findSubscriptionsForUser(session.getUser().getUserName())
+            .findSubscriptionsForUser(session.getUser().asString())
             .stream()
             .map(Subscription::getMailbox)
             .collect(Collectors.toCollection(() -> new HashSet<>(INITIAL_SIZE)));
@@ -92,7 +92,7 @@ public class StoreSubscriptionManager implements SubscriptionManager {
         final SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
         try {
             mapper.execute(Mapper.toTransaction(() -> {
-                Subscription subscription = mapper.findMailboxSubscriptionForUser(session.getUser().getUserName(), mailbox);
+                Subscription subscription = mapper.findMailboxSubscriptionForUser(session.getUser().asString(), mailbox);
                 if (subscription != null) {
                     mapper.delete(subscription);
                 }

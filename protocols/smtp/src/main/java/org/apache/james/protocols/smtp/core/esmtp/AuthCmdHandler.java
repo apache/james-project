@@ -323,7 +323,7 @@ public class AuthCmdHandler
     private Response doLoginAuthPass(SMTPSession session, String user) {
         if (user != null) {
             try {
-                user = new String(Base64.getDecoder().decode(user), StandardCharsets.UTF_8);
+                user = decodeBase64(user);
             } catch (Exception e) {
                 // Ignored - this parse error will be
                 // addressed in the if clause below
@@ -363,7 +363,7 @@ public class AuthCmdHandler
     private Response doLoginAuthPassCheck(SMTPSession session, String user, String pass) {
         if (pass != null) {
             try {
-                pass = new String(Base64.getDecoder().decode(pass), StandardCharsets.UTF_8);
+                pass = decodeBase64(pass);
             } catch (Exception e) {
                 // Ignored - this parse error will be
                 // addressed in the if clause below

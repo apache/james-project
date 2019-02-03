@@ -25,8 +25,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import javax.mail.Address;
 import javax.mail.Message;
+import javax.mail.internet.InternetAddress;
 
 import org.apache.james.javax.AddressHelper;
 import org.apache.james.jmap.api.filtering.Rule;
@@ -36,6 +36,7 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.google.common.collect.ImmutableMap;
 
@@ -47,7 +48,7 @@ public interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> 
     HeaderExtractor CC_EXTRACTOR = recipientExtractor(Message.RecipientType.CC);
     HeaderExtractor TO_EXTRACTOR = recipientExtractor(Message.RecipientType.TO);
     HeaderExtractor RECIPIENT_EXTRACTOR = and(TO_EXTRACTOR, CC_EXTRACTOR);
-    HeaderExtractor FROM_EXTRACTOR = addressExtractor(mail -> mail.getMessage().getFrom(), FROM);
+    HeaderExtractor FROM_EXTRACTOR = addressExtractor(mail -> mail.getMessage().getHeader(FROM), FROM);
 
     Map<Rule.Condition.Field, HeaderExtractor> HEADER_EXTRACTOR_REGISTRY = ImmutableMap.<Rule.Condition.Field, HeaderExtractor>builder()
         .put(Rule.Condition.Field.SUBJECT, SUBJECT_EXTRACTOR)
@@ -57,21 +58,23 @@ public interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> 
         .put(Rule.Condition.Field.TO, TO_EXTRACTOR)
         .build();
 
+    boolean STRICT_PARSING = true;
+
     static HeaderExtractor and(HeaderExtractor headerExtractor1, HeaderExtractor headerExtractor2) {
         return (Mail mail) -> StreamUtils.flatten(headerExtractor1.apply(mail), headerExtractor2.apply(mail));
     }
 
     static HeaderExtractor recipientExtractor(Message.RecipientType type) {
-        ThrowingFunction<Mail, Address[]> addressGetter = mail -> mail.getMessage().getRecipients(type);
-        String fallbackHeaderName = type.toString();
+        String headerName = type.toString();
+        ThrowingFunction<Mail, String[]> addressGetter = mail -> mail.getMessage().getHeader(headerName);
 
-        return addressExtractor(addressGetter, fallbackHeaderName);
+        return addressExtractor(addressGetter, headerName);
     }
 
-    static HeaderExtractor addressExtractor(ThrowingFunction<Mail, Address[]> addressGetter, String fallbackHeaderName) {
+    static HeaderExtractor addressExtractor(ThrowingFunction<Mail, String[]> addressGetter, String fallbackHeaderName) {
         return mail -> {
             try {
-                return toContent(addressGetter.apply(mail));
+                return toAddressContents(addressGetter.apply(mail));
             } catch (Exception e) {
                 LOGGER.info("Failed parsing header. Falling back to unparsed header value matching", e);
                 return Stream.of(mail.getMessage().getHeader(fallbackHeaderName))
@@ -80,10 +83,10 @@ public interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> 
         };
     }
 
-    static Stream<String> toContent(Address[] addresses) {
-        return Optional.ofNullable(addresses)
-            .map(AddressHelper::asStringStream)
-            .orElse(Stream.empty());
+    static Stream<String> toAddressContents(String[] headers) {
+        return StreamUtils.ofNullable(headers)
+                .map(Throwing.function(string -> InternetAddress.parseHeader(string, !STRICT_PARSING)))
+                .flatMap(AddressHelper::asStringStream);
     }
 
     static Optional<HeaderExtractor> asHeaderExtractor(Rule.Condition.Field field) {

@@ -116,6 +116,25 @@ public class SenderHostIsTest {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderHostIs")
                 .mailetContext(mailContext)
+                .condition("domain.tld")
+                .build());
+
+        Mail mail = FakeMail.builder()
+                .sender(ANY_AT_JAMES2)
+                .recipient(ANY_AT_JAMES2)
+                .build();
+        //When
+        Collection<MailAddress> actual = matcher.match(mail);
+        //Then
+        assertThat(actual).isNull();
+    }
+
+    @Test
+    void shouldNotMatchWhenNoSender() throws MessagingException {
+        //Given
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderHostIs")
+                .mailetContext(mailContext)
                 .condition("")
                 .build());
 

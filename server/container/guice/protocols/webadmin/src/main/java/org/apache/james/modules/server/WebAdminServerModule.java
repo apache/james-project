@@ -26,8 +26,8 @@ import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.utils.ConfigurationPerformer;
@@ -83,7 +83,7 @@ public class WebAdminServerModule extends AbstractModule {
     @Provides
     public WebAdminConfiguration provideWebAdminConfiguration(PropertiesProvider propertiesProvider) throws Exception {
         try {
-            PropertiesConfiguration configurationFile = propertiesProvider.getConfiguration("webadmin");
+            Configuration configurationFile = propertiesProvider.getConfiguration("webadmin");
             return WebAdminConfiguration.builder()
                 .enable(configurationFile.getBoolean("enabled", DEFAULT_DISABLED))
                 .port(new FixedPortSupplier(configurationFile.getInt("port", WebAdminServer.DEFAULT_PORT)))
@@ -102,7 +102,7 @@ public class WebAdminServerModule extends AbstractModule {
     public AuthenticationFilter providesAuthenticationFilter(PropertiesProvider propertiesProvider,
                                                              JwtTokenVerifier jwtTokenVerifier) throws Exception {
         try {
-            PropertiesConfiguration configurationFile = propertiesProvider.getConfiguration("webadmin");
+            Configuration configurationFile = propertiesProvider.getConfiguration("webadmin");
             if (configurationFile.getBoolean("jwt.enabled", DEFAULT_JWT_DISABLED)) {
                 return new JwtFilter(jwtTokenVerifier);
             }
@@ -112,7 +112,7 @@ public class WebAdminServerModule extends AbstractModule {
         }
     }
 
-    private Optional<TlsConfiguration> readHttpsConfiguration(PropertiesConfiguration configurationFile) {
+    private Optional<TlsConfiguration> readHttpsConfiguration(Configuration configurationFile) {
         boolean enabled = configurationFile.getBoolean("https.enabled", DEFAULT_HTTPS_DISABLED);
         if (enabled) {
             return Optional.of(TlsConfiguration.builder()

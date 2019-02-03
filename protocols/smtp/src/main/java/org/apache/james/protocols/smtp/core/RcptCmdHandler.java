@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
@@ -210,9 +211,9 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
         } else if (null != recipient) {
             sb.append(" [to:").append(recipient).append(']');
         }
-        if (null != session.getAttachment(SMTPSession.SENDER, State.Transaction)) {
-            MailAddress mailAddress = (MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction);
-            sb.append(" [from:").append(mailAddress.asString()).append(']');
+       MaybeSender sender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, State.Transaction);
+        if (null != sender && !sender.isNullSender()) {
+            sb.append(" [from:").append(sender.asString()).append(']');
         }
         return sb.toString();
     }
@@ -228,10 +229,9 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
     }
 
     @Override
-    protected HookResult callHook(RcptHook rawHook, SMTPSession session,
-                                  String parameters) {
-        return rawHook.doRcpt(session,
-                (MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction),
+    protected HookResult callHook(RcptHook rawHook, SMTPSession session, String parameters) {
+        MaybeSender sender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, State.Transaction);
+        return rawHook.doRcpt(session, sender,
                 (MailAddress) session.getAttachment(CURRENT_RECIPIENT, State.Transaction));
     }
 

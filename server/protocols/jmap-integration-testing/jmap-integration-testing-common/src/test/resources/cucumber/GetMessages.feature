@@ -58,6 +58,7 @@ Feature: GetMessages method
     Then no error is returned
     And the notFound list should contain the requested message id
 
+  @BasicFeature
   Scenario: Retrieving message should return messages when exists
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail"
     When "alice@domain.tld" ask for messages "m1"
@@ -154,6 +155,7 @@ Feature: GetMessages method
     And the id of the message is "m1"
     And the subject of the message is "my test subject"
 
+  @BasicFeature
   Scenario: Retrieving message should return attachments when some
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with two attachments
     When "alice@domain.tld" ask for messages "m1"
@@ -334,6 +336,7 @@ Feature: GetMessages method
             |content-type                                       |tranfer-encoding   |content                                                                                                     |preview                                                                                      |
             |"text/html; charset=iso-8859-1"                    |quoted-printable   |"Dans le cadre du stage effectu=E9 Mlle 2017, =E0 sign=E9e d=E8s que possible, =E0, tr=E8s, journ=E9e.."    |effectué, à, signée dès, très, journée                                                                        |
 
+  @BasicFeature
   Scenario Outline: Retrieving message should display keywords as jmap flag
     Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with flags <flags>
     When "alice@domain.tld" ask for messages "m1"
@@ -406,6 +409,20 @@ Feature: GetMessages method
       |name     |"encrypted.asc"               |
       |isInline |false                         |
 
+  Scenario: Retrieving message should be possible when message with inlined image but without content disposition
+    Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with inlined image without content disposition
+    When "alice@domain.tld" ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the hasAttachment of the message is "true"
+    And the list of attachments of the message contains 1 attachments
+    And the first attachment is:
+      |key      | value                                           |
+      |type     |"image/png"                                      |
+      |cid      |"14672787885774e5c4d4cee471352039@linagora.com"  |
+      |name     |"vlc.png"                                        |
+      |isInline |false                                            |
+
   Scenario: Retrieving message should be possible when message with inlined attachment but without content ID
     Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with inlined image without content ID
     When "alice@domain.tld" ask for messages "m1"
@@ -418,4 +435,18 @@ Feature: GetMessages method
     |type     |"image/jpeg"                  |
     |cid      |null                          |
     |name     |"IMG_6112.JPG"                |
+    |isInline |false                         |
+
+  Scenario: Header only text calendar should be read as normal calendar attachment by JMAP
+    Given "alice@domain.tld" receives a SMTP message specified in file "eml/ics_in_header.eml" as message "m1"
+    When "alice@domain.tld" ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the hasAttachment of the message is "true"
+    And the list of attachments of the message contains 1 attachments
+    And the first attachment is:
+    |key      | value                        |
+    |type     |"text/calendar"               |
+    |size     |1056                          |
+    |name     |"event.ics"                   |
     |isInline |false                         |

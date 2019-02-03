@@ -53,6 +53,7 @@ import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageSource;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +71,7 @@ public class FileMailQueue implements ManageableMailQueue {
 
     private final Map<String, FileItem> keyMappings = Collections.synchronizedMap(new LinkedHashMap<>());
     private final BlockingQueue<String> inmemoryQueue = new LinkedBlockingQueue<>();
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(NamedThreadFactory.withClassName(getClass()));
     private static final AtomicLong COUNTER = new AtomicLong();
     private final String queueDirName;
     private final File queueDir;

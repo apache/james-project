@@ -56,7 +56,7 @@ public class MessageSender {
     public void sendMessage(MessageId messageId,
                             Mail mail,
                             MailboxSession session) throws MessagingException {
-        MailMetadata metadata = new MailMetadata(messageId, session.getUser().getUserName());
+        MailMetadata metadata = new MailMetadata(messageId, session.getUser().asString());
         mailSpool.send(mail, metadata);
     }
 }

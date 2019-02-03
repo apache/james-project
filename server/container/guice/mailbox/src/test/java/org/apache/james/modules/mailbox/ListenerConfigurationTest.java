@@ -57,12 +57,33 @@ public class ListenerConfigurationTest {
     @Test
     public void isAsyncShouldReturnConfiguredValue() {
         DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
-        String expectedClazz = "MyClassName";
-        configuration.addProperty("class", expectedClazz);
+        configuration.addProperty("class", "MyClassName");
         configuration.addProperty("async", "false");
 
         ListenerConfiguration listenerConfiguration = ListenerConfiguration.from(configuration);
 
         assertThat(listenerConfiguration.isAsync()).contains(false);
+    }
+
+    @Test
+    public void getGroupShouldBeEmptyByDefault() {
+        DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
+        configuration.addProperty("class", "MyClassName");
+
+        ListenerConfiguration listenerConfiguration = ListenerConfiguration.from(configuration);
+
+        assertThat(listenerConfiguration.getGroup()).isEmpty();
+    }
+
+    @Test
+    public void getGroupShouldContainsConfiguredValue() {
+        String groupName = "Avengers";
+        DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
+        configuration.addProperty("class", "MyClassName");
+        configuration.addProperty("group", groupName);
+
+        ListenerConfiguration listenerConfiguration = ListenerConfiguration.from(configuration);
+
+        assertThat(listenerConfiguration.getGroup()).contains(groupName);
     }
 }

@@ -47,7 +47,7 @@ public class Bouncer {
     }
 
     public void bounce(Mail mail, Exception ex) {
-        if (mail.getSender() == null) {
+        if (!mail.hasSender()) {
             LOGGER.debug("Null Sender: no bounce will be generated for {}", mail.getName());
         } else {
             if (configuration.getBounceProcessor() != null) {

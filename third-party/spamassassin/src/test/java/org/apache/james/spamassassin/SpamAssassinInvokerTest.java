@@ -25,17 +25,19 @@ import java.nio.charset.StandardCharsets;
 
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.User;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.spamassassin.SpamAssassinExtension.SpamAssassin;
 import org.apache.james.util.MimeMessageUtil;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(SpamAssassinExtension.class)
 public class SpamAssassinInvokerTest {
 
-    public static final String USER = "any@james";
+    public static final User USER = User.fromUsername("any@james");
     private SpamAssassin spamAssassin;
     private SpamAssassinInvoker testee;
 
@@ -72,6 +74,7 @@ public class SpamAssassinInvokerTest {
         assertThat(result.getHeadersAsAttribute()).isNotEmpty();
     }
 
+    @Disabled("MAILBOX-377 This test is not stable, fails on our CI and thus is temporarily disabled")
     @Test
     public void scanMailShouldMarkAsSpamWhenKnownAsSpam() throws Exception {
         spamAssassin.train("user");

@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.SerializableQuotaValue;
@@ -52,6 +53,7 @@ import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.google.common.base.Strings;
 
@@ -95,6 +97,7 @@ public abstract class QuotaMailingTest {
         jmapServer.stop();
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void shouldSendANoticeWhenThresholdExceeded() throws Exception {
         jmapServer.getProbe(QuotaProbesImpl.class)

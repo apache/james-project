@@ -61,6 +61,11 @@ public class TestMessageId implements MessageId {
     }
 
     @Override
+    public boolean isSerializable() {
+        return true;
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hashCode(value);
     }

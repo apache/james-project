@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-server</artifactId>
-        <version>3.2.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>james-server-cli-integration</artifactId>
-    <name>Apache James :: Server :: Cli :: Integretion</name>
+    <name>Apache James :: Server :: Cli :: Integration</name>
 
     <dependencies>
         <dependency>

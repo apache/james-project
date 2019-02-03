@@ -24,51 +24,31 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraSchemaVersionDAOTest {
-
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-
-    private static CassandraCluster cassandra;
+class CassandraSchemaVersionDAOTest {
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSchemaVersionModule.MODULE);
 
     private CassandraSchemaVersionDAO testee;
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraSchemaVersionModule.MODULE, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         testee = new CassandraSchemaVersionDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void getCurrentSchemaVersionShouldReturnEmptyWhenTableIsEmpty() {
+    void getCurrentSchemaVersionShouldReturnEmptyWhenTableIsEmpty() {
         assertThat(testee.getCurrentSchemaVersion().join())
             .isEqualTo(Optional.empty());
     }
 
     @Test
-    public void getCurrentSchemaVersionShouldReturnVersionPresentInTheTable() {
+    void getCurrentSchemaVersionShouldReturnVersionPresentInTheTable() {
         SchemaVersion version = new SchemaVersion(42);
 
         testee.updateVersion(version).join();
@@ -77,7 +57,7 @@ public class CassandraSchemaVersionDAOTest {
     }
 
     @Test
-    public void getCurrentSchemaVersionShouldBeIdempotent() {
+    void getCurrentSchemaVersionShouldBeIdempotent() {
         SchemaVersion version = new SchemaVersion(42);
 
         testee.updateVersion(version.next()).join();

@@ -77,7 +77,7 @@ public class TikaTextExtractor implements TextExtractor {
 
     @Override
     public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
-        return metricFactory.withMetric("tikaTextExtraction", Throwing.supplier(
+        return metricFactory.runPublishingTimerMetric("tikaTextExtraction", Throwing.supplier(
             () -> performContentExtraction(inputStream, contentType))
             .sneakyThrow());
     }

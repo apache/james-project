@@ -78,7 +78,9 @@ public class SenderHostIs extends GenericMatcher {
     @Override
     public Collection<MailAddress> match(Mail mail) {
         try {
-            if (mail.getSender() != null && senderHosts.contains(mail.getSender().getDomain())) {
+            if (mail.getMaybeSender().asOptional()
+                    .map(mailAddress -> senderHosts.contains(mailAddress.getDomain()))
+                    .orElse(false)) {
                 return mail.getRecipients();
             }
         } catch (Exception e) {

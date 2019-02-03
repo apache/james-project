@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.concurrent.TimeUnit;
@@ -41,6 +42,8 @@ import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.MailAddressFixture;
+import org.apache.mailet.base.test.FakeMail;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
 import org.junit.Rule;
@@ -175,6 +178,29 @@ public class JamesMailetContextTest {
         mail.setRecipients(ImmutableList.of(mailAddress));
         mail.setMessage(MimeMessageUtil.defaultMimeMessage());
         testee.bounce(mail, "message");
+    }
+
+    @Test
+    public void bouncingToNullSenderShouldBeANoop() throws Exception {
+        MailImpl mail = new MailImpl();
+        mail.setSender(MailAddress.nullSender());
+        mail.setRecipients(ImmutableList.of(mailAddress));
+        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+
+        testee.bounce(mail, "message");
+
+        verifyZeroInteractions(spoolMailQueue);
+    }
+
+    @Test
+    public void bouncingToNoSenderShouldBeANoop() throws Exception {
+        MailImpl mail = new MailImpl();
+        mail.setRecipients(ImmutableList.of(mailAddress));
+        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+
+        testee.bounce(mail, "message");
+
+        verifyZeroInteractions(spoolMailQueue);
     }
 
     @Test
@@ -316,5 +342,49 @@ public class JamesMailetContextTest {
         verifyNoMoreInteractions(spoolMailQueue);
 
         assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(otherState);
+    }
+
+    @Test
+    public void sendMailForMailShouldEnqueueEmailWithOtherStateWhenSpecified() throws Exception {
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .addFrom(mailAddress.asString())
+            .addToRecipient(mailAddress.asString())
+            .setText("Simple text")
+            .build();
+
+        String otherState = "other";
+        testee.sendMail(FakeMail.builder()
+            .sender(MailAddressFixture.SENDER)
+            .recipient(MailAddressFixture.RECIPIENT1)
+            .mimeMessage(message)
+            .state(otherState)
+            .build());
+
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture());
+        verifyNoMoreInteractions(spoolMailQueue);
+
+        assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(otherState);
+    }
+
+    @Test
+    public void sendMailForMailShouldEnqueueEmailWithDefaults() throws Exception {
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .addFrom(mailAddress.asString())
+            .addToRecipient(mailAddress.asString())
+            .setText("Simple text")
+            .build();
+
+        testee.sendMail(FakeMail.builder()
+            .sender(MailAddressFixture.SENDER)
+            .recipient(MailAddressFixture.RECIPIENT1)
+            .mimeMessage(message)
+            .build());
+
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture());
+        verifyNoMoreInteractions(spoolMailQueue);
+
+        assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(Mail.DEFAULT);
     }
 }

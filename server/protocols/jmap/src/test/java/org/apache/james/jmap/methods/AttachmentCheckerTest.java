@@ -30,8 +30,8 @@ import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessageId;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,7 +55,7 @@ public class AttachmentCheckerTest {
 
     @Before
     public void setUp() {
-        session = new MockMailboxSession("Jonhy");
+        session = MailboxSessionUtil.create("Jonhy");
         attachmentManager = mock(AttachmentManager.class);
 
         sut = new AttachmentChecker(attachmentManager);

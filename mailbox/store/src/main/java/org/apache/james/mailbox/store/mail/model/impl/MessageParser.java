@@ -190,7 +190,7 @@ public class MessageParser {
         if (context == Context.BODY && isTextPart(part)) {
             return false;
         }
-        return attachmentDispositionCriterion(part) || attachmentContentTypeCriterion(part);
+        return attachmentDispositionCriterion(part) || attachmentContentTypeCriterion(part) || hadCID(part);
     }
 
     private boolean isTextPart(Entity part) {
@@ -201,7 +201,7 @@ public class MessageParser {
             .orElse(false);
     }
 
-    private Boolean attachmentContentTypeCriterion(Entity part) {
+    private boolean attachmentContentTypeCriterion(Entity part) {
         return getContentTypeField(part)
             .map(ContentTypeField::getMimeType)
             .map(dispositionType -> dispositionType.toLowerCase(Locale.US))
@@ -209,12 +209,16 @@ public class MessageParser {
             .orElse(false);
     }
 
-    private Boolean attachmentDispositionCriterion(Entity part) {
+    private boolean attachmentDispositionCriterion(Entity part) {
         return getContentDispositionField(part)
             .map(ContentDispositionField::getDispositionType)
             .map(dispositionType -> dispositionType.toLowerCase(Locale.US))
             .map(ATTACHMENT_CONTENT_DISPOSITIONS::contains)
             .orElse(false);
+    }
+
+    private boolean hadCID(Entity part) {
+        return readHeader(part, CONTENT_ID, ContentIdField.class).isPresent();
     }
 
     private byte[] getBytes(Body body) throws IOException {

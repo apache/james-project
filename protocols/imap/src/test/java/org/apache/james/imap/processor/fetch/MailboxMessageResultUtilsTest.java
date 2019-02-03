@@ -19,8 +19,8 @@
 
 package org.apache.james.imap.processor.fetch;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.apache.james.imap.processor.fetch.MessageResultUtils.getMatching;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -91,10 +91,10 @@ public class MailboxMessageResultUtilsTest {
     @Test
     public void testGetAllContent() {
         List<MessageResult.Header> results = MessageResultUtils.getAll(headers.iterator());
-        assertEquals(3, results.size());
-        assertEquals(headerOne, results.get(0));
-        assertEquals(headerTwo, results.get(1));
-        assertEquals(headerThree, results.get(2));
+        assertThat(results.size()).isEqualTo(3);
+        assertThat(results.get(0)).isEqualTo(headerOne);
+        assertThat(results.get(1)).isEqualTo(headerTwo);
+        assertThat(results.get(2)).isEqualTo(headerThree);
     }
 
     @Test
@@ -102,9 +102,9 @@ public class MailboxMessageResultUtilsTest {
 
         List<MessageResult.Header> results = MessageResultUtils
                 .getMatching(NAMES, headers.iterator());
-        assertEquals(2, results.size());
-        assertEquals(headerOne, results.get(0));
-        assertEquals(headerThree, results.get(1));
+        assertThat(results.size()).isEqualTo(2);
+        assertThat(results.get(0)).isEqualTo(headerOne);
+        assertThat(results.get(1)).isEqualTo(headerThree);
     }
 
     @Test
@@ -112,18 +112,17 @@ public class MailboxMessageResultUtilsTest {
 
         List<MessageResult.Header> results = MessageResultUtils.getNotMatching(NAMES, headers
                 .iterator());
-        assertEquals(1, results.size());
-        assertEquals(headerTwo, results.get(0));
+        assertThat(results.size()).isEqualTo(1);
+        assertThat(results.get(0)).isEqualTo(headerTwo);
     }
 
     @Test
     public void testGetMatchingSingle() throws Exception {
-        assertEquals(headerOne, MessageResultUtils.getMatching("One", headers
-                .iterator()));
-        assertEquals(headerThree, MessageResultUtils.getMatching("Three",
-                headers.iterator()));
-        assertNull(MessageResultUtils
-                .getMatching("Missing", headers.iterator()));
+        assertThat(MessageResultUtils.getMatching("One", headers
+                .iterator())).isEqualTo(headerOne);
+        assertThat(MessageResultUtils.getMatching("Three",
+                headers.iterator())).isEqualTo(headerThree);
+        assertThat(getMatching("Missing", headers.iterator())).isNull();
     }
 
 }

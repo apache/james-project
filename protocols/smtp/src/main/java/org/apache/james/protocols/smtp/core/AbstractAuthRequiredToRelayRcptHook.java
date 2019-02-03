@@ -20,6 +20,7 @@ package org.apache.james.protocols.smtp.core;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
@@ -48,8 +49,7 @@ public abstract class AbstractAuthRequiredToRelayRcptHook implements RcptHook {
         .build();
     
     @Override
-    public HookResult doRcpt(SMTPSession session, MailAddress sender,
-                             MailAddress rcpt) {
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
         if (!session.isRelayingAllowed()) {
             Domain toDomain = rcpt.getDomain();
             if (!isLocalDomain(toDomain)) {

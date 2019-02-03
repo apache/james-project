@@ -19,10 +19,12 @@
 
 package org.apache.james.mailbox.quota.cassandra.listeners;
 
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreExtension;
+import org.apache.james.mailbox.quota.cassandra.dto.QuotaEventDTOModules;
 import org.apache.james.mailbox.quota.mailing.listeners.QuotaThresholdMailingIntegrationTest;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(CassandraEventStoreExtension.class)
-public class CassandraQuotaMailingListenersIntegrationTest implements QuotaThresholdMailingIntegrationTest {
-
+class CassandraQuotaMailingListenersIntegrationTest implements QuotaThresholdMailingIntegrationTest {
+    @RegisterExtension
+    static CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE);
 }

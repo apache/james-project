@@ -42,11 +42,17 @@ public class SetFilterRequest implements JmapRequest {
         }
 
         public Builder accountId(String accountId) {
-            throw new JmapFieldNotSupportedException(ISSUER, "accountId");
+            if (accountId != null) {
+                throw new JmapFieldNotSupportedException(ISSUER, "accountId");
+            }
+            return this;
         }
 
         public Builder ifInState(String ifInState) {
-            throw new JmapFieldNotSupportedException(ISSUER, "ifInState");
+            if (ifInState != null) {
+                throw new JmapFieldNotSupportedException(ISSUER, "ifInState");
+            }
+            return this;
         }
 
         public Builder singleton(List<JmapRuleDTO> rules) {

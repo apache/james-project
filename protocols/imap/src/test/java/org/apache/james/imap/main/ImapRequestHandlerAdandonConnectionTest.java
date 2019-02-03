@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.imap.main;
 
-import static org.junit.Assert.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
@@ -74,6 +74,6 @@ public class ImapRequestHandlerAdandonConnectionTest {
         //
         // Verify output
         //
-        assertFalse("Connection should be abandoned", result);
+        assertThat(result).describedAs("Connection should be abandoned").isFalse();
     }
 }

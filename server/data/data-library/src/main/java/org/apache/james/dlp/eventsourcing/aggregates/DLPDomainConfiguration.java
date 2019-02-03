@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.james.dlp.api.DLPConfigurationItem;
+import org.apache.james.dlp.api.DLPRules;
 import org.apache.james.dlp.eventsourcing.events.ConfigurationItemsAdded;
 import org.apache.james.dlp.eventsourcing.events.ConfigurationItemsRemoved;
 import org.apache.james.eventsourcing.Event;
@@ -77,12 +78,12 @@ public class DLPDomainConfiguration {
         this.history = history;
     }
 
-    public Stream<DLPConfigurationItem> retrieveRules() {
-        return state.rules.stream();
+    public DLPRules retrieveRules() {
+        return new DLPRules(ImmutableList.copyOf(state.rules));
     }
 
     public List<Event> clear() {
-        ImmutableList<DLPConfigurationItem> rules = retrieveRules().collect(Guavate.toImmutableList());
+        ImmutableList<DLPConfigurationItem> rules = retrieveRules().getItems();
         if (!rules.isEmpty()) {
             ImmutableList<Event> events = ImmutableList.of(new ConfigurationItemsRemoved(aggregateId, history.getNextEventId(), rules));
             events.forEach(this::apply);
@@ -92,8 +93,8 @@ public class DLPDomainConfiguration {
         }
     }
 
-    public List<Event> store(List<DLPConfigurationItem> updatedRules) {
-        ImmutableSet<DLPConfigurationItem> existingRules = retrieveRules().collect(Guavate.toImmutableSet());
+    public List<Event> store(DLPRules updatedRules) {
+        ImmutableSet<DLPConfigurationItem> existingRules = retrieveRules().getItems().stream().collect(Guavate.toImmutableSet());
         ImmutableSet<DLPConfigurationItem> updatedRulesSet = ImmutableSet.copyOf(updatedRules);
 
         Optional<Event> removedRulesEvent = generateRemovedRulesEvent(existingRules, updatedRulesSet);

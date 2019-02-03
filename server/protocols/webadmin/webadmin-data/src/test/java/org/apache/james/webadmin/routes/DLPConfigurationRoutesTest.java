@@ -24,6 +24,8 @@ import static io.restassured.RestAssured.requestSpecification;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_FIELDS;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.hamcrest.Matchers.containsString;
@@ -53,6 +55,7 @@ import org.mockito.Mockito;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
+import net.javacrumbs.jsonunit.core.Option;
 
 class DLPConfigurationRoutesTest {
 
@@ -328,6 +331,168 @@ class DLPConfigurationRoutesTest {
                 .body("type", is("InvalidArgument"))
                 .body("message", is("Invalid request for domain: dr@strange.com"))
                 .body("details", is("Domain can not be empty nor contain `@`"));
+        }
+
+        @Test
+        void putShouldUpdateTheConfigurations() {
+            String storeBody =
+                "{\"rules\": [" +
+                    "  {" +
+                    "    \"id\": \"1\"," +
+                    "    \"expression\": \"expression 1\"," +
+                    "    \"explanation\": \"explanation 1\"," +
+                    "    \"targetsSender\": true," +
+                    "    \"targetsRecipients\": true," +
+                    "    \"targetsContent\": true" +
+                    "  }," +
+                    "  {" +
+                    "    \"id\": \"2\"," +
+                    "    \"expression\": \"expression 2\"," +
+                    "    \"explanation\": \"explanation 2\"," +
+                    "    \"targetsSender\": false," +
+                    "    \"targetsRecipients\": false," +
+                    "    \"targetsContent\": false" +
+                    "  }," +
+                    "  {" +
+                    "    \"id\": \"3\"," +
+                    "    \"expression\": \"expression 3\"," +
+                    "    \"explanation\": \"explanation 3\"," +
+                    "    \"targetsSender\": false," +
+                    "    \"targetsRecipients\": false," +
+                    "    \"targetsContent\": true" +
+                    "  }]}";
+            String updatedBody =
+                "{\"rules\": [" +
+                    "  {" +
+                    "    \"id\": \"4\"," +
+                    "    \"expression\": \"expression 4\"," +
+                    "    \"explanation\": \"explanation 4\"," +
+                    "    \"targetsSender\": true," +
+                    "    \"targetsRecipients\": true," +
+                    "    \"targetsContent\": true" +
+                    "  }," +
+                    "  {" +
+                    "    \"id\": \"2\"," +
+                    "    \"expression\": \"expression 2\"," +
+                    "    \"explanation\": \"explanation 2\"," +
+                    "    \"targetsSender\": false," +
+                    "    \"targetsRecipients\": false," +
+                    "    \"targetsContent\": false" +
+                    "  }," +
+                    "  {" +
+                    "    \"id\": \"3\"," +
+                    "    \"expression\": \"expression 3 updated\"," +
+                    "    \"explanation\": \"explanation 3 updated\"," +
+                    "    \"targetsSender\": false," +
+                    "    \"targetsRecipients\": false," +
+                    "    \"targetsContent\": true" +
+                    "  }]}";
+
+            given()
+                .body(storeBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+
+            given()
+                .body(updatedBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+
+            String retrievedBody = with()
+                .get(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+            .extract()
+                .body().asString();
+
+            assertThatJson(retrievedBody)
+                .when(Option.IGNORING_ARRAY_ORDER)
+                .isEqualTo(updatedBody);
+        }
+        
+        @Test
+        void putShouldRejectDuplicatedIds() {
+            String storeBody =
+                "{\"rules\": [" +
+                    "  {" +
+                    "    \"id\": \"1\"," +
+                    "    \"expression\": \"expression 1\"," +
+                    "    \"explanation\": \"explanation 1\"," +
+                    "    \"targetsSender\": true," +
+                    "    \"targetsRecipients\": true," +
+                    "    \"targetsContent\": true" +
+                    "  }," +
+                    "  {" +
+                    "    \"id\": \"1\"," +
+                    "    \"expression\": \"expression 3\"," +
+                    "    \"explanation\": \"explanation 3\"," +
+                    "    \"targetsSender\": false," +
+                    "    \"targetsRecipients\": false," +
+                    "    \"targetsContent\": true" +
+                    "  }]}";
+
+            given()
+                .body(storeBody).log().ifValidationFails()
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(JSON_CONTENT_TYPE)
+                .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("'id' duplicates are not allowed in DLP rules"));
+        }
+
+        @Test
+        void putShouldClearTheConfigurationsWhenNoRule() {
+            String storeBody =
+                "{\"rules\": [" +
+                    "  {" +
+                    "    \"id\": \"1\"," +
+                    "    \"expression\": \"expression 1\"," +
+                    "    \"explanation\": \"explanation 1\"," +
+                    "    \"targetsSender\": true," +
+                    "    \"targetsRecipients\": true," +
+                    "    \"targetsContent\": true" +
+                    "  }," +
+                    "  {" +
+                    "    \"id\": \"2\"," +
+                    "    \"expression\": \"expression 2\"," +
+                    "    \"explanation\": \"explanation 2\"," +
+                    "    \"targetsSender\": false," +
+                    "    \"targetsRecipients\": false," +
+                    "    \"targetsContent\": false" +
+                    "  }]}";
+            String updatedBody = "{\"rules\": []}";
+
+            given()
+                .body(storeBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+
+            given()
+                .body(updatedBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+
+            String retrievedBody = with()
+                .get(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+            .extract()
+                .body().asString();
+
+            assertThatJson(retrievedBody).isEqualTo(updatedBody);
         }
     }
 
@@ -696,6 +861,105 @@ class DLPConfigurationRoutesTest {
                 .body("type", is("InvalidArgument"))
                 .body("message", is("Invalid request for domain: dr@strange.com"))
                 .body("details", is("Domain can not be empty nor contain `@`"));
+        }
+    }
+    
+    @Nested
+    class DefineFetch {
+        @Test
+        public void fetchShouldBeOK() throws Exception {
+            storeRules();
+
+            String jsonAsString =
+                when()
+                    .get(DEFAULT_DOMAIN + "/rules/1")
+                .then()
+                    .statusCode(HttpStatus.OK_200)
+                    .contentType(ContentType.JSON)
+                    .extract()
+                        .body()
+                        .asString();
+
+            assertThatJson(jsonAsString)
+                .when(IGNORING_ARRAY_ORDER)
+                .when(IGNORING_EXTRA_FIELDS)
+                    .isEqualTo("{" +
+                            "    \"id\": \"1\"," +
+                            "    \"expression\": \"expression 1\"," +
+                            "    \"explanation\": \"explanation 1\"," +
+                            "    \"targetsSender\": true," +
+                            "    \"targetsRecipients\": true," +
+                            "    \"targetsContent\": true" +
+                            "}");
+        }
+
+        @Test
+        public void fetchOnUnknownDomainShouldBe404() throws Exception {
+            storeRules();
+
+            when()
+                .get("strange.com/rules/1")
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .contentType(JSON_CONTENT_TYPE)
+                .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("'strange.com' is not managed by this James server"));
+        }
+
+        @Test
+        public void fetchOnUnknownDomainAndRuleShouldBe404() throws Exception {
+            when()
+                .get("strange.com/rules/666")
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .contentType(JSON_CONTENT_TYPE)
+                .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("'strange.com' is not managed by this James server"));
+        }
+
+        @Test
+        public void fetchOnUnknownRuleIdShouldBe404() throws Exception {
+            storeRules();
+
+            when()
+                .get(DEFAULT_DOMAIN + "/rules/666")
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .contentType(JSON_CONTENT_TYPE)
+                .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("There is no rule '666' for '" + DEFAULT_DOMAIN + "' managed by this James server"));
+        }
+
+        private void storeRules() {
+            String storeBody =
+                "{\"rules\": [" +
+                "  {" +
+                "    \"id\": \"1\"," +
+                "    \"expression\": \"expression 1\"," +
+                "    \"explanation\": \"explanation 1\"," +
+                "    \"targetsSender\": true," +
+                "    \"targetsRecipients\": true," +
+                "    \"targetsContent\": true" +
+                "  }," +
+                "  {" +
+                "    \"id\": \"2\"," +
+                "    \"expression\": \"expression 2\"," +
+                "    \"explanation\": \"explanation 2\"," +
+                "    \"targetsSender\": true," +
+                "    \"targetsRecipients\": false," +
+                "    \"targetsContent\": false" +
+                "  }]}";
+
+            given()
+                .body(storeBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+
         }
     }
 }

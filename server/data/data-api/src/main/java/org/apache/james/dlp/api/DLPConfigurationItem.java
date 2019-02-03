@@ -273,7 +273,7 @@ public class DLPConfigurationItem {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(id, explanation, regexp, targets);
+        return Objects.hash(id, explanation, regexp.pattern(), targets);
     }
 
     @Override

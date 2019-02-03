@@ -19,6 +19,7 @@
 
 package org.apache.james.util.concurrency;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -27,8 +28,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,19 +41,28 @@ public class ConcurrentTestRunner {
 
     public static final int DEFAULT_OPERATION_COUNT = 1;
 
+    @FunctionalInterface
+    public interface RequireOperation {
+        RequireThreadCount operation(ConcurrentOperation operation);
+    }
+
+    @FunctionalInterface
+    public interface RequireThreadCount {
+        Builder threadCount(int threadCount);
+    }
+
     public static class Builder {
-        private Optional<Integer> threadCount;
-        private Optional<Integer>  operationCount;
+        private final int threadCount;
+        private final ConcurrentOperation operation;
+        private Optional<Integer> operationCount;
 
-        public Builder() {
-            threadCount = Optional.empty();
-            operationCount = Optional.empty();
-        }
-
-        public Builder threadCount(int threadCount) {
+        private Builder(int threadCount, ConcurrentOperation operation) {
             Preconditions.checkArgument(threadCount > 0, "Thread count should be strictly positive");
-            this.threadCount = Optional.of(threadCount);
-            return this;
+            Preconditions.checkNotNull(operation);
+
+            this.threadCount = threadCount;
+            this.operation = operation;
+            this.operationCount = Optional.empty();
         }
 
         public Builder operationCount(int operationCount) {
@@ -59,29 +71,36 @@ public class ConcurrentTestRunner {
             return this;
         }
 
-        public ConcurrentTestRunner build(BiConsumer operation) {
-            Preconditions.checkState(threadCount.isPresent(), "'threadCount' is compulsory");
-            Preconditions.checkNotNull(operation);
-
+        private ConcurrentTestRunner build() {
             return new ConcurrentTestRunner(
-                threadCount.get(),
+                threadCount,
                 operationCount.orElse(DEFAULT_OPERATION_COUNT),
                 operation);
         }
+
+        public ConcurrentTestRunner runSuccessfullyWithin(Duration duration) throws InterruptedException, ExecutionException {
+            return build()
+                .runSuccessfullyWithin(duration);
+        }
+
+        public ConcurrentTestRunner runAcceptingErrorsWithin(Duration duration) throws InterruptedException, ExecutionException {
+            return build()
+                .runAcceptingErrorsWithin(duration);
+        }
     }
 
-    public interface BiConsumer {
-        void consume(int threadNumber, int step) throws Exception;
+    public interface ConcurrentOperation {
+        void execute(int threadNumber, int step) throws Exception;
     }
 
     private class ConcurrentRunnableTask implements Runnable {
         private final int threadNumber;
-        private final BiConsumer biConsumer;
+        private final ConcurrentOperation concurrentOperation;
         private Exception exception;
 
-        public ConcurrentRunnableTask(int threadNumber, BiConsumer biConsumer) {
+        public ConcurrentRunnableTask(int threadNumber, ConcurrentOperation concurrentOperation) {
             this.threadNumber = threadNumber;
-            this.biConsumer = biConsumer;
+            this.concurrentOperation = concurrentOperation;
         }
 
         @Override
@@ -90,9 +109,9 @@ public class ConcurrentTestRunner {
             countDownLatch.countDown();
             for (int i = 0; i < operationCount; i++) {
                 try {
-                    biConsumer.consume(threadNumber, i);
+                    concurrentOperation.execute(threadNumber, i);
                 } catch (Exception e) {
-                    LOGGER.error("Error caught during concurrent testing", e);
+                    LOGGER.error("Error caught during concurrent testing (iteration {}, threadNumber {})", i, threadNumber, e);
                     exception = e;
                 }
             }
@@ -102,25 +121,30 @@ public class ConcurrentTestRunner {
         }
     }
 
+    public static class NotTerminatedException extends RuntimeException {
+
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentTestRunner.class);
 
-    public static Builder builder() {
-        return new Builder();
+    public static RequireOperation builder() {
+        return operation -> threadCount -> new Builder(threadCount, operation);
     }
 
     private final int threadCount;
     private final int operationCount;
     private final CountDownLatch countDownLatch;
-    private final BiConsumer biConsumer;
+    private final ConcurrentOperation biConsumer;
     private final ExecutorService executorService;
     private final List<Future<?>> futures;
 
-    private ConcurrentTestRunner(int threadCount, int operationCount, BiConsumer biConsumer) {
+    private ConcurrentTestRunner(int threadCount, int operationCount, ConcurrentOperation biConsumer) {
         this.threadCount = threadCount;
         this.operationCount = operationCount;
         this.countDownLatch = new CountDownLatch(threadCount);
         this.biConsumer = biConsumer;
-        this.executorService = Executors.newFixedThreadPool(threadCount);
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        this.executorService = Executors.newFixedThreadPool(threadCount, threadFactory);
         this.futures = new ArrayList<>();
     }
 
@@ -138,8 +162,23 @@ public class ConcurrentTestRunner {
         return this;
     }
 
-    public boolean awaitTermination(long time, TimeUnit unit) throws InterruptedException {
+    public ConcurrentTestRunner awaitTermination(Duration duration) throws InterruptedException {
         executorService.shutdown();
-        return executorService.awaitTermination(time, unit);
+        boolean terminated = executorService.awaitTermination(duration.toMillis(), TimeUnit.MILLISECONDS);
+        if (!terminated) {
+            throw new NotTerminatedException();
+        }
+        return this;
+    }
+
+    public ConcurrentTestRunner runSuccessfullyWithin(Duration duration) throws InterruptedException, ExecutionException {
+        return run()
+            .awaitTermination(duration)
+            .assertNoException();
+    }
+
+    public ConcurrentTestRunner runAcceptingErrorsWithin(Duration duration) throws InterruptedException, ExecutionException {
+        return run()
+            .awaitTermination(duration);
     }
 }

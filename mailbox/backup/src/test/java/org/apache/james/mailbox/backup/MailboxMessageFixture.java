@@ -28,8 +28,8 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -62,8 +62,9 @@ public interface MailboxMessageFixture {
     MessageUid MESSAGE_UID_1 = MessageUid.of(MESSAGE_UID_1_VALUE);
     MessageUid MESSAGE_UID_2 = MessageUid.of(MESSAGE_UID_2_VALUE);
     MailboxId MAILBOX_ID_1 = TestId.of(1L);
+    Flags flags1 = new Flags("myFlags");
 
-    MailboxSession MAILBOX_SESSION = new MockMailboxSession("user");
+    MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create("user");
     
     Mailbox MAILBOX_1 = new SimpleMailbox(MailboxPath.forUser("user", "mailbox1"), 42, TestId.of(1L));
     Mailbox MAILBOX_1_SUB_1 = new SimpleMailbox(MailboxPath.forUser("user", "mailbox1" + MAILBOX_SESSION.getPathDelimiter() + "sub1"), 420, TestId.of(11L));
@@ -76,7 +77,7 @@ public interface MailboxMessageFixture {
         .size(SIZE_1)
         .internalDate(new Date(DATE_1.toEpochSecond()))
         .bodyStartOctet(0)
-        .flags(new Flags())
+        .flags(flags1)
         .propertyBuilder(new PropertyBuilder())
         .mailboxId(MAILBOX_ID_1)
         .build();

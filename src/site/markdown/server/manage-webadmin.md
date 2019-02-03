@@ -37,13 +37,23 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
  - [Correcting ghost mailbox](#Correcting_ghost_mailbox)
  - [Creating address group](#Creating_address_group)
  - [Creating address forwards](#Creating_address_forwards)
+ - [Creating address aliases](#Creating_address_aliases)
  - [Administrating mail repositories](#Administrating_mail_repositories)
  - [Administrating mail queues](#Administrating_mail_queues)
  - [Administrating DLP Configuration](#Administrating_dlp_configuration)
  - [Administrating Sieve quotas](#Administrating_Sieve_quotas)
+ - [ReIndexing](#ReIndexing)
  - [Task management](#Task_management)
+ - [Cassandra extra operations](#Cassandra_extra_operations)
 
 ## HealthCheck
+
+   - [Check all components](#Check_all_components)
+   - [Check single component](#Check_single_component)
+   - [List all health checks](#List_all_health_checks)
+   
+
+### Check all components
 
 This endpoint is simple for now and is just returning the http status code corresponding to the state of checks (see below).
 The user has to check in the logs in order to have more information about failing checks.
@@ -57,6 +67,53 @@ Response codes:
  - 200: All checks have answered with a Healthy status
  - 500: At least one check have answered with a Unhealthy or Degraded status
 
+### Check single component
+
+Performs a health check for the given component. The component is referenced by its URL encoded name.
+
+```
+curl -XGET http://ip:port/healthcheck/checks/Cassandra%20Backend
+```
+
+Will return the component's name, the component's escaped name, the health status and a cause.
+
+```
+{
+  "componentName": "Cassandra Backend",
+  "escapedComponentName": "Cassandra%20Backend",
+  "status": "HEALTHY"
+  "cause": null
+}
+```
+
+Response codes:
+
+ - 200: The check has answered with a Healthy status.
+ - 404: A component with the given name was not found.
+ - 500: The check has anwered with a Unhealthy or Degraded status.
+ 
+### List all health checks
+ 
+This endpoint lists all the available health checks.
+ 
+```
+curl -XGET http://ip:port/healthcheck/checks
+```
+ 
+Will return the list of all available health checks.
+ 
+```
+[
+    {
+        "componentName": "Cassandra Backend",
+        "escapedComponentName": "Cassandra%20Backend"
+    }
+]
+```
+ 
+Response codes:
+ 
+  - 200: List of available health checks
 
 ## Administrating domains
 
@@ -1244,6 +1301,89 @@ Response codes:
  - 204: Success
  - 400: Forward structure or member is not valid
 
+## Creating address aliases
+
+You can use **webadmin** to define aliases for an user.
+
+When a specific email is sent to the alias address, the destination address of the alias will receive it.
+
+Aliases can be defined for existing users.
+
+This feature uses [Recipients rewrite table](/server/config-recipientrewritetable.html) and requires
+the [RecipientRewriteTable mailet](https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java)
+to be configured.
+
+Note that email addresses are restricted to ASCII character set. Mail addresses not matching this criteria will be rejected.
+
+ - [Listing users with aliases](#Listing_users_with_aliases)
+ - [Listing alias sources of an user](#Listing_alias_sources_of_an_user)
+ - [Adding a new alias to an user](#Adding_a_new_alias_to_an_user)
+ - [Removing an alias of an user](#Removing_an_alias_of_an_user)
+
+### Listing users with aliases
+
+```
+curl -XGET http://ip:port/address/aliases
+```
+
+Will return the users having aliases configured as a list of JSON Strings representing mail addresses. For instance:
+
+```
+["user1@domain.com", "user2@domain.com"]
+```
+
+Response codes:
+
+ - 200: Success
+
+### Listing alias sources of an user
+
+```
+curl -XGET http://ip:port/address/aliases/user@domain.com
+```
+
+Will return the aliases of this user as a list of JSON Strings representing mail addresses. For instance:
+
+```
+[
+  {"source":"alias1@domain.com"},
+  {"source":"alias2@domain.com"}
+]
+```
+
+Response codes:
+
+ - 200: Success
+ - 400: Alias structure is not valid
+
+### Adding a new alias to an user
+
+```
+curl -XPUT http://ip:port/address/aliases/user@domain.com/sources/alias@domain.com
+```
+
+Will add alias@domain.com to user@domain.com, creating the alias if needed
+
+Response codes:
+
+ - 204: OK
+ - 400: Alias structure or member is not valid
+ - 400: The alias source exists as an user already
+ - 400: Source and destination can't be the same!
+
+### Removing an alias of an user
+
+```
+curl -XDELETE http://ip:port/address/aliases/user@domain.com/sources/alias@domain.com
+```
+
+Will remove alias@domain.com from user@domain.com, removing the alias if needed
+
+Response codes:
+
+ - 204: OK
+ - 400: Alias structure or member is not valid
+
 ## Administrating mail repositories
 
  - [Create a mail repository](#Create_a_mail_repository)
@@ -1809,6 +1949,7 @@ Each `senderDomain` correspond to a distinct DLP configuration.
 - [List DLP configuration by sender domain](List_dlp_configuration_by_sender_domain)
 - [Store DLP configuration by sender domain](Store_dlp_configuration_by_sender_domain)
 - [Remove DLP configuration by sender domain](Remove_dlp_configuration_by_sender_domain)
+- [Fetch a DLP configuration item by sender domain and rule id](Fetch_a_dlp_configuration_item_by_sender_domain_and_rule_id)
 
 ### List DLP configuration by sender domain
 
@@ -1906,6 +2047,34 @@ Response codes:
  - 204: DLP configuration is removed
  - 400: Invalid senderDomain or payload in request
  - 404: The domain does not exist.
+
+
+### Fetch a DLP configuration item by sender domain and rule id
+
+Retrieve a DLP configuration rule for corresponding `senderDomain` and a `ruleId`
+
+```
+curl -XGET http://ip:port/dlp/rules/senderDomain/rules/ruleId
+```
+
+Response codes:
+
+ - 200: A dlp configuration item is returned
+ - 400: Invalid senderDomain or payload in request
+ - 404: The domain and/or the rule does not exist.
+
+This is an example of returned body.
+
+```
+{
+  "id": "1",
+  "expression": "james.org",
+  "explanation": "Find senders or recipients containing james[any char]org",
+  "targetsSender": true,
+  "targetsRecipients": true,
+  "targetsContent": false
+}
+```
 
 ## Administrating Sieve quotas
 
@@ -2012,6 +2181,238 @@ curl -XDELETE http://ip:port/sieve/quota/users/user@domain.com
 Response codes:
  - 204: Operation succeeded
 
+
+## ReIndexing
+
+ - [ReIndexing all mails](#ReIndexing_all_mails)
+ - [ReIndexing a user mails](#ReIndexing_a_user_mails)
+ - [ReIndexing a mailbox mails](#ReIndexing_a_mailbox_mails)
+ - [ReIndexing a single mail](#ReIndexing_a_single_mail)
+ - [ReIndexing a single mail by messageId](#ReIndexing_a_single_mail_by_messageId)
+
+Be also aware of the limits of these APIs:
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
+concurrent changes done during the reIndexing might be ignored.
+
+### ReIndexing all mails
+
+```
+curl -XPOST http://ip:port/mailboxes?task=reIndex
+```
+
+Will schedule a task for reIndexing all the mails stored on this James server.
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `FullReIndexing` and the following `additionalInformation`:
+
+```
+{
+  "successfullyReprocessMailCount":18,
+  "failedReprocessedMailCount": 1
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
+concurrent changes done during the reIndexing might be ignored.
+
+### ReIndexing a user mails
+
+```
+curl -XPOST http://ip:port/mailboxes?task=reIndex,user=bob%40domain.com
+```
+
+Will schedule a task for reIndexing all the mails in "bob@domain.com" mailboxes (encoded above).
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `userReIndexing` and the following `additionalInformation`:
+
+```
+{
+  "user":"bob@domain.com",
+  "successfullyReprocessMailCount":18,
+  "failedReprocessedMailCount": 1
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
+concurrent changes done during the reIndexing might be ignored.
+
+### ReIndexing a mailbox mails
+
+```
+curl -XPOST http://ip:port/mailboxes/{mailboxId}?task=reIndex
+```
+
+Will schedule a task for reIndexing all the mails in one mailbox.
+
+Note that 'mailboxId' path parameter needs to be a (implementation dependent) valid mailboxId.
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `mailboxReIndexing` and the following `additionalInformation`:
+
+```
+{
+  "mailboxId":"{mailboxId}",
+  "successfullyReprocessMailCount":18,
+  "failedReprocessedMailCount": 1
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
+concurrent changes done during the reIndexing might be ignored.
+
+### ReIndexing a single mail
+
+```
+curl -XPOST http://ip:port/mailboxes/{mailboxId}/uid/36?task=reIndex
+```
+
+Will schedule a task for reIndexing a single email.
+
+Note that 'mailboxId' path parameter needs to be a (implementation dependent) valid mailboxId.
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `messageReIndexing` and the following `additionalInformation`:
+
+```
+{
+  "mailboxId":"{mailboxId}",
+  "uid":18
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+### ReIndexing a single mail by messageId
+
+```
+curl -XPOST http://ip:port/messages/{messageId}?task=reIndex
+```
+
+Will schedule a task for reIndexing a single email in all the mailboxes containing it.
+
+Note that 'messageId' path parameter needs to be a (implementation dependent) valid messageId.
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `MessageIdReIndexingTask` and the following `additionalInformation`:
+
+```
+{
+  "messageId":"18"
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
 ## Task management
 
 Some webadmin features schedules tasks. The task management API allow to monitor and manage the execution of the following tasks.
@@ -2115,3 +2516,36 @@ Response codes:
 
  - 200: A list of corresponding tasks is returned
  - 400: Invalid status value
+
+## Cassandra extra operations
+
+Some webadmin features to manage some extra operations on Cassandra tables, like solving inconsistencies on projection tables.
+Such inconsistencies can be for example created by a fail of the DAO to add a mapping into 'mappings_sources`, while it was successful
+regarding the `rrt` table.
+
+ - [Operations on mappings sources](#Operations_on_mappings_sources)
+
+### Operations on mappings sources
+
+You can do a series of action on `mappings_sources` projection table :
+
+```
+curl -XPOST /cassandra/mappings?action=[ACTION]
+```
+
+Will return the taskId corresponding to the related task. Actions supported so far are :
+
+ - SolveInconsistencies : cleans up first all the mappings in `mappings_sources` index and then repopulate it correctly. In the meantime,
+listing sources of a mapping might create temporary inconsistencies during the process.
+
+For example :
+
+```
+curl -XPOST /cassandra/mappings?action=SolveInconsistencies
+```
+
+Response codes :
+
+ - 201: the taskId of the created task
+ - 400: Invalid action argument for performing operation on mappings data
+

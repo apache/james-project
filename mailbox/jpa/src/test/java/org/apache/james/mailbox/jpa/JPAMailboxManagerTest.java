@@ -21,45 +21,40 @@ package org.apache.james.mailbox.jpa;
 import java.util.Optional;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerTest;
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-public class JPAMailboxManagerTest extends MailboxManagerTest {
+public class JPAMailboxManagerTest extends MailboxManagerTest<OpenJPAMailboxManager> {
 
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
     private Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-    }
     
     @Override
-    protected MailboxManager provideMailboxManager() {
+    protected OpenJPAMailboxManager provideMailboxManager() {
         if (!openJPAMailboxManager.isPresent()) {
             openJPAMailboxManager = Optional.of(JpaMailboxManagerProvider.provideMailboxManager(JPA_TEST_CLUSTER));
         }
         return openJPAMailboxManager.get();
     }
 
-    @Override
-    @After
-    public void tearDown() throws MailboxException {
+    @AfterEach
+    void tearDownJpa() {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
     }
 
-    @Ignore("MAILBOX-343")
+    @Disabled("MAILBOX-353 Creating concurrently mailboxes with the same parents with JPA")
     @Test
     @Override
     public void creatingConcurrentlyMailboxesWithSameParentShouldNotFail() {
 
     }
 
+    @Override
+    protected EventBus retrieveEventBus(OpenJPAMailboxManager mailboxManager) {
+        return mailboxManager.getEventBus();
+    }
 }

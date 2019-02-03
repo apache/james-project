@@ -47,7 +47,6 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
-import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.mail.AbstractMessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -234,7 +233,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         Map<MessageUid, MessageMetaData> uids = new HashMap<>();
         for (MailboxMessage m : results) {
             MessageUid uid = m.getUid();
-            uids.put(uid, new SimpleMessageMetaData(m));
+            uids.put(uid, m.metaData());
             delete(mailbox, m);
         }
 
@@ -312,7 +311,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
             uid = folder.appendMessage(mailboxSession, newMessageFile.getName());
             message.setUid(uid);
             message.setModSeq(newMessageFile.lastModified());
-            return new SimpleMessageMetaData(message);
+            return message.metaData();
         } catch (MailboxException e) {
             throw new MailboxException("Failure while save MailboxMessage " + message + " in Mailbox " + mailbox, e);
         }

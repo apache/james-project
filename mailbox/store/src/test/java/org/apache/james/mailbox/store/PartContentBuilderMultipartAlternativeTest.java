@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.store;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -80,9 +80,9 @@ public class PartContentBuilderMultipartAlternativeTest {
 
     @Test
     public void testShouldLocatePartsOfMultipartAlterative() throws Exception {
-        assertEquals(ALT_PLAIN_BODY, bodyContent(MULTIPART_ALTERNATIVE, 1));
-        assertEquals(ALT_HTML_BODY, bodyContent(MULTIPART_ALTERNATIVE, 2));
-        assertEquals(ALT_XHTML_BODY, bodyContent(MULTIPART_ALTERNATIVE, 3));
+        assertThat(bodyContent(MULTIPART_ALTERNATIVE, 1)).isEqualTo(ALT_PLAIN_BODY);
+        assertThat(bodyContent(MULTIPART_ALTERNATIVE, 2)).isEqualTo(ALT_HTML_BODY);
+        assertThat(bodyContent(MULTIPART_ALTERNATIVE, 3)).isEqualTo(ALT_XHTML_BODY);
     }
 
     @Test
@@ -95,9 +95,9 @@ public class PartContentBuilderMultipartAlternativeTest {
     @Test
     public void testShouldLocateFullContentOfMultipartAlterative()
             throws Exception {
-        assertEquals(ALT_PART_PLAIN, fullContent(MULTIPART_ALTERNATIVE, 1));
-        assertEquals(ALT_PART_HTML, fullContent(MULTIPART_ALTERNATIVE, 2));
-        assertEquals(ALT_PART_XHTML, fullContent(MULTIPART_ALTERNATIVE, 3));
+        assertThat(fullContent(MULTIPART_ALTERNATIVE, 1)).isEqualTo(ALT_PART_PLAIN);
+        assertThat(fullContent(MULTIPART_ALTERNATIVE, 2)).isEqualTo(ALT_PART_HTML);
+        assertThat(fullContent(MULTIPART_ALTERNATIVE, 3)).isEqualTo(ALT_PART_XHTML);
     }
 
     private String fullContent(String mail, int position) throws Exception {
@@ -119,10 +119,10 @@ public class PartContentBuilderMultipartAlternativeTest {
     private void checkContentType(String contentType, String mail, int position)
             throws Exception {
         List<Header> headers = headers(mail, position);
-        assertEquals(1, headers.size());
+        assertThat(headers.size()).isEqualTo(1);
         ResultHeader header = (ResultHeader) headers.get(0);
-        assertEquals(CONTENT_TYPE, header.getName());
-        assertEquals(contentType, header.getValue());
+        assertThat(header.getName()).isEqualTo(CONTENT_TYPE);
+        assertThat(header.getValue()).isEqualTo(contentType);
     }
 
     private List<Header> headers(String mail, int position) throws Exception {

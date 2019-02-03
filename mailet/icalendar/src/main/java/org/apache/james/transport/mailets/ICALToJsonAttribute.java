@@ -220,7 +220,7 @@ public class ICALToJsonAttribute extends GenericMailet {
             .map(address -> (InternetAddress) address)
             .map(InternetAddress::getAddress)
             .findFirst();
-        Optional<String> fromEnvelope = Optional.ofNullable(mail.getSender())
+        Optional<String> fromEnvelope = mail.getMaybeSender().asOptional()
             .map(MailAddress::asString);
 
         return OptionalUtils.or(

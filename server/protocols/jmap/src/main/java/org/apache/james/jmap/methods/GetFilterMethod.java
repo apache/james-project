@@ -73,7 +73,7 @@ public class GetFilterMethod implements Method {
 
         GetFilterRequest filterRequest = (GetFilterRequest) request;
 
-        return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(),
+        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
             MDCBuilder.create()
                 .addContext(MDCBuilder.ACTION, "GET_FILTER")
                 .wrapArround(() -> process(clientId, mailboxSession, filterRequest)));
@@ -81,7 +81,7 @@ public class GetFilterMethod implements Method {
 
     private Stream<JmapResponse> process(ClientId clientId, MailboxSession mailboxSession, GetFilterRequest request) {
         try {
-            return retrieveFilter(clientId, mailboxSession.getUser().getCoreUser());
+            return retrieveFilter(clientId, mailboxSession.getUser());
         } catch (Exception e) {
             LOGGER.warn("Failed to retrieve filter");
 

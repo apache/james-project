@@ -68,7 +68,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
  * </p>
  */
 
-public interface MailboxManager extends RequestAware, MailboxListenerSupport, RightManager, MailboxAnnotationManager {
+public interface MailboxManager extends RequestAware, RightManager, MailboxAnnotationManager {
 
     int MAX_MAILBOX_NAME_LENGTH = 200;
 
@@ -179,7 +179,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport, Ri
      *             otherwise
      * @throws MailboxExistsException
      *             when the <code>to</code> mailbox exists
-     * @throws MailboxNotFound
+     * @throws MailboxNotFoundException
      *             when the <code>from</code> mailbox does not exist
      */
     void renameMailbox(MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException;

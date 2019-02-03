@@ -78,9 +78,8 @@ public class TransactionalMessageMapper implements MessageMapper {
     @Override
     public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(final Mailbox mailbox, final MessageRange set)
             throws MailboxException {
-        Map<MessageUid, MessageMetaData> data = messageMapper.execute(
+       return messageMapper.execute(
             () -> messageMapper.expungeMarkedForDeletionInMailbox(mailbox, set));
-        return data;
     }
 
     @Override
@@ -110,29 +109,27 @@ public class TransactionalMessageMapper implements MessageMapper {
 
     @Override
     public MessageMetaData add(final Mailbox mailbox, final MailboxMessage message) throws MailboxException {
-        MessageMetaData data = messageMapper.execute(
+        return messageMapper.execute(
             () -> messageMapper.add(mailbox, message));
-        return data;
     }
 
     @Override
     public Iterator<UpdatedFlags> updateFlags(final Mailbox mailbox, final FlagsUpdateCalculator flagsUpdateCalculator,
             final MessageRange set) throws MailboxException {
-        Iterator<UpdatedFlags> data = messageMapper.execute(
+        return messageMapper.execute(
             () -> messageMapper.updateFlags(mailbox, flagsUpdateCalculator, set));
-        return data;
     }
 
     @Override
     public MessageMetaData copy(final Mailbox mailbox, final MailboxMessage original) throws MailboxException {
-        MessageMetaData data = messageMapper.execute(
+        return messageMapper.execute(
             () -> messageMapper.copy(mailbox, original));
-        return data;
     }
 
     @Override
     public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
-        return messageMapper.move(mailbox, original);
+       return messageMapper.execute(
+                () -> messageMapper.move(mailbox, original));
     }
 
     @Override

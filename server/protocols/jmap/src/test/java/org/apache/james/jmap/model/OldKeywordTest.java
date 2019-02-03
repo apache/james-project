@@ -44,7 +44,7 @@ public class OldKeywordTest {
             .computeOldKeyword();
 
         assertThat(testee.get().asKeywords())
-            .isEqualTo(Keywords.factory().from(Keyword.FLAGGED));
+            .isEqualTo(Keywords.strictFactory().from(Keyword.FLAGGED));
     }
 
     @Test
@@ -54,7 +54,7 @@ public class OldKeywordTest {
             .computeOldKeyword();
 
         assertThat(testee.get().asKeywords())
-            .isEqualTo(Keywords.factory().from());
+            .isEqualTo(Keywords.strictFactory().from());
     }
 
     @Test
@@ -64,7 +64,7 @@ public class OldKeywordTest {
             .computeOldKeyword();
 
         assertThat(testee.get().asKeywords())
-            .isEqualTo(Keywords.factory().from());
+            .isEqualTo(Keywords.strictFactory().from());
     }
 
     @Test
@@ -75,7 +75,7 @@ public class OldKeywordTest {
 
 
         assertThat(testee.get().asKeywords())
-            .isEqualTo(Keywords.factory().from(Keyword.SEEN));
+            .isEqualTo(Keywords.strictFactory().from(Keyword.SEEN));
     }
 
     @Test
@@ -85,7 +85,7 @@ public class OldKeywordTest {
             .computeOldKeyword();
 
         assertThat(testee.get().asKeywords())
-            .isEqualTo(Keywords.factory().from(Keyword.ANSWERED));
+            .isEqualTo(Keywords.strictFactory().from(Keyword.ANSWERED));
     }
 
     @Test
@@ -95,7 +95,7 @@ public class OldKeywordTest {
             .computeOldKeyword();
 
         assertThat(testee.get().asKeywords())
-            .isEqualTo(Keywords.factory().from());
+            .isEqualTo(Keywords.strictFactory().from());
     }
 
     @Test
@@ -105,7 +105,7 @@ public class OldKeywordTest {
             .computeOldKeyword();
 
         assertThat(testee.get().asKeywords())
-            .isEqualTo(Keywords.factory().from(Keyword.DRAFT));
+            .isEqualTo(Keywords.strictFactory().from(Keyword.DRAFT));
     }
 
     @Test
@@ -115,7 +115,7 @@ public class OldKeywordTest {
             .computeOldKeyword();
 
         assertThat(testee.get().asKeywords())
-            .isEqualTo(Keywords.factory().from());
+            .isEqualTo(Keywords.strictFactory().from());
     }
 
     @Test
@@ -125,7 +125,7 @@ public class OldKeywordTest {
             .computeOldKeyword();
 
         assertThat(testee.get().asKeywords())
-            .isEqualTo(Keywords.factory().from(Keyword.FORWARDED));
+            .isEqualTo(Keywords.strictFactory().from(Keyword.FORWARDED));
     }
 
     @Test
@@ -135,7 +135,7 @@ public class OldKeywordTest {
             .computeOldKeyword();
 
         assertThat(testee.get().asKeywords())
-            .isEqualTo(Keywords.factory().from());
+            .isEqualTo(Keywords.strictFactory().from());
     }
 
     @Test

@@ -23,6 +23,8 @@ import javax.jms.ConnectionFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.james.metrics.api.GaugeRegistry;
+import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueFactoryContract;
@@ -44,7 +46,8 @@ public class JMSMailQueueFactoryTest implements MailQueueFactoryContract<Managea
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
         NoopMetricFactory metricFactory = new NoopMetricFactory();
-        mailQueueFactory = new JMSMailQueueFactory(connectionFactory, mailQueueItemDecoratorFactory, metricFactory);
+        GaugeRegistry gaugeRegistry = new NoopGaugeRegistry();
+        mailQueueFactory = new JMSMailQueueFactory(connectionFactory, mailQueueItemDecoratorFactory, metricFactory, gaugeRegistry);
         mailQueueFactory.setUseJMX(false);
     }
 

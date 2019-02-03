@@ -51,7 +51,10 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.collections.iterators.EnumerationIterator;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.lifecycle.api.Disposable;
+import org.apache.james.metrics.api.Gauge;
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
@@ -61,6 +64,7 @@ import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
+import org.apache.james.util.SerializationUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.slf4j.Logger;
@@ -143,8 +147,9 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     protected final Connection connection;
     protected final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
     protected final Metric enqueuedMailsMetric;
-    protected final Metric mailQueueSize;
+    protected final Metric dequeuedMailsMetric;
     protected final MetricFactory metricFactory;
+    protected final GaugeRegistry gaugeRegistry;
 
     protected final Session session;
     protected final Queue queue;
@@ -153,7 +158,9 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     private final Joiner joiner;
     private final Splitter splitter;
 
-    public JMSMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName, MetricFactory metricFactory) {
+    public JMSMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory,
+                        String queueName, MetricFactory metricFactory,
+                        GaugeRegistry gaugeRegistry) {
         try {
             connection = connectionFactory.createConnection();
             connection.start();
@@ -163,8 +170,11 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
         this.queueName = queueName;
         this.metricFactory = metricFactory;
-        this.enqueuedMailsMetric = metricFactory.generate("enqueuedMail:" + queueName);
-        this.mailQueueSize = metricFactory.generate("mailQueueSize:" + queueName);
+        this.enqueuedMailsMetric = metricFactory.generate(ENQUEUED_METRIC_NAME_PREFIX + queueName);
+        this.dequeuedMailsMetric = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + queueName);
+
+        this.gaugeRegistry = gaugeRegistry;
+        this.gaugeRegistry.register(QUEUE_SIZE_METRIC_NAME_PREFIX + queueName, queueSizeGauge());
 
         this.joiner = Joiner.on(JAMES_MAIL_SEPARATOR).skipNulls();
         this.splitter = Splitter.on(JAMES_MAIL_SEPARATOR)
@@ -202,7 +212,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         MessageConsumer consumer = null;
 
         while (true) {
-            TimeMetric timeMetric = metricFactory.timer("dequeueTime:" + queueName);
+            TimeMetric timeMetric = metricFactory.timer(DEQUEUED_TIMER_METRIC_NAME_PREFIX + queueName);
             try {
                 session = connection.createSession(true, Session.SESSION_TRANSACTED);
                 Queue queue = session.createQueue(queueName);
@@ -211,7 +221,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
                 Message message = consumer.receive(10000);
 
                 if (message != null) {
-                    mailQueueSize.decrement();
+                    dequeuedMailsMetric.increment();
                     return createMailQueueItem(session, consumer, message);
                 } else {
                     session.commit();
@@ -232,7 +242,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
 
     @Override
     public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
-        TimeMetric timeMetric = metricFactory.timer("enqueueMailTime:" + queueName);
+        TimeMetric timeMetric = metricFactory.timer(ENQUEUED_TIMER_METRIC_NAME_PREFIX + queueName);
 
         long nextDeliveryTimestamp = computeNextDeliveryTimestamp(delay, unit);
 
@@ -245,11 +255,9 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             }
 
             Map<String, Object> props = getJMSProperties(mail, nextDeliveryTimestamp);
-
             produceMail(props, msgPrio, mail);
 
             enqueuedMailsMetric.increment();
-            mailQueueSize.increment();
         } catch (Exception e) {
             throw new MailQueueException("Unable to enqueue mail " + mail, e);
         } finally {
@@ -317,7 +325,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         // won't serialize the empty headers so it is mandatory
         // to handle nulls when reconstructing mail from message
         if (!mail.getPerRecipientSpecificHeaders().getHeadersByRecipient().isEmpty()) {
-            props.put(JAMES_MAIL_PER_RECIPIENT_HEADERS, JMSSerializationUtils.serialize(mail.getPerRecipientSpecificHeaders()));
+            props.put(JAMES_MAIL_PER_RECIPIENT_HEADERS, SerializationUtil.serialize(mail.getPerRecipientSpecificHeaders()));
         }
 
         String recipientsAsString = joiner.join(mail.getRecipients());
@@ -326,10 +334,10 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         props.put(JAMES_MAIL_REMOTEADDR, mail.getRemoteAddr());
         props.put(JAMES_MAIL_REMOTEHOST, mail.getRemoteHost());
 
-        String sender = Optional.ofNullable(mail.getSender()).map(MailAddress::asString).orElse("");
+        String sender = mail.getMaybeSender().asString("");
 
         org.apache.james.util.streams.Iterators.toStream(mail.getAttributeNames())
-                .forEach(attrName -> props.put(attrName, JMSSerializationUtils.serialize(mail.getAttribute(attrName))));
+                .forEach(attrName -> props.put(attrName, SerializationUtil.serialize(mail.getAttribute(attrName))));
 
         props.put(JAMES_MAIL_ATTRIBUTE_NAMES, joiner.join(mail.getAttributeNames()));
         props.put(JAMES_MAIL_SENDER, sender);
@@ -386,7 +394,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         mail.setLastUpdated(new Date(message.getLongProperty(JAMES_MAIL_LAST_UPDATED)));
         mail.setName(message.getStringProperty(JAMES_MAIL_NAME));
 
-        Optional.ofNullable(JMSSerializationUtils.<PerRecipientHeaders>deserialize(message.getStringProperty(JAMES_MAIL_PER_RECIPIENT_HEADERS)))
+        Optional.ofNullable(SerializationUtil.<PerRecipientHeaders>deserialize(message.getStringProperty(JAMES_MAIL_PER_RECIPIENT_HEADERS)))
                 .ifPresent(mail::addAllSpecificHeaderForRecipient);
 
         List<MailAddress> rcpts = new ArrayList<>();
@@ -412,24 +420,9 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         splitter.split(attributeNames)
                 .forEach(name -> setMailAttribute(message, mail, name));
 
-        mail.setSender(getMailSender(message.getStringProperty(JAMES_MAIL_SENDER), mail));
+        MaybeSender.getMailSender(message.getStringProperty(JAMES_MAIL_SENDER))
+            .asOptional().ifPresent(mail::setSender);
         mail.setState(message.getStringProperty(JAMES_MAIL_STATE));
-    }
-
-    private MailAddress getMailSender(String sender, Mail mail) {
-        if (sender == null || sender.trim().length() <= 0) {
-            return null;
-        }
-        if (sender.equals(MailAddress.NULL_SENDER_AS_STRING)) {
-            return MailAddress.nullSender();
-        }
-        try {
-            return new MailAddress(sender);
-        } catch (AddressException e) {
-            // Should never happen as long as the user does not modify the header by himself
-            LOGGER.error("Unable to parse the sender address {} for mail {}, so we fallback to a null sender", sender, mail.getName(), e);
-            return MailAddress.nullSender();
-        }
     }
 
     /**
@@ -445,10 +438,14 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         Object attrValue = Throwing.function(message::getObjectProperty).apply(name);
 
         if (attrValue instanceof String) {
-            mail.setAttribute(name, JMSSerializationUtils.deserialize((String) attrValue));
+            mail.setAttribute(name, SerializationUtil.deserialize((String) attrValue));
         } else {
             LOGGER.error("Not supported mail attribute {} of type {} for mail {}", name, attrValue, mail.getName());
         }
+    }
+
+    private Gauge<Long> queueSizeGauge() {
+        return () -> Throwing.supplier(this::getSize).get();
     }
 
     @Override

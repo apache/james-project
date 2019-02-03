@@ -46,7 +46,6 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
-import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -119,8 +118,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
             .sendMessage(FROM, RECIPIENT);
 
         awaitAtMostOneMinute
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
-            .until(this::messageIsReceivedByTheSmtpServer);
+            .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
     @Test
@@ -148,8 +146,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
             .sendMessage(FROM, RECIPIENT);
 
         awaitAtMostOneMinute
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
-            .until(this::messageIsReceivedByTheSmtpServer);
+            .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
     @Test
@@ -208,8 +205,8 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
             .awaitMessage(awaitAtMostOneMinute);
     }
 
-    private boolean messageIsReceivedByTheSmtpServer() {
-        return fakeSmtp.isReceived(response -> response
+    private void assertMessageReceivedByTheSmtpServer() {
+        fakeSmtp.assertEmailReceived(response -> response
             .body("", hasSize(1))
             .body("[0].from", equalTo(FROM))
             .body("[0].subject", equalTo("test")));

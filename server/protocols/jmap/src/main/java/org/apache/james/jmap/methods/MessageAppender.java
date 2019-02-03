@@ -123,7 +123,7 @@ public class MessageAppender {
 
         return MessageFactory.MetaDataWithContent.builder()
             .uid(appendedMessage.getUid())
-            .keywords(Keywords.factory().fromFlags(flags))
+            .keywords(Keywords.lenientFactory().fromFlags(flags))
             .internalDate(internalDate.toInstant())
             .sharedContent(content)
             .size(messageContent.length)

@@ -155,7 +155,7 @@
                     </tr>
                     <tr>
                         <td>Mailbox implementation</td>
-                        <td>JPA/MailDir/JCR/Memory</td>
+                        <td>JPA/MailDir/Memory</td>
                         <td>Cassandra</td>
                         <td>Cassandra</td>
                         <td>JPA</td>
@@ -171,7 +171,8 @@
                     </tr>
                     <tr>
                         <td>Server data implementation</td>
-                        <td>JPA/File/HBase/JCR</td>
+                        <td>JPA/File</td>
+                        <td>JPA/File</td>
                         <td>Cassandra</td>
                         <td>Cassandra</td>
                         <td>JPA</td>

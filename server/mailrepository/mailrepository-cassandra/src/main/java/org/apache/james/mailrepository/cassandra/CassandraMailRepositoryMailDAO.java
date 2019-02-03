@@ -55,7 +55,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -68,6 +67,7 @@ import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.server.core.MailImpl;
@@ -81,10 +81,12 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.UDTValue;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import reactor.core.publisher.Mono;
 
-public class CassandraMailRepositoryMailDAO {
+public class CassandraMailRepositoryMailDAO implements CassandraMailRepositoryMailDaoAPI {
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement insertMail;
@@ -94,8 +96,9 @@ public class CassandraMailRepositoryMailDAO {
     private final CassandraTypesProvider cassandraTypesProvider;
 
     @Inject
-    public CassandraMailRepositoryMailDAO(Session session, BlobId.Factory blobIdFactory,
-                                          CassandraTypesProvider cassandraTypesProvider) {
+    @VisibleForTesting
+    CassandraMailRepositoryMailDAO(Session session, BlobId.Factory blobIdFactory,
+                                   CassandraTypesProvider cassandraTypesProvider) {
         this.executor = new CassandraAsyncExecutor(session);
 
         this.insertMail = prepareInsert(session);
@@ -138,6 +141,7 @@ public class CassandraMailRepositoryMailDAO {
                 .and(eq(MAIL_KEY, bindMarker(MAIL_KEY))));
     }
 
+    @Override
     public CompletableFuture<Void> store(MailRepositoryUrl url, Mail mail, BlobId headerId, BlobId bodyId) throws MessagingException {
         return executor.executeVoid(insertMail.bind()
             .setString(REPOSITORY_NAME, url.asString())
@@ -145,9 +149,7 @@ public class CassandraMailRepositoryMailDAO {
             .setString(HEADER_BLOB_ID, headerId.asString())
             .setString(BODY_BLOB_ID, bodyId.asString())
             .setString(STATE, mail.getState())
-            .setString(SENDER, Optional.ofNullable(mail.getSender())
-                .map(MailAddress::asString)
-                .orElse(null))
+            .setString(SENDER, mail.getMaybeSender().asString(null))
             .setList(RECIPIENTS, asStringList(mail.getRecipients()))
             .setString(ERROR_MESSAGE, mail.getErrorMessage())
             .setString(REMOTE_ADDR, mail.getRemoteAddr())
@@ -159,12 +161,14 @@ public class CassandraMailRepositoryMailDAO {
         );
     }
 
-    public CompletableFuture<Void> remove(MailRepositoryUrl url, MailKey key) {
-        return executor.executeVoid(deleteMail.bind()
+    @Override
+    public Mono<Void> remove(MailRepositoryUrl url, MailKey key) {
+        return executor.executeVoidReactor(deleteMail.bind()
             .setString(REPOSITORY_NAME, url.asString())
             .setString(MAIL_KEY, key.asString()));
     }
 
+    @Override
     public CompletableFuture<Optional<MailDTO>> read(MailRepositoryUrl url, MailKey key) {
         return executor.executeSingleRow(selectMail.bind()
             .setString(REPOSITORY_NAME, url.asString())
@@ -173,9 +177,9 @@ public class CassandraMailRepositoryMailDAO {
     }
 
     private MailDTO toMail(Row row) {
-        MailAddress sender = Optional.ofNullable(row.getString(SENDER))
-            .map(Throwing.function(MailAddress::new))
-            .orElse(null);
+        MaybeSender sender = Optional.ofNullable(row.getString(SENDER))
+            .map(MaybeSender::getMailSender)
+            .orElse(MaybeSender.nullSender());
         List<MailAddress> recipients = row.getList(RECIPIENTS, String.class)
             .stream()
             .map(Throwing.function(MailAddress::new))
@@ -278,44 +282,4 @@ public class CassandraMailRepositoryMailDAO {
         }
     }
 
-    public class MailDTO {
-        private final MailImpl.Builder mailBuilder;
-        private final BlobId headerBlobId;
-        private final BlobId bodyBlobId;
-
-        public MailDTO(MailImpl.Builder mailBuilder, BlobId headerBlobId, BlobId bodyBlobId) {
-            this.mailBuilder = mailBuilder;
-            this.headerBlobId = headerBlobId;
-            this.bodyBlobId = bodyBlobId;
-        }
-
-        public MailImpl.Builder getMailBuilder() {
-            return mailBuilder;
-        }
-
-        public BlobId getHeaderBlobId() {
-            return headerBlobId;
-        }
-
-        public BlobId getBodyBlobId() {
-            return bodyBlobId;
-        }
-
-        @Override
-        public final boolean equals(Object o) {
-            if (o instanceof MailDTO) {
-                MailDTO mailDTO = (MailDTO) o;
-
-                return Objects.equals(this.mailBuilder.build(), mailDTO.mailBuilder.build())
-                    && Objects.equals(this.headerBlobId, mailDTO.headerBlobId)
-                    && Objects.equals(this.bodyBlobId, mailDTO.bodyBlobId);
-            }
-            return false;
-        }
-
-        @Override
-        public final int hashCode() {
-            return Objects.hash(mailBuilder.build(), headerBlobId, bodyBlobId);
-        }
-    }
 }

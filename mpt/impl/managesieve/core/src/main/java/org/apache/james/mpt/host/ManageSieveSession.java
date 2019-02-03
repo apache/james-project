@@ -74,19 +74,24 @@ public class ManageSieveSession implements Session {
     }
 
     @Override
-    public void start() throws Exception {
+    public void start() {
     }
 
     @Override
-    public void stop() throws Exception {
+    public void stop() {
     }
 
     @Override
-    public void restart() throws Exception {
+    public void restart() {
     }
 
     @Override
-    public void writeLine(String line) throws Exception {
+    public void await() {
+
+    }
+
+    @Override
+    public void writeLine(String line) {
         isReadLast = false;
         in.nextLine(line);
     }

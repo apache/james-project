@@ -28,10 +28,12 @@ import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import com.google.common.base.Preconditions;
@@ -42,10 +44,12 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
 
     public static final String SEPARATOR = "&"; // Character illegal for mailbox naming in regard of RFC 3501 section 5.1
 
+    private final SessionProvider sessionProvider;
     private final MailboxSessionMapperFactory factory;
 
     @Inject
-    public DefaultUserQuotaRootResolver(MailboxSessionMapperFactory factory) {
+    public DefaultUserQuotaRootResolver(SessionProvider sessionProvider, MailboxSessionMapperFactory factory) {
+        this.sessionProvider = sessionProvider;
         this.factory = factory;
     }
 
@@ -65,6 +69,18 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
                 })
                 .map(user -> QuotaRoot.quotaRoot(mailboxPath.getNamespace() + SEPARATOR + user.asString(), user.getDomainPart()))
                 .orElseGet(() -> QuotaRoot.quotaRoot(mailboxPath.getNamespace(), Optional.empty()));
+    }
+
+    @Override
+    public QuotaRoot getQuotaRoot(MailboxId mailboxId) throws MailboxException {
+        MailboxSession session = sessionProvider.createSystemSession("DefaultUserQuotaRootResolver");
+        User user = User.fromUsername(
+            factory.getMailboxMapper(session)
+                .findMailboxById(mailboxId)
+                .generateAssociatedPath()
+                .getUser());
+
+        return forUser(user);
     }
 
     @Override

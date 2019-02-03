@@ -27,8 +27,8 @@ import javax.inject.Singleton;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.jpa.JPAConstants;
 import org.apache.james.utils.PropertiesProvider;
 
@@ -66,7 +66,7 @@ public class JPAEntityManagerModule extends AbstractModule {
     @Provides
     @Singleton
     JPAConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws FileNotFoundException, ConfigurationException {
-        PropertiesConfiguration dataSource = propertiesProvider.getConfiguration("james-database");
+        Configuration dataSource = propertiesProvider.getConfiguration("james-database");
         return JPAConfiguration.builder()
                 .driverName(dataSource.getString("database.driverClassName"))
                 .driverURL(dataSource.getString("database.url"))

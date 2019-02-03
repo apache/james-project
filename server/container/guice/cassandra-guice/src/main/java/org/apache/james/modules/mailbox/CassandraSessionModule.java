@@ -23,18 +23,20 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.backends.cassandra.utils.CassandraHealthCheck;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.SchemaState;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.server.CassandraProbe;
@@ -83,6 +85,8 @@ public class CassandraSessionModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(CassandraSchemaChecker.class);
 
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(CassandraProbe.class);
+
+        Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(CassandraHealthCheck.class);
     }
 
     @Provides
@@ -95,7 +99,7 @@ public class CassandraSessionModule extends AbstractModule {
     @Singleton
     BatchSizes getBatchSizesConfiguration(PropertiesProvider propertiesProvider) {
         try {
-            PropertiesConfiguration configuration = propertiesProvider.getConfiguration(BATCHSIZES_FILE_NAME);
+            Configuration configuration = propertiesProvider.getConfiguration(BATCHSIZES_FILE_NAME);
             BatchSizes batchSizes = BatchSizes.builder()
                     .fetchMetadata(configuration.getInt("fetch.metadata", BatchSizes.DEFAULT_BATCH_SIZE))
                     .fetchHeaders(configuration.getInt("fetch.headers", BatchSizes.DEFAULT_BATCH_SIZE))
@@ -107,7 +111,7 @@ public class CassandraSessionModule extends AbstractModule {
             LOGGER.debug("BatchSize configuration: {}", batchSizes);
             return batchSizes;
         } catch (FileNotFoundException | ConfigurationException e) {
-            LOGGER.warn("Could not locate batchsizes configuration file. Using default values.");
+            LOGGER.info("Could not locate batchsizes configuration file. Using default values.");
             return BatchSizes.defaultValues();
         }
     }

@@ -22,26 +22,20 @@ package org.apache.james.mailbox.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.Event;
+import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.MailboxListener;
 
-public class EventCollector implements MailboxListener {
+public class EventCollector implements MailboxListener.GroupMailboxListener {
+    private static class EventCollectorGroup extends Group {}
+
+    private static final Group GROUP = new EventCollectorGroup();
 
     private final List<Event> events = new ArrayList<>();
 
-    private final ListenerType listenerType;
-
-    public EventCollector(ListenerType listenerType) {
-        this.listenerType = listenerType;
-    }
-
-    public EventCollector() {
-        this(ListenerType.EACH_NODE);
-    }
-
     @Override
-    public ListenerType getType() {
-        return listenerType;
+    public Group getDefaultGroup() {
+        return GROUP;
     }
 
     public List<Event> getEvents() {
@@ -51,16 +45,6 @@ public class EventCollector implements MailboxListener {
     @Override
     public void event(Event event) {
         events.add(event);
-    }
-
-    public void mailboxDeleted() {
-    }
-
-    public void mailboxRenamed(String origName, String newName) {
-    }
-
-    public boolean isClosed() {
-        return false;
     }
 
 }

@@ -24,10 +24,13 @@ import javax.jms.ConnectionFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.api.GaugeRegistry;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.DelayedPriorityMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueMetricContract;
+import org.apache.james.queue.api.MailQueueMetricExtension;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.PriorityManageableMailQueueContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
@@ -41,19 +44,21 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(BrokerExtension.class)
 @Tag(BrokerExtension.STATISTICS)
-public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract, DelayedPriorityMailQueueContract, PriorityManageableMailQueueContract {
+public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract, DelayedPriorityMailQueueContract, PriorityManageableMailQueueContract,
+    MailQueueMetricContract {
 
     static final boolean USE_BLOB = true;
 
     ActiveMQMailQueue mailQueue;
 
     @BeforeEach
-    public void setUp(BrokerService broker) throws Exception {
+    public void setUp(BrokerService broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
-        NoopMetricFactory metricFactory = new NoopMetricFactory();
+        MetricFactory metricFactory = metricTestSystem.getSpyMetricFactory();
+        GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
         String queueName = BrokerExtension.generateRandomQueueName(broker);
-        mailQueue = new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, !USE_BLOB, metricFactory);
+        mailQueue = new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, !USE_BLOB, metricFactory, gaugeRegistry);
     }
 
     @AfterEach
@@ -119,6 +124,13 @@ public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract
     @Disabled("JAMES-2312 JMS clear mailqueue can ommit some messages" +
         "Random test failing around 1% of the time")
     public void clearShouldRemoveAllElements() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2544 Mixing concurrent ack/nack might lead to a deadlock")
+    public void concurrentEnqueueDequeueWithAckNackShouldNotFail() {
 
     }
 }

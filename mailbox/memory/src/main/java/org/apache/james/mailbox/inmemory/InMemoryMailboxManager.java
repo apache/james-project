@@ -25,18 +25,18 @@ import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.Authenticator;
-import org.apache.james.mailbox.store.Authorizator;
+import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
 public class InMemoryMailboxManager extends StoreMailboxManager {
@@ -50,20 +50,15 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
     public static final EnumSet<MessageCapabilities> MESSAGE_CAPABILITIES = EnumSet.of(MessageCapabilities.UniqueID);
 
     @Inject
-    public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
-                                  MailboxPathLocker locker, MessageParser messageParser, MessageId.Factory messageIdFactory, MailboxEventDispatcher dispatcher,
-                                  DelegatingMailboxListener delegatingMailboxListener,
+    public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, SessionProvider sessionProvider,
+                                  MailboxPathLocker locker, MessageParser messageParser, MessageId.Factory messageIdFactory,
+                                  EventBus eventBus,
                                   StoreMailboxAnnotationManager annotationManager,
-                                  StoreRightManager storeRightManager) {
-        super(mailboxSessionMapperFactory, authenticator, authorizator, locker, messageParser, messageIdFactory,
-            annotationManager, dispatcher,
-            delegatingMailboxListener, storeRightManager);
-    }
-
-    @Override
-    @Inject
-    public void setMessageSearchIndex(MessageSearchIndex index) {
-        super.setMessageSearchIndex(index);
+                                  StoreRightManager storeRightManager,
+                                  QuotaComponents quotaComponents,
+                                  MessageSearchIndex searchIndex) {
+        super(mailboxSessionMapperFactory, sessionProvider, locker, messageParser, messageIdFactory,
+            annotationManager, eventBus, storeRightManager, quotaComponents, searchIndex, MailboxManagerConfiguration.DEFAULT);
     }
 
     @Override
@@ -80,15 +75,14 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
     protected StoreMessageManager createMessageManager(Mailbox mailbox, MailboxSession session) {
         return new InMemoryMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
-            getEventDispatcher(),
+            getEventBus(),
             getLocker(),
             mailbox,
-            getQuotaManager(),
-            getQuotaRootResolver(),
+            getQuotaComponents().getQuotaManager(),
+            getQuotaComponents().getQuotaRootResolver(),
             getMessageParser(),
             getMessageIdFactory(),
-            getBatchSizes(),
-            getImmutableMailboxMessageFactory(),
+            configuration.getBatchSizes(),
             getStoreRightManager());
     }
 }

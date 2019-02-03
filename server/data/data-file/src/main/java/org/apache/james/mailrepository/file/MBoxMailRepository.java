@@ -116,7 +116,7 @@ import com.google.common.hash.Hashing;
  * suited to people who wish to use the mbox format for taking data out of James
  * and into something else (IMAP server or mail list displayer)
  *
- * @Depracted: See JAMES-2323
+ * @Deprecated: See JAMES-2323
  *
  * Will be removed in James 3.2.0 upcoming release.
  *

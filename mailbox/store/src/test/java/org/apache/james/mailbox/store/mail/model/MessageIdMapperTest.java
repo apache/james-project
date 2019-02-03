@@ -21,10 +21,10 @@ package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -677,15 +677,14 @@ public abstract class MessageIdMapperTest {
 
         int threadCount = 2;
         int updateCount = 10;
-        assertThat(ConcurrentTestRunner.builder()
-            .threadCount(threadCount)
-            .operationCount(updateCount)
-            .build((threadNumber, step) -> sut.setFlags(message1.getMessageId(),
+        ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> sut.setFlags(message1.getMessageId(),
                 ImmutableList.of(message1.getMailboxId()),
                 new Flags("custom-" + threadNumber + "-" + step),
-                FlagsUpdateMode.ADD)).run()
-            .awaitTermination(1, TimeUnit.MINUTES))
-            .isTrue();
+                FlagsUpdateMode.ADD))
+            .threadCount(threadCount)
+            .operationCount(updateCount)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);
@@ -701,10 +700,8 @@ public abstract class MessageIdMapperTest {
 
         int threadCount = 4;
         int updateCount = 20;
-        assertThat(ConcurrentTestRunner.builder()
-            .threadCount(threadCount)
-            .operationCount(updateCount)
-            .build((threadNumber, step) -> {
+        ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> {
                 if (step  < updateCount / 2) {
                     sut.setFlags(message1.getMessageId(),
                         ImmutableList.of(message1.getMailboxId()),
@@ -716,9 +713,10 @@ public abstract class MessageIdMapperTest {
                         new Flags("custom-" + threadNumber + "-" + (updateCount - step - 1)),
                         FlagsUpdateMode.REMOVE);
                 }
-            }).run()
-            .awaitTermination(1, TimeUnit.MINUTES))
-            .isTrue();
+            })
+            .threadCount(threadCount)
+            .operationCount(updateCount)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);

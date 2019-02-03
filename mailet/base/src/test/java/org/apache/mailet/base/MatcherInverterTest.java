@@ -19,9 +19,7 @@
 
 package org.apache.mailet.base;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,7 +46,7 @@ public class MatcherInverterTest {
                 .recipient(new MailAddress("user", "domain"))
                 .build();
 
-        assertNotNull("Should match all recipients", inverter.match(mail));
+        assertThat(inverter.match(mail)).withFailMessage("Should match all recipients").isNotNull();
     }
 
     @Test
@@ -67,7 +65,7 @@ public class MatcherInverterTest {
                 .recipients(address1, address2)
                 .build();
 
-        assertNull("Should match all recipients", inverter.match(mail));
+        assertThat(inverter.match(mail)).withFailMessage("Should match all recipients").isNull();
     }
 
     @Test
@@ -86,6 +84,6 @@ public class MatcherInverterTest {
                 .recipients(address1, address2)
                 .build();
 
-        assertEquals("Should match one recipient", address2.toString(), inverter.match(mail).iterator().next().toString());
+        assertThat(inverter.match(mail).iterator().next().toString()).describedAs("Should match one recipient").isEqualTo(address2.toString());
     }
 }

@@ -68,6 +68,7 @@ Feature: Moving mailbox and sharing
     Then "bob@domain.tld" lists mailboxes
     And the mailboxes should contain "sharedChild" in "Delegated" namespace, with no parent mailbox
 
+  @BasicFeature
   Scenario: A sharee should be able to retrieve a mailbox after sharer moved it into another mailbox
     Given "alice@domain.tld" has a mailbox "notShared"
     When "alice@domain.tld" moves the mailbox "shared.sharedChild" owned by "alice@domain.tld", into mailbox "notShared" owned by "alice@domain.tld"

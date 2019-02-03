@@ -25,6 +25,7 @@ import org.apache.james.imap.api.process.MailboxTyper;
 import org.apache.james.imap.processor.fetch.FetchProcessor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SubscriptionManager;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
@@ -35,80 +36,85 @@ import org.apache.james.metrics.api.MetricFactory;
 public class DefaultProcessorChain {
 
     public static ImapProcessor createDefaultChain(ImapProcessor chainEndProcessor,
-                  final MailboxManager mailboxManager, SubscriptionManager subscriptionManager,
-                  final StatusResponseFactory statusResponseFactory, MailboxTyper mailboxTyper, QuotaManager quotaManager,
-                  final QuotaRootResolver quotaRootResolver,
-                  MetricFactory metricFactory) {
-        final SystemMessageProcessor systemProcessor = new SystemMessageProcessor(chainEndProcessor, mailboxManager);
-        final LogoutProcessor logoutProcessor = new LogoutProcessor(systemProcessor, mailboxManager, statusResponseFactory, metricFactory);
+                                                   MailboxManager mailboxManager,
+                                                   EventBus eventBus,
+                                                   SubscriptionManager subscriptionManager,
+                                                   StatusResponseFactory statusResponseFactory,
+                                                   MailboxTyper mailboxTyper,
+                                                   QuotaManager quotaManager,
+                                                   QuotaRootResolver quotaRootResolver,
+                                                   MetricFactory metricFactory) {
 
-        final CapabilityProcessor capabilityProcessor = new CapabilityProcessor(logoutProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final CheckProcessor checkProcessor = new CheckProcessor(capabilityProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final LoginProcessor loginProcessor = new LoginProcessor(checkProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        SystemMessageProcessor systemProcessor = new SystemMessageProcessor(chainEndProcessor, mailboxManager);
+        LogoutProcessor logoutProcessor = new LogoutProcessor(systemProcessor, mailboxManager, statusResponseFactory, metricFactory);
+
+        CapabilityProcessor capabilityProcessor = new CapabilityProcessor(logoutProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        CheckProcessor checkProcessor = new CheckProcessor(capabilityProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        LoginProcessor loginProcessor = new LoginProcessor(checkProcessor, mailboxManager, statusResponseFactory, metricFactory);
         // so it can announce the LOGINDISABLED if needed
         capabilityProcessor.addProcessor(loginProcessor);
         
-        final RenameProcessor renameProcessor = new RenameProcessor(loginProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final DeleteProcessor deleteProcessor = new DeleteProcessor(renameProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final CreateProcessor createProcessor = new CreateProcessor(deleteProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final CloseProcessor closeProcessor = new CloseProcessor(createProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final UnsubscribeProcessor unsubscribeProcessor = new UnsubscribeProcessor(closeProcessor, mailboxManager, subscriptionManager, statusResponseFactory, metricFactory);
-        final SubscribeProcessor subscribeProcessor;
+        RenameProcessor renameProcessor = new RenameProcessor(loginProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        DeleteProcessor deleteProcessor = new DeleteProcessor(renameProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        CreateProcessor createProcessor = new CreateProcessor(deleteProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        CloseProcessor closeProcessor = new CloseProcessor(createProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        UnsubscribeProcessor unsubscribeProcessor = new UnsubscribeProcessor(closeProcessor, mailboxManager, subscriptionManager, statusResponseFactory, metricFactory);
+        SubscribeProcessor subscribeProcessor;
         if (mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Annotation)) {
-            final SetAnnotationProcessor setAnnotationProcessor = new SetAnnotationProcessor(unsubscribeProcessor, mailboxManager, statusResponseFactory, metricFactory);
+            SetAnnotationProcessor setAnnotationProcessor = new SetAnnotationProcessor(unsubscribeProcessor, mailboxManager, statusResponseFactory, metricFactory);
             capabilityProcessor.addProcessor(setAnnotationProcessor);
-            final GetAnnotationProcessor getAnnotationProcessor = new GetAnnotationProcessor(setAnnotationProcessor, mailboxManager, statusResponseFactory, metricFactory);
+            GetAnnotationProcessor getAnnotationProcessor = new GetAnnotationProcessor(setAnnotationProcessor, mailboxManager, statusResponseFactory, metricFactory);
             capabilityProcessor.addProcessor(getAnnotationProcessor);
             subscribeProcessor = new SubscribeProcessor(getAnnotationProcessor, mailboxManager, subscriptionManager, statusResponseFactory, metricFactory);
         } else {
             subscribeProcessor = new SubscribeProcessor(unsubscribeProcessor, mailboxManager, subscriptionManager, statusResponseFactory, metricFactory);
         }
-        final CopyProcessor copyProcessor = new CopyProcessor(subscribeProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        CopyProcessor copyProcessor = new CopyProcessor(subscribeProcessor, mailboxManager, statusResponseFactory, metricFactory);
         AuthenticateProcessor authenticateProcessor;
         if (mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move)) {
-            final MoveProcessor moveProcessor = new MoveProcessor(copyProcessor, mailboxManager, statusResponseFactory, metricFactory);
+            MoveProcessor moveProcessor = new MoveProcessor(copyProcessor, mailboxManager, statusResponseFactory, metricFactory);
             authenticateProcessor = new AuthenticateProcessor(moveProcessor, mailboxManager, statusResponseFactory, metricFactory);
             capabilityProcessor.addProcessor(moveProcessor);
         } else {
             authenticateProcessor = new AuthenticateProcessor(copyProcessor, mailboxManager, statusResponseFactory, metricFactory);
         }
-        final ExpungeProcessor expungeProcessor = new ExpungeProcessor(authenticateProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final ExamineProcessor examineProcessor = new ExamineProcessor(expungeProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final AppendProcessor appendProcessor = new AppendProcessor(examineProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final StoreProcessor storeProcessor = new StoreProcessor(appendProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final NoopProcessor noopProcessor = new NoopProcessor(storeProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final IdleProcessor idleProcessor = new IdleProcessor(noopProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final StatusProcessor statusProcessor = new StatusProcessor(idleProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final LSubProcessor lsubProcessor = new LSubProcessor(statusProcessor, mailboxManager, subscriptionManager, statusResponseFactory, metricFactory);
-        final XListProcessor xlistProcessor = new XListProcessor(lsubProcessor, mailboxManager, statusResponseFactory, mailboxTyper, metricFactory);
-        final ListProcessor listProcessor = new ListProcessor(xlistProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final SearchProcessor searchProcessor = new SearchProcessor(listProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        ExpungeProcessor expungeProcessor = new ExpungeProcessor(authenticateProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        ExamineProcessor examineProcessor = new ExamineProcessor(expungeProcessor, mailboxManager, eventBus, statusResponseFactory, metricFactory);
+        AppendProcessor appendProcessor = new AppendProcessor(examineProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        StoreProcessor storeProcessor = new StoreProcessor(appendProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        NoopProcessor noopProcessor = new NoopProcessor(storeProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        IdleProcessor idleProcessor = new IdleProcessor(noopProcessor, mailboxManager, eventBus, statusResponseFactory, metricFactory);
+        StatusProcessor statusProcessor = new StatusProcessor(idleProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        LSubProcessor lsubProcessor = new LSubProcessor(statusProcessor, mailboxManager, subscriptionManager, statusResponseFactory, metricFactory);
+        XListProcessor xlistProcessor = new XListProcessor(lsubProcessor, mailboxManager, statusResponseFactory, mailboxTyper, metricFactory);
+        ListProcessor listProcessor = new ListProcessor(xlistProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        SearchProcessor searchProcessor = new SearchProcessor(listProcessor, mailboxManager, statusResponseFactory, metricFactory);
         // WITHIN extension
         capabilityProcessor.addProcessor(searchProcessor);
 
-        final SelectProcessor selectProcessor = new SelectProcessor(searchProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final NamespaceProcessor namespaceProcessor = new NamespaceProcessor(selectProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        SelectProcessor selectProcessor = new SelectProcessor(searchProcessor, mailboxManager, eventBus, statusResponseFactory, metricFactory);
+        NamespaceProcessor namespaceProcessor = new NamespaceProcessor(selectProcessor, mailboxManager, statusResponseFactory, metricFactory);
 
         capabilityProcessor.addProcessor(xlistProcessor);
 
-        final ImapProcessor fetchProcessor = new FetchProcessor(namespaceProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final StartTLSProcessor startTLSProcessor = new StartTLSProcessor(fetchProcessor, statusResponseFactory);
+        ImapProcessor fetchProcessor = new FetchProcessor(namespaceProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        StartTLSProcessor startTLSProcessor = new StartTLSProcessor(fetchProcessor, statusResponseFactory);
 
-        final UnselectProcessor unselectProcessor = new UnselectProcessor(startTLSProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        UnselectProcessor unselectProcessor = new UnselectProcessor(startTLSProcessor, mailboxManager, statusResponseFactory, metricFactory);
 
-        final CompressProcessor compressProcessor = new CompressProcessor(unselectProcessor, statusResponseFactory);
+        CompressProcessor compressProcessor = new CompressProcessor(unselectProcessor, statusResponseFactory);
         
-        final GetACLProcessor getACLProcessor = new GetACLProcessor(compressProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final SetACLProcessor setACLProcessor = new SetACLProcessor(getACLProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final DeleteACLProcessor deleteACLProcessor = new DeleteACLProcessor(setACLProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final ListRightsProcessor listRightsProcessor = new ListRightsProcessor(deleteACLProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final MyRightsProcessor myRightsProcessor = new MyRightsProcessor(listRightsProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        GetACLProcessor getACLProcessor = new GetACLProcessor(compressProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        SetACLProcessor setACLProcessor = new SetACLProcessor(getACLProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        DeleteACLProcessor deleteACLProcessor = new DeleteACLProcessor(setACLProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        ListRightsProcessor listRightsProcessor = new ListRightsProcessor(deleteACLProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        MyRightsProcessor myRightsProcessor = new MyRightsProcessor(listRightsProcessor, mailboxManager, statusResponseFactory, metricFactory);
         
-        final EnableProcessor enableProcessor = new EnableProcessor(myRightsProcessor, mailboxManager, statusResponseFactory, metricFactory, capabilityProcessor);
+        EnableProcessor enableProcessor = new EnableProcessor(myRightsProcessor, mailboxManager, statusResponseFactory, metricFactory, capabilityProcessor);
 
-        final GetQuotaProcessor getQuotaProcessor = new GetQuotaProcessor(enableProcessor, mailboxManager, statusResponseFactory, quotaManager, quotaRootResolver, metricFactory);
-        final SetQuotaProcessor setQuotaProcessor = new SetQuotaProcessor(getQuotaProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        final GetQuotaRootProcessor getQuotaRootProcessor = new GetQuotaRootProcessor(setQuotaProcessor, mailboxManager, statusResponseFactory, quotaRootResolver, quotaManager, metricFactory);
+        GetQuotaProcessor getQuotaProcessor = new GetQuotaProcessor(enableProcessor, mailboxManager, statusResponseFactory, quotaManager, quotaRootResolver, metricFactory);
+        SetQuotaProcessor setQuotaProcessor = new SetQuotaProcessor(getQuotaProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        GetQuotaRootProcessor getQuotaRootProcessor = new GetQuotaRootProcessor(setQuotaProcessor, mailboxManager, statusResponseFactory, quotaRootResolver, quotaManager, metricFactory);
         // add for QRESYNC
         enableProcessor.addProcessor(selectProcessor);
         

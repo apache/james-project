@@ -25,9 +25,12 @@ import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryCountDAO;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryKeysDAO;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryMailDAO;
+import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryMailDaoAPI;
+import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryMailDaoV2;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryProvider;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryUrlModule;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryUrlStore;
+import org.apache.james.mailrepository.cassandra.MergingCassandraMailRepositoryMailDao;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -40,7 +43,10 @@ public class CassandraMailRepositoryModule extends AbstractModule {
         bind(CassandraMailRepositoryKeysDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMailRepositoryCountDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMailRepositoryMailDAO.class).in(Scopes.SINGLETON);
+        bind(CassandraMailRepositoryMailDaoV2.class).in(Scopes.SINGLETON);
+        bind(MergingCassandraMailRepositoryMailDao.class).in(Scopes.SINGLETON);
 
+        bind(CassandraMailRepositoryMailDaoAPI.class).to(MergingCassandraMailRepositoryMailDao.class);
         bind(MailRepositoryUrlStore.class).to(CassandraMailRepositoryUrlStore.class);
 
         Multibinder<MailRepositoryProvider> multibinder = Multibinder.newSetBinder(binder(), MailRepositoryProvider.class);

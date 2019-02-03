@@ -26,6 +26,12 @@ public interface DLPFixture {
         .expression("regex")
         .targetsSender()
         .build();
+    DLPConfigurationItem RULE_UPDATED = DLPConfigurationItem.builder()
+        .id(DLPConfigurationItem.Id.of("id1"))
+        .explanation("explanation2")
+        .expression("regex2")
+        .targetsSender()
+        .build();
     DLPConfigurationItem RULE_2 = DLPConfigurationItem.builder()
         .id(DLPConfigurationItem.Id.of("id2"))
         .explanation("explanation2")

@@ -25,12 +25,14 @@ import java.util.List;
 
 import org.apache.commons.net.imap.IMAPClient;
 import org.awaitility.core.ConditionFactory;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.rules.ExternalResource;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 
-public class IMAPMessageReader extends ExternalResource implements Closeable {
+public class IMAPMessageReader extends ExternalResource implements Closeable, AfterEachCallback {
 
     public static final String INBOX = "INBOX";
 
@@ -187,6 +189,11 @@ public class IMAPMessageReader extends ExternalResource implements Closeable {
         } catch (IOException e) {
             //ignore exception during close
         }
+    }
+
+    @Override
+    public void afterEach(ExtensionContext extensionContext) {
+        after();
     }
 
     public void copyFirstMessage(String destMailbox) throws IOException {

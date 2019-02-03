@@ -19,21 +19,28 @@
 
 package org.apache.james.mailbox.model;
 
+import java.util.Objects;
+
+import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
+
+import com.google.common.base.MoreObjects;
+
 /**
  * Returned by the list method of MailboxRepository and others
  */
-public interface MailboxMetaData {
-
+public class MailboxMetaData implements Comparable<MailboxMetaData> {
     /** RFC3501 Selectability flag */
-    enum Selectability {
+    public enum Selectability {
         NONE, MARKED, UNMARKED, NOSELECT
     }
 
     /**
      * Indicates whether this mailbox allows children and - if so - whether it
      * has any.
+     *
+     * See <code>\Noinferiors</code> as per RFC3501.
      */
-    enum Children {
+    public enum Children {
         /**
          * No children allowed.
          */
@@ -54,31 +61,90 @@ public interface MailboxMetaData {
         HAS_NO_CHILDREN
     }
 
+    public static MailboxMetaData unselectableMailbox(MailboxPath path, MailboxId mailboxId, char delimiter) {
+        return new MailboxMetaData(path, mailboxId, delimiter, Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.NONE);
+    }
+
+    private final MailboxPath path;
+    private final char delimiter;
+    private final Children inferiors;
+    private final Selectability selectability;
+    private final MailboxId mailboxId;
+
+    public MailboxMetaData(MailboxPath path, MailboxId mailboxId, char delimiter, Children inferiors, Selectability selectability) {
+        this.path = path;
+        this.mailboxId = mailboxId;
+        this.delimiter = delimiter;
+        this.inferiors = inferiors;
+        this.selectability = selectability;
+    }
+
+
     /**
      * Gets the inferiors status of this mailbox.
-     * 
+     *
+     * Is this mailbox <code>\Noinferiors</code> as per RFC3501.
+     *
      * @return not null
      */
-    Children inferiors();
+    public final Children inferiors() {
+        return inferiors;
+    }
 
     /**
      * Gets the RFC3501 Selectability flag.
      */
-    Selectability getSelectability();
+    public final Selectability getSelectability() {
+        return selectability;
+    }
 
     /**
      * Return the delimiter
      * 
      * @return delimiter
      */
-    char getHierarchyDelimiter();
+    public char getHierarchyDelimiter() {
+        return delimiter;
+    }
+
 
     /**
      * Return the MailboxPath
      * 
      * @return path
      */
-    MailboxPath getPath();
-    
-    MailboxId getId();
+    public MailboxPath getPath() {
+        return path;
+    }
+
+    public MailboxId getId() {
+        return mailboxId;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("path", path)
+            .toString();
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof MailboxMetaData) {
+            MailboxMetaData that = (MailboxMetaData) o;
+
+            return Objects.equals(this.path, that.path);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(path);
+    }
+
+    @Override
+    public int compareTo(MailboxMetaData o) {
+        return StandardMailboxMetaDataComparator.order(this, o);
+    }
 }

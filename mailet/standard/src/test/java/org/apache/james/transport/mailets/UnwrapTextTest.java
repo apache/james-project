@@ -19,7 +19,8 @@
 
 package org.apache.james.transport.mailets;
 
-import org.junit.jupiter.api.Assertions;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.Test;
 
 public class UnwrapTextTest {
@@ -32,8 +33,8 @@ public class UnwrapTextTest {
         String input;
         String output;
 
-        Assertions.assertEquals("", UnwrapText.unwrap(""));
-        Assertions.assertEquals("a", UnwrapText.unwrap("a"));
+        assertThat(UnwrapText.unwrap("")).isEqualTo("");
+        assertThat(UnwrapText.unwrap("a")).isEqualTo("a");
 
         input =
                 "Prova per vedere se effettivamente il testo viene wrappato\r\n" +
@@ -46,7 +47,7 @@ public class UnwrapTextTest {
                         "Chissà se funziona davvero\r\n" +
                         "o se va solo come gli pare";
 
-        Assertions.assertEquals(output, UnwrapText.unwrap(input));
+        assertThat(UnwrapText.unwrap(input)).isEqualTo(output);
 
         input =
                 "> Prova per vedere se effettivamente il testo viene wrappato\r\n" +
@@ -59,7 +60,7 @@ public class UnwrapTextTest {
                         "> Chissà se funziona davvero\r\n" +
                         "> o se va solo come gli pare";
 
-        Assertions.assertEquals(output, UnwrapText.unwrap(input));
+        assertThat(UnwrapText.unwrap(input)).isEqualTo(output);
 
         input =
                 "> Prova per vedere se effettivamente il testo viene wrappato\r\n" +
@@ -75,7 +76,7 @@ public class UnwrapTextTest {
                         "> o se va solo come gli pare\r\n" +
                         "> Prova per vedere se effettivamente il testo viene wrappato come dovrebbe.\r\n";
 
-        Assertions.assertEquals(output, UnwrapText.unwrap(input));
+        assertThat(UnwrapText.unwrap(input)).isEqualTo(output);
 
         input =
                 "> volevo chiedervi un piccolo aiutino. Una signora con un circolare ha un\r\n" +
@@ -91,7 +92,7 @@ public class UnwrapTextTest {
                         "trucco da  suggerirmi per rimuovere il ponte? Il ponte è in ceramica, per " +
                         "cui  l'utilizzo degli ultrasuoni puo' essere rischioso (?).\r\n";
 
-        Assertions.assertEquals(output, UnwrapText.unwrap(input));
+        assertThat(UnwrapText.unwrap(input)).isEqualTo(output);
 
         input =
                 "> Prova per vedere se effettivamente il testo viene wrappato\r\n" +
@@ -104,7 +105,7 @@ public class UnwrapTextTest {
                 "> Prova per vedere se effettivamente il testo viene wrappato com dovrebbe.\r\n" +
                         "> Prova per vedere se effettivamente il testo viene wrappato come dovrebbe.\r\n";
 
-        Assertions.assertEquals(output, UnwrapText.unwrap(input));
+        assertThat(UnwrapText.unwrap(input)).isEqualTo(output);
 
         input =
                 "> Prova per vedere se effettivamente il testo viene wrappato\r\n" +
@@ -118,7 +119,7 @@ public class UnwrapTextTest {
                         "> Prova per vedere se effettivamente il testo viene wrappato come\r\n" +
                         ">> dovrebbe.\r\n";
 
-        Assertions.assertEquals(output, UnwrapText.unwrap(input));
+        assertThat(UnwrapText.unwrap(input)).isEqualTo(output);
 
         input =
                 "> Prova per vedere se effettivamente il testo viene wrappato\r\n" +
@@ -131,7 +132,7 @@ public class UnwrapTextTest {
                         "> Prova per vedere se effettivamente il testo viene wrappato\r\n" +
                         "come dovrebbe.\r\n";
 
-        Assertions.assertEquals(output, UnwrapText.unwrap(input));
+        assertThat(UnwrapText.unwrap(input)).isEqualTo(output);
 
         input =
                 "...pero' devo dire che ai congressi vedo moltissimi casi di carico\r\n" +
@@ -147,7 +148,7 @@ public class UnwrapTextTest {
                         "\"parodontosici\" che io terrei li per altri 15 anni...\r\n" +
                         "Non voglio polemizzare ne tantomento accusare nessuno, ma credo che spesso a accada quello che Alessio suggerisce...\r\n";
 
-        Assertions.assertEquals(output, UnwrapText.unwrap(input));
+        assertThat(UnwrapText.unwrap(input)).isEqualTo(output);
 
         input =
                 "> mi trovo in difficolta,ho eseguito un lavoro di protesizzazione in\r\n" +
@@ -175,7 +176,7 @@ public class UnwrapTextTest {
                         "a tirar giu il lavoro anche con tutte le cautele del caso rischio la " +
                         "rottura\r\n";
 
-        Assertions.assertEquals(output, UnwrapText.unwrap(input, 79));
+        assertThat(UnwrapText.unwrap(input, 79)).isEqualTo(output);
 
         // Controllo spazi
         input =
@@ -193,7 +194,7 @@ public class UnwrapTextTest {
                         "o se va solo come gli pare \r\n" +
                         "> Prova per vedere se effettivamente il testo viene wrappato come dovrebbe. \r\n";
 
-        Assertions.assertEquals(output, UnwrapText.unwrap(input, 79));
+        assertThat(UnwrapText.unwrap(input, 79)).isEqualTo(output);
     }
 
 }

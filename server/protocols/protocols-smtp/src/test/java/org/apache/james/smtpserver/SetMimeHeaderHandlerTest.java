@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -82,7 +82,7 @@ public class SetMimeHeaderHandlerTest {
         header.setHeaderValue(HEADER_VALUE);
         header.onMessage(mockedSMTPSession, mockedMail);
 
-        assertEquals(HEADER_VALUE, mockedMail.getMessage().getHeader(HEADER_NAME)[0]);
+        assertThat(mockedMail.getMessage().getHeader(HEADER_NAME)[0]).isEqualTo(HEADER_VALUE);
     }
 
     // test if the Header was replaced
@@ -100,6 +100,6 @@ public class SetMimeHeaderHandlerTest {
         header.setHeaderValue(HEADER_VALUE);
         header.onMessage(mockedSMTPSession, mockedMail);
 
-        assertEquals(HEADER_VALUE, mockedMail.getMessage().getHeader(HEADER_NAME)[0]);
+        assertThat(mockedMail.getMessage().getHeader(HEADER_NAME)[0]).isEqualTo(HEADER_VALUE);
     }
 }

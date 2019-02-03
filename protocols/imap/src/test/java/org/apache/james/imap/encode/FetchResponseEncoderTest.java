@@ -19,9 +19,7 @@
 
 package org.apache.james.imap.encode;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import javax.mail.Flags;
@@ -53,13 +51,13 @@ public class FetchResponseEncoderTest  {
 
     @Test
     public void testShouldNotAcceptUnknownResponse() {
-        assertFalse(encoder.isAcceptable(mock(ImapMessage.class)));
+        assertThat(encoder.isAcceptable(mock(ImapMessage.class))).isFalse();
     }
 
     @Test
     public void testShouldAcceptFetchResponse() {
-        assertTrue(encoder.isAcceptable(new FetchResponse(11, null, null, null, null,
-                null, null, null, null, null)));
+        assertThat(encoder.isAcceptable(new FetchResponse(11, null, null, null, null,
+                null, null, null, null, null))).isTrue();
     }
 
     @Test
@@ -67,7 +65,7 @@ public class FetchResponseEncoderTest  {
         FetchResponse message = new FetchResponse(100, flags, null, null, null, null,
                 null, null, null, null);
         encoder.doEncode(message, composer, new FakeImapSession());
-        assertEquals("* 100 FETCH (FLAGS (\\Deleted))\r\n", writer.getString());
+        assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted))\r\n");
 
 
     }
@@ -77,7 +75,7 @@ public class FetchResponseEncoderTest  {
         FetchResponse message = new FetchResponse(100, null, MessageUid.of(72), null,
                 null, null, null, null, null, null); 
         encoder.doEncode(message, composer, new FakeImapSession());
-        assertEquals("* 100 FETCH (UID 72)\r\n", writer.getString());
+        assertThat(writer.getString()).isEqualTo("* 100 FETCH (UID 72)\r\n");
 
 
     }
@@ -87,7 +85,7 @@ public class FetchResponseEncoderTest  {
         FetchResponse message = new FetchResponse(100, flags, MessageUid.of(72), null,
                 null, null, null, null, null, null);
         encoder.doEncode(message, composer, new FakeImapSession());
-        assertEquals("* 100 FETCH (FLAGS (\\Deleted) UID 72)\r\n", writer.getString());
+        assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted) UID 72)\r\n");
         
     }
 }

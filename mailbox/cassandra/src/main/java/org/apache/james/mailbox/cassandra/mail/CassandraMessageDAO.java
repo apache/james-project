@@ -46,7 +46,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -76,8 +75,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
-import org.apache.james.util.CompletableFutureUtil;
-import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.streams.JamesCollectors;
 import org.apache.james.util.streams.Limit;
 
@@ -95,6 +92,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Bytes;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class CassandraMessageDAO {
     public static final long DEFAULT_LONG_VALUE = 0L;
@@ -184,10 +183,11 @@ public class CassandraMessageDAO {
         try {
             byte[] headerContent = IOUtils.toByteArray(message.getHeaderContent());
             byte[] bodyContent = IOUtils.toByteArray(message.getBodyContent());
-            return CompletableFutureUtil.combine(
-                blobStore.save(headerContent),
-                blobStore.save(bodyContent),
-                Pair::of);
+
+            CompletableFuture<BlobId> bodyFuture = blobStore.save(bodyContent).toFuture();
+            CompletableFuture<BlobId> headerFuture = blobStore.save(headerContent).toFuture();
+
+            return headerFuture.thenCombine(bodyFuture, Pair::of);
         } catch (IOException e) {
             throw new MailboxException("Error saving mail content", e);
         }
@@ -233,42 +233,36 @@ public class CassandraMessageDAO {
             .collect(Guavate.toImmutableList());
     }
 
-    public CompletableFuture<Stream<MessageResult>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
-        return CompletableFutureUtil.chainAll(
-                limit.applyOnStream(messageIds.stream().distinct())
-                    .collect(JamesCollectors.chunker(configuration.getMessageReadChunkSize())),
-            ids -> rowToMessages(fetchType, ids))
-            .thenApply(stream -> stream.flatMap(Function.identity()));
+    public Flux<MessageResult> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
+        return Flux.fromStream(limit.applyOnStream(messageIds.stream().distinct())
+            .collect(JamesCollectors.chunker(configuration.getMessageReadChunkSize())))
+            .flatMap(ids -> rowToMessages(fetchType, ids));
     }
 
-    private CompletableFuture<Stream<MessageResult>> rowToMessages(FetchType fetchType, Collection<ComposedMessageIdWithMetaData> ids) {
-        return FluentFutureStream.of(
-            ids.stream()
-                .map(id -> retrieveRow(id, fetchType)
-                    .thenCompose((ResultSet resultSet) -> message(resultSet, id, fetchType))))
-            .completableFuture();
+    private Flux<MessageResult> rowToMessages(FetchType fetchType, Collection<ComposedMessageIdWithMetaData> ids) {
+        return Flux.fromIterable(ids)
+            .flatMap(id -> retrieveRow(id, fetchType)
+                .flatMap(resultSet -> message(resultSet, id, fetchType)));
     }
 
-    private CompletableFuture<ResultSet> retrieveRow(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
+    private Mono<ResultSet> retrieveRow(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId.getComposedMessageId().getMessageId();
 
-        return cassandraAsyncExecutor.execute(retrieveSelect(fetchType)
+        return cassandraAsyncExecutor.executeReactor(retrieveSelect(fetchType)
             .bind()
             .setUUID(MESSAGE_ID, cassandraMessageId.get()));
     }
 
-    private CompletableFuture<MessageResult>
+    private Mono<MessageResult>
     message(ResultSet rows,ComposedMessageIdWithMetaData messageIdWithMetaData, FetchType fetchType) {
         ComposedMessageId messageId = messageIdWithMetaData.getComposedMessageId();
 
         if (rows.isExhausted()) {
-            return CompletableFuture.completedFuture(notFound(messageIdWithMetaData));
+            return Mono.just(notFound(messageIdWithMetaData));
         }
 
         Row row = rows.one();
-        CompletableFuture<byte[]> contentFuture = buildContentRetriever(fetchType).apply(row);
-
-        return contentFuture.thenApply(content -> {
+        return buildContentRetriever(fetchType, row).map(content -> {
             MessageWithoutAttachment messageWithoutAttachment =
                 new MessageWithoutAttachment(
                     messageId.getMessageId(),
@@ -340,38 +334,36 @@ public class CassandraMessageDAO {
             .setUUID(MESSAGE_ID, messageId.get()));
     }
 
-    private Function<Row, CompletableFuture<byte[]>> buildContentRetriever(FetchType fetchType) {
+    private Mono<byte[]> buildContentRetriever(FetchType fetchType, Row row) {
         switch (fetchType) {
             case Full:
-                return this::getFullContent;
+                return getFullContent(row);
             case Headers:
-                return this::getHeaderContent;
+                return getHeaderContent(row);
             case Body:
-                return row -> getBodyContent(row)
-                    .thenApply(data -> Bytes.concat(new byte[row.getInt(BODY_START_OCTET)], data));
+                return getBodyContent(row)
+                    .map(data -> Bytes.concat(new byte[row.getInt(BODY_START_OCTET)], data));
             case Metadata:
-                return row -> CompletableFuture.completedFuture(EMPTY_BYTE_ARRAY);
+                return Mono.just(EMPTY_BYTE_ARRAY);
             default:
                 throw new RuntimeException("Unknown FetchType " + fetchType);
         }
     }
 
-    private CompletableFuture<byte[]> getFullContent(Row row) {
-        return CompletableFutureUtil.combine(
-            getHeaderContent(row),
-            getBodyContent(row),
-            Bytes::concat);
+    private Mono<byte[]> getFullContent(Row row) {
+        return getHeaderContent(row)
+            .zipWith(getBodyContent(row), Bytes::concat);
     }
 
-    private CompletableFuture<byte[]> getBodyContent(Row row) {
+    private Mono<byte[]> getBodyContent(Row row) {
         return getFieldContent(BODY_CONTENT, row);
     }
 
-    private CompletableFuture<byte[]> getHeaderContent(Row row) {
+    private Mono<byte[]> getHeaderContent(Row row) {
         return getFieldContent(HEADER_CONTENT, row);
     }
 
-    private CompletableFuture<byte[]> getFieldContent(String field, Row row) {
+    private Mono<byte[]> getFieldContent(String field, Row row) {
         return blobStore.readBytes(blobIdFactory.from(row.getString(field)));
     }
 

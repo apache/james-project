@@ -30,9 +30,14 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.store.event.MailboxListenerRegistry;
+import org.apache.james.mailbox.events.GenericGroup;
+import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.utils.ExtendedClassLoader;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +47,7 @@ import com.google.inject.Guice;
 
 public class MailboxListenersLoaderImplTest {
 
-    private MailboxListenerRegistry registry;
+    private InVMEventBus eventBus;
     private MailboxListenersLoaderImpl testee;
 
     @Before
@@ -51,8 +56,8 @@ public class MailboxListenersLoaderImplTest {
         when(fileSystem.getFile(anyString()))
             .thenThrow(new FileNotFoundException());
 
-        registry = new MailboxListenerRegistry();
-        testee = new MailboxListenersLoaderImpl(new MailboxListenerFactory(Guice.createInjector()), registry,
+        eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
+        testee = new MailboxListenersLoaderImpl(new MailboxListenerFactory(Guice.createInjector()), eventBus,
             new ExtendedClassLoader(fileSystem), ImmutableSet.of());
     }
 
@@ -84,9 +89,9 @@ public class MailboxListenersLoaderImplTest {
     public void createListenerShouldReturnMailboxListenerWhenConfigurationIsGood() {
         ListenerConfiguration configuration = ListenerConfiguration.forClass("org.apache.james.modules.mailbox.NoopMailboxListener");
 
-        MailboxListener listener = testee.createListener(configuration);
+        Pair<Group, MailboxListener> listener = testee.createListener(configuration);
 
-        assertThat(listener).isInstanceOf(NoopMailboxListener.class);
+        assertThat(listener.getRight()).isInstanceOf(NoopMailboxListener.class);
     }
 
     @Test
@@ -95,14 +100,43 @@ public class MailboxListenersLoaderImplTest {
                     "<listener>" +
                         "<class>org.apache.james.modules.mailbox.NoopMailboxListener</class>" +
                     "</listener>" +
+                "</listeners>");
+
+        testee.configure(configuration);
+
+        assertThat(eventBus.registeredGroups()).containsExactly(NoopMailboxListener.GROUP);
+    }
+
+    @Test
+    public void customGroupCanBePassed() throws ConfigurationException {
+        DefaultConfigurationBuilder configuration = toConfigutation("<listeners>" +
                     "<listener>" +
                         "<class>org.apache.james.modules.mailbox.NoopMailboxListener</class>" +
+                        "<group>Avengers</group>" +
                     "</listener>" +
                 "</listeners>");
 
         testee.configure(configuration);
 
-        assertThat(registry.getGlobalListeners()).hasSize(2);
+        assertThat(eventBus.registeredGroups()).containsExactly(new GenericGroup("Avengers"));
+    }
+
+    @Test
+    public void aListenerCanBeRegisteredOnSeveralGroups() throws ConfigurationException {
+        DefaultConfigurationBuilder configuration = toConfigutation("<listeners>" +
+                    "<listener>" +
+                        "<class>org.apache.james.modules.mailbox.NoopMailboxListener</class>" +
+                        "<group>Avengers</group>" +
+                    "</listener>" +
+                    "<listener>" +
+                        "<class>org.apache.james.modules.mailbox.NoopMailboxListener</class>" +
+                        "<group>Fantastic 4</group>" +
+                    "</listener>" +
+                "</listeners>");
+
+        testee.configure(configuration);
+
+        assertThat(eventBus.registeredGroups()).containsExactlyInAnyOrder(new GenericGroup("Avengers"), new GenericGroup("Fantastic 4"));
     }
 
     private DefaultConfigurationBuilder toConfigutation(String configurationString) throws ConfigurationException {

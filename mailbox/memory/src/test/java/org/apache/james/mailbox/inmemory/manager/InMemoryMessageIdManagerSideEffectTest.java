@@ -21,6 +21,7 @@ package org.apache.james.mailbox.inmemory.manager;
 
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -31,13 +32,18 @@ import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.NoMaxQuotaManager;
+import org.apache.james.mailbox.store.quota.NoQuotaUpdater;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.junit.Before;
 
 public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
@@ -49,7 +55,7 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
     }
 
     @Override
-    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, MailboxEventDispatcher dispatcher) {
+    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, EventBus eventBus) {
         InMemoryMailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
 
         FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
@@ -57,26 +63,31 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
         fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
         FakeAuthorizator fakeAuthorizator = FakeAuthorizator.defaultReject();
 
-        StoreRightManager rightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), dispatcher);
+        StoreRightManager rightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), eventBus);
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
+        SessionProvider sessionProvider = new SessionProvider(fakeAuthenticator, fakeAuthorizator);
+
+        QuotaComponents quotaComponents = new QuotaComponents(new NoMaxQuotaManager(), quotaManager, new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory), new NoQuotaUpdater());
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor());
+
         InMemoryMailboxManager mailboxManager = new InMemoryMailboxManager(mapperFactory,
-            fakeAuthenticator,
-            fakeAuthorizator,
+            sessionProvider,
             locker,
             new MessageParser(),
             messageIdFactory,
-            dispatcher,
-            new DefaultDelegatingMailboxListener(),
+            eventBus,
             new StoreMailboxAnnotationManager(mapperFactory, rightManager),
-            rightManager);
+            rightManager,
+            quotaComponents,
+            index);
         StoreMessageIdManager messageIdManager = new StoreMessageIdManager(
             mailboxManager,
             mapperFactory,
-            dispatcher,
+            eventBus,
             messageIdFactory,
             quotaManager,
-            new DefaultUserQuotaRootResolver(mapperFactory));
+            quotaComponents.getQuotaRootResolver());
         return new MessageIdManagerTestSystem(messageIdManager, messageIdFactory, mapperFactory, mailboxManager);
     }
 }

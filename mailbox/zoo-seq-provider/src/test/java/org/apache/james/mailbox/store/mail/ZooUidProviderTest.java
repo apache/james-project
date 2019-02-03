@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.Serializable;
 import java.util.Optional;
@@ -173,24 +173,24 @@ public class ZooUidProviderTest {
     @Test
     public void testNextUid() throws Exception {
         MessageUid result = uuidProvider.nextUid(null, mailboxUUID);
-        assertEquals("Next UID is 1", 1, result.asLong());
+        assertThat(result.asLong()).describedAs("Next UID is 1").isEqualTo(1);
         result = longProvider.nextUid(null, mailboxLong);
-        assertEquals("Next UID is 1", 1, result.asLong());
+        assertThat(result.asLong()).describedAs("Next UID is 1").isEqualTo(1);
     }
 
     @Test
     public void testLastUid() throws Exception {
         Optional<MessageUid> result = uuidProvider.lastUid(null, mailboxUUID);
-        assertEquals("Next UID is empty", Optional.empty(), result);
+        assertThat(result).describedAs("Next UID is empty").isEqualTo(Optional.empty());
         MessageUid nextResult = uuidProvider.nextUid(null, mailboxUUID);
-        assertEquals("Next UID is 1", 1, nextResult.asLong());
+        assertThat(nextResult.asLong()).describedAs("Next UID is 1").isEqualTo(1);
     }
 
     @Test
     public void testLongLastUid() throws Exception {
         Optional<MessageUid> result = longProvider.lastUid(null, mailboxLong);
-        assertEquals("Next UID is empty", Optional.empty(), result);
+        assertThat(result).describedAs("Next UID is empty").isEqualTo(Optional.empty());
         MessageUid nextResult = longProvider.nextUid(null, mailboxLong);
-        assertEquals("Next UID is 1", 1, nextResult.asLong());
+        assertThat(nextResult.asLong()).describedAs("Next UID is 1").isEqualTo(1);
     }
 }

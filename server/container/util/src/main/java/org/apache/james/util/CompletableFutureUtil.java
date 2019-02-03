@@ -19,6 +19,9 @@
 
 package org.apache.james.util;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
@@ -26,6 +29,8 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import com.google.common.collect.ImmutableList;
 
 public class CompletableFutureUtil {
 
@@ -35,64 +40,30 @@ public class CompletableFutureUtil {
                 .orElse(CompletableFuture.completedFuture(Optional.empty())));
     }
 
-    @SafeVarargs
-    public static <T> CompletableFuture<Stream<T>> allOfArray(CompletableFuture<T>... futures) {
-        return allOf(Stream.of(futures));
-    }
-
-    public static <T, U, V> CompletableFuture<V> combine(CompletableFuture<T> t, CompletableFuture<U> u, BiFunction<T,U,V> combiner) {
-        return t.thenCompose(valueT ->
-            u.thenApply(valueU -> combiner.apply(valueT, valueU)));
-    }
-
+    @SuppressWarnings("unchecked")
     public static <T> CompletableFuture<Stream<T>> allOf(Stream<CompletableFuture<T>> futureStream) {
-        return futureStream
-            .map((CompletableFuture<T> future) -> future.thenApply(Stream::of))
-            .parallel()
-            .reduce((future1, future2) ->
-            future1.thenCompose(
-                stream1 -> future2.thenCompose(
-                    stream2 -> {
-                        Stream<T> concatStream = Stream.concat(stream1, stream2);
-                        return CompletableFuture.completedFuture(concatStream);
-                    })))
-            .orElse(CompletableFuture.completedFuture(Stream.of()));
+        CompletableFuture<T>[] arrayOfFutures = futureStream.toArray(CompletableFuture[]::new);
+
+        return CompletableFuture.allOf(arrayOfFutures)
+            .thenApply(any -> Arrays.stream(arrayOfFutures)
+                .map(CompletableFuture::join));
     }
 
-    public static <R, T> CompletableFuture<Stream<R>> chainAll(Stream<T> futureStream,
-        Function<T, CompletableFuture<R>> transformationToChain) {
-        return futureStream
+    public static <R, T> CompletableFuture<Stream<R>> chainAll(Stream<T> futureStream, Function<T, CompletableFuture<R>> transformationToChain) {
+        ImmutableList<T> elements = futureStream.collect(ImmutableList.toImmutableList());
+        ArrayList<R> results = new ArrayList<>(elements.size());
+
+        CompletableFuture<Void> futureEmptyStream = CompletableFuture.completedFuture(null);
+
+        BiFunction<CompletableFuture<?>, Supplier<CompletableFuture<R>>, CompletableFuture<?>> accumulator =
+            (future, supplier) -> future.thenCompose(any -> supplier.get().thenAccept(results::add));
+
+        BinaryOperator<CompletableFuture<?>> combiner = (f1, f2) -> f1.thenCompose(any -> f2);
+
+        return elements.stream()
             .map(t -> (Supplier<CompletableFuture<R>>) (() -> transformationToChain.apply(t)))
-            .reduce(CompletableFuture.<Stream<R>>completedFuture(Stream.of()),
-                (accumulator, supplier) ->
-                    accumulator.thenCompose(
-                        accumulatedStream ->
-                            supplier.get()
-                                .thenCompose(r ->
-                                    CompletableFuture.completedFuture(Stream.<R>concat(accumulatedStream, Stream.of(r))))
-                    ),
-                getCompletableFutureBinaryOperator());
-    }
-
-    private static <R> BinaryOperator<CompletableFuture<Stream<R>>> getCompletableFutureBinaryOperator() {
-        return (future1, future2) ->
-            future1.thenCompose(stream1 ->
-                future2.<Stream<R>>thenCompose(stream2 ->
-                    CompletableFuture.completedFuture(Stream.concat(stream1, stream2))));
-    }
-
-    public static <T> CompletableFuture<Stream<T>> performOnAll(CompletableFuture<Stream<T>> futurStream, Function<T, CompletableFuture<Void>> action) {
-        return thenComposeOnAll(futurStream, value ->
-            keepValue(() ->
-                action.apply(value),
-                value));
-    }
-
-    public static <T, U> CompletableFuture<Stream<U>> thenComposeOnAll(CompletableFuture<Stream<T>> futurStream, Function<T, CompletableFuture<U>> action) {
-        return futurStream
-            .thenCompose(stream ->
-                CompletableFutureUtil.allOf(
-                    stream.map(action)));
+            .reduce(futureEmptyStream, accumulator, combiner)
+            .thenApply(any -> results.stream());
     }
 
     public static <T, U> CompletableFuture<Stream<U>> map(CompletableFuture<Stream<T>> futurStream, Function<T, U> action) {
@@ -109,10 +80,6 @@ public class CompletableFutureUtil {
         return futureStream.thenApply(stream -> stream.reduce(binaryOperator).orElse(emptyAccumulator));
     }
 
-    public static <T> CompletableFuture<T> keepValue(Supplier<CompletableFuture<Void>> supplier, T value) {
-        return supplier.get().thenApply(any -> value);
-    }
-
     public static <T> Function<Boolean, CompletableFuture<Boolean>> composeIfTrue(Supplier<CompletableFuture<T>> composeOperation) {
         return b -> {
             if (b) {
@@ -120,5 +87,17 @@ public class CompletableFutureUtil {
             }
             return CompletableFuture.completedFuture(b);
         };
+    }
+
+    public static <T> CompletableFuture<Stream<T>> sorted(CompletableFuture<Stream<T>> futureStream, Comparator<T> comparator) {
+        return futureStream
+            .thenApply(stream ->
+                stream.sorted(comparator));
+    }
+
+    public static <T> CompletableFuture<T> exceptionallyFuture(Throwable throwable) {
+        CompletableFuture<T> failedFuture = new CompletableFuture<>();
+        failedFuture.completeExceptionally(throwable);
+        return failedFuture;
     }
 }

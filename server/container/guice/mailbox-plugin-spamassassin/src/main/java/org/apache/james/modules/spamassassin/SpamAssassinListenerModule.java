@@ -23,8 +23,8 @@ import java.io.FileNotFoundException;
 
 import javax.inject.Singleton;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.mailbox.spamassassin.SpamAssassinConfiguration;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
@@ -47,7 +47,7 @@ public class SpamAssassinListenerModule extends AbstractModule {
     @Singleton
     private SpamAssassinConfiguration getSpamAssassinConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            PropertiesConfiguration configuration = propertiesProvider.getConfiguration(SPAMASSASSIN_CONFIGURATION_NAME);
+            Configuration configuration = propertiesProvider.getConfiguration(SPAMASSASSIN_CONFIGURATION_NAME);
             return SpamAssassinConfigurationLoader.fromProperties(configuration);
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find " + SPAMASSASSIN_CONFIGURATION_NAME + " configuration file. Disabling this service.");

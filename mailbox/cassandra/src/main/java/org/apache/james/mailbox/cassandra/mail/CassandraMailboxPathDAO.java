@@ -19,23 +19,24 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
-
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.MailboxPath;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 public interface CassandraMailboxPathDAO {
 
-    CompletableFuture<Optional<CassandraIdAndPath>> retrieveId(MailboxPath mailboxPath);
+    Mono<CassandraIdAndPath> retrieveId(MailboxPath mailboxPath);
 
-    CompletableFuture<Stream<CassandraIdAndPath>> listUserMailboxes(String namespace, String user);
+    Flux<CassandraIdAndPath> listUserMailboxes(String namespace, String user);
 
-    Optional<CassandraIdAndPath> logGhostMailbox(MailboxPath mailboxPath, Optional<CassandraIdAndPath> value);
+    void logGhostMailboxSuccess(CassandraIdAndPath value);
 
-    CompletableFuture<Boolean> save(MailboxPath mailboxPath, CassandraId mailboxId);
+    void logGhostMailboxFailure(MailboxPath mailboxPath);
 
-    CompletableFuture<Void> delete(MailboxPath mailboxPath);
+    Mono<Boolean> save(MailboxPath mailboxPath, CassandraId mailboxId);
+
+    Mono<Void> delete(MailboxPath mailboxPath);
 
 }

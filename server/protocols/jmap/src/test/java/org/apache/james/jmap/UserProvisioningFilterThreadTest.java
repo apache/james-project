@@ -18,10 +18,11 @@
  ****************************************************************/
 package org.apache.james.jmap;
 
+import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
@@ -37,7 +38,7 @@ public class UserProvisioningFilterThreadTest {
     @Before
     public void before() {
         usersRepository = MemoryUsersRepository.withoutVirtualHosting();
-        session = new MockMailboxSession("username");
+        session = MailboxSessionUtil.create("username");
         sut = new UserProvisioningFilter(usersRepository, new NoopMetricFactory());
     }
 
@@ -45,10 +46,9 @@ public class UserProvisioningFilterThreadTest {
     public void testConcurrentAccessToFilterShouldNotThrow() throws ExecutionException, InterruptedException {
         ConcurrentTestRunner
             .builder()
+            .operation((threadNumber, step) -> sut.createAccountIfNeeded(session))
             .threadCount(2)
-            .build((threadNumber, step) -> sut.createAccountIfNeeded(session))
-            .run()
-            .assertNoException();
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
     }
 }
 

@@ -36,6 +36,7 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.User;
 import org.apache.james.jmap.exceptions.DraftMessageMailboxUpdateException;
 import org.apache.james.jmap.exceptions.InvalidOutboxMoveException;
 import org.apache.james.jmap.model.Keyword;
@@ -46,12 +47,12 @@ import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
 import org.apache.james.jmap.model.UpdateMessagePatch;
 import org.apache.james.jmap.utils.KeywordsCombiner;
-import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.Role;
+import org.apache.james.mailbox.SystemMailboxesProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.OverQuotaException;
@@ -180,7 +181,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             if (maybeMessageToSend.isPresent()) {
                 MessageResult messageToSend = maybeMessageToSend.get();
                 MailImpl mail = buildMailFromMessage(messageToSend);
-                assertUserIsSender(mailboxSession, mail.getSender());
+                assertUserIsSender(mailboxSession, mail.getMaybeSender().asOptional());
                 messageSender.sendMessage(messageId, mail, mailboxSession);
                 referenceUpdater.updateReferences(messageToSend.getHeaders(), mailboxSession);
             } else {
@@ -189,9 +190,12 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         }
     }
 
-    private void assertUserIsSender(MailboxSession session, MailAddress sender) throws MailboxSendingNotAllowedException {
-        if (!session.getUser().isSameUser(sender.asString())) {
-            String allowedSender = session.getUser().getUserName();
+    private void assertUserIsSender(MailboxSession session, Optional<MailAddress> sender) throws MailboxSendingNotAllowedException {
+        boolean userIsSender = sender.map(address -> session.getUser().equals(User.fromMailAddress(address)))
+            .orElse(false);
+
+        if (!userIsSender) {
+            String allowedSender = session.getUser().asString();
             throw new MailboxSendingNotAllowedException(allowedSender);
         }
     }
@@ -206,7 +210,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
 
         boolean isDraft = messagesToBeUpdated.stream()
             .map(MessageResult::getFlags)
-            .map(Keywords.factory().filterImapNonExposedKeywords()::fromFlags)
+            .map(Keywords.lenientFactory()::fromFlags)
             .reduce(new KeywordsCombiner())
             .orElse(Keywords.DEFAULT_VALUE)
             .contains(Keyword.DRAFT);
@@ -242,7 +246,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     }
 
     private List<MailboxId> mailboxIdFor(Role role, MailboxSession session) throws MailboxException {
-        return systemMailboxesProvider.getMailboxByRole(role, session)
+        return systemMailboxesProvider.getMailboxByRole(role, session.getUser())
             .map(MessageManager::getId)
             .collect(Guavate.toImmutableList());
     }
@@ -270,7 +274,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     }
 
     private Set<MailboxId> listMailboxIdsForRole(MailboxSession session, Role role) throws MailboxException {
-        return systemMailboxesProvider.getMailboxByRole(role, session)
+        return systemMailboxesProvider.getMailboxByRole(role, session.getUser())
             .map(MessageManager::getId)
             .collect(Guavate.toImmutableSet());
     }

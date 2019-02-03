@@ -41,7 +41,7 @@ import com.google.common.base.Objects;
 public class JPAMailboxAnnotation {
 
     public static final String MAILBOX_ID = "MAILBOX_ID";
-    public static final String KEY = "KEY";
+    public static final String ANNOTATION_KEY = "ANNOTATION_KEY";
     public static final String VALUE = "VALUE";
 
     @Id
@@ -49,7 +49,7 @@ public class JPAMailboxAnnotation {
     private long mailboxId;
 
     @Id
-    @Column(name = KEY, length = 200)
+    @Column(name = ANNOTATION_KEY, length = 200)
     private String key;
 
     @Basic()

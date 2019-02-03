@@ -20,8 +20,6 @@ package org.apache.james.transport.matchers;
 
 import java.util.Collection;
 
-import javax.mail.MessagingException;
-
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
@@ -32,8 +30,10 @@ import org.apache.mailet.base.GenericMatcher;
 public class SenderIsLocal extends GenericMatcher {
 
     @Override
-    public final Collection<MailAddress> match(Mail mail) throws MessagingException {
-        if (isLocal(mail.getSender())) {
+    public final Collection<MailAddress> match(Mail mail) {
+        if (mail.getMaybeSender().asOptional()
+                .map(this::isLocal)
+                .orElse(false)) {
             return mail.getRecipients();
         }
         return null;

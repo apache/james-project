@@ -75,7 +75,7 @@ public class CamelProcessor {
                      .addContext("mailet", mailet.getClass().getSimpleName())
                      .addContext("mail", mail.getName())
                      .addContext("recipients", ImmutableList.copyOf(mail.getRecipients()))
-                     .addContext("sender", mail.getSender())
+                     .addContext("sender", mail.getMaybeSender())
                      .build()) {
             MailetPipelineLogging.logBeginOfMailetProcess(mailet, mail);
             mailet.service(mail);

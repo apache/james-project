@@ -44,16 +44,16 @@ Step 0: Requirements
 Step 1: Download
 #################
 
-  * Download apache-james-3.1.0-app.zip from http://james.apache.org/download.cgi#Apache_James_Server
+  * Download apache-james-3.2.0-app.zip from http://james.apache.org/download.cgi#Apache_James_Server
 
 Step 2: Deploy
 ##############
 
-  * Unzip apache-james-3.1.0-app.zip.
+  * Unzip apache-james-3.2.0-app.zip.
   * You should have a folder with sub-folders bin, conf, lib, log, var and four text files.
 
-$ unzip apache-james-3.1.0-app.zip
-$ cd apache-james-3.1.0-app
+$ unzip apache-james-3.2.0-app.zip
+$ cd apache-james-3.2.0-app
 $ ls (linux) / dir (windows)
 bin
 BUILD.txt
@@ -69,7 +69,7 @@ Step 3: Understand James Features
 #################################
 
 Persistence
-- Mailbox is for users' Inbox, Sent Items, Trash... folders - Mailbox persistence is configured in spring-beans.xml (by default jpa, you set the database connection properties in database.properties - can also be maildir=file, jcr). We think to move this config out-of spring-beans.xml.
+- Mailbox is for users' Inbox, Sent Items, Trash... folders - Mailbox persistence is configured in spring-beans.xml (by default jpa, you set the database connection properties in database.properties - can also be maildir=file). We think to move this config out-of spring-beans.xml.
 - Mailrepositorystore is for spam, error,... mails, so nothing to do with users visible mails. Available mailstore persistence are defined in mailstore.xml. Each has an URL prefix (file, db, dbfile,...) that can be used in mailetcontainer.xml to define where to store spam,... mails (exemple: file://var/mail/error/).
 - Domain persistence is configured in domainlist.xml
 - Users persistence is configured in usersrepository.xml
@@ -93,7 +93,6 @@ domainlist.xml
 fetchmail.xml
 imapserver.xml
 james-listmanager.xml
-jcr-repository.xml
 jmx.properties
 lmtpserver.xml
 log4j.properties

@@ -111,6 +111,11 @@ public class ComposedMessageIdWithMetaDataTest {
         public String serialize() {
             return id;
         }
+
+        @Override
+        public boolean isSerializable() {
+            return true;
+        }
         
     }
 }

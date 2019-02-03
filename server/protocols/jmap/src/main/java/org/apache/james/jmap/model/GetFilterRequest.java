@@ -37,7 +37,10 @@ public class GetFilterRequest implements JmapRequest {
         }
 
         public Builder accountId(String accountId) {
-            throw new JmapFieldNotSupportedException(ISSUER, "accountId");
+            if (accountId != null) {
+                throw new JmapFieldNotSupportedException(ISSUER, "accountId");
+            }
+            return this;
         }
 
         public GetFilterRequest build() {

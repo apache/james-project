@@ -316,12 +316,7 @@ public class BayesianAnalysis extends GenericMailet {
             probabilityForm.applyPattern("##0.##%");
             String probabilityString = probabilityForm.format(probability);
 
-            String senderString;
-            if (mail.getSender() == null) {
-                senderString = "null";
-            } else {
-                senderString = mail.getSender().toString();
-            }
+            String senderString = mail.getMaybeSender().asString("null");
             if (probability > 0.1) {
                 final Collection<MailAddress> recipients = mail.getRecipients();
                 if (LOGGER.isDebugEnabled()) {
@@ -343,7 +338,10 @@ public class BayesianAnalysis extends GenericMailet {
     }
 
     private boolean isSenderLocal(Mail mail) {
-        return mail.getSender() != null && getMailetContext().isLocalServer(mail.getSender().getDomain());
+        return mail.getMaybeSender().asOptional()
+            .map(MailAddress::getDomain)
+            .map(domain -> getMailetContext().isLocalServer(domain))
+            .orElse(false);
     }
 
     void loadData(Connection conn) throws java.sql.SQLException {

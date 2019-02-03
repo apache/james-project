@@ -7,6 +7,8 @@ services:
       - elasticsearch
       - cassandra
       - tika
+      - rabbitmq
+      - swift
     entrypoint: bash -c "java -Dworking.directory=/root/ -jar james-server.jar"
     image: linagora/james-project:latest
     container_name: james
@@ -27,6 +29,16 @@ services:
     image: cassandra:3.11.3
     ports:
       - "9042:9042"
-
   tika:
-    image: linagora/docker-tikaserver:1.18-SNAPSHOT-plus-TIKA-2520
+    image: logicalspark/docker-tikaserver:1.20
+  rabbitmq:
+    image: rabbitmq:3.7.7-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+  swift:
+    image: linagora/openstack-keystone-swift:pike
+    ports:
+      - "5000:5000"
+      - "8080:8080"
+      - "35357:35357"

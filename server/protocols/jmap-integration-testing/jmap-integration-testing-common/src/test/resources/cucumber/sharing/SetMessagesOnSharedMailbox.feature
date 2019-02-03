@@ -28,6 +28,7 @@ Feature: SetMessages method on shared folders
     And "bob@domain.tld" has a message "mBob" in "shared" mailbox with two attachments in text
     And "alice@domain.tld" has a message "mAlice" in "INBOX" mailbox with two attachments in text
 
+  @BasicFeature
   Scenario: A delegated user can copy messages from shared mailbox when having "read" right
     Given "bob@domain.tld" shares his mailbox "shared" with "alice@domain.tld" with "lr" rights
     And "alice@domain.tld" copies "mBob" from mailbox "shared" of user "bob@domain.tld" to mailbox "INBOX" of user "alice@domain.tld"
@@ -35,12 +36,14 @@ Feature: SetMessages method on shared folders
         |alice@domain.tld |INBOX  |
         |bob@domain.tld   |shared |
 
+  @BasicFeature
   Scenario: A delegated user can move messages out of shared mailbox when having "read" and "delete" rights
     Given "bob@domain.tld" shares his mailbox "shared" with "alice@domain.tld" with "lrte" rights
     And "alice@domain.tld" moves "mBob" to mailbox "INBOX" of user "alice@domain.tld"
     Then "alice@domain.tld" should see message "mBob" in mailboxes:
         |alice@domain.tld |INBOX  |
 
+  @BasicFeature
   Scenario: A delegated user can add messages to a shared mailbox when having "insert" rights
     Given "bob@domain.tld" shares his mailbox "shared" with "alice@domain.tld" with "lri" rights
     And "alice@domain.tld" copies "mAlice" from mailbox "INBOX" of user "alice@domain.tld" to mailbox "shared" of user "bob@domain.tld"
@@ -75,7 +78,7 @@ Feature: SetMessages method on shared folders
     When "alice@domain.tld" moves "mBob" to mailbox "INBOX" of user "alice@domain.tld"
     Then message "mBob" is not updated
 
-
+  @BasicFeature
   Scenario: A delegated user add keywords on a delegated message when having "write" right
     Given "bob@domain.tld" shares his mailbox "shared" with "alice@domain.tld" with "lrw" rights
     When "alice@domain.tld" sets flags "$Flagged" on message "mBob"
@@ -86,6 +89,7 @@ Feature: SetMessages method on shared folders
     When "alice@domain.tld" sets flags "$Flagged" on message "mBob"
     Then message "mBob" is not updated
 
+  @BasicFeature
   Scenario: A delegated user remove keywords on a delegated message when having "write" right
     Given "bob@domain.tld" shares his mailbox "shared" with "alice@domain.tld" with "lrw" rights
     And "bob@domain.tld" sets flags "$Flagged" on message "mBob"

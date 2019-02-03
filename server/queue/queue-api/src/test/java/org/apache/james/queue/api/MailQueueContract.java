@@ -29,8 +29,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.Date;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -39,8 +41,10 @@ import java.util.concurrent.TimeoutException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.junit.ExecutorExtension;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.test.FakeMail;
@@ -56,16 +60,21 @@ public interface MailQueueContract {
 
     MailQueue getMailQueue();
 
+    default void enQueue(Mail mail) throws MailQueue.MailQueueException {
+        getMailQueue().enQueue(mail);
+    }
+
     @Test
     default void queueShouldSupportBigMail() throws Exception {
         String name = "name1";
         // 12 MB of text
         String messageText = Strings.repeat("0123456789\r\n", 1024 * 1024);
-        getMailQueue().enQueue(defaultMail()
+        FakeMail mail = defaultMail()
             .name(name)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setText(messageText))
-            .build());
+            .build();
+        enQueue(mail);
 
         MailQueue.MailQueueItem mailQueueItem = getMailQueue().deQueue();
         assertThat(mailQueueItem.getMail().getName())
@@ -74,7 +83,7 @@ public interface MailQueueContract {
 
     @Test
     default void queueShouldPreserveMailRecipients() throws Exception {
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .recipients(RECIPIENT1, RECIPIENT2)
             .build());
 
@@ -84,8 +93,8 @@ public interface MailQueueContract {
     }
 
     @Test
-    default void queueShouldPreserveNullSender() throws Exception {
-        getMailQueue().enQueue(FakeMail.builder()
+    default void queueShouldHandleSender() throws Exception {
+        enQueue(FakeMail.builder()
             .name("name")
             .mimeMessage(createMimeMessage())
             .recipients(RECIPIENT1, RECIPIENT2)
@@ -94,25 +103,39 @@ public interface MailQueueContract {
             .build());
 
         MailQueue.MailQueueItem mailQueueItem = getMailQueue().deQueue();
-        assertThat(mailQueueItem.getMail().getSender())
-            .isEqualTo(MailAddress.nullSender());
+        assertThat(mailQueueItem.getMail().getMaybeSender())
+            .isEqualTo(MaybeSender.nullSender());
+    }
+
+    @Test
+    default void queueShouldHandleNoSender() throws Exception {
+        enQueue(FakeMail.builder()
+            .name("name")
+            .mimeMessage(createMimeMessage())
+            .recipients(RECIPIENT1, RECIPIENT2)
+            .lastUpdated(new Date())
+            .build());
+
+        MailQueue.MailQueueItem mailQueueItem = getMailQueue().deQueue();
+        assertThat(mailQueueItem.getMail().getMaybeSender())
+            .isEqualTo(MaybeSender.nullSender());
     }
 
     @Test
     default void queueShouldPreserveMailSender() throws Exception {
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .sender(SENDER)
             .build());
 
         MailQueue.MailQueueItem mailQueueItem = getMailQueue().deQueue();
-        assertThat(mailQueueItem.getMail().getSender())
-            .isEqualTo(SENDER);
+        assertThat(mailQueueItem.getMail().getMaybeSender())
+            .isEqualTo(MaybeSender.of(SENDER));
     }
 
     @Test
     default void queueShouldPreserveMimeMessage() throws Exception {
         MimeMessage originalMimeMessage = createMimeMessage();
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .mimeMessage(originalMimeMessage)
             .build());
 
@@ -125,7 +148,7 @@ public interface MailQueueContract {
     default void queueShouldPreserveMailAttribute() throws Exception {
         String attributeName = "any";
         String attributeValue = "value";
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .attribute(attributeName, attributeValue)
             .build());
 
@@ -137,7 +160,7 @@ public interface MailQueueContract {
     @Test
     default void queueShouldPreserveErrorMessage() throws Exception {
         String errorMessage = "ErrorMessage";
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .errorMessage(errorMessage)
             .build());
 
@@ -149,7 +172,7 @@ public interface MailQueueContract {
     @Test
     default void queueShouldPreserveState() throws Exception {
         String state = "state";
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .state(state)
             .build());
 
@@ -161,7 +184,7 @@ public interface MailQueueContract {
     @Test
     default void queueShouldPreserveRemoteAddress() throws Exception {
         String remoteAddress = "remote";
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .remoteAddr(remoteAddress)
             .build());
 
@@ -173,7 +196,7 @@ public interface MailQueueContract {
     @Test
     default void queueShouldPreserveRemoteHost() throws Exception {
         String remoteHost = "remote";
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .remoteHost(remoteHost)
             .build());
 
@@ -185,7 +208,7 @@ public interface MailQueueContract {
     @Test
     default void queueShouldPreserveLastUpdated() throws Exception {
         Date lastUpdated = new Date();
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .lastUpdated(lastUpdated)
             .build());
 
@@ -197,7 +220,7 @@ public interface MailQueueContract {
     @Test
     default void queueShouldPreserveName() throws Exception {
         String expectedName = "name";
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name(expectedName)
             .build());
 
@@ -212,7 +235,7 @@ public interface MailQueueContract {
             .name("any")
             .value("any")
             .build();
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .addHeaderForRecipient(header, RECIPIENT1)
             .build());
 
@@ -226,7 +249,7 @@ public interface MailQueueContract {
     default void queueShouldPreserveNonStringMailAttribute() throws Exception {
         String attributeName = "any";
         SerializableAttribute attributeValue = new SerializableAttribute("value");
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
                 .attribute(attributeName, attributeValue)
                 .build());
 
@@ -239,11 +262,11 @@ public interface MailQueueContract {
     @Test
     default void dequeueShouldBeFifo() throws Exception {
         String firstExpectedName = "name1";
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name(firstExpectedName)
             .build());
         String secondExpectedName = "name2";
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name(secondExpectedName)
             .build());
 
@@ -257,10 +280,10 @@ public interface MailQueueContract {
 
     @Test
     default void dequeueCanBeChainedBeforeAck() throws Exception {
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
 
@@ -275,10 +298,10 @@ public interface MailQueueContract {
 
     @Test
     default void dequeueCouldBeInterleavingWithOutOfOrderAck() throws Exception {
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
 
@@ -292,10 +315,7 @@ public interface MailQueueContract {
 
     @Test
     default void dequeueShouldAllowRetrieveFailItems() throws Exception {
-        getMailQueue().enQueue(defaultMail()
-            .name("name1")
-            .build());
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
 
@@ -309,7 +329,7 @@ public interface MailQueueContract {
 
     @Test
     default void dequeueShouldNotReturnInProcessingEmails(ExecutorService executorService) throws Exception {
-        getMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name")
             .build());
 
@@ -321,7 +341,7 @@ public interface MailQueueContract {
     }
 
     @Test
-    default void deQueueShouldBlockWhenNoMail(ExecutorService executorService) throws Exception {
+    default void deQueueShouldBlockWhenNoMail(ExecutorService executorService) {
         Future<?> future = executorService.submit(Throwing.runnable(() -> getMailQueue().deQueue()));
 
         assertThatThrownBy(() -> future.get(2, TimeUnit.SECONDS))
@@ -330,19 +350,90 @@ public interface MailQueueContract {
 
     @Test
     default void deQueueShouldWaitForAMailToBeEnqueued(ExecutorService executorService) throws Exception {
+        MailQueue testee = getMailQueue();
+
         Mail mail = defaultMail()
             .name("name")
             .build();
-        Future<MailQueue.MailQueueItem> tryDequeue = executorService.submit(() -> getMailQueue().deQueue());
-        getMailQueue().enQueue(mail);
+        Future<MailQueue.MailQueueItem> tryDequeue = executorService.submit(testee::deQueue);
+        testee.enQueue(mail);
 
         assertThat(tryDequeue.get().getMail().getName()).isEqualTo("name");
+    }
+
+    @Test
+    default void concurrentEnqueueDequeueShouldNotFail() throws Exception {
+        MailQueue testee = getMailQueue();
+
+        ConcurrentLinkedDeque<Mail> dequeuedMails = new ConcurrentLinkedDeque<>();
+
+        int threadCount = 10;
+        int operationCount = 10;
+        int totalDequeuedMessages = 50;
+        ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> {
+                if (step % 2 == 0) {
+                    testee.enQueue(defaultMail()
+                        .name("name" + threadNumber + "-" + step)
+                        .build());
+                } else {
+                    MailQueue.MailQueueItem mailQueueItem = testee.deQueue();
+                    dequeuedMails.add(mailQueueItem.getMail());
+                    mailQueueItem.done(true);
+                }
+            })
+            .threadCount(threadCount)
+            .operationCount(operationCount)
+            .runSuccessfullyWithin(Duration.ofMinutes(5));
+
+        assertThat(
+            dequeuedMails.stream()
+                .map(Mail::getName)
+                .distinct())
+            .hasSize(totalDequeuedMessages);
+    }
+
+    @Test
+    default void concurrentEnqueueDequeueWithAckNackShouldNotFail() throws Exception {
+        MailQueue testee = getMailQueue();
+
+        ConcurrentLinkedDeque<Mail> dequeuedMails = new ConcurrentLinkedDeque<>();
+
+        int threadCount = 10;
+        int operationCount = 15;
+        int totalDequeuedMessages = 50;
+        ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> {
+                if (step % 3 == 0) {
+                    testee.enQueue(defaultMail()
+                        .name("name" + threadNumber + "-" + step)
+                        .build());
+                }
+                if (step % 3 == 1) {
+                    MailQueue.MailQueueItem mailQueueItem = testee.deQueue();
+                    mailQueueItem.done(false);
+                }
+                if (step % 3 == 2) {
+                    MailQueue.MailQueueItem mailQueueItem = testee.deQueue();
+                    dequeuedMails.add(mailQueueItem.getMail());
+                    mailQueueItem.done(true);
+                }
+            })
+            .threadCount(threadCount)
+            .operationCount(operationCount)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
+
+        assertThat(
+            dequeuedMails.stream()
+                .map(Mail::getName)
+                .distinct())
+            .hasSize(totalDequeuedMessages);
     }
 
     class SerializableAttribute implements Serializable {
         private final String value;
 
-        public SerializableAttribute(String value) {
+        SerializableAttribute(String value) {
             this.value = value;
         }
 

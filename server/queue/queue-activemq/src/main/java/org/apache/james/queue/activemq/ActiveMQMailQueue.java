@@ -39,6 +39,7 @@ import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.BlobMessage;
 import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.activemq.util.JMSExceptionSupport;
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
@@ -93,8 +94,9 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
      * Construct a {@link ActiveMQMailQueue} which only use {@link BlobMessage}
      * 
      */
-    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, MetricFactory metricFactory) {
-        this(connectionFactory, mailQueueItemDecoratorFactory, queuename, true, metricFactory);
+    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, MetricFactory metricFactory,
+                             GaugeRegistry gaugeRegistry) {
+        this(connectionFactory, mailQueueItemDecoratorFactory, queuename, true, metricFactory, gaugeRegistry);
     }
 
     /**
@@ -104,8 +106,9 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
      * @param queuename
      * @param useBlob
      */
-    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, boolean useBlob, MetricFactory metricFactory) {
-        super(connectionFactory, mailQueueItemDecoratorFactory, queuename, metricFactory);
+    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, boolean useBlob, MetricFactory metricFactory,
+                             GaugeRegistry gaugeRegistry) {
+        super(connectionFactory, mailQueueItemDecoratorFactory, queuename, metricFactory, gaugeRegistry);
         this.useBlob = useBlob;
     }
 

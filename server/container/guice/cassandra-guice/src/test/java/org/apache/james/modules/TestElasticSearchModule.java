@@ -21,6 +21,7 @@ package org.apache.james.modules;
 
 import javax.inject.Singleton;
 
+import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.mailbox.elasticsearch.MailboxIndexCreationUtil;
@@ -46,6 +47,6 @@ public class TestElasticSearchModule extends AbstractModule {
     @Singleton
     protected Client provideClientProvider() {
         Client client = new TestingClientProvider(embeddedElasticSearch.getNode()).get();
-        return MailboxIndexCreationUtil.prepareDefaultClient(client);
+        return MailboxIndexCreationUtil.prepareDefaultClient(client, ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
     }
 }

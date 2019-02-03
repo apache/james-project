@@ -27,6 +27,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -39,6 +40,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
@@ -58,6 +60,7 @@ public class MaildirFolder {
     public static final String VALIDITY_FILE = "james-uidvalidity";
     public static final String UIDLIST_FILE = "james-uidlist";
     public static final String ACL_FILE = "james-acl";
+    public static final String MAILBOX_ID_FILE = "james-mailboxId";
     public static final String CUR = "cur";
     public static final String NEW = "new";
     public static final String TMP = "tmp";
@@ -68,7 +71,8 @@ public class MaildirFolder {
     private final File tmpFolder;
     private final File uidFile;
     private final File aclFile;
-    
+    private final File mailboxIdFile;
+
     private Optional<MessageUid> lastUid;
     private int messageCount = 0;
     private long uidValidity = -1;
@@ -91,6 +95,7 @@ public class MaildirFolder {
         this.tmpFolder = new File(rootFolder, TMP);
         this.uidFile = new File(rootFolder, UIDLIST_FILE);
         this.aclFile = new File(rootFolder, ACL_FILE);
+        this.mailboxIdFile = new File(rootFolder, MAILBOX_ID_FILE);
         this.locker = locker;
         this.path = path;
         this.lastUid = Optional.empty();
@@ -162,6 +167,10 @@ public class MaildirFolder {
      */
     public File getCurFolder() {
         return curFolder;
+    }
+
+    public File getMailboxIdFile() {
+        return mailboxIdFile;
     }
     
     /**
@@ -292,6 +301,48 @@ public class MaildirFolder {
         }
         try (FileOutputStream fos = new FileOutputStream(validityFile)) {
             fos.write(String.valueOf(uidValidity).getBytes());
+        }
+    }
+
+    /**
+     * Sets the mailboxId for this mailbox and writes it to the file system
+     * @param mailboxId
+     * @throws IOException
+     */
+    public void setMailboxId(MaildirId mailboxId) throws IOException {
+        saveMailboxId(mailboxId);
+    }
+
+    /**
+     * Read the mailboxId of the given mailbox from the file system.
+     * If the respective file is not yet there, it gets created and
+     * filled with a brand new uidValidity.
+     * @return The uidValidity
+     * @throws IOException if there are problems with the validity file
+     */
+    public MaildirId readMailboxId() throws IOException {
+        if (!mailboxIdFile.exists()) {
+            MaildirId maildirId = MaildirId.random();
+            saveMailboxId(maildirId);
+            return maildirId;
+        }
+        try (FileInputStream fileInputStream = new FileInputStream(mailboxIdFile)) {
+            String serializedMaildirId = IOUtils.toString(fileInputStream, StandardCharsets.UTF_8);
+            return MaildirId.fromString(serializedMaildirId);
+        }
+    }
+
+    /**
+     * Save the given MaildirId to the file system
+     * @param id
+     * @throws IOException
+     */
+    private void saveMailboxId(MaildirId id) throws IOException {
+        if (!mailboxIdFile.createNewFile()) {
+            throw new IOException("Could not create file " + mailboxIdFile);
+        }
+        try (FileOutputStream fos = new FileOutputStream(mailboxIdFile)) {
+            fos.write(id.serialize().getBytes(StandardCharsets.UTF_8));
         }
     }
     

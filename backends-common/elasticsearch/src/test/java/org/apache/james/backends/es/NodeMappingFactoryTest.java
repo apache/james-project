@@ -46,7 +46,7 @@ public class NodeMappingFactoryTest {
     @Before
     public void setUp() throws Exception {
         clientProvider = new TestingClientProvider(embeddedElasticSearch.getNode());
-        new IndexCreationFactory()
+        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(clientProvider.get());

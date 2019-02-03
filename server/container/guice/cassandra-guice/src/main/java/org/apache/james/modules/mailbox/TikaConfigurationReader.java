@@ -21,13 +21,17 @@ package org.apache.james.modules.mailbox;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.Set;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.AbstractConfiguration;
+import org.apache.commons.configuration.Configuration;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.util.Size;
+import org.apache.james.util.StreamUtils;
 import org.apache.james.util.TimeConverter;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableSet;
 
 public class TikaConfigurationReader {
     public static final String TIKA_ENABLED = "tika.enabled";
@@ -37,8 +41,10 @@ public class TikaConfigurationReader {
     public static final String TIKA_TIMEOUT_IN_MS = "tika.timeoutInMillis";
     public static final String TIKA_CACHE_EVICTION_PERIOD = "tika.cache.eviction.period";
     public static final String TIKA_CACHE_WEIGHT_MAX = "tika.cache.weight.max";
+    public static final String TIKA_CONTENT_TYPE_BLACKLIST = "tika.contentType.blacklist";
 
-    public static TikaConfiguration readTikaConfiguration(PropertiesConfiguration configuration) {
+    public static TikaConfiguration readTikaConfiguration(Configuration configuration) {
+        AbstractConfiguration.setDefaultListDelimiter(',');
         Optional<Boolean> enabled = Optional.ofNullable(
             configuration.getBoolean(TIKA_ENABLED, null));
 
@@ -65,6 +71,11 @@ public class TikaConfigurationReader {
             .map(Throwing.function(Size::parse))
             .map(Size::asBytes);
 
+        Set<String> contentTypeBlacklist = StreamUtils
+            .ofNullable(configuration.getStringArray(TIKA_CONTENT_TYPE_BLACKLIST))
+            .map(String::trim)
+            .collect(ImmutableSet.toImmutableSet());
+
         return TikaConfiguration.builder()
             .enable(enabled)
             .host(host)
@@ -73,6 +84,7 @@ public class TikaConfigurationReader {
             .cacheEnable(cacheEnabled)
             .cacheEvictionPeriod(cacheEvictionPeriod)
             .cacheWeightInBytes(cacheWeight)
+            .contentTypeBlacklist(contentTypeBlacklist)
             .build();
     }
 }

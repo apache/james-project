@@ -26,7 +26,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-project</artifactId>
-        <version>3.2.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>james-server</artifactId>
@@ -58,14 +58,11 @@
         <module>data/data-api</module>
         <module>data/data-cassandra</module>
         <module>data/data-file</module>
-        <module>data/data-hbase</module>
-        <module>data/data-jcr</module>
         <module>data/data-jdbc</module>
         <module>data/data-jmap</module>
         <module>data/data-jmap-cassandra</module>
         <module>data/data-jpa</module>
         <module>data/data-ldap</module>
-        <module>data/data-ldap-integration-testing</module>
         <module>data/data-library</module>
         <module>data/data-memory</module>
 

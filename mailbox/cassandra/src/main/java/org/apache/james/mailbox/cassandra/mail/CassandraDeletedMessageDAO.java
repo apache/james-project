@@ -30,9 +30,6 @@ import static org.apache.james.mailbox.cassandra.table.CassandraDeletedMessageTa
 import static org.apache.james.mailbox.cassandra.table.CassandraDeletedMessageTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraDeletedMessageTable.UID;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -45,6 +42,8 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.google.common.annotations.VisibleForTesting;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class CassandraDeletedMessageDAO {
     private static final String UID_TO = "uid_to";
@@ -118,25 +117,25 @@ public class CassandraDeletedMessageDAO {
             .value(UID, bindMarker(UID)));
     }
 
-    public CompletableFuture<Void> addDeleted(CassandraId cassandraId, MessageUid uid) {
-        return cassandraAsyncExecutor.executeVoid(
+    public Mono<Void> addDeleted(CassandraId cassandraId, MessageUid uid) {
+        return cassandraAsyncExecutor.executeVoidReactor(
             addStatement.bind()
                 .setUUID(MAILBOX_ID, cassandraId.asUuid())
                 .setLong(UID, uid.asLong()));
     }
 
-    public CompletableFuture<Void> removeDeleted(CassandraId cassandraId, MessageUid uid) {
-        return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
+    public Mono<Void> removeDeleted(CassandraId cassandraId, MessageUid uid) {
+        return cassandraAsyncExecutor.executeVoidReactor(deleteStatement.bind()
             .setUUID(MAILBOX_ID, cassandraId.asUuid())
             .setLong(UID, uid.asLong()));
     }
 
-    public CompletableFuture<Stream<MessageUid>> retrieveDeletedMessage(CassandraId cassandraId, MessageRange range) {
+    public Flux<MessageUid> retrieveDeletedMessage(CassandraId cassandraId, MessageRange range) {
         return retrieveResultSetOfDeletedMessage(cassandraId, range)
-            .thenApply(this::resultSetToStream);
+            .flatMapMany(this::resultSetToFlux);
     }
 
-    private CompletableFuture<ResultSet> retrieveResultSetOfDeletedMessage(CassandraId cassandraId, MessageRange range) {
+    private Mono<ResultSet> retrieveResultSetOfDeletedMessage(CassandraId cassandraId, MessageRange range) {
         switch (range.getType()) {
             case ALL:
                 return retrieveAllDeleted(cassandraId);
@@ -151,35 +150,35 @@ public class CassandraDeletedMessageDAO {
         throw new UnsupportedOperationException();
     }
 
-    private Stream<MessageUid> resultSetToStream(ResultSet resultSet) {
-        return cassandraUtils.convertToStream(resultSet)
+    private Flux<MessageUid> resultSetToFlux(ResultSet resultSet) {
+        return cassandraUtils.convertToFlux(resultSet)
             .map(row ->
                 MessageUid.of(row.getLong(UID)));
     }
 
-    private CompletableFuture<ResultSet> retrieveAllDeleted(CassandraId cassandraId) {
-        return cassandraAsyncExecutor.execute(
+    private Mono<ResultSet> retrieveAllDeleted(CassandraId cassandraId) {
+        return cassandraAsyncExecutor.executeReactor(
             selectAllUidStatement.bind()
                 .setUUID(MAILBOX_ID, cassandraId.asUuid()));
     }
 
-    private CompletableFuture<ResultSet> retrieveOneDeleted(CassandraId cassandraId, MessageUid uid) {
-        return cassandraAsyncExecutor.execute(
+    private Mono<ResultSet> retrieveOneDeleted(CassandraId cassandraId, MessageUid uid) {
+        return cassandraAsyncExecutor.executeReactor(
             selectOneUidStatement.bind()
                 .setUUID(MAILBOX_ID, cassandraId.asUuid())
                 .setLong(UID, uid.asLong()));
     }
 
-    private CompletableFuture<ResultSet> retrieveDeletedBetween(CassandraId cassandraId, MessageUid from, MessageUid to) {
-        return cassandraAsyncExecutor.execute(
+    private Mono<ResultSet> retrieveDeletedBetween(CassandraId cassandraId, MessageUid from, MessageUid to) {
+        return cassandraAsyncExecutor.executeReactor(
             selectBetweenUidStatement.bind()
                 .setUUID(MAILBOX_ID, cassandraId.asUuid())
                 .setLong(UID_FROM, from.asLong())
                 .setLong(UID_TO, to.asLong()));
     }
 
-    private CompletableFuture<ResultSet> retrieveDeletedAfter(CassandraId cassandraId, MessageUid from) {
-        return cassandraAsyncExecutor.execute(
+    private Mono<ResultSet> retrieveDeletedAfter(CassandraId cassandraId, MessageUid from) {
+        return cassandraAsyncExecutor.executeReactor(
             selectFromUidStatement.bind()
                 .setUUID(MAILBOX_ID, cassandraId.asUuid())
                 .setLong(UID_FROM, from.asLong()));

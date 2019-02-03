@@ -1154,7 +1154,6 @@ The Apache Software Foundation (http://www.apache.org/).
                 <resource name='domainlist.xml'/>
                 <resource name='fetchmail.xml'/>
                 <resource name='imapserver.xml'/>
-                <resource name='jcr-repository.xml'/>
                 <resource name='jmx.properties'/>
                 <resource name='lmtpserver.xml'/>
                 <resource name='mailbox.xml'/>
@@ -1179,7 +1178,6 @@ The Apache Software Foundation (http://www.apache.org/).
     <within dir='WEB-INF/conf/context'>
         <with-license id='ApacheLicenseVersion2'>
             <by-organisation id='apache.org'>        
-                <resource name='james-mailbox-jcr-context.xml'/>
                 <resource name='james-mailbox-jpa-context.xml'/>
                 <resource name='james-mailbox-maildir-context.xml'/>
                 <resource name='james-mailbox-memory-context.xml'/>
@@ -1201,7 +1199,6 @@ The Apache Software Foundation (http://www.apache.org/).
         </public-domain>
         <with-license id='DaySpecLicensePlusAddendum'>
             <by-organisation id='day.com'>
-                <resource name='jcr-2.0.jar'/>
             </by-organisation>
         </with-license>
         <with-license id='CDDL'>
@@ -1241,7 +1238,6 @@ All rights reserved.
                 <resource name='apache-james-imap-message-0.2.1.jar'/>
                 <resource name='apache-james-imap-processor-0.2.1.jar'/>
                 <resource name='apache-james-mailbox-api-0.3.jar'/>
-                <resource name='apache-james-mailbox-jcr-0.3.jar'/>
                 <resource name='apache-james-mailbox-jpa-0.3.jar'/>
                 <resource name='apache-james-mailbox-maildir-0.3.jar'/>
                 <resource name='apache-james-mailbox-memory-0.3.jar'/>
@@ -1279,7 +1275,6 @@ All rights reserved.
                 <resource name='geronimo-stax-api_1.0_spec-1.0.1.jar'/>
                 <resource name='jackrabbit-api-2.2.5.jar'/>
                 <resource name='jackrabbit-core-2.2.5.jar'/>
-                <resource name='jackrabbit-jcr-commons-2.2.5.jar'/>
                 <resource name='jackrabbit-spi-2.2.5.jar'/>
                 <resource name='jackrabbit-spi-commons-2.2.5.jar'/>
                 <resource name='james-server-cli-3.0-beta3.jar'/>
@@ -1294,7 +1289,6 @@ All rights reserved.
                 <resource name='james-server-file-3.0-beta3.jar'/>
                 <resource name='james-server-filesystem-api-3.0-beta3.jar'/>
                 <resource name='james-server-imapserver-3.0-beta3.jar'/>
-                <resource name='james-server-jcr-3.0-beta3.jar'/>
                 <resource name='james-server-jdbc-3.0-beta3.jar'/>
                 <resource name='james-server-jpa-3.0-beta3.jar'/>
                 <resource name='james-server-ldap-3.0-beta3.jar'/>

@@ -32,6 +32,7 @@ import static org.apache.james.jmap.TestingConstants.DOMAIN;
 import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
+import static org.awaitility.Duration.ONE_MINUTE;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -48,6 +49,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.jmap.MessageAppender;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -63,6 +65,7 @@ import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.google.common.collect.Iterables;
 
@@ -278,6 +281,7 @@ public abstract class SendMDNMethodTest {
                     "Explanation: Disposition-Notification-To header is missing")));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void sendMDNShouldSendAMDNBackToTheOriginalMessageAuthor() {
         String bartSentJmapMessageId = bartSendMessageToHomer();
@@ -304,7 +308,7 @@ public abstract class SendMDNMethodTest {
             .post("/jmap");
 
         // BART should have received it
-        calmlyAwait.until(() -> !listMessageIdsInMailbox(bartAccessToken, getInboxId(bartAccessToken)).isEmpty());
+        calmlyAwait.atMost(ONE_MINUTE).until(() -> !listMessageIdsInMailbox(bartAccessToken, getInboxId(bartAccessToken)).isEmpty());
         String bartInboxMessageIds = Iterables.getOnlyElement(listMessageIdsInMailbox(bartAccessToken, getInboxId(bartAccessToken)));
 
         String firstMessage = ARGUMENTS + ".list[0]";

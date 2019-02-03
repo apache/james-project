@@ -20,58 +20,47 @@
 package org.apache.james.mailrepository.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraExtension;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
+import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.mailrepository.MailRepositoryContract;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(DockerCassandraExtension.class)
 class CassandraMailRepositoryTest implements MailRepositoryContract {
     static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
     static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
-    CassandraMailRepository cassandraMailRepository;
-    static CassandraCluster cassandra;
-
-    @BeforeAll
-    static void setUpClass(DockerCassandraExtension.DockerCassandra dockerCassandra) {
-        CassandraModule modules = CassandraModule.aggregateModules(
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
+        CassandraModule.aggregateModules(
+            CassandraSchemaVersionModule.MODULE,
             CassandraMailRepositoryModule.MODULE,
-            CassandraBlobModule.MODULE);
-        cassandra = CassandraCluster.create(modules, dockerCassandra.getHost());
-    }
+            CassandraBlobModule.MODULE));
+
+    CassandraMailRepository cassandraMailRepository;
+
 
     @BeforeEach
-    void setup() {
-        CassandraMailRepositoryMailDAO mailDAO = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
+    void setup(CassandraCluster cassandra) {
+        CassandraMailRepositoryMailDAO v1 = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
+        CassandraMailRepositoryMailDaoV2 v2 = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
+        CassandraMailRepositoryMailDaoAPI mailDAO = new MergingCassandraMailRepositoryMailDao(v1, v2);
         CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
 
         cassandraMailRepository = new CassandraMailRepository(URL,
-            keysDAO, countDAO, mailDAO, blobsDAO);
-    }
-
-    @AfterEach
-    void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterAll
-    static void tearDownClass() {
-        cassandra.closeCluster();
+            keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobsDAO).mimeMessageStore());
     }
 
     @Override
@@ -82,7 +71,7 @@ class CassandraMailRepositoryTest implements MailRepositoryContract {
     @Test
     @Disabled("key is unique in Cassandra")
     @Override
-    public void sizeShouldBeIncrementedByOneWhenDuplicates() throws Exception {
+    public void sizeShouldBeIncrementedByOneWhenDuplicates() {
     }
 
 }

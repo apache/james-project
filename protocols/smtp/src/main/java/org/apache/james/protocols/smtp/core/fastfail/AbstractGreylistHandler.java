@@ -22,6 +22,7 @@ package org.apache.james.protocols.smtp.core.fastfail;
 import java.util.Iterator;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
@@ -76,15 +77,12 @@ public abstract class AbstractGreylistHandler implements RcptHook {
     }
 
 
-    private HookResult doGreyListCheck(SMTPSession session, MailAddress senderAddress, MailAddress recipAddress) {
+    private HookResult doGreyListCheck(SMTPSession session, MaybeSender senderAddress, MailAddress recipAddress) {
         String recip = "";
-        String sender = "";
+        String sender = senderAddress.asString("");
 
         if (recipAddress != null) {
             recip = recipAddress.toString();
-        }
-        if (senderAddress != null) {
-            sender = senderAddress.toString();
         }
     
         long time = System.currentTimeMillis();
@@ -219,7 +217,7 @@ public abstract class AbstractGreylistHandler implements RcptHook {
   
 
     @Override
-    public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
         if (!session.isRelayingAllowed()) {
             return doGreyListCheck(session, sender,rcpt);
         } else {

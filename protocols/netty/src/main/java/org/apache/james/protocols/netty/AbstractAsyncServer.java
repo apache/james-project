@@ -23,8 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import org.apache.james.protocols.api.ProtocolServer;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelPipelineFactory;
@@ -203,7 +205,8 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
      * @return bossExecutor
      */
     protected Executor createBossExecutor() {
-        return Executors.newCachedThreadPool();
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        return Executors.newCachedThreadPool(threadFactory);
     }
 
     /**
@@ -212,7 +215,8 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
      * @return workerExecutor
      */
     protected Executor createWorkerExecutor() {
-        return Executors.newCachedThreadPool();
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        return Executors.newCachedThreadPool(threadFactory);
     }
     
 

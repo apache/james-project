@@ -26,5 +26,10 @@
                 <protocol>memory</protocol>
             </protocols>
         </mailrepository>
+        <mailrepository class="org.apache.james.mailrepository.memory.MemoryMailRepository">
+            <protocols>
+                <protocol>other</protocol>
+            </protocols>
+        </mailrepository>
     </mailrepositories>
 </mailrepositorystore>
