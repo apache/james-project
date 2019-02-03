@@ -16,51 +16,54 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.transport.matchers;
 
-package org.apache.james.transport.mailets;
-
-import java.util.Optional;
-
+import java.util.Collection;
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.MailPrioritySupport;
-import org.apache.mailet.Attribute;
-import org.apache.mailet.AttributeValue;
+import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
-import org.apache.mailet.base.GenericMailet;
+import org.apache.mailet.base.GenericMatcher;
+import org.apache.mailet.base.MailetUtil;
 
-/**
- * This mailet sets the priority of the incoming mail.
- *
- * Example configuration:
- *
- * <mailet match="All" class="WithPriority">
- *     <priority>7</priority>
- * </mailet>
- */
-public class WithPriority extends GenericMailet {
+import com.google.common.collect.ImmutableList;
 
-    private Attribute priority;
 
-    @Override
-    public String getMailetInfo() {
-        return "With Priority Mailet";
+public abstract class AbstractPriorityMatcher extends GenericMatcher {
+    private final String priorityMatcherName;
+    private Integer priority;
+
+    public AbstractPriorityMatcher(String priorityMatcherName) {
+        this.priorityMatcherName = priorityMatcherName;
     }
 
     @Override
     public void init() throws MessagingException {
-        Integer priorityRaw = Optional.ofNullable(getInitParameter("priority", null))
-                .map(Integer::valueOf)
-                .orElseThrow(() -> new IllegalArgumentException("'priority' init parameter is compulsory"));
-
-        if (priorityRaw < 0 || priorityRaw > 9) {
-            throw new IllegalArgumentException("Invalid priority: Priority should be from 0 to 9");
-            }
-            priority = new Attribute(MailPrioritySupport.MAIL_PRIORITY, AttributeValue.of(priorityRaw));
-        }
-
-        @Override
-        public void service(Mail mail) throws MessagingException {
-            mail.setAttribute(priority);
-        }
+        Integer priority = MailetUtil.getInitParameterAsStrictlyPositiveInteger(getCondition());
+        this.setPriority(priority);
     }
+
+    @Override
+    public Collection<MailAddress> match(Mail mail) throws MessagingException {
+        return AttributeUtils.getValueAndCastFromMail(mail, MailPrioritySupport.MAIL_PRIORITY, Integer.class)
+                .filter(this::priorityMatch)
+                .map(any -> mail.getRecipients())
+                .orElse(ImmutableList.of());
+    }
+
+    public abstract boolean priorityMatch(Integer mailPriorityValue);
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
+    public String getPriorityMatcherName() {
+        return priorityMatcherName;
+    }
+}
