@@ -133,7 +133,13 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
     private void turnSSLon(Channel channel) {
         if (sslContext != null) {
             channel.setReadable(false);
-            SslHandler filter = new SslHandler(sslContext.createSSLEngine(), false);
+            SslHandler filter;
+            if (channel.isConnected()){
+                InetSocketAddress remoteAddress = (InetSocketAddress) channel.getRemoteAddress();
+                filter = new SslHandler(sslContext.createSSLEngine(remoteAddress.getAddress().getHostAddress(), remoteAddress.getPort()), false);
+            } else {
+                filter = new SslHandler(sslContext.createSSLEngine(), false);
+            }
             filter.getEngine().setUseClientMode(false);
             if (enabledCipherSuites != null && enabledCipherSuites.length > 0) {
                 filter.getEngine().setEnabledCipherSuites(enabledCipherSuites);

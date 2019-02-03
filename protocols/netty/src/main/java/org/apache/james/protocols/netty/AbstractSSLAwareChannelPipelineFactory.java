@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
+import java.net.InetSocketAddress;
+
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
@@ -28,13 +30,13 @@ import org.jboss.netty.handler.ssl.SslHandler;
 import org.jboss.netty.util.HashedWheelTimer;
 
 /**
- * Abstract base class for {@link ChannelPipeline} implementations which use TLS 
- * 
+ * Abstract base class for {@link ChannelPipeline} implementations which use TLS
+ *
  *
  */
 public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractChannelPipelineFactory {
 
-    
+
     private String[] enabledCipherSuites = null;
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
@@ -47,7 +49,7 @@ public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractCha
             int maxConnections, int maxConnectsPerIp, ChannelGroup group, String[] enabledCipherSuites, ExecutionHandler eHandler,
             ChannelHandlerFactory frameHandlerFactory, HashedWheelTimer hashedWheelTimer) {
         this(timeout, maxConnections, maxConnectsPerIp, group, eHandler, frameHandlerFactory, hashedWheelTimer);
-        
+
         // We need to copy the String array becuase of possible security issues.
         // See https://issues.apache.org/jira/browse/PROTOCOLS-18
         if (enabledCipherSuites != null) {
@@ -58,7 +60,7 @@ public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractCha
         }
     }
 
-    
+
     @Override
     public ChannelPipeline getPipeline() throws Exception {
         ChannelPipeline pipeline =  super.getPipeline();
@@ -66,7 +68,13 @@ public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractCha
         if (isSSLSocket()) {
             // We need to set clientMode to false.
             // See https://issues.apache.org/jira/browse/JAMES-1025
-            SSLEngine engine = getSSLContext().createSSLEngine();
+            SSLEngine engine;
+            if (pipeline.getChannel().isConnected()){
+                InetSocketAddress remoteAddress = (InetSocketAddress) pipeline.getChannel().getRemoteAddress();
+                engine = getSSLContext().createSSLEngine(remoteAddress.getAddress().getHostAddress(), remoteAddress.getPort());
+            } else {
+                engine = getSSLContext().createSSLEngine();
+            }
             engine.setUseClientMode(false);
             if (enabledCipherSuites != null && enabledCipherSuites.length > 0) {
                 engine.setEnabledCipherSuites(enabledCipherSuites);
@@ -78,14 +86,14 @@ public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractCha
 
     /**
      * Return if the socket is using SSL/TLS
-     * 
+     *
      * @return isSSL
      */
     protected abstract boolean isSSLSocket();
-    
+
     /**
      * Return the SSL context
-     * 
+     *
      * @return context
      */
     protected abstract SSLContext getSSLContext();

@@ -21,6 +21,8 @@ package org.apache.james.managesieveserver.netty;
 
 import static org.jboss.netty.channel.Channels.pipeline;
 
+import java.net.InetSocketAddress;
+
 import javax.net.ssl.SSLEngine;
 
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
@@ -104,7 +106,13 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
                 if (secure != null && !secure.isStartTLS()) {
                     // We need to set clientMode to false.
                     // See https://issues.apache.org/jira/browse/JAMES-1025
-                    SSLEngine engine = secure.getContext().createSSLEngine();
+                    SSLEngine engine;
+                    if (pipeline.getChannel().isConnected()){
+                        InetSocketAddress remoteAddress = (InetSocketAddress) pipeline.getChannel().getRemoteAddress();
+                        engine = secure.getContext().createSSLEngine(remoteAddress.getAddress().getHostAddress(), remoteAddress.getPort());
+                    } else {
+                        engine = secure.getContext().createSSLEngine();
+                    }
                     engine.setUseClientMode(false);
                     pipeline.addFirst(SSL_HANDLER, new SslHandler(engine));
 
