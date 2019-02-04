@@ -34,7 +34,6 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.eventsourcing.AggregateId;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.History;
@@ -45,18 +44,17 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.fasterxml.jackson.core.JsonProcessingException;
+
 import reactor.core.publisher.Mono;
 
 public class EventStoreDao {
-    private final CassandraUtils cassandraUtils;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insert;
     private final PreparedStatement select;
     private final JsonEventSerializer jsonEventSerializer;
 
     @Inject
-    public EventStoreDao(Session session, CassandraUtils cassandraUtils, JsonEventSerializer jsonEventSerializer) {
-        this.cassandraUtils = cassandraUtils;
+    public EventStoreDao(Session session, JsonEventSerializer jsonEventSerializer) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.jsonEventSerializer = jsonEventSerializer;
         this.insert = prepareInsert(session);

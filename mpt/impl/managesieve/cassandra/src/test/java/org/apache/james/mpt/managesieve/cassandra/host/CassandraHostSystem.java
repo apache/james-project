@@ -21,7 +21,6 @@ package org.apache.james.mpt.managesieve.cassandra.host;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mpt.host.JamesManageSieveHostSystem;
 import org.apache.james.sieve.cassandra.CassandraActiveScriptDAO;
 import org.apache.james.sieve.cassandra.CassandraSieveDAO;
@@ -61,7 +60,7 @@ public class CassandraHostSystem extends JamesManageSieveHostSystem {
 
     @Override
     protected UsersRepository createUsersRepository() {
-        CassandraUsersRepository cassandraUsersRepository = new CassandraUsersRepository(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        CassandraUsersRepository cassandraUsersRepository = new CassandraUsersRepository(cassandra.getConf());
         cassandraUsersRepository.setEnableVirtualHosting(false);
         return cassandraUsersRepository;
     }

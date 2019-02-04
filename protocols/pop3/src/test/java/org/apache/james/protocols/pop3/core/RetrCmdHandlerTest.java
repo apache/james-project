@@ -23,14 +23,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
+import java.util.stream.Collectors;
+
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import java.util.Collections;
-import java.util.stream.Collectors;
 
 class RetrCmdHandlerTest {
 

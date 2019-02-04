@@ -20,7 +20,6 @@ package org.apache.james.rrt.file;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.rrt.api.RecipientRewriteTableException;

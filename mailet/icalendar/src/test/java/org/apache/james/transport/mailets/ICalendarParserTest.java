@@ -56,6 +56,7 @@ public class ICalendarParserTest {
         "END:VCALENDAR";
 
     private static final String WRONG_ICAL_VALUE = "anyValue";
+    @SuppressWarnings("unchecked")
     public static final Class<Map<String, Calendar>> MAP_STRING_CALENDAR_CLASS = (Class<Map<String, Calendar>>) (Object) Map.class;
 
     @Rule
@@ -156,7 +157,7 @@ public class ICalendarParserTest {
 
         assertThat(mail.getAttribute(DESTINATION_CUSTOM_ATTRIBUTE_NAME))
             .isPresent()
-            .hasValueSatisfying(attribute -> assertThat((Map) attribute.getValue().value()).isEmpty());
+            .hasValueSatisfying(attribute -> assertThat((Map<?, ?>) attribute.getValue().value()).isEmpty());
     }
 
     @Test
@@ -206,7 +207,6 @@ public class ICalendarParserTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void serviceShouldFilterResultWhenErrorParsing() throws Exception {
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("ICalendarParser")
@@ -240,7 +240,6 @@ public class ICalendarParserTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void parsingShouldBeLenient() throws Exception {
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("ICalendarParser")

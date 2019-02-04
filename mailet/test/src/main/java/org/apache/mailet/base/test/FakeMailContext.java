@@ -412,7 +412,7 @@ public class FakeMailContext implements MailetContext {
 
     @Override
     public Object getAttribute(String name) {
-        return attributes.get(name);
+        return attributes.get(AttributeName.of(name));
     }
 
     @Override

@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.memory;
 
-import java.io.IOException;
 import java.util.Random;
 
 import org.apache.activemq.store.PersistenceAdapter;
@@ -28,7 +27,6 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.JamesServerExtensionBuilder;
 import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.jmap.methods.integration.SendMDNMethodTest;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -37,7 +35,6 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.junit.Rule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class MemorySendMDNMethodTest extends SendMDNMethodTest {

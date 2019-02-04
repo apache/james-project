@@ -126,6 +126,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
             });
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void deletesShouldCallEventDispatcher() throws Exception {
         givenUnlimitedQuota();

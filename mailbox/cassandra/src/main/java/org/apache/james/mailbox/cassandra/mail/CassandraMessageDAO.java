@@ -56,7 +56,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -91,6 +90,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Bytes;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -104,7 +104,6 @@ public class CassandraMessageDAO {
     private final BlobStore blobStore;
     private final BlobId.Factory blobIdFactory;
     private final CassandraConfiguration configuration;
-    private final CassandraUtils cassandraUtils;
     private final CassandraMessageId.Factory messageIdFactory;
     private final PreparedStatement insert;
     private final PreparedStatement delete;
@@ -117,14 +116,13 @@ public class CassandraMessageDAO {
 
     @Inject
     public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, BlobStore blobStore,
-                               BlobId.Factory blobIdFactory, CassandraConfiguration cassandraConfiguration,
-            CassandraUtils cassandraUtils, CassandraMessageId.Factory messageIdFactory) {
+            BlobId.Factory blobIdFactory, CassandraConfiguration cassandraConfiguration,
+            CassandraMessageId.Factory messageIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.typesProvider = typesProvider;
         this.blobStore = blobStore;
         this.blobIdFactory = blobIdFactory;
         this.configuration = cassandraConfiguration;
-        this.cassandraUtils = cassandraUtils;
         this.messageIdFactory = messageIdFactory;
 
         this.insert = prepareInsert(session);
@@ -139,8 +137,8 @@ public class CassandraMessageDAO {
 
     @VisibleForTesting
     public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, BlobStore blobStore,
-                               BlobId.Factory blobIdFactory, CassandraUtils cassandraUtils, CassandraMessageId.Factory messageIdFactory) {
-        this(session, typesProvider, blobStore,  blobIdFactory, CassandraConfiguration.DEFAULT_CONFIGURATION, cassandraUtils, messageIdFactory);
+                               BlobId.Factory blobIdFactory, CassandraMessageId.Factory messageIdFactory) {
+        this(session, typesProvider, blobStore,  blobIdFactory, CassandraConfiguration.DEFAULT_CONFIGURATION, messageIdFactory);
     }
 
     private PreparedStatement prepareSelect(Session session, String[] fields) {

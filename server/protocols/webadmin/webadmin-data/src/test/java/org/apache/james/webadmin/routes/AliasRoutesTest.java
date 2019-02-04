@@ -19,9 +19,22 @@
 
 package org.apache.james.webadmin.routes;
 
-import io.restassured.RestAssured;
-import io.restassured.filter.log.LogDetail;
-import io.restassured.http.ContentType;
+import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.when;
+import static io.restassured.RestAssured.with;
+import static org.apache.james.webadmin.Constants.SEPARATOR;
+import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.CoreMatchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
@@ -46,21 +59,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.util.List;
-import java.util.Map;
-
-import static io.restassured.RestAssured.given;
-import static io.restassured.RestAssured.when;
-import static io.restassured.RestAssured.with;
-import static org.apache.james.webadmin.Constants.SEPARATOR;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.CoreMatchers.is;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
+import io.restassured.RestAssured;
+import io.restassured.filter.log.LogDetail;
+import io.restassured.http.ContentType;
 
 class AliasRoutesTest {
 

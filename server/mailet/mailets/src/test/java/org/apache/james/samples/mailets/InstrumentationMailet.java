@@ -21,7 +21,6 @@ package org.apache.james.samples.mailets;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.Iterator;
 
 import javax.mail.Address;
 import javax.mail.Flags;

@@ -51,6 +51,7 @@ import net.fortuna.ical4j.model.Calendar;
 
 public class ICALToJsonAttributeTest {
     private static final MailAddress SENDER = MailAddressFixture.ANY_AT_JAMES;
+    @SuppressWarnings("unchecked")
     private static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
 
     @Rule
@@ -213,6 +214,7 @@ public class ICALToJsonAttributeTest {
             .isEmpty();
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void serviceShouldAttachEmptyListWhenNoRecipient() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
@@ -233,7 +235,6 @@ public class ICALToJsonAttributeTest {
             .hasValueSatisfying(map -> assertThat(map).isEmpty());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void serviceShouldAttachJson() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
@@ -273,7 +274,6 @@ public class ICALToJsonAttributeTest {
         return new String(BufferRecyclers.getJsonStringEncoder().quoteAsUTF8(new String(ics, StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void serviceShouldAttachJsonForSeveralRecipient() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
@@ -319,7 +319,6 @@ public class ICALToJsonAttributeTest {
                 });
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void serviceShouldAttachJsonForSeveralICALs() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
@@ -368,7 +367,6 @@ public class ICALToJsonAttributeTest {
                     });
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void serviceShouldFilterInvalidICS() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
@@ -407,7 +405,6 @@ public class ICALToJsonAttributeTest {
                 });
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void serviceShouldFilterNonExistingKeys() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
@@ -446,7 +443,6 @@ public class ICALToJsonAttributeTest {
                 });
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void serviceShouldUseFromWhenSpecified() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
@@ -485,7 +481,6 @@ public class ICALToJsonAttributeTest {
                 });
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void serviceShouldSupportMimeMessagesWithoutFromFields() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
@@ -522,7 +517,6 @@ public class ICALToJsonAttributeTest {
                 });
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void serviceShouldUseFromWhenSpecifiedAndNoSender() throws Exception {
         testee.init(FakeMailetConfig.builder().build());

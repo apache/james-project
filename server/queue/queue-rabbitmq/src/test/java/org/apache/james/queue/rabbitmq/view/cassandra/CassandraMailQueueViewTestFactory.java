@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
@@ -48,7 +47,7 @@ public class CassandraMailQueueViewTestFactory {
                                                          MimeMessageStore.Factory mimeMessageStoreFactory) {
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
 
-        EnqueuedMailsDAO enqueuedMailsDao = new EnqueuedMailsDAO(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION, typesProvider, blobIdFactory);
+        EnqueuedMailsDAO enqueuedMailsDao = new EnqueuedMailsDAO(session, typesProvider, blobIdFactory);
         BrowseStartDAO browseStartDao = new BrowseStartDAO(session);
         DeletedMailsDAO deletedMailsDao = new DeletedMailsDAO(session);
 
@@ -57,7 +56,7 @@ public class CassandraMailQueueViewTestFactory {
         CassandraMailQueueMailDelete cassandraMailQueueMailDelete = new CassandraMailQueueMailDelete(deletedMailsDao, browseStartDao, cassandraMailQueueBrowser, configuration, random);
 
 
-        EventsourcingConfigurationManagement eventsourcingConfigurationManagement = new EventsourcingConfigurationManagement(new CassandraEventStore(new EventStoreDao(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION,
+        EventsourcingConfigurationManagement eventsourcingConfigurationManagement = new EventsourcingConfigurationManagement(new CassandraEventStore(new EventStoreDao(session,
             new JsonEventSerializer(ImmutableSet.of(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION)))));
 
         return new CassandraMailQueueView.Factory(

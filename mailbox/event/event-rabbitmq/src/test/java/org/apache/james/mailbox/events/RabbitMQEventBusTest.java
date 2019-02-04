@@ -28,9 +28,7 @@ import static org.apache.james.backend.rabbitmq.Constants.NO_ARGUMENTS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.ALL_GROUPS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT;
 import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_A;
-import static org.apache.james.mailbox.events.EventBusTestFixture.GroupA;
 import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_1;
-import static org.apache.james.mailbox.events.EventBusTestFixture.MailboxListenerCountingSuccessfulExecution;
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.THIRTY_SECONDS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.WAIT_CONDITION;
@@ -51,13 +49,14 @@ import static org.mockito.Mockito.when;
 
 import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.backend.rabbitmq.RabbitMQConnectionFactory;
 import org.apache.james.backend.rabbitmq.RabbitMQExtension;
 import org.apache.james.backend.rabbitmq.RabbitMQManagementAPI;
 import org.apache.james.event.json.EventSerializer;
+import org.apache.james.mailbox.events.EventBusTestFixture.GroupA;
+import org.apache.james.mailbox.events.EventBusTestFixture.MailboxListenerCountingSuccessfulExecution;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.metrics.api.NoopMetricFactory;
@@ -71,6 +70,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.stubbing.Answer;
 
 import com.rabbitmq.client.Connection;
+
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
@@ -195,7 +195,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             MailboxListenerCountingSuccessfulExecution eventBusListener = spy(new EventBusTestFixture.MailboxListenerCountingSuccessfulExecution());
             MailboxListenerCountingSuccessfulExecution eventBus2Listener = spy(new EventBusTestFixture.MailboxListenerCountingSuccessfulExecution());
             MailboxListenerCountingSuccessfulExecution eventBus3Listener = spy(new EventBusTestFixture.MailboxListenerCountingSuccessfulExecution());
-            Answer callEventAndSleepForever = invocation -> {
+            Answer<?> callEventAndSleepForever = invocation -> {
                 invocation.callRealMethod();
                 TimeUnit.SECONDS.sleep(Long.MAX_VALUE);
                 return null;
@@ -278,8 +278,6 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
     @Nested
     class LifeCycleTest {
-        private final Duration TEN_SECONDS = Duration.ofSeconds(10);
-
         private static final int THREAD_COUNT = 10;
         private static final int OPERATION_COUNT = 100000;
         private static final int MAX_EVENT_DISPATCHED_COUNT = THREAD_COUNT * OPERATION_COUNT;

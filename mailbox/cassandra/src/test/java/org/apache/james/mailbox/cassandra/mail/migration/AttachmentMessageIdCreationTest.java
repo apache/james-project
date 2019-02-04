@@ -36,7 +36,6 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.migration.Migration;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
@@ -60,6 +59,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+
 import reactor.core.publisher.Flux;
 
 class AttachmentMessageIdCreationTest {
@@ -88,7 +88,7 @@ class AttachmentMessageIdCreationTest {
 
         blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
         cassandraMessageDAO = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(),
-            blobsDAO, new HashBlobId.Factory(), CassandraUtils.WITH_DEFAULT_CONFIGURATION, messageIdFactory);
+            blobsDAO, new HashBlobId.Factory(), messageIdFactory);
 
         attachmentMessageIdDAO = new CassandraAttachmentMessageIdDAO(cassandra.getConf(),
             new CassandraMessageId.Factory());

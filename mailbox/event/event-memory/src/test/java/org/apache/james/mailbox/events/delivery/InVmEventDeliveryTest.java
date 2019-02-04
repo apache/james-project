@@ -27,7 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -46,11 +45,9 @@ import org.junit.jupiter.api.Test;
 class InVmEventDeliveryTest {
     private InVmEventDelivery inVmEventDelivery;
     private MailboxListenerCountingSuccessfulExecution listener;
-    private MailboxListener.MailboxEvent event;
 
     @BeforeEach
     void setUp() {
-        event = mock(MailboxListener.MailboxEvent.class);
         listener = newListener();
         inVmEventDelivery = new InVmEventDelivery(new NoopMetricFactory());
     }

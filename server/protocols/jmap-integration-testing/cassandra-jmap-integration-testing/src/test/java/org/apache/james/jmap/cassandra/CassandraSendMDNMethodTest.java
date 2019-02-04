@@ -21,11 +21,7 @@ package org.apache.james.jmap.cassandra;
 
 import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 
-import java.io.IOException;
-
 import org.apache.james.CassandraExtension;
-import org.apache.james.CassandraJmapTestRule;
-import org.apache.james.DockerCassandraRule;
 import org.apache.james.EmbeddedElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerExtension;
@@ -36,8 +32,6 @@ import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CassandraSendMDNMethodTest extends SendMDNMethodTest {

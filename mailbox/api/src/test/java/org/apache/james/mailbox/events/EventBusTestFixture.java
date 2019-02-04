@@ -70,7 +70,9 @@ public interface EventBusTestFixture {
     }
 
     class GroupA extends Group {}
+
     class GroupB extends Group {}
+
     class GroupC extends Group {}
 
     MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);

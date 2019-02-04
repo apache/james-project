@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -47,6 +45,9 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.junit.Test;
+
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractMailboxManagerAttachmentTest {
     private static final String USERNAME = "user@domain.tld";

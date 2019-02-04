@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableMap;
 class MimeDecodingMailetTest {
 
     private static final AttributeName MAIL_ATTRIBUTE = AttributeName.of("mime.attachments");
+    @SuppressWarnings("unchecked")
     private static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
 
     private MailetContext mailetContext;
@@ -130,7 +131,6 @@ class MimeDecodingMailetTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void serviceShouldChangeAttributeWhenDefined() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")

@@ -119,6 +119,7 @@ class RetryBackoffConfigurationTest {
         assertThat(retryBackoff.getJitterFactor())
             .isEqualTo(0);
     }
+
     @Test
     void buildShouldReturnCorrespondingValues() {
         RetryBackoffConfiguration retryBackoff = RetryBackoffConfiguration.builder()

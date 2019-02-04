@@ -122,6 +122,7 @@ public class AmqpForwardAttribute extends GenericMailet {
                     + attribute.toString() + " found."));
     }
 
+    @SuppressWarnings("unchecked")
     private Optional<Stream<byte[]>> extractAttributeValueContent(Object attributeContent) {
         if (attributeContent instanceof Map) {
             return Optional.of(((Map<String, byte[]>) attributeContent).values().stream());

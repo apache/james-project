@@ -39,7 +39,6 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
@@ -59,7 +58,6 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraUsersRepository.class);
 
     private final CassandraAsyncExecutor executor;
-    private final CassandraUtils cassandraUtils;
     private final PreparedStatement getUserStatement;
     private final PreparedStatement updateUserStatement;
     private final PreparedStatement removeUserStatement;
@@ -68,9 +66,8 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     private final PreparedStatement insertStatement;
 
     @Inject
-    public CassandraUsersRepository(Session session, CassandraUtils cassandraUtils) {
+    public CassandraUsersRepository(Session session) {
         this.executor = new CassandraAsyncExecutor(session);
-        this.cassandraUtils = cassandraUtils;
         this.getUserStatement = prepareGetUserStatement(session);
         this.updateUserStatement = prepareUpdateUserStatement(session);
         this.removeUserStatement = prepareRemoveUserStatement(session);

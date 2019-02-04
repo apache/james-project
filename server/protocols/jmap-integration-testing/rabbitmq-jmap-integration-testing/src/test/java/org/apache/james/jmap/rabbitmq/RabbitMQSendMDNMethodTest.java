@@ -21,7 +21,6 @@ package org.apache.james.jmap.rabbitmq;
 
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
-import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.EmbeddedElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerExtension;

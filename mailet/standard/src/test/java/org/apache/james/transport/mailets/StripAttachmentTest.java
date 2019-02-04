@@ -39,8 +39,6 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.consumers.ConsumerChainer;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.junit.TemporaryFolderExtension;
@@ -58,10 +56,15 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.consumers.ConsumerChainer;
+
 @ExtendWith(TemporaryFolderExtension.class)
 class StripAttachmentTest {
 
+    @SuppressWarnings("unchecked")
     private static Class<Collection<AttributeValue<String>>> COLLECTION_STRING_CLASS = (Class<Collection<AttributeValue<String>>>) (Object) Collection.class;
+    @SuppressWarnings("unchecked")
     private static Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
 
     private static final String EXPECTED_ATTACHMENT_CONTENT = "#¤ãàé";

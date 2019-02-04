@@ -43,8 +43,6 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueV
 import static org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDaoUtil.asStringList;
 import static org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDaoUtil.toHeaderMap;
 import static org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDaoUtil.toRawAttributeMap;
-import static org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.BucketId;
-import static org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice;
 
 import java.util.Date;
 
@@ -52,16 +50,18 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
+import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.BucketId;
+import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
 import org.apache.mailet.Mail;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -70,15 +70,13 @@ public class EnqueuedMailsDAO {
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement selectFrom;
     private final PreparedStatement insert;
-    private final CassandraUtils cassandraUtils;
     private final CassandraTypesProvider cassandraTypesProvider;
     private final BlobId.Factory blobFactory;
 
     @Inject
-    EnqueuedMailsDAO(Session session, CassandraUtils cassandraUtils, CassandraTypesProvider cassandraTypesProvider,
+    EnqueuedMailsDAO(Session session, CassandraTypesProvider cassandraTypesProvider,
                      BlobId.Factory blobIdFactory) {
         this.executor = new CassandraAsyncExecutor(session);
-        this.cassandraUtils = cassandraUtils;
         this.cassandraTypesProvider = cassandraTypesProvider;
 
         this.selectFrom = prepareSelectFrom(session);

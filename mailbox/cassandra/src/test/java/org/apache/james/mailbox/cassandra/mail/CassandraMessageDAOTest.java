@@ -36,7 +36,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
@@ -62,6 +61,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Bytes;
+
 import nl.jqno.equalsverifier.EqualsVerifier;
 import reactor.core.publisher.Flux;
 
@@ -95,7 +95,7 @@ class CassandraMessageDAOTest {
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
         testee = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO, blobIdFactory,
-            CassandraUtils.WITH_DEFAULT_CONFIGURATION, new CassandraMessageId.Factory());
+            new CassandraMessageId.Factory());
 
         messageIds = ImmutableList.of(ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(MAILBOX_ID, messageId, messageUid))

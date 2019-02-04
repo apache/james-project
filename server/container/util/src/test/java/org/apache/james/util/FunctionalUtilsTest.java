@@ -20,12 +20,12 @@ package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 class FunctionalUtilsTest {
 
