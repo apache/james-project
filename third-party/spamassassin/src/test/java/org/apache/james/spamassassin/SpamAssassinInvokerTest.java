@@ -29,6 +29,8 @@ import org.apache.james.core.User;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.spamassassin.SpamAssassinExtension.SpamAssassin;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -71,7 +73,7 @@ public class SpamAssassinInvokerTest {
                 ClassLoader.getSystemResourceAsStream("eml/spam.eml"));
         SpamAssassinResult result = testee.scanMail(mimeMessage, USER);
 
-        assertThat(result.getHeadersAsAttribute()).isNotEmpty();
+        assertThat(result.getHeadersAsAttributes()).isNotEmpty();
     }
 
     @Disabled("MAILBOX-377 This test is not stable, fails on our CI and thus is temporarily disabled")
@@ -84,7 +86,7 @@ public class SpamAssassinInvokerTest {
 
         SpamAssassinResult result = testee.scanMail(mimeMessage, USER);
 
-        assertThat(result.getHeadersAsAttribute().get(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("YES");
+        assertThat(result.getHeadersAsAttributes()).contains(new Attribute(SpamAssassinResult.FLAG_MAIL, AttributeValue.of("YES")));
     }
 
     @Test
@@ -108,7 +110,7 @@ public class SpamAssassinInvokerTest {
 
         SpamAssassinResult result = testee.scanMail(mimeMessage, USER);
 
-        assertThat(result.getHeadersAsAttribute().get(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("YES");
+        assertThat(result.getHeadersAsAttributes()).contains(new Attribute(SpamAssassinResult.FLAG_MAIL, AttributeValue.of("YES")));
     }
 
     @Test
@@ -130,7 +132,7 @@ public class SpamAssassinInvokerTest {
 
         SpamAssassinResult result = testee.scanMail(mimeMessage, USER);
 
-        assertThat(result.getHeadersAsAttribute().get(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("NO");
+        assertThat(result.getHeadersAsAttributes()).contains(new Attribute(SpamAssassinResult.FLAG_MAIL, AttributeValue.of("NO")));
     }
 
     @Test
@@ -145,6 +147,6 @@ public class SpamAssassinInvokerTest {
 
         SpamAssassinResult result = testee.scanMail(mimeMessage, USER);
 
-        assertThat(result.getHeadersAsAttribute().get(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME)).isEqualTo("NO");
+        assertThat(result.getHeadersAsAttributes()).contains(new Attribute(SpamAssassinResult.FLAG_MAIL, AttributeValue.of("NO")));
     }
 }

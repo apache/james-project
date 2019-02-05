@@ -22,12 +22,13 @@ package org.apache.james.jmap.send;
 import java.util.Objects;
 
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.mailet.AttributeName;
 
 import com.google.common.base.Preconditions;
 
 public class MailMetadata {
-    public static final String MAIL_METADATA_MESSAGE_ID_ATTRIBUTE = "org.apache.james.jmap.send.MailMetaData.messageId";
-    public static final String MAIL_METADATA_USERNAME_ATTRIBUTE = "org.apache.james.jmap.send.MailMetaData.username";
+    public static final AttributeName MAIL_METADATA_MESSAGE_ID_ATTRIBUTE = AttributeName.of("org.apache.james.jmap.send.MailMetaData.messageId");
+    public static final AttributeName MAIL_METADATA_USERNAME_ATTRIBUTE = AttributeName.of("org.apache.james.jmap.send.MailMetaData.username");
 
     private final MessageId messageId;
     private final String username;

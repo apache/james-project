@@ -167,7 +167,7 @@ public class DeliveryRunnable implements Runnable {
 
         if (configuration.isUsePriority()) {
             // Use lowest priority for retries. See JAMES-1311
-            mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.LOW_PRIORITY);
+            mail.setAttribute(MailPrioritySupport.LOW_PRIORITY_ATTRIBUTE);
         }
         queue.enQueue(mail, delay, TimeUnit.MILLISECONDS);
     }

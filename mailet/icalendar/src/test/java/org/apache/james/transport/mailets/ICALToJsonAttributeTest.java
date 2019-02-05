@@ -26,7 +26,6 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
@@ -51,8 +50,8 @@ import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.model.Calendar;
 
 public class ICALToJsonAttributeTest {
-    public static final MailAddress SENDER = MailAddressFixture.ANY_AT_JAMES;
-    public static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
+    private static final MailAddress SENDER = MailAddressFixture.ANY_AT_JAMES;
+    private static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();

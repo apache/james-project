@@ -132,7 +132,7 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
 
         // Update the Session for the current mail and execute
         SettableSession session = new SettableSession();
-        if (mail.getAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME) != null) {
+        if (mail.getAttribute(Mail.SMTP_AUTH_USER).isPresent()) {
             session.setState(Session.State.AUTHENTICATED);
         } else {
             session.setState(Session.State.UNAUTHENTICATED);

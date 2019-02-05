@@ -37,6 +37,9 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dlp.api.DLPConfigurationItem.Id;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.Test;
 
@@ -505,12 +508,13 @@ class DlpTest {
 
     @Test
     void matchShouldAttachMatchingRuleNameToMail() throws Exception {
+        String attributeValue = "should match sender";
         Dlp dlp = new Dlp(
             asRulesLoaderFor(
                 JAMES_APACHE_ORG_DOMAIN,
                 DlpDomainRules.builder()
                     .recipientRule(Id.of("should not match recipient"), Pattern.compile(RECIPIENT3.asString()))
-                    .senderRule(Id.of("should match sender"), Pattern.compile(JAMES_APACHE_ORG))
+                    .senderRule(Id.of(attributeValue), Pattern.compile(JAMES_APACHE_ORG))
                     .build()));
 
         FakeMail mail = FakeMail.builder()
@@ -521,7 +525,8 @@ class DlpTest {
 
         dlp.match(mail);
 
-        assertThat(mail.getAttribute("DlpMatchedRule")).isEqualTo("should match sender");
+        AttributeName name = AttributeName.of("DlpMatchedRule");
+        assertThat(mail.getAttribute(name)).contains(new Attribute(name, AttributeValue.of(attributeValue)));
     }
 
 }

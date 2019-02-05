@@ -56,6 +56,7 @@ public class ICalendarParserTest {
         "END:VCALENDAR";
 
     private static final String WRONG_ICAL_VALUE = "anyValue";
+    public static final Class<Map<String, Calendar>> MAP_STRING_CALENDAR_CLASS = (Class<Map<String, Calendar>>) (Object) Map.class;
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -224,11 +225,13 @@ public class ICalendarParserTest {
 
         mailet.service(mail);
 
-        Map<String, Calendar> expectedCalendars = (Map<String, Calendar>)mail.getAttribute(DESTINATION_CUSTOM_ATTRIBUTE);
+        Optional<Map<String, Calendar>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, MAP_STRING_CALENDAR_CLASS);
         Map.Entry<String, Calendar> expectedCalendar = Maps.immutableEntry("key2", new Calendar());
 
-        assertThat(expectedCalendars).hasSize(1)
-            .containsExactly(expectedCalendar);
+        assertThat(expectedCalendars).hasValueSatisfying(calendars ->
+            assertThat(calendars)
+                .hasSize(1)
+                .containsExactly(expectedCalendar));
     }
 
     @Test
@@ -256,7 +259,9 @@ public class ICalendarParserTest {
 
         mailet.service(mail);
 
-        Map<String, Calendar> expectedCalendars = (Map<String, Calendar>)mail.getAttribute(DESTINATION_CUSTOM_ATTRIBUTE);
-        assertThat(expectedCalendars).hasSize(1);
+        Optional<Map<String, Calendar>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, MAP_STRING_CALENDAR_CLASS);
+        assertThat(expectedCalendars).hasValueSatisfying(calendars ->
+                assertThat(calendars)
+                        .hasSize(1));
     }
 }

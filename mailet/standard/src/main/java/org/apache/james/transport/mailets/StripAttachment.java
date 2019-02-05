@@ -33,7 +33,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.mail.BodyPart;
 import javax.mail.Message;
@@ -48,6 +50,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.javax.MultipartUtil;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.DecoderUtil;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
@@ -86,6 +92,8 @@ import com.google.common.collect.ImmutableList;
 public class StripAttachment extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(StripAttachment.class);
 
+    @SuppressWarnings("unchecked")
+    private static final Class<List<AttributeValue<String>>> LIST_OF_STRINGS = (Class<List<AttributeValue<String>>>)(Object) List.class;
     private static final String MULTIPART_MIME_TYPE = "multipart/*";
     public static final String PATTERN_PARAMETER_NAME = "pattern";
     public static final String NOTPATTERN_PARAMETER_NAME = "notpattern";
@@ -100,8 +108,8 @@ public class StripAttachment extends GenericMailet {
     public static final String REMOVE_NONE = "no";
     public static final String REMOVE_ALL = "all";
     public static final String REMOVE_MATCHED = "matched";
-    public static final String REMOVED_ATTACHMENTS_ATTRIBUTE_KEY = "org.apache.james.mailet.standard.mailets.StripAttachment.removed";
-    public static final String SAVED_ATTACHMENTS_ATTRIBUTE_KEY = "org.apache.james.mailet.standard.mailets.StripAttachment.saved";
+    public static final AttributeName REMOVED_ATTACHMENTS = AttributeName.of("org.apache.james.mailet.standard.mailets.StripAttachment.removed");
+    public static final AttributeName SAVED_ATTACHMENTS = AttributeName.of("org.apache.james.mailet.standard.mailets.StripAttachment.saved");
 
     public static final boolean DECODE_FILENAME_DEFAULT_VALUE = false;
 
@@ -314,7 +322,7 @@ public class StripAttachment extends GenericMailet {
                 shouldRemove = true;
             }
         }
-        storeFileNameAsAttribute(mail, fileName, shouldRemove);
+        storeFileNameAsAttribute(mail, AttributeValue.of(fileName), shouldRemove);
         return shouldRemove;
     }
 
@@ -324,21 +332,23 @@ public class StripAttachment extends GenericMailet {
 
     private void storeBodyPartAsFile(BodyPart bodyPart, Mail mail, String fileName) throws Exception {
         if (directoryName != null) {
-            Optional<String> filename = saveAttachmentToFile(bodyPart, Optional.of(fileName));
-            if (filename.isPresent()) {
-                addFilenameToAttribute(mail, filename.get(), SAVED_ATTACHMENTS_ATTRIBUTE_KEY);
-            }
+            saveAttachmentToFile(bodyPart, Optional.of(fileName)).ifPresent(filename ->
+                    addFilenameToAttribute(mail, AttributeValue.of(filename), SAVED_ATTACHMENTS)
+            );
         }
     }
 
-    private void addFilenameToAttribute(Mail mail, String filename, String attributeName) {
-        @SuppressWarnings("unchecked")
-        List<String> attributeValues = (List<String>) mail.getAttribute(attributeName);
-        if (attributeValues == null) {
-            attributeValues = new ArrayList<>();
-            mail.setAttribute(attributeName, (Serializable) attributeValues);
-        }
-        attributeValues.add(filename);
+    private void addFilenameToAttribute(Mail mail, AttributeValue<String> attributeValue, AttributeName attributeName) {
+        Function<List<AttributeValue<String>>, List<AttributeValue<?>>> typeWeakner = values ->
+                values.stream().map(value -> (AttributeValue<?>) value).collect(Collectors.toList());
+
+        ImmutableList.Builder<AttributeValue<?>> attributeValues = ImmutableList.<AttributeValue<?>>builder()
+                .addAll(AttributeUtils
+                    .getValueAndCastFromMail(mail, attributeName, LIST_OF_STRINGS)
+                    .map(typeWeakner)
+                    .orElse(new ArrayList<>()));
+        attributeValues.add(attributeValue);
+        mail.setAttribute(new Attribute(attributeName, AttributeValue.of(attributeValues.build())));
     }
 
     private void storeBodyPartAsMailAttribute(BodyPart bodyPart, Mail mail, String fileName) throws IOException, MessagingException {
@@ -359,9 +369,9 @@ public class StripAttachment extends GenericMailet {
         fileNamesToPartContent.put(fileName, byteArrayOutputStream.toByteArray());
     }
 
-    private void storeFileNameAsAttribute(Mail mail, String fileName, boolean hasToBeStored) {
+    private void storeFileNameAsAttribute(Mail mail, AttributeValue<String> fileName, boolean hasToBeStored) {
         if (hasToBeStored) {
-            addFilenameToAttribute(mail, fileName, REMOVED_ATTACHMENTS_ATTRIBUTE_KEY);
+            addFilenameToAttribute(mail, fileName, REMOVED_ATTACHMENTS);
         }
     }
 

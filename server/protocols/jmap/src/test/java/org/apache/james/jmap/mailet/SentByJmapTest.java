@@ -25,6 +25,8 @@ import java.util.Collection;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.send.MailMetadata;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
@@ -49,7 +51,7 @@ public class SentByJmapTest {
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
         FakeMail fakeMail = FakeMail.builder()
             .recipient(recipient)
-            .attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, "true")
+            .attribute(new Attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of("true")))
             .build();
 
         Collection<MailAddress> results =  testee.match(fakeMail);
@@ -83,7 +85,7 @@ public class SentByJmapTest {
     public void matchShouldReturnEmptyCollectionWhenUserAttributeIsPresentAndThereIsNoRecipient() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
             .recipients()
-            .attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, "true")
+            .attribute(new Attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of("true")))
             .build();
 
         Collection<MailAddress> results =  testee.match(fakeMail);

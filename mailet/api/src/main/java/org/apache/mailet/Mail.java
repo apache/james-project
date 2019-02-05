@@ -82,9 +82,17 @@ public interface Mail extends Serializable, Cloneable {
     String DEFAULT = "root";
     String ERROR = "error";
     String TRANSPORT = "transport";
-    String SMTP_AUTH_USER_ATTRIBUTE_NAME = "org.apache.james.SMTPAuthUser";
     String SENT_BY_MAILET = "org.apache.james.SentByMailet";
-    String MAILET_ERROR_ATTRIBUTE_NAME = "org.apache.james.MailetError";
+
+    AttributeName SMTP_AUTH_USER = AttributeName.of("org.apache.james.SMTPAuthUser");
+    AttributeName MAILET_ERROR = AttributeName.of("org.apache.james.MailetError");
+
+    @Deprecated
+    String SMTP_AUTH_USER_ATTRIBUTE_NAME = SMTP_AUTH_USER.asString();
+
+    @Deprecated
+    String MAILET_ERROR_ATTRIBUTE_NAME = MAILET_ERROR.asString();
+
     /**
      * Returns the name of this message.
      * 

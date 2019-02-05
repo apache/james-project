@@ -18,17 +18,21 @@
  ****************************************************************/
 package org.apache.james.spamassassin;
 
-import java.util.Map;
+import java.util.List;
+
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 
 public class SpamAssassinResult {
     /** The mail attribute under which the status get stored */
-    public static final String STATUS_MAIL_ATTRIBUTE_NAME = "org.apache.james.spamassassin.status";
+    public static final AttributeName STATUS_MAIL = AttributeName.of("org.apache.james.spamassassin.status");
 
     /** The mail attribute under which the flag get stored */
-    public static final String FLAG_MAIL_ATTRIBUTE_NAME = "org.apache.james.spamassassin.flag";
+    public static final AttributeName FLAG_MAIL = AttributeName.of("org.apache.james.spamassassin.flag");
 
     public static final String NO_RESULT = "?";
 
@@ -71,27 +75,27 @@ public class SpamAssassinResult {
             Preconditions.checkNotNull(hits);
             Preconditions.checkNotNull(requiredHits);
 
-            ImmutableMap.Builder<String, String> headersAsAttribute = ImmutableMap.builder();
+            ImmutableList.Builder<Attribute> headersAsAttributes = ImmutableList.builder();
             if (isSpam) {
-                headersAsAttribute.put(FLAG_MAIL_ATTRIBUTE_NAME, "YES");
-                headersAsAttribute.put(STATUS_MAIL_ATTRIBUTE_NAME, "Yes, hits=" + hits + " required=" + requiredHits);
+                headersAsAttributes.add(new Attribute(FLAG_MAIL, AttributeValue.of("YES")));
+                headersAsAttributes.add(new Attribute(STATUS_MAIL, AttributeValue.of("Yes, hits=" + hits + " required=" + requiredHits)));
             } else {
-                headersAsAttribute.put(FLAG_MAIL_ATTRIBUTE_NAME, "NO");
-                headersAsAttribute.put(STATUS_MAIL_ATTRIBUTE_NAME, "No, hits=" + hits + " required=" + requiredHits);
+                headersAsAttributes.add(new Attribute(FLAG_MAIL, AttributeValue.of("NO")));
+                headersAsAttributes.add(new Attribute(STATUS_MAIL, AttributeValue.of("No, hits=" + hits + " required=" + requiredHits)));
             }
 
-            return new SpamAssassinResult(hits, requiredHits, headersAsAttribute.build());
+            return new SpamAssassinResult(hits, requiredHits, headersAsAttributes.build());
         }
     }
 
     private final String hits;
     private final String requiredHits;
-    private final Map<String, String> headersAsAttribute;
+    private final List<Attribute> headersAsAttributes;
 
-    private SpamAssassinResult(String hits, String requiredHits, Map<String, String> headersAsAttribute) {
+    private SpamAssassinResult(String hits, String requiredHits, List<Attribute> headersAsAttributes) {
         this.hits = hits;
         this.requiredHits = requiredHits;
-        this.headersAsAttribute = headersAsAttribute;
+        this.headersAsAttributes = headersAsAttributes;
     }
 
     public String getHits() {
@@ -102,8 +106,8 @@ public class SpamAssassinResult {
         return requiredHits;
     }
 
-    public Map<String, String> getHeadersAsAttribute() {
-        return headersAsAttribute;
+    public List<Attribute> getHeadersAsAttributes() {
+        return headersAsAttributes;
     }
 
 }

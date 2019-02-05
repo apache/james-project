@@ -147,15 +147,14 @@ public interface MailQueueContract {
 
     @Test
     default void queueShouldPreserveMailAttribute() throws Exception {
-        String attributeName = "any";
-        String attributeValue = "value";
+        Attribute attribute = Attribute.convertToAttribute("any", "value");
         enQueue(defaultMail()
-            .attribute(attributeName, attributeValue)
+            .attribute(attribute)
             .build());
 
         MailQueue.MailQueueItem mailQueueItem = getMailQueue().deQueue();
-        assertThat(mailQueueItem.getMail().getAttribute(attributeName))
-            .isEqualTo(attributeValue);
+        assertThat(mailQueueItem.getMail().getAttribute(attribute.getName()))
+            .contains(attribute);
     }
 
     @Test
@@ -248,16 +247,19 @@ public interface MailQueueContract {
 
     @Test
     default void queueShouldPreserveNonStringMailAttribute() throws Exception {
-        String attributeName = "any";
-        SerializableAttribute attributeValue = new SerializableAttribute("value");
+        Attribute attribute = Attribute.convertToAttribute("any", new SerializableAttribute("value"));
         enQueue(defaultMail()
-                .attribute(attributeName, attributeValue)
+                .attribute(attribute)
                 .build());
 
         MailQueue.MailQueueItem mailQueueItem = getMailQueue().deQueue();
-        assertThat(mailQueueItem.getMail().getAttribute(attributeName))
-                .isInstanceOf(SerializableAttribute.class)
-                .isEqualTo(attributeValue);
+        assertThat(mailQueueItem.getMail().getAttribute(attribute.getName()))
+            .hasValueSatisfying(item -> {
+                assertThat(item)
+                        .isEqualTo(attribute);
+                assertThat(item.getValue().value())
+                        .isInstanceOf(SerializableAttribute.class);
+            });
     }
 
     @Test

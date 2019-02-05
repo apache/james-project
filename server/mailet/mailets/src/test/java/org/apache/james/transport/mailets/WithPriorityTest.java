@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.queue.api.MailPrioritySupport;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.base.test.FakeMail;
@@ -33,6 +35,7 @@ import org.junit.Test;
 
 public class WithPriorityTest {
 
+    private static final Attribute PROPERTY_PRIORITY = new Attribute(MailPrioritySupport.MAIL_PRIORITY, AttributeValue.of(7));
     private WithPriority mailet;
 
     @Before
@@ -107,29 +110,29 @@ public class WithPriorityTest {
     public void serviceShouldSetMailPriorityWhenNone() throws Exception {
         MailetConfig mockedMailetConfig = FakeMailetConfig.builder()
             .mailetContext(FakeMailContext.defaultContext())
-            .setProperty("priority", "7")
+            .setProperty("priority", PROPERTY_PRIORITY.getValue().value().toString())
             .build();
 
         mailet.init(mockedMailetConfig);
         Mail mail = FakeMail.builder().build();
         mailet.service(mail);
 
-        assertThat(mail.getAttribute(MailPrioritySupport.MAIL_PRIORITY)).isEqualTo(7);
+        assertThat(mail.getAttribute(MailPrioritySupport.MAIL_PRIORITY)).contains(PROPERTY_PRIORITY);
     }
 
     @Test
     public void serviceShouldSetMailPriorityWhenPriorityExists() throws Exception {
         MailetConfig mockedMailetConfig = FakeMailetConfig.builder()
             .mailetContext(FakeMailContext.defaultContext())
-            .setProperty("priority", "7")
+            .setProperty("priority", PROPERTY_PRIORITY.getValue().value().toString())
             .build();
 
         mailet.init(mockedMailetConfig);
         Mail mail = FakeMail.builder()
-                .attribute(MailPrioritySupport.MAIL_PRIORITY, 5)
+                .attribute(new Attribute(MailPrioritySupport.MAIL_PRIORITY, AttributeValue.of(5)))
                 .build();
         mailet.service(mail);
 
-        assertThat(mail.getAttribute(MailPrioritySupport.MAIL_PRIORITY)).isEqualTo(7);
+        assertThat(mail.getAttribute(MailPrioritySupport.MAIL_PRIORITY)).contains(PROPERTY_PRIORITY);
     }
 }

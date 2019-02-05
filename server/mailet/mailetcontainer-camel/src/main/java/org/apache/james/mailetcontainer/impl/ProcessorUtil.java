@@ -26,6 +26,8 @@ import java.util.Collection;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.slf4j.Logger;
@@ -63,7 +65,7 @@ public class ProcessorUtil {
         String errorString = sout.toString();
         mail.setErrorMessage(errorString);
         logger.error(errorString);
-        mail.setAttribute(Mail.MAILET_ERROR_ATTRIBUTE_NAME, me);
+        mail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofSerializable(me)));
     }
 
     /**

@@ -67,6 +67,7 @@ import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.util.SerializationUtil;
 import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.slf4j.Logger;
@@ -252,11 +253,8 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
 
         try {
 
-            int msgPrio = NORMAL_PRIORITY;
-            Object prio = mail.getAttribute(MAIL_PRIORITY);
-            if (prio instanceof Integer) {
-                msgPrio = (Integer) prio;
-            }
+            int msgPrio = AttributeUtils.getValueAndCastFromMail(mail, MAIL_PRIORITY, Integer.class)
+                .orElse(NORMAL_PRIORITY);
 
             Map<String, Object> props = getJMSProperties(mail, nextDeliveryTimestamp);
             produceMail(props, msgPrio, mail);

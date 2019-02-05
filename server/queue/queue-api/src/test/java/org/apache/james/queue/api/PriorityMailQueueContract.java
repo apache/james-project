@@ -24,6 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.stream.IntStream;
 
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.Test;
 
@@ -39,52 +41,52 @@ public interface PriorityMailQueueContract {
     default void priorityShouldReorderMailsWhenDequeing() throws Exception {
         getMailQueue().enQueue(defaultMail()
             .name("name3")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 3)
+            .attribute(mailPriority(3))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name9")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 9)
+            .attribute(mailPriority(9))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name1")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 1)
+            .attribute(mailPriority(1))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name8")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 8)
+            .attribute(mailPriority(8))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name6")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 6)
+            .attribute(mailPriority(6))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name0")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 0)
+            .attribute(mailPriority(0))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name7")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 7)
+            .attribute(mailPriority(7))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name4")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 4)
+            .attribute(mailPriority(4))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name2")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 2)
+            .attribute(mailPriority(2))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name5")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 5)
+            .attribute(mailPriority(5))
             .build());
 
         ImmutableList<MailQueue.MailQueueItem> items = IntStream.range(1, 11).boxed()
@@ -105,11 +107,11 @@ public interface PriorityMailQueueContract {
     default void negativePriorityShouldDefaultToMinimumPriority() throws Exception {
         getMailQueue().enQueue(defaultMail()
             .name("name0")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, -1)
+            .attribute(mailPriority(-1))
             .build());
         getMailQueue().enQueue(defaultMail()
             .name("name1")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 1)
+            .attribute(mailPriority(1))
             .build());
 
         MailQueue.MailQueueItem mailQueueItem1 = getMailQueue().deQueue();
@@ -124,11 +126,11 @@ public interface PriorityMailQueueContract {
     default void tooBigPriorityShouldDefaultToMaximalPriority() throws Exception {
         getMailQueue().enQueue(defaultMail()
             .name("name0")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 12)
+            .attribute(mailPriority(12))
             .build());
         getMailQueue().enQueue(defaultMail()
             .name("name1")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 8)
+            .attribute(mailPriority(8))
             .build());
 
         MailQueue.MailQueueItem mailQueueItem1 = getMailQueue().deQueue();
@@ -143,15 +145,15 @@ public interface PriorityMailQueueContract {
     default void invalidPriorityShouldDefaultToNormalPriority() throws Exception {
         getMailQueue().enQueue(defaultMail()
             .name("name1")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, "invalid")
+            .attribute(mailPriority("invalid"))
             .build());
         getMailQueue().enQueue(defaultMail()
             .name("name2")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 4)
+            .attribute(mailPriority(4))
             .build());
         getMailQueue().enQueue(defaultMail()
             .name("name3")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 6)
+            .attribute(mailPriority(6))
             .build());
 
         MailQueue.MailQueueItem mailQueueItem1 = getMailQueue().deQueue();
@@ -172,11 +174,11 @@ public interface PriorityMailQueueContract {
             .build());
         getMailQueue().enQueue(defaultMail()
             .name("name2")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 4)
+            .attribute(mailPriority(4))
             .build());
         getMailQueue().enQueue(defaultMail()
             .name("name3")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 6)
+            .attribute(mailPriority(6))
             .build());
 
         MailQueue.MailQueueItem mailQueueItem1 = getMailQueue().deQueue();
@@ -198,5 +200,9 @@ public interface PriorityMailQueueContract {
 
         MailQueue.MailQueueItem mailQueueItem = getMailQueue().deQueue();
         assertThat(mailQueueItem.getMail().getName()).isEqualTo("name1");
+    }
+
+    default Attribute mailPriority(Object priority) {
+        return new Attribute(MailPrioritySupport.MAIL_PRIORITY, AttributeValue.ofAny(priority));
     }
 }

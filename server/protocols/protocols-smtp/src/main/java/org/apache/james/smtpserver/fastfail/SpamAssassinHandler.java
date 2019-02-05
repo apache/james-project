@@ -127,9 +127,7 @@ public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
             SpamAssassinResult result = sa.scanMail(message);
 
             // Add the headers
-            for (String key : result.getHeadersAsAttribute().keySet()) {
-                mail.setAttribute(key, result.getHeadersAsAttribute().get(key));
-            }
+            result.getHeadersAsAttributes().forEach(mail::setAttribute);
 
             // Check if rejectionHits was configured
             if (spamdRejectionHits > 0) {

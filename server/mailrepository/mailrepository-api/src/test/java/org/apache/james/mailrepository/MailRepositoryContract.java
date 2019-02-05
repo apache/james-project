@@ -42,6 +42,8 @@ import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.james.utils.DiscreteDistribution;
 import org.apache.james.utils.DiscreteDistribution.DistributionEntry;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.MailAddressFixture;
@@ -58,7 +60,7 @@ import com.google.common.hash.Hashing;
 
 public interface MailRepositoryContract {
 
-    String TEST_ATTRIBUTE = "testAttribute";
+    Attribute TEST_ATTRIBUTE = Attribute.convertToAttribute("testAttribute", "testValue");
     MailKey MAIL_1 = new MailKey("mail1");
     MailKey MAIL_2 = new MailKey("mail2");
     MailKey UNKNOWN_KEY = new MailKey("random");
@@ -74,7 +76,7 @@ public interface MailRepositoryContract {
                 new MailAddress("rec2@domain.com"));
         MailAddress sender = new MailAddress("sender@domain.com");
         MailImpl mail = new MailImpl(key.asString(), sender, recipients, mailContent);
-        mail.setAttribute(TEST_ATTRIBUTE, "testValue");
+        mail.setAttribute(TEST_ATTRIBUTE);
         return mail;
     }
 
@@ -92,7 +94,7 @@ public interface MailRepositoryContract {
             softly.assertThat(actual.getMessageSize()).isEqualTo(expected.getMessageSize());
             softly.assertThat(actual.getName()).isEqualTo(expected.getName());
             softly.assertThat(actual.getState()).isEqualTo(expected.getState());
-            softly.assertThat(actual.getAttribute(TEST_ATTRIBUTE)).isEqualTo(expected.getAttribute(TEST_ATTRIBUTE));
+            softly.assertThat(actual.getAttribute(TEST_ATTRIBUTE.getName())).isEqualTo(expected.getAttribute(TEST_ATTRIBUTE.getName()));
             softly.assertThat(actual.getErrorMessage()).isEqualTo(expected.getErrorMessage());
             softly.assertThat(actual.getRemoteHost()).isEqualTo(expected.getRemoteHost());
             softly.assertThat(actual.getRemoteAddr()).isEqualTo(expected.getRemoteAddr());
@@ -412,7 +414,7 @@ public interface MailRepositoryContract {
         Mail mail = createMail(MAIL_1);
         testee.store(mail);
 
-        mail.setAttribute(TEST_ATTRIBUTE, "newValue");
+        mail.setAttribute(new Attribute(TEST_ATTRIBUTE.getName(), AttributeValue.of("newValue")));
         testee.store(mail);
 
         assertThat(testee.list()).hasSize(1);

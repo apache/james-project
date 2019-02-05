@@ -25,6 +25,7 @@ import java.util.Collection;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.send.MailMetadata;
+import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
@@ -33,11 +34,8 @@ import com.google.common.collect.ImmutableList;
 public class SentByJmap extends GenericMatcher {
     @Override
     public Collection<MailAddress> match(Mail mail) {
-        String authUser = (String) mail.getAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE);
-        if (authUser != null) {
-            return mail.getRecipients();
-        } else {
-            return ImmutableList.of();
-        }
+        return AttributeUtils.getAttributeValueFromMail(mail, MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE)
+            .map(ignored -> mail.getRecipients())
+            .orElse(ImmutableList.of());
     }
 }

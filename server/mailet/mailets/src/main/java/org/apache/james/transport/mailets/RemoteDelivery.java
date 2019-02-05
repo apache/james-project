@@ -198,7 +198,7 @@ public class RemoteDelivery extends GenericMailet {
             LOGGER.debug("Remotely delivering mail {}", mail.getName());
         }
         if (configuration.isUsePriority()) {
-            mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.HIGH_PRIORITY);
+            mail.setAttribute(MailPrioritySupport.HIGH_PRIORITY_ATTRIBUTE);
         }
         if (!mail.getRecipients().isEmpty()) {
             if (configuration.getGatewayServer().isEmpty()) {

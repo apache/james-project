@@ -47,11 +47,9 @@ public class SMTPAuthSuccessful extends GenericMatcher {
 
     @Override
     public Collection<MailAddress> match(Mail mail) {
-        String authUser = (String) mail.getAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME);
-        if (authUser != null) {
-            return mail.getRecipients();
-        } else {
-            return ImmutableList.of();
-        }
+        return mail
+            .getAttribute(Mail.SMTP_AUTH_USER)
+            .map(ignored -> mail.getRecipients())
+            .orElse(ImmutableList.of());
     }
 }

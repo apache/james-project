@@ -196,7 +196,7 @@ public class RemoteDeliveryTest {
             .extracting(MailProjection::from)
             .containsOnly(MailProjection.from(FakeMail.builder()
                 .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
-                .attribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.HIGH_PRIORITY)
+                .attribute(MailPrioritySupport.HIGH_PRIORITY_ATTRIBUTE)
                 .recipient(MailAddressFixture.ANY_AT_JAMES)
                 .build()));
     }

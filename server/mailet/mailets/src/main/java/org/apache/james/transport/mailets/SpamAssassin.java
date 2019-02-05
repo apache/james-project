@@ -33,6 +33,7 @@ import org.apache.james.spamassassin.SpamAssassinResult;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.Port;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.GenericMailet;
@@ -110,10 +111,10 @@ public class SpamAssassin extends GenericMailet {
         SpamAssassinResult result = sa.scanMail(message, User.fromUsername(usersRepository.getUser(recipient)));
 
         // Add headers per recipient to mail object
-        for (String key : result.getHeadersAsAttribute().keySet()) {
+        for (Attribute attribute : result.getHeadersAsAttributes()) {
             mail.addSpecificHeaderForRecipient(PerRecipientHeaders.Header.builder()
-                    .name(key)
-                    .value(result.getHeadersAsAttribute().get(key))
+                    .name(attribute.getName().asString())
+                    .value((String) attribute.getValue().value())
                     .build(), recipient);
         }
     }

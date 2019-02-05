@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.jmap.send;
 
-import java.io.Serializable;
 import java.util.List;
+import java.util.Optional;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -41,6 +41,8 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory.MailQueueItemDecorator;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +51,7 @@ import com.google.common.collect.ImmutableList;
 
 public class PostDequeueDecorator extends MailQueueItemDecorator {
     private static final Logger LOG = LoggerFactory.getLogger(PostDequeueDecorator.class);
-    private static final String IS_DELIVERED = "DELIVERED";
+    private static final Attribute IS_DELIVERED = Attribute.convertToAttribute("DELIVERED", "DELIVERED");
 
     private final MailboxManager mailboxManager;
     private final Factory messageIdFactory;
@@ -77,13 +79,14 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
     public void done(boolean success) throws MailQueueException {
         mailQueueItem.done(success);
         if (success && mandatoryJmapMetaDataIsPresent()) {
-            MessageId messageId = messageIdFactory.fromString((String) getMail().getAttribute(MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE));
-            String username = (String) getMail().getAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE);
-            if (getMail().getAttribute(IS_DELIVERED) == null) {
+            Optional<?> optionalRawMessageId = retrieveMessageId();
+            MessageId messageId = messageIdFactory.fromString((String) optionalRawMessageId.get());
+            Optional<String> username = retrieveUsername();
+            if (!getMail().getAttribute(IS_DELIVERED.getName()).isPresent()) {
                 try {
-                    MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
+                    MailboxSession mailboxSession = mailboxManager.createSystemSession(username.get());
                     moveFromOutboxToSentWithSeenFlag(messageId, mailboxSession);
-                    getMail().setAttribute(IS_DELIVERED, IS_DELIVERED);
+                    getMail().setAttribute(IS_DELIVERED);
                 } catch (MailShouldBeInOutboxException e) {
                     LOG.info("Message does not exist on Outbox anymore, it could have already been sent", e);
                 } catch (MailboxException e) {
@@ -93,13 +96,26 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
         }
     }
 
+    private Optional<?> retrieveMessageId() {
+        return AttributeUtils.getAttributeValueFromMail(getMail(), MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE);
+    }
+
+    private Optional<String> retrieveUsername() {
+        return AttributeUtils.getValueAndCastFromMail(getMail(), MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, String.class);
+    }
+
     private boolean mandatoryJmapMetaDataIsPresent() {
         return checkMessageIdAttribute()
             && checkUsernameAttribute();
     }
 
     private boolean checkMessageIdAttribute() {
-        Serializable messageId = getMail().getAttribute(MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE);
+        return retrieveMessageId()
+            .map(this::validateMessageId)
+            .orElse(false);
+    }
+
+    private boolean validateMessageId(Object messageId) {
         if (messageId instanceof String) {
             try {
                 messageIdFactory.fromString((String) messageId);
@@ -107,15 +123,14 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
             } catch (Exception e) {
                 LOG.error("Invalid messageId: {}", messageId, e);
             }
-        } else if (messageId != null) {
-            LOG.error("Non-String messageId {} has type {}", messageId, messageId.getClass());
         }
+
+        LOG.error("Non-String messageId {} has type {}", messageId, messageId.getClass());
         return false;
     }
 
     private boolean checkUsernameAttribute() {
-        Serializable username = getMail().getAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE);
-        return (username instanceof String);
+        return retrieveUsername().isPresent();
     }
 
     private void moveFromOutboxToSentWithSeenFlag(MessageId messageId, MailboxSession mailboxSession) throws MailQueueException, MailboxException {

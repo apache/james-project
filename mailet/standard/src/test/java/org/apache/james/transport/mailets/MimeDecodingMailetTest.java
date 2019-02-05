@@ -24,9 +24,14 @@ import static org.mockito.Mockito.mock;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.test.FakeMail;
@@ -42,7 +47,8 @@ import com.google.common.collect.ImmutableMap;
 
 class MimeDecodingMailetTest {
 
-    private static final String MAIL_ATTRIBUTE = "mime.attachments";
+    private static final AttributeName MAIL_ATTRIBUTE = AttributeName.of("mime.attachments");
+    private static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
 
     private MailetContext mailetContext;
     private MimeDecodingMailet testee;
@@ -82,12 +88,12 @@ class MimeDecodingMailetTest {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailetContext)
-                .setProperty(MimeDecodingMailet.ATTRIBUTE_PARAMETER_NAME, MAIL_ATTRIBUTE)
+                .setProperty(MimeDecodingMailet.ATTRIBUTE_PARAMETER_NAME, MAIL_ATTRIBUTE.asString())
                 .build();
         testee.init(mailetConfig);
 
         FakeMail mail = FakeMail.defaultFakeMail();
-        mail.setAttribute(MAIL_ATTRIBUTE, ImmutableList.of());
+        mail.setAttribute(new Attribute(MAIL_ATTRIBUTE, AttributeValue.of(ImmutableList.of())));
 
         testee.service(mail);
     }
@@ -97,12 +103,13 @@ class MimeDecodingMailetTest {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailetContext)
-                .setProperty(MimeDecodingMailet.ATTRIBUTE_PARAMETER_NAME, MAIL_ATTRIBUTE)
+                .setProperty(MimeDecodingMailet.ATTRIBUTE_PARAMETER_NAME, MAIL_ATTRIBUTE.asString())
                 .build();
         testee.init(mailetConfig);
 
         FakeMail mail = FakeMail.defaultFakeMail();
-        mail.setAttribute(MAIL_ATTRIBUTE, ImmutableMap.of("1", "2"));
+        AttributeValue<Map<String, AttributeValue<?>>> value = AttributeValue.of(ImmutableMap.of("1", AttributeValue.of("2")));
+        mail.setAttribute(new Attribute(MAIL_ATTRIBUTE, value));
 
         testee.service(mail);
     }
@@ -112,14 +119,14 @@ class MimeDecodingMailetTest {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailetContext)
-                .setProperty(MimeDecodingMailet.ATTRIBUTE_PARAMETER_NAME, MAIL_ATTRIBUTE)
+                .setProperty(MimeDecodingMailet.ATTRIBUTE_PARAMETER_NAME, MAIL_ATTRIBUTE.asString())
                 .build();
         testee.init(mailetConfig);
 
         FakeMail mail = FakeMail.defaultFakeMail();
 
         testee.service(mail);
-        assertThat(mail.getAttribute(MAIL_ATTRIBUTE)).isNull();
+        assertThat(mail.getAttribute(MAIL_ATTRIBUTE)).isEmpty();
     }
 
     @Test
@@ -128,7 +135,7 @@ class MimeDecodingMailetTest {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailetContext)
-                .setProperty(MimeDecodingMailet.ATTRIBUTE_PARAMETER_NAME, MAIL_ATTRIBUTE)
+                .setProperty(MimeDecodingMailet.ATTRIBUTE_PARAMETER_NAME, MAIL_ATTRIBUTE.asString())
                 .build();
         testee.init(mailetConfig);
 
@@ -138,12 +145,15 @@ class MimeDecodingMailetTest {
                 + "Content-Type: application/octet-stream; charset=utf-8\r\n\r\n"
                 + text;
         String expectedKey = "mimePart1";
-        mail.setAttribute(MAIL_ATTRIBUTE, ImmutableMap.of(expectedKey, content.getBytes(StandardCharsets.UTF_8)));
+        AttributeValue<?> value = AttributeValue.ofAny(ImmutableMap.of(expectedKey, content.getBytes(StandardCharsets.UTF_8)));
+        mail.setAttribute(new Attribute(MAIL_ATTRIBUTE, value));
 
         byte[] expectedValue = text.getBytes(StandardCharsets.UTF_8);
         testee.service(mail);
 
-        Map<String, byte[]> processedAttribute = (Map<String, byte[]>) mail.getAttribute(MAIL_ATTRIBUTE);
-        assertThat(processedAttribute).containsExactly(MapEntry.entry(expectedKey, expectedValue));
+        Optional<Map<String, byte[]>> processedAttribute = AttributeUtils.getValueAndCastFromMail(mail, MAIL_ATTRIBUTE, MAP_STRING_BYTES_CLASS);
+        assertThat(processedAttribute).hasValueSatisfying(map ->
+            assertThat(map)
+                .containsExactly(MapEntry.entry(expectedKey, expectedValue)));
     }
 }

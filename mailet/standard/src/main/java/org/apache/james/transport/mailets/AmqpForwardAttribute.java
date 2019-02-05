@@ -20,13 +20,16 @@
 package org.apache.james.transport.mailets;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
@@ -69,7 +72,7 @@ public class AmqpForwardAttribute extends GenericMailet {
     public static final String ROUTING_KEY_DEFAULT_VALUE = "";
 
     private String exchange;
-    private String attribute;
+    private AttributeName attribute;
     private ConnectionFactory connectionFactory;
     @VisibleForTesting String routingKey;
 
@@ -86,11 +89,12 @@ public class AmqpForwardAttribute extends GenericMailet {
                     + " parameter was provided.");
         }
         routingKey = getInitParameter(ROUTING_KEY_PARAMETER_NAME, ROUTING_KEY_DEFAULT_VALUE);
-        attribute = getInitParameter(ATTRIBUTE_PARAMETER_NAME);
-        if (Strings.isNullOrEmpty(attribute)) {
+        String rawAttribute = getInitParameter(ATTRIBUTE_PARAMETER_NAME);
+        if (Strings.isNullOrEmpty(rawAttribute)) {
             throw new MailetException("No value for " + ATTRIBUTE_PARAMETER_NAME
                     + " parameter was provided.");
         }
+        attribute = AttributeName.of(rawAttribute);
         connectionFactory = new ConnectionFactory();
         try {
             connectionFactory.setUri(uri);
@@ -106,12 +110,34 @@ public class AmqpForwardAttribute extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MailetException {
-        if (mail.getAttribute(attribute) == null) {
-            return;
+        mail.getAttribute(attribute)
+            .map(Throwing.function(this::getAttributeContent).sneakyThrow())
+            .ifPresent(this::sendContent);
+    }
+
+    private Stream<byte[]> getAttributeContent(Attribute attribute) throws MailetException {
+        return extractAttributeValueContent(attribute.getValue().value())
+                .orElseThrow(() -> new MailetException("Invalid attribute found into attribute "
+                    + this.attribute.asString() + "class Map or List or String expected but "
+                    + attribute.toString() + " found."));
+    }
+
+    private Optional<Stream<byte[]>> extractAttributeValueContent(Object attributeContent) {
+        if (attributeContent instanceof Map) {
+            return Optional.of(((Map<String, byte[]>) attributeContent).values().stream());
         }
-        Stream<byte[]> content = getAttributeContent(mail);
+        if (attributeContent instanceof List) {
+            return Optional.of(((List<AttributeValue<byte[]>>) attributeContent).stream().map(AttributeValue::value));
+        }
+        if (attributeContent instanceof String) {
+            return Optional.of(Stream.of(((String) attributeContent).getBytes(StandardCharsets.UTF_8)));
+        }
+        return Optional.empty();
+    }
+
+    private void sendContent(Stream<byte[]> content) {
         try {
-            sendContent(content);
+            trySendContent(content);
         } catch (IOException e) {
             LOGGER.error("IOException while writing to AMQP: {}", e.getMessage(), e);
         } catch (TimeoutException e) {
@@ -121,24 +147,7 @@ public class AmqpForwardAttribute extends GenericMailet {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private Stream<byte[]> getAttributeContent(Mail mail) throws MailetException {
-        Serializable attributeContent = mail.getAttribute(attribute);
-        if (attributeContent instanceof Map) {
-            return ((Map<String, byte[]>) attributeContent).values().stream();
-        }
-        if (attributeContent instanceof List) {
-            return ((List<byte[]>) attributeContent).stream();
-        }
-        if (attributeContent instanceof String) {
-            return Stream.of(((String) attributeContent).getBytes(StandardCharsets.UTF_8));
-        }
-        throw new MailetException("Invalid attribute found into attribute "
-                + attribute + "class Map or List or String expected but "
-                + attributeContent.getClass() + " found.");
-    }
-
-    private void sendContent(Stream<byte[]> content) throws IOException, TimeoutException {
+    private void trySendContent(Stream<byte[]> content) throws IOException, TimeoutException {
         Connection connection = null;
         Channel channel = null;
         try {

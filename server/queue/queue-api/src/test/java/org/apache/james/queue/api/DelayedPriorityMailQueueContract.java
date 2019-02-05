@@ -35,14 +35,14 @@ public interface DelayedPriorityMailQueueContract extends DelayedMailQueueContra
     default void delayedHighPriorityMailShouldBeDeQueuedBeforeLowPriorityNonDelayedMailAfterDelayExpiracy() throws Exception {
         getMailQueue().enQueue(defaultMail()
             .name("name1")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.LOW_PRIORITY)
+            .attribute(MailPrioritySupport.LOW_PRIORITY_ATTRIBUTE)
             .build());
 
         int delay = 1;
         TimeUnit unit = TimeUnit.SECONDS;
         getMailQueue().enQueue(defaultMail()
             .name("name2")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.HIGH_PRIORITY)
+            .attribute(MailPrioritySupport.HIGH_PRIORITY_ATTRIBUTE)
             .build(),
             delay,
             unit);
@@ -62,14 +62,14 @@ public interface DelayedPriorityMailQueueContract extends DelayedMailQueueContra
     default void delayedHighPriorityMailShouldBeDeQueuedAfterNonDelayedMail() throws Exception {
         getMailQueue().enQueue(defaultMail()
             .name("name1")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.LOW_PRIORITY)
+            .attribute(MailPrioritySupport.LOW_PRIORITY_ATTRIBUTE)
             .build());
 
         int delay = 1;
         TimeUnit unit = TimeUnit.SECONDS;
         getMailQueue().enQueue(defaultMail()
             .name("name2")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.HIGH_PRIORITY)
+            .attribute(MailPrioritySupport.HIGH_PRIORITY_ATTRIBUTE)
             .build(),
             delay,
             unit);

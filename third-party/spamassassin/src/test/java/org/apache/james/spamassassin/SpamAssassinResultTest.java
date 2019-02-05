@@ -21,11 +21,11 @@ package org.apache.james.spamassassin;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Rule;
 import org.junit.Test;
-
-import com.google.common.collect.ImmutableMap;
 
 public class SpamAssassinResultTest {
 
@@ -60,10 +60,10 @@ public class SpamAssassinResultTest {
 
         softly.assertThat(spamAssassinResult.getHits()).isEqualTo(hits);
         softly.assertThat(spamAssassinResult.getRequiredHits()).isEqualTo(requiredHits);
-        softly.assertThat(spamAssassinResult.getHeadersAsAttribute())
-            .containsAllEntriesOf(ImmutableMap.of(
-                SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME, "YES",
-                SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME, "Yes, hits=1.1 required=5.0"));
+        softly.assertThat(spamAssassinResult.getHeadersAsAttributes())
+            .containsOnly(
+                new Attribute(SpamAssassinResult.FLAG_MAIL, AttributeValue.of("YES")),
+                new Attribute(SpamAssassinResult.STATUS_MAIL, AttributeValue.of("Yes, hits=1.1 required=5.0")));
     }
 
     @Test
@@ -76,8 +76,8 @@ public class SpamAssassinResultTest {
             .requiredHits(requiredHits)
             .build();
 
-        assertThat(spamAssassinResult.getHeadersAsAttribute())
-            .containsEntry(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME, "YES");
+        assertThat(spamAssassinResult.getHeadersAsAttributes())
+            .contains(new Attribute(SpamAssassinResult.FLAG_MAIL, AttributeValue.of("YES")));
     }
 
     @Test
@@ -90,7 +90,7 @@ public class SpamAssassinResultTest {
             .requiredHits(requiredHits)
             .build();
 
-        assertThat(spamAssassinResult.getHeadersAsAttribute())
-            .containsEntry(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME, "NO");
+        assertThat(spamAssassinResult.getHeadersAsAttributes())
+            .contains(new Attribute(SpamAssassinResult.FLAG_MAIL, AttributeValue.of("NO")));
     }
 }

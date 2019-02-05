@@ -73,7 +73,7 @@ public class IsMarkedAsSpam extends GenericMatcher {
     public boolean isMarkedAsSpam(Mail mail, MailAddress recipient) {
         return mail.getPerRecipientSpecificHeaders().getHeadersForRecipient(recipient)
             .stream()
-            .filter(header -> header.getName().equals(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME))
+            .filter(header -> header.getName().equals(SpamAssassinResult.STATUS_MAIL.asString()))
             .anyMatch(header -> header.getValue().toLowerCase(Locale.US).startsWith(YES));
     }
 

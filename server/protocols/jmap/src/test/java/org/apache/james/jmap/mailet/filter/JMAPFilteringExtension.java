@@ -68,7 +68,7 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
             this.filteringManagement = filteringManagement;
             this.mailboxManager = mailboxManager;
             try {
-                this.recipient1Mailbox = createMailbox(RECIPIENT_1_USERNAME, RECIPIENT_1_MAILBOX_1);
+                this.recipient1Mailbox = createMailbox(RECIPIENT_1_USERNAME, RECIPIENT_1_MAILBOX_1.value());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
