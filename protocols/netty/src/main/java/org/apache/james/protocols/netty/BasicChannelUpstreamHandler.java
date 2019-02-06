@@ -19,7 +19,6 @@
 package org.apache.james.protocols.netty;
 
 import java.io.Closeable;
-import java.net.InetSocketAddress;
 import java.nio.channels.ClosedChannelException;
 import java.util.LinkedList;
 import java.util.List;
@@ -205,12 +204,7 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
     protected ProtocolSession createSession(ChannelHandlerContext ctx) throws Exception {
         SSLEngine engine = null;
         if (secure != null) {
-            if (ctx.getChannel().isConnected()){
-                InetSocketAddress remoteAddress = (InetSocketAddress) ctx.getChannel().getRemoteAddress();
-                engine = secure.getContext().createSSLEngine(remoteAddress.getAddress().getHostAddress(), remoteAddress.getPort());
-            } else {
-                engine = secure.getContext().createSSLEngine();
-            }
+            engine = SslEngineUtil.INSTANCE.generateSslEngine(ctx.getChannel(), secure.getContext());
             String[] enabledCipherSuites = secure.getEnabledCipherSuites();
             if (enabledCipherSuites != null && enabledCipherSuites.length > 0) {
                 engine.setEnabledCipherSuites(enabledCipherSuites);

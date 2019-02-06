@@ -28,6 +28,7 @@ import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieve.util.SettableSession;
+import org.apache.james.protocols.netty.SslEngineUtil;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFutureListener;
@@ -133,13 +134,7 @@ public class ManageSieveChannelUpstreamHandler extends SimpleChannelUpstreamHand
     private void turnSSLon(Channel channel) {
         if (sslContext != null) {
             channel.setReadable(false);
-            SslHandler filter;
-            if (channel.isConnected()){
-                InetSocketAddress remoteAddress = (InetSocketAddress) channel.getRemoteAddress();
-                filter = new SslHandler(sslContext.createSSLEngine(remoteAddress.getAddress().getHostAddress(), remoteAddress.getPort()), false);
-            } else {
-                filter = new SslHandler(sslContext.createSSLEngine(), false);
-            }
+            SslHandler filter = new SslHandler(SslEngineUtil.INSTANCE.generateSslEngine(channel, sslContext), false);
             filter.getEngine().setUseClientMode(false);
             if (enabledCipherSuites != null && enabledCipherSuites.length > 0) {
                 filter.getEngine().setEnabledCipherSuites(enabledCipherSuites);

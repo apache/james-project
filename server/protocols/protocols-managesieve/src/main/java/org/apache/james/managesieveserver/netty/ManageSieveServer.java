@@ -33,6 +33,7 @@ import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
 import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
 import org.apache.james.protocols.netty.LineDelimiterBasedChannelHandlerFactory;
+import org.apache.james.protocols.netty.SslEngineUtil;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
@@ -106,13 +107,7 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
                 if (secure != null && !secure.isStartTLS()) {
                     // We need to set clientMode to false.
                     // See https://issues.apache.org/jira/browse/JAMES-1025
-                    SSLEngine engine;
-                    if (pipeline.getChannel().isConnected()){
-                        InetSocketAddress remoteAddress = (InetSocketAddress) pipeline.getChannel().getRemoteAddress();
-                        engine = secure.getContext().createSSLEngine(remoteAddress.getAddress().getHostAddress(), remoteAddress.getPort());
-                    } else {
-                        engine = secure.getContext().createSSLEngine();
-                    }
+                    SSLEngine engine = SslEngineUtil.INSTANCE.generateSslEngine(pipeline.getChannel(), secure.getContext());
                     engine.setUseClientMode(false);
                     pipeline.addFirst(SSL_HANDLER, new SslHandler(engine));
 

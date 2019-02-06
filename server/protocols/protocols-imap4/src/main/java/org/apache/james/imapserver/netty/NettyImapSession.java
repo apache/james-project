@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
-import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,6 +27,7 @@ import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
+import org.apache.james.protocols.netty.SslEngineUtil;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.compression.ZlibDecoder;
 import org.jboss.netty.handler.codec.compression.ZlibEncoder;
@@ -125,13 +125,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         }
         channel.setReadable(false);
 
-        SslHandler filter;
-        if (channel.isConnected()){
-            InetSocketAddress remoteAddress = (InetSocketAddress) channel.getRemoteAddress();
-            filter = new SslHandler(sslContext.createSSLEngine(remoteAddress.getAddress().getHostAddress(), remoteAddress.getPort()), false);
-        } else {
-            filter = new SslHandler(sslContext.createSSLEngine(), false);
-        }
+        SslHandler filter = new SslHandler(SslEngineUtil.INSTANCE.generateSslEngine(channel, sslContext), false);
         filter.getEngine().setUseClientMode(false);
         if (enabledCipherSuites != null && enabledCipherSuites.length > 0) {
             filter.getEngine().setEnabledCipherSuites(enabledCipherSuites);

@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
-import java.net.InetSocketAddress;
-
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
@@ -68,13 +66,7 @@ public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractCha
         if (isSSLSocket()) {
             // We need to set clientMode to false.
             // See https://issues.apache.org/jira/browse/JAMES-1025
-            SSLEngine engine;
-            if (pipeline.getChannel().isConnected()){
-                InetSocketAddress remoteAddress = (InetSocketAddress) pipeline.getChannel().getRemoteAddress();
-                engine = getSSLContext().createSSLEngine(remoteAddress.getAddress().getHostAddress(), remoteAddress.getPort());
-            } else {
-                engine = getSSLContext().createSSLEngine();
-            }
+            SSLEngine engine = SslEngineUtil.INSTANCE.generateSslEngine(pipeline.getChannel(), getSSLContext());
             engine.setUseClientMode(false);
             if (enabledCipherSuites != null && enabledCipherSuites.length > 0) {
                 engine.setEnabledCipherSuites(enabledCipherSuites);
