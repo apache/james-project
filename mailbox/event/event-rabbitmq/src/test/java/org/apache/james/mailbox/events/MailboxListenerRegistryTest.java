@@ -22,6 +22,7 @@ package org.apache.james.mailbox.events;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -30,6 +31,9 @@ import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 class MailboxListenerRegistryTest {
     private static final MailboxIdRegistrationKey KEY_1 = new MailboxIdRegistrationKey(TestId.of(42));
@@ -234,6 +238,30 @@ class MailboxListenerRegistryTest {
                 .runSuccessfullyWithin(ONE_SECOND);
 
             assertThat(runIfEmptyCount.get()).isEqualTo(1);
+        }
+
+        @Test
+        void iterationShouldPerformOnASnapshotOfListenersSet() throws Exception {
+            MailboxListener listener1 = event -> {};
+            MailboxListener listener2 = event -> {};
+            MailboxListener listener3 = event -> {};
+            MailboxListener listener4 = event -> {};
+            MailboxListener listener5 = event -> {};
+
+            testee.addListener(KEY_1, listener1, NOOP);
+            testee.addListener(KEY_1, listener2, NOOP);
+            testee.addListener(KEY_1, listener3, NOOP);
+            testee.addListener(KEY_1, listener4, NOOP);
+            testee.addListener(KEY_1, listener5, NOOP);
+
+            Mono<List<MailboxListener>> listeners = testee.getLocalMailboxListeners(KEY_1)
+                .publishOn(Schedulers.elastic())
+                .delayElements(Duration.ofMillis(100))
+                .collectList();
+
+            testee.removeListener(KEY_1, listener5, NOOP);
+
+            assertThat(listeners.block(Duration.ofSeconds(10))).hasSize(5);
         }
     }
 }

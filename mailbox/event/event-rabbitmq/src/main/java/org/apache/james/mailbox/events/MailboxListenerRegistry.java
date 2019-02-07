@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.events;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
@@ -32,21 +33,27 @@ class MailboxListenerRegistry {
         this.listeners = Multimaps.synchronizedMultimap(HashMultimap.create());
     }
 
-    synchronized void addListener(RegistrationKey registrationKey, MailboxListener listener, Runnable runIfEmpty) {
-        if (listeners.get(registrationKey).isEmpty()) {
-            runIfEmpty.run();
+    void addListener(RegistrationKey registrationKey, MailboxListener listener, Runnable runIfEmpty) {
+        synchronized (listeners) {
+            if (listeners.get(registrationKey).isEmpty()) {
+                runIfEmpty.run();
+            }
+            listeners.put(registrationKey, listener);
         }
-        listeners.put(registrationKey, listener);
     }
 
-    synchronized void removeListener(RegistrationKey registrationKey, MailboxListener listener, Runnable runIfEmpty) {
-        boolean wasRemoved = listeners.remove(registrationKey, listener);
-        if (wasRemoved && listeners.get(registrationKey).isEmpty()) {
-            runIfEmpty.run();
+    void removeListener(RegistrationKey registrationKey, MailboxListener listener, Runnable runIfEmpty) {
+        synchronized (listeners) {
+            boolean wasRemoved = listeners.remove(registrationKey, listener);
+            if (wasRemoved && listeners.get(registrationKey).isEmpty()) {
+                runIfEmpty.run();
+            }
         }
     }
 
     Flux<MailboxListener> getLocalMailboxListeners(RegistrationKey registrationKey) {
-        return Flux.fromIterable(listeners.get(registrationKey));
+        synchronized (listeners) {
+            return Flux.fromIterable(ImmutableSet.copyOf(listeners.get(registrationKey)));
+        }
     }
 }
