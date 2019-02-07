@@ -75,12 +75,16 @@ class EventDispatcher {
     }
 
     Mono<Void> dispatch(Event event, Set<RegistrationKey> keys) {
-        byte[] serializedEvent = serializeEvent(event);
-
-        Mono<Void> distantDispatchMono = doDispatch(serializedEvent, keys).cache()
+        return Flux
+            .concat(
+                dispatchToLocalListeners(event, keys),
+                dispatchToRemoteListeners(serializeEvent(event), keys))
+            .then()
             .subscribeWith(MonoProcessor.create());
+    }
 
-        Mono<Void> localListenerDelivery = Flux.fromIterable(keys)
+    private Mono<Void> dispatchToLocalListeners(Event event, Set<RegistrationKey> keys) {
+        return Flux.fromIterable(keys)
             .subscribeOn(Schedulers.elastic())
             .flatMap(key -> mailboxListenerRegistry.getLocalMailboxListeners(key)
                 .map(listener -> Pair.of(key, listener)))
@@ -89,11 +93,6 @@ class EventDispatcher {
                 .doOnError(e -> structuredLogger(event, keys)
                     .log(logger -> logger.error("Exception happens when dispatching event", e)))
                 .onErrorResume(e -> Mono.empty()))
-            .cache()
-            .then()
-            .subscribeWith(MonoProcessor.create());
-
-        return Flux.concat(localListenerDelivery, distantDispatchMono)
             .then();
     }
 
@@ -112,7 +111,7 @@ class EventDispatcher {
             .addField(EventBus.StructuredLoggingFields.REGISTRATION_KEYS, keys);
     }
 
-    private Mono<Void> doDispatch(byte[] serializedEvent, Set<RegistrationKey> keys) {
+    private Mono<Void> dispatchToRemoteListeners(byte[] serializedEvent, Set<RegistrationKey> keys) {
         Stream<RoutingKey> routingKeys = Stream.concat(Stream.of(RoutingKey.empty()), keys.stream().map(RoutingKey::of));
 
         Stream<OutboundMessage> outboundMessages = routingKeys
