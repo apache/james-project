@@ -49,6 +49,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -65,12 +66,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.stubbing.Answer;
 
 import com.rabbitmq.client.Connection;
-
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
@@ -281,7 +282,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         private final Duration TEN_SECONDS = Duration.ofSeconds(10);
 
         private static final int THREAD_COUNT = 10;
-        private static final int OPERATION_COUNT = 100;
+        private static final int OPERATION_COUNT = 100000;
         private static final int MAX_EVENT_DISPATCHED_COUNT = THREAD_COUNT * OPERATION_COUNT;
 
         private RabbitMQManagementAPI rabbitManagementAPI;
@@ -464,19 +465,23 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 MailboxListenerCountingSuccessfulExecution listener = new MailboxListenerCountingSuccessfulExecution();
                 eventBus.register(listener, GROUP_A);
 
-                ConcurrentTestRunner.builder()
+                try (Closeable closeable = ConcurrentTestRunner.builder()
                     .operation((threadNumber, step) -> eventBus.dispatch(EVENT, KEY_1))
                     .threadCount(THREAD_COUNT)
                     .operationCount(OPERATION_COUNT)
-                    .runSuccessfullyWithin(Duration.ofMinutes(1));
+                    .run()) {
 
-                eventBus.stop();
-                int callsAfterStop = listener.numberOfEventCalls();
+                    TimeUnit.SECONDS.sleep(2);
 
-                TimeUnit.SECONDS.sleep(1);
-                assertThat(listener.numberOfEventCalls())
-                    .isEqualTo(callsAfterStop)
-                    .isLessThan(MAX_EVENT_DISPATCHED_COUNT);
+                    eventBus.stop();
+                    eventBus2.stop();
+                    int callsAfterStop = listener.numberOfEventCalls();
+
+                    TimeUnit.SECONDS.sleep(1);
+                    assertThat(listener.numberOfEventCalls())
+                        .isEqualTo(callsAfterStop)
+                        .isLessThanOrEqualTo(MAX_EVENT_DISPATCHED_COUNT);
+                }
             }
         }
 
@@ -544,7 +549,6 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                     .isEmpty();
             }
 
-            @Disabled("JAMES-2659 instable test")
             @Test
             void registrationsShouldNotHandleEventsAfterStop() throws Exception {
                 eventBus.start();
@@ -554,20 +558,23 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 eventBus.register(listener, GROUP_A);
                 eventBus2.register(listener, GROUP_A);
 
-                ConcurrentTestRunner.builder()
+                try (Closeable closeable = ConcurrentTestRunner.builder()
                     .operation((threadNumber, step) -> eventBus.dispatch(EVENT, KEY_1))
                     .threadCount(THREAD_COUNT)
                     .operationCount(OPERATION_COUNT)
-                    .runSuccessfullyWithin(TEN_SECONDS);
+                    .run()) {
 
-                eventBus.stop();
-                eventBus2.stop();
-                int callsAfterStop = listener.numberOfEventCalls();
+                    TimeUnit.SECONDS.sleep(2);
 
-                TimeUnit.SECONDS.sleep(1);
-                assertThat(listener.numberOfEventCalls())
-                    .isEqualTo(callsAfterStop)
-                    .isLessThan(MAX_EVENT_DISPATCHED_COUNT);
+                    eventBus.stop();
+                    eventBus2.stop();
+                    int callsAfterStop = listener.numberOfEventCalls();
+
+                    TimeUnit.SECONDS.sleep(1);
+                    assertThat(listener.numberOfEventCalls())
+                        .isEqualTo(callsAfterStop)
+                        .isLessThanOrEqualTo(MAX_EVENT_DISPATCHED_COUNT);
+                }
             }
         }
 

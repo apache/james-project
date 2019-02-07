@@ -23,9 +23,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
@@ -103,6 +106,39 @@ public class ConcurrentTestRunnerTest {
 
     @Test
     void runShouldPerformAllOperations() {
+        ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
+
+        assertThatCode(() -> ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> queue.add(threadNumber + ":" + step))
+            .threadCount(2)
+            .operationCount(2)
+            .run()
+            .awaitTermination(Duration.ofSeconds(1)))
+            .doesNotThrowAnyException();
+
+        assertThat(queue).containsOnly("0:0", "0:1", "1:0", "1:1");
+    }
+
+    @Test
+    void closeShouldPreventPerformAllOperations() throws IOException, InterruptedException {
+        ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
+
+        int maxItems = 200000;
+        Closeable closeable = ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> queue.add(threadNumber + ":" + step))
+            .threadCount(2)
+            .operationCount(maxItems)
+            .run();
+        closeable.close();
+        TimeUnit.SECONDS.sleep(1);
+        int stabilizedItemCount = queue.size();
+        assertThat(stabilizedItemCount).isLessThanOrEqualTo(maxItems * 2);
+        TimeUnit.SECONDS.sleep(1);
+        assertThat(queue).hasSize(stabilizedItemCount);
+    }
+
+    @Test
+    void runSuccessfullyWithinShouldPerformAllOperations() {
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
 
         assertThatCode(() -> ConcurrentTestRunner.builder()
