@@ -26,9 +26,11 @@ import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXC
 
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.event.json.EventSerializer;
+import org.apache.james.mailbox.events.RoutingKeyConverter.RoutingKey;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.MDCStructuredLogger;
 import org.apache.james.util.StructuredLogger;
@@ -38,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.AMQP;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoProcessor;
@@ -74,10 +75,7 @@ class EventDispatcher {
     }
 
     Mono<Void> dispatch(Event event, Set<RegistrationKey> keys) {
-        Mono<byte[]> serializedEvent = Mono.just(event)
-            .publishOn(Schedulers.parallel())
-            .map(this::serializeEvent)
-            .cache();
+        byte[] serializedEvent = serializeEvent(event);
 
         Mono<Void> distantDispatchMono = doDispatch(serializedEvent, keys).cache()
             .subscribeWith(MonoProcessor.create());
@@ -114,17 +112,13 @@ class EventDispatcher {
             .addField(EventBus.StructuredLoggingFields.REGISTRATION_KEYS, keys);
     }
 
-    private Mono<Void> doDispatch(Mono<byte[]> serializedEvent, Set<RegistrationKey> keys) {
-        Flux<RoutingKeyConverter.RoutingKey> routingKeys = Flux.concat(
-            Mono.just(RoutingKeyConverter.RoutingKey.empty()),
-            Flux.fromIterable(keys)
-                .map(RoutingKeyConverter.RoutingKey::of));
+    private Mono<Void> doDispatch(byte[] serializedEvent, Set<RegistrationKey> keys) {
+        Stream<RoutingKey> routingKeys = Stream.concat(Stream.of(RoutingKey.empty()), keys.stream().map(RoutingKey::of));
 
-        Flux<OutboundMessage> outboundMessages = routingKeys
-            .flatMap(routingKey -> serializedEvent
-                .map(payload -> new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME, routingKey.asString(), basicProperties, payload)));
+        Stream<OutboundMessage> outboundMessages = routingKeys
+            .map(routingKey -> new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME, routingKey.asString(), basicProperties, serializedEvent));
 
-        return sender.send(outboundMessages);
+        return sender.send(Flux.fromStream(outboundMessages));
     }
 
     private byte[] serializeEvent(Event event) {
