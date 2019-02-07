@@ -544,6 +544,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                     .isEmpty();
             }
 
+            @Disabled("JAMES-2659 instable test")
             @Test
             void registrationsShouldNotHandleEventsAfterStop() throws Exception {
                 eventBus.start();
