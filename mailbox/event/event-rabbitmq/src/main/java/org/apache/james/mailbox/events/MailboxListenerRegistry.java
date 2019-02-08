@@ -19,41 +19,53 @@
 
 package org.apache.james.mailbox.events;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
+import static com.google.common.base.Predicates.not;
 
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableSet;
 import reactor.core.publisher.Flux;
 
 class MailboxListenerRegistry {
-    private final Multimap<RegistrationKey, MailboxListener> listeners;
+    private final ConcurrentHashMap<RegistrationKey, ImmutableSet<MailboxListener>> listenersByKey;
 
     MailboxListenerRegistry() {
-        this.listeners = Multimaps.synchronizedMultimap(HashMultimap.create());
+        this.listenersByKey = new ConcurrentHashMap<>();
     }
 
     void addListener(RegistrationKey registrationKey, MailboxListener listener, Runnable runIfEmpty) {
-        synchronized (listeners) {
-            if (listeners.get(registrationKey).isEmpty()) {
-                runIfEmpty.run();
-            }
-            listeners.put(registrationKey, listener);
-        }
+        listenersByKey.compute(registrationKey, (key, listeners) ->
+            Optional.ofNullable(listeners)
+                .map(set -> ImmutableSet.<MailboxListener>builder().addAll(set).add(listener).build())
+                .orElseGet(() -> {
+                    runIfEmpty.run();
+                    return ImmutableSet.of(listener);
+                })
+        );
     }
 
     void removeListener(RegistrationKey registrationKey, MailboxListener listener, Runnable runIfEmpty) {
-        synchronized (listeners) {
-            boolean wasRemoved = listeners.remove(registrationKey, listener);
-            if (wasRemoved && listeners.get(registrationKey).isEmpty()) {
-                runIfEmpty.run();
+        listenersByKey.compute(registrationKey, (key, listeners) -> {
+            boolean listenersContainRequested = Optional.ofNullable(listeners).orElse(ImmutableSet.of()).contains(listener);
+            if (listenersContainRequested) {
+                return removeListenerFromSet(listener, runIfEmpty, listeners);
             }
+            return listeners;
+        });
+    }
+
+    private ImmutableSet<MailboxListener> removeListenerFromSet(MailboxListener listener, Runnable runIfEmpty, ImmutableSet<MailboxListener> listeners) {
+        ImmutableSet<MailboxListener> remainingListeners = listeners.stream().filter(not(listener::equals)).collect(Guavate.toImmutableSet());
+        if (remainingListeners.isEmpty()) {
+            runIfEmpty.run();
+            return null;
         }
+        return remainingListeners;
     }
 
     Flux<MailboxListener> getLocalMailboxListeners(RegistrationKey registrationKey) {
-        synchronized (listeners) {
-            return Flux.fromIterable(ImmutableSet.copyOf(listeners.get(registrationKey)));
-        }
+        return Flux.fromIterable(listenersByKey.getOrDefault(registrationKey, ImmutableSet.of()));
     }
 }
