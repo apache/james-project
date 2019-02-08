@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.james.mailbox.model.TestId;
@@ -37,8 +36,6 @@ import reactor.core.scheduler.Schedulers;
 
 class MailboxListenerRegistryTest {
     private static final MailboxIdRegistrationKey KEY_1 = new MailboxIdRegistrationKey(TestId.of(42));
-    private static final Runnable NOOP = () -> {
-    };
 
     private MailboxListenerRegistry testee;
 
@@ -56,7 +53,7 @@ class MailboxListenerRegistryTest {
     @Test
     void getLocalMailboxListenersShouldReturnPreviouslyAddedListener() {
         MailboxListener listener = event -> {};
-        testee.addListener(KEY_1, listener, NOOP);
+        testee.addListener(KEY_1, listener);
 
         assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
             .containsOnly(listener);
@@ -66,8 +63,8 @@ class MailboxListenerRegistryTest {
     void getLocalMailboxListenersShouldReturnPreviouslyAddedListeners() {
         MailboxListener listener1 = event -> {};
         MailboxListener listener2 = event -> {};
-        testee.addListener(KEY_1, listener1, NOOP);
-        testee.addListener(KEY_1, listener2, NOOP);
+        testee.addListener(KEY_1, listener1);
+        testee.addListener(KEY_1, listener2);
 
         assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
             .containsOnly(listener1, listener2);
@@ -77,68 +74,51 @@ class MailboxListenerRegistryTest {
     void getLocalMailboxListenersShouldNotReturnRemovedListeners() {
         MailboxListener listener1 = event -> {};
         MailboxListener listener2 = event -> {};
-        testee.addListener(KEY_1, listener1, NOOP);
-        testee.addListener(KEY_1, listener2, NOOP);
+        testee.addListener(KEY_1, listener1);
+        MailboxListenerRegistry.Registration registration = testee.addListener(KEY_1, listener2);
 
-        testee.removeListener(KEY_1, listener2, NOOP);
+        registration.unregister();
 
         assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
             .containsOnly(listener1);
     }
 
     @Test
-    void addListenerShouldRunTaskWhenNoPreviouslyRegisteredListeners() {
+    void addListenerShouldReturnFirstListenerWhenNoPreviouslyRegisteredListeners() {
         MailboxListener listener = event -> {};
 
-        AtomicBoolean atomicBoolean = new AtomicBoolean(false);
-        testee.addListener(KEY_1, listener, () -> atomicBoolean.set(true));
-
-        assertThat(atomicBoolean).isTrue();
+        assertThat(testee.addListener(KEY_1, listener).isFirstListener()).isTrue();
     }
 
     @Test
-    void addListenerShouldNotRunTaskWhenPreviouslyRegisteredListeners() {
-        MailboxListener listener = event -> {};
-
-        AtomicBoolean atomicBoolean = new AtomicBoolean(false);
-        testee.addListener(KEY_1, listener, NOOP);
-        testee.addListener(KEY_1, listener, () -> atomicBoolean.set(true));
-
-        assertThat(atomicBoolean).isFalse();
-    }
-
-    @Test
-    void removeListenerShouldNotRunTaskWhenNoListener() {
-        MailboxListener listener = event -> {};
-
-        AtomicBoolean atomicBoolean = new AtomicBoolean(false);
-        testee.removeListener(KEY_1, listener, () -> atomicBoolean.set(true));
-
-        assertThat(atomicBoolean).isFalse();
-    }
-
-    @Test
-    void removeListenerShouldNotRunTaskWhenSeveralListener() {
+    void addListenerShouldNotReturnFirstListenerWhenPreviouslyRegisteredListeners() {
         MailboxListener listener = event -> {};
         MailboxListener listener2 = event -> {};
 
-        AtomicBoolean atomicBoolean = new AtomicBoolean(false);
-        testee.addListener(KEY_1, listener, NOOP);
-        testee.addListener(KEY_1, listener2, NOOP);
-        testee.removeListener(KEY_1, listener, () -> atomicBoolean.set(true));
+        testee.addListener(KEY_1, listener);
 
-        assertThat(atomicBoolean).isFalse();
+        assertThat(testee.addListener(KEY_1, listener2).isFirstListener()).isFalse();
     }
 
     @Test
-    void removeListenerShouldRunTaskWhenOneListener() {
+    void removeListenerShouldNotReturnLastListenerRemovedWhenSeveralListener() {
+        MailboxListener listener = event -> {};
+        MailboxListener listener2 = event -> {};
+
+        MailboxListenerRegistry.Registration registration = testee.addListener(KEY_1, listener);
+        testee.addListener(KEY_1, listener2);
+
+        assertThat(registration.unregister().lastListenerRemoved()).isFalse();
+    }
+
+    @Test
+    void removeListenerShouldReturnLastListenerRemovedWhenOneListener() {
         MailboxListener listener = event -> {};
 
-        AtomicBoolean atomicBoolean = new AtomicBoolean(false);
-        testee.addListener(KEY_1, listener, NOOP);
-        testee.removeListener(KEY_1, listener, () -> atomicBoolean.set(true));
 
-        assertThat(atomicBoolean).isTrue();
+        MailboxListenerRegistry.Registration registration = testee.addListener(KEY_1, listener);
+
+        assertThat(registration.unregister().lastListenerRemoved()).isTrue();
     }
 
     @Nested
@@ -150,7 +130,7 @@ class MailboxListenerRegistryTest {
             MailboxListener listener = event -> {};
 
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> testee.addListener(KEY_1, listener, NOOP))
+                .operation((threadNumber, operationNumber) -> testee.addListener(KEY_1, listener))
                 .threadCount(10)
                 .operationCount(10)
                 .runSuccessfullyWithin(ONE_SECOND);
@@ -168,11 +148,11 @@ class MailboxListenerRegistryTest {
             ConcurrentTestRunner.builder()
                 .operation((threadNumber, operationNumber) -> {
                     if (threadNumber % 3 == 0) {
-                        testee.addListener(KEY_1, listener1, NOOP);
+                        testee.addListener(KEY_1, listener1);
                     } else if (threadNumber % 3 == 1) {
-                        testee.addListener(KEY_1, listener2, NOOP);
+                        testee.addListener(KEY_1, listener2);
                     } else if (threadNumber % 3 == 2) {
-                        testee.addListener(KEY_1, listener3, NOOP);
+                        testee.addListener(KEY_1, listener3);
                     }
                 })
                 .threadCount(6)
@@ -187,11 +167,10 @@ class MailboxListenerRegistryTest {
         void getLocalMailboxListenersShouldReturnEmptyWhenRemoveAddedListener() throws Exception {
             MailboxListener listener1 = event -> {};
 
-            testee.addListener(KEY_1, listener1, NOOP);
+            MailboxListenerRegistry.Registration registration = testee.addListener(KEY_1, listener1);
 
             ConcurrentTestRunner.builder()
-                .operation(((threadNumber, operationNumber) ->
-                    testee.removeListener(KEY_1, listener1, NOOP)))
+                .operation(((threadNumber, operationNumber) -> registration.unregister()))
                 .threadCount(10)
                 .operationCount(10)
                 .runSuccessfullyWithin(ONE_SECOND);
@@ -201,65 +180,78 @@ class MailboxListenerRegistryTest {
         }
 
         @Test
-        void addListenerOnlyRunTaskOnceForEmptyRegistry() throws Exception {
+        void addListenerOnlyReturnIsFirstListenerForEmptyRegistry() throws Exception {
             MailboxListener listener1 = event -> {};
             MailboxListener listener2 = event -> {};
             MailboxListener listener3 = event -> {};
 
-            AtomicInteger runIfEmptyCount = new AtomicInteger(0);
+            AtomicInteger firstListenerCount = new AtomicInteger(0);
 
             ConcurrentTestRunner.builder()
                 .operation((threadNumber, operationNumber) -> {
                     if (threadNumber % 3 == 0) {
-                        testee.addListener(KEY_1, listener1, runIfEmptyCount::incrementAndGet);
+                        MailboxListenerRegistry.Registration registration = testee.addListener(KEY_1, listener1);
+                        if (registration.isFirstListener()) {
+                            firstListenerCount.incrementAndGet();
+                        }
                     } else if (threadNumber % 3 == 1) {
-                        testee.addListener(KEY_1, listener2, runIfEmptyCount::incrementAndGet);
+                        MailboxListenerRegistry.Registration registration = testee.addListener(KEY_1, listener2);
+                        if (registration.isFirstListener()) {
+                            firstListenerCount.incrementAndGet();
+                        }
                     } else if (threadNumber % 3 == 2) {
-                        testee.addListener(KEY_1, listener3, runIfEmptyCount::incrementAndGet);
+                        MailboxListenerRegistry.Registration registration = testee.addListener(KEY_1, listener3);
+                        if (registration.isFirstListener()) {
+                            firstListenerCount.incrementAndGet();
+                        }
                     }
                 })
                 .threadCount(6)
                 .operationCount(10)
                 .runSuccessfullyWithin(ONE_SECOND);
 
-            assertThat(runIfEmptyCount.get()).isEqualTo(1);
+            assertThat(firstListenerCount.get()).isEqualTo(1);
         }
 
         @Test
-        void removeListenerOnlyRunTaskOnceForEmptyRegistry() throws Exception {
+        void removeListenerOnlyReturnLastListenerRemovedForEmptyRegistry() throws Exception {
             MailboxListener listener1 = event -> {};
-            AtomicInteger runIfEmptyCount = new AtomicInteger(0);
+            AtomicInteger lastListenerRemoved = new AtomicInteger(0);
 
-            testee.addListener(KEY_1, listener1, NOOP);
+            MailboxListenerRegistry.Registration registration = testee.addListener(KEY_1, listener1);
             ConcurrentTestRunner.builder()
-                .operation(((threadNumber, operationNumber) -> testee.removeListener(KEY_1, listener1, runIfEmptyCount::incrementAndGet)))
+                .operation(((threadNumber, operationNumber) -> {
+                    if (registration.unregister().lastListenerRemoved()) {
+                        lastListenerRemoved.incrementAndGet();
+                    }
+                }))
                 .threadCount(10)
                 .operationCount(10)
                 .runSuccessfullyWithin(ONE_SECOND);
 
-            assertThat(runIfEmptyCount.get()).isEqualTo(1);
+            assertThat(lastListenerRemoved.get()).isEqualTo(1);
         }
 
         @Test
-        void iterationShouldPerformOnASnapshotOfListenersSet() throws Exception {
+        void iterationShouldPerformOnASnapshotOfListenersSet() {
             MailboxListener listener1 = event -> {};
             MailboxListener listener2 = event -> {};
             MailboxListener listener3 = event -> {};
             MailboxListener listener4 = event -> {};
             MailboxListener listener5 = event -> {};
 
-            testee.addListener(KEY_1, listener1, NOOP);
-            testee.addListener(KEY_1, listener2, NOOP);
-            testee.addListener(KEY_1, listener3, NOOP);
-            testee.addListener(KEY_1, listener4, NOOP);
-            testee.addListener(KEY_1, listener5, NOOP);
+            testee.addListener(KEY_1, listener1);
+            testee.addListener(KEY_1, listener2);
+            testee.addListener(KEY_1, listener3);
+            testee.addListener(KEY_1, listener4);
+            MailboxListenerRegistry.Registration registration5 = testee.addListener(KEY_1, listener5);
 
             Mono<List<MailboxListener>> listeners = testee.getLocalMailboxListeners(KEY_1)
                 .publishOn(Schedulers.elastic())
                 .delayElements(Duration.ofMillis(100))
                 .collectList();
 
-            testee.removeListener(KEY_1, listener5, NOOP);
+            registration5.unregister();
 
             assertThat(listeners.block(Duration.ofSeconds(10))).hasSize(5);
         }

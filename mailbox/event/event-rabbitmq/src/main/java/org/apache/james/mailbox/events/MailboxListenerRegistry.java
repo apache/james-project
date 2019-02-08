@@ -23,44 +23,77 @@ import static com.google.common.base.Predicates.not;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableSet;
 import reactor.core.publisher.Flux;
 
 class MailboxListenerRegistry {
+
+    interface RemovalStatus {
+        boolean lastListenerRemoved();
+    }
+
+    public static class Registration {
+        private final boolean firstListener;
+        private final Supplier<RemovalStatus> unregister;
+
+        public Registration(boolean firstListener, Supplier<RemovalStatus> unregister) {
+            this.firstListener = firstListener;
+            this.unregister = unregister;
+        }
+
+        public boolean isFirstListener() {
+            return firstListener;
+        }
+
+        public RemovalStatus unregister() {
+            return unregister.get();
+        }
+    }
+
     private final ConcurrentHashMap<RegistrationKey, ImmutableSet<MailboxListener>> listenersByKey;
 
     MailboxListenerRegistry() {
         this.listenersByKey = new ConcurrentHashMap<>();
     }
 
-    void addListener(RegistrationKey registrationKey, MailboxListener listener, Runnable runIfEmpty) {
+    Registration addListener(RegistrationKey registrationKey, MailboxListener listener) {
+        AtomicBoolean firstListener = new AtomicBoolean(false);
         listenersByKey.compute(registrationKey, (key, listeners) ->
             Optional.ofNullable(listeners)
                 .map(set -> ImmutableSet.<MailboxListener>builder().addAll(set).add(listener).build())
                 .orElseGet(() -> {
-                    runIfEmpty.run();
+                    firstListener.set(true);
                     return ImmutableSet.of(listener);
                 })
         );
+        return new Registration(firstListener.get(), () -> removeListener(registrationKey, listener));
     }
 
-    void removeListener(RegistrationKey registrationKey, MailboxListener listener, Runnable runIfEmpty) {
+    private RemovalStatus removeListener(RegistrationKey registrationKey, MailboxListener listener) {
+        AtomicBoolean lastListenerRemoved = new AtomicBoolean(false);
         listenersByKey.compute(registrationKey, (key, listeners) -> {
             boolean listenersContainRequested = Optional.ofNullable(listeners).orElse(ImmutableSet.of()).contains(listener);
             if (listenersContainRequested) {
-                return removeListenerFromSet(listener, runIfEmpty, listeners);
+                ImmutableSet<MailboxListener> remainingListeners = removeListenerFromSet(listener, listeners);
+                if (remainingListeners.isEmpty()) {
+                    lastListenerRemoved.set(true);
+                    return null;
+                }
+                return remainingListeners;
             }
             return listeners;
         });
+        return lastListenerRemoved::get;
     }
 
-    private ImmutableSet<MailboxListener> removeListenerFromSet(MailboxListener listener, Runnable runIfEmpty, ImmutableSet<MailboxListener> listeners) {
+    private ImmutableSet<MailboxListener> removeListenerFromSet(MailboxListener listener, ImmutableSet<MailboxListener> listeners) {
         ImmutableSet<MailboxListener> remainingListeners = listeners.stream().filter(not(listener::equals)).collect(Guavate.toImmutableSet());
         if (remainingListeners.isEmpty()) {
-            runIfEmpty.run();
-            return null;
+            return ImmutableSet.of();
         }
         return remainingListeners;
     }

@@ -99,13 +99,15 @@ class KeyRegistrationHandler {
     }
 
     Registration register(MailboxListener listener, RegistrationKey key) {
-        Runnable bindIfEmpty = () -> registrationBinder.bind(key).block();
-        Runnable unbindIfEmpty = () -> registrationBinder.unbind(key).block();
-        Runnable unregister = () -> mailboxListenerRegistry.removeListener(key, listener, unbindIfEmpty);
-
-        KeyRegistration keyRegistration = new KeyRegistration(unregister);
-        mailboxListenerRegistry.addListener(key, listener, bindIfEmpty);
-        return keyRegistration;
+        MailboxListenerRegistry.Registration registration = mailboxListenerRegistry.addListener(key, listener);
+        if (registration.isFirstListener()) {
+            registrationBinder.bind(key).block();
+        }
+        return new KeyRegistration(() -> {
+            if (registration.unregister().lastListenerRemoved()) {
+                registrationBinder.unbind(key).block();
+            }
+        });
     }
 
     private Mono<Void> handleDelivery(Delivery delivery) {
