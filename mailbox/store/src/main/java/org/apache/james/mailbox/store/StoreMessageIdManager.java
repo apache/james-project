@@ -258,7 +258,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     public void setInMailboxesNoCheck(MessageId messageId, MailboxId targetMailboxId, MailboxSession mailboxSession) throws MailboxException {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
-        List<MailboxMessage> currentMailboxMessages = messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Full);
+        List<MailboxMessage> currentMailboxMessages = messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata);
 
         MessageMoves messageMoves = MessageMoves.builder()
             .previousMailboxIds(toMailboxIds(currentMailboxMessages))
@@ -273,7 +273,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     private List<MailboxMessage> findRelatedMailboxMessages(MessageId messageId, MailboxSession mailboxSession) throws MailboxException {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
-        return messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Full)
+        return messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
             .stream()
             .filter(hasRightsOn(mailboxSession, Right.Read))
             .collect(Guavate.toImmutableList());
