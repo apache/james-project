@@ -45,7 +45,7 @@ public class ContentReplacer {
     }
 
     public String applyPatterns(List<ReplacingPattern> patterns, String text) {
-        String textCopy = new String(text);
+        String textCopy = text;
         for (ReplacingPattern replacingPattern : patterns) {
             textCopy = applyPattern(replacingPattern, textCopy);
         }

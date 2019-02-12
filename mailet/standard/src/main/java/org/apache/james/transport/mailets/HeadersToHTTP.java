@@ -70,7 +70,7 @@ public class HeadersToHTTP extends GenericMailet {
     @Override
     public void init() throws MessagingException {
 
-        passThrough = (getInitParameter("passThrough", "true").compareToIgnoreCase("true") == 0);
+        passThrough = getInitParameter("passThrough", true);
         String targetUrl = getInitParameter("url");
         parameterKey = getInitParameter("parameterKey");
         parameterValue = getInitParameter("parameterValue");

@@ -96,19 +96,13 @@ public class MailetUtil {
      * <p>Gets a boolean valued init parameter.</p>
      * @param config not null
      * @param name name of the init parameter to be queried
-     * @return true when the init parameter is <code>true</code> (ignoring case);
-     * false when the init parameter is <code>false</code> (ignoring case);
-     * otherwise the default value
+     * @return true when the init parameter is <code>true</code>;
+     * false when the init parameter is <code>false</code>;
+     * throw an exception when the value is not of Boolean type;
+     * otherwise returns optional with empty value
      */
     public static Optional<Boolean> getInitParameter(MailetConfig config, String name) {
-        String value = config.getInitParameter(name);
-        if ("true".equalsIgnoreCase(value)) {
-            return Optional.of(true);
-        }
-        if ("false".equalsIgnoreCase(value)) {
-            return Optional.of(false);
-        }
-        return Optional.empty();
+        return Optional.ofNullable(config.getInitParameter(name, Boolean.class));
     }
 
     public static int getInitParameterAsStrictlyPositiveInteger(String condition, int defaultValue) throws MessagingException {

@@ -18,20 +18,28 @@
  ****************************************************************/
 
 
-
 package org.apache.james.transport.mailets;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.mailet.Mail;
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMailet;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.Mail;
+import org.apache.mailet.PerRecipientHeaders;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,11 +60,15 @@ public class LogMessage extends GenericMailet {
      * or mark it as finished.
      */
     private final Logger logger;
+    private LogLevel logLevel;
     private boolean passThrough = true;
-    private boolean headers = true;
-    private boolean body = true;
-    private int bodyMax = 0;
-    private String comment = null;
+    private boolean headers;
+    private boolean body;
+    private int bodyMax;
+    private String comment;
+    private List<String> specificHeaderNames;
+    private List<String> specificAttributeNames;
+
 
     public LogMessage(Logger logger) {
         this.logger = logger;
@@ -66,16 +78,20 @@ public class LogMessage extends GenericMailet {
         this(LOGGER);
     }
 
+
     @Override
     public void init() {
         try {
+            logLevel = getInitParameter("level", LogLevel.class, LogLevel.INFO);
+            specificHeaderNames = getInitParameter("specificHeaders", List.class, Collections.emptyList());
+            specificAttributeNames = getInitParameter("specificAttributes", List.class, Collections.emptyList());
+            headers = getInitParameter("headers", false);
+            body = getInitParameter("body", false);
             passThrough = getInitParameter("passThrough", true);
-            headers = getInitParameter("headers", true);
-            body = getInitParameter("body", true);
-            bodyMax = (getInitParameter("maxBody") == null) ? 0 : Integer.parseInt(getInitParameter("maxBody"));
+            bodyMax = Optional.ofNullable(getInitParameter("maxBody", Integer.class)).orElse(0);
             comment = getInitParameter("comment");
-        } catch (Exception e) {
-            logger.error("Caught exception while initializing LogMessage", e);
+        } catch (ClassCastException e) {
+            logger.error("Caught exception while parsing initial parameter values", e);
         }
     }
 
@@ -86,12 +102,13 @@ public class LogMessage extends GenericMailet {
 
     @Override
     public void service(Mail mail) {
-        logger.info("Logging mail {}", mail.getName());
-        logComment();
+        StringBuilder logs = new StringBuilder();
+        logs.append(commentLog());
         try {
-            MimeMessage message = mail.getMessage();
-            logHeaders(message);
-            logBody(message);
+            logs.append(headersLog(mail));
+            logs.append(bodyLog(mail));
+            logs.append(attributeLog(mail));
+            logLevel.log().accept(logger, logs.toString());
         } catch (MessagingException | IOException e) {
             logger.error("Error logging message.", e);
         }
@@ -100,27 +117,45 @@ public class LogMessage extends GenericMailet {
         }
     }
 
-    private void logComment() {
-        if (comment != null) {
-            logger.info(comment);
-        }
-    }
-
-    private void logHeaders(MimeMessage message) throws MessagingException {
-        if (headers && logger.isInfoEnabled()) {
-            logger.info("\n");
-            for (String header : Collections.list(message.getAllHeaderLines())) {
-                logger.info(header + "\n");
+    private String attributeLog(Mail mail) {
+        StringBuilder attributeLog = new StringBuilder();
+        if (!specificAttributeNames.isEmpty()) {
+            for (String name : specificAttributeNames) {
+                AttributeName attributeName = AttributeName.of(name);
+                Optional<Attribute> attribute = mail.getAttribute(attributeName);
+                attributeLog.append(name + ": " + attribute.map(Attribute::getValue).map(AttributeValue::getValue).get() + '\n');
             }
+            return '\n' + attributeLog.toString();
         }
+        return attributeLog.toString();
     }
 
-    private void logBody(MimeMessage message) throws MessagingException, IOException {
+    private String commentLog() {
+        return Optional.ofNullable(comment).orElse("");
+    }
+
+    private String headersLog(Mail mail) throws MessagingException {
+        StringBuilder headersLog = new StringBuilder();
+        if (headers && logger.isInfoEnabled()) {
+            MimeMessage message = mail.getMessage();
+            headersLog.append(Collections.list(message.getAllHeaderLines()).stream().collect(Collectors.joining("\n")));
+
+            if (!specificHeaderNames.isEmpty()) {
+                headersLog.append("\n" + mail.getRecipients().stream().map(recipient -> logSpecificHeadersFor(mail, recipient)).collect(Collectors.joining("\n")));
+            }
+            return '\n' + headersLog.toString() + '\n';
+        }
+        return headersLog.toString();
+    }
+
+    private String bodyLog(Mail mail) throws MessagingException, IOException {
+        MimeMessage message = mail.getMessage();
         if (body && logger.isInfoEnabled()) {
             try (InputStream inputStream = ByteStreams.limit(message.getDataHandler().getInputStream(), lengthToLog(message))) {
-                logger.info(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
+                return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
             }
         }
+        return "";
     }
 
     private int lengthToLog(MimeMessage message) throws MessagingException {
@@ -129,9 +164,18 @@ public class LogMessage extends GenericMailet {
 
     private int messageSizeOrUnlimited(MimeMessage message) throws MessagingException {
         int computedSize = message.getSize();
-        if (computedSize > 0) {
-            return computedSize;
-        }
-        return Integer.MAX_VALUE;
+        return computedSize > 0 ? computedSize : Integer.MAX_VALUE;
     }
+
+    private String logSpecificHeadersFor(Mail mail, MailAddress recipient) {
+        StringBuilder headersLogs = new StringBuilder();
+        List<PerRecipientHeaders.Header> headers = mail.getPerRecipientSpecificHeaders()
+                .getHeadersForRecipient(recipient).stream()
+                .filter(header -> specificHeaderNames.contains(header.getName()))
+                .collect(Collectors.toList());
+        headersLogs.append("Recipient " + recipient.asPrettyString() + "'s headers are: \n");
+        headersLogs.append(headers.stream().map(header -> header.getName() + ": " + header.getValue()).collect(Collectors.joining("\n")));
+        return headersLogs.toString();
+    }
+
 }

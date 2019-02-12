@@ -88,6 +88,7 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
         return MailetUtil.getInitParameter(config, name).orElse(defaultValue);
     }
 
+
     public Optional<String> getInitParameterAsOptional(String name) {
         String value = getInitParameter(name);
         if (Strings.isNullOrEmpty(value)) {
@@ -122,11 +123,27 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
      * named parameter from the mailet's MailetConfig object.
      *
      * @param name - a String specifying the name of the initialization parameter
-     * @return a String containing the value of the initalization parameter
+     * @return a String containing the value of the initialization parameter
      */
     @Override
     public String getInitParameter(String name) {
         return config.getInitParameter(name);
+    }
+
+    /**
+     * Returns a String containing the value of the named initialization
+     * parameter, or null if the parameter does not exist.
+     * <p>
+     * This method is supplied for convenience. It gets the value of the
+     * named parameter from the mailet's MailetConfig object.
+     *
+     * @param name - a String specifying the name of the initialization parameter
+     * @param clazz - a class specifying the type of the returned value type
+     * @return an object containing the value of the initialization parameter
+     */
+    @Override
+    public <T> T getInitParameter(String name, Class<T> clazz) {
+        return config.getInitParameter(name, clazz);
     }
 
     /**
@@ -137,17 +154,29 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
      * named parameter from the mailet's MailetConfig object.
      *
      * @param name - a String specifying the name of the initialization parameter
-     * @param defValue - a String specifying the default value when the parameter
+     * @param defaultValue - a String specifying the default value when the parameter
      *                    is not present
-     * @return a String containing the value of the initalization parameter
+     * @return a String containing the value of the initialization parameter
      */
-    public String getInitParameter(String name, String defValue) {
-        String res = config.getInitParameter(name);
-        if (res == null) {
-            return defValue;
-        } else {
-            return res;
-        }
+    public String getInitParameter(String name, String defaultValue) {
+        return Optional.ofNullable(config.getInitParameter(name)).orElse(defaultValue);
+    }
+
+    /**
+     * Returns a String containing the value of the named initialization
+     * parameter, or defValue if the parameter does not exist.
+     * <p>
+     * This method is supplied for convenience. It gets the value of the
+     * named parameter from the mailet's MailetConfig object.
+     *
+     * @param name - a String specifying the name of the initialization parameter
+     * @param clazz - a class type specifying the type of the returned value type
+     * @param defaultValue - a generic type specifying the default value when the parameter
+     *                    is not present
+     * @return a generic type containing the value of the initialization parameter
+     */
+    public <T> T getInitParameter(String name, Class<T> clazz, T defaultValue) {
+        return Optional.ofNullable(config.getInitParameter(name, clazz)).orElse(defaultValue);
     }
 
     /**

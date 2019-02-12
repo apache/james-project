@@ -34,6 +34,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.mail.MessagingException;
@@ -266,8 +267,7 @@ public class ClamAVScan extends GenericMailet {
      * Initializer for property debug.
      */
     protected void initDebug() {
-        String debugParam = getInitParameter("debug");
-        setDebug((debugParam == null) ? false : Boolean.valueOf(debugParam));
+        setDebug(Optional.ofNullable(getInitParameter("debug", Boolean.class)).orElse(false));
     }
 
     /**
@@ -332,8 +332,7 @@ public class ClamAVScan extends GenericMailet {
      * Initializer for property port.
      */
     protected void initPort() {
-        String portParam = getInitParameter("port");
-        setPort((portParam == null) ? DEFAULT_PORT : Integer.parseInt(portParam));
+        setPort(Optional.ofNullable(getInitParameter("port", Integer.class)).orElse(DEFAULT_PORT));
         if (isDebug()) {
             LOGGER.debug("port: {}", getPort());
         }
@@ -363,8 +362,8 @@ public class ClamAVScan extends GenericMailet {
      * Initializer for property maxPings.
      */
     protected void initMaxPings() {
-        String maxPingsParam = getInitParameter("maxPings");
-        setMaxPings((maxPingsParam == null) ? DEFAULT_MAX_PINGS : Integer.parseInt(maxPingsParam));
+        Integer maxPingsParam = getInitParameter("maxPings", Integer.class);
+        setMaxPings(Optional.ofNullable(getInitParameter("maxPings", Integer.class)).orElse(DEFAULT_MAX_PINGS));
         if (isDebug()) {
             LOGGER.debug("maxPings: {}", getMaxPings());
         }
@@ -394,8 +393,7 @@ public class ClamAVScan extends GenericMailet {
      * Initializer for property pingIntervalMilli.
      */
     protected void initPingIntervalMilli() {
-        String pingIntervalMilliParam = getInitParameter("pingIntervalMilli");
-        setPingIntervalMilli((pingIntervalMilliParam == null) ? DEFAULT_PING_INTERVAL_MILLI : Integer.parseInt(pingIntervalMilliParam));
+        setPingIntervalMilli(Optional.ofNullable(getInitParameter("pingIntervalMilli", Integer.class)).orElse(DEFAULT_PING_INTERVAL_MILLI));
         if (isDebug()) {
             LOGGER.debug("pingIntervalMilli: {}", getPingIntervalMilli());
         }
@@ -425,8 +423,7 @@ public class ClamAVScan extends GenericMailet {
      * Initializer for property streamBufferSize.
      */
     protected void initStreamBufferSize() {
-        String streamBufferSizeParam = getInitParameter("streamBufferSize");
-        setStreamBufferSize((streamBufferSizeParam == null) ? DEFAULT_STREAM_BUFFER_SIZE : Integer.parseInt(streamBufferSizeParam));
+        setStreamBufferSize(Optional.ofNullable(getInitParameter("streamBufferSize", Integer.class)).orElse(DEFAULT_STREAM_BUFFER_SIZE));
         if (isDebug()) {
             LOGGER.debug("streamBufferSize: {}", getStreamBufferSize());
         }
