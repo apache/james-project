@@ -18,24 +18,24 @@
  ****************************************************************/
 package org.apache.james.backend.rabbitmq;
 
+import org.junit.rules.ExternalResource;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-public class DockerRabbitMQTestRule implements TestRule {
+public class DockerRabbitMQTestRule extends ExternalResource {
 
     private DockerRabbitMQ dockerRabbitMQ;
 
     @Override
-    public Statement apply(Statement base, Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                dockerRabbitMQ = DockerRabbitMQ.withoutCookie();
-                dockerRabbitMQ.start();
-                base.evaluate();
-            }
-        };
+    protected void before() throws Throwable {
+        dockerRabbitMQ = DockerRabbitMQ.withoutCookie();
+        dockerRabbitMQ.start();
+    }
+
+    @Override
+    protected void after() {
+        dockerRabbitMQ.stop();
     }
 
     public DockerRabbitMQ getDockerRabbitMQ() {
