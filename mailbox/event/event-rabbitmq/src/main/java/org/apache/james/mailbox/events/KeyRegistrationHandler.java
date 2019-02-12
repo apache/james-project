@@ -53,7 +53,7 @@ class KeyRegistrationHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyRegistrationHandler.class);
 
     private final EventBusId eventBusId;
-    private final MailboxListenerRegistry mailboxListenerRegistry;
+    private final LocalListenerRegistry localListenerRegistry;
     private final EventSerializer eventSerializer;
     private final Sender sender;
     private final RoutingKeyConverter routingKeyConverter;
@@ -63,12 +63,12 @@ class KeyRegistrationHandler {
     private final MailboxListenerExecutor mailboxListenerExecutor;
     private Optional<Disposable> receiverSubscriber;
 
-    KeyRegistrationHandler(EventBusId eventBusId, EventSerializer eventSerializer, Sender sender, Mono<Connection> connectionMono, RoutingKeyConverter routingKeyConverter, MailboxListenerRegistry mailboxListenerRegistry, MailboxListenerExecutor mailboxListenerExecutor) {
+    KeyRegistrationHandler(EventBusId eventBusId, EventSerializer eventSerializer, Sender sender, Mono<Connection> connectionMono, RoutingKeyConverter routingKeyConverter, LocalListenerRegistry localListenerRegistry, MailboxListenerExecutor mailboxListenerExecutor) {
         this.eventBusId = eventBusId;
         this.eventSerializer = eventSerializer;
         this.sender = sender;
         this.routingKeyConverter = routingKeyConverter;
-        this.mailboxListenerRegistry = mailboxListenerRegistry;
+        this.localListenerRegistry = localListenerRegistry;
         this.receiver = RabbitFlux.createReceiver(new ReceiverOptions().connectionMono(connectionMono));
         this.mailboxListenerExecutor = mailboxListenerExecutor;
         this.registrationQueue = new RegistrationQueueName();
@@ -99,7 +99,7 @@ class KeyRegistrationHandler {
     }
 
     Registration register(MailboxListener listener, RegistrationKey key) {
-        MailboxListenerRegistry.Registration registration = mailboxListenerRegistry.addListener(key, listener);
+        LocalListenerRegistry.LocalRegistration registration = localListenerRegistry.addListener(key, listener);
         if (registration.isFirstListener()) {
             registrationBinder.bind(key).block();
         }
@@ -122,7 +122,7 @@ class KeyRegistrationHandler {
         RegistrationKey registrationKey = routingKeyConverter.toRegistrationKey(routingKey);
         Event event = toEvent(delivery);
 
-        return mailboxListenerRegistry.getLocalMailboxListeners(registrationKey)
+        return localListenerRegistry.getLocalMailboxListeners(registrationKey)
             .filter(listener -> !isLocalSynchronousListeners(eventBusId, listener))
             .flatMap(listener -> Mono.fromRunnable(Throwing.runnable(() -> executeListener(listener, event, registrationKey)))
                 .doOnError(e -> structuredLogger(event, registrationKey)

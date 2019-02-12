@@ -28,19 +28,20 @@ import java.util.function.Supplier;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableSet;
+
 import reactor.core.publisher.Flux;
 
-class MailboxListenerRegistry {
+class LocalListenerRegistry {
 
     interface RemovalStatus {
         boolean lastListenerRemoved();
     }
 
-    public static class Registration {
+    public static class LocalRegistration {
         private final boolean firstListener;
         private final Supplier<RemovalStatus> unregister;
 
-        public Registration(boolean firstListener, Supplier<RemovalStatus> unregister) {
+        public LocalRegistration(boolean firstListener, Supplier<RemovalStatus> unregister) {
             this.firstListener = firstListener;
             this.unregister = unregister;
         }
@@ -56,11 +57,11 @@ class MailboxListenerRegistry {
 
     private final ConcurrentHashMap<RegistrationKey, ImmutableSet<MailboxListener>> listenersByKey;
 
-    MailboxListenerRegistry() {
+    LocalListenerRegistry() {
         this.listenersByKey = new ConcurrentHashMap<>();
     }
 
-    Registration addListener(RegistrationKey registrationKey, MailboxListener listener) {
+    LocalRegistration addListener(RegistrationKey registrationKey, MailboxListener listener) {
         AtomicBoolean firstListener = new AtomicBoolean(false);
         listenersByKey.compute(registrationKey, (key, listeners) ->
             Optional.ofNullable(listeners)
@@ -70,7 +71,7 @@ class MailboxListenerRegistry {
                     return ImmutableSet.of(listener);
                 })
         );
-        return new Registration(firstListener.get(), () -> removeListener(registrationKey, listener));
+        return new LocalRegistration(firstListener.get(), () -> removeListener(registrationKey, listener));
     }
 
     private RemovalStatus removeListener(RegistrationKey registrationKey, MailboxListener listener) {

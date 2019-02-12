@@ -30,6 +30,7 @@ import org.apache.james.metrics.api.MetricFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.rabbitmq.client.Connection;
+
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Sender;
@@ -75,10 +76,10 @@ public class RabbitMQEventBus implements EventBus {
         if (!isRunning && !isStopping) {
             sender = RabbitFlux.createSender(new SenderOptions().connectionMono(connectionMono)
                 .resourceManagementChannelMono(connectionMono.map(Throwing.function(Connection::createChannel))));
-            MailboxListenerRegistry mailboxListenerRegistry = new MailboxListenerRegistry();
-            keyRegistrationHandler = new KeyRegistrationHandler(eventBusId, eventSerializer, sender, connectionMono, routingKeyConverter, mailboxListenerRegistry, mailboxListenerExecutor);
+            LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
+            keyRegistrationHandler = new KeyRegistrationHandler(eventBusId, eventSerializer, sender, connectionMono, routingKeyConverter, localListenerRegistry, mailboxListenerExecutor);
             groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, sender, connectionMono, retryBackoff, eventDeadLetters, mailboxListenerExecutor);
-            eventDispatcher = new EventDispatcher(eventBusId, eventSerializer, sender, mailboxListenerRegistry, mailboxListenerExecutor);
+            eventDispatcher = new EventDispatcher(eventBusId, eventSerializer, sender, localListenerRegistry, mailboxListenerExecutor);
 
             eventDispatcher.start();
             keyRegistrationHandler.start();

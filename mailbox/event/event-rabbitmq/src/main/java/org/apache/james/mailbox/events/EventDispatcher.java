@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.rabbitmq.client.AMQP;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoProcessor;
@@ -53,14 +54,14 @@ class EventDispatcher {
 
     private final EventSerializer eventSerializer;
     private final Sender sender;
-    private final MailboxListenerRegistry mailboxListenerRegistry;
+    private final LocalListenerRegistry localListenerRegistry;
     private final AMQP.BasicProperties basicProperties;
     private final MailboxListenerExecutor mailboxListenerExecutor;
 
-    EventDispatcher(EventBusId eventBusId, EventSerializer eventSerializer, Sender sender, MailboxListenerRegistry mailboxListenerRegistry, MailboxListenerExecutor mailboxListenerExecutor) {
+    EventDispatcher(EventBusId eventBusId, EventSerializer eventSerializer, Sender sender, LocalListenerRegistry localListenerRegistry, MailboxListenerExecutor mailboxListenerExecutor) {
         this.eventSerializer = eventSerializer;
         this.sender = sender;
-        this.mailboxListenerRegistry = mailboxListenerRegistry;
+        this.localListenerRegistry = localListenerRegistry;
         this.basicProperties = new AMQP.BasicProperties.Builder()
             .headers(ImmutableMap.of(EVENT_BUS_ID, eventBusId.asString()))
             .build();
@@ -86,7 +87,7 @@ class EventDispatcher {
     private Mono<Void> dispatchToLocalListeners(Event event, Set<RegistrationKey> keys) {
         return Flux.fromIterable(keys)
             .subscribeOn(Schedulers.elastic())
-            .flatMap(key -> mailboxListenerRegistry.getLocalMailboxListeners(key)
+            .flatMap(key -> localListenerRegistry.getLocalMailboxListeners(key)
                 .map(listener -> Tuples.of(key, listener)))
             .filter(pair -> pair.getT2().getExecutionMode().equals(MailboxListener.ExecutionMode.SYNCHRONOUS))
             .flatMap(pair -> executeListener(event, pair.getT2(), pair.getT1()))

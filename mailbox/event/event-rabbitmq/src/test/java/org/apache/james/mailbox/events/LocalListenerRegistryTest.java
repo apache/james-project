@@ -34,14 +34,14 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-class MailboxListenerRegistryTest {
+class LocalListenerRegistryTest {
     private static final MailboxIdRegistrationKey KEY_1 = new MailboxIdRegistrationKey(TestId.of(42));
 
-    private MailboxListenerRegistry testee;
+    private LocalListenerRegistry testee;
 
     @BeforeEach
     void setUp() {
-        testee = new MailboxListenerRegistry();
+        testee = new LocalListenerRegistry();
     }
 
     @Test
@@ -75,7 +75,7 @@ class MailboxListenerRegistryTest {
         MailboxListener listener1 = event -> {};
         MailboxListener listener2 = event -> {};
         testee.addListener(KEY_1, listener1);
-        MailboxListenerRegistry.Registration registration = testee.addListener(KEY_1, listener2);
+        LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener2);
 
         registration.unregister();
 
@@ -105,7 +105,7 @@ class MailboxListenerRegistryTest {
         MailboxListener listener = event -> {};
         MailboxListener listener2 = event -> {};
 
-        MailboxListenerRegistry.Registration registration = testee.addListener(KEY_1, listener);
+        LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener);
         testee.addListener(KEY_1, listener2);
 
         assertThat(registration.unregister().lastListenerRemoved()).isFalse();
@@ -116,7 +116,7 @@ class MailboxListenerRegistryTest {
         MailboxListener listener = event -> {};
 
 
-        MailboxListenerRegistry.Registration registration = testee.addListener(KEY_1, listener);
+        LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener);
 
         assertThat(registration.unregister().lastListenerRemoved()).isTrue();
     }
@@ -167,7 +167,7 @@ class MailboxListenerRegistryTest {
         void getLocalMailboxListenersShouldReturnEmptyWhenRemoveAddedListener() throws Exception {
             MailboxListener listener1 = event -> {};
 
-            MailboxListenerRegistry.Registration registration = testee.addListener(KEY_1, listener1);
+            LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener1);
 
             ConcurrentTestRunner.builder()
                 .operation(((threadNumber, operationNumber) -> registration.unregister()))
@@ -190,17 +190,17 @@ class MailboxListenerRegistryTest {
             ConcurrentTestRunner.builder()
                 .operation((threadNumber, operationNumber) -> {
                     if (threadNumber % 3 == 0) {
-                        MailboxListenerRegistry.Registration registration = testee.addListener(KEY_1, listener1);
+                        LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener1);
                         if (registration.isFirstListener()) {
                             firstListenerCount.incrementAndGet();
                         }
                     } else if (threadNumber % 3 == 1) {
-                        MailboxListenerRegistry.Registration registration = testee.addListener(KEY_1, listener2);
+                        LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener2);
                         if (registration.isFirstListener()) {
                             firstListenerCount.incrementAndGet();
                         }
                     } else if (threadNumber % 3 == 2) {
-                        MailboxListenerRegistry.Registration registration = testee.addListener(KEY_1, listener3);
+                        LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener3);
                         if (registration.isFirstListener()) {
                             firstListenerCount.incrementAndGet();
                         }
@@ -218,7 +218,7 @@ class MailboxListenerRegistryTest {
             MailboxListener listener1 = event -> {};
             AtomicInteger lastListenerRemoved = new AtomicInteger(0);
 
-            MailboxListenerRegistry.Registration registration = testee.addListener(KEY_1, listener1);
+            LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener1);
             ConcurrentTestRunner.builder()
                 .operation(((threadNumber, operationNumber) -> {
                     if (registration.unregister().lastListenerRemoved()) {
@@ -244,7 +244,7 @@ class MailboxListenerRegistryTest {
             testee.addListener(KEY_1, listener2);
             testee.addListener(KEY_1, listener3);
             testee.addListener(KEY_1, listener4);
-            MailboxListenerRegistry.Registration registration5 = testee.addListener(KEY_1, listener5);
+            LocalListenerRegistry.LocalRegistration registration5 = testee.addListener(KEY_1, listener5);
 
             Mono<List<MailboxListener>> listeners = testee.getLocalMailboxListeners(KEY_1)
                 .publishOn(Schedulers.elastic())
