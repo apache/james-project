@@ -39,6 +39,7 @@ import com.google.inject.Module;
 public class CassandraRabbitMQSwiftJmapTestRule implements TestRule {
 
     private static final int LIMIT_TO_10_MESSAGES = 10;
+    public static final int TWO_SECONDS = 2000;
     private final TemporaryFolder temporaryFolder;
 
     public static CassandraRabbitMQSwiftJmapTestRule defaultTestRule() {
@@ -70,6 +71,7 @@ public class CassandraRabbitMQSwiftJmapTestRule implements TestRule {
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
             .overrideWith(new TestESMetricReporterModule())
             .overrideWith(guiceModuleTestRule.getModule())
+            .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()))
             .overrideWith(additionals);
     }
 
@@ -79,6 +81,16 @@ public class CassandraRabbitMQSwiftJmapTestRule implements TestRule {
     }
 
     public void await() {
+        awaitProcessingStart();
         guiceModuleTestRule.await();
+    }
+
+    private void awaitProcessingStart() {
+        // As the RabbitMQEventBus is asynchronous we have otherwise no guaranties that the processing to be awaiting for did start
+        try {
+            Thread.sleep(TWO_SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

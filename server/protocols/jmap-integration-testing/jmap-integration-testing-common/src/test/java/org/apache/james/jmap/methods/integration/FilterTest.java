@@ -36,6 +36,7 @@ import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.apache.james.mailbox.model.MailboxConstants.INBOX;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Duration.ONE_MINUTE;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
@@ -744,8 +745,8 @@ public abstract class FilterTest {
             .body(requestBody)
             .post("/jmap");
 
-        calmlyAwait.until(
-            () -> JmapCommonRequests.isAnyMessageFoundInRecipientsMailbox(accessToken, matchedMailbox));
+        calmlyAwait.atMost(ONE_MINUTE)
+            .until(() -> JmapCommonRequests.isAnyMessageFoundInRecipientsMailbox(accessToken, matchedMailbox));
     }
 
     @Test
@@ -1078,8 +1079,8 @@ public abstract class FilterTest {
         .then()
             .statusCode(200);
 
-        calmlyAwait.until(
-            () -> JmapCommonRequests.isAnyMessageFoundInRecipientsMailbox(accessToken, inbox));
+        calmlyAwait.atMost(ONE_MINUTE)
+            .until(() -> JmapCommonRequests.isAnyMessageFoundInRecipientsMailbox(accessToken, inbox));
     }
 
     @Test

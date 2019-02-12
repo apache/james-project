@@ -30,7 +30,7 @@ import javax.inject.Singleton;
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
 import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
-import org.apache.james.queue.rabbitmq.RabbitMQManagementApi;
+import org.apache.james.queue.rabbitmq.RabbitMQMailQueueManagement;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
 
 import com.google.inject.AbstractModule;
@@ -63,17 +63,17 @@ public class TestRabbitMQModule extends AbstractModule {
     @Singleton
     protected RabbitMQConfiguration provideRabbitMQConfiguration() throws URISyntaxException {
         return RabbitMQConfiguration.builder()
-                .amqpUri(rabbitMQ.amqpUri())
-                .managementUri(rabbitMQ.managementUri())
-                .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
-                .build();
+            .amqpUri(rabbitMQ.amqpUri())
+            .managementUri(rabbitMQ.managementUri())
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .build();
     }
 
     public static class QueueCleanUp implements CleanupTasksPerformer.CleanupTask {
-        private final RabbitMQManagementApi api;
+        private final RabbitMQMailQueueManagement api;
 
         @Inject
-        public QueueCleanUp(RabbitMQManagementApi api) {
+        public QueueCleanUp(RabbitMQMailQueueManagement api) {
             this.api = api;
         }
 

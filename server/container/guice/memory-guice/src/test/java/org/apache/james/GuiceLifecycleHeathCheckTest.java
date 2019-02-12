@@ -27,18 +27,19 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 
+import javax.annotation.PreDestroy;
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.task.Task;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminConfiguration;
+import org.apache.james.webadmin.WebAdminServer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import com.google.inject.multibindings.Multibinder;
 
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
@@ -80,17 +81,29 @@ class GuiceLifecycleHeathCheckTest {
         }
     }
 
-    @Nested
-    class Unhealthy {
-        CountDownLatch latch = new CountDownLatch(1);
-        CleanupTasksPerformer.CleanupTask awaitCleanupTask = () -> {
+    static class DestroyedBeforeWebAdmin {
+        WebAdminServer webAdminServer;
+        CountDownLatch latch;
+
+        @Inject
+        DestroyedBeforeWebAdmin(WebAdminServer webAdminServer, CountDownLatch latch) {
+            this.webAdminServer = webAdminServer;
+            this.latch = latch;
+        }
+
+        @PreDestroy
+        void cleanup() {
             try {
                 latch.await();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            return Task.Result.COMPLETED;
-        };
+        }
+    }
+
+    @Nested
+    class Unhealthy {
+        CountDownLatch latch = new CountDownLatch(1);
 
         @RegisterExtension
         JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
@@ -99,9 +112,8 @@ class GuiceLifecycleHeathCheckTest {
                 .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
                 .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
                 .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION))
-                .overrideWith(binder -> Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class)
-                    .addBinding()
-                    .toInstance(awaitCleanupTask)))
+                .overrideWith(binder -> binder.bind(CountDownLatch.class).toInstance(latch))
+                .overrideWith(binder -> binder.bind(DestroyedBeforeWebAdmin.class).asEagerSingleton()))
             .build();
 
         @Test

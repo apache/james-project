@@ -23,6 +23,7 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageMetaData;
 
 /**
  * A MIME message, consisting of meta-data (including MIME headers)
@@ -133,5 +134,8 @@ public interface MailboxMessage extends Message, Comparable<MailboxMessage> {
      */
     Flags createFlags();
 
+    default MessageMetaData metaData() {
+        return new MessageMetaData(getUid(), getModSeq(), createFlags(), getFullContentOctets(), getInternalDate(), getMessageId());
+    }
 
 }

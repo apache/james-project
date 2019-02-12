@@ -33,7 +33,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.mock.DataProvisioner;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -91,13 +90,6 @@ public class MailboxCopierTest {
      */
     @Test
     public void testMailboxCopy() throws MailboxException, IOException {
-         if (srcMemMailboxManager instanceof StoreMailboxManager) {
-             ((StoreMailboxManager) srcMemMailboxManager).init();
-         }
-         if (dstMemMailboxManager instanceof StoreMailboxManager) {
-             ((StoreMailboxManager) dstMemMailboxManager).init();
-         }
-
         DataProvisioner.feedMailboxManager(srcMemMailboxManager);
        
         assertMailboxManagerSize(srcMemMailboxManager, 1);

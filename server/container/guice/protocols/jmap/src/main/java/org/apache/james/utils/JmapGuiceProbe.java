@@ -28,10 +28,11 @@ import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.jmap.api.vacation.VacationRepository;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -42,21 +43,23 @@ public class JmapGuiceProbe implements GuiceProbe {
     private final JMAPServer jmapServer;
     private final MessageIdManager messageIdManager;
     private final MailboxManager mailboxManager;
+    private final EventBus eventBus;
 
     @Inject
-    private JmapGuiceProbe(VacationRepository vacationRepository, JMAPServer jmapServer, MessageIdManager messageIdManager, MailboxManager mailboxManager) {
+    private JmapGuiceProbe(VacationRepository vacationRepository, JMAPServer jmapServer, MessageIdManager messageIdManager, MailboxManager mailboxManager, EventBus eventBus) {
         this.vacationRepository = vacationRepository;
         this.jmapServer = jmapServer;
         this.messageIdManager = messageIdManager;
         this.mailboxManager = mailboxManager;
+        this.eventBus = eventBus;
     }
 
     public int getJmapPort() {
         return jmapServer.getPort();
     }
 
-    public void addMailboxListener(MailboxListener listener) throws MailboxException {
-        mailboxManager.addGlobalListener(listener, mailboxManager.createSystemSession("jmap"));
+    public void addMailboxListener(MailboxListener.GroupMailboxListener listener) {
+        eventBus.register(listener);
     }
 
     public void modifyVacation(AccountId accountId, VacationPatch vacationPatch) {

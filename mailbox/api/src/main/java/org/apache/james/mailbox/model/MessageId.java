@@ -30,4 +30,6 @@ public interface MessageId {
     }
     
     String serialize();
+
+    boolean isSerializable();
 }

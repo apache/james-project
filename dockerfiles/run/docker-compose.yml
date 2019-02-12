@@ -30,7 +30,7 @@ services:
     ports:
       - "9042:9042"
   tika:
-    image: logicalspark/docker-tikaserver:1.19.1
+    image: logicalspark/docker-tikaserver:1.20
   rabbitmq:
     image: rabbitmq:3.7.7-management
     ports:

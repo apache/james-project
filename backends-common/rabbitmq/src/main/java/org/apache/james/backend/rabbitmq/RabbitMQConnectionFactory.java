@@ -18,30 +18,47 @@
  ****************************************************************/
 package org.apache.james.backend.rabbitmq;
 
-import java.util.concurrent.ExecutionException;
+import java.time.Duration;
+import java.util.Optional;
+import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
-import org.apache.james.util.retry.RetryExecutorUtil;
-
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
-public class RabbitMQConnectionFactory {
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
-    private final AsyncRetryExecutor executor;
+public class RabbitMQConnectionFactory {
+    private class ConnectionCallable implements Callable<Connection> {
+        private final ConnectionFactory connectionFactory;
+        private Optional<Connection> connection;
+
+        ConnectionCallable(ConnectionFactory connectionFactory) {
+            this.connectionFactory = connectionFactory;
+            connection = Optional.empty();
+        }
+
+        @Override
+        public synchronized Connection call() throws Exception {
+            if (connection.map(Connection::isOpen).orElse(false)) {
+                return connection.get();
+            }
+            Connection newConnection = connectionFactory.newConnection();
+            connection = Optional.of(newConnection);
+            return newConnection;
+        }
+    }
+
     private final ConnectionFactory connectionFactory;
 
-    private final int maxRetries;
-    private final int minDelay;
+    private final RabbitMQConfiguration configuration;
 
     @Inject
-    public RabbitMQConnectionFactory(RabbitMQConfiguration rabbitMQConfiguration, AsyncRetryExecutor executor) {
-        this.executor = executor;
+    public RabbitMQConnectionFactory(RabbitMQConfiguration rabbitMQConfiguration) {
         this.connectionFactory = from(rabbitMQConfiguration);
-        this.maxRetries = rabbitMQConfiguration.getMaxRetries();
-        this.minDelay = rabbitMQConfiguration.getMinDelay();
+        this.configuration = rabbitMQConfiguration;
     }
 
     private ConnectionFactory from(RabbitMQConfiguration rabbitMQConfiguration) {
@@ -55,12 +72,12 @@ public class RabbitMQConnectionFactory {
     }
 
     public Connection create() {
-        try {
-            return RetryExecutorUtil.retryOnExceptions(executor, maxRetries, minDelay, Exception.class)
-                    .getWithRetry(context -> connectionFactory.newConnection())
-                    .get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+        return connectionMono().block();
+    }
+
+    public Mono<Connection> connectionMono() {
+        return Mono.fromCallable(new ConnectionCallable(connectionFactory))
+            .retryBackoff(configuration.getMaxRetries(), Duration.ofMillis(configuration.getMinDelayInMs()))
+            .publishOn(Schedulers.elastic());
     }
 }

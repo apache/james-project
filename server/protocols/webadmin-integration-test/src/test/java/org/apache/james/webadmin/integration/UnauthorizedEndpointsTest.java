@@ -24,6 +24,8 @@ import static io.restassured.RestAssured.when;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.routes.AliasRoutes;
+import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.CassandraMigrationRoutes;
 import org.apache.james.webadmin.routes.DLPConfigurationRoutes;
 import org.apache.james.webadmin.routes.DomainMappingsRoutes;
@@ -78,6 +80,8 @@ class UnauthorizedEndpointsTest {
             UserRoutes.USERS,
             ForwardRoutes.ROOT_PATH,
             ForwardRoutes.ROOT_PATH + "/alice@james.org",
+            AliasRoutes.ROOT_PATH,
+            AliasRoutes.ROOT_PATH + "/bob@james.org",
             GlobalQuotaRoutes.QUOTA_ENDPOINT,
             GlobalQuotaRoutes.QUOTA_ENDPOINT + "/count",
             GlobalQuotaRoutes.QUOTA_ENDPOINT + "/size",
@@ -104,7 +108,8 @@ class UnauthorizedEndpointsTest {
     @ParameterizedTest
     @ValueSource(strings = {
             CassandraMigrationRoutes.VERSION_BASE + "/upgrade",
-            CassandraMigrationRoutes.VERSION_BASE + "/upgrade/latest"
+            CassandraMigrationRoutes.VERSION_BASE + "/upgrade/latest",
+            CassandraMappingsRoutes.ROOT_PATH
     })
     void checkUrlProtectionOnPost(String url) {
         when()
@@ -127,6 +132,7 @@ class UnauthorizedEndpointsTest {
             UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/size",
             UserRoutes.USERS + "/user@james.org",
             ForwardRoutes.ROOT_PATH + "/alice@james.org/bob@james.org",
+            AliasRoutes.ROOT_PATH + "/bob@james.org/sources/bob-alias@james.org",
             GlobalQuotaRoutes.QUOTA_ENDPOINT + "/count",
             GlobalQuotaRoutes.QUOTA_ENDPOINT + "/size",
             GlobalQuotaRoutes.QUOTA_ENDPOINT,
@@ -155,6 +161,7 @@ class UnauthorizedEndpointsTest {
             UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/size",
             UserRoutes.USERS + "/user@james.org",
             ForwardRoutes.ROOT_PATH + "/alice@james.org/bob@james.org",
+            AliasRoutes.ROOT_PATH + "/bob@james.org/sources/bob-alias@james.org",
             GlobalQuotaRoutes.QUOTA_ENDPOINT + "/count",
             GlobalQuotaRoutes.QUOTA_ENDPOINT + "/size",
             GroupsRoutes.ROOT_PATH + "/group@james.org/user@james.org",

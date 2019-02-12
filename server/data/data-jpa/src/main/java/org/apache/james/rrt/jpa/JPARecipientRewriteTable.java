@@ -54,8 +54,6 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     /**
      * Set the entity manager to use.
-     * 
-     * @param entityManagerFactory
      */
     @Inject
     @PersistenceUnit(unitName = "James")
@@ -65,7 +63,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     @Override
     public void addMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
-        Mappings map = getUserDomainMappings(source);
+        Mappings map = getStoredMappings(source);
         if (!map.isEmpty()) {
             Mappings updatedMappings = MappingsImpl.from(map).add(mapping).build();
             doUpdateMapping(source, updatedMappings.serialize());
@@ -76,42 +74,19 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     @Override
     protected Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException {
-        Mappings mapping = getMapping(user, domain, "selectExactMappings");
-        if (!mapping.isEmpty()) {
-            return mapping;
+        Mappings userDomainMapping = getStoredMappings(MappingSource.fromUser(user, domain));
+        if (userDomainMapping != null && !userDomainMapping.isEmpty()) {
+            return userDomainMapping;
         }
-        return getMapping(user, domain, "selectMappings");
-    }
-
-    private Mappings getMapping(String user, Domain domain, String queryName) throws RecipientRewriteTableException {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        final EntityTransaction transaction = entityManager.getTransaction();
-        try {
-            transaction.begin();
-            @SuppressWarnings("unchecked")
-            List<JPARecipientRewrite> virtualUsers = entityManager
-                .createNamedQuery(queryName)
-                .setParameter("user", user)
-                .setParameter("domain", domain.asString())
-                .getResultList();
-            transaction.commit();
-            if (virtualUsers.size() > 0) {
-                return MappingsImpl.fromRawString(virtualUsers.get(0).getTargetAddress());
-            }
-            return MappingsImpl.empty();
-        } catch (PersistenceException e) {
-            LOGGER.debug("Failed to find mapping for  user={} and domain={}", user, domain, e);
-            if (transaction.isActive()) {
-                transaction.rollback();
-            }
-            throw new RecipientRewriteTableException("Error while retrieve mappings", e);
-        } finally {
-            entityManager.close();
+        Mappings domainMapping = getStoredMappings(MappingSource.fromDomain(domain));
+        if (domainMapping != null && !domainMapping.isEmpty()) {
+            return domainMapping;
         }
+        return MappingsImpl.empty();
     }
 
     @Override
-    public Mappings getUserDomainMappings(MappingSource source) throws RecipientRewriteTableException {
+    public Mappings getStoredMappings(MappingSource source) throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
@@ -164,7 +139,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     @Override
     public void removeMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
-        Mappings map = getUserDomainMappings(source);
+        Mappings map = getStoredMappings(source);
         if (map.size() > 1) {
             Mappings updatedMappings = map.remove(mapping);
             doUpdateMapping(source, updatedMappings.serialize());
@@ -175,12 +150,8 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     /**
      * Update the mapping for the given user and domain
-     * 
-     * @param user the user
-     * @param domain the domain
-     * @param mapping the mapping
+     *
      * @return true if update was successfully
-     * @throws RecipientRewriteTableException
      */
     private boolean doUpdateMapping(MappingSource source, String mapping) throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
@@ -211,11 +182,6 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     /**
      * Remove a mapping for the given user and domain
-     * 
-     * @param user the user
-     * @param domain the domain
-     * @param mapping the mapping
-     * @throws RecipientRewriteTableException
      */
     private void doRemoveMapping(MappingSource source, String mapping) throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
@@ -243,11 +209,6 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     /**
      * Add mapping for given user and domain
-     * 
-     * @param user the user
-     * @param domain the domain
-     * @param mapping the mapping
-     * @throws RecipientRewriteTableException
      */
     private void doAddMapping(MappingSource source, String mapping) throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();

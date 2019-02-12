@@ -419,6 +419,21 @@ public interface MailRepositoryContract {
         assertThat(testee.retrieve(MAIL_1)).satisfies(actual -> checkMailEquality(actual, mail));
     }
 
+
+    @Test
+    default void storingMessageWithPerRecipientHeadersShouldAllowMultipleHeadersPerUser() throws Exception {
+
+        MailRepository testee = retrieveRepository();
+        Mail mail = createMail(MAIL_1);
+        MailAddress recipient1 = new MailAddress("rec1@domain.com");
+        mail.addSpecificHeaderForRecipient(PerRecipientHeaders.Header.builder().name("foo").value("bar").build(), recipient1);
+        mail.addSpecificHeaderForRecipient(PerRecipientHeaders.Header.builder().name("fizz").value("buzz").build(), recipient1);
+        testee.store(mail);
+
+        assertThat(testee.list()).hasSize(1).containsOnly(MAIL_1);
+        assertThat(testee.retrieve(MAIL_1)).satisfies(actual -> checkMailEquality(actual, mail));
+    }
+
     @RepeatedTest(100)
     default void storingAndRemovingMessagesConcurrentlyShouldLeadToConsistentResult() throws Exception {
         MailRepository testee = retrieveRepository();

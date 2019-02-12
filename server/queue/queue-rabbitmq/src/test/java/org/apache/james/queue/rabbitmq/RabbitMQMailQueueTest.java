@@ -20,7 +20,6 @@
 package org.apache.james.queue.rabbitmq;
 
 import static java.time.temporal.ChronoUnit.HOURS;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -33,12 +32,12 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
-import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backend.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
@@ -80,7 +79,8 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
         CassandraBlobModule.MODULE,
         CassandraMailQueueViewModule.MODULE,
-        CassandraEventStoreModule.MODULE));
+        CassandraEventStoreModule.MODULE,
+        CassandraSchemaVersionModule.MODULE));
 
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
@@ -88,7 +88,7 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
     private RabbitMQMailQueueFactory mailQueueFactory;
     private UpdatableTickingClock clock;
     private RabbitMQMailQueue mailQueue;
-    private RabbitMQManagementApi mqManagementApi;
+    private RabbitMQMailQueueManagement mqManagementApi;
 
     @Override
     public void enQueue(Mail mail) throws MailQueue.MailQueueException {
@@ -111,12 +111,6 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
                     .build(),
             mimeMessageStoreFactory);
 
-        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(rabbitMQ.amqpUri())
-            .managementUri(rabbitMQ.managementUri())
-            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
-            .build();
-
         RabbitClient rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
         RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
             metricTestSystem.getSpyMetricFactory(),
@@ -127,7 +121,7 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
             mailQueueViewFactory,
             clock,
             new RawMailQueueItemDecoratorFactory());
-        mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
+        mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
         mailQueue = mailQueueFactory.createQueue(SPOOL);
     }

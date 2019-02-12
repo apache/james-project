@@ -25,9 +25,12 @@ import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO.MessageIdAttachmentIds;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import reactor.core.publisher.Flux;
 
 public class AttachmentMessageIdCreation implements Migration {
     private static final Logger LOGGER = LoggerFactory.getLogger(AttachmentMessageIdCreation.class);
@@ -56,10 +59,11 @@ public class AttachmentMessageIdCreation implements Migration {
 
     private Result createIndex(MessageIdAttachmentIds message) {
         try {
-            message.getAttachmentId()
-                .forEach(attachmentId -> attachmentMessageIdDAO
-                    .storeAttachmentForMessageId(attachmentId, message.getMessageId())
-                    .join());
+            MessageId messageId = message.getMessageId();
+            Flux.fromIterable(message.getAttachmentId())
+                .flatMap(attachmentId -> attachmentMessageIdDAO.storeAttachmentForMessageId(attachmentId, messageId))
+                .then()
+                .block();
             return Result.COMPLETED;
         } catch (Exception e) {
             LOGGER.error("Error while creation attachmentId -> messageIds index", e);

@@ -27,14 +27,15 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.message.request.ExamineRequest;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
 public class ExamineProcessor extends AbstractSelectionProcessor<ExamineRequest> {
 
-    public ExamineProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory,
-            MetricFactory metricFactory) {
-        super(ExamineRequest.class, next, mailboxManager, statusResponseFactory, true, metricFactory);
+    public ExamineProcessor(ImapProcessor next, MailboxManager mailboxManager, EventBus eventBus, StatusResponseFactory statusResponseFactory,
+                            MetricFactory metricFactory) {
+        super(ExamineRequest.class, next, mailboxManager, statusResponseFactory, true, metricFactory, eventBus);
     }
 
     @Override

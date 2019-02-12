@@ -19,8 +19,6 @@
  -->
 
 <listeners>
-  <poolSize>8</poolSize>
-
   <listener>
     <class>org.apache.james.mailbox.spamassassin.SpamAssassinListener</class>
     <async>true</async>

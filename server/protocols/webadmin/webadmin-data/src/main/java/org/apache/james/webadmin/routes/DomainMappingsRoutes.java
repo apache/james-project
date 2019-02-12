@@ -160,7 +160,7 @@ public class DomainMappingsRoutes implements Routes {
     public List<String> getMapping(Request request, Response response) throws RecipientRewriteTableException {
         MappingSource mappingSource = mappingSourceFrom(request);
 
-        return Optional.ofNullable(recipientRewriteTable.getUserDomainMappings(mappingSource).select(Mapping.Type.Domain))
+        return Optional.of(recipientRewriteTable.getStoredMappings(mappingSource).select(Mapping.Type.Domain))
                 .filter(mappings -> !mappings.isEmpty())
                 .filter(mappings -> mappings.contains(Mapping.Type.Domain))
                 .map(this::toDomainList)

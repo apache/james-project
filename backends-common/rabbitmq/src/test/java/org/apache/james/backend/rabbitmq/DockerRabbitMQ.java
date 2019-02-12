@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.backend.rabbitmq;
 
+import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
@@ -44,6 +46,8 @@ import com.rabbitmq.client.ConnectionFactory;
 public class DockerRabbitMQ {
     private static final Logger LOGGER = LoggerFactory.getLogger(DockerRabbitMQ.class);
 
+    private static final int MAX_THREE_RETRIES = 3;
+    private static final int MIN_DELAY_OF_ONE_HUNDRED_MILLISECONDS = 100;
     private static final String DEFAULT_RABBIT_HOST_NAME_PREFIX = "my-rabbit";
     private static final String DEFAULT_RABBIT_NODE_NAME_PREFIX = "rabbit";
     private static final int DEFAULT_RABBITMQ_PORT = 5672;
@@ -226,5 +230,25 @@ public class DockerRabbitMQ {
         if (container.isRunning()) {
             actionPerform.accept(this);
         }
+    }
+
+    public void pause() {
+        DockerClientFactory.instance().client().pauseContainerCmd(container.getContainerId()).exec();
+    }
+
+    public void unpause() {
+        DockerClientFactory.instance().client().unpauseContainerCmd(container.getContainerId()).exec();
+    }
+
+    public RabbitMQConnectionFactory createRabbitConnectionFactory() throws URISyntaxException {
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(amqpUri())
+            .managementUri(managementUri())
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .maxRetries(MAX_THREE_RETRIES)
+            .minDelayInMs(MIN_DELAY_OF_ONE_HUNDRED_MILLISECONDS)
+            .build();
+
+        return new RabbitMQConnectionFactory(rabbitMQConfiguration);
     }
 }

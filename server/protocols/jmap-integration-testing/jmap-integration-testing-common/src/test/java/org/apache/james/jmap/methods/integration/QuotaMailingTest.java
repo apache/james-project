@@ -50,6 +50,8 @@ import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
+import org.awaitility.Duration;
+import org.awaitility.core.ConditionFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -65,6 +67,7 @@ public abstract class QuotaMailingTest {
     private static final String BART = "bart@" + DOMAIN;
     private static final String PASSWORD = "password";
     private static final String BOB_PASSWORD = "bobPassword";
+    private static final ConditionFactory WAIT_TWO_MINUTES = calmlyAwait.atMost(Duration.TWO_MINUTES);
 
     protected abstract GuiceJamesServer createJmapServer() throws IOException;
 
@@ -107,8 +110,7 @@ public abstract class QuotaMailingTest {
         bartSendMessageToHomer();
         // Homer receives a mail big enough to trigger a configured threshold
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS)
-            .until(() -> listMessageIdsForAccount(homerAccessToken).size() == 2);
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 2);
 
         List<String> ids = listMessageIdsForAccount(homerAccessToken);
         String idString = ids.stream()
@@ -135,13 +137,11 @@ public abstract class QuotaMailingTest {
 
         bartSendMessageToHomer();
         // Homer receives a mail big enough to trigger a 10% configured threshold
-        calmlyAwait.atMost(30, TimeUnit.SECONDS)
-            .until(() -> listMessageIdsForAccount(homerAccessToken).size() == 2);
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 2);
 
         bartSendMessageToHomer();
         // Homer receives a mail big enough to trigger a 20% configured threshold
-        calmlyAwait.atMost(30, TimeUnit.SECONDS)
-            .until(() -> listMessageIdsForAccount(homerAccessToken).size() == 4);
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 4);
 
         List<String> ids = listMessageIdsForAccount(homerAccessToken);
         String idString = ids.stream()

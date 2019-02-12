@@ -30,9 +30,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 
 import org.apache.james.util.concurrent.NamedThreadFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -48,20 +48,20 @@ public class RetryExecutorUtilTest {
     private RetryExecutor retryExecutor;
     private ScheduledExecutorService scheduledExecutor;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
         scheduledExecutor = Executors.newSingleThreadScheduledExecutor(threadFactory);
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         scheduledExecutor.shutdownNow();
     }
 
     @Test
-    public void retryOnExceptionsAndExecuteShouldRethrowWhenScheduledServiceAlwaysThrowException() throws Exception {
+    void retryOnExceptionsAndExecuteShouldRethrowWhenScheduledServiceAlwaysThrowException() throws Exception {
         given(serviceMock.faultyService())
                 .willThrow(IllegalArgumentException.class)
                 .willThrow(IllegalArgumentException.class)
@@ -76,7 +76,7 @@ public class RetryExecutorUtilTest {
     }
 
     @Test
-    public void retryOnExceptionsAndExecuteShouldRetryWhenMatchExceptionAndSuccess() throws Exception {
+    void retryOnExceptionsAndExecuteShouldRetryWhenMatchExceptionAndSuccess() throws Exception {
         given(serviceMock.faultyService())
                 .willThrow(IllegalArgumentException.class)
                 .willReturn("Foo");
@@ -88,7 +88,7 @@ public class RetryExecutorUtilTest {
     }
 
     @Test
-    public void retryOnExceptionsAndExecuteShouldNotRetryWhenDoesNotMatchException() throws Exception {
+    void retryOnExceptionsAndExecuteShouldNotRetryWhenDoesNotMatchException() throws Exception {
         given(serviceMock.faultyService())
                 .willThrow(IllegalStateException.class)
                 .willReturn("Foo");
@@ -102,7 +102,7 @@ public class RetryExecutorUtilTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void retryOnExceptionsAndExecuteShouldRetryWithMaxTimesAndReturnValue() throws Exception {
+    void retryOnExceptionsAndExecuteShouldRetryWithMaxTimesAndReturnValue() throws Exception {
         given(serviceMock.faultyService())
                 .willThrow(IllegalStateException.class, IllegalStateException.class, IllegalStateException.class)
                 .willReturn("Foo");
@@ -116,7 +116,7 @@ public class RetryExecutorUtilTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void retryOnExceptionsAndExecuteShouldFailIfFailMoreThanMaxRetry() throws Exception {
+    void retryOnExceptionsAndExecuteShouldFailIfFailMoreThanMaxRetry() throws Exception {
         given(serviceMock.faultyService())
             .willThrow(IllegalStateException.class, IllegalStateException.class, IllegalStateException.class, IllegalStateException.class)
             .willReturn("Foo");

@@ -119,14 +119,14 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
     }
 
     private final RabbitClient rabbitClient;
-    private final RabbitMQManagementApi mqManagementApi;
+    private final RabbitMQMailQueueManagement mqManagementApi;
     private final PrivateFactory privateFactory;
     private final RabbitMQMailQueueObjectPool mailQueueObjectPool;
 
     @VisibleForTesting
     @Inject
     RabbitMQMailQueueFactory(RabbitClient rabbitClient,
-                             RabbitMQManagementApi mqManagementApi,
+                             RabbitMQMailQueueManagement mqManagementApi,
                              PrivateFactory privateFactory) {
         this.rabbitClient = rabbitClient;
         this.mqManagementApi = mqManagementApi;

@@ -19,6 +19,7 @@
 package org.apache.james.protocols.netty;
 
 import java.io.Closeable;
+import java.nio.channels.ClosedChannelException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -234,7 +235,11 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
                     }
                     transport.writeResponse(Response.DISCONNECT, session);
                 }
-                LOGGER.error("Unable to process request", e.getCause());
+                if (e.getCause() instanceof ClosedChannelException) {
+                    LOGGER.info("Unable to process request", e.getCause());
+                } else {
+                    LOGGER.error("Unable to process request", e.getCause());
+                }
                 cleanup(ctx);
             }
         }

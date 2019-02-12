@@ -43,6 +43,8 @@ public abstract class AbstractRecipientRewriteTableTest {
 
     private static final String USER = "test";
     private static final String ADDRESS = "test@localhost2";
+    private static final String ADDRESS_2 = "test@james";
+    private static final MappingSource SOURCE = MappingSource.fromUser(USER, Domain.LOCALHOST);
 
     protected abstract AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception;
 
@@ -74,38 +76,36 @@ public abstract class AbstractRecipientRewriteTableTest {
     public void testStoreAndGetMappings() throws Exception {
         Domain domain = Domain.of("test");
         virtualUserTable.addMapping(MappingSource.fromDomain(domain), Mapping.regex("prefix_.*:admin@test"));
-        assertThat(virtualUserTable.getMappings("prefix_abc", domain)).isNotEmpty();
+        assertThat(virtualUserTable.getResolvedMappings("prefix_abc", domain)).isNotEmpty();
     }
 
     @Test
     public void testStoreAndRetrieveRegexMapping() throws Exception {
-        Domain domain = Domain.LOCALHOST;
-        MappingSource source = MappingSource.fromUser(USER, domain);
-        // String regex = "(.*):{$1}@localhost";
-        // String regex2 = "(.+):{$1}@test";
         String regex = "(.*)@localhost";
         String regex2 = "(.+)@test";
         String invalidRegex = ".*):";
 
-        assertThat(virtualUserTable.getMappings(USER, domain)).describedAs("No mapping")
-            .isEqualTo(MappingsImpl.empty());
+        Mapping mappingRegex = Mapping.regex(regex);
+        Mapping mappingRegex2 = Mapping.regex(regex2);
 
-        virtualUserTable.addMapping(source, Mapping.regex(regex));
-        virtualUserTable.addMapping(source, Mapping.regex(regex2));
-        assertThat(virtualUserTable.getMappings(USER, domain)).describedAs("Two mappings").hasSize(2);
+        assertThat(virtualUserTable.getStoredMappings(SOURCE)).describedAs("No mapping").isEmpty();
+
+        virtualUserTable.addMapping(SOURCE, mappingRegex);
+        virtualUserTable.addMapping(SOURCE, mappingRegex2);
+        assertThat(virtualUserTable.getStoredMappings(SOURCE)).describedAs("Two mappings")
+            .containsOnly(mappingRegex, mappingRegex2);
         assertThat(virtualUserTable.getAllMappings()).describedAs("One mappingline").hasSize(1);
-        virtualUserTable.removeMapping(source, Mapping.regex(regex));
+        virtualUserTable.removeMapping(SOURCE, mappingRegex);
 
-        assertThatThrownBy(() -> virtualUserTable.addRegexMapping(source, invalidRegex))
+        assertThatThrownBy(() -> virtualUserTable.addRegexMapping(SOURCE, invalidRegex))
             .describedAs("Invalid Mapping throw exception")
             .isInstanceOf(RecipientRewriteTableException.class);
 
 
-        virtualUserTable.removeMapping(source, Mapping.regex(regex2));
+        virtualUserTable.removeMapping(SOURCE, mappingRegex2);
 
 
-        assertThat(virtualUserTable.getMappings(USER, domain)).describedAs("No mapping")
-            .isEqualTo(MappingsImpl.empty());
+        assertThat(virtualUserTable.getStoredMappings(SOURCE)).describedAs("No mapping").isEmpty();
         assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isEmpty();
     }
 
@@ -115,95 +115,90 @@ public abstract class AbstractRecipientRewriteTableTest {
         String regex = "(.*)@localhost";
         String regex2 = "(.+)@test";
 
-        MappingSource source1 = MappingSource.fromUser(USER, Domain.LOCALHOST);
+        Mapping mappingAddress = Mapping.address(USER + "@" + Domain.LOCALHOST.asString());
+        Mapping mappingRegex = Mapping.regex(regex);
+        Mapping mappingRegex2 = Mapping.regex(regex2);
         MappingSource source2 = MappingSource.fromUser(user2, Domain.LOCALHOST);
 
-        virtualUserTable.addMapping(source1, Mapping.regex(regex));
-        virtualUserTable.addMapping(source1, Mapping.regex(regex2));
-        virtualUserTable.addMapping(source2, Mapping.address(USER + "@" + Domain.LOCALHOST.asString()));
+        virtualUserTable.addMapping(SOURCE, mappingRegex);
+        virtualUserTable.addMapping(SOURCE, mappingRegex2);
+        virtualUserTable.addMapping(source2, mappingAddress);
 
         assertThat(virtualUserTable.getAllMappings())
             .describedAs("One mappingline")
             .containsOnly(
-                Pair.of(source1, MappingsImpl.builder()
-                    .add(Mapping.regex(regex))
-                    .add(Mapping.regex(regex2))
+                Pair.of(SOURCE, MappingsImpl.builder()
+                    .add(mappingRegex)
+                    .add(mappingRegex2)
                     .build()),
                 Pair.of(source2, MappingsImpl.builder()
-                    .add(Mapping.address(USER + "@" + Domain.LOCALHOST.asString()))
+                    .add(mappingAddress)
                     .build()));
     }
 
     @Test
     public void testStoreAndRetrieveAddressMapping() throws Exception {
-        Domain domain = Domain.LOCALHOST;
-        MappingSource source = MappingSource.fromUser(USER, domain);
-        String address2 = "test@james";
+        Mapping mappingAddress = Mapping.address(ADDRESS);
+        Mapping mappingAddress2 = Mapping.address(ADDRESS_2);
 
-        assertThat(virtualUserTable.getMappings(USER, domain)).describedAs("No mapping")
-            .isEqualTo(MappingsImpl.empty());
+        assertThat(virtualUserTable.getStoredMappings(SOURCE)).describedAs("No mapping").isEmpty();
 
-        virtualUserTable.addMapping(source, Mapping.address(ADDRESS));
-        virtualUserTable.addMapping(source, Mapping.address(address2));
+        virtualUserTable.addMapping(SOURCE, mappingAddress);
+        virtualUserTable.addMapping(SOURCE, mappingAddress2);
 
-        assertThat(virtualUserTable.getMappings(USER, domain)).describedAs("Two mappings").hasSize(2);
+        assertThat(virtualUserTable.getStoredMappings(SOURCE)).describedAs("Two mappings")
+            .containsOnly(mappingAddress, mappingAddress2);
         assertThat(virtualUserTable.getAllMappings()).describedAs("One mappingline").hasSize(1);
 
-        virtualUserTable.removeMapping(source, Mapping.address(ADDRESS));
-        virtualUserTable.removeMapping(source, Mapping.address(address2));
+        virtualUserTable.removeMapping(SOURCE, mappingAddress);
+        virtualUserTable.removeMapping(SOURCE, mappingAddress2);
 
-        assertThat(virtualUserTable.getMappings(USER, domain)).describedAs("No mapping")
-            .isEqualTo(MappingsImpl.empty());
+        assertThat(virtualUserTable.getStoredMappings(SOURCE)).describedAs("No mapping").isEmpty();
         assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isEmpty();
     }
 
     @Test
     public void testStoreAndRetrieveErrorMapping() throws Exception {
-        Domain domain = Domain.LOCALHOST;
-        MappingSource source = MappingSource.fromUser(USER, domain);
         String error = "bounce!";
 
-        assertThat(virtualUserTable.getMappings(USER, domain)).describedAs("No mapping")
-            .isEqualTo(MappingsImpl.empty());
+        assertThat(virtualUserTable.getResolvedMappings(USER, Domain.LOCALHOST)).describedAs("No mapping").isEmpty();
 
-        virtualUserTable.addMapping(source, Mapping.error(error));
+        virtualUserTable.addMapping(SOURCE, Mapping.error(error));
         assertThat(virtualUserTable.getAllMappings()).describedAs("One mappingline").hasSize(1);
 
         assertThatThrownBy(() ->
-            virtualUserTable.getMappings(USER, domain))
+            virtualUserTable.getResolvedMappings(USER, Domain.LOCALHOST))
             .describedAs("Exception thrown on to many mappings")
             .isInstanceOf(ErrorMappingException.class);
 
-        virtualUserTable.removeMapping(source, Mapping.error(error));
+        virtualUserTable.removeMapping(SOURCE, Mapping.error(error));
 
-        assertThat(virtualUserTable.getMappings(USER, domain)).describedAs("No mapping")
-            .isEqualTo(MappingsImpl.empty());
+        assertThat(virtualUserTable.getResolvedMappings(USER, Domain.LOCALHOST)).describedAs("No mapping").isEmpty();
         assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isEmpty();
     }
 
     @Test
     public void testStoreAndRetrieveWildCardAddressMapping() throws Exception {
         String user2 = "test2";
-        Domain domain = Domain.LOCALHOST;
-        String address2 = "test@james";
-        MappingSource source = MappingSource.fromUser(USER, domain);
 
-        assertThat(virtualUserTable.getMappings(USER, domain)).describedAs("No mapping")
-            .isEqualTo(MappingsImpl.empty());
+        Mapping mappingAddress = Mapping.address(ADDRESS);
+        Mapping mappingAddress2 = Mapping.address(ADDRESS_2);
 
-        virtualUserTable.addMapping(MappingSource.fromDomain(domain), Mapping.address(ADDRESS));
-        virtualUserTable.addMapping(source, Mapping.address(address2));
+        assertThat(virtualUserTable.getResolvedMappings(USER, Domain.LOCALHOST)).describedAs("No mapping").isEmpty();
 
-        assertThat(virtualUserTable.getMappings(USER, domain)).describedAs("One mappings").hasSize(1);
-        assertThat(virtualUserTable.getMappings(user2, domain)).describedAs("One mappings").hasSize(1);
+        virtualUserTable.addMapping(MappingSource.fromDomain(Domain.LOCALHOST), mappingAddress);
+        virtualUserTable.addMapping(SOURCE, mappingAddress2);
 
-        virtualUserTable.removeMapping(source, Mapping.address(address2));
-        virtualUserTable.removeMapping(MappingSource.fromDomain(domain), Mapping.address(ADDRESS));
+        assertThat(virtualUserTable.getResolvedMappings(USER, Domain.LOCALHOST)).describedAs("One mappings")
+            .containsOnly(mappingAddress2);
+        assertThat(virtualUserTable.getResolvedMappings(user2, Domain.LOCALHOST)).describedAs("One mappings")
+            .containsOnly(mappingAddress);
 
-        assertThat(virtualUserTable.getMappings(USER, domain)).describedAs("No mapping")
-            .isEqualTo(MappingsImpl.empty());
-        assertThat(virtualUserTable.getMappings(user2, domain)).describedAs("No mapping")
-            .isEqualTo(MappingsImpl.empty());
+        virtualUserTable.removeMapping(SOURCE, mappingAddress2);
+        virtualUserTable.removeMapping(MappingSource.fromDomain(Domain.LOCALHOST), mappingAddress);
+
+        assertThat(virtualUserTable.getResolvedMappings(USER, Domain.LOCALHOST)).describedAs("No mapping").isEmpty();
+        assertThat(virtualUserTable.getResolvedMappings(user2, Domain.LOCALHOST)).describedAs("No mapping").isEmpty();
     }
 
     @Test
@@ -224,17 +219,18 @@ public abstract class AbstractRecipientRewriteTableTest {
 
         virtualUserTable.addMapping(source1, Mapping.address(user2 + "@" + domain2.asString()));
         virtualUserTable.addMapping(source2, Mapping.address(user3 + "@" + domain3.asString()));
-        assertThat(virtualUserTable.getMappings(user1, domain1)).containsOnly(Mapping.address(user3 + "@" + domain3.asString()));
+        assertThat(virtualUserTable.getResolvedMappings(user1, domain1)).containsOnly(Mapping.address(user3 + "@" + domain3.asString()));
         virtualUserTable.addMapping(source3, Mapping.address(user1 + "@" + domain1.asString()));
 
         assertThatThrownBy(() ->
-            virtualUserTable.getMappings(user1, domain1))
+            virtualUserTable.getResolvedMappings(user1, domain1))
             .describedAs("Exception thrown on to many mappings")
             .isInstanceOf(ErrorMappingException.class);
 
         // disable recursive mapping
         virtualUserTable.setRecursiveMapping(false);
-        assertThat(virtualUserTable.getMappings(user1, domain1)).describedAs("Not recursive mapped").containsExactly(Mapping.address(user2 + "@" + domain2.asString()));
+        assertThat(virtualUserTable.getResolvedMappings(user1, domain1)).describedAs("Not recursive mapped")
+            .containsExactly(Mapping.address(user2 + "@" + domain2.asString()));
     }
 
     @Test
@@ -244,107 +240,131 @@ public abstract class AbstractRecipientRewriteTableTest {
         String user = "user";
         String user2 = "user2";
 
+        Mapping mappingAddress = Mapping.address(user2 + "@" + domain);
+        Mapping mappingDomain = Mapping.domain(Domain.of(domain));
+
         assertThat(virtualUserTable.getAllMappings()).describedAs("No mappings").isEmpty();
 
-        virtualUserTable.addMapping(MappingSource.fromDomain(aliasDomain), Mapping.address(user2 + "@" + domain));
-        virtualUserTable.addMapping(MappingSource.fromDomain(aliasDomain), Mapping.domain(Domain.of(domain)));
+        virtualUserTable.addMapping(MappingSource.fromDomain(aliasDomain), mappingAddress);
+        virtualUserTable.addMapping(MappingSource.fromDomain(aliasDomain), mappingDomain);
 
-        assertThat(virtualUserTable.getMappings(user, aliasDomain))
+        assertThat(virtualUserTable.getResolvedMappings(user, aliasDomain))
             .describedAs("Domain mapped as first, Address mapped as second")
             .isEqualTo(MappingsImpl.builder()
                 .add(Mapping.address(user + "@" + domain))
-                .add(Mapping.address(user2 + "@" + domain))
+                .add(mappingAddress)
                 .build());
 
-        virtualUserTable.removeMapping(MappingSource.fromDomain(aliasDomain), Mapping.address(user2 + "@" + domain));
-        virtualUserTable.removeMapping(MappingSource.fromDomain(aliasDomain), Mapping.domain(Domain.of(domain)));
+        virtualUserTable.removeMapping(MappingSource.fromDomain(aliasDomain), mappingAddress);
+        virtualUserTable.removeMapping(MappingSource.fromDomain(aliasDomain), mappingDomain);
     }
 
     @Test
     public void addMappingShouldThrowWhenMappingAlreadyExists() throws Exception {
-        Domain domain = Domain.LOCALHOST;
-        MappingSource source = MappingSource.fromUser(USER, domain);
-
         expectedException.expect(RecipientRewriteTableException.class);
 
-        virtualUserTable.addAddressMapping(source, ADDRESS);
-        virtualUserTable.addAddressMapping(source, ADDRESS);
+        virtualUserTable.addAddressMapping(SOURCE, ADDRESS);
+        virtualUserTable.addAddressMapping(SOURCE, ADDRESS);
     }
 
     @Test
     public void addMappingShouldNotThrowWhenMappingAlreadyExistsWithAnOtherType() throws Exception {
-        Domain domain = Domain.LOCALHOST;
-        MappingSource source = MappingSource.fromUser(USER, domain);
+        Mapping mappingAddress = Mapping.address(ADDRESS);
+        Mapping mappingRegex = Mapping.regex(ADDRESS);
 
-        virtualUserTable.addMapping(source, Mapping.address(ADDRESS));
-        virtualUserTable.addMapping(source, Mapping.regex(ADDRESS));
+        virtualUserTable.addMapping(SOURCE, mappingAddress);
+        virtualUserTable.addMapping(SOURCE, mappingRegex);
 
-        assertThat(virtualUserTable.getMappings(USER, domain)).hasSize(2);
+        assertThat(virtualUserTable.getStoredMappings(SOURCE)).containsOnly(mappingAddress, mappingRegex);
     }
 
     @Test
     public void addForwardMappingShouldStore() throws Exception {
-        Domain domain = Domain.LOCALHOST;
-        String address2 = "test@james";
-        MappingSource source = MappingSource.fromUser(USER, domain);
+        Mapping mappingForward = Mapping.forward(ADDRESS);
+        Mapping mappingForward2 = Mapping.forward(ADDRESS_2);
 
-        virtualUserTable.addMapping(source, Mapping.forward(ADDRESS));
-        virtualUserTable.addMapping(source, Mapping.forward(address2));
+        virtualUserTable.addMapping(SOURCE, mappingForward);
+        virtualUserTable.addMapping(SOURCE, mappingForward2);
 
-        assertThat(virtualUserTable.getMappings(USER, domain)).hasSize(2);
+        assertThat(virtualUserTable.getStoredMappings(SOURCE)).containsOnly(mappingForward, mappingForward2);
     }
 
     @Test
     public void removeForwardMappingShouldDelete() throws Exception {
-        Domain domain = Domain.LOCALHOST;
-        String address2 = "test@james";
-        MappingSource source = MappingSource.fromUser(USER, domain);
+        Mapping mappingForward = Mapping.forward(ADDRESS);
+        Mapping mappingForward2 = Mapping.forward(ADDRESS_2);
+        MappingSource source = MappingSource.fromUser(USER, Domain.LOCALHOST);
 
-        virtualUserTable.addMapping(source, Mapping.forward(ADDRESS));
-        virtualUserTable.addMapping(source, Mapping.forward(address2));
+        virtualUserTable.addMapping(source, mappingForward);
+        virtualUserTable.addMapping(source, mappingForward2);
 
-        virtualUserTable.removeMapping(source, Mapping.forward(ADDRESS));
-        virtualUserTable.removeMapping(source, Mapping.forward(address2));
+        virtualUserTable.removeMapping(source, mappingForward);
+        virtualUserTable.removeMapping(source, mappingForward2);
 
-        assertThat(virtualUserTable.getMappings(USER, domain))
-            .isEqualTo(MappingsImpl.empty());
+        assertThat(virtualUserTable.getStoredMappings(source)).isEmpty();
     }
 
     @Test
     public void addGroupMappingShouldStore() throws Exception {
-        Domain domain = Domain.LOCALHOST;
-        String address2 = "test@james";
-        MappingSource source = MappingSource.fromUser(USER, domain);
+        Mapping mappingGroup = Mapping.group(ADDRESS);
+        Mapping mappingGroup2 = Mapping.group(ADDRESS_2);
 
-        virtualUserTable.addMapping(source, Mapping.group(ADDRESS));
-        virtualUserTable.addMapping(source, Mapping.group(address2));
+        virtualUserTable.addMapping(SOURCE, mappingGroup);
+        virtualUserTable.addMapping(SOURCE, mappingGroup2);
 
-        assertThat(virtualUserTable.getMappings(USER, domain)).hasSize(2);
+        assertThat(virtualUserTable.getStoredMappings(SOURCE)).containsOnly(mappingGroup, mappingGroup2);
     }
 
     @Test
     public void removeGroupMappingShouldDelete() throws Exception {
-        Domain domain = Domain.LOCALHOST;
-        String address2 = "test@james";
-        MappingSource source = MappingSource.fromUser(USER, domain);
+        Mapping mappingGroup = Mapping.group(ADDRESS);
+        Mapping mappingGroup2 = Mapping.group(ADDRESS_2);
 
-        virtualUserTable.addMapping(source, Mapping.group(ADDRESS));
-        virtualUserTable.addMapping(source, Mapping.group(address2));
+        virtualUserTable.addMapping(SOURCE, mappingGroup);
+        virtualUserTable.addMapping(SOURCE, mappingGroup2);
 
-        virtualUserTable.removeMapping(source, Mapping.group(ADDRESS));
-        virtualUserTable.removeMapping(source, Mapping.group(address2));
+        virtualUserTable.removeMapping(SOURCE, mappingGroup);
+        virtualUserTable.removeMapping(SOURCE, mappingGroup2);
 
-        assertThat(virtualUserTable.getMappings(USER, domain))
-            .isEqualTo(MappingsImpl.empty());
+        assertThat(virtualUserTable.getStoredMappings(SOURCE)).isEmpty();
+    }
+
+    @Test
+    public void addAliasMappingShouldStore() throws Exception {
+        Mapping mappingAlias = Mapping.alias(ADDRESS);
+        Mapping mappingAlias2 = Mapping.alias(ADDRESS_2);
+
+        virtualUserTable.addMapping(SOURCE, mappingAlias);
+        virtualUserTable.addMapping(SOURCE, mappingAlias2);
+
+        assertThat(virtualUserTable.getStoredMappings(SOURCE)).containsOnly(mappingAlias, mappingAlias2);
+    }
+
+    @Test
+    public void removeAliasMappingShouldDelete() throws Exception {
+        Mapping mappingAlias = Mapping.alias(ADDRESS);
+        Mapping mappingAlias2 = Mapping.alias(ADDRESS_2);
+
+        virtualUserTable.addMapping(SOURCE, mappingAlias);
+        virtualUserTable.addMapping(SOURCE, mappingAlias2);
+
+        virtualUserTable.removeMapping(SOURCE, mappingAlias);
+        virtualUserTable.removeMapping(SOURCE, mappingAlias2);
+
+        assertThat(virtualUserTable.getStoredMappings(SOURCE)).isEmpty();
+    }
+
+    @Test
+    public void getUserDomainMappingShouldBeEmptyByDefault() throws Exception {
+        assertThat(virtualUserTable.getStoredMappings(SOURCE)).isEmpty();
     }
 
     @Test
     public void listSourcesShouldReturnWhenHasMapping() throws Exception {
-        MappingSource source = MappingSource.fromUser(USER, Domain.LOCALHOST);
         Mapping mapping = Mapping.group(ADDRESS);
-        virtualUserTable.addMapping(source, mapping);
+        virtualUserTable.addMapping(SOURCE, mapping);
 
-        assertThat(virtualUserTable.listSources(mapping)).contains(source);
+        assertThat(virtualUserTable.listSources(mapping)).contains(SOURCE);
     }
 
     @Test
@@ -361,30 +381,36 @@ public abstract class AbstractRecipientRewriteTableTest {
 
     @Test
     public void listSourcesShouldReturnWhenHasForwardMapping() throws Exception {
-        MappingSource source = MappingSource.fromUser(USER, Domain.LOCALHOST);
         Mapping mapping = Mapping.forward("forward");
 
-        virtualUserTable.addMapping(source, mapping);
+        virtualUserTable.addMapping(SOURCE, mapping);
 
-        assertThat(virtualUserTable.listSources(mapping)).contains(source);
+        assertThat(virtualUserTable.listSources(mapping)).contains(SOURCE);
+    }
+
+    @Test
+    public void listSourcesShouldReturnAliasMappings() throws Exception {
+        Mapping mapping = Mapping.alias("alias");
+
+        virtualUserTable.addMapping(SOURCE, mapping);
+
+        assertThat(virtualUserTable.listSources(mapping)).contains(SOURCE);
     }
 
     @Test
     public void listSourcesShouldReturnWhenHasAddressMapping() throws Exception {
-        MappingSource source = MappingSource.fromUser(USER, Domain.LOCALHOST);
         Mapping mapping = Mapping.address("address");
 
-        virtualUserTable.addMapping(source, mapping);
+        virtualUserTable.addMapping(SOURCE, mapping);
 
-        assertThat(virtualUserTable.listSources(mapping)).contains(source);
+        assertThat(virtualUserTable.listSources(mapping)).contains(SOURCE);
     }
 
     @Test
     public void listSourcesShouldThrowExceptionWhenHasRegexMapping() throws Exception {
-        MappingSource source = MappingSource.fromUser(USER, Domain.LOCALHOST);
         Mapping mapping = Mapping.regex("regex");
 
-        virtualUserTable.addMapping(source, mapping);
+        virtualUserTable.addMapping(SOURCE, mapping);
 
         assertThatThrownBy(() -> virtualUserTable.listSources(mapping))
             .isInstanceOf(IllegalArgumentException.class);
@@ -392,10 +418,9 @@ public abstract class AbstractRecipientRewriteTableTest {
 
     @Test
     public void listSourcesShouldThrowExceptionWhenHasDomainMapping() throws Exception {
-        MappingSource source = MappingSource.fromUser(USER, Domain.LOCALHOST);
         Mapping mapping = Mapping.domain(Domain.of("domain"));
 
-        virtualUserTable.addMapping(source, mapping);
+        virtualUserTable.addMapping(SOURCE, mapping);
 
         assertThatThrownBy(() -> virtualUserTable.listSources(mapping))
             .isInstanceOf(IllegalArgumentException.class);
@@ -403,10 +428,9 @@ public abstract class AbstractRecipientRewriteTableTest {
 
     @Test
     public void listSourcesShouldThrowExceptionWhenHasErrorMapping() throws Exception {
-        MappingSource source = MappingSource.fromUser(USER, Domain.LOCALHOST);
         Mapping mapping = Mapping.error("error");
 
-        virtualUserTable.addMapping(source, mapping);
+        virtualUserTable.addMapping(SOURCE, mapping);
 
         assertThatThrownBy(() -> virtualUserTable.listSources(mapping))
             .isInstanceOf(IllegalArgumentException.class);
@@ -414,12 +438,99 @@ public abstract class AbstractRecipientRewriteTableTest {
 
     @Test
     public void listSourcesShouldReturnEmptyWhenMappingDoesNotExist() throws Exception {
-        MappingSource source = MappingSource.fromUser(USER, Domain.LOCALHOST);
         Mapping domainMapping = Mapping.domain(Domain.of("domain"));
         Mapping groupMapping = Mapping.group("group");
 
-        virtualUserTable.addMapping(source, domainMapping);
+        virtualUserTable.addMapping(SOURCE, domainMapping);
 
         assertThat(virtualUserTable.listSources(groupMapping)).isEmpty();
     }
+
+    @Test
+    public void getSourcesForTypeShouldReturnEmptyWhenNoMapping() throws Exception {
+        assertThat(virtualUserTable.getSourcesForType(Mapping.Type.Alias)).isEmpty();
+    }
+
+    @Test
+    public void getSourcesForTypeShouldReturnEmptyWhenNoMatchingMapping() throws Exception {
+        virtualUserTable.addForwardMapping(SOURCE, ADDRESS);
+
+        assertThat(virtualUserTable.getSourcesForType(Mapping.Type.Alias)).isEmpty();
+    }
+
+    @Test
+    public void getSourcesForTypeShouldReturnMatchingMapping() throws Exception {
+        virtualUserTable.addAliasMapping(SOURCE, ADDRESS);
+
+        assertThat(virtualUserTable.getSourcesForType(Mapping.Type.Alias)).containsOnly(SOURCE);
+    }
+
+    @Test
+    public void getSourcesForTypeShouldNotReturnDuplicatedSources() throws Exception {
+        virtualUserTable.addAliasMapping(SOURCE, ADDRESS);
+        virtualUserTable.addAliasMapping(SOURCE, ADDRESS_2);
+
+        assertThat(virtualUserTable.getSourcesForType(Mapping.Type.Alias)).containsExactly(SOURCE);
+    }
+
+    @Test
+    public void getSourcesForTypeShouldReturnSortedStream() throws Exception {
+        MappingSource source1 = MappingSource.fromUser("alice", Domain.LOCALHOST);
+        MappingSource source2 = MappingSource.fromUser("bob", Domain.LOCALHOST);
+        MappingSource source3 = MappingSource.fromUser("cedric", Domain.LOCALHOST);
+
+        virtualUserTable.addAliasMapping(source1, ADDRESS);
+        virtualUserTable.addAliasMapping(source3, ADDRESS);
+        virtualUserTable.addAliasMapping(source2, ADDRESS);
+
+        assertThat(virtualUserTable.getSourcesForType(Mapping.Type.Alias))
+            .containsExactly(source1, source2, source3);
+    }
+
+    @Test
+    public void getMappingsForTypeShouldReturnEmptyWhenNoMapping() throws Exception {
+        assertThat(virtualUserTable.getMappingsForType(Mapping.Type.Alias)).isEmpty();
+    }
+
+    @Test
+    public void getMappingsForTypeShouldReturnEmptyWhenNoMatchingMapping() throws Exception {
+        virtualUserTable.addForwardMapping(SOURCE, ADDRESS);
+
+        assertThat(virtualUserTable.getMappingsForType(Mapping.Type.Alias)).isEmpty();
+    }
+
+    @Test
+    public void getMappingsForTypeShouldReturnMatchingMapping() throws Exception {
+        virtualUserTable.addAliasMapping(SOURCE, ADDRESS);
+
+        assertThat(virtualUserTable.getMappingsForType(Mapping.Type.Alias)).containsOnly(Mapping.alias(ADDRESS));
+    }
+
+    @Test
+    public void getMappingsForTypeShouldNotReturnDuplicatedDestinations() throws Exception {
+        MappingSource source2 = MappingSource.fromUser("bob", Domain.LOCALHOST);
+
+        virtualUserTable.addAliasMapping(SOURCE, ADDRESS);
+        virtualUserTable.addAliasMapping(source2, ADDRESS);
+
+        assertThat(virtualUserTable.getMappingsForType(Mapping.Type.Alias)).containsExactly(Mapping.alias(ADDRESS));
+    }
+
+    @Test
+    public void getMappingsForTypeShouldReturnSortedStream() throws Exception {
+        String address1 = "alice@domain.com";
+        String address2 = "bob@domain.com";
+        String address3 = "cedric@domain.com";
+        Mapping mapping1 = Mapping.alias(address1);
+        Mapping mapping2 = Mapping.alias(address2);
+        Mapping mapping3 = Mapping.alias(address3);
+
+        virtualUserTable.addAliasMapping(SOURCE, address1);
+        virtualUserTable.addAliasMapping(SOURCE, address3);
+        virtualUserTable.addAliasMapping(SOURCE, address2);
+
+        assertThat(virtualUserTable.getMappingsForType(Mapping.Type.Alias))
+            .containsExactly(mapping1, mapping2, mapping3);
+    }
+
 }

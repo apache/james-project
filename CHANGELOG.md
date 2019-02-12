@@ -4,8 +4,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
- 
-## [3.2.0] - 2018-11-XX
+
+### Added
+- Metrics for BlobStore
+- New Guice product using Cassandra RabbitMQ ElasticSearch, OpenStack Swift and optional LDAP dependency (experimental)
+- JPA SMTP dockerFile contributed by [matzepan](https://github.com/matzepan)
+- Listing healthchecks, thanks to [Madhu Bhat](https://github.com/kratostaine)
+- Configuring the ElasticSearch clusterName
+- Logging and Metrics now supports Elasticsearch 6 (previously only Elasticsearch 2 was supported)
+- Implementation of the RabbitMQ EventBus
+- DeadLetter APIs and memory implementation for storing events that failed delivery
+- RecipientRewriteTable Aliases and associated WebAdmin routes
+
+### Fixed
+- MAILBOX-350 Potential invalid UID <-> MSN mapping upon IMAP COPY
+- Possibility to better zoom in Grafana boards
+- default ElasticSearch shards & replica configured values
+- Move & copy batch sizes are now loaded from configuration
+
+### Changed
+- WebAdmin ReIndexing API had been reworked
+- MailboxListener and mailbox event system were reworked. Custom listeners will need to be adapted. Please see Upgrade instuctions.
+- Docker images are now using a JRE instead of a JDK
+- Replacement of the old mailbox event system with the EventBus
+
+### Removed
+- Drop HBase and JCR components (mailbox and server/data).
+
+### Third party softwares
+ - Tika prior 1.20 is subject to multiple CVEs. We recommend the upgrade
+
+## [3.2.0] - 2018-11-14
 ### Added
 - Mail filtering configured via the JMAP protocol
 - WebAdmin exposed mail re-indexing tasks

@@ -20,54 +20,57 @@
 package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SizeTest {
 
     @Test
-    public void testNoUnit() throws Exception {
+    void testNoUnit() throws Exception {
         assertThat(Size.parse("1024").asBytes()).isEqualTo(1024);
     }
 
     @Test
-    public void testUnitB() throws Exception {
+    void testUnitB() throws Exception {
         assertThat(Size.parse("1024B").asBytes()).isEqualTo(1024);
     }
 
     @Test
-    public void testUnitK() throws Exception {
+    void testUnitK() throws Exception {
         assertThat(Size.parse("5K").asBytes()).isEqualTo(5 * 1024);
     }
 
     @Test
-    public void testUnitM() throws Exception {
+    void testUnitM() throws Exception {
         assertThat(Size.parse("5M").asBytes()).isEqualTo(5 * 1024 * 1024);
     }
 
     @Test
-    public void testUnitG() throws Exception {
+    void testUnitG() throws Exception {
         assertThat(Size.parse("1G").asBytes()).isEqualTo(1024 * 1024 * 1024);
     }
 
     @Test
-    public void testUnknown() throws Exception {
+    void testUnknown() throws Exception {
         assertThat(Size.parse("unknown").asBytes()).isEqualTo(Size.UNKNOWN_VALUE);
     }
 
     @Test
-    public void testUnlimited() throws Exception {
+    void testUnlimited() throws Exception {
         assertThat(Size.parse("unlimited").asBytes()).isEqualTo(Size.UNLIMITED_VALUE);
     }
 
-    @Test(expected = Exception.class)
-    public void testBadUnit() throws Exception {
-        Size.parse("42T");
+    @Test
+    void testBadUnit() {
+        assertThatThrownBy(() -> Size.parse("42T"))
+            .isInstanceOf(Exception.class);
     }
 
-    @Test(expected = NumberFormatException.class)
-    public void testWrongNumber() throws Exception {
-        Size.parse("42RG");
+    @Test
+    void testWrongNumber() throws Exception {
+        assertThatThrownBy(() -> Size.parse("42RG"))
+            .isInstanceOf(NumberFormatException.class);
     }
 
 }

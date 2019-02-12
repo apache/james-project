@@ -21,6 +21,7 @@
 package org.apache.james.rrt.lib;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -44,40 +45,7 @@ public interface Mapping {
     }
 
     static Mapping of(Type type, String mapping) {
-        UserRewritter.MappingUserRewriter rewriter = selectRewriter(type);
-        IdentityMappingPolicy identityMappingPolicy = selectIdentityPolicy(type);
-        MailAddressConversionPolicy mailAddressConversionPolicy = selectMailAddressConversionPolicy(type);
-        return new Impl(type, mapping, rewriter.generateUserRewriter(mapping), identityMappingPolicy, mailAddressConversionPolicy);
-    }
-
-    static UserRewritter.MappingUserRewriter selectRewriter(Type type) {
-        switch (type) {
-            case Regex:
-                return new UserRewritter.RegexRewriter();
-            case Domain:
-                return new UserRewritter.DomainRewriter();
-            case Error:
-                return new UserRewritter.ThrowingRewriter();
-            case Forward:
-            case Group:
-            case Address:
-                return new UserRewritter.ReplaceRewriter();
-        }
-        throw new IllegalStateException("unhandle enum type");
-    }
-
-    static IdentityMappingPolicy selectIdentityPolicy(Type type) {
-        switch (type) {
-            case Regex:
-            case Domain:
-            case Error:
-            case Group:
-            case Address:
-                return IdentityMappingPolicy.Throw;
-            case Forward:
-                return IdentityMappingPolicy.ReturnIdentity;
-        }
-        throw new IllegalStateException("unhandle enum type");
+        return new Impl(type, mapping);
     }
 
     enum MailAddressConversionPolicy {
@@ -99,20 +67,6 @@ public interface Mapping {
         };
 
         abstract Optional<MailAddress> convert(String mapping);
-    }
-
-    static MailAddressConversionPolicy selectMailAddressConversionPolicy(Type type) {
-        switch (type) {
-            case Regex:
-            case Domain:
-            case Error:
-                return MailAddressConversionPolicy.ToEmpty;
-            case Forward:
-            case Group:
-            case Address:
-                return MailAddressConversionPolicy.ToMailAddress;
-            }
-        throw new IllegalStateException("unhandle enum type");
     }
 
     static Mapping address(String mapping) {
@@ -139,41 +93,62 @@ public interface Mapping {
         return of(Type.Group, mapping);
     }
 
+    static Mapping alias(String mapping) {
+        return of(Type.Alias, mapping);
+    }
+
     static Type detectType(String input) {
-        if (input.startsWith(Type.Regex.asPrefix())) {
-            return Type.Regex;
-        }
-        if (input.startsWith(Type.Domain.asPrefix())) {
-            return Type.Domain;
-        }
-        if (input.startsWith(Type.Error.asPrefix())) {
-            return Type.Error;
-        }
-        if (input.startsWith(Type.Forward.asPrefix())) {
-            return Type.Forward;
-        }
-        if (input.startsWith(Type.Group.asPrefix())) {
-            return Type.Group;
-        }
-        return Type.Address;
+        return Arrays.stream(Type.values())
+            .filter(Type::hasPrefix)
+            .filter(type -> input.startsWith(type.asPrefix()))
+            .findAny()
+            .orElse(Type.Address);
+    }
+
+    enum TypeOrder {
+        TYPE_ORDER_1,
+        TYPE_ORDER_2,
+        TYPE_ORDER_3,
+        TYPE_ORDER_4
     }
 
     enum Type {
-        Regex("regex:"),
-        Domain("domain:"),
-        Error("error:"),
-        Forward("forward:"),
-        Group("group:"),
-        Address("");
+        Regex("regex:", new UserRewritter.RegexRewriter(), IdentityMappingPolicy.Throw,
+            MailAddressConversionPolicy.ToEmpty, TypeOrder.TYPE_ORDER_4),
+        Domain("domain:", new UserRewritter.DomainRewriter(), IdentityMappingPolicy.Throw,
+            MailAddressConversionPolicy.ToEmpty, TypeOrder.TYPE_ORDER_1),
+        Error("error:", new UserRewritter.ThrowingRewriter(), IdentityMappingPolicy.Throw,
+            MailAddressConversionPolicy.ToEmpty, TypeOrder.TYPE_ORDER_4),
+        Forward("forward:", new UserRewritter.ReplaceRewriter(), IdentityMappingPolicy.ReturnIdentity,
+            MailAddressConversionPolicy.ToMailAddress, TypeOrder.TYPE_ORDER_3),
+        Group("group:", new UserRewritter.ReplaceRewriter(), IdentityMappingPolicy.Throw,
+            MailAddressConversionPolicy.ToMailAddress, TypeOrder.TYPE_ORDER_2),
+        Alias("alias:", new UserRewritter.ReplaceRewriter(), IdentityMappingPolicy.Throw,
+            MailAddressConversionPolicy.ToMailAddress, TypeOrder.TYPE_ORDER_3),
+        Address("", new UserRewritter.ReplaceRewriter(), IdentityMappingPolicy.Throw,
+            MailAddressConversionPolicy.ToMailAddress, TypeOrder.TYPE_ORDER_4);
 
         private final String asPrefix;
+        private final UserRewritter.MappingUserRewriter rewriter;
+        private final IdentityMappingPolicy identityMappingPolicy;
+        private final MailAddressConversionPolicy mailAddressConversionPolicy;
+        private final TypeOrder typeOrder;
 
-        Type(String asPrefix) {
+        Type(String asPrefix, UserRewritter.MappingUserRewriter rewriter, IdentityMappingPolicy identityMappingPolicy,
+             MailAddressConversionPolicy mailAddressConversionPolicy, TypeOrder typeOrder) {
             this.asPrefix = asPrefix;
+            this.rewriter = rewriter;
+            this.identityMappingPolicy = identityMappingPolicy;
+            this.mailAddressConversionPolicy = mailAddressConversionPolicy;
+            this.typeOrder = typeOrder;
         }
 
         public String asPrefix() {
             return asPrefix;
+        }
+
+        public int getTypeOrder() {
+            return typeOrder.ordinal();
         }
 
         public String withoutPrefix(String input) {
@@ -181,12 +156,14 @@ public interface Mapping {
             return input.substring(asPrefix.length());
         }
 
+        public boolean hasPrefix() {
+            return !asPrefix.isEmpty();
+        }
+
         public static boolean hasPrefix(String mapping) {
-            return mapping.startsWith(Regex.asPrefix())
-                || mapping.startsWith(Domain.asPrefix())
-                || mapping.startsWith(Error.asPrefix())
-                || mapping.startsWith(Forward.asPrefix())
-                || mapping.startsWith(Group.asPrefix());
+            return Arrays.stream(Type.values())
+                .filter(Type::hasPrefix)
+                .anyMatch(type -> mapping.startsWith(type.asPrefix()));
         }
 
     }
@@ -217,21 +194,13 @@ public interface Mapping {
         private final Type type;
         private final String mapping;
         private final UserRewritter rewriter;
-        private final IdentityMappingPolicy identityMappingPolicy;
-        private final MailAddressConversionPolicy mailAddressConversionPolicy;
 
-        private Impl(Type type,
-                     String mapping,
-                     UserRewritter rewriter,
-                     IdentityMappingPolicy identityMappingBehaviour,
-                     MailAddressConversionPolicy mailAddressConversionPolicy) {
+        private Impl(Type type, String mapping) {
             Preconditions.checkNotNull(type);
             Preconditions.checkNotNull(mapping);
             this.type = type;
             this.mapping = mapping;
-            this.rewriter = rewriter;
-            this.identityMappingPolicy = identityMappingBehaviour;
-            this.mailAddressConversionPolicy = mailAddressConversionPolicy;
+            this.rewriter = type.rewriter.generateUserRewriter(mapping);
         }
 
         @Override
@@ -272,6 +241,11 @@ public interface Mapping {
         }
 
         @Override
+        public String getMappingValue() {
+            return mapping;
+        }
+
+        @Override
         public String getErrorMessage() {
             Preconditions.checkState(getType() == Type.Error);
             return mapping;
@@ -284,12 +258,12 @@ public interface Mapping {
 
         @Override
         public Stream<Mapping> handleIdentity(Stream<Mapping> nonRecursiveResult) {
-            return identityMappingPolicy.handleIdentity(nonRecursiveResult);
+            return type.identityMappingPolicy.handleIdentity(nonRecursiveResult);
         }
 
         @Override
         public Optional<MailAddress> asMailAddress() {
-            return mailAddressConversionPolicy.convert(mapping);
+            return type.mailAddressConversionPolicy.convert(mapping);
         }
 
         @Override
@@ -315,6 +289,8 @@ public interface Mapping {
     }
 
     Type getType();
+
+    String getMappingValue();
     
     String asString();
 

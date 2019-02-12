@@ -19,19 +19,24 @@
 package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
+import org.apache.james.mailbox.events.EventBus;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraMailboxManagerTest extends MailboxManagerTest {
+public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMailboxManager> {
     @RegisterExtension
     static CassandraClusterExtension cassandra = new CassandraClusterExtension(MailboxAggregateModule.MODULE_WITH_QUOTA);
 
     @Override
-    protected MailboxManager provideMailboxManager() {
+    protected CassandraMailboxManager provideMailboxManager() {
         return CassandraMailboxManagerProvider.provideMailboxManager(
             cassandra.getCassandraCluster().getConf(),
             cassandra.getCassandraCluster().getTypesProvider());
+    }
+
+    @Override
+    protected EventBus retrieveEventBus(CassandraMailboxManager mailboxManager) {
+        return mailboxManager.getEventBus();
     }
 }

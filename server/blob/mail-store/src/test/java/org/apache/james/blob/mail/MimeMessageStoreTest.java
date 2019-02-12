@@ -70,9 +70,9 @@ class MimeMessageStoreTest {
             .setText("Important mail content")
             .build();
 
-        MimeMessagePartsId parts = testee.save(message).join();
+        MimeMessagePartsId parts = testee.save(message).block();
 
-        MimeMessage retrievedMessage = testee.read(parts).join();
+        MimeMessage retrievedMessage = testee.read(parts).block();
 
         assertThat(MimeMessageUtil.asString(retrievedMessage))
             .isEqualTo(MimeMessageUtil.asString(message));
@@ -86,9 +86,9 @@ class MimeMessageStoreTest {
             .setSubject("Important Mail")
             .build();
 
-        MimeMessagePartsId parts = testee.save(message).join();
+        MimeMessagePartsId parts = testee.save(message).block();
 
-        MimeMessage retrievedMessage = testee.read(parts).join();
+        MimeMessage retrievedMessage = testee.read(parts).block();
 
         assertThat(MimeMessageUtil.asString(retrievedMessage))
             .isEqualTo(MimeMessageUtil.asString(message));
@@ -105,14 +105,14 @@ class MimeMessageStoreTest {
             .setText("Important mail content")
             .build();
 
-        MimeMessagePartsId parts = testee.save(message).join();
+        MimeMessagePartsId parts = testee.save(message).block();
 
         SoftAssertions.assertSoftly(
             softly -> {
                 BlobId headerBlobId = parts.getHeaderBlobId();
                 BlobId bodyBlobId = parts.getBodyBlobId();
 
-                softly.assertThat(new String(blobStore.readBytes(headerBlobId).join(), StandardCharsets.UTF_8))
+                softly.assertThat(new String(blobStore.readBytes(headerBlobId).block(), StandardCharsets.UTF_8))
                     .isEqualTo("Date: Thu, 6 Sep 2018 13:29:13 +0700 (ICT)\r\n" +
                         "From: any@any.com\r\n" +
                         "To: toddy@any.com\r\n" +
@@ -121,7 +121,7 @@ class MimeMessageStoreTest {
                         "MIME-Version: 1.0\r\n" +
                         "Content-Type: text/plain; charset=UTF-8\r\n" +
                         "Content-Transfer-Encoding: 7bit\r\n\r\n");
-                softly.assertThat(new String(blobStore.readBytes(bodyBlobId).join(), StandardCharsets.UTF_8))
+                softly.assertThat(new String(blobStore.readBytes(bodyBlobId).block(), StandardCharsets.UTF_8))
                     .isEqualTo("Important mail content");
             });
     }

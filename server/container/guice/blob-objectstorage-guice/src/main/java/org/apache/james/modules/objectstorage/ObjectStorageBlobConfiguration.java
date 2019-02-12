@@ -37,7 +37,7 @@ import com.google.common.base.Strings;
 
 public class ObjectStorageBlobConfiguration {
 
-    private static final String OBJECTSTORAGE_CONFIGURATION_NAME = "objectstorage";
+    private static final String OBJECTSTORAGE_CONFIGURATION_NAME = "blobstore";
     private static final String OBJECTSTORAGE_NAMESPACE = "objectstorage.namespace";
     private static final String OBJECTSTORAGE_PROVIDER = "objectstorage.provider";
     private static final String OBJECTSTORAGE_SWIFT_AUTH_API = "objectstorage.swift.authapi";

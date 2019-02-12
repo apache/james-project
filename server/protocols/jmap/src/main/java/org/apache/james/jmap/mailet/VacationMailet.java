@@ -20,7 +20,6 @@
 package org.apache.james.jmap.mailet;
 
 import java.time.ZonedDateTime;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -39,6 +38,9 @@ import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class VacationMailet extends GenericMailet {
 
@@ -80,13 +82,12 @@ public class VacationMailet extends GenericMailet {
     private void manageVacation(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate) {
         AccountId accountId = AccountId.fromString(recipient.toString());
 
-        CompletableFuture<Vacation> vacationFuture = vacationRepository.retrieveVacation(accountId);
-        CompletableFuture<Boolean> alreadySentFuture = notificationRegistry.isRegistered(
-            AccountId.fromString(recipient.toString()),
-            RecipientId.fromMailAddress(processedMail.getMaybeSender().get()));
-
-        Pair<Vacation, Boolean> pair = vacationFuture.thenCombine(alreadySentFuture, Pair::of)
-            .join();
+        Mono<Vacation> vacation = Mono.fromCompletionStage(vacationRepository.retrieveVacation(accountId));
+        Mono<Boolean> alreadySent = Mono.fromCompletionStage(notificationRegistry.isRegistered(
+                AccountId.fromString(recipient.toString()),
+                RecipientId.fromMailAddress(processedMail.getMaybeSender().get())));
+        Pair<Vacation, Boolean> pair = Flux.combineLatest(vacation, alreadySent, Pair::of)
+            .blockFirst();
 
         sendNotificationIfRequired(recipient, processedMail, processingDate, pair.getKey(), pair.getValue());
     }

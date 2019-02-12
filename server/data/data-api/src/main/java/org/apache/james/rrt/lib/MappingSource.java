@@ -145,4 +145,8 @@ public class MappingSource implements Serializable {
     public final int hashCode() {
         return Objects.hash(domain, user, wildcard);
     }
+
+    public String asMailAddressString() {
+        return getFixedUser() + "@" + getFixedDomain();
+    }
 }

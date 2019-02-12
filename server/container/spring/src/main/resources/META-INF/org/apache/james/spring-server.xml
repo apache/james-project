@@ -149,10 +149,6 @@
     </bean>
 
     <!-- Event system -->
-    <bean id="dispatcher" class="org.apache.james.mailbox.store.event.MailboxEventDispatcher">
-        <constructor-arg index="0" ref="delegating-listener"/>
-    </bean>
-
     <import resource="classpath:META-INF/spring/event-system.xml"/>
 
     <!-- Mailbox Copier -->

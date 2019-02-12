@@ -25,6 +25,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 
@@ -43,7 +44,11 @@ import org.apache.james.sieverepository.api.exception.IsActiveException;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
-import org.apache.james.util.CompletableFutureUtil;
+
+import org.apache.james.util.FunctionalUtils;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class CassandraSieveRepository implements SieveRepository {
 
@@ -60,7 +65,8 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public ZonedDateTime getActivationDateForActiveScript(User user) throws ScriptNotFoundException {
-        return cassandraActiveScriptDAO.getActiveSctiptInfo(user).join()
+        return cassandraActiveScriptDAO.getActiveSctiptInfo(user)
+            .blockOptional()
             .orElseThrow(ScriptNotFoundException::new)
             .getActivationDate();
     }
@@ -70,19 +76,20 @@ public class CassandraSieveRepository implements SieveRepository {
         throwOnOverQuota(user, spaceThatWillBeUsedByNewScript(user, name, newSize));
     }
 
-    private void throwOnOverQuota(User user, CompletableFuture<Long> sizeDifference) throws QuotaExceededException {
+    private void throwOnOverQuota(User user, Mono<Long> sizeDifference) throws QuotaExceededException {
         CompletableFuture<Optional<QuotaSize>> userQuotaFuture = cassandraSieveQuotaDAO.getQuota(user);
         CompletableFuture<Optional<QuotaSize>> globalQuotaFuture = cassandraSieveQuotaDAO.getQuota();
         CompletableFuture<Long> spaceUsedFuture = cassandraSieveQuotaDAO.spaceUsedBy(user);
 
         new SieveQuota(spaceUsedFuture.join(), limitToUse(userQuotaFuture, globalQuotaFuture))
-            .checkOverQuotaUponModification(sizeDifference.join());
+            .checkOverQuotaUponModification(sizeDifference.block());
     }
 
-    private CompletableFuture<Long> spaceThatWillBeUsedByNewScript(User user, ScriptName name, long scriptSize) {
+    private Mono<Long> spaceThatWillBeUsedByNewScript(User user, ScriptName name, long scriptSize) {
         return cassandraSieveDAO.getScript(user, name)
-            .thenApply(optional -> optional.map(Script::getSize).orElse(0L))
-            .thenApply(sizeOfStoredScript -> scriptSize - sizeOfStoredScript);
+            .map(Script::getSize)
+            .switchIfEmpty(Mono.just(0L))
+            .map(sizeOfStoredScript -> scriptSize - sizeOfStoredScript);
     }
 
     private Optional<QuotaSize> limitToUse(CompletableFuture<Optional<QuotaSize>> userQuota, CompletableFuture<Optional<QuotaSize>> globalQuota) {
@@ -94,23 +101,24 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public void putScript(User user, ScriptName name, ScriptContent content) throws QuotaExceededException {
-        CompletableFuture<Long> spaceUsed = spaceThatWillBeUsedByNewScript(user, name, content.length());
+        Mono<Long> spaceUsed = spaceThatWillBeUsedByNewScript(user, name, content.length());
         throwOnOverQuota(user, spaceUsed);
 
-        CompletableFuture.allOf(
-            updateSpaceUsed(user, spaceUsed.join()),
+        Flux.merge(
+            updateSpaceUsed(user, spaceUsed.block()),
             cassandraSieveDAO.insertScript(user,
                 Script.builder()
                     .name(name)
                     .content(content)
                     .isActive(false)
                     .build()))
-            .join();
+            .then()
+            .block();
     }
 
-    private CompletableFuture<Void> updateSpaceUsed(User user, long spaceUsed) {
+    private Mono<Void> updateSpaceUsed(User user, long spaceUsed) {
         if (spaceUsed == 0) {
-            return CompletableFuture.completedFuture(null);
+            return Mono.empty();
         }
         return cassandraSieveQuotaDAO.updateSpaceUsed(user, spaceUsed);
     }
@@ -124,10 +132,8 @@ public class CassandraSieveRepository implements SieveRepository {
     public InputStream getActive(User user) throws ScriptNotFoundException {
         return IOUtils.toInputStream(
             cassandraActiveScriptDAO.getActiveSctiptInfo(user)
-                .thenCompose(optionalActiveName -> optionalActiveName
-                    .map(activeScriptInfo -> cassandraSieveDAO.getScript(user, activeScriptInfo.getName()))
-                    .orElse(CompletableFuture.completedFuture(Optional.empty())))
-                .join()
+                .flatMap(activeScriptInfo -> cassandraSieveDAO.getScript(user, activeScriptInfo.getName()))
+                .blockOptional()
                 .orElseThrow(ScriptNotFoundException::new)
                 .getContent()
                 .getValue(), StandardCharsets.UTF_8);
@@ -135,36 +141,33 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public void setActive(User user, ScriptName name) throws ScriptNotFoundException {
-        CompletableFuture<Boolean> activateNewScript =
+        Mono<Boolean> activateNewScript =
             unactivateOldScript(user)
-                .thenCompose(any -> updateScriptActivation(user, name, true)
-                    .thenCompose(CompletableFutureUtil.composeIfTrue(
-                        () -> cassandraActiveScriptDAO.activate(user, name))));
+                .then(updateScriptActivation(user, name, true))
+                .filter(FunctionalUtils.toPredicate(Function.identity()))
+                .flatMap(any -> cassandraActiveScriptDAO.activate(user, name).thenReturn(any));
 
-        if (!activateNewScript.join()) {
+        if (!activateNewScript.blockOptional().isPresent()) {
             throw new ScriptNotFoundException();
         }
     }
 
-    private CompletableFuture<Void> unactivateOldScript(User user) {
+    private Mono<Void> unactivateOldScript(User user) {
         return cassandraActiveScriptDAO.getActiveSctiptInfo(user)
-            .thenCompose(scriptNameOptional -> scriptNameOptional
-                .map(activeScriptInfo -> updateScriptActivation(user, activeScriptInfo.getName(), false)
-                    .<Void>thenApply(any -> null))
-                .orElse(CompletableFuture.completedFuture(null)));
+            .flatMap(activeScriptInfo -> updateScriptActivation(user, activeScriptInfo.getName(), false).then());
     }
 
-    private CompletableFuture<Boolean> updateScriptActivation(User user, ScriptName scriptName, boolean active) {
+    private Mono<Boolean> updateScriptActivation(User user, ScriptName scriptName, boolean active) {
         if (!scriptName.equals(SieveRepository.NO_SCRIPT_NAME)) {
             return cassandraSieveDAO.updateScriptActivation(user, scriptName, active);
         }
-        return cassandraActiveScriptDAO.unactivate(user).thenApply(any -> true);
+        return cassandraActiveScriptDAO.unactivate(user).thenReturn(true);
     }
 
     @Override
     public InputStream getScript(User user, ScriptName name) throws ScriptNotFoundException {
         return  cassandraSieveDAO.getScript(user, name)
-            .join()
+            .blockOptional()
             .map(script -> IOUtils.toInputStream(script.getContent().getValue(), StandardCharsets.UTF_8))
             .orElseThrow(ScriptNotFoundException::new);
     }
@@ -172,13 +175,13 @@ public class CassandraSieveRepository implements SieveRepository {
     @Override
     public void deleteScript(User user, ScriptName name) throws ScriptNotFoundException, IsActiveException {
         ensureIsNotActive(user, name);
-        if (!cassandraSieveDAO.deleteScriptInCassandra(user, name).join()) {
+        if (!cassandraSieveDAO.deleteScriptInCassandra(user, name).switchIfEmpty(Mono.just(false)).block()) {
             throw new ScriptNotFoundException();
         }
     }
 
     private void ensureIsNotActive(User user, ScriptName name) throws IsActiveException {
-        Optional<ScriptName> activeName = cassandraActiveScriptDAO.getActiveSctiptInfo(user).join().map(ActiveScriptInfo::getName);
+        Optional<ScriptName> activeName = cassandraActiveScriptDAO.getActiveSctiptInfo(user).blockOptional().map(ActiveScriptInfo::getName);
         if (activeName.isPresent() && name.equals(activeName.get())) {
             throw new IsActiveException();
         }
@@ -186,22 +189,21 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public void renameScript(User user, ScriptName oldName, ScriptName newName) throws ScriptNotFoundException, DuplicateException {
-        CompletableFuture<Boolean> scriptExistsFuture = cassandraSieveDAO.getScript(user, newName)
-            .thenApply(Optional::isPresent);
-        CompletableFuture<Optional<Script>> oldScriptFuture = cassandraSieveDAO.getScript(user, oldName);
+        Mono<Script> oldScript = cassandraSieveDAO.getScript(user, oldName).cache();
+        Mono<Boolean> newScriptExists = cassandraSieveDAO.getScript(user, newName).hasElement();
 
-        oldScriptFuture.join();
-        if (scriptExistsFuture.join()) {
+        oldScript.block();
+        if (newScriptExists.block()) {
             throw new DuplicateException();
         }
 
         performScriptRename(user,
             newName,
-            oldScriptFuture.join().orElseThrow(ScriptNotFoundException::new));
+            oldScript.blockOptional().orElseThrow(ScriptNotFoundException::new));
     }
 
     private void performScriptRename(User user, ScriptName newName, Script oldScript) {
-        CompletableFuture.allOf(
+        Flux.merge(
             cassandraSieveDAO.insertScript(user,
                 Script.builder()
                     .copyOf(oldScript)
@@ -209,15 +211,14 @@ public class CassandraSieveRepository implements SieveRepository {
                     .build()),
             cassandraSieveDAO.deleteScriptInCassandra(user, oldScript.getName()),
             performActiveScriptRename(user, oldScript.getName(), newName))
-            .join();
+            .then()
+            .block();
     }
 
-    private CompletableFuture<Void> performActiveScriptRename(User user, ScriptName oldName, ScriptName newName) {
+    private Mono<Void> performActiveScriptRename(User user, ScriptName oldName, ScriptName newName) {
         return cassandraActiveScriptDAO.getActiveSctiptInfo(user)
-            .thenCompose(optionalActivationInfo -> optionalActivationInfo
-                .filter(activeScriptInfo -> activeScriptInfo.getName().equals(oldName))
-                .map(name -> cassandraActiveScriptDAO.activate(user, newName))
-                .orElse(CompletableFuture.completedFuture(null)));
+            .filter(activeScriptInfo -> activeScriptInfo.getName().equals(oldName))
+            .flatMap(name -> cassandraActiveScriptDAO.activate(user, newName));
     }
 
     @Override

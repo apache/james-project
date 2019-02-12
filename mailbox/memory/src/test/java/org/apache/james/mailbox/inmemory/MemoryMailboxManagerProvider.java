@@ -19,16 +19,14 @@
 
 package org.apache.james.mailbox.inmemory;
 
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 
 public class MemoryMailboxManagerProvider {
     private static final int LIMIT_ANNOTATIONS = 3;
     private static final int LIMIT_ANNOTATION_SIZE = 30;
 
-    public static MailboxManager provideMailboxManager() throws MailboxException {
+    public static InMemoryMailboxManager provideMailboxManager() {
         return new InMemoryIntegrationResources()
             .createResources(new SimpleGroupMembershipResolver(),
                 LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE)

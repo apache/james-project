@@ -57,15 +57,4 @@ public class UsernameTest {
             .isInstanceOf(NullPointerException.class);
     }
 
-    @Test
-    public void fromMailboxSessionShouldThrowOnNullUsername() {
-        MailboxSession mailboxSession = mock(MailboxSession.class);
-        MailboxSession.User user = mock(MailboxSession.User.class);
-        when(mailboxSession.getUser()).thenReturn(user);
-        when(user.getUserName()).thenReturn(null);
-
-        assertThatThrownBy(() -> Username.fromMailboxSession(mailboxSession))
-            .isInstanceOf(NullPointerException.class);
-    }
-
 }

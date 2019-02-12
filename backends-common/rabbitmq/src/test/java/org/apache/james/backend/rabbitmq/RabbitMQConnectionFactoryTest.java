@@ -22,25 +22,10 @@ import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEME
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.URI;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 
-import org.apache.james.util.concurrent.NamedThreadFactory;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
-
 class RabbitMQConnectionFactoryTest {
-
-    private ScheduledExecutorService scheduledExecutor;
-
-    @BeforeEach
-    void setUp() throws Exception {
-        scheduledExecutor = Executors.newSingleThreadScheduledExecutor(NamedThreadFactory.withClassName(getClass()));
-    }
-
     @Test
     void creatingAFactoryShouldWorkWhenConfigurationIsValid() {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
@@ -49,7 +34,7 @@ class RabbitMQConnectionFactoryTest {
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
-        new RabbitMQConnectionFactory(rabbitMQConfiguration, new AsyncRetryExecutor(scheduledExecutor));
+        new RabbitMQConnectionFactory(rabbitMQConfiguration);
     }
 
     @Test
@@ -60,7 +45,7 @@ class RabbitMQConnectionFactoryTest {
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
-        assertThatThrownBy(() -> new RabbitMQConnectionFactory(rabbitMQConfiguration, new AsyncRetryExecutor(scheduledExecutor)))
+        assertThatThrownBy(() -> new RabbitMQConnectionFactory(rabbitMQConfiguration))
             .isInstanceOf(RuntimeException.class);
     }
 
@@ -71,12 +56,12 @@ class RabbitMQConnectionFactoryTest {
                 .managementUri(URI.create("http://james:james@rabbitmq_host:15672/api/"))
                 .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
                 .maxRetries(1)
-                .minDelay(1)
+                .minDelayInMs(1)
                 .build();
 
-        RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(rabbitMQConfiguration, new AsyncRetryExecutor(scheduledExecutor));
+        RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(rabbitMQConfiguration);
 
-        assertThatThrownBy(() -> rabbitMQConnectionFactory.create())
+        assertThatThrownBy(rabbitMQConnectionFactory::create)
             .isInstanceOf(RuntimeException.class);
     }
 }

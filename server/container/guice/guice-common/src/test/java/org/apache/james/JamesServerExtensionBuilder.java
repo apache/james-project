@@ -112,7 +112,10 @@ public class JamesServerExtensionBuilder {
             .map(GuiceModuleTestExtension::getModule)
             .collect(Guavate.toImmutableList());
 
-        return server.buildServer(configurationProvider.buildConfiguration(file)).overrideWith(modules);
+        return server
+            .buildServer(configurationProvider.buildConfiguration(file))
+            .overrideWith(modules)
+            .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()));
     }
 
 }

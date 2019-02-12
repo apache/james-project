@@ -18,12 +18,12 @@
  ****************************************************************/
 package org.apache.james.backend.rabbitmq;
 
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.AUTO_DELETE;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DIRECT;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DURABLE;
+import static org.apache.james.backend.rabbitmq.Constants.AUTO_DELETE;
+import static org.apache.james.backend.rabbitmq.Constants.DIRECT_EXCHANGE;
+import static org.apache.james.backend.rabbitmq.Constants.DURABLE;
+import static org.apache.james.backend.rabbitmq.Constants.EXCLUSIVE;
+import static org.apache.james.backend.rabbitmq.Constants.NO_PROPERTIES;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.EXCHANGE_NAME;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.EXCLUSIVE;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.NO_PROPERTIES;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.ROUTING_KEY;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -120,7 +120,7 @@ class RabbitMQClusterTest {
 
         @Test
         void queuesShouldBeShared() throws Exception {
-            node1Channel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
+            node1Channel.exchangeDeclare(EXCHANGE_NAME, DIRECT_EXCHANGE, DURABLE);
             node1Channel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
             node1Channel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
 
@@ -142,7 +142,7 @@ class RabbitMQClusterTest {
 
         @Test
         void queuesShouldBeDeclarableOnAnotherNode() throws Exception {
-            node1Channel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
+            node1Channel.exchangeDeclare(EXCHANGE_NAME, DIRECT_EXCHANGE, DURABLE);
             node2Channel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
             node2Channel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
 
@@ -191,7 +191,7 @@ class RabbitMQClusterTest {
             "See https://github.com/rabbitmq/rabbitmq-server/issues/959")
         @Test
         void nodeKillingWhenProducing(DockerRabbitMQCluster cluster) throws Exception {
-            resilientChannel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
+            resilientChannel.exchangeDeclare(EXCHANGE_NAME, DIRECT_EXCHANGE, DURABLE);
             resilientChannel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
             resilientChannel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
 
@@ -241,7 +241,7 @@ class RabbitMQClusterTest {
             try (Connection connection = node3ConnectionFactory.newConnection(clusterAddresses);
                  Channel channel = connection.createChannel()) {
 
-                channel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
+                channel.exchangeDeclare(EXCHANGE_NAME, DIRECT_EXCHANGE, DURABLE);
                 channel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
                 channel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
 
@@ -266,7 +266,7 @@ class RabbitMQClusterTest {
             "This test have roughly 4% chance to fail")
         @Test
         void nodeKillingWhenConsuming(DockerRabbitMQCluster cluster) throws Exception {
-            resilientChannel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
+            resilientChannel.exchangeDeclare(EXCHANGE_NAME, DIRECT_EXCHANGE, DURABLE);
             resilientChannel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
             resilientChannel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
 

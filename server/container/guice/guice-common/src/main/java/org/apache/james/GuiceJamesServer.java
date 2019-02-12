@@ -20,7 +20,6 @@ package org.apache.james;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import javax.annotation.PreDestroy;
 
@@ -47,7 +46,6 @@ public class GuiceJamesServer {
     private final IsStartedProbe isStartedProbe;
     private Stager<PreDestroy> preDestroy;
     private GuiceProbeProvider guiceProbeProvider;
-    private CleanupTasksPerformer cleanupTasksPerformer;
 
     public static GuiceJamesServer forConfiguration(Configuration configuration) {
         IsStartedProbe isStartedProbe = new IsStartedProbe();
@@ -82,13 +80,11 @@ public class GuiceJamesServer {
         preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {}));
         injector.getInstance(ConfigurationsPerformer.class).initModules();
         guiceProbeProvider = injector.getInstance(GuiceProbeProvider.class);
-        cleanupTasksPerformer = injector.getInstance(CleanupTasksPerformer.class);
         isStartedProbe.notifyStarted();
     }
 
     public void stop() {
         isStartedProbe.notifyStoped();
-        Optional.ofNullable(cleanupTasksPerformer).ifPresent(CleanupTasksPerformer::clean);
         if (preDestroy != null) {
             preDestroy.stage();
         }

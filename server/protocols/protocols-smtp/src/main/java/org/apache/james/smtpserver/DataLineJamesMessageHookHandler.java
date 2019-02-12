@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 
@@ -99,9 +100,9 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
 
                 @SuppressWarnings("unchecked")
                 List<MailAddress> recipientCollection = (List<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction);
-                MailAddress mailAddress = (MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction);
+                MaybeSender sender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, State.Transaction);
 
-                MailImpl mail = new MailImpl(MailImpl.getId(), mailAddress, recipientCollection);
+                MailImpl mail = new MailImpl(MailImpl.getId(), Optional.ofNullable(sender).flatMap(MaybeSender::asOptional), recipientCollection);
 
                 // store mail in the session so we can be sure it get disposed later
                 session.setAttachment(SMTPConstants.MAIL, mail, State.Transaction);

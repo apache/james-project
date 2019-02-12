@@ -21,10 +21,7 @@ package org.apache.james.backend.rabbitmq;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
 
 import java.net.URISyntaxException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
-import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -34,15 +31,10 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
-
 public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
-
-    private static final int THREE_RETRIES = 3;
-    private static final int ONE_HUNDRED_MILLISECONDS = 100;
-
     private DockerRabbitMQ rabbitMQ;
     private SimpleChannelPool simpleChannelPool;
+    private RabbitMQConnectionFactory connectionFactory;
 
     @Override
     public void beforeAll(ExtensionContext context) {
@@ -52,7 +44,7 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
-        RabbitMQConnectionFactory connectionFactory = createRabbitConnectionFactory();
+        connectionFactory = createRabbitConnectionFactory();
         this.simpleChannelPool = new SimpleChannelPool(connectionFactory);
     }
 
@@ -84,18 +76,19 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
         return rabbitMQ;
     }
 
-    private RabbitMQConnectionFactory createRabbitConnectionFactory() throws URISyntaxException {
-        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(rabbitMQ.amqpUri())
-            .managementUri(rabbitMQ.managementUri())
-            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
-            .maxRetries(THREE_RETRIES)
-            .minDelay(ONE_HUNDRED_MILLISECONDS)
-            .build();
+    public RabbitMQConnectionFactory getConnectionFactory() {
+        return connectionFactory;
+    }
 
-        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
-        return new RabbitMQConnectionFactory(
-            rabbitMQConfiguration,
-            new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor(threadFactory)));
+    public RabbitMQManagementAPI managementAPI() throws Exception {
+        return RabbitMQManagementAPI.from(RabbitMQConfiguration.builder()
+                .amqpUri(rabbitMQ.amqpUri())
+                .managementUri(rabbitMQ.managementUri())
+                .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+                .build());
+    }
+
+    private RabbitMQConnectionFactory createRabbitConnectionFactory() throws URISyntaxException {
+        return rabbitMQ.createRabbitConnectionFactory();
     }
 }

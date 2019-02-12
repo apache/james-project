@@ -26,11 +26,11 @@ import static org.mockito.Mockito.when;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.fixture.MailboxFixture;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,7 +38,7 @@ import org.junit.rules.ExpectedException;
 
 public class SystemMailboxesProviderImplTest {
 
-    private MailboxSession mailboxSession = new MockMailboxSession(MailboxFixture.ALICE);
+    private MailboxSession mailboxSession = MailboxSessionUtil.create(MailboxFixture.ALICE);
     private SystemMailboxesProviderImpl systemMailboxProvider;
 
     private MailboxManager mailboxManager;
@@ -61,7 +61,7 @@ public class SystemMailboxesProviderImplTest {
         when(mailboxManager.createSystemSession(MailboxFixture.ALICE)).thenReturn(mailboxSession);
         when(mailboxManager.getMailbox(eq(MailboxFixture.INBOX_ALICE), eq(mailboxSession))).thenThrow(MailboxNotFoundException.class);
 
-        assertThat(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession.getUser().getCoreUser())).isEmpty();
+        assertThat(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession.getUser())).isEmpty();
     }
 
     @Test
@@ -69,7 +69,7 @@ public class SystemMailboxesProviderImplTest {
         when(mailboxManager.createSystemSession(MailboxFixture.ALICE)).thenReturn(mailboxSession);
         when(mailboxManager.getMailbox(eq(MailboxFixture.INBOX_ALICE), eq(mailboxSession))).thenReturn(inboxMessageManager);
 
-        assertThat(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession.getUser().getCoreUser()))
+        assertThat(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession.getUser()))
             .hasSize(1)
             .containsOnly(inboxMessageManager);
     }

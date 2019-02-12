@@ -32,6 +32,7 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.jmap.mailet.VacationMailet;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -130,8 +131,8 @@ public class GroupMappingTest {
         dataProbe.addUser(USER_DOMAIN1, PASSWORD);
         dataProbe.addUser(USER_DOMAIN2, PASSWORD);
 
-        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, USER_DOMAIN1, "INBOX");
-        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, USER_DOMAIN2, "INBOX");
+        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.forUser(USER_DOMAIN1, MailboxConstants.INBOX));
+        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.forUser(USER_DOMAIN2, MailboxConstants.INBOX));
 
         WebAdminGuiceProbe webAdminGuiceProbe = jamesServer.getProbe(WebAdminGuiceProbe.class);
         webAdminGuiceProbe.await();

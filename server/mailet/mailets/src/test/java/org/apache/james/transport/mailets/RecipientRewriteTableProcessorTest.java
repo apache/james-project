@@ -221,7 +221,7 @@ public class RecipientRewriteTableProcessorTest {
     
     @Test
     public void processShouldNotRewriteRecipientWhenVirtualTableStoreReturnNullMappings() throws Exception {
-        when(virtualTableStore.getMappings(any(String.class), any(Domain.class))).thenReturn(null);
+        when(virtualTableStore.getResolvedMappings(any(String.class), any(Domain.class))).thenReturn(null);
 
         mail = FakeMail.builder()
             .mimeMessage(message)
@@ -235,7 +235,7 @@ public class RecipientRewriteTableProcessorTest {
     
     @Test
     public void processShouldSendMailToAllErrorRecipientsWhenErrorMappingException() throws Exception {
-        when(virtualTableStore.getMappings(eq("other"), eq(Domain.of(MailAddressFixture.JAMES_LOCAL)))).thenThrow(ErrorMappingException.class);
+        when(virtualTableStore.getResolvedMappings(eq("other"), eq(Domain.of(MailAddressFixture.JAMES_LOCAL)))).thenThrow(ErrorMappingException.class);
 
         mail = FakeMail.builder()
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -259,7 +259,7 @@ public class RecipientRewriteTableProcessorTest {
     
     @Test
     public void processShouldSendMailToAllErrorRecipientsWhenRecipientRewriteTableException() throws Exception {
-        when(virtualTableStore.getMappings(eq("other"), eq(Domain.of(MailAddressFixture.JAMES_LOCAL)))).thenThrow(RecipientRewriteTableException.class);
+        when(virtualTableStore.getResolvedMappings(eq("other"), eq(Domain.of(MailAddressFixture.JAMES_LOCAL)))).thenThrow(RecipientRewriteTableException.class);
 
         mail = FakeMail.builder()
             .sender(MailAddressFixture.ANY_AT_JAMES)
@@ -283,7 +283,7 @@ public class RecipientRewriteTableProcessorTest {
     
     @Test
     public void processShouldNotSendMailWhenNoErrorRecipients() throws Exception {
-        when(virtualTableStore.getMappings(any(String.class), any(Domain.class))).thenReturn(null);
+        when(virtualTableStore.getResolvedMappings(any(String.class), any(Domain.class))).thenReturn(null);
 
         mail = FakeMail.builder()
             .mimeMessage(message)
@@ -297,7 +297,7 @@ public class RecipientRewriteTableProcessorTest {
     
     @Test
     public void processShouldResetMailStateToGhostWhenCanNotBuildNewRecipient() throws Exception {
-        when(virtualTableStore.getMappings(any(String.class), any(Domain.class))).thenReturn(mappings);
+        when(virtualTableStore.getResolvedMappings(any(String.class), any(Domain.class))).thenReturn(mappings);
         when(domainList.getDefaultDomain()).thenReturn(Domain.of(MailAddressFixture.JAMES_LOCAL));
 
         mail = FakeMail.builder()

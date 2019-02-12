@@ -103,14 +103,14 @@ public class RabbitMQConfiguration {
         private final URI managementUri;
         private final ManagementCredentials managementCredentials;
         private Optional<Integer> maxRetries;
-        private Optional<Integer> minDelay;
+        private Optional<Integer> minDelayInMs;
 
         private Builder(URI amqpUri, URI managementUri, ManagementCredentials managementCredentials) {
             this.amqpUri = amqpUri;
             this.managementUri = managementUri;
             this.managementCredentials = managementCredentials;
             this.maxRetries = Optional.empty();
-            this.minDelay = Optional.empty();
+            this.minDelayInMs = Optional.empty();
         }
 
         public Builder maxRetries(int maxRetries) {
@@ -118,8 +118,8 @@ public class RabbitMQConfiguration {
             return this;
         }
 
-        public Builder minDelay(int minDelay) {
-            this.minDelay = Optional.of(minDelay);
+        public Builder minDelayInMs(int minDelay) {
+            this.minDelayInMs = Optional.of(minDelay);
             return this;
         }
 
@@ -131,7 +131,7 @@ public class RabbitMQConfiguration {
                     managementUri,
                     managementCredentials,
                     maxRetries.orElse(DEFAULT_MAX_RETRIES),
-                    minDelay.orElse(DEFAULT_MIN_DELAY));
+                    minDelayInMs.orElse(DEFAULT_MIN_DELAY));
         }
     }
 
@@ -170,15 +170,16 @@ public class RabbitMQConfiguration {
     private final URI uri;
     private final URI managementUri;
     private final int maxRetries;
-    private final int minDelay;
+    private final int minDelayInMs;
+
     private final ManagementCredentials managementCredentials;
 
-    private RabbitMQConfiguration(URI uri, URI managementUri, ManagementCredentials managementCredentials, int maxRetries, int minDelay) {
+    private RabbitMQConfiguration(URI uri, URI managementUri, ManagementCredentials managementCredentials, int maxRetries, int minDelayInMs) {
         this.uri = uri;
         this.managementUri = managementUri;
         this.managementCredentials = managementCredentials;
         this.maxRetries = maxRetries;
-        this.minDelay = minDelay;
+        this.minDelayInMs = minDelayInMs;
     }
 
     public URI getUri() {
@@ -193,8 +194,8 @@ public class RabbitMQConfiguration {
         return maxRetries;
     }
 
-    public int getMinDelay() {
-        return minDelay;
+    public int getMinDelayInMs() {
+        return minDelayInMs;
     }
 
     public ManagementCredentials getManagementCredentials() {
@@ -209,7 +210,7 @@ public class RabbitMQConfiguration {
             return Objects.equals(this.uri, that.uri)
                 && Objects.equals(this.managementUri, that.managementUri)
                 && Objects.equals(this.maxRetries, that.maxRetries)
-                && Objects.equals(this.minDelay, that.minDelay)
+                && Objects.equals(this.minDelayInMs, that.minDelayInMs)
                 && Objects.equals(this.managementCredentials, that.managementCredentials);
         }
         return false;
@@ -217,6 +218,6 @@ public class RabbitMQConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(uri, managementUri, maxRetries, minDelay, managementCredentials);
+        return Objects.hash(uri, managementUri, maxRetries, minDelayInMs, managementCredentials);
     }
 }

@@ -19,6 +19,8 @@
 
 package org.apache.james.util.concurrency;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
-public class ConcurrentTestRunner {
+public class ConcurrentTestRunner implements Closeable {
 
     public static final int DEFAULT_OPERATION_COUNT = 1;
 
@@ -78,6 +80,12 @@ public class ConcurrentTestRunner {
                 operation);
         }
 
+        public ConcurrentTestRunner run() {
+            ConcurrentTestRunner testRunner = build();
+            testRunner.run();
+            return testRunner;
+        }
+
         public ConcurrentTestRunner runSuccessfullyWithin(Duration duration) throws InterruptedException, ExecutionException {
             return build()
                 .runSuccessfullyWithin(duration);
@@ -111,7 +119,7 @@ public class ConcurrentTestRunner {
                 try {
                     concurrentOperation.execute(threadNumber, i);
                 } catch (Exception e) {
-                    LOGGER.error("Error caught during concurrent testing", e);
+                    LOGGER.error("Error caught during concurrent testing (iteration {}, threadNumber {})", i, threadNumber, e);
                     exception = e;
                 }
             }
@@ -180,5 +188,11 @@ public class ConcurrentTestRunner {
     public ConcurrentTestRunner runAcceptingErrorsWithin(Duration duration) throws InterruptedException, ExecutionException {
         return run()
             .awaitTermination(duration);
+    }
+
+
+    @Override
+    public void close() throws IOException {
+        executorService.shutdownNow();
     }
 }

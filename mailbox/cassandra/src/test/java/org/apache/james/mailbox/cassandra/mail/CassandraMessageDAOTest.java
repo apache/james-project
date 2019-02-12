@@ -26,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import javax.mail.Flags;
@@ -62,8 +61,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Bytes;
-
 import nl.jqno.equalsverifier.EqualsVerifier;
+import reactor.core.publisher.Flux;
 
 class CassandraMessageDAOTest {
     private static final int BODY_START = 16;
@@ -105,7 +104,7 @@ class CassandraMessageDAOTest {
     void saveShouldSaveNullValueForTextualLineCountAsZero() throws Exception {
         message = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
 
-        testee.save(message).join();
+        testee.save(message).block();
 
         MessageWithoutAttachment attachmentRepresentation =
             toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Metadata, Limit.unlimited()));
@@ -121,7 +120,7 @@ class CassandraMessageDAOTest {
         propertyBuilder.setTextualLineCount(textualLineCount);
         message = createMessage(messageId, CONTENT, BODY_START, propertyBuilder, NO_ATTACHMENT);
 
-        testee.save(message).join();
+        testee.save(message).block();
 
         MessageWithoutAttachment attachmentRepresentation =
             toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Metadata, Limit.unlimited()));
@@ -133,7 +132,7 @@ class CassandraMessageDAOTest {
     void saveShouldStoreMessageWithFullContent() throws Exception {
         message = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
 
-        testee.save(message).join();
+        testee.save(message).block();
 
         MessageWithoutAttachment attachmentRepresentation =
             toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Full, Limit.unlimited()));
@@ -146,7 +145,7 @@ class CassandraMessageDAOTest {
     void saveShouldStoreMessageWithBodyContent() throws Exception {
         message = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
 
-        testee.save(message).join();
+        testee.save(message).block();
 
         MessageWithoutAttachment attachmentRepresentation =
             toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Body, Limit.unlimited()));
@@ -162,7 +161,7 @@ class CassandraMessageDAOTest {
     void saveShouldStoreMessageWithHeaderContent() throws Exception {
         message = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
 
-        testee.save(message).join();
+        testee.save(message).block();
 
         MessageWithoutAttachment attachmentRepresentation =
             toMessage(testee.retrieveMessages(messageIds, MessageMapper.FetchType.Headers, Limit.unlimited()));
@@ -186,8 +185,8 @@ class CassandraMessageDAOTest {
             .build();
     }
 
-    private MessageWithoutAttachment toMessage(CompletableFuture<Stream<CassandraMessageDAO.MessageResult>> readOptional) throws InterruptedException, java.util.concurrent.ExecutionException {
-        return readOptional.join()
+    private MessageWithoutAttachment toMessage(Flux<CassandraMessageDAO.MessageResult> read) throws InterruptedException, java.util.concurrent.ExecutionException {
+        return read.toStream()
             .map(CassandraMessageDAO.MessageResult::message)
             .map(Pair::getLeft)
             .findAny()
@@ -211,7 +210,7 @@ class CassandraMessageDAOTest {
                 .build())
             .build();
         SimpleMailboxMessage message1 = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), ImmutableList.of(attachment));
-        testee.save(message1).join();
+        testee.save(message1).block();
         MessageIdAttachmentIds expected = new MessageIdAttachmentIds(messageId, ImmutableSet.of(attachment.getAttachmentId()));
         
         //When
@@ -237,7 +236,7 @@ class CassandraMessageDAOTest {
                 .build())
             .build();
         SimpleMailboxMessage message1 = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), ImmutableList.of(attachment1, attachment2));
-        testee.save(message1).join();
+        testee.save(message1).block();
         MessageIdAttachmentIds expected = new MessageIdAttachmentIds(messageId, ImmutableSet.of(attachment1.getAttachmentId(), attachment2.getAttachmentId()));
         
         //When
@@ -266,8 +265,8 @@ class CassandraMessageDAOTest {
             .build();
         SimpleMailboxMessage message1 = createMessage(messageId1, CONTENT, BODY_START, new PropertyBuilder(), ImmutableList.of(attachment1));
         SimpleMailboxMessage message2 = createMessage(messageId2, CONTENT, BODY_START, new PropertyBuilder(), ImmutableList.of(attachment2));
-        testee.save(message1).join();
-        testee.save(message2).join();
+        testee.save(message1).block();
+        testee.save(message2).block();
         MessageIdAttachmentIds expected1 = new MessageIdAttachmentIds(messageId1, ImmutableSet.of(attachment1.getAttachmentId()));
         MessageIdAttachmentIds expected2 = new MessageIdAttachmentIds(messageId2, ImmutableSet.of(attachment2.getAttachmentId()));
         
@@ -282,7 +281,7 @@ class CassandraMessageDAOTest {
     void retrieveAllMessageIdAttachmentIdsShouldReturnEmtpyWhenStoredWithoutAttachment() throws Exception {
         //Given
         SimpleMailboxMessage message1 = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
-        testee.save(message1).join();
+        testee.save(message1).block();
         
         //When
         Stream<MessageIdAttachmentIds> actual = testee.retrieveAllMessageIdAttachmentIds().join();
@@ -312,9 +311,9 @@ class CassandraMessageDAOTest {
         SimpleMailboxMessage message1 = createMessage(messageId1, CONTENT, BODY_START, new PropertyBuilder(), ImmutableList.of(attachmentFor1));
         SimpleMailboxMessage message2 = createMessage(messageId2, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
         SimpleMailboxMessage message3 = createMessage(messageId3, CONTENT, BODY_START, new PropertyBuilder(), ImmutableList.of(attachmentFor3));
-        testee.save(message1).join();
-        testee.save(message2).join();
-        testee.save(message3).join();
+        testee.save(message1).block();
+        testee.save(message2).block();
+        testee.save(message3).block();
         
         //When
         Stream<MessageIdAttachmentIds> actual = testee.retrieveAllMessageIdAttachmentIds().join();

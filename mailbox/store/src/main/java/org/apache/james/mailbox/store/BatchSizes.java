@@ -107,8 +107,8 @@ public class BatchSizes {
                     fetchHeaders.orElse(DEFAULT_BATCH_SIZE),
                     fetchBody.orElse(DEFAULT_BATCH_SIZE),
                     fetchFull.orElse(DEFAULT_BATCH_SIZE),
-                    copyBatchSize.orElse(DEFAULT_BATCH_SIZE),
-                    moveBatchSize.orElse(DEFAULT_BATCH_SIZE));
+                    copyBatchSize,
+                    moveBatchSize);
         }
     }
 
@@ -116,10 +116,10 @@ public class BatchSizes {
     private final int fetchHeaders;
     private final int fetchBody;
     private final int fetchFull;
-    private final int copyBatchSize;
-    private final int moveBatchSize;
+    private final Optional<Integer> copyBatchSize;
+    private final Optional<Integer> moveBatchSize;
 
-    private BatchSizes(int fetchMetadata, int fetchHeaders, int fetchBody, int fetchFull, int copyBatchSize, int moveBatchSize) {
+    private BatchSizes(int fetchMetadata, int fetchHeaders, int fetchBody, int fetchFull, Optional<Integer> copyBatchSize, Optional<Integer> moveBatchSize) {
         this.fetchMetadata = fetchMetadata;
         this.fetchHeaders = fetchHeaders;
         this.fetchBody = fetchBody;
@@ -144,11 +144,11 @@ public class BatchSizes {
         return fetchFull;
     }
 
-    public int getCopyBatchSize() {
+    public Optional<Integer> getCopyBatchSize() {
         return copyBatchSize;
     }
 
-    public int getMoveBatchSize() {
+    public Optional<Integer> getMoveBatchSize() {
         return moveBatchSize;
     }
 

@@ -65,7 +65,7 @@ public class ReIndexerPerformer {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
     }
 
-    Task.Result reIndex(MailboxId mailboxId, ReprocessingContext reprocessingContext) throws MailboxException {
+    Task.Result reIndex(MailboxId mailboxId, ReprocessingContext reprocessingContext) throws Exception {
         LOGGER.info("Intend to reindex mailbox with mailboxId {}", mailboxId.serialize());
         MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXING);
         Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);

@@ -22,14 +22,16 @@ package org.apache.james.blob.memory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.CompletableFuture;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.ObjectStoreException;
 
 import com.google.common.base.Preconditions;
+import reactor.core.publisher.Mono;
 
 public class MemoryBlobStore implements BlobStore {
     private final ConcurrentHashMap<BlobId, byte[]> blobs;
@@ -41,17 +43,17 @@ public class MemoryBlobStore implements BlobStore {
     }
 
     @Override
-    public CompletableFuture<BlobId> save(byte[] data) {
+    public Mono<BlobId> save(byte[] data) {
         Preconditions.checkNotNull(data);
         BlobId blobId = factory.forPayload(data);
 
         blobs.put(blobId, data);
 
-        return CompletableFuture.completedFuture(blobId);
+        return Mono.just(blobId);
     }
 
     @Override
-    public CompletableFuture<BlobId> save(InputStream data) {
+    public Mono<BlobId> save(InputStream data) {
         Preconditions.checkNotNull(data);
         try {
             byte[] bytes = IOUtils.toByteArray(data);
@@ -62,8 +64,8 @@ public class MemoryBlobStore implements BlobStore {
     }
 
     @Override
-    public CompletableFuture<byte[]> readBytes(BlobId blobId) {
-        return CompletableFuture.completedFuture(retrieveStoredValue(blobId));
+    public Mono<byte[]> readBytes(BlobId blobId) {
+        return Mono.fromCallable(() -> retrieveStoredValue(blobId));
     }
 
     @Override
@@ -72,6 +74,7 @@ public class MemoryBlobStore implements BlobStore {
     }
 
     private byte[] retrieveStoredValue(BlobId blobId) {
-        return blobs.getOrDefault(blobId, new byte[]{});
+        return Optional.ofNullable(blobs.get(blobId))
+            .orElseThrow(() -> new ObjectStoreException("unable to find blob with id " + blobId));
     }
 }

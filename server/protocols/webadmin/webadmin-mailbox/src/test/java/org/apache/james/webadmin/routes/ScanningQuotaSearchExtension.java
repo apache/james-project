@@ -26,6 +26,7 @@ import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
 import org.apache.james.quota.search.scanning.ClauseConverter;
 import org.apache.james.quota.search.scanning.ScanningQuotaSearcher;
@@ -56,13 +57,16 @@ public class ScanningQuotaSearchExtension implements ParameterResolver, BeforeEa
                 .autoDetectIp(false));
             usersRepository.setDomainList(domainList);
 
+
+            QuotaComponents quotaComponents = resources.getMailboxManager().getQuotaComponents();
+
             QuotaSearchTestSystem quotaSearchTestSystem = new QuotaSearchTestSystem(
-                resources.getMaxQuotaManager(),
+                quotaComponents.getMaxQuotaManager(),
                 resources.getMailboxManager(),
-                resources.getQuotaManager(),
-                resources.getQuotaRootResolver(),
+                quotaComponents.getQuotaManager(),
+                resources.getDefaultUserQuotaRootResolver(),
                 new ScanningQuotaSearcher(usersRepository,
-                    new ClauseConverter(resources.getQuotaRootResolver(), resources.getQuotaManager())),
+                    new ClauseConverter(resources.getDefaultUserQuotaRootResolver(), quotaComponents.getQuotaManager())),
                 usersRepository,
                 domainList,
                 resources.getCurrentQuotaManager(),

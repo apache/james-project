@@ -2,7 +2,7 @@
 #
 # VERSION	1.0
 
-FROM openjdk:8u171-jdk
+FROM openjdk:8u181-jre
 
 # Ports that are used
 #
@@ -25,4 +25,5 @@ ADD destination/conf /root/conf
 
 VOLUME /logs
 
-ENTRYPOINT java -classpath '/root/james-server-jpa-smtp-guice.jar:/root/james-server-jpa-smtp-guice.lib/*' -javaagent:/root/james-server-jpa-smtp-guice.lib/openjpa-3.0.0.jar -Dlogback.configurationFile=/root/conf/logback.xml -Dworking.directory=/root/ org.apache.james.JPAJamesServerMain
+ENV JVM_OPTIONS=""
+ENTRYPOINT java -classpath '/root/james-server-jpa-smtp-guice.jar:/root/james-server-jpa-smtp-guice.lib/*' -javaagent:/root/james-server-jpa-smtp-guice.lib/openjpa-3.0.0.jar -Dlogback.configurationFile=/root/conf/logback.xml -Dworking.directory=/root/ $JVM_OPTIONS org.apache.james.JPAJamesServerMain

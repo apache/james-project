@@ -27,28 +27,23 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxAnnotationManager;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSession.SessionType;
-import org.apache.james.mailbox.MailboxSessionIdGenerator;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
-import org.apache.james.mailbox.exception.BadCredentialsException;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.exception.NotAdminException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
-import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
@@ -68,22 +63,15 @@ import org.apache.james.mailbox.model.search.MailboxNameExpression;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
+import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
-import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
-import org.apache.james.mailbox.store.quota.NoQuotaManager;
-import org.apache.james.mailbox.store.quota.QuotaUpdater;
-import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
-import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.util.streams.Iterators;
 import org.slf4j.Logger;
@@ -108,148 +96,56 @@ public class StoreMailboxManager implements MailboxManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreMailboxManager.class);
     public static final char SQL_WILDCARD_CHAR = '%';
     public static final EnumSet<MessageCapabilities> DEFAULT_NO_MESSAGE_CAPABILITIES = EnumSet.noneOf(MessageCapabilities.class);
-
-    private final MailboxEventDispatcher dispatcher;
-    private final DelegatingMailboxListener delegatingListener;
-    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
-
-    private final Authenticator authenticator;
-    private final MailboxAnnotationManager annotationManager;
-
-    private Authorizator authorizator;
-
-    private final StoreRightManager storeRightManager;
-
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    private MessageBatcher copyBatcher;
-
-    private MessageBatcher moveBatcher;
-
+    private final StoreRightManager storeRightManager;
+    private final EventBus eventBus;
+    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
+    private final MailboxAnnotationManager annotationManager;
     private final MailboxPathLocker locker;
-
-    private MessageSearchIndex index;
-
-    private MailboxSessionIdGenerator idGenerator;
-
-    private QuotaManager quotaManager;
-
-    private QuotaRootResolver quotaRootResolver;
-
-    private QuotaUpdater quotaUpdater;
-
-    private BatchSizes batchSizes = BatchSizes.defaultValues();
-
     private final MessageParser messageParser;
     private final Factory messageIdFactory;
-    private final ImmutableMailboxMessage.Factory immutableMailboxMessageFactory;
+    private final SessionProvider sessionProvider;
+    private final QuotaManager quotaManager;
+    private final QuotaRootResolver quotaRootResolver;
+    private final QuotaComponents quotaComponents;
+    private final MessageSearchIndex index;
+    protected final MailboxManagerConfiguration configuration;
 
     @Inject
-    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
+    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, SessionProvider sessionProvider,
                                MailboxPathLocker locker, MessageParser messageParser,
                                MessageId.Factory messageIdFactory, MailboxAnnotationManager annotationManager,
-                               MailboxEventDispatcher mailboxEventDispatcher,
-                               DelegatingMailboxListener delegatingListener, StoreRightManager storeRightManager) {
-        Preconditions.checkNotNull(delegatingListener);
-        Preconditions.checkNotNull(mailboxEventDispatcher);
+                               EventBus eventBus, StoreRightManager storeRightManager,
+                               QuotaComponents quotaComponents, MessageSearchIndex searchIndex, MailboxManagerConfiguration configuration) {
+        Preconditions.checkNotNull(eventBus);
         Preconditions.checkNotNull(mailboxSessionMapperFactory);
 
         this.annotationManager = annotationManager;
-        this.authenticator = authenticator;
-        this.authorizator = authorizator;
+        this.sessionProvider = sessionProvider;
         this.locker = locker;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.messageParser = messageParser;
         this.messageIdFactory = messageIdFactory;
-        this.delegatingListener = delegatingListener;
-        this.dispatcher = mailboxEventDispatcher;
-        this.immutableMailboxMessageFactory = new ImmutableMailboxMessage.Factory();
+        this.eventBus = eventBus;
         this.storeRightManager = storeRightManager;
+        this.quotaRootResolver = quotaComponents.getQuotaRootResolver();
+        this.quotaManager = quotaComponents.getQuotaManager();
+        this.quotaComponents = quotaComponents;
+        this.index = searchIndex;
+        this.configuration = configuration;
+    }
+
+    public QuotaComponents getQuotaComponents() {
+        return quotaComponents;
     }
 
     public Factory getMessageIdFactory() {
         return messageIdFactory;
     }
-    
-    public void setMailboxSessionIdGenerator(MailboxSessionIdGenerator idGenerator) {
-        this.idGenerator = idGenerator;
-    }
 
-    public void setQuotaManager(QuotaManager quotaManager) {
-        this.quotaManager = quotaManager;
-    }
-
-    public void setQuotaRootResolver(QuotaRootResolver quotaRootResolver) {
-        this.quotaRootResolver = quotaRootResolver;
-    }
-
-    public void setQuotaUpdater(QuotaUpdater quotaUpdater) {
-        this.quotaUpdater = quotaUpdater;
-    }
-
-    public void setCopyBatchSize(BatchSizes batchSizes) {
-        this.copyBatcher = new MessageBatcher(batchSizes.getCopyBatchSize());
-    }
-
-    public int getCopyBatchSize() {
-        return copyBatcher.getBatchSize();
-    }
-
-    public void setMoveBatchSize(BatchSizes batchSizes) {
-        this.moveBatcher = new MessageBatcher(batchSizes.getMoveBatchSize());
-    }
-
-    public int getMoveBatchSize() {
-        return moveBatcher.getBatchSize();
-    }
-
-    public void setBatchSizes(BatchSizes batchSizes) {
-        this.batchSizes = batchSizes;
-    }
-
-    public BatchSizes getBatchSizes() {
-        return batchSizes;
-    }
-
-    public ImmutableMailboxMessage.Factory getImmutableMailboxMessageFactory() {
-        return immutableMailboxMessageFactory;
-    }
-
-    /**
-     * Init the {@link MailboxManager}
-     *
-     * @throws MailboxException
-     */
-    @PostConstruct
-    public void init() throws MailboxException {
-        if (idGenerator == null) {
-            idGenerator = new RandomMailboxSessionIdGenerator();
-        }
-        MailboxSession session = createSystemSession("storeMailboxManager");
-        if (index == null) {
-            index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
-        }
-        if (index instanceof ListeningMessageSearchIndex) {
-            this.addGlobalListener((MailboxListener) index, session);
-        }
-        if (quotaManager == null) {
-            quotaManager = new NoQuotaManager();
-        }
-        if (quotaRootResolver == null) {
-            quotaRootResolver = new DefaultUserQuotaRootResolver(this, mailboxSessionMapperFactory);
-        }
-        if (quotaUpdater != null && quotaUpdater instanceof MailboxListener) {
-            this.addGlobalListener((MailboxListener) quotaUpdater, session);
-        }
-        if (copyBatcher == null) {
-            copyBatcher = new MessageBatcher(MessageBatcher.NO_BATCH_SIZE);
-        }
-        if (moveBatcher == null) {
-            moveBatcher = new MessageBatcher(MessageBatcher.NO_BATCH_SIZE);
-        }
-        if (hasCapability(MailboxCapabilities.Annotation)) {
-            this.addGlobalListener(new MailboxAnnotationListener(mailboxSessionMapperFactory, this), session);
-        }
+    public SessionProvider getSessionProvider() {
+        return sessionProvider;
     }
 
     @Override
@@ -266,17 +162,15 @@ public class StoreMailboxManager implements MailboxManager {
     public EnumSet<SearchCapabilities> getSupportedSearchCapabilities() {
         return index.getSupportedCapabilities(getSupportedMessageCapabilities());
     }
-    
 
     /**
-     * Return the {@link DelegatingMailboxListener} which is used by this {@link MailboxManager}
+     * Return the {@link EventBus} which is used by this {@link MailboxManager}
      *
      * @return delegatingListener
      */
-    public DelegatingMailboxListener getDelegationListener() {
-        return delegatingListener;
+    public EventBus getEventBus() {
+        return eventBus;
     }
-
 
     /**
      * Return the {@link MessageSearchIndex} used by this {@link MailboxManager}
@@ -285,23 +179,6 @@ public class StoreMailboxManager implements MailboxManager {
      */
     public MessageSearchIndex getMessageSearchIndex() {
         return index;
-    }
-
-    public QuotaRootResolver getQuotaRootResolver() {
-        return quotaRootResolver;
-    }
-
-    public QuotaManager getQuotaManager() {
-        return quotaManager;
-    }
-
-    /**
-     * Return the {@link MailboxEventDispatcher} used by thei {@link MailboxManager}
-     *
-     * @return dispatcher
-     */
-    public MailboxEventDispatcher getEventDispatcher() {
-        return dispatcher;
     }
 
     /**
@@ -326,16 +203,6 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     /**
-     * Set the {@link MessageSearchIndex} which should be used by this {@link MailboxManager}. If none is given this implementation will use a {@link SimpleMessageSearchIndex}
-     * by default
-     *
-     * @param index
-     */
-    public void setMessageSearchIndex(MessageSearchIndex index) {
-        this.index = index;
-    }
-
-    /**
      * Generate an return the next uid validity
      *
      * @return uidValidity
@@ -346,84 +213,30 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public MailboxSession createSystemSession(String userName) {
-        return createSession(userName, null, SessionType.System);
-    }
-
-    /**
-     * Create Session
-     *
-     * @param userName
-     * @return session
-     */
-
-    protected MailboxSession createSession(String userName, String password, SessionType type) {
-        return new SimpleMailboxSession(newSessionId(), userName, password, new ArrayList<>(), getDelimiter(), type);
-    }
-
-    private MailboxSession.SessionId newSessionId() {
-        return MailboxSession.SessionId.of(randomId());
-    }
-
-    /**
-     * Generate and return the next id to use
-     *
-     * @return id
-     */
-    protected long randomId() {
-        return idGenerator.nextId();
+        return sessionProvider.createSystemSession(userName);
     }
 
     @Override
     public char getDelimiter() {
-        return MailboxConstants.DEFAULT_DELIMITER;
-    }
-
-    /**
-     * Log in the user with the given userid and password
-     *
-     * @param userid the username
-     * @param passwd the password
-     * @return success true if login success false otherwise
-     */
-    private boolean isValidLogin(String userid, String passwd) throws MailboxException {
-        return authenticator.isAuthentic(userid, passwd);
+        return sessionProvider.getDelimiter();
     }
 
     @Override
     public MailboxSession login(String userid, String passwd) throws MailboxException {
-        if (isValidLogin(userid, passwd)) {
-            return createSession(userid, passwd, SessionType.User);
-        } else {
-            throw new BadCredentialsException();
-        }
+        return sessionProvider.login(userid, passwd);
     }
 
     @Override
     public MailboxSession loginAsOtherUser(String adminUserid, String passwd, String otherUserId) throws MailboxException {
-        if (! isValidLogin(adminUserid, passwd)) {
-            throw new BadCredentialsException();
-        }
-        Authorizator.AuthorizationState authorizationState = authorizator.canLoginAsOtherUser(adminUserid, otherUserId);
-        switch (authorizationState) {
-            case ALLOWED:
-                return createSystemSession(otherUserId);
-            case NOT_ADMIN:
-                throw new NotAdminException();
-            case UNKNOWN_USER:
-                throw new UserDoesNotExistException(otherUserId);
-            default:
-                throw new RuntimeException("Unknown AuthorizationState " + authorizationState);
-        }
+        return sessionProvider.loginAsOtherUser(adminUserid, passwd, otherUserId);
     }
 
     /**
      * Close the {@link MailboxSession} if not null
      */
     @Override
-    public void logout(MailboxSession session, boolean force) throws MailboxException {
-        if (session != null) {
-            session.close();
-        }
+    public void logout(MailboxSession session, boolean force) {
+        sessionProvider.logout(session);
     }
 
     /**
@@ -435,10 +248,10 @@ public class StoreMailboxManager implements MailboxManager {
      * @return storeMailbox
      */
     protected StoreMessageManager createMessageManager(Mailbox mailbox, MailboxSession session) throws MailboxException {
-        return new StoreMessageManager(DEFAULT_NO_MESSAGE_CAPABILITIES, getMapperFactory(), getMessageSearchIndex(), getEventDispatcher(),
-                getLocker(), mailbox, getQuotaManager(),
-                getQuotaRootResolver(), getMessageParser(), getMessageIdFactory(), getBatchSizes(),
-                getImmutableMailboxMessageFactory(), getStoreRightManager());
+        return new StoreMessageManager(DEFAULT_NO_MESSAGE_CAPABILITIES, getMapperFactory(), getMessageSearchIndex(), getEventBus(),
+                getLocker(), mailbox, quotaManager,
+            getQuotaComponents().getQuotaRootResolver(), getMessageParser(), getMessageIdFactory(), configuration.getBatchSizes(),
+            getStoreRightManager());
     }
 
     /**
@@ -530,7 +343,13 @@ public class StoreMailboxManager implements MailboxManager {
                         try {
                             mapper.execute(Mapper.toTransaction(() -> mailboxIds.add(mapper.save(m))));
                             // notify listeners
-                            dispatcher.mailboxAdded(mailboxSession, m);
+                            eventBus.dispatch(EventFactory.mailboxAdded()
+                                .randomEventId()
+                                .mailboxSession(mailboxSession)
+                                .mailbox(m)
+                                .build(),
+                                new MailboxIdRegistrationKey(m.getMailboxId()))
+                                .block();
                         } catch (MailboxExistsException e) {
                             LOGGER.info("{} mailbox was created concurrently", m.generateAssociatedPath());
                         }
@@ -574,7 +393,16 @@ public class StoreMailboxManager implements MailboxManager {
             // mailbox once we remove it
             SimpleMailbox m = new SimpleMailbox(mailbox);
             mailboxMapper.delete(mailbox);
-            dispatcher.mailboxDeleted(session, mailbox, quotaRoot, QuotaCount.count(messageCount), QuotaSize.size(totalSize));
+            eventBus.dispatch(EventFactory.mailboxDeleted()
+                .randomEventId()
+                .mailboxSession(session)
+                .mailbox(mailbox)
+                .quotaRoot(quotaRoot)
+                .quotaCount(QuotaCount.count(messageCount))
+                .quotaSize(QuotaSize.size(totalSize))
+                .build(),
+                new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+                .block();
             return m;
         });
 
@@ -598,7 +426,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     private void assertIsOwner(MailboxSession mailboxSession, MailboxPath mailboxPath) throws MailboxNotFoundException {
         if (!mailboxPath.belongsTo(mailboxSession)) {
-            LOGGER.info("Mailbox {} does not belong to {}", mailboxPath.asString(), mailboxSession.getUser().getUserName());
+            LOGGER.info("Mailbox {} does not belong to {}", mailboxPath.asString(), mailboxSession.getUser().asString());
             throw new MailboxNotFoundException(mailboxPath.asString());
         }
     }
@@ -613,7 +441,15 @@ public class StoreMailboxManager implements MailboxManager {
         mailbox.setName(to.getName());
         mapper.save(mailbox);
 
-        dispatcher.mailboxRenamed(session, from, mailbox);
+        eventBus.dispatch(EventFactory.mailboxRenamed()
+            .randomEventId()
+            .mailboxSession(session)
+            .mailboxId(mailbox.getMailboxId())
+            .oldPath(from)
+            .newPath(to)
+            .build(),
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+            .block();
 
         // rename submailboxes
         MailboxPath children = new MailboxPath(from.getNamespace(), from.getUser(), from.getName() + getDelimiter() + "%");
@@ -625,7 +461,15 @@ public class StoreMailboxManager implements MailboxManager {
                 MailboxPath fromPath = new MailboxPath(children, subOriginalName);
                 sub.setName(subNewName);
                 mapper.save(sub);
-                dispatcher.mailboxRenamed(session, fromPath, sub);
+                eventBus.dispatch(EventFactory.mailboxRenamed()
+                    .randomEventId()
+                    .mailboxSession(session)
+                    .mailboxId(sub.getMailboxId())
+                    .oldPath(fromPath)
+                    .newPath(sub.generateAssociatedPath())
+                    .build(),
+                    new MailboxIdRegistrationKey(sub.getMailboxId()))
+                    .block();
 
                 LOGGER.debug("Rename mailbox sub-mailbox {} to {}", subOriginalName, subNewName);
             }
@@ -635,35 +479,33 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public List<MessageRange> copyMessages(MessageRange set, MailboxPath from, MailboxPath to, final MailboxSession session) throws MailboxException {
-        final StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
-        final StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
+    public List<MessageRange> copyMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
+        StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
+        StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
 
         return copyMessages(set, session, toMailbox, fromMailbox);
     }
 
     @Override
-    public List<MessageRange> copyMessages(MessageRange set, MailboxId from, MailboxId to, final MailboxSession session) throws MailboxException {
-        final StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
-        final StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
+    public List<MessageRange> copyMessages(MessageRange set, MailboxId from, MailboxId to, MailboxSession session) throws MailboxException {
+        StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
+        StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
 
         return copyMessages(set, session, toMailbox, fromMailbox);
     }
 
     
-    private List<MessageRange> copyMessages(MessageRange set, final MailboxSession session,
-            final StoreMessageManager toMailbox, final StoreMessageManager fromMailbox) throws MailboxException {
-        return copyBatcher.batchMessages(set,
+    private List<MessageRange> copyMessages(MessageRange set, MailboxSession session, StoreMessageManager toMailbox, StoreMessageManager fromMailbox) throws MailboxException {
+        return configuration.getCopyBatcher().batchMessages(set,
             messageRange -> fromMailbox.copyTo(messageRange, toMailbox, session));
     }
 
     @Override
-    public List<MessageRange> moveMessages(MessageRange set, MailboxPath from, MailboxPath to, final MailboxSession session) throws MailboxException {
-        final StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
-        final StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
+    public List<MessageRange> moveMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
+        StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
+        StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
 
-        return moveBatcher.batchMessages(set,
-            messageRange -> fromMailbox.moveTo(messageRange, toMailbox, session));
+        return configuration.getMoveBatcher().batchMessages(set, messageRange -> fromMailbox.moveTo(messageRange, toMailbox, session));
     }
 
     @Override
@@ -700,7 +542,7 @@ public class StoreMailboxManager implements MailboxManager {
             + SQL_WILDCARD_CHAR;
         MailboxPath base = new MailboxPath(
             mailboxQuery.getNamespace().orElse(MailboxConstants.USER_NAMESPACE),
-            mailboxQuery.getUser().orElse(mailboxSession.getUser().getUserName()),
+            mailboxQuery.getUser().orElse(mailboxSession.getUser().asString()),
             combinedName);
         return new MailboxPath(base, combinedName);
     }
@@ -710,11 +552,11 @@ public class StoreMailboxManager implements MailboxManager {
         if (mailboxQuery.isPrivateMailboxes(session)) {
             return Stream.of();
         }
-        return mailboxMapper.findNonPersonalMailboxes(session.getUser().getUserName(), right).stream();
+        return mailboxMapper.findNonPersonalMailboxes(session.getUser().asString(), right).stream();
     }
 
-    private SimpleMailboxMetaData toMailboxMetadata(MailboxSession session, List<Mailbox> mailboxes, Mailbox mailbox) {
-        return new SimpleMailboxMetaData(
+    private MailboxMetaData toMailboxMetadata(MailboxSession session, List<Mailbox> mailboxes, Mailbox mailbox) {
+        return new MailboxMetaData(
             mailbox.generateAssociatedPath(),
             mailbox.getMailboxId(),
             getDelimiter(),
@@ -771,11 +613,6 @@ public class StoreMailboxManager implements MailboxManager {
 
     }
 
-    @Override
-    public void addListener(MailboxId mailboxId, MailboxListener listener, MailboxSession session) throws MailboxException {
-        delegatingListener.addListener(mailboxId, listener, session);
-    }
-
     /**
      * End processing of Request for session
      */
@@ -799,22 +636,6 @@ public class StoreMailboxManager implements MailboxManager {
             .stream()
             .map(Mailbox::generateAssociatedPath)
             .collect(Guavate.toImmutableList());
-    }
-
-    @Override
-    public void addGlobalListener(MailboxListener listener, MailboxSession session) throws MailboxException {
-        delegatingListener.addGlobalListener(listener, session);
-    }
-
-    @Override
-    public void removeListener(MailboxId mailboxId, MailboxListener listener, MailboxSession session) throws MailboxException {
-        delegatingListener.removeListener(mailboxId, listener, session);
-
-    }
-
-    @Override
-    public void removeGlobalListener(MailboxListener listener, MailboxSession session) throws MailboxException {
-        delegatingListener.removeGlobalListener(listener, session);
     }
 
     @Override

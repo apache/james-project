@@ -41,6 +41,7 @@ import org.apache.james.mailbox.store.mail.model.Username;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import reactor.core.publisher.Mono;
 
 public class CassandraAttachmentOwnerDAO {
 
@@ -72,8 +73,8 @@ public class CassandraAttachmentOwnerDAO {
                 .where(eq(ID, bindMarker(ID))));
     }
 
-    public CompletableFuture<Void> addOwner(AttachmentId attachmentId, Username owner) {
-        return executor.executeVoid(
+    public Mono<Void> addOwner(AttachmentId attachmentId, Username owner) {
+        return executor.executeVoidReactor(
             addStatement.bind()
                 .setUUID(ID, attachmentId.asUUID())
                 .setString(OWNER, owner.getValue()));

@@ -22,6 +22,7 @@ package org.apache.james;
 import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 
 import org.apache.james.modules.blobstore.BlobStoreChoosingModule;
+import org.apache.james.modules.event.RabbitMQEventBusModule;
 import org.apache.james.modules.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.server.core.configuration.Configuration;
@@ -33,7 +34,7 @@ public class CassandraRabbitMQJamesServerMain {
     public static final Module MODULES =
         Modules
             .override(Modules.combine(ALL_BUT_JMX_CASSANDRA_MODULE))
-            .with(new RabbitMQModule(), new BlobStoreChoosingModule());
+            .with(new RabbitMQModule(), new BlobStoreChoosingModule(), new RabbitMQEventBusModule());
 
     public static void main(String[] args) throws Exception {
         Configuration configuration = Configuration.builder()

@@ -137,7 +137,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
                     .setString(PASSWORD, defaultUser.getHashedPassword())
                     .setString(ALGORITHM, defaultUser.getHashAlgorithm())
                     .setString(NAME, defaultUser.getUserName().toLowerCase(Locale.US)))
-            .join();
+            .block();
 
         if (!executed) {
             throw new UsersRepositoryException("Unable to update user");
@@ -149,7 +149,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
         boolean executed = executor.executeReturnApplied(
             removeUserStatement.bind()
                 .setString(NAME, name))
-            .join();
+            .block();
 
         if (!executed) {
             throw new UsersRepositoryException("unable to remove unknown user " + name);
@@ -202,7 +202,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
                 .setString(REALNAME, user.getUserName())
                 .setString(PASSWORD, user.getHashedPassword())
                 .setString(ALGORITHM, user.getHashAlgorithm()))
-            .join();
+            .block();
 
         if (!executed) {
             throw new AlreadyExistInUsersRepositoryException("User with username " + username + " already exist!");

@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import org.apache.james.core.User;
 import org.apache.james.jmap.exceptions.AttachmentsNotFoundException;
 import org.apache.james.jmap.exceptions.InvalidDraftKeywordsException;
 import org.apache.james.jmap.exceptions.InvalidMailboxForCreationException;
@@ -283,9 +284,9 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private void assertUserIsSender(MailboxSession session, Optional<DraftEmailer> from) throws MailboxSendingNotAllowedException {
         if (!from.flatMap(DraftEmailer::getEmail)
-                .filter(email -> session.getUser().isSameUser(email))
+                .filter(email -> session.getUser().equals(User.fromUsername(email)))
                 .isPresent()) {
-            String allowedSender = session.getUser().getUserName();
+            String allowedSender = session.getUser().asString();
             throw new MailboxSendingNotAllowedException(allowedSender);
         }
     }
@@ -309,7 +310,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
 
     private Optional<MessageManager> getMailboxWithRole(MailboxSession mailboxSession, Role role) throws MailboxException {
-        return systemMailboxesProvider.getMailboxByRole(role, mailboxSession.getUser().getCoreUser()).findFirst();
+        return systemMailboxesProvider.getMailboxByRole(role, mailboxSession.getUser()).findFirst();
     }
     
     private SetError buildSetErrorFromValidationResult(List<ValidationResult> validationErrors) {

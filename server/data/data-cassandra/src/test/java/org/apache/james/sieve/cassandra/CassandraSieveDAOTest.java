@@ -70,54 +70,54 @@ class CassandraSieveDAOTest {
     
      @Test
     void getScriptShouldReturnEmptyByDefault() {
-        assertThat(sieveDAO.getScript(USER, SCRIPT_NAME).join().isPresent())
-            .isFalse();
+        assertThat(sieveDAO.getScript(USER, SCRIPT_NAME).blockOptional())
+            .isEmpty();
     }
 
     @Test
     void getScriptShouldReturnStoredScript() {
-        sieveDAO.insertScript(USER, SCRIPT).join();
+        sieveDAO.insertScript(USER, SCRIPT).block();
 
-        Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).join();
+        Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).blockOptional();
 
         assertThat(actual).contains(SCRIPT);
     }
 
     @Test
     void insertScriptShouldUpdateContent() {
-        sieveDAO.insertScript(USER, SCRIPT).join();
+        sieveDAO.insertScript(USER, SCRIPT).block();
 
-        sieveDAO.insertScript(USER, SCRIPT_NEW_CONTENT).join();
+        sieveDAO.insertScript(USER, SCRIPT_NEW_CONTENT).block();
 
-        Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).join();
+        Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).blockOptional();
         assertThat(actual).contains(SCRIPT_NEW_CONTENT);
     }
 
     @Test
     void insertScriptShouldUpdateActivate() {
-        sieveDAO.insertScript(USER, SCRIPT).join();
+        sieveDAO.insertScript(USER, SCRIPT).block();
 
-        sieveDAO.insertScript(USER, ACTIVE_SCRIPT).join();
+        sieveDAO.insertScript(USER, ACTIVE_SCRIPT).block();
 
-        Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).join();
+        Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).blockOptional();
         assertThat(actual).contains(ACTIVE_SCRIPT);
     }
 
     @Test
     void deleteScriptInCassandraShouldWork() {
-        sieveDAO.insertScript(USER, SCRIPT).join();
+        sieveDAO.insertScript(USER, SCRIPT).block();
 
-        sieveDAO.deleteScriptInCassandra(USER, SCRIPT_NAME).join();
+        sieveDAO.deleteScriptInCassandra(USER, SCRIPT_NAME).block();
 
-        Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).join();
+        Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).blockOptional();
         assertThat(actual).isEmpty();
     }
 
     @Test
     void deleteScriptInCassandraShouldWorkWhenNoneStore() {
-        sieveDAO.deleteScriptInCassandra(USER, SCRIPT_NAME).join();
+        sieveDAO.deleteScriptInCassandra(USER, SCRIPT_NAME).block();
 
-        Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).join();
+        Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).blockOptional();
         assertThat(actual).isEmpty();
     }
 
@@ -130,8 +130,8 @@ class CassandraSieveDAOTest {
 
     @Test
     void listScriptsShouldReturnSingleStoredValue() {
-        sieveDAO.insertScript(USER, SCRIPT).join();
-        sieveDAO.insertScript(USER, SCRIPT2).join();
+        sieveDAO.insertScript(USER, SCRIPT).block();
+        sieveDAO.insertScript(USER, SCRIPT2).block();
 
         List<ScriptSummary> scriptSummaryList = sieveDAO.listScripts(USER).join();
 

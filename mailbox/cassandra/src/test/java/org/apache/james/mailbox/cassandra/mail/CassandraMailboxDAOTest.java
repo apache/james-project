@@ -36,8 +36,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.steveash.guavate.Guavate;
-
 class CassandraMailboxDAOTest {
     private static final int UID_VALIDITY_1 = 145;
     private static final int UID_VALIDITY_2 = 147;
@@ -70,30 +68,30 @@ class CassandraMailboxDAOTest {
 
     @Test
     void retrieveMailboxShouldReturnEmptyWhenNone() {
-        assertThat(testee.retrieveMailbox(CASSANDRA_ID_1).join())
+        assertThat(testee.retrieveMailbox(CASSANDRA_ID_1).blockOptional())
             .isEmpty();
     }
 
     @Test
     void saveShouldAddAMailbox() {
-        testee.save(mailbox1).join();
+        testee.save(mailbox1).block();
 
         Optional<SimpleMailbox> readMailbox = testee.retrieveMailbox(CASSANDRA_ID_1)
-            .join();
+            .blockOptional();
         assertThat(readMailbox.isPresent()).isTrue();
         assertThat(readMailbox.get()).isEqualToComparingFieldByField(mailbox1);
     }
 
     @Test
     void saveShouldOverride() {
-        testee.save(mailbox1).join();
+        testee.save(mailbox1).block();
 
         mailbox2.setMailboxId(CASSANDRA_ID_1);
-        testee.save(mailbox2).join();
+        testee.save(mailbox2).block();
 
 
         Optional<SimpleMailbox> readMailbox = testee.retrieveMailbox(CASSANDRA_ID_1)
-            .join();
+            .blockOptional();
         assertThat(readMailbox.isPresent()).isTrue();
         assertThat(readMailbox.get()).isEqualToComparingFieldByField(mailbox2);
     }
@@ -101,47 +99,47 @@ class CassandraMailboxDAOTest {
     @Test
     void retrieveAllMailboxesShouldBeEmptyByDefault() {
         List<SimpleMailbox> mailboxes = testee.retrieveAllMailboxes()
-            .join()
-            .collect(Guavate.toImmutableList());
+            .collectList()
+            .block();
 
         assertThat(mailboxes).isEmpty();
     }
 
     @Test
     void retrieveAllMailboxesShouldReturnSingleMailbox() {
-        testee.save(mailbox1).join();
+        testee.save(mailbox1).block();
 
         List<SimpleMailbox> mailboxes = testee.retrieveAllMailboxes()
-            .join()
-            .collect(Guavate.toImmutableList());
+            .collectList()
+            .block();
 
         assertThat(mailboxes).containsOnly(mailbox1);
     }
 
     @Test
     void retrieveAllMailboxesShouldReturnMultiMailboxes() {
-        testee.save(mailbox1).join();
-        testee.save(mailbox2).join();
+        testee.save(mailbox1).block();
+        testee.save(mailbox2).block();
 
         List<SimpleMailbox> mailboxes = testee.retrieveAllMailboxes()
-            .join()
-            .collect(Guavate.toImmutableList());
+            .collectList()
+            .block();
 
         assertThat(mailboxes).containsOnly(mailbox1, mailbox2);
     }
 
     @Test
     void deleteShouldNotFailWhenMailboxIsAbsent() {
-        testee.delete(CASSANDRA_ID_1).join();
+        testee.delete(CASSANDRA_ID_1).block();
     }
 
     @Test
     void deleteShouldRemoveExistingMailbox() {
-        testee.save(mailbox1).join();
+        testee.save(mailbox1).block();
 
-        testee.delete(CASSANDRA_ID_1).join();
+        testee.delete(CASSANDRA_ID_1).block();
 
-        assertThat(testee.retrieveMailbox(CASSANDRA_ID_1).join())
+        assertThat(testee.retrieveMailbox(CASSANDRA_ID_1).blockOptional())
             .isEmpty();
     }
 
@@ -152,14 +150,14 @@ class CassandraMailboxDAOTest {
 
     @Test
     void updateShouldChangeMailboxPath() {
-        testee.save(mailbox1).join();
+        testee.save(mailbox1).block();
 
         testee.updatePath(CASSANDRA_ID_1, NEW_MAILBOX_PATH).join();
 
         mailbox1.setNamespace(NEW_MAILBOX_PATH.getNamespace());
         mailbox1.setUser(NEW_MAILBOX_PATH.getUser());
         mailbox1.setName(NEW_MAILBOX_PATH.getName());
-        Optional<SimpleMailbox> readMailbox = testee.retrieveMailbox(CASSANDRA_ID_1).join();
+        Optional<SimpleMailbox> readMailbox = testee.retrieveMailbox(CASSANDRA_ID_1).blockOptional();
         assertThat(readMailbox.isPresent()).isTrue();
         assertThat(readMailbox.get()).isEqualToComparingFieldByField(mailbox1);
     }

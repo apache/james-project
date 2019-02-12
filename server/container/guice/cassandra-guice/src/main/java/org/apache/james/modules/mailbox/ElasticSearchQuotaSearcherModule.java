@@ -29,7 +29,7 @@ import javax.inject.Named;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.backends.es.ElasticSearchIndexer;
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.quota.search.QuotaSearcher;
 import org.apache.james.quota.search.elasticsearch.ElasticSearchQuotaConfiguration;
 import org.apache.james.quota.search.elasticsearch.ElasticSearchQuotaSearcher;
@@ -51,7 +51,7 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), MailboxListener.class)
+        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
             .addBinding()
             .to(ElasticSearchQuotaMailboxListener.class);
     }

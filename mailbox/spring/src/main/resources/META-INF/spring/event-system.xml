@@ -20,28 +20,20 @@
 
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="
-          http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+          http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+          http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
-    <bean id="default-delegating-listener" class="org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener" lazy-init="true">
+    <bean id="event-bus" class="org.apache.james.mailbox.events.InVMEventBus" lazy-init="true">
         <constructor-arg index="0" ref="event-delivery"/>
-        <constructor-arg index="1" ref="event-registry"/>
+        <constructor-arg index="1">
+            <util:constant static-field="org.apache.james.mailbox.events.RetryBackoffConfiguration.DEFAULT"/>
+        </constructor-arg>
+        <constructor-arg index="2" ref="event-deadletters"/>
     </bean>
-
-    <bean id="synchronous-event-delivery" class="org.apache.james.mailbox.store.event.SynchronousEventDelivery" lazy-init="true">
+    <bean id="event-delivery" class="org.apache.james.mailbox.events.delivery.InVmEventDelivery" lazy-init="true">
         <constructor-arg index="0" ref="metricFactory"/>
     </bean>
-
-    <bean id="event-registry" class="org.apache.james.mailbox.store.event.MailboxListenerRegistry"/>
-
-    <bean id="asynchronous-event-delivery" class="org.apache.james.mailbox.store.event.AsynchronousEventDelivery" lazy-init="true">
-        <constructor-arg index="0" ref="${event.delivery.thread.count}"/>
-        <constructor-arg index="1" ref="synchronous-event-delivery"/>
-    </bean>
-
-    <bean id="mixed-event-delivery" class="org.apache.james.mailbox.store.event.MixedEventDelivery" lazy-init="true">
-        <constructor-arg index="0" ref="asynchronous-event-delivery"/>
-        <constructor-arg index="1" ref="synchronous-event-delivery"/>
-    </bean>
-
+    <bean id="event-deadletters" class="org.apache.james.mailbox.events.MemoryEventDeadLetters" lazy-init="true"/>
 </beans>

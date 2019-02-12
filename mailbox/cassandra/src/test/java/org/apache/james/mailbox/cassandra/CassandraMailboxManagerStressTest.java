@@ -21,16 +21,16 @@ package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerStressTest;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
+import org.apache.james.mailbox.events.EventBus;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
-public class CassandraMailboxManagerStressTest extends MailboxManagerStressTest {
+public class CassandraMailboxManagerStressTest extends MailboxManagerStressTest<CassandraMailboxManager> {
     
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
@@ -47,13 +47,17 @@ public class CassandraMailboxManagerStressTest extends MailboxManagerStressTest 
     }
     
     @Override
-    protected MailboxManager provideManager() {
+    protected CassandraMailboxManager provideManager() {
         return CassandraMailboxManagerProvider.provideMailboxManager(cassandra.getConf(), cassandra.getTypesProvider());
     }
 
+    @Override
+    protected EventBus retrieveEventBus(CassandraMailboxManager mailboxManager) {
+        return mailboxManager.getEventBus();
+    }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         cassandra.clearTables();
     }
 

@@ -26,30 +26,22 @@ import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 
-import com.rabbitmq.client.AMQP;
+public interface RabbitMQFixture {
+    String EXCHANGE_NAME = "exchangeName";
+    String ROUTING_KEY = "routingKey";
+    String WORK_QUEUE = "workQueue";
 
-public class RabbitMQFixture {
-    public static final boolean DURABLE = true;
-    public static final boolean AUTO_ACK = true;
-    public static final AMQP.BasicProperties NO_PROPERTIES = null;
-    public static final String EXCHANGE_NAME = "exchangeName";
-    public static final String ROUTING_KEY = "routingKey";
-    public static final String DIRECT = "direct";
-    public static final boolean EXCLUSIVE = true;
-    public static final boolean AUTO_DELETE = true;
-    public static final String WORK_QUEUE = "workQueue";
+    String DEFAULT_USER = "guest";
+    String DEFAULT_PASSWORD_STRING = "guest";
+    char[] DEFAULT_PASSWORD = DEFAULT_PASSWORD_STRING.toCharArray();
+    RabbitMQConfiguration.ManagementCredentials DEFAULT_MANAGEMENT_CREDENTIAL = new RabbitMQConfiguration.ManagementCredentials(DEFAULT_USER, DEFAULT_PASSWORD);
 
-    static final String DEFAULT_USER = "guest";
-    static final String DEFAULT_PASSWORD_STRING = "guest";
-    static final char[] DEFAULT_PASSWORD = DEFAULT_PASSWORD_STRING.toCharArray();
-    public static final RabbitMQConfiguration.ManagementCredentials DEFAULT_MANAGEMENT_CREDENTIAL = new RabbitMQConfiguration.ManagementCredentials(DEFAULT_USER, DEFAULT_PASSWORD);
-
-    public static Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
-    public static ConditionFactory calmlyAwait = Awaitility.with()
+    Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
+    ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)
         .and()
         .with()
         .pollDelay(slowPacedPollInterval)
         .await();
-    public static ConditionFactory awaitAtMostOneMinute = calmlyAwait.atMost(ONE_MINUTE);
+    ConditionFactory awaitAtMostOneMinute = calmlyAwait.atMost(ONE_MINUTE);
 }

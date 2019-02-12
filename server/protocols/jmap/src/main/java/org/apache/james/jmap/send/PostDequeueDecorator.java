@@ -137,12 +137,12 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
     }
 
     private MailboxId getSentMailboxId(MailboxSession session) throws MailboxRoleNotFoundException, MailboxException {
-        return systemMailboxesProvider.findMailbox(Role.SENT, session.getUser().getCoreUser())
+        return systemMailboxesProvider.findMailbox(Role.SENT, session.getUser())
             .getId();
     }
     
     private MailboxId getOutboxMailboxId(MailboxSession session) throws MailboxRoleNotFoundException, MailboxException {
-        return systemMailboxesProvider.findMailbox(Role.OUTBOX, session.getUser().getCoreUser())
+        return systemMailboxesProvider.findMailbox(Role.OUTBOX, session.getUser())
             .getId();
     }
     

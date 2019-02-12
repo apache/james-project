@@ -23,21 +23,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.assertj.core.data.MapEntry;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import reactor.core.publisher.Mono;
 
 public class AttachmentLoaderTest {
 
@@ -53,15 +49,15 @@ public class AttachmentLoaderTest {
     @Test
     public void getAttachmentsShouldWorkWithDuplicatedAttachments() {
         AttachmentId attachmentId = AttachmentId.from("1");
-        Set<AttachmentId> attachmentIds = ImmutableSet.of(attachmentId);
 
         Attachment attachment = Attachment.builder()
             .attachmentId(attachmentId)
             .bytes("attachment".getBytes())
             .type("type")
             .build();
-        when(attachmentMapper.getAttachmentsAsFuture(attachmentIds))
-            .thenReturn(CompletableFuture.completedFuture(ImmutableList.of(attachment)));
+
+        when(attachmentMapper.getAttachmentsAsMono(attachmentId))
+            .thenReturn(Mono.just(attachment));
 
         Optional<String> name = Optional.of("name1");
         Optional<Cid> cid = Optional.empty();
@@ -69,7 +65,7 @@ public class AttachmentLoaderTest {
         MessageAttachmentRepresentation attachmentRepresentation = new MessageAttachmentRepresentation(attachmentId, name, cid, isInlined);
 
         Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation, attachmentRepresentation))
-            .join();
+            .block();
 
         MessageAttachment expectedAttachment = new MessageAttachment(attachment, name, cid, isInlined);
         assertThat(attachments).hasSize(2)
@@ -79,15 +75,15 @@ public class AttachmentLoaderTest {
     @Test
     public void getAttachmentsShouldWorkWithDuplicatedIds() {
         AttachmentId attachmentId = AttachmentId.from("1");
-        Set<AttachmentId> attachmentIds = ImmutableSet.of(attachmentId);
 
         Attachment attachment = Attachment.builder()
             .attachmentId(attachmentId)
             .bytes("attachment".getBytes())
             .type("type")
             .build();
-        when(attachmentMapper.getAttachmentsAsFuture(attachmentIds))
-            .thenReturn(CompletableFuture.completedFuture(ImmutableList.of(attachment)));
+
+        when(attachmentMapper.getAttachmentsAsMono(attachmentId))
+                .thenReturn(Mono.just(attachment));
 
         Optional<String> name1 = Optional.of("name1");
         Optional<String> name2 = Optional.of("name2");
@@ -97,7 +93,7 @@ public class AttachmentLoaderTest {
         MessageAttachmentRepresentation attachmentRepresentation2 = new MessageAttachmentRepresentation(attachmentId, name2, cid, isInlined);
 
         Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation1, attachmentRepresentation2))
-            .join();
+            .block();
 
         assertThat(attachments).hasSize(2)
             .containsOnly(new MessageAttachment(attachment, name1, cid, isInlined),
@@ -108,7 +104,6 @@ public class AttachmentLoaderTest {
     public void getAttachmentsShouldReturnMultipleAttachmentWhenSeveralAttachmentsRepresentation() {
         AttachmentId attachmentId1 = AttachmentId.from("1");
         AttachmentId attachmentId2 = AttachmentId.from("2");
-        Set<AttachmentId> attachmentIds = ImmutableSet.of(attachmentId1, attachmentId2);
 
         Attachment attachment1 = Attachment.builder()
             .attachmentId(attachmentId1)
@@ -120,8 +115,11 @@ public class AttachmentLoaderTest {
             .bytes("attachment2".getBytes())
             .type("type")
             .build();
-        when(attachmentMapper.getAttachmentsAsFuture(attachmentIds))
-            .thenReturn(CompletableFuture.completedFuture(ImmutableList.of(attachment1, attachment2)));
+
+        when(attachmentMapper.getAttachmentsAsMono(attachmentId1))
+                .thenReturn(Mono.just(attachment1));
+        when(attachmentMapper.getAttachmentsAsMono(attachmentId2))
+                .thenReturn(Mono.just(attachment2));
 
         Optional<String> name1 = Optional.of("name1");
         Optional<String> name2 = Optional.of("name2");
@@ -131,7 +129,7 @@ public class AttachmentLoaderTest {
         MessageAttachmentRepresentation attachmentRepresentation2 = new MessageAttachmentRepresentation(attachmentId2, name2, cid, isInlined);
 
         Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of(attachmentRepresentation1, attachmentRepresentation2))
-            .join();
+            .block();
 
         assertThat(attachments).hasSize(2)
             .containsOnly(new MessageAttachment(attachment1, name1, cid, isInlined),
@@ -141,61 +139,19 @@ public class AttachmentLoaderTest {
     @Test
     public void getAttachmentsShouldReturnEmptyByDefault() {
         AttachmentId attachmentId = AttachmentId.from("1");
-        Set<AttachmentId> attachmentIds = ImmutableSet.of(attachmentId);
 
         Attachment attachment = Attachment.builder()
             .attachmentId(attachmentId)
             .bytes("attachment".getBytes())
             .type("type")
             .build();
-        when(attachmentMapper.getAttachmentsAsFuture(attachmentIds))
-            .thenReturn(CompletableFuture.completedFuture(ImmutableList.of(attachment)));
+
+        when(attachmentMapper.getAttachmentsAsMono(attachmentId))
+                .thenReturn(Mono.just(attachment));
 
         Collection<MessageAttachment> attachments = testee.getAttachments(ImmutableList.of())
-            .join();
+            .block();
 
         assertThat(attachments).isEmpty();
     }
-
-    @Test
-    public void attachmentsByIdShouldReturnMapWhenExist() {
-        AttachmentId attachmentId = AttachmentId.from("1");
-        AttachmentId attachmentId2 = AttachmentId.from("2");
-        Set<AttachmentId> attachmentIds = ImmutableSet.of(attachmentId, attachmentId2);
-
-        Attachment attachment = Attachment.builder()
-                .attachmentId(attachmentId)
-                .bytes("attachment".getBytes())
-                .type("type")
-                .build();
-        Attachment attachment2 = Attachment.builder()
-                .attachmentId(attachmentId2)
-                .bytes("attachment2".getBytes())
-                .type("type")
-                .build();
-        when(attachmentMapper.getAttachmentsAsFuture(attachmentIds))
-            .thenReturn(CompletableFuture.completedFuture(ImmutableList.of(attachment, attachment2)));
-
-        Map<AttachmentId, Attachment> attachmentsById = testee.attachmentsById(attachmentIds)
-            .join();
-
-        assertThat(attachmentsById).hasSize(2)
-                .containsOnly(MapEntry.entry(attachmentId, attachment), MapEntry.entry(attachmentId2, attachment2));
-    }
-
-    @Test
-    public void attachmentsByIdShouldReturnEmptyMapWhenAttachmentsDontExists() {
-        AttachmentId attachmentId = AttachmentId.from("1");
-        AttachmentId attachmentId2 = AttachmentId.from("2");
-        Set<AttachmentId> attachmentIds = ImmutableSet.of(attachmentId, attachmentId2);
-
-        when(attachmentMapper.getAttachmentsAsFuture(attachmentIds))
-                .thenReturn(CompletableFuture.completedFuture(ImmutableList.of()));
-
-        Map<AttachmentId, Attachment> attachmentsById = testee.attachmentsById(attachmentIds)
-            .join();
-
-        assertThat(attachmentsById).hasSize(0);
-    }
-
 }

@@ -35,9 +35,9 @@ class CassandraMailboxPathDAOImplTest extends CassandraMailboxPathDAOTest {
 
     @Test
     void countAllShouldReturnEntryCount() {
-        testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join();
-        testee.save(USER_OUTBOX_MAILBOXPATH, OUTBOX_ID).join();
-        testee.save(OTHER_USER_MAILBOXPATH, otherMailboxId).join();
+        testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).block();
+        testee.save(USER_OUTBOX_MAILBOXPATH, OUTBOX_ID).block();
+        testee.save(OTHER_USER_MAILBOXPATH, otherMailboxId).block();
 
         CassandraMailboxPathDAOImpl daoV1 = (CassandraMailboxPathDAOImpl) testee;
 
@@ -55,9 +55,9 @@ class CassandraMailboxPathDAOImplTest extends CassandraMailboxPathDAOTest {
 
     @Test
     void readAllShouldReturnAllStoredData() {
-        testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join();
-        testee.save(USER_OUTBOX_MAILBOXPATH, OUTBOX_ID).join();
-        testee.save(OTHER_USER_MAILBOXPATH, otherMailboxId).join();
+        testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).block();
+        testee.save(USER_OUTBOX_MAILBOXPATH, OUTBOX_ID).block();
+        testee.save(OTHER_USER_MAILBOXPATH, otherMailboxId).block();
 
         CassandraMailboxPathDAOImpl daoV1 = (CassandraMailboxPathDAOImpl) testee;
 

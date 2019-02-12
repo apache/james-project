@@ -70,10 +70,10 @@ public class DeletedMailsDAO {
     }
 
     Mono<Boolean> isDeleted(MailQueueName mailQueueName, MailKey mailKey) {
-        return Mono.fromCompletionStage(executor.executeReturnExists(
+        return executor.executeReturnExists(
             selectOne.bind()
                 .setString(QUEUE_NAME, mailQueueName.asString())
-                .setString(MAIL_KEY, mailKey.getMailKey())));
+                .setString(MAIL_KEY, mailKey.getMailKey()));
     }
 
     Mono<Boolean> isStillEnqueued(MailQueueName mailQueueName, MailKey mailKey) {

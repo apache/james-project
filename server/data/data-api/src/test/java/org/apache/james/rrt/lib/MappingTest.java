@@ -38,25 +38,31 @@ public class MappingTest {
 
     @Test
     void hasPrefixShouldReturnTrueWhenDomain() {
-        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Domain.asPrefix() + "myRegex");
+        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Domain.asPrefix() + "myDomain");
         assertThat(hasPrefix).isTrue();
     }
 
     @Test
     void hasPrefixShouldReturnTrueWhenError() {
-        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Error.asPrefix() + "myRegex");
+        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Error.asPrefix() + "myError");
         assertThat(hasPrefix).isTrue();
     }
 
     @Test
     void hasPrefixShouldReturnTrueWhenForward() {
-        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Forward.asPrefix() + "myRegex");
+        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Forward.asPrefix() + "myForward");
+        assertThat(hasPrefix).isTrue();
+    }
+
+    @Test
+    void hasPrefixShouldReturnTrueWhenAlias() {
+        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Alias.asPrefix() + "myAlias");
         assertThat(hasPrefix).isTrue();
     }
 
     @Test
     void hasPrefixShouldReturnFalseWhenAddress() {
-        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Address.asPrefix() + "myRegex");
+        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Address.asPrefix() + "myAddress");
         assertThat(hasPrefix).isFalse();
     }
 
@@ -88,6 +94,12 @@ public class MappingTest {
     void detectTypeShouldReturnForwardWhenForwardPrefix() {
         assertThat(Mapping.detectType(Type.Forward.asPrefix() + "mapping"))
             .isEqualTo(Type.Forward);
+    }
+
+    @Test
+    void detectTypeShouldReturnAliasWhenAliasPrefix() {
+        assertThat(Mapping.detectType(Type.Alias.asPrefix() + "mapping"))
+            .isEqualTo(Type.Alias);
     }
 
     @Test
@@ -123,6 +135,12 @@ public class MappingTest {
     @Test
     void withoutPrefixShouldRemoveForwardPrefix() {
         assertThat(Type.Forward.withoutPrefix(Type.Forward.asPrefix() + "mapping"))
+            .isEqualTo("mapping");
+    }
+
+    @Test
+    void withoutPrefixShouldRemoveAliasPrefix() {
+        assertThat(Type.Alias.withoutPrefix(Type.Alias.asPrefix() + "mapping"))
             .isEqualTo("mapping");
     }
 
@@ -184,6 +202,12 @@ public class MappingTest {
     @Test
     void groupFactoryMethodShouldThrowOnNull() {
         assertThatThrownBy(() -> Mapping.group(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void aliasFactoryMethodShouldThrowOnNull() {
+        assertThatThrownBy(() -> Mapping.alias(null))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -258,6 +282,11 @@ public class MappingTest {
     }
 
     @Test
+    void getTypeShouldReturnAliasWhenAliasPrefix() {
+        assertThat(Mapping.alias("abc").getType()).isEqualTo(Mapping.Type.Alias);
+    }
+
+    @Test
     void getErrorMessageShouldThrowWhenMappingIsNotAnError() {
         assertThatThrownBy(() -> Mapping.domain(Domain.of("toto")).getErrorMessage())
             .isInstanceOf(IllegalStateException.class);
@@ -303,6 +332,12 @@ public class MappingTest {
     @Test
     void asMailAddressShouldReturnMappingValueForForward() throws Exception {
         assertThat(Mapping.forward("value@domain").asMailAddress())
+            .contains(new MailAddress("value@domain"));
+    }
+
+    @Test
+    void asMailAddressShouldReturnMappingValueForAlias() throws Exception {
+        assertThat(Mapping.alias("value@domain").asMailAddress())
             .contains(new MailAddress("value@domain"));
     }
 

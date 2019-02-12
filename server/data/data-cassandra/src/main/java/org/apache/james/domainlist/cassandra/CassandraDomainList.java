@@ -112,7 +112,7 @@ public class CassandraDomainList extends AbstractDomainList {
     public void addDomain(Domain domain) throws DomainListException {
         boolean executed = executor.executeReturnApplied(insertStatement.bind()
             .setString(DOMAIN, domain.asString()))
-            .join();
+            .block();
         if (!executed) {
             throw new DomainListException(domain.name() + " already exists.");
         }
@@ -122,7 +122,7 @@ public class CassandraDomainList extends AbstractDomainList {
     public void removeDomain(Domain domain) throws DomainListException {
         boolean executed = executor.executeReturnApplied(removeStatement.bind()
             .setString(DOMAIN, domain.asString()))
-            .join();
+            .block();
         if (!executed) {
             throw new DomainListException(domain.name() + " was not found");
         }

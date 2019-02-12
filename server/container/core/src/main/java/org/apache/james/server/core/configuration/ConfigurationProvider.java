@@ -21,10 +21,16 @@ package org.apache.james.server.core.configuration;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.util.LoggingLevel;
 
 public interface ConfigurationProvider {
 
-    HierarchicalConfiguration getConfiguration(String component)
+    default HierarchicalConfiguration getConfiguration(String component)
+            throws ConfigurationException {
+        return getConfiguration(component, LoggingLevel.WARNING);
+    }
+
+    HierarchicalConfiguration getConfiguration(String component, LoggingLevel loggingLevelOnError)
             throws ConfigurationException;
 
 }

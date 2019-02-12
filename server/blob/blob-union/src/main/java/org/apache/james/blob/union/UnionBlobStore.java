@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -35,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import reactor.core.publisher.Mono;
 
 public class UnionBlobStore implements BlobStore {
 
@@ -80,11 +80,11 @@ public class UnionBlobStore implements BlobStore {
     }
 
     @Override
-    public CompletableFuture<BlobId> save(byte[] data) {
+    public Mono<BlobId> save(byte[] data) {
         try {
             return saveToCurrentFallbackIfFails(
-                currentBlobStore.save(data),
-                () -> legacyBlobStore.save(data));
+                Mono.defer(() -> currentBlobStore.save(data)),
+                () -> Mono.defer(() -> legacyBlobStore.save(data)));
         } catch (Exception e) {
             LOGGER.error("exception directly happens while saving bytes data, fall back to legacy blob store", e);
             return legacyBlobStore.save(data);
@@ -92,11 +92,11 @@ public class UnionBlobStore implements BlobStore {
     }
 
     @Override
-    public CompletableFuture<BlobId> save(InputStream data) {
+    public Mono<BlobId> save(InputStream data) {
         try {
             return saveToCurrentFallbackIfFails(
-                currentBlobStore.save(data),
-                () -> legacyBlobStore.save(data));
+                Mono.defer(() -> currentBlobStore.save(data)),
+                () -> Mono.defer(() -> legacyBlobStore.save(data)));
         } catch (Exception e) {
             LOGGER.error("exception directly happens while saving InputStream data, fall back to legacy blob store", e);
             return legacyBlobStore.save(data);
@@ -104,12 +104,12 @@ public class UnionBlobStore implements BlobStore {
     }
 
     @Override
-    public CompletableFuture<byte[]> readBytes(BlobId blobId) {
+    public Mono<byte[]> readBytes(BlobId blobId) {
         try {
             return readBytesFallBackIfFailsOrEmptyResult(blobId);
         } catch (Exception e) {
             LOGGER.error("exception directly happens while readBytes, fall back to legacy blob store", e);
-            return legacyBlobStore.readBytes(blobId);
+            return Mono.defer(() -> legacyBlobStore.readBytes(blobId));
         }
     }
 
@@ -141,44 +141,24 @@ public class UnionBlobStore implements BlobStore {
         return false;
     }
 
-    private CompletableFuture<byte[]> readBytesFallBackIfFailsOrEmptyResult(BlobId blobId) {
-        return currentBlobStore.readBytes(blobId)
-            .thenApply(Optional::ofNullable)
-            .exceptionally(this::logAndReturnEmptyOptional)
-            .thenCompose(maybeBytes -> readFromLegacyIfNeeded(maybeBytes, blobId));
+    private Mono<byte[]> readBytesFallBackIfFailsOrEmptyResult(BlobId blobId) {
+        return Mono.defer(() -> currentBlobStore.readBytes(blobId))
+            .onErrorResume(this::logAndReturnEmpty)
+            .switchIfEmpty(legacyBlobStore.readBytes(blobId));
     }
 
-    private CompletableFuture<BlobId> saveToCurrentFallbackIfFails(
-        CompletableFuture<BlobId> currentSavingOperation,
-        Supplier<CompletableFuture<BlobId>> fallbackSavingOperationSupplier) {
+    private Mono<BlobId> saveToCurrentFallbackIfFails(
+        Mono<BlobId> currentSavingOperation,
+        Supplier<Mono<BlobId>> fallbackSavingOperationSupplier) {
 
         return currentSavingOperation
-            .thenApply(Optional::ofNullable)
-            .exceptionally(this::logAndReturnEmptyOptional)
-            .thenCompose(maybeBlobId -> saveToLegacyIfNeeded(maybeBlobId, fallbackSavingOperationSupplier));
+            .onErrorResume(this::logAndReturnEmpty)
+            .switchIfEmpty(fallbackSavingOperationSupplier.get());
     }
 
-    private <T> Optional<T> logAndReturnEmptyOptional(Throwable throwable) {
+    private <T> Mono<T> logAndReturnEmpty(Throwable throwable) {
         LOGGER.error("error happens from current blob store, fall back to legacy blob store", throwable);
-        return Optional.empty();
-    }
-
-    private CompletableFuture<BlobId> saveToLegacyIfNeeded(Optional<BlobId> maybeBlobId,
-                                                           Supplier<CompletableFuture<BlobId>> saveToLegacySupplier) {
-        return maybeBlobId
-            .map(CompletableFuture::completedFuture)
-            .orElseGet(saveToLegacySupplier);
-    }
-
-    private CompletableFuture<byte[]> readFromLegacyIfNeeded(Optional<byte[]> readFromCurrentResult, BlobId blodId) {
-        return readFromCurrentResult
-            .filter(this::hasContent)
-            .map(CompletableFuture::completedFuture)
-            .orElseGet(() -> legacyBlobStore.readBytes(blodId));
-    }
-
-    private boolean hasContent(byte [] bytes) {
-        return bytes.length > 0;
+        return Mono.empty();
     }
 
     @Override

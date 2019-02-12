@@ -21,7 +21,6 @@ package org.apache.james.queue.rabbitmq;
 
 import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.MINUTES;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,12 +32,12 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backend.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
@@ -79,6 +78,7 @@ class RabbitMQMailQueueConfigurationChangeTest {
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
+        CassandraSchemaVersionModule.MODULE,
         CassandraBlobModule.MODULE,
         CassandraMailQueueViewModule.MODULE,
         CassandraEventStoreModule.MODULE));
@@ -87,7 +87,7 @@ class RabbitMQMailQueueConfigurationChangeTest {
     static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
 
     private UpdatableTickingClock clock;
-    private RabbitMQManagementApi mqManagementApi;
+    private RabbitMQMailQueueManagement mqManagementApi;
     private RabbitClient rabbitClient;
     private ThreadLocalRandom random;
     private MimeMessageStore.Factory mimeMessageStoreFactory;
@@ -99,13 +99,8 @@ class RabbitMQMailQueueConfigurationChangeTest {
         clock = new UpdatableTickingClock(IN_SLICE_1);
         random = ThreadLocalRandom.current();
 
-        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(rabbitMQExtension.getRabbitMQ().amqpUri())
-            .managementUri(rabbitMQExtension.getRabbitMQ().managementUri())
-            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
-            .build();
         rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
-        mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
+        mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
     }
 
     @AfterEach

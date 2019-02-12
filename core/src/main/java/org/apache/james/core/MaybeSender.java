@@ -24,14 +24,38 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import javax.mail.internet.AddressException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
 public class MaybeSender {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MaybeSender.class);
+
+    public static MaybeSender getMailSender(String sender) {
+        if (sender == null || sender.trim().isEmpty()) {
+            return MaybeSender.nullSender();
+        }
+        if (sender.equals(MailAddress.NULL_SENDER_AS_STRING)) {
+            return MaybeSender.nullSender();
+        }
+        try {
+            return MaybeSender.of(new MailAddress(sender));
+        } catch (AddressException e) {
+            // Should never happen as long as the user does not modify the header by himself
+            LOGGER.warn("Unable to parse the sender address {}, so we fallback to a null sender", sender, e);
+            return MaybeSender.nullSender();
+        }
+    }
+
     public static MaybeSender nullSender() {
         return new MaybeSender(Optional.empty());
     }
 
+    @SuppressWarnings("deprecation")
     public static MaybeSender of(MailAddress mailAddress) {
         return new MaybeSender(Optional.ofNullable(mailAddress)
             .filter(address -> !address.isNullSender()));

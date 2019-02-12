@@ -21,6 +21,7 @@ package org.apache.james.blob.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -31,6 +32,7 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
+import org.apache.james.util.ZeroedInputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -70,11 +72,18 @@ public class CassandraBlobsDAOTest implements MetricableBlobStoreContract {
     @Test
     void readBytesShouldReturnSplitSavedDataByChunk() {
         String longString = Strings.repeat("0123456789\n", MULTIPLE_CHUNK_SIZE);
-        BlobId blobId = testee.save(longString.getBytes(StandardCharsets.UTF_8)).join();
+        BlobId blobId = testee.save(longString.getBytes(StandardCharsets.UTF_8)).block();
 
-        byte[] bytes = testee.readBytes(blobId).join();
+        byte[] bytes = testee.readBytes(blobId).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEqualTo(longString);
+    }
+
+    @Test
+    void blobStoreShouldSupport100MBBlob() {
+        BlobId blobId = testee.save(new ZeroedInputStream(100_000_000)).block();
+        InputStream bytes = testee.read(blobId);
+        assertThat(bytes).hasSameContentAs(new ZeroedInputStream(100_000_000));
     }
 
 }

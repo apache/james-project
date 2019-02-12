@@ -32,7 +32,7 @@
 
     <groupId>org.apache.james</groupId>
     <artifactId>james-project</artifactId>
-    <version>3.3.0-SNAPSHOT</version>
+    <version>3.4.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Apache James Project</name>
@@ -634,7 +634,7 @@
         <testcontainers.version>1.9.0</testcontainers.version>
         <assertj.version>3.3.0</assertj.version>
         <es.version>2.2.1</es.version>
-        <es-reporter.version>2.2.0</es-reporter.version>
+        <es-reporter.version>6.0.0-RC2</es-reporter.version>
         <guava.version>25.1-jre</guava.version>
 
         <jutf7.version>1.0.0</jutf7.version>
@@ -668,7 +668,7 @@
             <dependency>
                 <groupId>io.projectreactor</groupId>
                 <artifactId>reactor-bom</artifactId>
-                <version>Bismuth-RELEASE</version>
+                <version>Californium-SR3</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -759,6 +759,21 @@
                 <artifactId>apache-james-mailbox-elasticsearch</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>apache-james-mailbox-event-json</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>apache-james-mailbox-event-memory</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>apache-james-mailbox-event-rabbitmq</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
@@ -1606,6 +1621,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-webadmin-cassandra-data</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-webadmin-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1819,6 +1839,11 @@
                 <version>2.4.0</version>
             </dependency>
             <dependency>
+                <groupId>com.linagora</groupId>
+                <artifactId>metrics-elasticsearch-reporter</artifactId>
+                <version>${es-reporter.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>io.rest-assured</groupId>
                 <artifactId>rest-assured</artifactId>
                 <version>3.1.0</version>
@@ -1837,7 +1862,7 @@
             <dependency>
                 <groupId>com.rabbitmq</groupId>
                 <artifactId>amqp-client</artifactId>
-                <version>5.4.3</version>
+                <version>5.6.0</version>
             </dependency>
             <dependency>
                 <groupId>com.sparkjava</groupId>
@@ -1998,6 +2023,11 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty</artifactId>
                 <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.projectreactor.rabbitmq</groupId>
+                <artifactId>reactor-rabbitmq</artifactId>
+                <version>1.0.0.RELEASE</version>
             </dependency>
             <dependency>
                 <groupId>javax.activation</groupId>
@@ -2381,11 +2411,6 @@
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-servlet</artifactId>
                 <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.elasticsearch</groupId>
-                <artifactId>metrics-elasticsearch-reporter</artifactId>
-                <version>2.2.0</version>
             </dependency>
             <dependency>
                 <groupId>org.hamcrest</groupId>

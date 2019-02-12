@@ -20,7 +20,9 @@ package org.apache.james.mailbox.model;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -36,7 +38,7 @@ public class MessageMoves {
             targetMailboxIds = ImmutableSet.builder();
         }
 
-        public Builder previousMailboxIds(Collection<MailboxId> mailboxIds) {
+        public Builder previousMailboxIds(Iterable<MailboxId> mailboxIds) {
             previousMailboxIds.addAll(mailboxIds);
             return this;
         }
@@ -46,7 +48,7 @@ public class MessageMoves {
             return this;
         }
 
-        public Builder targetMailboxIds(Collection<MailboxId> mailboxIds) {
+        public Builder targetMailboxIds(Iterable<MailboxId> mailboxIds) {
             targetMailboxIds.addAll(mailboxIds);
             return this;
         }
@@ -83,5 +85,35 @@ public class MessageMoves {
 
     public Set<MailboxId> removedMailboxIds() {
         return Sets.difference(previousMailboxIds, targetMailboxIds);
+    }
+
+    public ImmutableSet<MailboxId> getPreviousMailboxIds() {
+        return previousMailboxIds;
+    }
+
+    public ImmutableSet<MailboxId> getTargetMailboxIds() {
+        return targetMailboxIds;
+    }
+
+    public Stream<MailboxId> impactedMailboxIds() {
+        return Stream.concat(
+            addedMailboxIds().stream(),
+            removedMailboxIds().stream());
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof MessageMoves) {
+            MessageMoves that = (MessageMoves) o;
+
+            return Objects.equals(this.previousMailboxIds, that.previousMailboxIds)
+                && Objects.equals(this.targetMailboxIds, that.targetMailboxIds);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(previousMailboxIds, targetMailboxIds);
     }
 }

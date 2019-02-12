@@ -32,7 +32,7 @@ public class InMemoryQuotaMailboxMessageManagerTest extends QuotaMessageManagerT
 
     @Override
     protected ManagerTestResources<StoreMailboxManager> createResources() throws Exception {
-        return new ManagerTestResources<StoreMailboxManager>(new InMemoryIntegrationResources());
+        return new ManagerTestResources<>(new InMemoryIntegrationResources());
     }
 
 }

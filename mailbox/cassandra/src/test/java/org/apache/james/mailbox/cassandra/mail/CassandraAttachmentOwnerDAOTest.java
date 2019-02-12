@@ -29,11 +29,12 @@ import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Username;
-import org.apache.james.util.FluentFutureStream;
 import org.apache.james.util.streams.JamesCollectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import reactor.core.publisher.Flux;
 
 class CassandraAttachmentOwnerDAOTest {
     private static final AttachmentId ATTACHMENT_ID = AttachmentId.from("id1");
@@ -59,7 +60,7 @@ class CassandraAttachmentOwnerDAOTest {
 
     @Test
     void retrieveOwnersShouldReturnAddedOwner() {
-        testee.addOwner(ATTACHMENT_ID, OWNER_1).join();
+        testee.addOwner(ATTACHMENT_ID, OWNER_1).block();
 
         assertThat(testee.retrieveOwners(ATTACHMENT_ID).join())
             .containsOnly(OWNER_1);
@@ -67,8 +68,8 @@ class CassandraAttachmentOwnerDAOTest {
 
     @Test
     void retrieveOwnersShouldReturnAddedOwners() {
-        testee.addOwner(ATTACHMENT_ID, OWNER_1).join();
-        testee.addOwner(ATTACHMENT_ID, OWNER_2).join();
+        testee.addOwner(ATTACHMENT_ID, OWNER_1).block();
+        testee.addOwner(ATTACHMENT_ID, OWNER_2).block();
 
         assertThat(testee.retrieveOwners(ATTACHMENT_ID).join())
             .containsOnly(OWNER_1, OWNER_2);
@@ -81,10 +82,10 @@ class CassandraAttachmentOwnerDAOTest {
         IntStream.range(0, referenceCountExceedingPaging)
             .boxed()
             .collect(JamesCollectors.chunker(128))
-            .forEach(chunk -> FluentFutureStream.of(
-                chunk.stream()
-                    .map(i -> testee.addOwner(ATTACHMENT_ID, Username.fromRawValue("owner" + i))))
-                .join());
+            .forEach(chunk -> Flux.fromIterable(chunk)
+                    .flatMap(i -> testee.addOwner(ATTACHMENT_ID, Username.fromRawValue("owner" + i)))
+                    .then()
+                    .block());
 
         assertThat(testee.retrieveOwners(ATTACHMENT_ID).join())
             .hasSize(referenceCountExceedingPaging);

@@ -91,7 +91,7 @@ class MailboxPathV2MigrationTest {
     void newValuesShouldBeSavedInMostRecentDAO() throws Exception {
         mailboxMapper.save(MAILBOX_1);
 
-        assertThat(daoV2.retrieveId(MAILBOX_PATH_1).join())
+        assertThat(daoV2.retrieveId(MAILBOX_PATH_1).blockOptional())
             .contains(new CassandraIdAndPath(MAILBOX_ID_1, MAILBOX_PATH_1));
     }
 
@@ -99,33 +99,33 @@ class MailboxPathV2MigrationTest {
     void newValuesShouldNotBeSavedInOldDAO() throws Exception {
         mailboxMapper.save(MAILBOX_1);
 
-        assertThat(daoV1.retrieveId(MAILBOX_PATH_1).join())
+        assertThat(daoV1.retrieveId(MAILBOX_PATH_1).blockOptional())
             .isEmpty();
     }
 
     @Test
     void readingOldValuesShouldMigrateThem() throws Exception {
-        daoV1.save(MAILBOX_PATH_1, MAILBOX_ID_1).join();
-        mailboxDAO.save(MAILBOX_1).join();
+        daoV1.save(MAILBOX_PATH_1, MAILBOX_ID_1).block();
+        mailboxDAO.save(MAILBOX_1).block();
 
         mailboxMapper.findMailboxByPath(MAILBOX_PATH_1);
 
         SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(daoV1.retrieveId(MAILBOX_PATH_1).join()).isEmpty();
-        softly.assertThat(daoV2.retrieveId(MAILBOX_PATH_1).join())
+        softly.assertThat(daoV1.retrieveId(MAILBOX_PATH_1).blockOptional()).isEmpty();
+        softly.assertThat(daoV2.retrieveId(MAILBOX_PATH_1).blockOptional())
             .contains(new CassandraIdAndPath(MAILBOX_ID_1, MAILBOX_PATH_1));
         softly.assertAll();
     }
 
     @Test
     void migrationTaskShouldMoveDataToMostRecentDao() {
-        daoV1.save(MAILBOX_PATH_1, MAILBOX_ID_1).join();
+        daoV1.save(MAILBOX_PATH_1, MAILBOX_ID_1).block();
 
         new MailboxPathV2Migration(daoV1, daoV2).run();
 
         SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(daoV1.retrieveId(MAILBOX_PATH_1).join()).isEmpty();
-        softly.assertThat(daoV2.retrieveId(MAILBOX_PATH_1).join())
+        softly.assertThat(daoV1.retrieveId(MAILBOX_PATH_1).blockOptional()).isEmpty();
+        softly.assertThat(daoV2.retrieveId(MAILBOX_PATH_1).blockOptional())
             .contains(new CassandraIdAndPath(MAILBOX_ID_1, MAILBOX_PATH_1));
         softly.assertAll();
     }

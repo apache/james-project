@@ -29,6 +29,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.util.LoggingLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +44,7 @@ public class FileConfigurationProvider implements ConfigurationProvider {
     private static final String CONFIGURATION_FILE_SUFFIX = ".xml";
     private static final char SEMICOLON = ';';
 
-    public static final HierarchicalConfiguration EMTY_CONFIGURATION = new HierarchicalConfiguration();
+    public static final HierarchicalConfiguration EMPTY_CONFIGURATION = new HierarchicalConfiguration();
 
     public static XMLConfiguration getConfig(InputStream configStream) throws ConfigurationException {
         PropertiesConfiguration.setDefaultListDelimiter(SEMICOLON);
@@ -63,30 +64,30 @@ public class FileConfigurationProvider implements ConfigurationProvider {
     }
     
     @Override
-    public HierarchicalConfiguration getConfiguration(String component) throws ConfigurationException {
+    public HierarchicalConfiguration getConfiguration(String component, LoggingLevel loggingLevelOnError) throws ConfigurationException {
         Preconditions.checkNotNull(component);
         List<String> configPathParts = Splitter.on(".").splitToList(component);
         Preconditions.checkArgument(!configPathParts.isEmpty());
 
-        Optional<InputStream> inputStream = retrieveConfigInputStream(configPathParts.get(0));
+        Optional<InputStream> inputStream = retrieveConfigInputStream(configPathParts.get(0), loggingLevelOnError);
         if (inputStream.isPresent()) {
             return selectConfigurationPart(configPathParts,
                 getConfig(inputStream.get()));
         }
-        return EMTY_CONFIGURATION;
+        return EMPTY_CONFIGURATION;
     }
 
     private HierarchicalConfiguration selectConfigurationPart(List<String> configPathParts, HierarchicalConfiguration config) {
         return selectHierarchicalConfigPart(config, Iterables.skip(configPathParts, 1));
     }
 
-    private Optional<InputStream> retrieveConfigInputStream(String configurationFileWithoutExtension) throws ConfigurationException {
+    private Optional<InputStream> retrieveConfigInputStream(String configurationFileWithoutExtension, LoggingLevel loggingLevelOnError) throws ConfigurationException {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(configurationFileWithoutExtension), "The configuration file name should not be empty or null");
         try {
             return Optional.of(
                 fileSystem.getResource(configurationPrefix + configurationFileWithoutExtension + CONFIGURATION_FILE_SUFFIX));
         } catch (IOException e) {
-            LOGGER.warn("Unable to locate configuration file {}" + CONFIGURATION_FILE_SUFFIX + ", assuming empty configuration", configurationFileWithoutExtension);
+            loggingLevelOnError.format(LOGGER, "Unable to locate configuration file {}" + CONFIGURATION_FILE_SUFFIX + ", assuming empty configuration", configurationFileWithoutExtension);
             return Optional.empty();
         }
     }

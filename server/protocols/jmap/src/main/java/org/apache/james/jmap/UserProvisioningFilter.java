@@ -31,9 +31,8 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.james.core.MailAddress;
+import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
@@ -93,9 +92,9 @@ public class UserProvisioningFilter implements Filter {
 
     private String getUsername(User user) throws UsersRepositoryException {
         try {
-            return usersRepository.getUser(new MailAddress(user.getUserName()));
-        } catch (AddressException e) {
-            return user.getUserName();
+            return usersRepository.getUser(user.asMailAddress());
+        } catch (IllegalStateException | AddressException e) {
+            return user.asString();
         }
     }
     

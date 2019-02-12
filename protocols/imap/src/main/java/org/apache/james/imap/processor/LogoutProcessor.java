@@ -53,7 +53,7 @@ public class LogoutProcessor extends AbstractMailboxProcessor<LogoutRequest> {
             bye(responder);
             okComplete(command, tag, responder);
         } catch (MailboxException e) {
-            LOGGER.error("Logout failed for user {}", mailboxSession.getUser().getUserName(), e);
+            LOGGER.error("Logout failed for user {}", mailboxSession.getUser().asString(), e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

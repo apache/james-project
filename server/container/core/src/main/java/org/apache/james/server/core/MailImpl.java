@@ -64,6 +64,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -417,9 +418,13 @@ public class MailImpl implements Disposable, Mail {
      * @param recipients the collection of recipients of this MailImpl
      */
     public MailImpl(String name, MailAddress sender, Collection<MailAddress> recipients) {
+        this(name, Optional.ofNullable(sender), recipients);
+    }
+
+    public MailImpl(String name, Optional<MailAddress> sender, Collection<MailAddress> recipients) {
         this();
         setName(name);
-        setSender(sender);
+        sender.ifPresent(this::setSender);
 
         // Copy the recipient list
         if (recipients != null) {
@@ -438,12 +443,12 @@ public class MailImpl implements Disposable, Mail {
             if (mail instanceof MailImpl) {
                 setAttributesRaw((Map<String, Object>) cloneSerializableObject(((MailImpl) mail).getAttributesRaw()));
             } else {
-                HashMap<String, Object> attribs = new HashMap<>();
-                for (Iterator<String> i = mail.getAttributeNames(); i.hasNext(); ) {
-                    String hashKey = i.next();
-                    attribs.put(hashKey, cloneSerializableObject(mail.getAttribute(hashKey)));
-                }
-                setAttributesRaw(attribs);
+                ImmutableMap<String, Object> attributesMap = mail.attributes()
+                    .collect(Guavate.toImmutableMap(
+                            attribute -> attribute.getName().asString(),
+                            Throwing.function(attribute -> cloneSerializableObject(attribute.getValue().getValue()))));
+
+                setAttributesRaw(attributesMap);
             }
         } catch (IOException | ClassNotFoundException e) {
             LOGGER.error("Error while deserializing attributes", e);

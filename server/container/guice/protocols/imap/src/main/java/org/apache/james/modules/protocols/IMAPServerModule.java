@@ -31,10 +31,10 @@ import org.apache.james.imapserver.netty.OioIMAPServerFactory;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SubscriptionManager;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.modules.Names;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceProbe;
@@ -46,7 +46,6 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Named;
 
 public class IMAPServerModule extends AbstractModule {
 
@@ -61,13 +60,15 @@ public class IMAPServerModule extends AbstractModule {
 
     @Provides
     ImapProcessor provideImapProcessor(
-            @Named(Names.MAILBOXMANAGER_NAME)MailboxManager mailboxManager,
+            MailboxManager mailboxManager,
+            EventBus eventBus,
             SubscriptionManager subscriptionManager,
             QuotaManager quotaManager,
             QuotaRootResolver quotaRootResolver,
             MetricFactory metricFactory) {
         return DefaultImapProcessorFactory.createXListSupportingProcessor(
                 mailboxManager,
+                eventBus,
                 subscriptionManager,
                 null,
                 quotaManager,

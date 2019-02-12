@@ -142,20 +142,23 @@ public class CommandDispatcher<SessionT extends ProtocolSession> implements Exte
     
     @Override
     public Response onLine(SessionT session, ByteBuffer line) {
-        
+        Request request;
         try {
             
-            Request request = parseRequest(session, line);
+            request = parseRequest(session, line);
             if (request == null) {
                 return null;
             }
-            return dispatchCommandHandlers(session, request);
         } catch (Exception e) {
             LOGGER.debug("Unable to parse request", e);
             return session.newFatalErrorResponse();
-        } 
-
-       
+        }
+        try {
+            return dispatchCommandHandlers(session, request);
+        } catch (Exception e) {
+            LOGGER.error("Error dispatching command for request {}", request.getCommand(), e);
+            return session.newFatalErrorResponse();
+        }
     }
     
     /**

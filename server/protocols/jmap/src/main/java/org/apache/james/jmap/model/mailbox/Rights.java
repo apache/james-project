@@ -99,7 +99,7 @@ public class Rights {
         }
 
         public static Username fromSession(MailboxSession mailboxSession) {
-            return new Username(mailboxSession.getUser().getUserName());
+            return new Username(mailboxSession.getUser().asString());
         }
 
         private final String value;

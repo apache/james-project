@@ -30,13 +30,13 @@ import java.util.function.Predicate;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.fixture.MailboxFixture;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.DeleteResult;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -75,9 +75,9 @@ public abstract class AbstractMessageIdManagerStorageTest {
     protected abstract MessageIdManagerTestSystem createTestingData() throws Exception;
 
     public void setUp() throws Exception {
-        aliceSession = new MockMailboxSession(MailboxFixture.ALICE);
-        bobSession = new MockMailboxSession(MailboxFixture.BOB);
-        systemSession = new MockMailboxSession("systemuser");
+        aliceSession = MailboxSessionUtil.create(MailboxFixture.ALICE);
+        bobSession = MailboxSessionUtil.create(MailboxFixture.BOB);
+        systemSession = MailboxSessionUtil.create("systemuser");
         testingData = createTestingData();
         messageIdManager = testingData.getMessageIdManager();
 

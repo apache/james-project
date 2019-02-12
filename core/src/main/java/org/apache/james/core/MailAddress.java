@@ -113,6 +113,10 @@ public class MailAddress implements java.io.Serializable {
         return NULL_SENDER;
     }
 
+    /**
+     * Prefer using {@link MaybeSender#getMailSender(String)}
+     */
+    @Deprecated
     public static  MailAddress getMailSender(String sender) {
         if (sender == null || sender.trim().length() <= 0) {
             return null;
@@ -666,8 +670,9 @@ public class MailAddress implements java.io.Serializable {
     /**
      * Return <code>true</code> if the {@link MailAddress} should represent a null sender (<>)
      *
-     * @return nullsender
+     * @Deprecated You should use an Optional&lt;MailAddress&gt; representation of a MailAddress rather than relying on a NULL object
      */
+    @Deprecated
     public boolean isNullSender() {
         return false;
     }

@@ -28,9 +28,6 @@ import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.KEYS
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.MAIL_KEY;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.REPOSITORY_NAME;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -40,6 +37,8 @@ import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class CassandraMailRepositoryKeysDAO {
 
@@ -80,20 +79,20 @@ public class CassandraMailRepositoryKeysDAO {
             .value(MAIL_KEY, bindMarker(MAIL_KEY)));
     }
 
-    public CompletableFuture<Boolean> store(MailRepositoryUrl url, MailKey key) {
+    public Mono<Boolean> store(MailRepositoryUrl url, MailKey key) {
         return executor.executeReturnApplied(insertKey.bind()
             .setString(REPOSITORY_NAME, url.asString())
             .setString(MAIL_KEY, key.asString()));
     }
 
-    public CompletableFuture<Stream<MailKey>> list(MailRepositoryUrl url) {
-        return executor.execute(listKeys.bind()
+    public Flux<MailKey> list(MailRepositoryUrl url) {
+        return executor.executeReactor(listKeys.bind()
             .setString(REPOSITORY_NAME, url.asString()))
-            .thenApply(cassandraUtils::convertToStream)
-            .thenApply(stream -> stream.map(row -> new MailKey(row.getString(MAIL_KEY))));
+            .flatMapMany(cassandraUtils::convertToFlux)
+            .map(row -> new MailKey(row.getString(MAIL_KEY)));
     }
 
-    public CompletableFuture<Boolean> remove(MailRepositoryUrl url, MailKey key) {
+    public Mono<Boolean> remove(MailRepositoryUrl url, MailKey key) {
         return executor.executeReturnApplied(deleteKey.bind()
             .setString(REPOSITORY_NAME, url.asString())
             .setString(MAIL_KEY, key.asString()));

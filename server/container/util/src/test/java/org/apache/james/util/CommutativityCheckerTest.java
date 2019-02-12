@@ -26,13 +26,13 @@ import java.util.Set;
 import java.util.function.BinaryOperator;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
 public class CommutativityCheckerTest {
     @Test
-    public void constructorShouldThrowWhenNullValuesToTest() throws Exception {
+    void constructorShouldThrowWhenNullValuesToTest() throws Exception {
         BinaryOperator<Integer> binaryOperator = (a, b) -> a * a + b;
 
         assertThatThrownBy(() -> new CommutativityChecker<>(null, binaryOperator))
@@ -40,7 +40,7 @@ public class CommutativityCheckerTest {
     }
 
     @Test
-    public void constructorShouldThrowWhenEmptyValuesToTest() throws Exception {
+    void constructorShouldThrowWhenEmptyValuesToTest() throws Exception {
         BinaryOperator<Integer> binaryOperator = (a, b) -> a * a + b;
 
         assertThatThrownBy(() -> new CommutativityChecker<>(ImmutableSet.of(), binaryOperator))
@@ -48,7 +48,7 @@ public class CommutativityCheckerTest {
     }
 
     @Test
-    public void constructorShouldThrowWhenSingleValueToTest() throws Exception {
+    void constructorShouldThrowWhenSingleValueToTest() throws Exception {
         BinaryOperator<Integer> binaryOperator = (a, b) -> a * a + b;
 
         assertThatThrownBy(() -> new CommutativityChecker<>(ImmutableSet.of(0), binaryOperator))
@@ -56,13 +56,13 @@ public class CommutativityCheckerTest {
     }
 
     @Test
-    public void constructorShouldThrowWhenNullOperation() throws Exception {
+    void constructorShouldThrowWhenNullOperation() throws Exception {
         assertThatThrownBy(() -> new CommutativityChecker<>(ImmutableSet.of(0, 1), null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void findNonCommutativeInputShouldReturnEmptyWhenCommutativeOperation() throws Exception {
+    void findNonCommutativeInputShouldReturnEmptyWhenCommutativeOperation() throws Exception {
         Set<Integer> integers = ImmutableSet.of(5, 4, 3, 2, 1);
         BinaryOperator<Integer> commutativeOperator = (a, b) -> a + b;
         CommutativityChecker<Integer> commutativityChecker = new CommutativityChecker<>(integers, commutativeOperator);
@@ -71,7 +71,7 @@ public class CommutativityCheckerTest {
     }
 
     @Test
-    public void findNonCommutativeInputShouldReturnDataWhenNonCommutativeOperation() throws Exception {
+    void findNonCommutativeInputShouldReturnDataWhenNonCommutativeOperation() throws Exception {
         Set<Integer> integers = ImmutableSet.of(2, 1);
         BinaryOperator<Integer> nonCommutativeOperator = (a, b) -> 2 * a + b;
         CommutativityChecker<Integer> commutativityChecker = new CommutativityChecker<>(integers, nonCommutativeOperator);
@@ -81,7 +81,7 @@ public class CommutativityCheckerTest {
     }
 
     @Test
-    public void findNonCommutativeInputShouldNotReturnStableValues() throws Exception {
+    void findNonCommutativeInputShouldNotReturnStableValues() throws Exception {
         Set<Integer> integers = ImmutableSet.of(0, 1, 2);
         BinaryOperator<Integer> nonCommutativeOperatorWithStableValues = (a, b) -> a * a + b;
         CommutativityChecker<Integer> commutativityChecker = new CommutativityChecker<>(integers, nonCommutativeOperatorWithStableValues);
@@ -92,7 +92,7 @@ public class CommutativityCheckerTest {
     }
 
     @Test
-    public void findNonCommutativeInputShouldReturnEmptyWhenNonCommutativeOperationButOnlyStableValues() throws Exception {
+    void findNonCommutativeInputShouldReturnEmptyWhenNonCommutativeOperationButOnlyStableValues() throws Exception {
         Set<Integer> stableValues = ImmutableSet.of(0, 1);
         BinaryOperator<Integer> nonCommutativeOperatorWithStableValues = (a, b) -> a * a + b;
         CommutativityChecker<Integer> commutativityChecker = new CommutativityChecker<>(stableValues, nonCommutativeOperatorWithStableValues);

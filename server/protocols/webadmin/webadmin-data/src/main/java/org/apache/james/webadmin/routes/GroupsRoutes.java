@@ -22,16 +22,9 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static spark.Spark.halt;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
 import javax.inject.Inject;
-import javax.mail.internet.AddressException;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -49,7 +42,6 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
-import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.OptionalUtils;
@@ -59,8 +51,6 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
@@ -84,14 +74,13 @@ public class GroupsRoutes implements Routes {
 
     public static final String ROOT_PATH = "address/groups";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GroupsRoutes.class);
-
     private static final String GROUP_ADDRESS = "groupAddress";
     private static final String GROUP_ADDRESS_PATH = ROOT_PATH + SEPARATOR + ":" + GROUP_ADDRESS;
     private static final String USER_ADDRESS = "userAddress";
     private static final String USER_IN_GROUP_ADDRESS_PATH = GROUP_ADDRESS_PATH + SEPARATOR + ":" + USER_ADDRESS;
     private static final String MAILADDRESS_ASCII_DISCLAIMER = "Note that email addresses are restricted to ASCII character set. " +
         "Mail addresses not matching this criteria will be rejected.";
+    private static final String ADDRESS_TYPE = "group";
 
     private final UsersRepository usersRepository;
     private final DomainList domainList;
@@ -131,16 +120,8 @@ public class GroupsRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - Something went bad on the server side.")
     })
-    public Set<String> listGroups(Request request, Response response) throws RecipientRewriteTableException {
-        return Optional.ofNullable(recipientRewriteTable.getAllMappings())
-            .map(mappings ->
-                mappings.entrySet().stream()
-                    .filter(e -> e.getValue().contains(Mapping.Type.Group))
-                    .map(Map.Entry::getKey)
-                    .flatMap(source -> OptionalUtils.toStream(source.asMailAddress()))
-                    .map(MailAddress::asString)
-                    .collect(Guavate.toImmutableSortedSet()))
-            .orElse(ImmutableSortedSet.of());
+    public List<MappingSource> listGroups(Request request, Response response) throws RecipientRewriteTableException {
+        return recipientRewriteTable.getSourcesForType(Mapping.Type.Group).collect(Guavate.toImmutableList());
     }
 
     @PUT
@@ -164,11 +145,11 @@ public class GroupsRoutes implements Routes {
             message = "Internal server error - Something went bad on the server side.")
     })
     public HaltException addToGroup(Request request, Response response) throws RecipientRewriteTableException, UsersRepositoryException, DomainListException {
-        MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
+        MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), ADDRESS_TYPE);
         Domain domain = groupAddress.getDomain();
         ensureRegisteredDomain(domain);
         ensureNotShadowingAnotherAddress(groupAddress);
-        MailAddress userAddress = parseMailAddress(request.params(USER_ADDRESS));
+        MailAddress userAddress = MailAddressParser.parseMailAddress(request.params(USER_ADDRESS), ADDRESS_TYPE);
         MappingSource source = MappingSource.fromUser(User.fromLocalPartWithDomain(groupAddress.getLocalPart(), domain));
         addGroupMember(source, userAddress);
         return halt(HttpStatus.NO_CONTENT_204);
@@ -218,8 +199,8 @@ public class GroupsRoutes implements Routes {
             message = "Internal server error - Something went bad on the server side.")
     })
     public HaltException removeFromGroup(Request request, Response response) throws RecipientRewriteTableException {
-        MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
-        MailAddress userAddress = parseMailAddress(request.params(USER_ADDRESS));
+        MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), ADDRESS_TYPE);
+        MailAddress userAddress = MailAddressParser.parseMailAddress(request.params(USER_ADDRESS), ADDRESS_TYPE);
         MappingSource source = MappingSource
             .fromUser(
                 User.fromLocalPartWithDomain(groupAddress.getLocalPart(), groupAddress.getDomain()));
@@ -241,9 +222,8 @@ public class GroupsRoutes implements Routes {
             message = "Internal server error - Something went bad on the server side.")
     })
     public ImmutableSortedSet<String> listGroupMembers(Request request, Response response) throws RecipientRewriteTableException {
-        MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
-        Mappings mappings = Optional.ofNullable(recipientRewriteTable.getUserDomainMappings(MappingSource.fromMailAddress(groupAddress)))
-            .orElse(MappingsImpl.empty())
+        MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), ADDRESS_TYPE);
+        Mappings mappings = recipientRewriteTable.getStoredMappings(MappingSource.fromMailAddress(groupAddress))
             .select(Mapping.Type.Group);
 
         ensureNonEmptyMappings(mappings);
@@ -254,28 +234,6 @@ public class GroupsRoutes implements Routes {
                 .flatMap(OptionalUtils::toStream)
                 .map(MailAddress::asString)
                 .collect(Guavate.toImmutableSortedSet());
-    }
-
-    private MailAddress parseMailAddress(String address) {
-        try {
-            String decodedAddress = URLDecoder.decode(address, StandardCharsets.UTF_8.displayName());
-            return new MailAddress(decodedAddress);
-        } catch (AddressException e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("The group is not an email address")
-                .cause(e)
-                .haltError();
-        } catch (UnsupportedEncodingException e) {
-            LOGGER.error("UTF-8 should be a valid encoding");
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .type(ErrorType.SERVER_ERROR)
-                .message("Internal server error - Something went bad on the server side.")
-                .cause(e)
-                .haltError();
-        }
     }
 
     private void ensureNonEmptyMappings(Mappings mappings) {

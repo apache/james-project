@@ -23,12 +23,13 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.acl.ACLDiff;
+import org.apache.james.mailbox.events.Event;
+import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Entry;
@@ -37,8 +38,11 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PropagateLookupRightListener implements MailboxListener {
+public class PropagateLookupRightListener implements MailboxListener.GroupMailboxListener {
+    private static class PropagateLookupRightListenerGroup extends Group {}
+
     private static final Logger LOGGER = LoggerFactory.getLogger(PropagateLookupRightListener.class);
+    private static final Group GROUP = new PropagateLookupRightListenerGroup();
 
     private final RightManager rightManager;
     private final MailboxManager mailboxManager;
@@ -50,35 +54,27 @@ public class PropagateLookupRightListener implements MailboxListener {
     }
 
     @Override
-    public ListenerType getType() {
-        return ListenerType.ONCE;
+    public Group getDefaultGroup() {
+        return GROUP;
     }
 
     @Override
-    public void event(Event event) {
-        try {
-            MailboxSession mailboxSession = createMailboxSession(event);
+    public void event(Event event) throws MailboxException {
+        MailboxSession mailboxSession = createMailboxSession(event);
 
-            if (event instanceof MailboxACLUpdated) {
-                MailboxACLUpdated aclUpdateEvent = (MailboxACLUpdated) event;
-                MailboxPath mailboxPath = mailboxManager.getMailbox(aclUpdateEvent.getMailboxId(), mailboxSession).getMailboxPath();
+        if (event instanceof MailboxACLUpdated) {
+            MailboxACLUpdated aclUpdateEvent = (MailboxACLUpdated) event;
+            MailboxPath mailboxPath = mailboxManager.getMailbox(aclUpdateEvent.getMailboxId(), mailboxSession).getMailboxPath();
 
-                updateLookupRightOnParent(mailboxSession, mailboxPath, aclUpdateEvent.getAclDiff());
-            } else if (event instanceof MailboxRenamed) {
-                MailboxRenamed renamedEvent = (MailboxRenamed) event;
-                updateLookupRightOnParent(mailboxSession, renamedEvent.getNewPath());
-            }
-        } catch (MailboxException e) {
-            throw new RuntimeException(e);
+            updateLookupRightOnParent(mailboxSession, mailboxPath, aclUpdateEvent.getAclDiff());
+        } else if (event instanceof MailboxRenamed) {
+            MailboxRenamed renamedEvent = (MailboxRenamed) event;
+            updateLookupRightOnParent(mailboxSession, renamedEvent.getNewPath());
         }
     }
 
-    private MailboxSession createMailboxSession(Event event) {
-        try {
-            return mailboxManager.createSystemSession(event.getUser().asString());
-        } catch (MailboxException e) {
-            throw new RuntimeException("unable to create system session of user:" + event.getUser().toString(), e);
-        }
+    private MailboxSession createMailboxSession(Event event) throws MailboxException {
+        return mailboxManager.createSystemSession(event.getUser().asString());
     }
 
     private void updateLookupRightOnParent(MailboxSession session, MailboxPath path) throws MailboxException {
@@ -127,7 +123,7 @@ public class PropagateLookupRightListener implements MailboxListener {
         } catch (MailboxException e) {
             LOGGER.error(String.format("Mailbox '%s' does not exist, user '%s' cannot share mailbox",
                 mailboxPath,
-                session.getUser().getUserName()), e);
+                session.getUser().asString()), e);
         }
     }
 }

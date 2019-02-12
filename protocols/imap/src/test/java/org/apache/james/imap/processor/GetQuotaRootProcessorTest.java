@@ -45,8 +45,8 @@ import org.apache.james.imap.message.response.QuotaRootResponse;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.Quota;
@@ -61,10 +61,10 @@ import org.mockito.ArgumentCaptor;
 public class GetQuotaRootProcessorTest {
 
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("plop", Optional.empty());
-    public static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("plop", "INBOX");
-    public static final Quota<QuotaCount> MESSAGE_QUOTA =
+    private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("plop", "INBOX");
+    private static final Quota<QuotaCount> MESSAGE_QUOTA =
         Quota.<QuotaCount>builder().used(QuotaCount.count(24)).computedLimit(QuotaCount.count(1589)).build();
-    public static final Quota<QuotaSize> STORAGE_QUOTA =
+    private static final Quota<QuotaSize> STORAGE_QUOTA =
         Quota.<QuotaSize>builder().used(QuotaSize.size(240)).computedLimit(QuotaSize.size(15890)).build();
 
     private GetQuotaRootProcessor testee;
@@ -77,7 +77,7 @@ public class GetQuotaRootProcessorTest {
 
     @Before
     public void setUp() {
-        mailboxSession = new MockMailboxSession("plop");
+        mailboxSession = MailboxSessionUtil.create("plop");
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         mockedImapSession = mock(ImapSession.class);
         mockedQuotaManager = mock(QuotaManager.class);

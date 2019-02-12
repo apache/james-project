@@ -35,8 +35,8 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.memory.MemoryBlobStore;
-import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.StreamUtils;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,23 +49,25 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.shaded.com.google.common.base.MoreObjects;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 class UnionBlobStoreTest implements BlobStoreContract {
 
-    private static class FutureThrowingBlobStore implements BlobStore {
+    private static class FailingBlobStore implements BlobStore {
 
         @Override
-        public CompletableFuture<BlobId> save(byte[] data) {
-            return CompletableFutureUtil.exceptionallyFuture(new RuntimeException("broken everywhere"));
+        public Mono<BlobId> save(byte[] data) {
+            return Mono.error(new RuntimeException("broken everywhere"));
         }
 
         @Override
-        public CompletableFuture<BlobId> save(InputStream data) {
-            return CompletableFutureUtil.exceptionallyFuture(new RuntimeException("broken everywhere"));
+        public Mono<BlobId> save(InputStream data) {
+            return Mono.error(new RuntimeException("broken everywhere"));
         }
 
         @Override
-        public CompletableFuture<byte[]> readBytes(BlobId blobId) {
-            return CompletableFutureUtil.exceptionallyFuture(new RuntimeException("broken everywhere"));
+        public Mono<byte[]> readBytes(BlobId blobId) {
+            return Mono.error(new RuntimeException("broken everywhere"));
         }
 
         @Override
@@ -83,17 +85,17 @@ class UnionBlobStoreTest implements BlobStoreContract {
     private static class ThrowingBlobStore implements BlobStore {
 
         @Override
-        public CompletableFuture<BlobId> save(byte[] data) {
+        public Mono<BlobId> save(byte[] data) {
             throw new RuntimeException("broken everywhere");
         }
 
         @Override
-        public CompletableFuture<BlobId> save(InputStream data) {
+        public Mono<BlobId> save(InputStream data) {
             throw new RuntimeException("broken everywhere");
         }
 
         @Override
-        public CompletableFuture<byte[]> readBytes(BlobId blobId) {
+        public Mono<byte[]> readBytes(BlobId blobId) {
             throw new RuntimeException("broken everywhere");
         }
 
@@ -140,13 +142,13 @@ class UnionBlobStoreTest implements BlobStoreContract {
     class CurrentSaveThrowsExceptionDirectly {
 
         @Test
-        void saveShouldFallBackToLegacyWhenCurrentGotException() throws Exception {
+        void saveShouldFallBackToLegacyWhenCurrentGotException() {
             MemoryBlobStore legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
             UnionBlobStore unionBlobStore = UnionBlobStore.builder()
                 .current(new ThrowingBlobStore())
                 .legacy(legacyBlobStore)
                 .build();
-            BlobId blobId = unionBlobStore.save(BLOB_CONTENT).get();
+            BlobId blobId = unionBlobStore.save(BLOB_CONTENT).block();
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(unionBlobStore.read(blobId))
@@ -157,13 +159,13 @@ class UnionBlobStoreTest implements BlobStoreContract {
         }
 
         @Test
-        void saveInputStreamShouldFallBackToLegacyWhenCurrentGotException() throws Exception {
+        void saveInputStreamShouldFallBackToLegacyWhenCurrentGotException() {
             MemoryBlobStore legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
             UnionBlobStore unionBlobStore = UnionBlobStore.builder()
                 .current(new ThrowingBlobStore())
                 .legacy(legacyBlobStore)
                 .build();
-            BlobId blobId = unionBlobStore.save(new ByteArrayInputStream(BLOB_CONTENT)).get();
+            BlobId blobId = unionBlobStore.save(new ByteArrayInputStream(BLOB_CONTENT)).block();
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(unionBlobStore.read(blobId))
@@ -178,13 +180,13 @@ class UnionBlobStoreTest implements BlobStoreContract {
     class CurrentSaveCompletesExceptionally {
 
         @Test
-        void saveShouldFallBackToLegacyWhenCurrentCompletedExceptionally() throws Exception {
+        void saveShouldFallBackToLegacyWhenCurrentCompletedExceptionally() {
             MemoryBlobStore legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
             UnionBlobStore unionBlobStore = UnionBlobStore.builder()
-                .current(new FutureThrowingBlobStore())
+                .current(new FailingBlobStore())
                 .legacy(legacyBlobStore)
                 .build();
-            BlobId blobId = unionBlobStore.save(BLOB_CONTENT).get();
+            BlobId blobId = unionBlobStore.save(BLOB_CONTENT).block();
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(unionBlobStore.read(blobId))
@@ -195,13 +197,13 @@ class UnionBlobStoreTest implements BlobStoreContract {
         }
 
         @Test
-        void saveInputStreamShouldFallBackToLegacyWhenCurrentCompletedExceptionally() throws Exception {
+        void saveInputStreamShouldFallBackToLegacyWhenCurrentCompletedExceptionally() {
             MemoryBlobStore legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
             UnionBlobStore unionBlobStore = UnionBlobStore.builder()
-                .current(new FutureThrowingBlobStore())
+                .current(new FailingBlobStore())
                 .legacy(legacyBlobStore)
                 .build();
-            BlobId blobId = unionBlobStore.save(new ByteArrayInputStream(BLOB_CONTENT)).get();
+            BlobId blobId = unionBlobStore.save(new ByteArrayInputStream(BLOB_CONTENT)).block();
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(unionBlobStore.read(blobId))
@@ -217,29 +219,29 @@ class UnionBlobStoreTest implements BlobStoreContract {
     class CurrentReadThrowsExceptionDirectly {
 
         @Test
-        void readShouldReturnFallbackToLegacyWhenCurrentGotException() throws Exception {
+        void readShouldReturnFallbackToLegacyWhenCurrentGotException() {
             MemoryBlobStore legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
             UnionBlobStore unionBlobStore = UnionBlobStore.builder()
                 .current(new ThrowingBlobStore())
                 .legacy(legacyBlobStore)
                 .build();
-            BlobId blobId = legacyBlobStore.save(BLOB_CONTENT).get();
+            BlobId blobId = legacyBlobStore.save(BLOB_CONTENT).block();
 
             assertThat(unionBlobStore.read(blobId))
                 .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
         }
 
         @Test
-        void readBytesShouldReturnFallbackToLegacyWhenCurrentGotException() throws Exception {
+        void readBytesShouldReturnFallbackToLegacyWhenCurrentGotException() {
             MemoryBlobStore legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
 
             UnionBlobStore unionBlobStore = UnionBlobStore.builder()
                 .current(new ThrowingBlobStore())
                 .legacy(legacyBlobStore)
                 .build();
-            BlobId blobId = legacyBlobStore.save(BLOB_CONTENT).get();
+            BlobId blobId = legacyBlobStore.save(BLOB_CONTENT).block();
 
-            assertThat(unionBlobStore.readBytes(blobId).get())
+            assertThat(unionBlobStore.readBytes(blobId).block())
                 .isEqualTo(BLOB_CONTENT);
         }
 
@@ -249,28 +251,28 @@ class UnionBlobStoreTest implements BlobStoreContract {
     class CurrentReadCompletesExceptionally {
 
         @Test
-        void readShouldReturnFallbackToLegacyWhenCurrentCompletedExceptionally() throws Exception {
+        void readShouldReturnFallbackToLegacyWhenCurrentCompletedExceptionally() {
             MemoryBlobStore legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
             UnionBlobStore unionBlobStore = UnionBlobStore.builder()
-                .current(new FutureThrowingBlobStore())
+                .current(new FailingBlobStore())
                 .legacy(legacyBlobStore)
                 .build();
-            BlobId blobId = legacyBlobStore.save(BLOB_CONTENT).get();
+            BlobId blobId = legacyBlobStore.save(BLOB_CONTENT).block();
 
             assertThat(unionBlobStore.read(blobId))
                 .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
         }
 
         @Test
-        void readBytesShouldReturnFallbackToLegacyWhenCurrentCompletedExceptionally() throws Exception {
+        void readBytesShouldReturnFallbackToLegacyWhenCurrentCompletedExceptionally() {
             MemoryBlobStore legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
             UnionBlobStore unionBlobStore = UnionBlobStore.builder()
-                .current(new FutureThrowingBlobStore())
+                .current(new FailingBlobStore())
                 .legacy(legacyBlobStore)
                 .build();
-            BlobId blobId = legacyBlobStore.save(BLOB_CONTENT).get();
+            BlobId blobId = legacyBlobStore.save(BLOB_CONTENT).block();
 
-            assertThat(unionBlobStore.readBytes(blobId).get())
+            assertThat(unionBlobStore.readBytes(blobId).block())
                 .isEqualTo(BLOB_CONTENT);
         }
     }
@@ -280,7 +282,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
     class CurrentAndLegacyCouldNotComplete {
 
 
-        Stream<Function<UnionBlobStore, CompletableFuture<?>>> blobStoreOperationsReturnFutures() {
+        Stream<Function<UnionBlobStore, Mono<?>>> blobStoreOperationsReturnFutures() {
             return Stream.of(
                 blobStore -> blobStore.save(BLOB_CONTENT),
                 blobStore -> blobStore.save(new ByteArrayInputStream(BLOB_CONTENT)),
@@ -296,15 +298,15 @@ class UnionBlobStoreTest implements BlobStoreContract {
             List<UnionBlobStore> futureThrowingUnionBlobStores = ImmutableList.of(
                 UnionBlobStore.builder()
                     .current(new ThrowingBlobStore())
-                    .legacy(new FutureThrowingBlobStore())
+                    .legacy(new FailingBlobStore())
                     .build(),
                 UnionBlobStore.builder()
-                    .current(new FutureThrowingBlobStore())
+                    .current(new FailingBlobStore())
                     .legacy(new ThrowingBlobStore())
                     .build(),
                 UnionBlobStore.builder()
-                    .current(new FutureThrowingBlobStore())
-                    .legacy(new FutureThrowingBlobStore())
+                    .current(new FailingBlobStore())
+                    .legacy(new FailingBlobStore())
                     .build());
 
             return blobStoreOperationsReturnFutures()
@@ -337,74 +339,74 @@ class UnionBlobStoreTest implements BlobStoreContract {
         @ParameterizedTest
         @MethodSource("blobStoresCauseReturnExceptionallyFutures")
         void operationShouldReturnExceptionallyFuture(UnionBlobStore blobStoreReturnsExceptionallyFuture,
-                                                      Function<UnionBlobStore, CompletableFuture<?>> blobStoreOperation) {
-            assertThat(blobStoreOperation.apply(blobStoreReturnsExceptionallyFuture))
-                .isCompletedExceptionally();
+                                                      Function<UnionBlobStore, Mono<?>> blobStoreOperation) {
+            Mono<?> mono = blobStoreOperation.apply(blobStoreReturnsExceptionallyFuture);
+            assertThatThrownBy(mono::block).isInstanceOf(RuntimeException.class);
         }
     }
 
     @Test
-    void readShouldReturnFromCurrentWhenAvailable() throws Exception {
-        BlobId blobId = currentBlobStore.save(BLOB_CONTENT).get();
+    void readShouldReturnFromCurrentWhenAvailable() {
+        BlobId blobId = currentBlobStore.save(BLOB_CONTENT).block();
 
         assertThat(unionBlobStore.read(blobId))
             .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
     }
 
     @Test
-    void readShouldReturnFromLegacyWhenCurrentNotAvailable() throws Exception {
-        BlobId blobId = legacyBlobStore.save(BLOB_CONTENT).get();
+    void readShouldReturnFromLegacyWhenCurrentNotAvailable() {
+        BlobId blobId = legacyBlobStore.save(BLOB_CONTENT).block();
 
         assertThat(unionBlobStore.read(blobId))
             .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
     }
 
     @Test
-    void readBytesShouldReturnFromCurrentWhenAvailable() throws Exception {
-        BlobId blobId = currentBlobStore.save(BLOB_CONTENT).get();
+    void readBytesShouldReturnFromCurrentWhenAvailable() {
+        BlobId blobId = currentBlobStore.save(BLOB_CONTENT).block();
 
-        assertThat(unionBlobStore.readBytes(blobId).get())
+        assertThat(unionBlobStore.readBytes(blobId).block())
             .isEqualTo(BLOB_CONTENT);
     }
 
     @Test
-    void readBytesShouldReturnFromLegacyWhenCurrentNotAvailable() throws Exception {
-        BlobId blobId = legacyBlobStore.save(BLOB_CONTENT).get();
+    void readBytesShouldReturnFromLegacyWhenCurrentNotAvailable() {
+        BlobId blobId = legacyBlobStore.save(BLOB_CONTENT).block();
 
-        assertThat(unionBlobStore.readBytes(blobId).get())
+        assertThat(unionBlobStore.readBytes(blobId).block())
             .isEqualTo(BLOB_CONTENT);
     }
 
     @Test
-    void saveShouldWriteToCurrent() throws Exception {
-        BlobId blobId = unionBlobStore.save(BLOB_CONTENT).get();
+    void saveShouldWriteToCurrent() {
+        BlobId blobId = unionBlobStore.save(BLOB_CONTENT).block();
 
-        assertThat(currentBlobStore.readBytes(blobId).get())
+        assertThat(currentBlobStore.readBytes(blobId).block())
             .isEqualTo(BLOB_CONTENT);
     }
 
     @Test
-    void saveShouldNotWriteToLegacy() throws Exception {
-        BlobId blobId = unionBlobStore.save(BLOB_CONTENT).get();
+    void saveShouldNotWriteToLegacy() {
+        BlobId blobId = unionBlobStore.save(BLOB_CONTENT).block();
 
-        assertThat(legacyBlobStore.readBytes(blobId).get())
-            .isEmpty();
+        assertThatThrownBy(() -> legacyBlobStore.readBytes(blobId).block())
+            .isInstanceOf(ObjectStoreException.class);
     }
 
     @Test
-    void saveInputStreamShouldWriteToCurrent() throws Exception {
-        BlobId blobId = unionBlobStore.save(new ByteArrayInputStream(BLOB_CONTENT)).get();
+    void saveInputStreamShouldWriteToCurrent() {
+        BlobId blobId = unionBlobStore.save(new ByteArrayInputStream(BLOB_CONTENT)).block();
 
-        assertThat(currentBlobStore.readBytes(blobId).get())
+        assertThat(currentBlobStore.readBytes(blobId).block())
             .isEqualTo(BLOB_CONTENT);
     }
 
     @Test
-    void saveInputStreamShouldNotWriteToLegacy() throws Exception {
-        BlobId blobId = unionBlobStore.save(new ByteArrayInputStream(BLOB_CONTENT)).get();
+    void saveInputStreamShouldNotWriteToLegacy() {
+        BlobId blobId = unionBlobStore.save(new ByteArrayInputStream(BLOB_CONTENT)).block();
 
-        assertThat(legacyBlobStore.readBytes(blobId).get())
-            .isEmpty();
+        assertThatThrownBy(() -> legacyBlobStore.readBytes(blobId).block())
+            .isInstanceOf(ObjectStoreException.class);
     }
 
     @Test

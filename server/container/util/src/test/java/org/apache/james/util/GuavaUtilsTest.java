@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableMap;
 public class GuavaUtilsTest {
 
     @Test
-    public void toMultimapShouldAcceptEmptyMaps() {
+    void toMultimapShouldAcceptEmptyMaps() {
         assertThat(GuavaUtils.toMultimap(ImmutableMap
             .<String, List<String>>builder()
             .build())
@@ -41,7 +41,7 @@ public class GuavaUtilsTest {
     }
 
     @Test
-    public void toMultimapShouldAcceptSingleValuesMaps() {
+    void toMultimapShouldAcceptSingleValuesMaps() {
         assertThat(GuavaUtils.toMultimap(ImmutableMap
             .<String, List<String>>builder()
             .put("k1", ImmutableList.of("v1"))
@@ -55,7 +55,7 @@ public class GuavaUtilsTest {
     }
 
     @Test
-    public void toMultimapShouldAcceptMultiplesValuesMaps() {
+    void toMultimapShouldAcceptMultiplesValuesMaps() {
         assertThat(GuavaUtils.toMultimap(ImmutableMap
             .<String, List<String>>builder()
             .put("k1", ImmutableList.of("v1"))
@@ -70,7 +70,7 @@ public class GuavaUtilsTest {
     }
 
     @Test
-    public void shouldStripEntriesWithEmptyList() {
+    void shouldStripEntriesWithEmptyList() {
         assertThat(GuavaUtils.toMultimap(ImmutableMap
             .<String, List<String>>builder()
             .put("k1", ImmutableList.of())

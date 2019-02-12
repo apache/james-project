@@ -115,7 +115,7 @@ public class CassandraMailQueueBrowser {
 
     private Mono<Mail> toMailFuture(EnqueuedItemWithSlicingContext enqueuedItemWithSlicingContext) {
         EnqueuedItem enqueuedItem = enqueuedItemWithSlicingContext.getEnqueuedItem();
-        return Mono.fromCompletionStage(mimeMessageStore.read(enqueuedItem.getPartsId()))
+        return mimeMessageStore.read(enqueuedItem.getPartsId())
             .map(mimeMessage -> toMail(enqueuedItem, mimeMessage));
     }
 

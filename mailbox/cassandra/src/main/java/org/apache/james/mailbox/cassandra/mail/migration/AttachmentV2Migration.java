@@ -59,12 +59,12 @@ public class AttachmentV2Migration implements Migration {
 
     private Result migrateAttachment(Attachment attachment) {
         try {
-            blobStore.save(attachment.getBytes())
-                .thenApply(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
-                .thenCompose(attachmentDAOV2::storeAttachment)
-                .thenCompose(any -> attachmentDAOV1.deleteAttachment(attachment.getAttachmentId()))
-                .join();
-            return Result.COMPLETED;
+            return blobStore.save(attachment.getBytes())
+                .map(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
+                .flatMap(attachmentDAOV2::storeAttachment)
+                .then(attachmentDAOV1.deleteAttachment(attachment.getAttachmentId()))
+                .thenReturn(Result.COMPLETED)
+                .block();
         } catch (Exception e) {
             LOGGER.error("Error while performing attachmentDAO V2 migration", e);
             return Result.PARTIAL;

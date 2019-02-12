@@ -22,6 +22,7 @@ import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MO
 
 import java.io.IOException;
 
+import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
@@ -70,7 +71,8 @@ public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallba
                 .overrideWith(cassandra.getModule())
                 .overrideWith(new TestElasticSearchModule(elasticSearch))
                 .overrideWith(new WebAdminConfigurationModule())
-                .overrideWith(new UnauthorizedModule());
+                .overrideWith(new UnauthorizedModule())
+                .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()));
     }
 
     @Override

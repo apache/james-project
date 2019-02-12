@@ -33,6 +33,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.User;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -65,8 +66,8 @@ public class ToRecipientFolderTest {
     private UsersRepository usersRepository;
     private MailboxManager mailboxManager;
     private ToRecipientFolder testee;
-    private MailboxSession.User user;
     private FakeMailContext mailetContext;
+    private MailboxSession session;
 
     @Before
     public void setUp() throws Exception {
@@ -74,21 +75,20 @@ public class ToRecipientFolderTest {
         messageManager = mock(MessageManager.class);
         usersRepository = mock(UsersRepository.class);
         mailboxManager = mock(MailboxManager.class);
-        user = mock(MailboxSession.User.class);
 
 
         MetricFactory metricFactory = mock(MetricFactory.class);
         when(metricFactory.generate(anyString())).thenReturn(mock(Metric.class));
         testee = new ToRecipientFolder(mailboxManager, usersRepository, metricFactory);
 
-        MailboxSession session = mock(MailboxSession.class);
+        session = mock(MailboxSession.class);
         when(session.getPathDelimiter()).thenReturn('.');
         try {
             when(mailboxManager.createSystemSession(any(String.class))).thenReturn(session);
         } catch (MailboxException e) {
             throw new RuntimeException(e);
         }
-        when(session.getUser()).thenReturn(user);
+        when(session.getUser()).thenReturn(User.fromUsername(USER));
     }
 
     @Test
@@ -134,7 +134,6 @@ public class ToRecipientFolderTest {
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
         when(usersRepository.getUser(new MailAddress(USER))).thenReturn(USER);
         when(mailboxManager.getMailbox(eq(JUNK_VIRTUAL_HOSTING), any(MailboxSession.class))).thenReturn(messageManager);
-        when(user.getUserName()).thenReturn(USER);
 
         testee.init(FakeMailetConfig.builder()
             .mailetName(MAILET_NAME)
@@ -151,7 +150,6 @@ public class ToRecipientFolderTest {
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
         when(usersRepository.getUser(new MailAddress(USER))).thenReturn(USER);
         when(mailboxManager.getMailbox(eq(INBOX), any(MailboxSession.class))).thenReturn(messageManager);
-        when(user.getUserName()).thenReturn(USER);
 
         testee.init(FakeMailetConfig.builder()
             .mailetName(MAILET_NAME)
@@ -168,7 +166,7 @@ public class ToRecipientFolderTest {
         when(usersRepository.getUser(new MailAddress(USER_LOCAL_PART + "@localhost"))).thenReturn(USER_LOCAL_PART);
         when(usersRepository.getUser(new MailAddress(USER))).thenReturn(USER_LOCAL_PART);
         when(mailboxManager.getMailbox(eq(JUNK), any(MailboxSession.class))).thenReturn(messageManager);
-        when(user.getUserName()).thenReturn(USER_LOCAL_PART);
+        when(session.getUser()).thenReturn(User.fromUsername(USER_LOCAL_PART));
 
         testee.init(FakeMailetConfig.builder()
             .mailetName(MAILET_NAME)

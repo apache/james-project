@@ -14,6 +14,79 @@ Note: this section is in progress. It will be updated during all the development
 
 Changes to apply between 3.2.x and 3.3.x will be reported here.
 
+Change list:
+
+ - [Changes to the MailboxListener API](#changes-to-the-mailboxlistener-api)
+ - [Changes in WebAdmin reIndexing API](#changes-in-webadmin-reindexing-api)
+ - [Rename KEY column in JAMES_MAILBOX_ANNOTATION table](#james-mailbox-annotation)
+
+### Changes to the MailboxListener API
+
+#### Persistent MailboxId for MailDir
+
+Date: 30/11/2018
+
+SHA-1: 7e32da51a29bee1c732b2b13708bb4b986140119
+
+JIRA: https://issues.apache.org/jira/browse/MAILBOX-292
+
+MailboxId are now persisted in a `james-mailboxId` file. This file is created on the fly, so no action is required for users relying on
+the MailDir mailbox.
+
+#### Registration by MailboxId
+
+Date: 30/11/2018
+
+SHA-1: d9bcebc7dd546bd5f11f3d9b496491e7c9042fe2
+
+JIRA: https://issues.apache.org/jira/browse/MAILBOX-354
+
+Only user written components performing MailboxListener registration will be affected.
+
+The MailboxPath is mutable and thus can be changed upon mailbox rename. This leads to significantly complex code with possible inconsistency windows.
+
+Using the mailboxId, which is immutable, solves these issues.
+
+### Changes in WebAdmin reIndexing API
+
+Date: 05/12/2018
+
+SHA-1: 985b9a4a75bfa75c331cba6cbf835c043185dbdb
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-2555
+
+We made this API introduced in James 3.2.0 a bit more REST friendly. If you developed tools using this API, you will need to update them.
+
+For more details please refer to [the latest WebAdmin documentation](https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#ReIndexing).
+
+### Rename KEY column in JAMES_MAILBOX_ANNOTATION table
+
+Date: 19/12/2018
+
+SHA-1: e25967664538be18ec29f47e73e661bdf29da41f
+
+JIRA: https://issues.apache.org/jira/projects/MAILBOX/issues/MAILBOX-356
+
+Required: Yes
+
+Concerned products: all JPA related products
+
+#### Upgrade procedure
+
+Rename `KEY` column in `JAMES_MAILBOX_ANNOTATION` table. The syntax is:
+
+##### In MySQL
+```
+ALTER TABLE JAMES_MAILBOX_ANNOTATION CHANGE KEY ANNOTATION_KEY varchar(200);
+```
+
+##### In MariaDB
+```
+ALTER TABLE JAMES_MAILBOX_ANNOTATION CHANGE COLUMN KEY ANNOTATION_KEY varchar(200);
+```
+
+_or the syntax corresponding to your database._
+
 ## 3.2.0 version
 
 Changes to apply between 3.1.0 and 3.2.0 had been reported here.
@@ -128,4 +201,3 @@ $ nodetool stop
 ```
 $ nodetool upgradesstables apache_james
 ```
-

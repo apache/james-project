@@ -20,19 +20,27 @@ package org.apache.james.mailbox.spamassassin;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.Event;
+import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.SystemMailboxesProvider;
+import org.apache.james.mailbox.events.Event;
+import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.MessageMoveEvent;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.store.event.EventFactory;
-import org.apache.james.mailbox.store.event.MessageMoveEvent;
+import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.event.SpamEventListener;
+import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Message;
+import org.apache.james.util.streams.Iterators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,23 +50,30 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 public class SpamAssassinListener implements SpamEventListener {
+    private static class SpamAssassinListenerGroup extends Group {}
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SpamAssassinListener.class);
+    private static final int LIMIT = 1;
+    private static final Group GROUP = new SpamAssassinListenerGroup();
 
     private final SpamAssassin spamAssassin;
     private final SystemMailboxesProvider systemMailboxesProvider;
+    private final MailboxManager mailboxManager;
+    private final MailboxSessionMapperFactory mapperFactory;
     private final ExecutionMode executionMode;
 
     @Inject
-    SpamAssassinListener(SpamAssassin spamAssassin, SystemMailboxesProvider systemMailboxesProvider, ExecutionMode executionMode) {
+    public SpamAssassinListener(SpamAssassin spamAssassin, SystemMailboxesProvider systemMailboxesProvider, MailboxManager mailboxManager, MailboxSessionMapperFactory mapperFactory, ExecutionMode executionMode) {
         this.spamAssassin = spamAssassin;
         this.systemMailboxesProvider = systemMailboxesProvider;
+        this.mailboxManager = mailboxManager;
+        this.mapperFactory = mapperFactory;
         this.executionMode = executionMode;
     }
 
     @Override
-    public ListenerType getType() {
-        return ListenerType.ONCE;
+    public Group getDefaultGroup() {
+        return GROUP;
     }
 
     @Override
@@ -67,33 +82,52 @@ public class SpamAssassinListener implements SpamEventListener {
     }
 
     @Override
-    public void event(Event event) {
+    public void event(Event event) throws MailboxException {
+        MailboxSession session = mailboxManager.createSystemSession(getClass().getCanonicalName());
         if (event instanceof MessageMoveEvent) {
-            MessageMoveEvent messageMoveEvent = (MessageMoveEvent) event;
-            if (isMessageMovedToSpamMailbox(messageMoveEvent)) {
-                LOGGER.debug("Spam event detected");
-                ImmutableList<InputStream> messages = retrieveMessages(messageMoveEvent);
-                spamAssassin.learnSpam(messages, event.getUser());
-            }
-            if (isMessageMovedOutOfSpamMailbox(messageMoveEvent)) {
-                ImmutableList<InputStream> messages = retrieveMessages(messageMoveEvent);
-                spamAssassin.learnHam(messages, event.getUser());
-            }
+            handleMessageMove(event, session, (MessageMoveEvent) event);
         }
-        if (event instanceof EventFactory.AddedImpl) {
-            EventFactory.AddedImpl addedEvent = (EventFactory.AddedImpl) event;
-            if (isAppendedToInbox(addedEvent)) {
-                List<InputStream> contents = addedEvent.getAvailableMessages()
-                    .values()
-                    .stream()
-                    .map(Throwing.function(MailboxMessage::getFullContent))
-                    .collect(Guavate.toImmutableList());
-                spamAssassin.learnHam(contents, event.getUser());
-            }
+        if (event instanceof Added) {
+            handleAdded(event, session, (Added) event);
         }
     }
 
-    private boolean isAppendedToInbox(EventFactory.AddedImpl addedEvent) {
+    private void handleAdded(Event event, MailboxSession session, Added addedEvent) throws MailboxException {
+        if (isAppendedToInbox(addedEvent)) {
+            Mailbox mailbox = mapperFactory.getMailboxMapper(session).findMailboxById(addedEvent.getMailboxId());
+            MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
+
+            List<InputStream> contents = MessageRange.toRanges(addedEvent.getUids())
+                .stream()
+                .flatMap(range -> retrieveMessages(messageMapper, mailbox, range))
+                .map(Throwing.function(MailboxMessage::getFullContent))
+                .collect(Guavate.toImmutableList());
+            spamAssassin.learnHam(contents, event.getUser());
+        }
+    }
+
+    private void handleMessageMove(Event event, MailboxSession session, MessageMoveEvent messageMoveEvent) throws MailboxException {
+        if (isMessageMovedToSpamMailbox(messageMoveEvent)) {
+            LOGGER.debug("Spam event detected");
+            ImmutableList<InputStream> messages = retrieveMessages(messageMoveEvent, session);
+            spamAssassin.learnSpam(messages, event.getUser());
+        }
+        if (isMessageMovedOutOfSpamMailbox(messageMoveEvent)) {
+            ImmutableList<InputStream> messages = retrieveMessages(messageMoveEvent, session);
+            spamAssassin.learnHam(messages, event.getUser());
+        }
+    }
+
+    private Stream<MailboxMessage> retrieveMessages(MessageMapper messageMapper, Mailbox mailbox, MessageRange range) {
+        try {
+            return Iterators.toStream(messageMapper.findInMailbox(mailbox, range, MessageMapper.FetchType.Full, LIMIT));
+        } catch (MailboxException e) {
+            LOGGER.warn("Can not retrieve message {} {}", mailbox.getMailboxId(), range.toString(), e);
+            return Stream.empty();
+        }
+    }
+
+    private boolean isAppendedToInbox(Added addedEvent) {
         try {
             return systemMailboxesProvider.findMailbox(Role.INBOX, addedEvent.getUser())
                 .getId().equals(addedEvent.getMailboxId());
@@ -103,9 +137,9 @@ public class SpamAssassinListener implements SpamEventListener {
         }
     }
 
-    public ImmutableList<InputStream> retrieveMessages(MessageMoveEvent messageMoveEvent) {
-        return messageMoveEvent.getMessages()
-            .values()
+    private ImmutableList<InputStream> retrieveMessages(MessageMoveEvent messageMoveEvent, MailboxSession session) throws MailboxException {
+        return mapperFactory.getMessageIdMapper(session)
+            .find(messageMoveEvent.getMessageIds(), MessageMapper.FetchType.Full)
             .stream()
             .map(Throwing.function(Message::getFullContent))
             .collect(Guavate.toImmutableList());

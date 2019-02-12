@@ -52,59 +52,59 @@ class CassandraApplicableFlagDAOTest {
 
     @Test
     void updateApplicableFlagsShouldReturnEmptyByDefault() {
-        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
-            .isEmpty();
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).hasElement().block())
+            .isFalse();
     }
 
     @Test
     void updateApplicableFlagsShouldSupportEmptyUserFlags() {
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of()).join();
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of()).block();
 
-        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
-            .isEmpty();
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).hasElement().block())
+            .isFalse();
     }
 
     @Test
     void updateApplicableFlagsShouldUpdateUserFlag() {
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).join();
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).block();
 
-        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
-            .contains(new Flags(USER_FLAG));
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).block())
+            .isEqualTo(new Flags(USER_FLAG));
     }
 
     @Test
     void updateApplicableFlagsShouldUnionUserFlags() {
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).join();
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG2)).join();
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).block();
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG2)).block();
 
-        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
-            .contains(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).block())
+            .isEqualTo(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
     }
 
     @Test
     void updateApplicableFlagsShouldBeIdempotent() {
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).join();
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).join();
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).block();
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).block();
 
-        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
-            .contains(new Flags(USER_FLAG));
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).block())
+            .isEqualTo(new Flags(USER_FLAG));
     }
 
     @Test
     void updateApplicableFlagsShouldSkipAlreadyStoredFlagsWhenAddingFlag() {
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).join();
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG, USER_FLAG2)).join();
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG)).block();
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG, USER_FLAG2)).block();
 
-        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
-            .contains(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).block())
+            .isEqualTo(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
     }
 
     @Test
     void updateApplicableFlagsShouldUpdateMultiFlags() {
-        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG, USER_FLAG2)).join();
+        testee.updateApplicableFlags(CASSANDRA_ID, ImmutableSet.of(USER_FLAG, USER_FLAG2)).block();
 
-        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).join())
-            .contains(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
+        assertThat(testee.retrieveApplicableFlag(CASSANDRA_ID).block())
+            .isEqualTo(FlagsBuilder.builder().add(USER_FLAG, USER_FLAG2).build());
     }
 
 }

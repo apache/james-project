@@ -233,7 +233,7 @@ You need a running *ElasticSearch* in docker. To achieve this run:
 
 If you want to use all the JMAP search capabilities, you may also need to start Tika:
 
-    $ docker run -d --name=tika logicalspark/docker-tikaserver:1.19.1
+    $ docker run -d --name=tika logicalspark/docker-tikaserver:1.20
 
 You can find more explanation on the need of Tika in this page http://james.apache.org/server/config-elasticsearch.html
 
@@ -258,6 +258,11 @@ Where :
 
 You can add an optional port binding to port 8000, to expose the webadmin server. Please note that users are not authenticated on webadmin server, thus you should avoid exposing it in production.
 
+If you want to pass additional options to the underlying java command, you can configure a _JVM_OPTIONS_ env variable, for example add:
+
+    --env JVM_OPTIONS="-Xms256m -Xmx2048m"
+
+
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
 
 ==== Handling attachment indexing
@@ -266,7 +271,7 @@ You can handle attachment text extraction before indexing in ElasticSearch. This
 
 Run tika:
 
-    $ docker run --name tika logicalspark/docker-tikaserver:1.19.1
+    $ docker run --name tika logicalspark/docker-tikaserver:1.20
 
 Add a link for the tika container in the above command line:
 
@@ -297,7 +302,7 @@ You need a running *ElasticSearch* in docker. To achieve this run:
 
 If you want to use all the JMAP search capabilities, you may also need to start Tika:
 
-    $ docker run -d --name=tika logicalspark/docker-tikaserver:1.19.1
+    $ docker run -d --name=tika logicalspark/docker-tikaserver:1.20
 
 You can find more explanation on the need of Tika in this page http://james.apache.org/server/config-elasticsearch.html
 
@@ -329,7 +334,7 @@ You can handle attachment text extraction before indexing in ElasticSearch. This
 
 Run tika:
 
-    $ docker run --name tika logicalspark/docker-tikaserver:1.19.1
+    $ docker run --name tika logicalspark/docker-tikaserver:1.20
 
 Add a link for the tika container in the above command line:
 

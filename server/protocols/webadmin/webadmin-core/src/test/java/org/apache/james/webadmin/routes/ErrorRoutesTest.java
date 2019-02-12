@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import static io.restassured.RestAssured.when;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.apache.james.webadmin.routes.ErrorRoutes.INTERNAL_SERVER_ERROR;
+import static org.apache.james.webadmin.routes.ErrorRoutes.INVALID_ARGUMENT_EXCEPTION;
 import static org.apache.james.webadmin.routes.ErrorRoutes.JSON_EXTRACT_EXCEPTION;
 import static org.apache.james.webadmin.utils.ErrorResponder.ErrorType.INVALID_ARGUMENT;
 import static org.apache.james.webadmin.utils.ErrorResponder.ErrorType.SERVER_ERROR;
@@ -88,7 +89,7 @@ public class ErrorRoutesTest {
     }
 
     @Test
-    public void defineJsonExtractExceptionShouldReturnBadRequestJsonFormat() throws InterruptedException {
+    public void defineJsonExtractExceptionShouldReturnBadRequestJsonFormat() {
         when()
             .get(JSON_EXTRACT_EXCEPTION)
         .then()
@@ -97,5 +98,17 @@ public class ErrorRoutesTest {
             .body("type", equalTo(INVALID_ARGUMENT.getType()))
             .body("message", equalTo("JSON payload of the request is not valid"))
             .body("details", containsString("Unrecognized token 'a': was expecting ('true', 'false' or 'null')"));
+    }
+
+    @Test
+    public void defineIllegalExceptionShouldReturnBadRequestJsonFormat() {
+        when()
+            .get(INVALID_ARGUMENT_EXCEPTION)
+        .then()
+            .statusCode(BAD_REQUEST_400)
+            .body("statusCode", equalTo(BAD_REQUEST_400))
+            .body("type", equalTo(INVALID_ARGUMENT.getType()))
+            .body("message", equalTo("Invalid arguments supplied in the user request"))
+            .body("details", containsString("Argument is non valid"));
     }
 }

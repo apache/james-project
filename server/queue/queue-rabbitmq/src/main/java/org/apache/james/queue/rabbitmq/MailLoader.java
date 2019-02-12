@@ -46,7 +46,7 @@ class MailLoader {
                     .headerBlobId(blobIdFactory.from(dto.getHeaderBlobId()))
                     .bodyBlobId(blobIdFactory.from(dto.getBodyBlobId()))
                     .build())
-                .join();
+                .block();
 
             return dto.toMailWithMimeMessage(mimeMessage);
         } catch (AddressException e) {

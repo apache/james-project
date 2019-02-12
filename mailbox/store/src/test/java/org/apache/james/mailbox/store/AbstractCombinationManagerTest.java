@@ -32,13 +32,13 @@ import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.fixture.MailboxFixture;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MessageId;
@@ -74,7 +74,7 @@ public abstract class AbstractCombinationManagerTest {
     public abstract CombinationManagerTestSystem createTestingData() throws Exception;
 
     public void setUp() throws Exception {
-        session = new MockMailboxSession(MailboxFixture.ALICE);
+        session = MailboxSessionUtil.create(MailboxFixture.ALICE);
         testingData = createTestingData();
 
         mailbox1 = testingData.createMailbox(MailboxFixture.INBOX_ALICE, session);
@@ -384,7 +384,8 @@ public abstract class AbstractCombinationManagerTest {
         assertThat(messageManager1.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, session)).isEmpty();
         assertThat(messageManager2.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, session))
             .hasSize(1)
-            .extractingResultOf("getMessageId").containsOnly(messageId);
+            .extracting(MessageResult::getMessageId)
+            .containsOnly(messageId);
     }
 
     @Test
