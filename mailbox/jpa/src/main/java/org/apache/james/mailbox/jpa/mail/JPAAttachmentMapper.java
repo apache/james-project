@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
@@ -55,22 +56,19 @@ public class JPAAttachmentMapper extends JPATransactionalMapper implements Attac
 
     @Override
     public Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException {
-        Preconditions.checkArgument(attachmentId != null);
+        Preconditions.checkArgument(attachmentId != null, "AttachmentId can't be null when trying to get attachment!");
         return Optional.ofNullable(getEntityManager().find(JPAAttachment.class, attachmentId.getId()))
                 .orElseThrow(() -> new AttachmentNotFoundException(attachmentId.getId())).toAttachment();
     }
 
     @Override
     public List<Attachment> getAttachments(Collection<AttachmentId> attachmentIds) {
-        Preconditions.checkArgument(attachmentIds != null);
-        return ImmutableList.<Attachment>builder().addAll(
-               attachmentIds.stream().distinct()
+        Preconditions.checkArgument(attachmentIds != null, "AttachmentId collection can't be null when trying to get attachments!");
+        return attachmentIds.stream().distinct()
                .map(attachmentId -> getEntityManager().find(JPAAttachment.class, attachmentId.getId()))
                        .filter(Objects::nonNull)
                        .map(jpaAttachment ->  jpaAttachment.toAttachment())
-               .collect(Collectors.toList())
-
-        ).build();
+               .collect(Guavate.toImmutableList());
 
 
     }
@@ -78,8 +76,8 @@ public class JPAAttachmentMapper extends JPATransactionalMapper implements Attac
 
     @Override
     public void storeAttachmentForOwner(Attachment attachment, Username owner) throws MailboxException {
-        Preconditions.checkArgument(owner != null);
-        Preconditions.checkArgument(attachment != null);
+        Preconditions.checkArgument(owner != null, "Attachment shouldn't be null when trying to store attachment for owner!");
+        Preconditions.checkArgument(attachment != null, "Username shouldn't be null when trying to store attachment for the owner!");
         JPAAttachment jpaAttachment = getJpaAttachment(attachment);
         try {
             jpaAttachment.getOwners().add(owner.getValue());
@@ -87,7 +85,8 @@ public class JPAAttachmentMapper extends JPATransactionalMapper implements Attac
             getEntityManager().merge(jpaAttachment);
             getEntityManager().getTransaction().commit();
         } catch (PersistenceException e) {
-            LOGGER.warn("Persist attachment for owner met an exception", e);
+            getEntityManager().getTransaction().rollback();
+            LOGGER.error("Persist attachment" + attachment.getAttachmentId() + " for owner " + owner.getValue() +" met an exception", e);
             throw new MailboxException(" Store attachment for owner " + owner.getValue() + " failed", e);
         }
     }
@@ -95,8 +94,8 @@ public class JPAAttachmentMapper extends JPATransactionalMapper implements Attac
     @Override
     public void storeAttachmentsForMessage(Collection<Attachment> attachments, MessageId ownerMessageId) throws MailboxException {
 
-        Preconditions.checkArgument(attachments != null);
-        Preconditions.checkArgument(ownerMessageId != null);
+        Preconditions.checkArgument(attachments != null, "Attachment collection shouldn't be null when trying to store attachments for message!");
+        Preconditions.checkArgument(ownerMessageId != null, "MessageId shouldn't be null when trying to store attachments for the message!");
         try {
             attachments.stream()
                     .map(attachment -> getJpaAttachment(attachment))
@@ -107,7 +106,8 @@ public class JPAAttachmentMapper extends JPATransactionalMapper implements Attac
                         getEntityManager().getTransaction().commit();
                     });
         } catch (PersistenceException e) {
-            LOGGER.warn("Persist attachments with messageId met an exception ", e);
+            getEntityManager().getTransaction().rollback();
+            LOGGER.error("Persist attachments for message" + ownerMessageId.serialize() + " met an exception ", e);
             throw new MailboxException("Store attachments for owner with message " + ownerMessageId.serialize() +" failed.", e);
         }
 
@@ -116,15 +116,13 @@ public class JPAAttachmentMapper extends JPATransactionalMapper implements Attac
 
     @Override
     public Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException {
-        Preconditions.checkArgument(attachmentId != null);
+        Preconditions.checkArgument(attachmentId != null, "AttachmentId can't be null when trying to get related message Ids!");
         JPAAttachment attachment = getEntityManager().find(JPAAttachment.class, attachmentId.getId());
-
-        if(attachment!=null && attachment.getMessageIds() != null) {
-            return ImmutableList.<MessageId>builder()
-                    .addAll(
-                            attachment.getMessageIds().stream().
-                                    map(messageId -> new JPAMessageId.Factory().fromString(messageId)).collect(Collectors.toList())
-                    ).build();
+        if(attachment != null && attachment.getMessageIds() != null) {
+            return attachment.getMessageIds()
+                    .stream()
+                    .map(messageId -> new JPAMessageId.Factory().fromString(messageId))
+                    .collect(Guavate.toImmutableList());
         } else {
             return new ArrayList<>();
         }
@@ -133,13 +131,13 @@ public class JPAAttachmentMapper extends JPATransactionalMapper implements Attac
 
     @Override
     public Collection<Username> getOwners(AttachmentId attachmentId) throws MailboxException {
-        Preconditions.checkArgument(attachmentId != null);
+        Preconditions.checkArgument(attachmentId != null, "AttachmentId can't be null when trying to get attachment owners!");
         JPAAttachment attachment = getEntityManager().find(JPAAttachment.class, attachmentId.getId());
         if(attachment != null && attachment.getOwners() != null) {
-            return ImmutableList.<Username>builder().addAll(
-                    attachment.getOwners().stream()
-                            .map(owner -> Username.fromRawValue(owner)).collect(Collectors.toList())
-            ).build();
+            return attachment.getOwners()
+                    .stream()
+                    .map(owner -> Username.fromRawValue(owner))
+                    .collect(Guavate.toImmutableList());
         } else {
             return new ArrayList<>();
         }

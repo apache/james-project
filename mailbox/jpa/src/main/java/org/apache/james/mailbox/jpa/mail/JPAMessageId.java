@@ -23,8 +23,21 @@ import org.apache.james.mailbox.model.MessageId;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Random;
 
 public class JPAMessageId implements MessageId {
+
+    public static class Factory implements MessageId.Factory {
+        @Override
+        public MessageId fromString(String serialized) {
+            return of(Long.valueOf(serialized));
+        }
+
+        @Override
+        public MessageId generate() {
+            return of(new Random().nextLong());
+        }
+    }
 
     private final long value;
 
@@ -44,18 +57,6 @@ public class JPAMessageId implements MessageId {
         return Serializable.class.isInstance(value);
     }
 
-    public static class Factory implements MessageId.Factory {
-        @Override
-        public MessageId fromString(String serialized) {
-            return of(Long.valueOf(serialized));
-        }
-
-        @Override
-        public MessageId generate() {
-            return of((long) Math.random());
-        }
-    }
-
     @Override
     public String toString() {
         return "JPAMessageId{" +
@@ -65,8 +66,8 @@ public class JPAMessageId implements MessageId {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {return true;}
+        if (o == null || getClass() != o.getClass()) {return false;}
         JPAMessageId that = (JPAMessageId) o;
         return value == that.value;
     }

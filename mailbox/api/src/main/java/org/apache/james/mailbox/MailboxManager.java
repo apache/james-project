@@ -79,6 +79,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
         UserFlag,
         ACL,
         Quota,
+        Attachment
     }
 
     EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities();

@@ -22,7 +22,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.apache.commons.io.IOUtils;
+import org.apache.james.mailbox.jpa.JPAId;
+import org.apache.james.mailbox.jpa.mail.JPAMessageId;
 import org.junit.Test;
 
 public class JPAMailboxMessageTest {
@@ -40,6 +43,20 @@ public class JPAMailboxMessageTest {
         // Get and check
         assertThat(IOUtils.toByteArray(message.getFullContent())).containsExactly(content);
 
+    }
+
+    @Test
+    public void equalsContractForJPAMessageId() {
+        EqualsVerifier.forClass(JPAMessageId.class)
+                .usingGetClass()
+                .verify();
+    }
+
+    @Test
+    public void equalsContractForJPAId() {
+        EqualsVerifier.forClass(JPAId.class)
+                .usingGetClass()
+                .verify();
     }
 
 }

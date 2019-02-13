@@ -112,9 +112,4 @@ public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
     public InputStream getHeaderContent() throws IOException {
         return new ByteArrayInputStream(header);
     }
-
-    @Override
-    public void setMailboxId(MailboxId mailboxId) {
-
-    }
 }

@@ -109,7 +109,6 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
                 break;
             case ONE:
                 results = findMessagesInMailboxWithUID(mailboxId, from);
-
                 break;
             case RANGE:
                 results = findMessagesInMailboxBetweenUIDs(mailboxId, from, to, max);
@@ -122,7 +121,6 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
             throw new MailboxException("Search of MessageRange " + set + " failed in mailbox " + mailbox, e);
         }
     }
-
 
     @Override
     public long countMessagesInMailbox(Mailbox mailbox) throws MailboxException {

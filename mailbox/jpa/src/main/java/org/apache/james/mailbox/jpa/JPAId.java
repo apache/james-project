@@ -46,11 +46,14 @@ public class JPAId implements MailboxId, Serializable {
         return String.valueOf(value);
     }
 
+
     @Override
     public String toString() {
-        return String.valueOf(value);
+        return "JPAId{" +
+                "value=" + value +
+                '}';
     }
-    
+
     public long getRawId() {
         return value;
     }
@@ -64,21 +67,10 @@ public class JPAId implements MailboxId, Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        JPAId other = (JPAId) obj;
-        if (value != other.value) {
-            return false;
-        }
-        return true;
+    public boolean equals(Object o) {
+        if (this == o) {return true;}
+        if (o == null || getClass() != o.getClass()) {return false;}
+        JPAId jpaId = (JPAId) o;
+        return value == jpaId.value;
     }
-    
 }

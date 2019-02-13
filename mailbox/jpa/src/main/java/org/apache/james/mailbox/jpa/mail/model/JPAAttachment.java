@@ -19,15 +19,23 @@
 
 package org.apache.james.mailbox.jpa.mail.model;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.checkerframework.checker.units.qual.C;
 
-import javax.persistence.*;
-import java.util.*;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Lob;
+import javax.persistence.Table;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Objects;
+
 
 @Entity(name = "Attachment")
 @Table(name = "JAMES_MAIL_ATTACHMENT")
@@ -69,7 +77,7 @@ public class JPAAttachment {
 
     public JPAAttachment(){}
 
-    public JPAAttachment(String attachmentId, byte[] content, String type, Collection<String> owners, Collection<String> messageIds, String cid, Boolean inline){
+    public JPAAttachment(String attachmentId, byte[] content, String type, ImmutableList<String> owners, ImmutableList<String> messageIds, String cid, Boolean inline){
         this.attachmentId = attachmentId;
         this.content = content;
         this.type = type;
@@ -77,6 +85,45 @@ public class JPAAttachment {
         this.messageIds = messageIds;
         this.cidValue = cid;
         this.inline = inline;
+    }
+
+
+    public static JPAAttachment from(Attachment attachment) {
+        return new JPAAttachment(attachment.getAttachmentId().getId(),
+                attachment.getBytes(),
+                attachment.getType(),
+                ImmutableList.<String>builder().build(),
+                ImmutableList.<String>builder().build(),
+                "",
+                false);
+    }
+
+    public static JPAAttachment from(MessageAttachment messageAttachment) {
+        Attachment attachment = messageAttachment.getAttachment();
+        return new JPAAttachment(attachment.getAttachmentId().getId(),
+                attachment.getBytes(),
+                attachment.getType(),
+                ImmutableList.<String>builder().build(),
+                ImmutableList.<String>builder().build(),
+                messageAttachment.getCid().get().getValue(),
+                messageAttachment.isInline());
+    }
+
+    public Attachment toAttachment() {
+        return Attachment.builder()
+                .attachmentId(AttachmentId.from(this.attachmentId))
+                .bytes(this.content)
+                .type(this.type)
+                .build();
+
+    }
+
+    public MessageAttachment toMessageAttachment() {
+        return MessageAttachment.builder()
+                .attachment(this.toAttachment())
+                .cid(Cid.from(this.cidValue))
+                .isInline(this.inline)
+                .build();
     }
 
     public String getAttachmentId() {
@@ -107,7 +154,7 @@ public class JPAAttachment {
         return owners;
     }
 
-    public void setOwners(Collection<String> owners) {
+    public void setOwners(ImmutableList<String> owners) {
         this.owners = owners;
     }
 
@@ -115,7 +162,7 @@ public class JPAAttachment {
         return messageIds;
     }
 
-    public void setMessageIds(Collection<String> messageId) {
+    public void setMessageIds(ImmutableList<String> messageId) {
         this.messageIds = messageId;
     }
 
@@ -162,44 +209,6 @@ public class JPAAttachment {
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
-    }
-
-    public Attachment toAttachment() {
-        return Attachment.builder()
-                .attachmentId(AttachmentId.from(this.attachmentId))
-                .bytes(this.content)
-                .type(this.type)
-                .build();
-
-    }
-
-    public static JPAAttachment from(Attachment attachment) {
-        return new JPAAttachment(attachment.getAttachmentId().getId(),
-                attachment.getBytes(),
-                attachment.getType(),
-                new ArrayList<>(),
-                new ArrayList<>(),
-                "",
-                false);
-    }
-
-    public static JPAAttachment from(MessageAttachment messageAttachment) {
-        Attachment attachment = messageAttachment.getAttachment();
-        return new JPAAttachment(attachment.getAttachmentId().getId(),
-                attachment.getBytes(),
-                attachment.getType(),
-                new ArrayList<>(),
-                new ArrayList<>(),
-                messageAttachment.getCid().get().getValue(),
-                messageAttachment.isInline());
-    }
-
-    public MessageAttachment toMessageAttachment() {
-        return MessageAttachment.builder()
-                .attachment(this.toAttachment())
-                .cid(Cid.from(this.cidValue))
-                .isInline(this.inline)
-                .build();
     }
 
 }
