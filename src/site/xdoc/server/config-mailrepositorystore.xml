@@ -89,7 +89,7 @@
     
     <subsection name="MBox Repositories">
 
-     <p>Warning: deprecated. This feature will be removed as part of James release 3.2.0 unless it is maintained.
+     <p>Warning: deprecated. This feature had been removed as part of James release 3.2.0.
          See https://issues.apache.org/jira/browse/JAMES-2323. Use File Repositories instead.</p>
     
      <p>The MBox file format repository.</p>
