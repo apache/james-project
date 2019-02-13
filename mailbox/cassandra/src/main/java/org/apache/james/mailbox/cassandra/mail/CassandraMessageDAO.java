@@ -40,7 +40,6 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.T
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.TEXTUAL_LINE_COUNT;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -73,7 +72,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
-import org.apache.james.util.streams.JamesCollectors;
 import org.apache.james.util.streams.Limit;
 
 import com.datastax.driver.core.BoundStatement;
@@ -233,13 +231,8 @@ public class CassandraMessageDAO {
     }
 
     public Flux<MessageResult> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
-        return Flux.fromStream(limit.applyOnStream(messageIds.stream().distinct())
-            .collect(JamesCollectors.chunker(configuration.getMessageReadChunkSize())))
-            .flatMap(ids -> rowToMessages(fetchType, ids));
-    }
-
-    private Flux<MessageResult> rowToMessages(FetchType fetchType, Collection<ComposedMessageIdWithMetaData> ids) {
-        return Flux.fromIterable(ids)
+        return Flux.fromStream(limit.applyOnStream(messageIds.stream().distinct()))
+            .limitRate(configuration.getMessageReadChunkSize())
             .flatMap(id -> retrieveRow(id, fetchType)
                 .flatMap(resultSet -> message(resultSet, id, fetchType)));
     }

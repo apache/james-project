@@ -21,14 +21,11 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.stream.IntStream;
-
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Username;
-import org.apache.james.util.streams.JamesCollectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -78,13 +75,10 @@ class CassandraAttachmentOwnerDAOTest {
     void retrieveOwnersShouldNotThrowWhenMoreReferencesThanPaging() {
         int referenceCountExceedingPaging = 5050;
 
-        IntStream.range(0, referenceCountExceedingPaging)
-            .boxed()
-            .collect(JamesCollectors.chunker(128))
-            .forEach(chunk -> Flux.fromIterable(chunk)
-                    .flatMap(i -> testee.addOwner(ATTACHMENT_ID, Username.fromRawValue("owner" + i)))
-                    .then()
-                    .block());
+        Flux.range(0, referenceCountExceedingPaging)
+            .limitRate(128)
+            .flatMap(i -> testee.addOwner(ATTACHMENT_ID, Username.fromRawValue("owner" + i)))
+            .blockLast();
 
         assertThat(testee.retrieveOwners(ATTACHMENT_ID).toIterable())
             .hasSize(referenceCountExceedingPaging);

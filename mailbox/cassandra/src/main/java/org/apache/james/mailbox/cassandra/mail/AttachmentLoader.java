@@ -25,11 +25,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -41,7 +42,7 @@ public class AttachmentLoader {
         this.attachmentMapper = attachmentMapper;
     }
 
-    public Mono<SimpleMailboxMessage> addAttachmentToMessage(Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> messageRepresentation, MessageMapper.FetchType fetchType) {
+    public Mono<MailboxMessage> addAttachmentToMessage(Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> messageRepresentation, MessageMapper.FetchType fetchType) {
         return loadAttachments(messageRepresentation.getRight(), fetchType)
             .map(attachments -> messageRepresentation.getLeft().toMailboxMessage(attachments));
     }

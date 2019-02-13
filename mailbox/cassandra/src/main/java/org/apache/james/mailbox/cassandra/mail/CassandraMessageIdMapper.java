@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
@@ -46,16 +45,15 @@ import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.ReactorUtils;
-import org.apache.james.util.streams.JamesCollectors;
 import org.apache.james.util.streams.Limit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.Multimap;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -92,27 +90,20 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     @Override
     public List<MailboxMessage> find(Collection<MessageId> messageIds, FetchType fetchType) {
-        return messageIds.stream()
-            .collect(JamesCollectors.chunker(cassandraConfiguration.getMessageReadChunkSize()))
-            .flatMap(chuckedIds -> findAsStream(messageIds, fetchType))
-            .collect(Guavate.toImmutableList());
-    }
-
-    private Stream<SimpleMailboxMessage> findAsStream(Collection<MessageId> messageIds, FetchType fetchType) {
         return Flux.fromStream(messageIds.stream())
-                .flatMap(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty()))
-                .collectList()
-                .flatMapMany(composedMessageIds -> messageDAO.retrieveMessages(composedMessageIds, fetchType, Limit.unlimited()))
-                .filter(CassandraMessageDAO.MessageResult::isFound)
-                .map(CassandraMessageDAO.MessageResult::message)
-                .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, fetchType))
-                .flatMap(this::keepMessageIfMailboxExists)
-                .collectSortedList(Comparator.comparing(MailboxMessage::getUid))
-                .block()
-                .stream();
+            .limitRate(cassandraConfiguration.getMessageReadChunkSize())
+            .flatMap(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty()))
+            .collectList()
+            .flatMapMany(composedMessageIds -> messageDAO.retrieveMessages(composedMessageIds, fetchType, Limit.unlimited()))
+            .filter(CassandraMessageDAO.MessageResult::isFound)
+            .map(CassandraMessageDAO.MessageResult::message)
+            .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, fetchType))
+            .flatMap(this::keepMessageIfMailboxExists)
+            .collectSortedList(Comparator.comparing(MailboxMessage::getUid))
+            .block();
     }
 
-    private Mono<SimpleMailboxMessage> keepMessageIfMailboxExists(SimpleMailboxMessage message) {
+    private Mono<MailboxMessage> keepMessageIfMailboxExists(MailboxMessage message) {
         CassandraId cassandraId = (CassandraId) message.getMailboxId();
         return mailboxDAO.retrieveMailbox(cassandraId)
             .map(any -> message)
