@@ -48,8 +48,9 @@ public class ResilientClusterProvider implements Provider<Cluster> {
 
     @Inject
     private ResilientClusterProvider(ClusterConfiguration configuration) {
+        Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
         cluster = Mono.fromCallable(getClusterRetryCallable(configuration))
-            .retryBackoff(configuration.getMaxRetry(), Duration.ofMillis(configuration.getMinDelay()))
+            .retryBackoff(configuration.getMaxRetry(), waitDelay, waitDelay)
             .publishOn(Schedulers.elastic())
             .block();
     }

@@ -139,8 +139,9 @@ public class ElasticSearchMailboxModule extends AbstractModule {
                                    ElasticSearchMailboxConfiguration mailboxConfiguration,
                                    ElasticSearchQuotaConfiguration quotaConfiguration) {
 
+        Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
         return Mono.fromCallable(() -> connectToCluster(configuration, mailboxConfiguration, quotaConfiguration))
-            .retryBackoff(configuration.getMaxRetries(), Duration.ofMillis(configuration.getMinDelay()))
+            .retryBackoff(configuration.getMaxRetries(), waitDelay, waitDelay)
             .publishOn(Schedulers.elastic())
             .block();
     }
