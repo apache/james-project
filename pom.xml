@@ -1855,11 +1855,6 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>com.nurkiewicz.asyncretry</groupId>
-                <artifactId>asyncretry</artifactId>
-                <version>0.0.7</version>
-            </dependency>
-            <dependency>
                 <groupId>com.rabbitmq</groupId>
                 <artifactId>amqp-client</artifactId>
                 <version>5.6.0</version>

@@ -159,10 +159,6 @@
             <artifactId>logback-elasticsearch-appender</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.nurkiewicz.asyncretry</groupId>
-            <artifactId>asyncretry</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>

@@ -59,10 +59,6 @@
             <artifactId>icu4j</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.nurkiewicz.asyncretry</groupId>
-            <artifactId>asyncretry</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
         </dependency>
