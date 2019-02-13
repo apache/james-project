@@ -19,8 +19,9 @@
 
 package org.apache.james.modules.mailbox;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Callable;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
@@ -30,15 +31,14 @@ import javax.inject.Singleton;
 import org.apache.james.backends.cassandra.init.ClusterBuilder;
 import org.apache.james.backends.cassandra.init.ClusterWithKeyspaceCreatedFactory;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
-import org.apache.james.util.retry.RetryExecutorUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.exceptions.NoHostAvailableException;
 import com.google.common.collect.ImmutableList;
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
-import com.nurkiewicz.asyncretry.function.RetryCallable;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @Singleton
 public class ResilientClusterProvider implements Provider<Cluster> {
@@ -47,17 +47,18 @@ public class ResilientClusterProvider implements Provider<Cluster> {
     private final Cluster cluster;
 
     @Inject
-    private ResilientClusterProvider(ClusterConfiguration configuration, AsyncRetryExecutor executor) throws ExecutionException, InterruptedException {
-        cluster = RetryExecutorUtil.retryOnExceptions(executor, configuration.getMaxRetry(), configuration.getMinDelay(), NoHostAvailableException.class)
-                .getWithRetry(getClusterRetryCallable(configuration))
-                .get();
+    private ResilientClusterProvider(ClusterConfiguration configuration) {
+        cluster = Mono.fromCallable(getClusterRetryCallable(configuration))
+            .retryBackoff(configuration.getMaxRetry(), Duration.ofMillis(configuration.getMinDelay()))
+            .publishOn(Schedulers.elastic())
+            .block();
     }
 
-    private RetryCallable<Cluster> getClusterRetryCallable(ClusterConfiguration configuration) {
+    private Callable<Cluster> getClusterRetryCallable(ClusterConfiguration configuration) {
         LOGGER.info("Trying to connect to Cassandra service at {} (list {})", LocalDateTime.now(),
             ImmutableList.copyOf(configuration.getHosts()).toString());
 
-        return context -> {
+        return () -> {
             Cluster cluster = ClusterBuilder.builder()
                     .servers(configuration.getHosts())
                     .poolingOptions(configuration.getPoolingOptions())

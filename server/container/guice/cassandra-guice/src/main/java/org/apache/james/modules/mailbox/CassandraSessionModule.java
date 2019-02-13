@@ -21,7 +21,6 @@ package org.apache.james.modules.mailbox;
 import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -57,7 +56,6 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 
 public class CassandraSessionModule extends AbstractModule {
 
@@ -70,7 +68,6 @@ public class CassandraSessionModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(ScheduledExecutorService.class).toProvider(ScheduledExecutorServiceProvider.class);
         bind(CassandraUtils.class).in(Scopes.SINGLETON);
         bind(Session.class).toProvider(SessionWithInitializedTablesFactory.class);
         bind(Cluster.class).toProvider(ResilientClusterProvider.class);
@@ -114,12 +111,6 @@ public class CassandraSessionModule extends AbstractModule {
             LOGGER.info("Could not locate batchsizes configuration file. Using default values.");
             return BatchSizes.defaultValues();
         }
-    }
-
-
-    @Provides
-    private AsyncRetryExecutor provideAsyncRetryExecutor(ScheduledExecutorService scheduler) {
-        return new AsyncRetryExecutor(scheduler);
     }
 
     @VisibleForTesting

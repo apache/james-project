@@ -22,8 +22,8 @@ package org.apache.james.modules.mailbox;
 import static org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher.DEFAULT_SEARCH_SIZE;
 
 import java.io.FileNotFoundException;
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
 import javax.inject.Named;
@@ -48,10 +48,8 @@ import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.quota.search.elasticsearch.ElasticSearchQuotaConfiguration;
 import org.apache.james.quota.search.elasticsearch.QuotaSearchIndexCreationUtil;
-import org.apache.james.util.retry.RetryExecutorUtil;
 import org.apache.james.utils.PropertiesProvider;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +57,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class ElasticSearchMailboxModule extends AbstractModule {
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchMailboxModule.class);
@@ -137,12 +137,12 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     @Singleton
     protected Client provideClient(ElasticSearchConfiguration configuration,
                                    ElasticSearchMailboxConfiguration mailboxConfiguration,
-                                   ElasticSearchQuotaConfiguration quotaConfiguration,
-                                   AsyncRetryExecutor executor) throws ExecutionException, InterruptedException {
+                                   ElasticSearchQuotaConfiguration quotaConfiguration) {
 
-        return RetryExecutorUtil.retryOnExceptions(executor, configuration.getMaxRetries(), configuration.getMinDelay(), NoNodeAvailableException.class)
-            .getWithRetry(context -> connectToCluster(configuration, mailboxConfiguration, quotaConfiguration))
-            .get();
+        return Mono.fromCallable(() -> connectToCluster(configuration, mailboxConfiguration, quotaConfiguration))
+            .retryBackoff(configuration.getMaxRetries(), Duration.ofMillis(configuration.getMinDelay()))
+            .publishOn(Schedulers.elastic())
+            .block();
     }
 
     private Client connectToCluster(ElasticSearchConfiguration configuration,
