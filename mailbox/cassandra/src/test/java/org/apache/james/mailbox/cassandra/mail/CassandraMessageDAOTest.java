@@ -189,7 +189,7 @@ class CassandraMessageDAOTest {
             .build();
     }
 
-    private MessageWithoutAttachment toMessage(Flux<CassandraMessageDAO.MessageResult> read) throws InterruptedException, java.util.concurrent.ExecutionException {
+    private MessageWithoutAttachment toMessage(Flux<CassandraMessageDAO.MessageResult> read) {
         return read.toStream()
             .map(CassandraMessageDAO.MessageResult::message)
             .map(Pair::getLeft)
