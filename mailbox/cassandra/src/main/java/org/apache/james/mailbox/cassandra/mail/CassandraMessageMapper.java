@@ -107,7 +107,7 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Iterator<MessageUid> listAllMessageUids(Mailbox mailbox) throws MailboxException {
+    public Iterator<MessageUid> listAllMessageUids(Mailbox mailbox) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
         return messageIdDAO.retrieveMessages(cassandraId, MessageRange.all())
             .map(metaData -> metaData.getComposedMessageId().getUid())
@@ -160,7 +160,7 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange messageRange, FetchType ftype, int max) throws MailboxException {
+    public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange messageRange, FetchType ftype, int max) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return retrieveMessages(retrieveMessageIds(mailboxId, messageRange), ftype, Limit.from(max))
             .map(MailboxMessage.class::cast)
@@ -183,7 +183,7 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
-    public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {
+    public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return mailboxRecentDAO.getRecentMessageUidsInMailbox(mailboxId)
             .collectList()
@@ -191,7 +191,7 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
-    public MessageUid findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException {
+    public MessageUid findFirstUnseenMessageUid(Mailbox mailbox) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return firstUnseenDAO.retrieveFirstUnread(mailboxId)
                 .blockOptional()
@@ -199,7 +199,7 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange messageRange) throws MailboxException {
+    public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange messageRange) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         return deletedMessageDAO.retrieveDeletedMessage(mailboxId, messageRange)
@@ -270,7 +270,7 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagUpdateCalculator, MessageRange range) throws MailboxException {
+    public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagUpdateCalculator, MessageRange range) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         Flux<ComposedMessageIdWithMetaData> toBeUpdated = messageIdDAO.retrieveMessages(mailboxId, range);
@@ -348,7 +348,7 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Flags getApplicableFlag(Mailbox mailbox) throws MailboxException {
+    public Flags getApplicableFlag(Mailbox mailbox) {
         return ApplicableFlagBuilder.builder()
             .add(applicableFlagDAO.retrieveApplicableFlag((CassandraId) mailbox.getMailboxId())
                 .defaultIfEmpty(new Flags())
