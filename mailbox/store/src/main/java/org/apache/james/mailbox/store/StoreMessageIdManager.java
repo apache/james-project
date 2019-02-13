@@ -289,7 +289,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     private void applyMessageMoveNoMailboxChecks(MailboxSession mailboxSession, List<MailboxMessage> currentMailboxMessages, MessageMoves messageMoves) throws MailboxException {
         MailboxMessage mailboxMessage = currentMailboxMessages.stream().findAny().orElseThrow(() -> new MailboxNotFoundException("can't load message"));
 
-        validateQuota(messageMoves, mailboxSession, mailboxMessage);
+        validateQuota(messageMoves, mailboxMessage);
 
         addMessageToMailboxes(mailboxMessage, messageMoves.addedMailboxIds(), mailboxSession);
         removeMessageFromMailboxes(mailboxMessage, messageMoves.removedMailboxIds(), mailboxSession);
@@ -342,10 +342,8 @@ public class StoreMessageIdManager implements MessageIdManager {
         }
     }
 
-    private void validateQuota(MessageMoves messageMoves, MailboxSession mailboxSession, MailboxMessage mailboxMessage) throws MailboxException {
-        MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
-
-        Map<QuotaRoot, Integer> messageCountByQuotaRoot = buildMapQuotaRoot(messageMoves, mailboxMapper);
+    private void validateQuota(MessageMoves messageMoves, MailboxMessage mailboxMessage) throws MailboxException {
+        Map<QuotaRoot, Integer> messageCountByQuotaRoot = buildMapQuotaRoot(messageMoves);
         for (Map.Entry<QuotaRoot, Integer> entry : messageCountByQuotaRoot.entrySet()) {
             Integer additionalCopyCount = entry.getValue();
             if (additionalCopyCount > 0) {
@@ -356,26 +354,21 @@ public class StoreMessageIdManager implements MessageIdManager {
         }
     }
 
-    private Map<QuotaRoot, Integer> buildMapQuotaRoot(MessageMoves messageMoves, MailboxMapper mailboxMapper) throws MailboxException {
+    private Map<QuotaRoot, Integer> buildMapQuotaRoot(MessageMoves messageMoves) throws MailboxException {
         Map<QuotaRoot, Integer> messageCountByQuotaRoot = new HashMap<>();
         for (MailboxId mailboxId : messageMoves.addedMailboxIds()) {
-            QuotaRoot quotaRoot = retrieveQuotaRoot(mailboxMapper, mailboxId);
+            QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxId);
             int currentCount = Optional.ofNullable(messageCountByQuotaRoot.get(quotaRoot))
                 .orElse(0);
             messageCountByQuotaRoot.put(quotaRoot, currentCount + 1);
         }
         for (MailboxId mailboxId : messageMoves.removedMailboxIds()) {
-            QuotaRoot quotaRoot = retrieveQuotaRoot(mailboxMapper, mailboxId);
+            QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxId);
             int currentCount = Optional.ofNullable(messageCountByQuotaRoot.get(quotaRoot))
                 .orElse(0);
             messageCountByQuotaRoot.put(quotaRoot, currentCount - 1);
         }
         return messageCountByQuotaRoot;
-    }
-
-    private QuotaRoot retrieveQuotaRoot(MailboxMapper mailboxMapper, MailboxId mailboxId) throws MailboxException {
-        Mailbox mailbox = mailboxMapper.findMailboxById(mailboxId);
-        return quotaRootResolver.getQuotaRoot(mailbox.generateAssociatedPath());
     }
 
     private void addMessageToMailboxes(MailboxMessage mailboxMessage, Set<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
