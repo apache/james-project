@@ -107,11 +107,10 @@ public class CassandraAttachmentDAO {
     }
 
     public Flux<Attachment> retrieveAll() {
-        return cassandraAsyncExecutor.execute(
+        return cassandraAsyncExecutor.executeRows(
                 selectAllStatement.bind()
                     .setReadTimeoutMillis(configuration.getAttachmentV2MigrationReadTimeout())
                     .setFetchSize(1))
-            .flatMapMany(Flux::fromIterable)
             .map(this::attachment);
     }
 

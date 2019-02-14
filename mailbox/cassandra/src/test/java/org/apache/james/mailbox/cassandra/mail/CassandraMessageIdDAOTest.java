@@ -27,6 +27,8 @@ import javax.mail.Flags.Flag;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -41,8 +43,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.core.publisher.Flux;
 
 class CassandraMessageIdDAOTest {
+    public static final CassandraModule MODULE = CassandraModule.aggregateModules(
+        CassandraMessageModule.MODULE,
+        CassandraSchemaVersionModule.MODULE);
+
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraMessageModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULE);
 
     private CassandraMessageId.Factory messageIdFactory;
     private CassandraMessageIdDAO testee;

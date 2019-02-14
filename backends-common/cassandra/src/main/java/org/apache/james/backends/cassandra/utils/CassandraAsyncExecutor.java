@@ -28,6 +28,7 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import net.javacrumbs.futureconverter.java8guava.FutureConverter;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -59,6 +60,11 @@ public class CassandraAsyncExecutor {
     public Mono<Row> executeSingleRow(Statement statement) {
         return executeSingleRowOptional(statement)
                 .flatMap(Mono::justOrEmpty);
+    }
+
+    public Flux<Row> executeRows(Statement statement) {
+        return execute(statement)
+            .flatMapMany(Flux::fromIterable);
     }
 
     public Mono<Optional<Row>> executeSingleRowOptional(Statement statement) {

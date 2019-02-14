@@ -74,10 +74,9 @@ public class CassandraAttachmentMessageIdDAO {
 
     public Flux<MessageId> getOwnerMessageIds(AttachmentId attachmentId) {
         Preconditions.checkArgument(attachmentId != null);
-        return cassandraAsyncExecutor.execute(
+        return cassandraAsyncExecutor.executeRows(
                 selectStatement.bind()
                     .setUUID(ATTACHMENT_ID_AS_UUID, attachmentId.asUUID()))
-            .flatMapMany(Flux::fromIterable)
             .map(this::rowToMessageId);
     }
 

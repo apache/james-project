@@ -116,8 +116,7 @@ public class CassandraRecipientRewriteTableDAO {
     }
 
     public Flux<Pair<MappingSource, Mapping>> getAllMappings() {
-        return executor.execute(retrieveAllMappingsStatement.bind())
-            .flatMapMany(Flux::fromIterable)
+        return executor.executeRows(retrieveAllMappingsStatement.bind())
             .map(row -> Pair.of(
                 MappingSource.fromUser(row.getString(USER), row.getString(DOMAIN)),
                 Mapping.of(row.getString(MAPPING))));

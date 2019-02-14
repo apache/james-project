@@ -142,12 +142,11 @@ public class EnqueuedMailsDAO {
     Flux<EnqueuedItemWithSlicingContext> selectEnqueuedMails(
         MailQueueName queueName, Slice slice, BucketId bucketId) {
 
-        return executor.execute(
+        return executor.executeRows(
                 selectFrom.bind()
                     .setString(QUEUE_NAME, queueName.asString())
                     .setTimestamp(TIME_RANGE_START, Date.from(slice.getStartSliceInstant()))
                     .setInt(BUCKET_ID, bucketId.getValue()))
-            .flatMapMany(Flux::fromIterable)
             .map(row -> EnqueuedMailsDaoUtil.toEnqueuedMail(row, blobFactory));
     }
 

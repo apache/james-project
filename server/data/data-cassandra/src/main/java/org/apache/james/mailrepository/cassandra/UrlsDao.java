@@ -84,8 +84,7 @@ public class UrlsDao {
     }
 
     public Flux<MailRepositoryUrl> retrieveUsedUrls() {
-        return executor.execute(selectAll.bind())
-            .flatMapMany(Flux::fromIterable)
+        return executor.executeRows(selectAll.bind())
             .map(this::toUrl);
     }
 

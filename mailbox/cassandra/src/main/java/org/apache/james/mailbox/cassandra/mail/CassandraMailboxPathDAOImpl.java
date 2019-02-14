@@ -200,8 +200,7 @@ public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
     }
 
     public Flux<CassandraIdAndPath> readAll() {
-        return cassandraAsyncExecutor.execute(selectAll.bind())
-            .flatMapMany(Flux::fromIterable)
+        return cassandraAsyncExecutor.executeRows(selectAll.bind())
             .map(this::fromRowToCassandraIdAndPath);
     }
 

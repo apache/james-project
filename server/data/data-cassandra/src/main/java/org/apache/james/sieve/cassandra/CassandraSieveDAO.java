@@ -106,10 +106,9 @@ public class CassandraSieveDAO {
     }
 
     public Flux<ScriptSummary> listScripts(User user) {
-        return cassandraAsyncExecutor.execute(
+        return cassandraAsyncExecutor.executeRows(
                 selectScriptsStatement.bind()
                     .setString(USER_NAME, user.asString()))
-            .flatMapMany(Flux::fromIterable)
             .map(row -> new ScriptSummary(
                     new ScriptName(row.getString(SCRIPT_NAME)),
                     row.getBool(IS_ACTIVE)));

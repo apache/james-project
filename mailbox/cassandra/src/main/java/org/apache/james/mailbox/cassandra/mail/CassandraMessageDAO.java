@@ -399,10 +399,9 @@ public class CassandraMessageDAO {
     }
 
     public Flux<MessageIdAttachmentIds> retrieveAllMessageIdAttachmentIds() {
-        return cassandraAsyncExecutor.execute(
+        return cassandraAsyncExecutor.executeRows(
             selectAllMessagesWithAttachment.bind()
                 .setReadTimeoutMillis(configuration.getMessageAttachmentIdsReadTimeout()))
-            .flatMapMany(Flux::fromIterable)
             .map(this::fromRow)
             .filter(MessageIdAttachmentIds::hasAttachment);
     }

@@ -99,10 +99,9 @@ public class CassandraMappingsSourcesDAO {
     }
 
     public Flux<MappingSource> retrieveSources(Mapping mapping) {
-        return executor.execute(retrieveSourcesStatement.bind()
+        return executor.executeRows(retrieveSourcesStatement.bind()
             .setString(MAPPING_TYPE, mapping.getType().asPrefix())
             .setString(MAPPING_VALUE, mapping.getMappingValue()))
-            .flatMapMany(Flux::fromIterable)
             .map(row -> MappingSource.parse(row.getString(SOURCE)));
     }
 

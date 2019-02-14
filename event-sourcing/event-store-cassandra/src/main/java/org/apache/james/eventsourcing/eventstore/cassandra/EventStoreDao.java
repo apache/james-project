@@ -45,7 +45,6 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class EventStoreDao {
@@ -97,10 +96,9 @@ public class EventStoreDao {
     }
 
     public History getEventsOfAggregate(AggregateId aggregateId) {
-        return cassandraAsyncExecutor.execute(
+        return cassandraAsyncExecutor.executeRows(
                 select.bind()
                     .setString(AGGREGATE_ID, aggregateId.asAggregateKey()))
-            .flatMapMany(Flux::fromIterable)
             .map(this::toEvent)
             .collectList()
             .map(History::of)

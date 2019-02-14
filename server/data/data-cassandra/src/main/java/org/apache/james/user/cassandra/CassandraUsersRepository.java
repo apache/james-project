@@ -52,7 +52,6 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
-import reactor.core.publisher.Flux;
 
 public class CassandraUsersRepository extends AbstractUsersRepository {
 
@@ -180,8 +179,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
 
     @Override
     public Iterator<String> list() throws UsersRepositoryException {
-        return executor.execute(listStatement.bind())
-            .flatMapMany(Flux::fromIterable)
+        return executor.executeRows(listStatement.bind())
             .map(row -> row.getString(REALNAME))
             .toIterable()
             .iterator();

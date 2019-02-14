@@ -59,7 +59,6 @@ import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 
 import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
@@ -211,58 +210,57 @@ public class CassandraMessageIdDAO {
     }
 
     public Mono<Optional<ComposedMessageIdWithMetaData>> retrieve(CassandraId mailboxId, MessageUid uid) {
-        return selectOneRow(mailboxId, uid).map(this::asOptionalOfCassandraMessageId);
+        return asOptionalOfCassandraMessageId(selectOneRow(mailboxId, uid));
     }
 
-    private Optional<ComposedMessageIdWithMetaData> asOptionalOfCassandraMessageId(ResultSet resultSet) {
-        if (resultSet.isExhausted()) {
-            return Optional.empty();
-        }
-        return Optional.of(fromRowToComposedMessageIdWithFlags(resultSet.one()));
+    private Mono<Optional<ComposedMessageIdWithMetaData>> asOptionalOfCassandraMessageId(Mono<Row> row) {
+        return row
+                .map(this::fromRowToComposedMessageIdWithFlags)
+                .map(Optional::of)
+                .switchIfEmpty(Mono.just(Optional.empty()));
     }
 
-    private Mono<ResultSet> selectOneRow(CassandraId mailboxId, MessageUid uid) {
-        return cassandraAsyncExecutor.execute(select.bind()
+    private Mono<Row> selectOneRow(CassandraId mailboxId, MessageUid uid) {
+        return cassandraAsyncExecutor.executeSingleRow(select.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid())
                 .setLong(IMAP_UID, uid.asLong()));
     }
 
     public Flux<ComposedMessageIdWithMetaData> retrieveMessages(CassandraId mailboxId, MessageRange set) {
+        return retrieveRows(mailboxId, set)
+            .map(this::fromRowToComposedMessageIdWithFlags);
+    }
+
+    private Flux<Row> retrieveRows(CassandraId mailboxId, MessageRange set) {
         switch (set.getType()) {
         case ALL:
-            return toMessageIds(selectAll(mailboxId));
+            return selectAll(mailboxId);
         case FROM:
-            return toMessageIds(selectFrom(mailboxId, set.getUidFrom()));
+            return selectFrom(mailboxId, set.getUidFrom());
         case RANGE:
-            return toMessageIds(selectRange(mailboxId, set.getUidFrom(), set.getUidTo()));
+            return selectRange(mailboxId, set.getUidFrom(), set.getUidTo());
         case ONE:
-            return toMessageIds(selectOneRow(mailboxId, set.getUidFrom()));
+            return Flux.concat(selectOneRow(mailboxId, set.getUidFrom()));
         }
         throw new UnsupportedOperationException();
     }
 
-    private Mono<ResultSet> selectAll(CassandraId mailboxId) {
-        return cassandraAsyncExecutor.execute(selectAllUids.bind()
+    private Flux<Row> selectAll(CassandraId mailboxId) {
+        return cassandraAsyncExecutor.executeRows(selectAllUids.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid()));
     }
 
-    private Mono<ResultSet> selectFrom(CassandraId mailboxId, MessageUid uid) {
-        return cassandraAsyncExecutor.execute(selectUidGte.bind()
+    private Flux<Row> selectFrom(CassandraId mailboxId, MessageUid uid) {
+        return cassandraAsyncExecutor.executeRows(selectUidGte.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid())
                 .setLong(IMAP_UID, uid.asLong()));
     }
 
-    private Mono<ResultSet> selectRange(CassandraId mailboxId, MessageUid from, MessageUid to) {
-        return cassandraAsyncExecutor.execute(selectUidRange.bind()
+    private Flux<Row> selectRange(CassandraId mailboxId, MessageUid from, MessageUid to) {
+        return cassandraAsyncExecutor.executeRows(selectUidRange.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid())
                 .setLong(IMAP_UID_GTE, from.asLong())
                 .setLong(IMAP_UID_LTE, to.asLong()));
-    }
-
-    private Flux<ComposedMessageIdWithMetaData> toMessageIds(Mono<ResultSet> results) {
-        return results
-            .flatMapMany(Flux::fromIterable)
-            .map(this::fromRowToComposedMessageIdWithFlags);
     }
 
     private ComposedMessageIdWithMetaData fromRowToComposedMessageIdWithFlags(Row row) {

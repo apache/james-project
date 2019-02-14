@@ -36,7 +36,6 @@ import org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersion
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.utils.UUIDs;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraSchemaVersionDAO {
@@ -65,8 +64,7 @@ public class CassandraSchemaVersionDAO {
     }
 
     public Mono<Optional<SchemaVersion>> getCurrentSchemaVersion() {
-        return cassandraAsyncExecutor.execute(readVersionStatement.bind())
-            .flatMapMany(Flux::fromIterable)
+        return cassandraAsyncExecutor.executeRows(readVersionStatement.bind())
             .map(row -> row.getInt(VALUE))
             .reduce(Math::max)
             .map(SchemaVersion::new)

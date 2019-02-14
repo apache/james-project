@@ -26,7 +26,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -109,7 +108,6 @@ public class CassandraMailQueueBrowser {
         return browseStartDao.findBrowseStart(queueName)
             .flatMapMany(this::allSlicesStartingAt)
             .flatMapSequential(slice -> browseSlice(queueName, slice))
-            .flatMapSequential(Flux::fromIterable)
             .subscribeOn(Schedulers.parallel());
     }
 
@@ -131,11 +129,11 @@ public class CassandraMailQueueBrowser {
         return mail;
     }
 
-    private Mono<List<EnqueuedItemWithSlicingContext>> browseSlice(MailQueueName queueName, Slice slice) {
+    private Flux<EnqueuedItemWithSlicingContext> browseSlice(MailQueueName queueName, Slice slice) {
         return
             allBucketIds()
                 .flatMap(bucketId -> browseBucket(queueName, slice, bucketId))
-                .collectSortedList(Comparator.comparing(enqueuedMail -> enqueuedMail.getEnqueuedItem().getEnqueuedTime()));
+                .sort(Comparator.comparing(enqueuedMail -> enqueuedMail.getEnqueuedItem().getEnqueuedTime()));
     }
 
     private Flux<EnqueuedItemWithSlicingContext> browseBucket(MailQueueName queueName, Slice slice, BucketId bucketId) {

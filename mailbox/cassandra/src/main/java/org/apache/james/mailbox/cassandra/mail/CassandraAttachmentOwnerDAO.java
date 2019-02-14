@@ -76,10 +76,9 @@ public class CassandraAttachmentOwnerDAO {
     }
 
     public Flux<Username> retrieveOwners(AttachmentId attachmentId) {
-        return executor.execute(
+        return executor.executeRows(
                 selectStatement.bind()
                     .setUUID(ID, attachmentId.asUUID()))
-            .flatMapMany(Flux::fromIterable)
             .map(this::toOwner);
     }
 
