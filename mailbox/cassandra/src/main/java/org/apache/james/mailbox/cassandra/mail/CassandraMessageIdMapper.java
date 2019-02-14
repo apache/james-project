@@ -56,6 +56,7 @@ import com.google.common.collect.Multimap;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class CassandraMessageIdMapper implements MessageIdMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageIdMapper.class);
@@ -91,6 +92,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     @Override
     public List<MailboxMessage> find(Collection<MessageId> messageIds, FetchType fetchType) {
         return Flux.fromStream(messageIds.stream())
+            .publishOn(Schedulers.elastic())
             .limitRate(cassandraConfiguration.getMessageReadChunkSize())
             .flatMap(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty()))
             .collectList()
@@ -178,6 +180,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         Flux.fromIterable(ids.asMap()
             .entrySet())
             .limitRate(cassandraConfiguration.getExpungeChunkSize())
+            .publishOn(Schedulers.elastic())
             .flatMap(entry -> deleteAsMono(entry.getKey(), entry.getValue()))
             .then()
             .block();
