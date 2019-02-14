@@ -141,6 +141,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
         Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
         return Mono.fromCallable(() -> connectToCluster(configuration, mailboxConfiguration, quotaConfiguration))
+            .doOnError(e -> LOGGER.warn("Error establishing ElasticSearch connection. Next retry scheduled in {} ms", waitDelay, e))
             .retryBackoff(configuration.getMaxRetries(), waitDelay, waitDelay)
             .publishOn(Schedulers.elastic())
             .block();
