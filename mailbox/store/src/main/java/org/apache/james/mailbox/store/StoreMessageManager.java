@@ -22,6 +22,8 @@ package org.apache.james.mailbox.store;
 import static org.apache.james.mailbox.extension.PreDeletionHook.DeleteOperation;
 import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -102,7 +104,6 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -339,7 +340,8 @@ public class StoreMessageManager implements MessageManager {
             // source for the InputStream
             file = File.createTempFile("imap", ".msg");
             try (FileOutputStream out = new FileOutputStream(file);
-                 TeeInputStream tmpMsgIn = new TeeInputStream(msgIn, out);
+                 BufferedOutputStream bufferedOut = new BufferedOutputStream(out);
+                 BufferedInputStream tmpMsgIn = new BufferedInputStream(new TeeInputStream(msgIn, bufferedOut));
                  BodyOffsetInputStream bIn = new BodyOffsetInputStream(tmpMsgIn)) {
                 // Disable line length... This should be handled by the smtp server
                 // component and not the parser itself
@@ -433,6 +435,7 @@ public class StoreMessageManager implements MessageManager {
                     // the file now
                     // via the TeeInputStream
                 }
+                bufferedOut.close();
                 int bodyStartOctet = (int) bIn.getBodyStartOffset();
                 if (bodyStartOctet == -1) {
                     bodyStartOctet = 0;
