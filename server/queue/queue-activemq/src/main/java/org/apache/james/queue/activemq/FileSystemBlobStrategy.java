@@ -35,6 +35,7 @@ import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.blob.BlobUploadStrategy;
 import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.james.filesystem.api.FileSystem;
 
 /**
@@ -58,20 +59,16 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
 
     @Override
     public URL uploadFile(ActiveMQBlobMessage message, File file) throws JMSException, IOException {
-        return uploadStream(message, new FileInputStream(file));
+        try (FileInputStream in = new FileInputStream(file)) {
+            return uploadStream(message, in);
+        }
     }
 
     @Override
     public URL uploadStream(ActiveMQBlobMessage message, InputStream in) throws JMSException, IOException {
-        FileOutputStream out = null;
-        try {
-            File f = getFile(message);
-            out = new FileOutputStream(f);
-            byte[] buffer = new byte[policy.getBufferSize()];
-            for (int c = in.read(buffer); c != -1; c = in.read(buffer)) {
-                out.write(buffer, 0, c);
-                out.flush();
-            }
+        File f = getFile(message);
+        try (FileOutputStream out = new FileOutputStream(f)) {
+            IOUtils.copy(in, out, policy.getBufferSize());
             out.flush();
             // File.toURL() is deprecated
             return f.toURI().toURL();
@@ -83,15 +80,7 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
                     // ignore on close
                 }
             }
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    // ignore on close
-                }
-            }
         }
-
     }
 
     @Override
