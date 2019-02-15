@@ -128,7 +128,6 @@ class GroupRegistration implements Registration {
 
     private void subscribeWorkQueue() {
         receiverSubscriber = Optional.of(receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE))
-            .subscribeOn(Schedulers.parallel())
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
             .flatMap(this::deliver)
             .subscribeOn(Schedulers.elastic())
