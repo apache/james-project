@@ -26,6 +26,8 @@ import com.google.common.collect.ImmutableSet;
 import reactor.core.publisher.Mono;
 
 public interface EventBus {
+    int EXECUTION_RATE = 10;
+
     interface StructuredLoggingFields {
         String EVENT_ID = "eventId";
         String EVENT_CLASS = "eventClass";

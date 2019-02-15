@@ -43,6 +43,7 @@ import com.rabbitmq.client.Delivery;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.rabbitmq.ConsumeOptions;
 import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Receiver;
@@ -85,7 +86,7 @@ class KeyRegistrationHandler {
             .doOnSuccess(registrationQueue::initialize)
             .block();
 
-        receiverSubscriber = Optional.of(receiver.consumeAutoAck(registrationQueue.asString())
+        receiverSubscriber = Optional.of(receiver.consumeAutoAck(registrationQueue.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE))
             .subscribeOn(Schedulers.parallel())
             .flatMap(this::handleDelivery)
             .subscribe());
