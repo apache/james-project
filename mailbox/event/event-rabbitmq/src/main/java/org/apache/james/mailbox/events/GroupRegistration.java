@@ -45,6 +45,7 @@ import reactor.core.publisher.MonoProcessor;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.AcknowledgableDelivery;
 import reactor.rabbitmq.BindingSpecification;
+import reactor.rabbitmq.ConsumeOptions;
 import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Receiver;
@@ -126,7 +127,7 @@ class GroupRegistration implements Registration {
     }
 
     private void subscribeWorkQueue() {
-        receiverSubscriber = Optional.of(receiver.consumeManualAck(queueName.asString())
+        receiverSubscriber = Optional.of(receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE))
             .subscribeOn(Schedulers.parallel())
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
             .flatMap(this::deliver)
