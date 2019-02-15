@@ -24,7 +24,7 @@ import java.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-
+import com.google.common.primitives.Ints;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -34,12 +34,14 @@ class WaitDelayGenerator {
         return new WaitDelayGenerator(retryBackoff);
     }
 
-    private static int randomBetween(int lowest, int highest) {
-        Preconditions.checkArgument(lowest <= highest, "lowest always has to be less than or equals highest");
-        if (lowest == highest) {
-            return lowest;
+    private static Duration randomBetween(Duration base, Duration jitter) {
+        Preconditions.checkArgument(!jitter.isNegative(), "jitter value should always be positive");
+        if (jitter.isZero()) {
+            return base;
         }
-        return SECURE_RANDOM.nextInt(highest - lowest) + lowest;
+        long maxJitterAsMillis = jitter.toMillis();
+        long jitterAsMillis = SECURE_RANDOM.nextInt(Ints.checkedCast(maxJitterAsMillis * 2)) / 2;
+        return base.plusMillis(jitterAsMillis);
     }
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
@@ -65,11 +67,13 @@ class WaitDelayGenerator {
         if (!shouldDelay(retryCount)) {
             return Duration.ZERO;
         }
-        int exponentialFactor = Double.valueOf(Math.pow(2, retryCount - 1)).intValue();
-        int minDelay = exponentialFactor * (int) retryBackoff.getFirstBackoff().toMillis();
-        int maxDelay = Double.valueOf(minDelay + minDelay * retryBackoff.getJitterFactor()).intValue();
+        long exponentialFactor = Double.valueOf(Math.pow(2, retryCount - 1)).longValue();
+        Duration minDelay = retryBackoff.getFirstBackoff().multipliedBy(exponentialFactor);
+        Duration jitterDelay = retryBackoff.getFirstBackoff()
+            .multipliedBy(Double.valueOf(retryBackoff.getJitterFactor() * 100).intValue())
+            .dividedBy(100);
 
-        return Duration.ofMillis(randomBetween(minDelay, maxDelay));
+        return randomBetween(minDelay, jitterDelay);
     }
 
     private boolean shouldDelay(int retryCount) {
