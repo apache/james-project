@@ -395,7 +395,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                 .randomEventId()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailboxMapper.findMailboxById(mailboxId))
-                .addMessage(copy)
+                .addMetaData(copy.metaData())
                 .build(),
                 new MailboxIdRegistrationKey(mailboxId))
                 .block();

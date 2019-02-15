@@ -451,12 +451,12 @@ public class StoreMessageManager implements MessageManager {
                         MessageMetaData data = appendMessageToStore(message, attachments, mailboxSession);
 
                         Mailbox mailbox = getMailboxEntity();
-                        MailboxMessage copy = copyMessage(message);
+
                         eventBus.dispatch(EventFactory.added()
                             .randomEventId()
                             .mailboxSession(mailboxSession)
                             .mailbox(mailbox)
-                            .addMessage(copy)
+                            .addMetaData(message.metaData())
                             .build(),
                             new MailboxIdRegistrationKey(mailbox.getMailboxId()))
                             .block();
@@ -498,15 +498,6 @@ public class StoreMessageManager implements MessageManager {
      */
     protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) throws MailboxException {
         return new SimpleMailboxMessage(messageIdFactory.generate(), internalDate, size, bodyStartOctet, content, flags, propertyBuilder, getMailboxEntity().getMailboxId(), attachments);
-    }
-
-    private MailboxMessage copyMessage(MailboxMessage message) throws MailboxException {
-        return SimpleMailboxMessage
-            .from(message)
-            .mailboxId(message.getMailboxId())
-            .uid(message.getUid())
-            .modseq(message.getModSeq())
-            .build();
     }
 
     @Override

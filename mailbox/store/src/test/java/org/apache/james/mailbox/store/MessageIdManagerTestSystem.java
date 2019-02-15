@@ -87,7 +87,7 @@ public class MessageIdManagerTestSystem {
                 .randomEventId()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailbox)
-                .addMessage(message)
+                .addMetaData(message.metaData())
                 .build(),
                 new MailboxIdRegistrationKey(mailboxId))
             .block();

@@ -241,7 +241,7 @@ public class SpamAssassinListenerTest {
             .randomEventId()
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(inbox)
-            .addMessage(message)
+            .addMetaData(message.metaData())
             .build();
 
         listener.event(addedEvent);
@@ -257,7 +257,7 @@ public class SpamAssassinListenerTest {
             .randomEventId()
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(mailbox1)
-            .addMessage(message)
+            .addMetaData(message.metaData())
             .build();
 
         listener.event(addedEvent);
