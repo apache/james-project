@@ -40,7 +40,6 @@ import com.rabbitmq.client.Connection;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoProcessor;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.AcknowledgableDelivery;
 import reactor.rabbitmq.BindingSpecification;
@@ -143,9 +142,7 @@ class GroupRegistration implements Registration {
             .publishOn(Schedulers.elastic())
             .flatMap(any -> Mono.fromRunnable(Throwing.runnable(() -> runListener(event))))
             .onErrorResume(throwable -> retryHandler.handleRetry(event, currentRetryCount, throwable))
-            .then(Mono.fromRunnable(acknowledgableDelivery::ack))
-            .subscribeWith(MonoProcessor.create())
-            .then();
+            .then(Mono.fromRunnable(acknowledgableDelivery::ack));
     }
 
     Mono<Void> reDeliver(Event event) {
