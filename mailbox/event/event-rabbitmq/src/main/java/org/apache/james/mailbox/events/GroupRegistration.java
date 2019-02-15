@@ -164,7 +164,7 @@ class GroupRegistration implements Registration {
         return Optional.ofNullable(acknowledgableDelivery.getProperties().getHeaders())
             .flatMap(headers -> Optional.ofNullable(headers.get(RETRY_COUNT)))
             .filter(object -> object instanceof Integer)
-            .map(object -> (Integer) object)
+            .map(Integer.class::cast)
             .orElse(DEFAULT_RETRY_COUNT);
     }
 
