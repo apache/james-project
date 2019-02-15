@@ -37,7 +37,6 @@ import org.apache.james.util.MDCBuilder;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.rabbitmq.client.Connection;
-
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -105,10 +104,11 @@ class GroupRegistration implements Registration {
     }
 
     GroupRegistration start() {
-        createGroupWorkQueue()
-            .then(retryHandler.createRetryExchange(queueName))
-            .doOnSuccess(any -> this.subscribeWorkQueue())
-            .block();
+        receiverSubscriber = Optional
+            .of(createGroupWorkQueue()
+                .then(retryHandler.createRetryExchange(queueName))
+                .then(Mono.fromCallable(() -> this.consumeWorkQueue()))
+                .block());
         return this;
     }
 
@@ -126,12 +126,12 @@ class GroupRegistration implements Registration {
             .then();
     }
 
-    private void subscribeWorkQueue() {
-        receiverSubscriber = Optional.of(receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE))
+    private Disposable consumeWorkQueue() {
+        return receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE))
+            .publishOn(Schedulers.parallel())
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
             .flatMap(this::deliver)
-            .subscribeOn(Schedulers.elastic())
-            .subscribe());
+            .subscribe();
     }
 
     private Mono<Void> deliver(AcknowledgableDelivery acknowledgableDelivery) {
