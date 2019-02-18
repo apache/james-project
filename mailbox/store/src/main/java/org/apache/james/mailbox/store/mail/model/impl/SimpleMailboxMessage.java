@@ -138,13 +138,9 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, internalDate, size,
                 bodyStartOctet, content, flags, propertyBuilder, mailboxId, attachments.build());
 
-            if (uid.isPresent()) {
-                simpleMailboxMessage.setUid(uid.get());
-            }
+            uid.ifPresent(simpleMailboxMessage::setUid);
+            modseq.ifPresent(simpleMailboxMessage::setModSeq);
 
-            if (modseq.isPresent()) {
-                simpleMailboxMessage.setModSeq(modseq.get());
-            }
             return simpleMailboxMessage;
         }
     }
@@ -218,7 +214,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
                                 PropertyBuilder propertyBuilder, MailboxId mailboxId) {
         this(messageId, internalDate, size, bodyStartOctet,
                 content, flags,
-                propertyBuilder, mailboxId, ImmutableList.<MessageAttachment>of());
+                propertyBuilder, mailboxId, ImmutableList.of());
     }
 
     @Override
