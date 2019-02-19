@@ -43,6 +43,7 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
  - [Administrating DLP Configuration](#Administrating_dlp_configuration)
  - [Administrating Sieve quotas](#Administrating_Sieve_quotas)
  - [ReIndexing](#ReIndexing)
+ - [Event Dead Letter](#Event_Dead_Letter)
  - [Task management](#Task_management)
  - [Cassandra extra operations](#Cassandra_extra_operations)
 
@@ -2412,6 +2413,88 @@ The scheduled task will have the following type `MessageIdReIndexingTask` and th
 ```
 
 Warning: During the re-indexing, the result of search operations might be altered.
+
+## Event Dead letter
+
+The EventBus allows to register 'group listeners' that are called in a (potentially) distributed fashion. These group
+listeners enable the implementation of some advanced mailbox manager feature like indexing, spam reporting, quota management
+and the like.
+
+Upon exceptions, a bounded number of retries are performed (with exponential backoff delays). If after those retries the listener is still
+failing, then the event will be stored in the "Event Dead Letter". This API allows diagnosing issues, as well as performing event replay (not implemented yet).
+
+ - [Listing groups](#Listing_groups)
+ - [Listing failed events](#Listing_failed_events)
+ - [Getting event details](#Getting_event_details)
+ - [Deleting an event](#Deleting_an_event)
+ - [Rescheduling group execution](#Rescheduling_group_execution)
+
+### Listing groups
+
+This endpoint allows discovering the list of groups.
+
+```
+curl -XGET http://ip:port/events/deadLetter/groups
+```
+
+Will return a list of group names that can be further used to interact with the dead letter API:
+
+```
+["org.apache.james.mailbox.events.EventBusTestFixture$GroupA", "org.apache.james.mailbox.events.GenericGroup-abc"]
+```
+
+Response codes:
+
+ - 200: Success. A list of group names is returned.
+
+### Listing failed events
+
+This endpoint allows listing failed events for a given group:
+
+```
+curl -XGET http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA/events
+```
+
+Will return a list of event ids:
+
+```
+["6e0dd59d-660e-4d9b-b22f-0354479f47b4", "58a8f59d-660e-4d9b-b22f-0354486322a2"]
+```
+
+Response codes:
+
+ - 200: Success. A list of event ids is returned.
+ - 400: Invalid group name
+
+### Getting event details
+
+```
+curl -XGET http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA/events/6e0dd59d-660e-4d9b-b22f-0354479f47b4
+```
+
+Will return the full JSON associated with this event.
+
+Response codes:
+
+ - 200: Success. A JSON representing this event is returned.
+ - 400: Invalid group name or eventId
+
+### Deleting an event
+
+```
+curl -XDELETE http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA/events/6e0dd59d-660e-4d9b-b22f-0354479f47b4
+```
+
+Will delete this event.
+
+Response codes:
+
+ - 204: Success
+ - 400: Invalid group name or eventId
+
+### Rescheduling group execution
+
+Not implemented yet.
 
 ## Task management
 
