@@ -19,12 +19,17 @@
 
 package org.apache.james.webadmin.routes;
 
+import java.util.UUID;
+
 import javax.inject.Inject;
 
+import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.eclipse.jetty.http.HttpStatus;
 
 import com.github.steveash.guavate.Guavate;
 
@@ -34,6 +39,7 @@ import spark.Service;
 
 public class EventDeadLettersRoutes implements Routes {
     private static final String BASE_PATH = "/events/deadLetter";
+    private static final String GROUP_PARAM = ":group";
 
     private final EventDeadLetters deadLetters;
     private final JsonTransformer jsonTransformer;
@@ -52,6 +58,7 @@ public class EventDeadLettersRoutes implements Routes {
     @Override
     public void define(Service service) {
         service.get(BASE_PATH + "/groups", this::listGroups, jsonTransformer);
+        service.get(BASE_PATH + "/groups/" + GROUP_PARAM + "/events", this::listFailedEvents, jsonTransformer);
     }
 
     private Iterable<String> listGroups(Request request, Response response) {
@@ -59,5 +66,28 @@ public class EventDeadLettersRoutes implements Routes {
             .map(Group::asString)
             .collect(Guavate.toImmutableList())
             .block();
+    }
+
+    private Iterable<String> listFailedEvents(Request request, Response response) {
+        Group group = parseGroup(request);
+        return deadLetters.failedEventIds(group)
+            .map(Event.EventId::getId)
+            .map(UUID::toString)
+            .collect(Guavate.toImmutableList())
+            .block();
+    }
+
+    private Group parseGroup(Request request) {
+        String groupAsString = request.params(GROUP_PARAM);
+        try {
+            return Group.deserialize(groupAsString);
+        } catch (Group.GroupDeserializationException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .message("Can not deserialize the supplied group: " + groupAsString)
+                .cause(e)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .haltError();
+        }
     }
 }

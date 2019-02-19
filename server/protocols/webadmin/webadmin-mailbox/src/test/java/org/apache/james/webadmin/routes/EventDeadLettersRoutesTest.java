@@ -24,6 +24,7 @@ import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
@@ -38,6 +39,7 @@ import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
@@ -140,6 +142,69 @@ class EventDeadLettersRoutesTest {
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
                 .body(".", containsInAnyOrder(EventBusTestFixture.GroupA.class.getName(), EventBusTestFixture.GroupB.class.getName()));
+        }
+    }
+
+    @Nested
+    class ListEvents {
+        @Test
+        void listEventsShouldFailWhenInvalidGroup() {
+            when()
+                .get("/events/deadLetter/groups/invalid/events")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Can not deserialize the supplied group: invalid"));
+        }
+
+        @Test
+        void listEventsShouldReturnEmptyWhenNone() {
+            when()
+                .get("/events/deadLetter/groups/" + new EventBusTestFixture.GroupA().asString() + "/events")
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .body(".", hasSize(0));
+        }
+
+        @Test
+        void listEventsShouldReturnContainedEvents() {
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+
+            when()
+                .get("/events/deadLetter/groups/" + new EventBusTestFixture.GroupA().asString() + "/events")
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .body(".", contains(UUID_1));
+        }
+
+        @Test
+        void listEventsShouldNotReturnEventsOfOtherGroups() {
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+            deadLetters.store(new EventBusTestFixture.GroupB(), EVENT_2).block();
+
+            when()
+                .get("/events/deadLetter/groups/" + new EventBusTestFixture.GroupA().asString() + "/events")
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .body(".", contains(UUID_1));
+        }
+
+        @Test
+        void listEventsShouldReturnAllEvents() {
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_2).block();
+
+            when()
+                .get("/events/deadLetter/groups/" + new EventBusTestFixture.GroupA().asString() + "/events")
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .body(".", containsInAnyOrder(UUID_1, UUID_2));
         }
     }
 }
