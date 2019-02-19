@@ -54,6 +54,10 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageSource;
 import org.apache.james.util.concurrent.NamedThreadFactory;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +84,7 @@ public class FileMailQueue implements ManageableMailQueue {
     private final boolean sync;
     private static final String MSG_EXTENSION = ".msg";
     private static final String OBJECT_EXTENSION = ".obj";
-    private static final String NEXT_DELIVERY = "FileQueueNextDelivery";
+    private static final AttributeName NEXT_DELIVERY = AttributeName.of("FileQueueNextDelivery");
     private static final int SPLITCOUNT = 10;
     private static final SecureRandom RANDOM = new SecureRandom();
     private final String queueName;
@@ -163,11 +167,9 @@ public class FileMailQueue implements ManageableMailQueue {
     }
 
     private Optional<ZonedDateTime> getNextDelivery(Mail mail) {
-        Long next = (Long) mail.getAttribute(NEXT_DELIVERY);
-        if (next == null) {
-            return Optional.empty();
-        }
-        return Optional.of(Instant.ofEpochMilli(next).atZone(ZoneId.systemDefault()));
+        return AttributeUtils
+            .getValueAndCastFromMail(mail, NEXT_DELIVERY, Long.class)
+            .map(next -> Instant.ofEpochMilli(next).atZone(ZoneId.systemDefault()));
     }
 
     @Override
@@ -180,7 +182,7 @@ public class FileMailQueue implements ManageableMailQueue {
 
             final FileItem item = new FileItem(name + OBJECT_EXTENSION, name + MSG_EXTENSION);
             if (delay > 0) {
-                mail.setAttribute(NEXT_DELIVERY, System.currentTimeMillis() + unit.toMillis(delay));
+                mail.setAttribute(new Attribute(NEXT_DELIVERY, AttributeValue.of(System.currentTimeMillis() + unit.toMillis(delay))));
             }
             try (FileOutputStream foout = new FileOutputStream(item.getObjectFile());
                 ObjectOutputStream oout = new ObjectOutputStream(foout)) {

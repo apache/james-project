@@ -408,14 +408,14 @@ public class JamesMailetContext implements MailetContext, Configurable {
 
     @Override
     public void sendMail(Mail mail, String state) throws MessagingException {
-        mail.setAttribute(Mail.SENT_BY_MAILET, "true");
+        mail.setAttribute(Mail.SENT_BY_MAILET_ATTRIBUTE);
         mail.setState(state);
         rootMailQueue.enQueue(mail);
     }
     
     @Override
     public void sendMail(Mail mail, String state, long delay, TimeUnit unit) throws MessagingException {
-        mail.setAttribute(Mail.SENT_BY_MAILET, "true");
+        mail.setAttribute(Mail.SENT_BY_MAILET_ATTRIBUTE);
         mail.setState(state);
         rootMailQueue.enQueue(mail, delay, unit);
     }

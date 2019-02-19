@@ -142,7 +142,7 @@ public class DeliveryRunnableTest {
         testee.attemptDelivery(fakeMail);
 
         verify(mailQueue).enQueue(FakeMail.builder()
-                .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 1)
+                .attribute(DeliveryRetriesHelper.makeAttribute(1))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
                 .build(),
@@ -155,7 +155,7 @@ public class DeliveryRunnableTest {
     public void deliveryTemporaryFailureShouldRetryDeliveryWithRightDelay() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
             .state(Mail.ERROR)
-            .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 2)
+            .attribute(DeliveryRetriesHelper.makeAttribute(2))
             .build();
         Exception exception = new Exception();
         when(mailDelivrer.deliver(fakeMail)).thenReturn(ExecutionResult.temporaryFailure(exception));
@@ -163,7 +163,7 @@ public class DeliveryRunnableTest {
         testee.attemptDelivery(fakeMail);
 
         verify(mailQueue).enQueue(FakeMail.builder()
-                .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 3)
+                .attribute(DeliveryRetriesHelper.makeAttribute(3))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
                 .build(),
@@ -176,7 +176,7 @@ public class DeliveryRunnableTest {
     public void deliveryTemporaryFailureShouldRetryDeliveryOnMaximumRetryNumber() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
             .state(Mail.ERROR)
-            .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 4)
+            .attribute(DeliveryRetriesHelper.makeAttribute(4))
             .build();
         Exception exception = new Exception();
         when(mailDelivrer.deliver(fakeMail)).thenReturn(ExecutionResult.temporaryFailure(exception));
@@ -184,7 +184,7 @@ public class DeliveryRunnableTest {
         testee.attemptDelivery(fakeMail);
 
         verify(mailQueue).enQueue(FakeMail.builder()
-                .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 5)
+                .attribute(DeliveryRetriesHelper.makeAttribute(5))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
                 .build(),
@@ -197,7 +197,7 @@ public class DeliveryRunnableTest {
     public void deliveryTemporaryFailureShouldNotRetryDeliveryOverMaximumRetryNumber() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
             .state(Mail.ERROR)
-            .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 5)
+            .attribute(DeliveryRetriesHelper.makeAttribute(5))
             .build();
         Exception exception = new Exception();
         when(mailDelivrer.deliver(fakeMail)).thenReturn(ExecutionResult.temporaryFailure(exception));
@@ -211,7 +211,7 @@ public class DeliveryRunnableTest {
     public void deliveryTemporaryFailureShouldBounceWhenRetryExceeded() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
             .state(Mail.ERROR)
-            .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 5)
+            .attribute(DeliveryRetriesHelper.makeAttribute(5))
             .build();
         Exception exception = new Exception("");
         when(mailDelivrer.deliver(fakeMail)).thenReturn(ExecutionResult.temporaryFailure(exception));
@@ -226,7 +226,7 @@ public class DeliveryRunnableTest {
     public void deliveryTemporaryFailureShouldResetDeliveryCountOnNonErrorState() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
             .state(Mail.DEFAULT)
-            .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 5)
+            .attribute(DeliveryRetriesHelper.makeAttribute(5))
             .build();
         Exception exception = new Exception();
         when(mailDelivrer.deliver(fakeMail)).thenReturn(ExecutionResult.temporaryFailure(exception));
@@ -234,7 +234,7 @@ public class DeliveryRunnableTest {
         testee.attemptDelivery(fakeMail);
 
         verify(mailQueue).enQueue(FakeMail.builder()
-                .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 1)
+                .attribute(DeliveryRetriesHelper.makeAttribute(1))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
                 .build(),

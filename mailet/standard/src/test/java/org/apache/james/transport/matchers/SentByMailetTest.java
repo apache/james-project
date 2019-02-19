@@ -24,6 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Collection;
 
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -49,7 +51,7 @@ public class SentByMailetTest {
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
         FakeMail fakeMail = FakeMail.builder()
             .recipient(recipient)
-            .attribute(Mail.SENT_BY_MAILET, "true")
+            .attribute(Mail.SENT_BY_MAILET_ATTRIBUTE)
             .build();
 
         Collection<MailAddress> results =  testee.match(fakeMail);
@@ -83,7 +85,7 @@ public class SentByMailetTest {
     public void matchShouldReturnEmptyCollectionWhenAuthUserAttributeIsPresentAndThereIsNoRecipient() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
             .recipients()
-            .attribute(Mail.SENT_BY_MAILET, "true")
+            .attribute(Mail.SENT_BY_MAILET_ATTRIBUTE)
             .build();
 
         Collection<MailAddress> results =  testee.match(fakeMail);

@@ -60,7 +60,7 @@ public class ICALToHeadersTest {
             .mailetName("ICALToHeader")
             .build());
 
-        assertThat(testee.getAttribute()).isEqualTo(ICALToHeader.ATTRIBUTE_DEFAULT_NAME);
+        assertThat(testee.getAttribute().asString()).isEqualTo(ICALToHeader.ATTRIBUTE_DEFAULT_NAME);
     }
 
     @Test
@@ -71,7 +71,7 @@ public class ICALToHeadersTest {
             .setProperty(ICALToHeader.ATTRIBUTE_PROPERTY, attribute)
             .build());
 
-        assertThat(testee.getAttribute()).isEqualTo(attribute);
+        assertThat(testee.getAttribute().asString()).isEqualTo(attribute);
     }
 
     @Test

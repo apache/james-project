@@ -30,6 +30,8 @@ import java.util.List;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
@@ -49,7 +51,7 @@ import org.apache.mailet.base.GenericMatcher;
  * 
  */
 public class IsX509CertificateSubject extends GenericMatcher {
-    protected String sourceAttribute;
+    protected AttributeName sourceAttribute;
     protected String check;
     
     @Override
@@ -60,44 +62,41 @@ public class IsX509CertificateSubject extends GenericMatcher {
         }
         
         int pos = condition.indexOf(";");
-        sourceAttribute = condition.substring(0,pos).trim();
+        sourceAttribute = AttributeName.of(condition.substring(0,pos).trim());
         check = condition.substring(pos + 1, condition.length());
     }
     
     @Override
-    @SuppressWarnings("unchecked")
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        List<X509Certificate> certificates;
-        
-        Object obj = mail.getAttribute(sourceAttribute);
-        if (obj != null) {
-            if (obj instanceof X509Certificate) {
-                certificates = Collections.singletonList((X509Certificate)obj);
-            } else {
-                certificates = (List<X509Certificate>) obj;
-            }
 
-            boolean valid = false;
-
-            for (X509Certificate cert : certificates) {
-                // Here I should use the method getSubjectX500Principal, but
-                // that would break the compatibility with jdk13.
-                Principal prin = cert.getSubjectDN();
-                // TODO: Maybe here a more strong check should be done ...
-                if ((prin.toString().indexOf(check)) > 0) {
-                    valid = true;
-                }
-            }
-
-            if (valid) {
-                return mail.getRecipients();
-            } else {
-                return null;
-            }
-        } else {
-            return null;
-        }
+        return AttributeUtils.getAttributeValueFromMail(mail, sourceAttribute)
+            .map(this::getCertificates)
+            .filter(this::hasCertificate)
+            .map(any -> mail.getRecipients())
+            .orElse(null);
     }
 
+    private boolean hasCertificate(List<X509Certificate> certificates) {
+        for (X509Certificate cert : certificates) {
+            // Here I should use the method getSubjectX500Principal, but
+            // that would break the compatibility with jdk13.
+            Principal prin = cert.getSubjectDN();
+            // TODO: Maybe here a more strong check should be done ...
+            if ((prin.toString().indexOf(check)) > 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<X509Certificate> getCertificates(Object attributeValue) {
+        if (attributeValue instanceof X509Certificate) {
+            return Collections.singletonList((X509Certificate) attributeValue);
+        } else {
+            return (List<X509Certificate>) attributeValue;
+        }
+    }
 }
 

@@ -55,6 +55,8 @@ import org.apache.james.transport.util.ReplyToUtils;
 import org.apache.james.transport.util.SenderUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.james.transport.util.TosUtils;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
@@ -115,6 +117,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private static final Pattern DIAG_PATTERN = Patterns.compilePatternUncheckedException("^\\d{3}\\s.*$");
     private static final String MACHINE_PATTERN = "[machine]";
     private static final String LINE_BREAK = "\n";
+    private static final AttributeName DELIVERY_ERROR = AttributeName.of("delivery-error");
 
     private final DNSService dns;
     private final FastDateFormat dateFormatter;
@@ -353,7 +356,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         }
         buffer.append(LINE_BREAK).append(LINE_BREAK);
         buffer.append("Error message:").append(LINE_BREAK);
-        buffer.append((String) originalMail.getAttribute("delivery-error")).append(LINE_BREAK);
+        buffer.append(AttributeUtils.getValueAndCastFromMail(originalMail, DELIVERY_ERROR, String.class).orElse("")).append(LINE_BREAK);
         buffer.append(LINE_BREAK);
 
         MimeBodyPart bodyPart = new MimeBodyPart();
@@ -417,11 +420,9 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     }
 
     private String getDeliveryError(Mail originalMail) {
-        String deliveryError = (String) originalMail.getAttribute("delivery-error");
-        if (deliveryError != null) {
-            return deliveryError;
-        }
-        return "unknown";
+        return AttributeUtils
+            .getValueAndCastFromMail(originalMail, DELIVERY_ERROR, String.class)
+            .orElse("unknown");
     }
 
     private String getDiagnosticType(String diagnosticCode) {

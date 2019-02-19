@@ -20,7 +20,6 @@ package org.apache.james.transport.mailets;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -28,6 +27,10 @@ import java.util.stream.Stream;
 import javax.mail.MessagingException;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
@@ -65,6 +68,7 @@ import net.fortuna.ical4j.model.Calendar;
  */
 public class ICalendarParser extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ICalendarParser.class);
+    private static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
 
     public static final String SOURCE_ATTRIBUTE_PARAMETER_NAME = "sourceAttribute";
     public static final String DESTINATION_ATTRIBUTE_PARAMETER_NAME = "destinationAttribute";
@@ -76,46 +80,48 @@ public class ICalendarParser extends GenericMailet {
         ICal4JConfigurator.configure();
     }
 
-    private String sourceAttributeName;
-    private String destinationAttributeName;
+    private AttributeName sourceAttributeName;
+    private AttributeName destinationAttributeName;
 
     @Override
     public void init() throws MessagingException {
-        sourceAttributeName = getInitParameter(SOURCE_ATTRIBUTE_PARAMETER_NAME, SOURCE_ATTRIBUTE_PARAMETER_DEFAULT_VALUE);
-        if (Strings.isNullOrEmpty(sourceAttributeName)) {
+        String sourceAttributeNameRaw = getInitParameter(SOURCE_ATTRIBUTE_PARAMETER_NAME, SOURCE_ATTRIBUTE_PARAMETER_DEFAULT_VALUE);
+        if (Strings.isNullOrEmpty(sourceAttributeNameRaw)) {
             throw new MessagingException("source attribute cannot be empty");
         }
-        destinationAttributeName = getInitParameter(DESTINATION_ATTRIBUTE_PARAMETER_NAME, DESTINATION_ATTRIBUTE_PARAMETER_DEFAULT_VALUE);
-        if (Strings.isNullOrEmpty(destinationAttributeName)) {
+        sourceAttributeName = AttributeName.of(sourceAttributeNameRaw);
+
+        String destinationAttributeNameRaw = getInitParameter(DESTINATION_ATTRIBUTE_PARAMETER_NAME, DESTINATION_ATTRIBUTE_PARAMETER_DEFAULT_VALUE);
+        if (Strings.isNullOrEmpty(destinationAttributeNameRaw)) {
             throw new MessagingException("destination attribute cannot be empty");
         }
+        destinationAttributeName = AttributeName.of(destinationAttributeNameRaw);
     }
 
     @VisibleForTesting
-    public String getSourceAttributeName() {
+    AttributeName getSourceAttributeName() {
         return sourceAttributeName;
     }
 
     @VisibleForTesting
-    public String getDestinationAttributeName() {
+    AttributeName getDestinationAttributeName() {
         return destinationAttributeName;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void service(Mail mail) throws MessagingException {
-        Object icsAttachmentsObj = mail.getAttribute(sourceAttributeName);
-        if (icsAttachmentsObj == null || !(icsAttachmentsObj instanceof Map)) {
-            return;
-        }
+        AttributeUtils
+            .getValueAndCastFromMail(mail, sourceAttributeName, MAP_STRING_BYTES_CLASS)
+            .ifPresent(icsAttachments -> addCalendarsToAttribute(mail, icsAttachments));
+    }
 
-        Map<String, byte[]> icsAttachments = (Map<String, byte[]>) icsAttachmentsObj;
+    private void addCalendarsToAttribute(Mail mail, Map<String, byte[]> icsAttachments) {
         Map<String, Calendar> calendars = icsAttachments.entrySet()
             .stream()
             .flatMap(entry -> createCalendar(entry.getKey(), entry.getValue()))
             .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue));
 
-        mail.setAttribute(destinationAttributeName, (Serializable) calendars);
+        mail.setAttribute(new Attribute(destinationAttributeName, AttributeValue.ofAny(calendars)));
     }
 
     @Override
@@ -140,5 +146,4 @@ public class ICalendarParser extends GenericMailet {
             return Stream.of();
         }
     }
-
 }

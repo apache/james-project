@@ -26,6 +26,8 @@ import java.util.Collection;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
@@ -70,7 +72,7 @@ public class HasMailAttributeWithValue extends GenericMatcher {
     /**
      * The name of the attribute to match
      */    
-    private String fieldAttributeName;
+    private AttributeName fieldAttributeName;
 
     /**
      * The value of the attribute to match
@@ -86,45 +88,11 @@ public class HasMailAttributeWithValue extends GenericMatcher {
      */
     @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        Object attributeValue = mail.getAttribute(getAttributeName());
-
-        if (attributeValue != null
-            && attributeValue.toString().trim().equals(getAttributeValue())) {
-            return mail.getRecipients();
-        }
-        return null;
-    }
-
-    /**
-     * Returns the attributeName.
-     * @return String
-     */
-    protected String getAttributeName() {
-        return fieldAttributeName;
-    }
-
-    /**
-     * Returns the attributeValue.
-     * @return String
-     */
-    protected String getAttributeValue() {
-        return fieldAttributeValue;
-    }
-
-    /**
-     * Sets the attributeName.
-     * @param attributeName The attributeName to set
-     */
-    protected void setAttributeName(String attributeName) {
-        fieldAttributeName = attributeName;
-    }
-
-    /**
-     * Sets the attributeValue.
-     * @param attributeValue The attributeValue to set
-     */
-    protected void setAttributeValue(String attributeValue) {
-        fieldAttributeValue = attributeValue;
+        return AttributeUtils
+            .getAttributeValueFromMail(mail, fieldAttributeName)
+            .filter(attributeValue -> attributeValue.toString().trim().equals(fieldAttributeValue))
+            .map(any -> mail.getRecipients())
+            .orElse(null);
     }
 
     @Override
@@ -140,8 +108,8 @@ public class HasMailAttributeWithValue extends GenericMatcher {
             throw new MessagingException("Syntax Error. Missing attribute name.");
         }
 
-        setAttributeName(condition.substring(0, commaPosition).trim());
-        setAttributeValue(condition.substring(commaPosition + 1).trim());
+        fieldAttributeName = AttributeName.of(condition.substring(0, commaPosition).trim());
+        fieldAttributeValue = condition.substring(commaPosition + 1).trim();
     }
     
     @Override

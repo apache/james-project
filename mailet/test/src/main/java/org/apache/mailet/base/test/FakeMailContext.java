@@ -198,7 +198,7 @@ public class FakeMailContext implements MailetContext {
 
             public SentMail build() throws MessagingException {
                 if (fromMailet.orElse(false)) {
-                    this.attribute(Mail.SENT_BY_MAILET, "true");
+                    this.attribute(Mail.SENT_BY_MAILET_ATTRIBUTE);
                 }
                 return new SentMail(sender, recipients.orElse(ImmutableList.<MailAddress>of()), msg,
                     ImmutableMap.copyOf(attributes), state.orElse(Mail.DEFAULT), delay);

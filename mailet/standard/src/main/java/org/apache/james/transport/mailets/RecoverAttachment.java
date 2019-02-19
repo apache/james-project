@@ -31,12 +31,16 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.fge.lambdas.Throwing;
 
 /**
  * <p>
@@ -61,21 +65,23 @@ import org.slf4j.LoggerFactory;
 @Experimental
 public class RecoverAttachment extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecoverAttachment.class);
+    private static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
 
-    public static final String ATTRIBUTE_PARAMETER_NAME = "attribute";
+    private static final String ATTRIBUTE_PARAMETER_NAME = "attribute";
 
-    private String attributeName = null;
+    private AttributeName attributeName;
 
     @Override
     public void init() throws MailetException {
-        attributeName = getInitParameter(ATTRIBUTE_PARAMETER_NAME);
+        String attributeNameRaw = getInitParameter(ATTRIBUTE_PARAMETER_NAME);
 
-        if (attributeName == null) {
+        if (attributeNameRaw == null) {
             throw new MailetException(ATTRIBUTE_PARAMETER_NAME
                     + " is a mandatory parameter");
         }
 
-        LOGGER.debug("RecoverAttachment is initialised with attribute [{}]", attributeName);
+        LOGGER.debug("RecoverAttachment is initialised with attribute [{}]", attributeNameRaw);
+        attributeName = AttributeName.of(attributeNameRaw);
     }
 
     /**
@@ -89,48 +95,50 @@ public class RecoverAttachment extends GenericMailet {
      */
     @Override
     public void service(Mail mail) throws MailetException {
-        @SuppressWarnings("unchecked")
-        Map<String, byte[]> attachments = (Map<String, byte[]>) mail.getAttribute(attributeName);
-        if (attachments != null) {
+        AttributeUtils
+            .getValueAndCastFromMail(mail, attributeName, MAP_STRING_BYTES_CLASS)
+            .ifPresent(Throwing.<Map<String, byte[]>>consumer(attachments ->
+                    processAttachment(mail, attachments)).sneakyThrow());
+    }
 
-            MimeMessage message;
-            try {
-                message = mail.getMessage();
-            } catch (MessagingException e) {
-                throw new MailetException(
-                        "Could not retrieve message from Mail object", e);
-            }
+    private void processAttachment(Mail mail, Map<String, byte[]> attachments) throws MailetException {
+        MimeMessage message;
+        try {
+            message = mail.getMessage();
+        } catch (MessagingException e) {
+            throw new MailetException(
+                    "Could not retrieve message from Mail object", e);
+        }
 
-            Iterator<byte[]> i = attachments.values().iterator();
-            try {
-                while (i.hasNext()) {
-                    byte[] bytes = i.next();
-                    InputStream is = new BufferedInputStream(
-                            new ByteArrayInputStream(bytes));
-                    MimeBodyPart p = new MimeBodyPart(is);
-                    if (!(message.isMimeType("multipart/*") && (message
-                            .getContent() instanceof MimeMultipart))) {
-                        Object content = message.getContent();
-                        String contentType = message.getContentType();
-                        MimeMultipart mimeMultipart = new MimeMultipart();
-                        message.setContent(mimeMultipart);
-                        // This saveChanges is required when the MimeMessage has
-                        // been created from
-                        // an InputStream, otherwise it is not saved correctly.
-                        message.saveChanges();
-                        mimeMultipart.setParent(message);
-                        MimeBodyPart bodyPart = new MimeBodyPart();
-                        mimeMultipart.addBodyPart(bodyPart);
-                        bodyPart.setContent(content, contentType);
-                    }
-                    ((MimeMultipart) message.getContent()).addBodyPart(p);
+        Iterator<byte[]> i = attachments.values().iterator();
+        try {
+            while (i.hasNext()) {
+                byte[] bytes = i.next();
+                InputStream is = new BufferedInputStream(
+                        new ByteArrayInputStream(bytes));
+                MimeBodyPart p = new MimeBodyPart(is);
+                if (!(message.isMimeType("multipart/*") && (message
+                        .getContent() instanceof MimeMultipart))) {
+                    Object content = message.getContent();
+                    String contentType = message.getContentType();
+                    MimeMultipart mimeMultipart = new MimeMultipart();
+                    message.setContent(mimeMultipart);
+                    // This saveChanges is required when the MimeMessage has
+                    // been created from
+                    // an InputStream, otherwise it is not saved correctly.
+                    message.saveChanges();
+                    mimeMultipart.setParent(message);
+                    MimeBodyPart bodyPart = new MimeBodyPart();
+                    mimeMultipart.addBodyPart(bodyPart);
+                    bodyPart.setContent(content, contentType);
                 }
-                message.saveChanges();
-            } catch (MessagingException e) {
-                LOGGER.error("MessagingException in recoverAttachment", e);
-            } catch (IOException e) {
-                LOGGER.error("IOException in recoverAttachment", e);
+                ((MimeMultipart) message.getContent()).addBodyPart(p);
             }
+            message.saveChanges();
+        } catch (MessagingException e) {
+            LOGGER.error("MessagingException in recoverAttachment", e);
+        } catch (IOException e) {
+            LOGGER.error("IOException in recoverAttachment", e);
         }
     }
 

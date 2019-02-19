@@ -26,6 +26,8 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,10 +102,9 @@ public class SimpleMailStore implements MailStore {
     }
 
     private String locateFolder(String username, Mail mail) {
-        if (mail.getAttribute(DELIVERY_PATH_PREFIX + username) instanceof String) {
-            return (String) mail.getAttribute(DELIVERY_PATH_PREFIX + username);
-        }
-        return folder;
+        return AttributeUtils
+            .getValueAndCastFromMail(mail, AttributeName.of(DELIVERY_PATH_PREFIX + username), String.class)
+            .orElse(folder);
     }
 
     private String computeUsername(MailAddress recipient) {

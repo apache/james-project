@@ -22,9 +22,15 @@ package org.apache.james.transport.mailets.jsieve;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.fge.lambdas.Throwing;
 
 /**
  * Utility methods helpful for actions.
@@ -65,16 +71,17 @@ public class ActionUtils {
     public static void detectAndHandleLocalLooping(Mail aMail, ActionContext context, String anAttributeSuffix)
             throws MessagingException {
         MailAddress thisRecipient = getSoleRecipient(aMail);
-        MailAddress lastRecipient = (MailAddress) aMail
-                .getAttribute(ATTRIBUTE_PREFIX + anAttributeSuffix);
-        if (null != lastRecipient && lastRecipient.equals(thisRecipient)) {
-            MessagingException ex = new MessagingException(
-                    "This message is looping! Message ID: "
-                            + aMail.getMessage().getMessageID());
-            LOGGER.warn(ex.getMessage(), ex);
-            throw ex;
-        }
-        aMail.setAttribute(ATTRIBUTE_PREFIX + anAttributeSuffix,
-                thisRecipient);
+        AttributeName attributeName = AttributeName.of(ATTRIBUTE_PREFIX + anAttributeSuffix);
+        AttributeUtils
+            .getValueAndCastFromMail(aMail, attributeName, MailAddress.class)
+            .filter(lastRecipient -> lastRecipient.equals(thisRecipient))
+            .ifPresent(Throwing.consumer(any -> {
+                MessagingException ex = new MessagingException(
+                        "This message is looping! Message ID: "
+                                + aMail.getMessage().getMessageID());
+                LOGGER.warn(ex.getMessage(), ex);
+                throw ex;
+            }).sneakyThrow());
+        aMail.setAttribute(new Attribute(attributeName, AttributeValue.ofSerializable(thisRecipient)));
     }
 }
