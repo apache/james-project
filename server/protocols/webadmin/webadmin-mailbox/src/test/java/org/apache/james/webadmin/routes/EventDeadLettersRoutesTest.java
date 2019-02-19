@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.routes;
 
 import static io.restassured.RestAssured.when;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -27,6 +28,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 import org.apache.james.core.User;
+import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventBusTestFixture;
@@ -34,6 +36,7 @@ import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.events.MemoryEventDeadLetters;
 import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
@@ -68,6 +71,19 @@ class EventDeadLettersRoutesTest {
         .mailboxId(InMemoryId.of(456))
         .mailboxPath(MailboxPath.forUser(BOB, "project-3"))
         .build();
+    private static final String JSON_1 = "{" +
+        "  \"MailboxAdded\":{" +
+        "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
+        "    \"mailboxPath\":{" +
+        "      \"namespace\":\"#private\"," +
+        "      \"user\":\"bob@apache.org\"," +
+        "      \"name\":\"Important-mailbox\"" +
+        "     }," +
+        "     \"mailboxId\":\"453\"," +
+        "     \"user\":\"bob@apache.org\"," +
+        "     \"sessionId\":452" +
+        "  }" +
+        "}";
 
     private WebAdminServer webAdminServer;
     private EventDeadLetters deadLetters;
@@ -76,12 +92,14 @@ class EventDeadLettersRoutesTest {
     void beforeEach() throws Exception {
         deadLetters = new MemoryEventDeadLetters();
         JsonTransformer jsonTransformer = new JsonTransformer();
+        EventSerializer eventSerializer = new EventSerializer(new InMemoryId.Factory(), new InMemoryMessageId.Factory());
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
             new EventDeadLettersRoutes(
                 deadLetters,
-                jsonTransformer));
+                jsonTransformer,
+                eventSerializer));
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
 
@@ -205,6 +223,56 @@ class EventDeadLettersRoutesTest {
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
                 .body(".", containsInAnyOrder(UUID_1, UUID_2));
+        }
+    }
+
+    @Nested
+    class GetEvent {
+        @Test
+        void getEventShouldReturnEvent() {
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+
+            String response = when()
+                .get("/events/deadLetter/groups/" + new EventBusTestFixture.GroupA().asString() + "/events/" + UUID_1)
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .asString();
+
+            assertThatJson(response).isEqualTo(JSON_1);
+        }
+
+        @Test
+        void getEventShouldReturn404WhenNotFound() {
+            when()
+                .get("/events/deadLetter/groups/" + new EventBusTestFixture.GroupA().asString() + "/events/" + UUID_1)
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404);
+        }
+
+        @Test
+        void getEventShouldFailWhenInvalidEventId() {
+            when()
+                .get("/events/deadLetter/groups/" + new EventBusTestFixture.GroupA().asString() + "/events/invalid")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Can not deserialize the supplied eventId: invalid"));
+        }
+
+        @Test
+        void getEventShouldFailWhenInvalidGroup() {
+            when()
+                .get("/events/deadLetter/groups/invalid/events/" + UUID_1)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Can not deserialize the supplied group: invalid"));
         }
     }
 }

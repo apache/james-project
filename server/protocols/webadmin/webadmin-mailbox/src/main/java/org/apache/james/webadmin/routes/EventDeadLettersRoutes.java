@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.Group;
@@ -40,14 +41,17 @@ import spark.Service;
 public class EventDeadLettersRoutes implements Routes {
     private static final String BASE_PATH = "/events/deadLetter";
     private static final String GROUP_PARAM = ":group";
+    private static final String EVENT_ID_PARAM = ":eventId";
 
     private final EventDeadLetters deadLetters;
     private final JsonTransformer jsonTransformer;
+    private final EventSerializer eventSerializer;
 
     @Inject
-    EventDeadLettersRoutes(EventDeadLetters deadLetters, JsonTransformer jsonTransformer) {
+    EventDeadLettersRoutes(EventDeadLetters deadLetters, JsonTransformer jsonTransformer, EventSerializer eventSerializer) {
         this.deadLetters = deadLetters;
         this.jsonTransformer = jsonTransformer;
+        this.eventSerializer = eventSerializer;
     }
 
     @Override
@@ -59,6 +63,7 @@ public class EventDeadLettersRoutes implements Routes {
     public void define(Service service) {
         service.get(BASE_PATH + "/groups", this::listGroups, jsonTransformer);
         service.get(BASE_PATH + "/groups/" + GROUP_PARAM + "/events", this::listFailedEvents, jsonTransformer);
+        service.get(BASE_PATH + "/groups/" + GROUP_PARAM + "/events/" + EVENT_ID_PARAM, this::getEventDetails);
     }
 
     private Iterable<String> listGroups(Request request, Response response) {
@@ -77,6 +82,15 @@ public class EventDeadLettersRoutes implements Routes {
             .block();
     }
 
+    private String getEventDetails(Request request, Response response) {
+        Group group = parseGroup(request);
+        Event.EventId eventId = parseEventId(request);
+
+        return deadLetters.failedEvent(group, eventId)
+            .map(eventSerializer::toJson)
+            .block();
+    }
+
     private Group parseGroup(Request request) {
         String groupAsString = request.params(GROUP_PARAM);
         try {
@@ -85,6 +99,20 @@ public class EventDeadLettersRoutes implements Routes {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .message("Can not deserialize the supplied group: " + groupAsString)
+                .cause(e)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .haltError();
+        }
+    }
+
+    private Event.EventId parseEventId(Request request) {
+        String eventIdAsString = request.params(EVENT_ID_PARAM);
+        try {
+            return Event.EventId.of(eventIdAsString);
+        } catch (Exception e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .message("Can not deserialize the supplied eventId: " + eventIdAsString)
                 .cause(e)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .haltError();
