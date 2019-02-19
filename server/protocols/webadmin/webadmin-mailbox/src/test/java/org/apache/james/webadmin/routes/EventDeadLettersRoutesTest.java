@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.routes;
 
 import static io.restassured.RestAssured.when;
+import static io.restassured.RestAssured.with;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.hamcrest.Matchers.contains;
@@ -273,6 +274,64 @@ class EventDeadLettersRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Can not deserialize the supplied group: invalid"));
+        }
+    }
+
+    @Nested
+    class Delete {
+        @Test
+        void deleteShouldReturnOk() {
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+
+            when()
+                .delete("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/events/" + UUID_1)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
+        void deleteShouldReturnOkWhenEventNotFound() {
+            when()
+                .delete("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/events/" + UUID_1)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
+        void deleteShouldFailWhenInvalidGroup() {
+            when()
+                .delete("/events/deadLetter/groups/invalid/events/" + UUID_1)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Can not deserialize the supplied group: invalid"));
+        }
+
+        @Test
+        void deleteShouldFailWhenInvalidEventId() {
+            when()
+                .delete("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/events/invalid")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Can not deserialize the supplied eventId: invalid"));
+        }
+
+        @Test
+        void deleteShouldRemoveEvent() {
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+
+            with()
+                .delete("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/events/" + UUID_1);
+
+            when()
+                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/events/" + UUID_1)
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404);
         }
     }
 }

@@ -64,6 +64,7 @@ public class EventDeadLettersRoutes implements Routes {
         service.get(BASE_PATH + "/groups", this::listGroups, jsonTransformer);
         service.get(BASE_PATH + "/groups/" + GROUP_PARAM + "/events", this::listFailedEvents, jsonTransformer);
         service.get(BASE_PATH + "/groups/" + GROUP_PARAM + "/events/" + EVENT_ID_PARAM, this::getEventDetails);
+        service.delete(BASE_PATH + "/groups/" + GROUP_PARAM + "/events/" + EVENT_ID_PARAM, this::deleteEvent);
     }
 
     private Iterable<String> listGroups(Request request, Response response) {
@@ -89,6 +90,15 @@ public class EventDeadLettersRoutes implements Routes {
         return deadLetters.failedEvent(group, eventId)
             .map(eventSerializer::toJson)
             .block();
+    }
+
+    private Response deleteEvent(Request request, Response response) {
+        Group group = parseGroup(request);
+        Event.EventId eventId = parseEventId(request);
+
+        deadLetters.remove(group, eventId).block();
+        response.status(HttpStatus.NO_CONTENT_204);
+        return response;
     }
 
     private Group parseGroup(Request request) {
