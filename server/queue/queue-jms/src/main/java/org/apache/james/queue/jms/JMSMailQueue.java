@@ -149,6 +149,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     public static final String FORCE_DELIVERY = "FORCE_DELIVERY";
 
     protected final String queueName;
+    protected final ConsumerOptions consumerOptions;
     protected final Connection connection;
     protected final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
     protected final Metric enqueuedMailsMetric;
@@ -166,6 +167,10 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     public JMSMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory,
                         String queueName, MetricFactory metricFactory,
                         GaugeRegistry gaugeRegistry) {
+        this(connectionFactory, mailQueueItemDecoratorFactory, queueName, ConsumerOptions.EMPTY, metricFactory, gaugeRegistry);
+    }
+
+    public JMSMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName, ConsumerOptions consumerOptions, MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
         try {
             connection = connectionFactory.createConnection();
             connection.start();
@@ -174,6 +179,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         }
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
         this.queueName = queueName;
+        this.consumerOptions = consumerOptions;
         this.metricFactory = metricFactory;
         this.enqueuedMailsMetric = metricFactory.generate(ENQUEUED_METRIC_NAME_PREFIX + queueName);
         this.dequeuedMailsMetric = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + queueName);
@@ -220,7 +226,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             TimeMetric timeMetric = metricFactory.timer(DEQUEUED_TIMER_METRIC_NAME_PREFIX + queueName);
             try {
                 session = connection.createSession(true, Session.SESSION_TRANSACTED);
-                Queue queue = session.createQueue(queueName);
+                Queue queue = session.createQueue(consumerOptions.applyForDequeue(queueName));
                 consumer = session.createConsumer(queue, getMessageSelector());
 
                 Message message = consumer.receive(10000);

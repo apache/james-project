@@ -43,6 +43,7 @@ import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
+import org.apache.james.queue.jms.ConsumerOptions;
 import org.apache.james.queue.jms.JMSMailQueue;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageInputStream;
@@ -94,21 +95,26 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
      * Construct a {@link ActiveMQMailQueue} which only use {@link BlobMessage}
      * 
      */
-    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, MetricFactory metricFactory,
+    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory,
+                             String queuename, ConsumerOptions consumerOptions, MetricFactory metricFactory,
                              GaugeRegistry gaugeRegistry) {
-        this(connectionFactory, mailQueueItemDecoratorFactory, queuename, true, metricFactory, gaugeRegistry);
+        this(connectionFactory, mailQueueItemDecoratorFactory, queuename, consumerOptions, true, metricFactory, gaugeRegistry);
     }
 
     /**
      * Construct a new ActiveMQ based {@link MailQueue}.
-     * 
+     *
      * @param connectionFactory
+     * @param mailQueueItemDecoratorFactory
      * @param queuename
+     * @param consumerOptions
      * @param useBlob
+     * @param metricFactory
      */
-    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queuename, boolean useBlob, MetricFactory metricFactory,
+    public ActiveMQMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory,
+                             String queuename, ConsumerOptions consumerOptions, boolean useBlob, MetricFactory metricFactory,
                              GaugeRegistry gaugeRegistry) {
-        super(connectionFactory, mailQueueItemDecoratorFactory, queuename, metricFactory, gaugeRegistry);
+        super(connectionFactory, mailQueueItemDecoratorFactory, queuename, consumerOptions, metricFactory, gaugeRegistry);
         this.useBlob = useBlob;
     }
 
@@ -136,7 +142,6 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
         }
     }
 
-    
     /**
      * Produce the mail to the JMS Queue
      */

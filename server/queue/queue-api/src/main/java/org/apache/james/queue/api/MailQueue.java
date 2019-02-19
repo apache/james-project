@@ -134,4 +134,5 @@ public interface MailQueue {
          */
         void done(boolean success) throws MailQueueException;
     }
+
 }
