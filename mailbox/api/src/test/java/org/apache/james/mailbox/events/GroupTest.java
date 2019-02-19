@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.events;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
@@ -74,5 +75,53 @@ class GroupTest {
     @Test
     void asStringShouldReturnNameWhenGenericGroup() {
         assertThat(new GenericGroup("abc").asString()).isEqualTo("org.apache.james.mailbox.events.GenericGroup-abc");
+    }
+
+    @Test
+    void deserializeShouldReturnGroupWhenGenericGroup() throws Exception {
+        assertThat(Group.deserialize("org.apache.james.mailbox.events.GenericGroup-abc"))
+            .isEqualTo(new GenericGroup("abc"));
+    }
+
+    @Test
+    void deserializeShouldReturnGroupWhenEmptyGenericGroup() throws Exception {
+        assertThat(Group.deserialize("org.apache.james.mailbox.events.GenericGroup-"))
+            .isEqualTo(new GenericGroup(""));
+    }
+
+    @Test
+    void deserializeShouldReturnGroupWhenExtendsGroup() throws Exception {
+        assertThat(Group.deserialize("org.apache.james.mailbox.events.EventBusTestFixture$GroupA"))
+            .isEqualTo(new EventBusTestFixture.GroupA());
+    }
+
+    @Test
+    void deserializeShouldThrowWhenClassNotFound() {
+        assertThatThrownBy(() -> Group.deserialize("org.apache.james.mailbox.events.Noone"))
+            .isInstanceOf(Group.GroupDeserializationException.class);
+    }
+
+    @Test
+    void deserializeShouldThrowWhenNotAGroup() {
+        assertThatThrownBy(() -> Group.deserialize("java.lang.String"))
+            .isInstanceOf(Group.GroupDeserializationException.class);
+    }
+
+    @Test
+    void deserializeShouldThrowWhenConstructorArgumentsRequired() {
+        assertThatThrownBy(() -> Group.deserialize("org.apache.james.mailbox.events.GenericGroup"))
+            .isInstanceOf(Group.GroupDeserializationException.class);
+    }
+
+    @Test
+    void deserializeShouldThrowWhenNull() {
+        assertThatThrownBy(() -> Group.deserialize(null))
+            .isInstanceOf(Group.GroupDeserializationException.class);
+    }
+
+    @Test
+    void deserializeShouldThrowWhenEmpty() {
+        assertThatThrownBy(() -> Group.deserialize(""))
+            .isInstanceOf(Group.GroupDeserializationException.class);
     }
 }

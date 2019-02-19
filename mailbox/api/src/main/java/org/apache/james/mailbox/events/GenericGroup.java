@@ -22,6 +22,7 @@ package org.apache.james.mailbox.events;
 import java.util.Objects;
 
 public class GenericGroup extends Group {
+    static final String DELIMITER = "-";
     private final String groupName;
 
     public GenericGroup(String groupName) {
@@ -30,7 +31,7 @@ public class GenericGroup extends Group {
 
     @Override
     public String asString() {
-        return super.asString() + "-" + groupName;
+        return super.asString() + DELIMITER + groupName;
     }
 
     @Override
