@@ -80,20 +80,6 @@ import reactor.core.publisher.Mono;
 
 public class StoreMessageIdManager implements MessageIdManager {
 
-    private static class MetadataWithMailboxId {
-        private final MessageMetaData messageMetaData;
-        private final MailboxId mailboxId;
-
-        public MetadataWithMailboxId(MessageMetaData messageMetaData, MailboxId mailboxId) {
-            this.messageMetaData = messageMetaData;
-            this.mailboxId = mailboxId;
-        }
-    }
-
-    private static MetadataWithMailboxId toMetadataWithMailboxId(MailboxMessage message) {
-        return new MetadataWithMailboxId(message.metaData(), message.getMailboxId());
-    }
-
     public static ImmutableSet<MailboxId> toMailboxIds(List<MailboxMessage> mailboxMessages) {
         return mailboxMessages
             .stream()
@@ -211,7 +197,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     private void delete(MessageIdMapper messageIdMapper, List<MailboxMessage> messageList, MailboxSession mailboxSession) throws MailboxException {
         ImmutableList<MetadataWithMailboxId> metadataWithMailbox = messageList.stream()
-            .map(StoreMessageIdManager::toMetadataWithMailboxId)
+            .map(MetadataWithMailboxId::from)
             .collect(Guavate.toImmutableList());
 
         messageIdMapper.delete(
@@ -222,14 +208,14 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
         Flux.fromIterable(metadataWithMailbox)
-            .flatMap(Throwing.<StoreMessageIdManager.MetadataWithMailboxId, Mono<Void>>function(
+            .flatMap(Throwing.<MetadataWithMailboxId, Mono<Void>>function(
                 metadataWithMailboxId -> eventBus.dispatch(EventFactory.expunged()
                     .randomEventId()
                     .mailboxSession(mailboxSession)
-                    .mailbox(mailboxMapper.findMailboxById(metadataWithMailboxId.mailboxId))
-                    .addMetaData(metadataWithMailboxId.messageMetaData)
+                    .mailbox(mailboxMapper.findMailboxById(metadataWithMailboxId.getMailboxId()))
+                    .addMetaData(metadataWithMailboxId.getMessageMetaData())
                     .build(),
-                new MailboxIdRegistrationKey(metadataWithMailboxId.mailboxId)))
+                new MailboxIdRegistrationKey(metadataWithMailboxId.getMailboxId())))
                 .sneakyThrow())
             .then()
             .block();
