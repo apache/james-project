@@ -61,8 +61,9 @@ public interface MessageMapper extends Mapper {
      * @param mailbox
      * @param messageRange
      * @return list of {@link MessageUid} which are marked as deleted
+     * @throws MailboxException
      */
-    List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange);
+    List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) throws MailboxException;
 
     /**
      * Return the count of messages in the mailbox

@@ -365,7 +365,7 @@ public abstract class MessageMapperTest {
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE), MessageRange.one(message5.getUid()));
         assertThat(messageMapper.findFirstUnseenMessageUid(benwaInboxMailbox)).isEqualTo(message2.getUid());
     }
-
+/*
     @Test
     public void expungeMarkedForDeletionInMailboxShouldReturnEmptyResultOnEmptyMailbox() throws MailboxException, IOException {
         assertThat(messageMapper.expungeMarkedForDeletionInMailbox(benwaInboxMailbox, MessageRange.all())).isEmpty();
@@ -450,7 +450,7 @@ public abstract class MessageMapperTest {
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Full, LIMIT);
 
         assertMessages(Lists.newArrayList(retrievedMessageIterator)).containOnly(message1, message2, message3, message5);
-    }
+    }*/
 
     @Test
     public void getHighestMoseqShouldBeEqualToZeroOnEmptyMailbox() throws MailboxException {
@@ -1076,7 +1076,7 @@ public abstract class MessageMapperTest {
                 message4.getUid(),
                 message5.getUid());
     }
-
+/*
     @Test
     public void getUidsShouldNotReturnUidsOfExpungedMessages() throws Exception {
         saveMessages();
@@ -1095,7 +1095,7 @@ public abstract class MessageMapperTest {
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.REPLACE), MessageRange.one(message4.getUid()));
         return messageMapper.expungeMarkedForDeletionInMailbox(benwaInboxMailbox, range);
     }
-
+*/
     private SimpleMailbox createMailbox(MailboxPath mailboxPath) throws MailboxException {
         SimpleMailbox mailbox = new SimpleMailbox(mailboxPath, UID_VALIDITY);
         mailbox.setMailboxId(mapperProvider.generateId());

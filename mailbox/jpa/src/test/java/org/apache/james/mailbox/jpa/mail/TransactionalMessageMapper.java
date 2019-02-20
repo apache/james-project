@@ -76,10 +76,15 @@ public class TransactionalMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(final Mailbox mailbox, final MessageRange set)
-            throws MailboxException {
-       return messageMapper.execute(
-            () -> messageMapper.expungeMarkedForDeletionInMailbox(mailbox, set));
+    public List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) throws MailboxException {
+        return messageMapper.execute(
+            () -> messageMapper.retrieveMessagesMarkedForDeletion(mailbox, messageRange));
+    }
+
+    @Override
+    public Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) throws MailboxException {
+        return messageMapper.execute(
+            () -> messageMapper.deleteMessages(mailbox, uids));
     }
 
     @Override

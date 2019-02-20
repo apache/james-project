@@ -56,10 +56,14 @@ public class CachingMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(
-            Mailbox mailbox, MessageRange set) throws MailboxException {
+    public List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) throws MailboxException {
+        return underlying.retrieveMessagesMarkedForDeletion(mailbox, messageRange);
+    }
+
+    @Override
+    public Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) throws MailboxException {
         invalidateMetadata(mailbox);
-        return underlying.expungeMarkedForDeletionInMailbox(mailbox, set);
+        return underlying.deleteMessages(mailbox, uids);
     }
 
     @Override
@@ -140,7 +144,6 @@ public class CachingMessageMapper implements MessageMapper {
 
     private void invalidateMetadata(Mailbox mailbox) {
         cache.invalidate(mailbox);
-
     }
 
     @Override

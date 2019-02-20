@@ -55,6 +55,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 import org.apache.openjpa.persistence.ArgumentException;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 
@@ -197,42 +198,68 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     }
 
     @Override
-    public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange set)
-            throws MailboxException {
+    public List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) throws MailboxException {
         try {
-            final Map<MessageUid, MessageMetaData> data;
-            final List<MailboxMessage> results;
-            final MessageUid from = set.getUidFrom();
-            final MessageUid to = set.getUidTo();
             JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+            List<MailboxMessage> messages = findDeletedMessages(messageRange, mailboxId);
+            return getUidList(messages);
+        } catch (PersistenceException e) {
+            throw new MailboxException("Search of MessageRange " + messageRange + " failed in mailbox " + mailbox, e);
+        }
+    }
 
-            switch (set.getType()) {
+    @Override
+    public Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) throws MailboxException {
+        JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+        Map<MessageUid, MessageMetaData> data = new HashMap<>();
+        List<MessageRange> ranges = MessageRange.toRanges(uids);
+
+        ranges.forEach(range -> {
+            List<MailboxMessage> messages = findDeletedMessages(range, mailboxId);
+            data.putAll(createMetaData(messages));
+            deleteDeletedMessages(range, mailboxId);
+        });
+
+        return data;
+    }
+
+    private List<MailboxMessage> findDeletedMessages(MessageRange messageRange, JPAId mailboxId) {
+        MessageUid from = messageRange.getUidFrom();
+        MessageUid to = messageRange.getUidTo();
+
+        switch (messageRange.getType()) {
             case ONE:
-                results = findDeletedMessagesInMailboxWithUID(mailboxId, from);
-                data = createMetaData(results);
+                return findDeletedMessagesInMailboxWithUID(mailboxId, from);
+            case RANGE:
+                return findDeletedMessagesInMailboxBetweenUIDs(mailboxId, from, to);
+            case FROM:
+                return findDeletedMessagesInMailboxAfterUID(mailboxId, from);
+            case ALL:
+                return findDeletedMessagesInMailbox(mailboxId);
+            default:
+                throw new RuntimeException();
+        }
+    }
+
+    private void deleteDeletedMessages(MessageRange messageRange, JPAId mailboxId) {
+        MessageUid from = messageRange.getUidFrom();
+        MessageUid to = messageRange.getUidTo();
+
+        switch (messageRange.getType()) {
+            case ONE:
                 deleteDeletedMessagesInMailboxWithUID(mailboxId, from);
                 break;
             case RANGE:
-                results = findDeletedMessagesInMailboxBetweenUIDs(mailboxId, from, to);
-                data = createMetaData(results);
                 deleteDeletedMessagesInMailboxBetweenUIDs(mailboxId, from, to);
                 break;
             case FROM:
-                results = findDeletedMessagesInMailboxAfterUID(mailboxId, from);
-                data = createMetaData(results);
                 deleteDeletedMessagesInMailboxAfterUID(mailboxId, from);
                 break;
-            default:
             case ALL:
-                results = findDeletedMessagesInMailbox(mailboxId);
                 deleteDeletedMessagesInMailbox(mailboxId);
-                data = createMetaData(results);
                 break;
-            }
-
-            return data;
-        } catch (PersistenceException e) {
-            throw new MailboxException("Search of MessageRange " + set + " failed in mailbox " + mailbox, e);
+            default:
+                throw new RuntimeException();
         }
     }
 
@@ -383,6 +410,12 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
             data.put(m.getUid(), m.metaData());
         }
         return data;
+    }
+
+    private List<MessageUid> getUidList(List<MailboxMessage> messages) {
+        return messages.stream()
+            .map(message -> message.getUid())
+            .collect(Guavate.toImmutableList());
     }
 
     private int deleteDeletedMessagesInMailbox(JPAId mailboxId) {

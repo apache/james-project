@@ -120,10 +120,13 @@ public class StoreMailboxMessageResultIteratorTest {
         }
 
         @Override
-        public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange set)
-                throws MailboxException {
+        public List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) throws MailboxException {
             throw new UnsupportedOperationException();
+        }
 
+        @Override
+        public Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) throws MailboxException {
+            throw new UnsupportedOperationException();
         }
 
         @Override

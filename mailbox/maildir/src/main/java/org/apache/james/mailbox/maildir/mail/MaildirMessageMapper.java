@@ -53,6 +53,9 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
+
 public class MaildirMessageMapper extends AbstractMessageMapper {
 
     private final MaildirStore maildirStore;
@@ -207,37 +210,52 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
     }
 
     @Override
-    public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange set)
-            throws MailboxException {
-        List<MailboxMessage> results = new ArrayList<>();
-        final MessageUid from = set.getUidFrom();
-        final MessageUid to = set.getUidTo();
-        final Type type = set.getType();
-        switch (type) {
-        default:
-        case ALL:
-            results = findMessagesInMailbox(mailbox, MaildirMessageName.FILTER_DELETED_MESSAGES, -1);
-            break;
-        case FROM:
-            results = findMessagesInMailboxBetweenUIDs(mailbox, MaildirMessageName.FILTER_DELETED_MESSAGES, from, null,
-                    -1);
-            break;
-        case ONE:
-            results = findDeletedMessageInMailboxWithUID(mailbox, from);
-            break;
-        case RANGE:
-            results = findMessagesInMailboxBetweenUIDs(mailbox, MaildirMessageName.FILTER_DELETED_MESSAGES, from, to,
-                    -1);
-            break;
-        }
-        Map<MessageUid, MessageMetaData> uids = new HashMap<>();
-        for (MailboxMessage m : results) {
-            MessageUid uid = m.getUid();
-            uids.put(uid, m.metaData());
-            delete(mailbox, m);
+    public List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) throws MailboxException {
+        List<MailboxMessage> messages = findDeletedMessages(mailbox, messageRange);
+        return getUidList(messages);
+    }
+
+    @Override
+    public Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) throws MailboxException {
+        Map<MessageUid, MessageMetaData> data = new HashMap<>();
+        List<MessageRange> ranges = MessageRange.toRanges(uids);
+
+        for (MessageRange range : ranges) {
+            List<MailboxMessage> messages = findDeletedMessages(mailbox, range);
+            data.putAll(deleteDeletedMessages(mailbox, messages));
         }
 
-        return uids;
+        return data;
+    }
+
+    private List<MailboxMessage> findDeletedMessages(Mailbox mailbox, MessageRange messageRange) throws MailboxException {
+        MessageUid from = messageRange.getUidFrom();
+        MessageUid to = messageRange.getUidTo();
+
+        switch (messageRange.getType()) {
+            case ONE:
+                return findDeletedMessageInMailboxWithUID(mailbox, from);
+            case RANGE:
+                return findMessagesInMailboxBetweenUIDs(mailbox, MaildirMessageName.FILTER_DELETED_MESSAGES, from, to, -1);
+            case FROM:
+                return findMessagesInMailboxBetweenUIDs(mailbox, MaildirMessageName.FILTER_DELETED_MESSAGES, from, null, -1);
+            case ALL:
+                return findMessagesInMailbox(mailbox, MaildirMessageName.FILTER_DELETED_MESSAGES, -1);
+            default:
+                throw new RuntimeException();
+        }
+    }
+
+    private Map<MessageUid, MessageMetaData> deleteDeletedMessages(Mailbox mailbox, List<MailboxMessage> messages) throws MailboxException {
+        return messages.stream()
+            .peek(Throwing.<MailboxMessage>consumer(message -> delete(mailbox, message)).sneakyThrow())
+            .collect(Guavate.toImmutableMap(MailboxMessage::getUid, MailboxMessage::metaData));
+    }
+
+    private List<MessageUid> getUidList(List<MailboxMessage> messages) {
+        return messages.stream()
+            .map(MailboxMessage::getUid)
+            .collect(Guavate.toImmutableList());
     }
 
     @Override

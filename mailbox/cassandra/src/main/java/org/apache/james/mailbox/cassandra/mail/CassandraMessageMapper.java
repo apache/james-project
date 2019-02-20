@@ -208,7 +208,8 @@ public class CassandraMessageMapper implements MessageMapper {
             .block();
     }
 
-    public Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) throws MailboxException {
+    @Override
+    public Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         return Flux.fromStream(uids.stream())
