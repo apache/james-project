@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.inmemory.manager;
 
+import java.util.Set;
+
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -118,11 +120,16 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     }
 
     public Resources createResources(GroupMembershipResolver groupMembershipResolver, int limitAnnotationCount, int limitAnnotationSize) {
+        return createResources(groupMembershipResolver, limitAnnotationCount, limitAnnotationSize, PreDeletionHook.NO_PRE_DELETION_HOOK);
+    }
+
+    public Resources createResources(GroupMembershipResolver groupMembershipResolver, int limitAnnotationCount, int limitAnnotationSize,
+                                     Set<PreDeletionHook> preDeletionHooks) {
         FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
         fakeAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
         fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
 
-        return createResources(groupMembershipResolver, fakeAuthenticator, FakeAuthorizator.defaultReject(), limitAnnotationCount, limitAnnotationSize);
+        return createResources(groupMembershipResolver, fakeAuthenticator, FakeAuthorizator.defaultReject(), limitAnnotationCount, limitAnnotationSize, preDeletionHooks);
     }
 
     public StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver, Authenticator authenticator, Authorizator authorizator) {
@@ -138,15 +145,26 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
                                       int limitAnnotationCount, int limitAnnotationSize) {
 
         return createResources(new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory())),
-            groupMembershipResolver, authenticator, authorizator, limitAnnotationCount, limitAnnotationSize);
+            groupMembershipResolver, authenticator, authorizator, limitAnnotationCount, limitAnnotationSize, PreDeletionHook.NO_PRE_DELETION_HOOK);
+    }
+
+    private Resources createResources(GroupMembershipResolver groupMembershipResolver,
+                                      Authenticator authenticator, Authorizator authorizator,
+                                      int limitAnnotationCount, int limitAnnotationSize, Set<PreDeletionHook> preDeletionHooks) {
+
+        return createResources(new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory())),
+            groupMembershipResolver, authenticator, authorizator, limitAnnotationCount, limitAnnotationSize, preDeletionHooks);
     }
 
     public Resources createResources(EventBus eventBus, Authenticator authenticator, Authorizator authorizator) {
         return createResources(eventBus,
-            new SimpleGroupMembershipResolver(), authenticator, authorizator, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
+            new SimpleGroupMembershipResolver(), authenticator, authorizator, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE,
+            PreDeletionHook.NO_PRE_DELETION_HOOK);
     }
 
-    private Resources createResources(EventBus eventBus, GroupMembershipResolver groupMembershipResolver, Authenticator authenticator, Authorizator authorizator, int limitAnnotationCount, int limitAnnotationSize) {
+    private Resources createResources(EventBus eventBus, GroupMembershipResolver groupMembershipResolver, Authenticator authenticator, Authorizator authorizator,
+                                      int limitAnnotationCount, int limitAnnotationSize,
+                                      Set<PreDeletionHook> preDeletionHooks) {
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(),
             groupMembershipResolver, eventBus);
@@ -174,7 +192,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             storeRightManager,
             quotaComponents,
             index,
-            PreDeletionHook.NO_PRE_DELETION_HOOK);
+            preDeletionHooks);
 
         eventBus.register(listeningCurrentQuotaUpdater);
         eventBus.register(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider));
@@ -196,9 +214,9 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             factory,
             quotaComponents.getQuotaManager(),
             quotaComponents.getQuotaRootResolver(),
-            PreDeletionHook.NO_PRE_DELETION_HOOK);
+            mailboxManager.getPreDeletionHooks());
     }
-    
+
     @Override
     public QuotaManager retrieveQuotaManager(StoreMailboxManager mailboxManager) {
         return mailboxManager.getQuotaComponents().getQuotaManager();

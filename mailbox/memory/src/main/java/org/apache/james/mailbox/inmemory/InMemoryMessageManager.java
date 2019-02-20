@@ -1,6 +1,7 @@
 package org.apache.james.mailbox.inmemory;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.mail.Flags;
 
@@ -38,10 +39,11 @@ public class InMemoryMessageManager extends StoreMessageManager {
                                   MessageParser messageParser,
                                   MessageId.Factory messageIdFactory,
                                   BatchSizes batchSizes,
-                                  StoreRightManager storeRightManager) {
+                                  StoreRightManager storeRightManager,
+                                  Set<PreDeletionHook> preDeletionHooks) {
 
         super(InMemoryMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox, quotaManager, quotaRootResolver,
-            messageParser, messageIdFactory, batchSizes, storeRightManager, PreDeletionHook.NO_PRE_DELETION_HOOK);
+            messageParser, messageIdFactory, batchSizes, storeRightManager, preDeletionHooks);
         this.mapperFactory = (InMemoryMailboxSessionMapperFactory) mapperFactory;
     }
 

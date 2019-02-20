@@ -21,6 +21,7 @@ package org.apache.james.mailbox.inmemory;
 
 import org.apache.james.mailbox.MailboxManagerStressTest;
 import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.junit.Before;
 
 public class MemoryMailboxManagerStressTest extends MailboxManagerStressTest<InMemoryMailboxManager> {
@@ -33,7 +34,7 @@ public class MemoryMailboxManagerStressTest extends MailboxManagerStressTest<InM
     
     @Override
     protected InMemoryMailboxManager provideManager() {
-        return MemoryMailboxManagerProvider.provideMailboxManager();
+        return MemoryMailboxManagerProvider.provideMailboxManager(PreDeletionHook.NO_PRE_DELETION_HOOK);
     }
 
     @Override

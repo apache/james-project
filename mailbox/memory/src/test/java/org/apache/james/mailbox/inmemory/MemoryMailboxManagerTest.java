@@ -21,19 +21,12 @@ package org.apache.james.mailbox.inmemory;
 
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.events.EventBus;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Nested;
 
 public class MemoryMailboxManagerTest extends MailboxManagerTest<InMemoryMailboxManager> {
 
-    @Disabled("will enable at later commits")
-    @Nested
-    class HookTests {
-    }
-
     @Override
     protected InMemoryMailboxManager provideMailboxManager() {
-        return MemoryMailboxManagerProvider.provideMailboxManager();
+        return MemoryMailboxManagerProvider.provideMailboxManager(preDeletionHooks());
     }
 
     @Override

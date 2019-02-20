@@ -87,6 +87,7 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
             getMessageParser(),
             getMessageIdFactory(),
             configuration.getBatchSizes(),
-            getStoreRightManager());
+            getStoreRightManager(),
+            getPreDeletionHooks());
     }
 }
