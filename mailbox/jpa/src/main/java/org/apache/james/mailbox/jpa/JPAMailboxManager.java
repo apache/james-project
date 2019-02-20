@@ -24,6 +24,7 @@ import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.jpa.mail.JPAMailboxMapper;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -62,7 +63,7 @@ public abstract class JPAMailboxManager extends StoreMailboxManager {
         super(mailboxSessionMapperFactory, sessionProvider, locker,
             messageParser, messageIdFactory, annotationManager,
             eventBus, storeRightManager, quotaComponents,
-            index, MailboxManagerConfiguration.DEFAULT);
+            index, MailboxManagerConfiguration.DEFAULT, PreDeletionHook.NO_PRE_DELETION_HOOK);
     }
     
     @Override

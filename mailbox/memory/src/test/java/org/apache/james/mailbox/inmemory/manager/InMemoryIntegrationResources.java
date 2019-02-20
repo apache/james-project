@@ -173,7 +173,8 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             annotationManager,
             storeRightManager,
             quotaComponents,
-            index);
+            index,
+            PreDeletionHook.NO_PRE_DELETION_HOOK);
 
         eventBus.register(listeningCurrentQuotaUpdater);
         eventBus.register(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider));

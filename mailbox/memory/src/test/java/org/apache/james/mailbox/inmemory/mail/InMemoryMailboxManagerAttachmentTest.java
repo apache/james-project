@@ -30,6 +30,7 @@ import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -76,12 +77,12 @@ public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManager
 
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
         mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(),
-                new MessageParser(), messageIdFactory, eventBus, annotationManager, storeRightManager, quotaComponents, index);
+                new MessageParser(), messageIdFactory, eventBus, annotationManager, storeRightManager, quotaComponents, index, PreDeletionHook.NO_PRE_DELETION_HOOK);
         MessageParser failingMessageParser = mock(MessageParser.class);
         when(failingMessageParser.retrieveAttachments(any(InputStream.class)))
             .thenThrow(new RuntimeException("Message parser set to fail"));
         parseFailingMailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(),
-            failingMessageParser, messageIdFactory, eventBus, annotationManager, storeRightManager, quotaComponents, index);
+            failingMessageParser, messageIdFactory, eventBus, annotationManager, storeRightManager, quotaComponents, index, PreDeletionHook.NO_PRE_DELETION_HOOK);
         super.setUp();
     }
 

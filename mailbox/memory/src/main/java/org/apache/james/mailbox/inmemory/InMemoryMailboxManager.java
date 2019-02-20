@@ -20,12 +20,14 @@
 package org.apache.james.mailbox.inmemory;
 
 import java.util.EnumSet;
+import java.util.Set;
 
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -56,9 +58,11 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
                                   StoreMailboxAnnotationManager annotationManager,
                                   StoreRightManager storeRightManager,
                                   QuotaComponents quotaComponents,
-                                  MessageSearchIndex searchIndex) {
+                                  MessageSearchIndex searchIndex,
+                                  Set<PreDeletionHook> preDeletionHooks) {
         super(mailboxSessionMapperFactory, sessionProvider, locker, messageParser, messageIdFactory,
-            annotationManager, eventBus, storeRightManager, quotaComponents, searchIndex, MailboxManagerConfiguration.DEFAULT);
+            annotationManager, eventBus, storeRightManager, quotaComponents, searchIndex, MailboxManagerConfiguration.DEFAULT,
+            preDeletionHooks);
     }
 
     @Override

@@ -8,6 +8,7 @@ import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -40,7 +41,7 @@ public class InMemoryMessageManager extends StoreMessageManager {
                                   StoreRightManager storeRightManager) {
 
         super(InMemoryMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox, quotaManager, quotaRootResolver,
-            messageParser, messageIdFactory, batchSizes, storeRightManager);
+            messageParser, messageIdFactory, batchSizes, storeRightManager, PreDeletionHook.NO_PRE_DELETION_HOOK);
         this.mapperFactory = (InMemoryMailboxSessionMapperFactory) mapperFactory;
     }
 

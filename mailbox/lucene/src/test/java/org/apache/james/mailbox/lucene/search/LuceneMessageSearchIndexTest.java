@@ -78,7 +78,8 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
             annotationManager,
             storeRightManager,
             quotaComponents,
-            luceneMessageSearchIndex);
+            luceneMessageSearchIndex,
+            PreDeletionHook.NO_PRE_DELETION_HOOK);
 
         messageIdManager = new StoreMessageIdManager(
             storeMailboxManager,

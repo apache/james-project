@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra;
 
 import java.util.EnumSet;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -27,6 +28,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -64,7 +66,8 @@ public class CassandraMailboxManager extends StoreMailboxManager {
                                    MessageId.Factory messageIdFactory, EventBus eventBus,
                                    StoreMailboxAnnotationManager annotationManager, StoreRightManager storeRightManager,
                                    QuotaComponents quotaComponents, MessageSearchIndex index,
-                                   MailboxManagerConfiguration configuration) {
+                                   MailboxManagerConfiguration configuration,
+                                   Set<PreDeletionHook> preDeletionHooks) {
         super(mapperFactory,
             sessionProvider,
             locker,
@@ -75,7 +78,8 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             storeRightManager,
             quotaComponents,
             index,
-            configuration);
+            configuration,
+            preDeletionHooks);
         this.locker = locker;
         this.mapperFactory = mapperFactory;
     }
@@ -109,7 +113,8 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             getMessageParser(),
             getMessageIdFactory(),
             configuration.getBatchSizes(),
-            getStoreRightManager());
+            getStoreRightManager(),
+            getPreDeletionHooks());
     }
 
 }

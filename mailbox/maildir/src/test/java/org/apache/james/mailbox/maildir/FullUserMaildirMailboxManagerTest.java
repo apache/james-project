@@ -22,9 +22,18 @@ import org.apache.james.junit.TemporaryFolderExtension;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class FullUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailboxManager> {
+
+    @Disabled("Maildir is using DefaultMessageId which doesn't support full feature of a messageId, which is an essential" +
+        "element of the Vault")
+    @Nested
+    class HookTests {
+    }
+
     @RegisterExtension
     TemporaryFolderExtension temporaryFolder = new TemporaryFolderExtension();
     

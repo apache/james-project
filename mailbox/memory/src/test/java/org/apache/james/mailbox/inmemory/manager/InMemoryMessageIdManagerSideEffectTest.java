@@ -83,7 +83,8 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
             new StoreMailboxAnnotationManager(mapperFactory, rightManager),
             rightManager,
             quotaComponents,
-            index);
+            index,
+            preDeletionHooks);
         StoreMessageIdManager messageIdManager = new StoreMessageIdManager(
             mailboxManager,
             mapperFactory,

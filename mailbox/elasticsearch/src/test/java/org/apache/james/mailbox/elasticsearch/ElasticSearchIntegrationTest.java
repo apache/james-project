@@ -152,7 +152,8 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
             annotationManager,
             storeRightManager,
             quotaComponents,
-            elasticSearchListeningMessageSearchIndex);
+            elasticSearchListeningMessageSearchIndex,
+            PreDeletionHook.NO_PRE_DELETION_HOOK);
 
         messageIdManager = new StoreMessageIdManager(
             storeMailboxManager,

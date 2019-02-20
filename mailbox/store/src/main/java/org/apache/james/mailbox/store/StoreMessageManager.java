@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.apache.james.mailbox.extension.PreDeletionHook.DeleteOperation;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,6 +31,7 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -44,6 +47,7 @@ import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
@@ -51,6 +55,7 @@ import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.ReadOnlyException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxCounters;
@@ -89,15 +94,19 @@ import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
 import org.apache.james.util.BodyOffsetInputStream;
 import org.apache.james.util.IteratorWrapper;
+import org.apache.james.util.StreamUtils;
 import org.apache.james.util.streams.Iterators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * Base class for {@link MessageManager}
@@ -112,6 +121,7 @@ import reactor.core.publisher.Flux;
  */
 public class StoreMessageManager implements MessageManager {
 
+    private static final int NO_LIMIT = -1;
     private static final MailboxCounters ZERO_MAILBOX_COUNTERS = MailboxCounters.builder()
         .count(0)
         .unseen(0)
@@ -148,12 +158,13 @@ public class StoreMessageManager implements MessageManager {
     private final MessageParser messageParser;
     private final Factory messageIdFactory;
     private final BatchSizes batchSizes;
+    private final Set<PreDeletionHook> preDeletionHooks;
 
     public StoreMessageManager(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities, MailboxSessionMapperFactory mapperFactory,
                                MessageSearchIndex index, EventBus eventBus,
                                MailboxPathLocker locker, Mailbox mailbox,
                                QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes,
-                               StoreRightManager storeRightManager) {
+                               StoreRightManager storeRightManager, Set<PreDeletionHook> preDeletionHooks) {
         this.messageCapabilities = messageCapabilities;
         this.eventBus = eventBus;
         this.mailbox = mailbox;
@@ -166,6 +177,7 @@ public class StoreMessageManager implements MessageManager {
         this.messageIdFactory = messageIdFactory;
         this.batchSizes = batchSizes;
         this.storeRightManager = storeRightManager;
+        this.preDeletionHooks = preDeletionHooks;
     }
 
     protected Factory getMessageIdFactory() {
@@ -283,6 +295,8 @@ public class StoreMessageManager implements MessageManager {
 
     private Map<MessageUid, MessageMetaData> deleteMessages(List<MessageUid> messageUids, MailboxSession session) throws MailboxException {
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
+
+        runPredeletionHooks(messageUids, session);
 
         return messageMapper.execute(
             () -> messageMapper.deleteMessages(getMailboxEntity(), messageUids));
@@ -713,6 +727,24 @@ public class StoreMessageManager implements MessageManager {
             return members;
         });
 
+    }
+
+    private void runPredeletionHooks(List<MessageUid> uids, MailboxSession session) throws MailboxException {
+        MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
+
+        DeleteOperation deleteOperation = Flux.fromIterable(MessageRange.toRanges(uids))
+            .publishOn(Schedulers.elastic())
+            .flatMap(range -> Mono.fromCallable(() -> messageMapper.findInMailbox(mailbox, range, FetchType.Metadata, NO_LIMIT))
+                .flatMapMany(iterator -> Flux.fromStream(Iterators.toStream(iterator))))
+            .map(mailboxMessage -> MetadataWithMailboxId.from(mailboxMessage.metaData(), mailboxMessage.getMailboxId()))
+            .collect(Guavate.toImmutableList())
+            .map(DeleteOperation::from)
+            .block();
+
+        Flux.fromIterable(preDeletionHooks)
+            .publishOn(Schedulers.elastic())
+            .flatMap(hook -> hook.notifyDelete(deleteOperation))
+            .blockLast();
     }
 
     @Override

@@ -23,11 +23,18 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 import javax.mail.Flags;
 
@@ -42,8 +49,10 @@ import org.apache.james.mailbox.events.MessageMoveEvent;
 import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.mock.DataProvisioner;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -53,6 +62,7 @@ import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -61,14 +71,18 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.util.EventCollector;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+
+import reactor.core.publisher.Mono;
 
 /**
  * Test the {@link MailboxManager} methods that
@@ -88,17 +102,35 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
     private MailboxSession session;
     private Message.Builder message;
 
+    private PreDeletionHook preDeletionHook1;
+    private PreDeletionHook preDeletionHook2;
+
     protected abstract T provideMailboxManager();
 
     protected abstract EventBus retrieveEventBus(T mailboxManager);
 
+    protected Set<PreDeletionHook> preDeletionHooks() {
+        return ImmutableSet.of(preDeletionHook1, preDeletionHook2);
+    }
+
     @BeforeEach
     void setUp() throws Exception {
+        setupMockForPreDeletionHooks();
         this.mailboxManager = provideMailboxManager();
 
         this.message = Message.Builder.of()
             .setSubject("test")
             .setBody("testmail", StandardCharsets.UTF_8);
+    }
+
+    private void setupMockForPreDeletionHooks() {
+        preDeletionHook1 = mock(PreDeletionHook.class);
+        when(preDeletionHook1.notifyDelete(any(PreDeletionHook.DeleteOperation.class)))
+            .thenReturn(Mono.empty());
+
+        preDeletionHook2 = mock(PreDeletionHook.class);
+        when(preDeletionHook2.notifyDelete(any(PreDeletionHook.DeleteOperation.class)))
+            .thenReturn(Mono.empty());
     }
 
     @AfterEach
@@ -1298,6 +1330,146 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.endProcessingRequest(session);
 
             assertThat(session.isOpen()).isFalse();
+        }
+    }
+
+    @Nested
+    class HookTests {
+
+        @Nested
+        class PreDeletion {
+
+            private final QuotaRoot quotaRoot = QuotaRoot.quotaRoot("#private&USER_1", Optional.empty());
+            private MailboxPath inbox;
+            private MailboxId inboxId;
+            private MailboxId anotherMailboxId;
+            private MessageManager inboxManager;
+            private MessageManager anotherMailboxManager;
+
+            @BeforeEach
+            void setUp() throws Exception {
+                session = mailboxManager.createSystemSession(USER_1);
+                inbox = MailboxPath.inbox(session);
+
+                MailboxPath anotherMailboxPath = MailboxPath.forUser(USER_1, "anotherMailbox");
+                anotherMailboxId = mailboxManager.createMailbox(anotherMailboxPath, session).get();
+
+                inboxId = mailboxManager.createMailbox(inbox, session).get();
+                inboxManager = mailboxManager.getMailbox(inbox, session);
+                anotherMailboxManager = mailboxManager.getMailbox(anotherMailboxPath, session);
+            }
+
+            @Test
+            void expungeShouldCallAllPreDeletionHooks() throws Exception {
+                ComposedMessageId composeId = inboxManager.appendMessage(AppendCommand.builder()
+                    .build(message), session);
+                inboxManager.expunge(MessageRange.one(composeId.getUid()), session);
+
+                ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor1 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+                ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor2 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+                verify(preDeletionHook1, times(1)).notifyDelete(preDeleteCaptor1.capture());
+                verify(preDeletionHook2, times(1)).notifyDelete(preDeleteCaptor2.capture());
+
+                assertThat(preDeleteCaptor1.getValue().getDeletionMetadataList())
+                    .hasSize(1)
+                    .hasSameElementsAs(preDeleteCaptor2.getValue().getDeletionMetadataList())
+                    .allSatisfy(deleteMetadata -> SoftAssertions.assertSoftly(softy -> {
+                        softy.assertThat(deleteMetadata.getMailboxId()).isEqualTo(inboxId);
+                        softy.assertThat(deleteMetadata.getMessageMetaData().getMessageId()).isEqualTo(composeId.getMessageId());
+                    }));
+            }
+
+            @Test
+            void expungeShouldCallAllPreDeletionHooksOnEachMessageDeletionCall() throws Exception {
+                ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+                ComposedMessageId composeId2 = inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+
+                inboxManager.expunge(MessageRange.one(composeId1.getUid()), session);
+                inboxManager.expunge(MessageRange.one(composeId2.getUid()), session);
+
+                ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor1 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+                ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor2 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+                verify(preDeletionHook1, times(2)).notifyDelete(preDeleteCaptor1.capture());
+                verify(preDeletionHook2, times(2)).notifyDelete(preDeleteCaptor2.capture());
+
+                assertThat(preDeleteCaptor1.getAllValues())
+                    .hasSize(2)
+                    .hasSameElementsAs(preDeleteCaptor2.getAllValues())
+                    .flatExtracting(PreDeletionHook.DeleteOperation::getDeletionMetadataList)
+                    .allSatisfy(deleteMetadata -> assertThat(deleteMetadata.getMailboxId()).isEqualTo(inboxId))
+                    .extracting(deleteMetadata -> deleteMetadata.getMessageMetaData().getMessageId())
+                    .containsOnly(composeId1.getMessageId(), composeId2.getMessageId());
+            }
+
+            @Test
+            void expungeShouldCallAllPreDeletionHooksOnEachMessageDeletionOnDifferentMailboxes() throws Exception {
+                ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+                ComposedMessageId composeId2 = anotherMailboxManager.appendMessage(AppendCommand.builder().build(message), session);
+
+                inboxManager.expunge(MessageRange.one(composeId1.getUid()), session);
+                anotherMailboxManager.expunge(MessageRange.one(composeId2.getUid()), session);
+
+                ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor1 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+                ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor2 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+                verify(preDeletionHook1, times(2)).notifyDelete(preDeleteCaptor1.capture());
+                verify(preDeletionHook2, times(2)).notifyDelete(preDeleteCaptor2.capture());
+
+                assertThat(preDeleteCaptor1.getAllValues())
+                    .hasSameElementsAs(preDeleteCaptor2.getAllValues())
+                    .flatExtracting(PreDeletionHook.DeleteOperation::getDeletionMetadataList)
+                    .extracting(deleteMetadata -> deleteMetadata.getMessageMetaData().getMessageId())
+                    .containsOnly(composeId1.getMessageId(), composeId2.getMessageId());
+
+                assertThat(preDeleteCaptor1.getAllValues())
+                    .hasSameElementsAs(preDeleteCaptor2.getAllValues())
+                    .flatExtracting(PreDeletionHook.DeleteOperation::getDeletionMetadataList)
+                    .extracting(MetadataWithMailboxId::getMailboxId)
+                    .containsOnly(inboxId, anotherMailboxId);
+            }
+
+            @Test
+            void expungeShouldNotBeExecutedWhenOneOfPreDeleteHooksFails() throws Exception {
+                when(preDeletionHook1.notifyDelete(any(PreDeletionHook.DeleteOperation.class)))
+                    .thenThrow(new RuntimeException("throw at hook 1"));
+
+                ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+                assertThatThrownBy(() -> inboxManager.expunge(MessageRange.one(composeId1.getUid()), session))
+                    .isInstanceOf(RuntimeException.class);
+
+                assertThat(ImmutableList.copyOf(inboxManager.getMessages(MessageRange.one(composeId1.getUid()), FetchGroupImpl.MINIMAL, session))
+                        .stream()
+                        .map(MessageResult::getMessageId))
+                    .hasSize(1)
+                    .containsOnly(composeId1.getMessageId());
+            }
+
+            @Test
+            void expungeShouldBeExecutedAfterAllHooksFinish() throws Exception {
+                CountDownLatch latchForHook1 = new CountDownLatch(1);
+                when(preDeletionHook1.notifyDelete(any(PreDeletionHook.DeleteOperation.class)))
+                    .thenAnswer(invocation -> {
+                        latchForHook1.countDown();
+                        return Mono.empty();
+                    });
+
+                CountDownLatch latchForHook2 = new CountDownLatch(1);
+                when(preDeletionHook2.notifyDelete(any(PreDeletionHook.DeleteOperation.class)))
+                    .thenAnswer(invocation -> {
+                        latchForHook2.countDown();
+                        return Mono.empty();
+                    });
+
+                ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+                inboxManager.setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.ADD,
+                    MessageRange.one(composeId1.getUid()), session);
+                inboxManager.expunge(MessageRange.all(), session);
+
+                latchForHook1.await();
+                latchForHook2.await();
+
+                assertThat(inboxManager.getMessages(MessageRange.one(composeId1.getUid()), FetchGroupImpl.MINIMAL, session))
+                    .isEmpty();
+            }
         }
     }
 }

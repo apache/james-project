@@ -44,6 +44,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
@@ -110,6 +111,7 @@ public class StoreMailboxManager implements MailboxManager {
     private final QuotaRootResolver quotaRootResolver;
     private final QuotaComponents quotaComponents;
     private final MessageSearchIndex index;
+    private final Set<PreDeletionHook> preDeletionHooks;
     protected final MailboxManagerConfiguration configuration;
 
     @Inject
@@ -117,7 +119,8 @@ public class StoreMailboxManager implements MailboxManager {
                                MailboxPathLocker locker, MessageParser messageParser,
                                MessageId.Factory messageIdFactory, MailboxAnnotationManager annotationManager,
                                EventBus eventBus, StoreRightManager storeRightManager,
-                               QuotaComponents quotaComponents, MessageSearchIndex searchIndex, MailboxManagerConfiguration configuration) {
+                               QuotaComponents quotaComponents, MessageSearchIndex searchIndex, MailboxManagerConfiguration configuration,
+                               Set<PreDeletionHook> preDeletionHooks) {
         Preconditions.checkNotNull(eventBus);
         Preconditions.checkNotNull(mailboxSessionMapperFactory);
 
@@ -134,6 +137,7 @@ public class StoreMailboxManager implements MailboxManager {
         this.quotaComponents = quotaComponents;
         this.index = searchIndex;
         this.configuration = configuration;
+        this.preDeletionHooks = preDeletionHooks;
     }
 
     public QuotaComponents getQuotaComponents() {
@@ -202,6 +206,10 @@ public class StoreMailboxManager implements MailboxManager {
         return messageParser;
     }
 
+    public Set<PreDeletionHook> getPreDeletionHooks() {
+        return preDeletionHooks;
+    }
+
     /**
      * Generate an return the next uid validity
      *
@@ -251,7 +259,7 @@ public class StoreMailboxManager implements MailboxManager {
         return new StoreMessageManager(DEFAULT_NO_MESSAGE_CAPABILITIES, getMapperFactory(), getMessageSearchIndex(), getEventBus(),
                 getLocker(), mailbox, quotaManager,
             getQuotaComponents().getQuotaRootResolver(), getMessageParser(), getMessageIdFactory(), configuration.getBatchSizes(),
-            getStoreRightManager());
+            getStoreRightManager(), preDeletionHooks);
     }
 
     /**

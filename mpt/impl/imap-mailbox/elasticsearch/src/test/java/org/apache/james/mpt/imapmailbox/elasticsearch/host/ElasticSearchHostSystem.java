@@ -51,6 +51,7 @@ import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
@@ -140,7 +141,8 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
             annotationManager,
             storeRightManager,
             quotaComponents,
-            searchIndex);
+            searchIndex,
+            PreDeletionHook.NO_PRE_DELETION_HOOK);
 
         eventBus.register(searchIndex);
 

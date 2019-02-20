@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.mail.Flags;
 
@@ -27,6 +28,7 @@ import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -53,9 +55,11 @@ public class CassandraMessageManager extends StoreMessageManager {
                             EventBus eventBus, MailboxPathLocker locker, Mailbox mailbox, QuotaManager quotaManager,
                             QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory,
                             BatchSizes batchSizes,
-                            StoreRightManager storeRightManager) {
+                            StoreRightManager storeRightManager,
+                            Set<PreDeletionHook> preDeletionHooks) {
         super(CassandraMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
-            quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, storeRightManager);
+            quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, storeRightManager,
+            preDeletionHooks);
 
         this.mapperFactory = mapperFactory;
     }
