@@ -100,7 +100,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import reactor.core.publisher.Flux;
 
 /**
- * Base class for {@link org.apache.james.mailbox.MessageManager}
+ * Base class for {@link MessageManager}
  * implementations.
  * 
  * This base class take care of dispatching events to the registered
@@ -110,7 +110,7 @@ import reactor.core.publisher.Flux;
  * 
  * 
  */
-public class StoreMessageManager implements org.apache.james.mailbox.MessageManager {
+public class StoreMessageManager implements MessageManager {
 
     private static final MailboxCounters ZERO_MAILBOX_COUNTERS = MailboxCounters.builder()
         .count(0)
@@ -259,17 +259,44 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         if (!isWriteable(mailboxSession)) {
             throw new ReadOnlyException(getMailboxPath(), mailboxSession.getPathDelimiter());
         }
-        Map<MessageUid, MessageMetaData> uids = deleteMarkedInMailbox(set, mailboxSession);
 
+        List<MessageUid> uids = retrieveMessagesMarkedForDeletion(set, mailboxSession);
+        Map<MessageUid, MessageMetaData> deletedMessages = deleteMessages(uids, mailboxSession);
+
+        dispatchExpungeEvent(mailboxSession, deletedMessages);
+        return deletedMessages.keySet().iterator();
+    }
+
+    private List<MessageUid> retrieveMessagesMarkedForDeletion(MessageRange messageRange, MailboxSession session) throws MailboxException {
+        MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
+
+        return messageMapper.execute(
+            () -> messageMapper.retrieveMessagesMarkedForDeletion(getMailboxEntity(), messageRange));
+    }
+
+    @Override
+    public void delete(List<MessageUid> messageUids, MailboxSession mailboxSession) throws MailboxException {
+        Map<MessageUid, MessageMetaData> deletedMessages = deleteMessages(messageUids, mailboxSession);
+
+        dispatchExpungeEvent(mailboxSession, deletedMessages);
+    }
+
+    private Map<MessageUid, MessageMetaData> deleteMessages(List<MessageUid> messageUids, MailboxSession session) throws MailboxException {
+        MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
+
+        return messageMapper.execute(
+            () -> messageMapper.deleteMessages(getMailboxEntity(), messageUids));
+    }
+
+    private void dispatchExpungeEvent(MailboxSession mailboxSession, Map<MessageUid, MessageMetaData> deletedMessages) throws MailboxException {
         eventBus.dispatch(EventFactory.expunged()
-            .randomEventId()
-            .mailboxSession(mailboxSession)
-            .mailbox(getMailboxEntity())
-            .metaData(ImmutableSortedMap.copyOf(uids))
-            .build(),
+                .randomEventId()
+                .mailboxSession(mailboxSession)
+                .mailbox(getMailboxEntity())
+                .metaData(ImmutableSortedMap.copyOf(deletedMessages))
+                .build(),
             new MailboxIdRegistrationKey(mailbox.getMailboxId()))
             .block();
-        return uids.keySet().iterator();
     }
 
     @Override
@@ -686,14 +713,6 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             return members;
         });
 
-    }
-
-    protected Map<MessageUid, MessageMetaData> deleteMarkedInMailbox(final MessageRange range, MailboxSession session) throws MailboxException {
-
-        final MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
-
-        return messageMapper.execute(
-            () -> messageMapper.expungeMarkedForDeletionInMailbox(getMailboxEntity(), range));
     }
 
     @Override

@@ -105,7 +105,8 @@ public interface MessageManager {
     Iterator<MessageUid> search(SearchQuery searchQuery, MailboxSession mailboxSession) throws MailboxException;
 
     /**
-     * Expunges messages in the given range from this mailbox.
+     * Expunges messages in the given range from this mailbox by first retrieving the messages to be deleted
+     * and then deleting them.
      * 
      * @param set
      *            not null
@@ -116,6 +117,11 @@ public interface MessageManager {
      *             if anything went wrong
      */
     Iterator<MessageUid> expunge(MessageRange set, MailboxSession mailboxSession) throws MailboxException;
+
+    /**
+     * Deletes a list of messages given their uids in the mailbox.
+     */
+    void delete(List<MessageUid> uids, MailboxSession mailboxSession) throws MailboxException;
 
     /**
      * Sets flags on messages within the given range. The new flags are returned

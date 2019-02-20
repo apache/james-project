@@ -199,10 +199,19 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange messageRange) {
+    public List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         return deletedMessageDAO.retrieveDeletedMessage(mailboxId, messageRange)
+            .limitRate(cassandraConfiguration.getExpungeChunkSize())
+            .collect(Guavate.toImmutableList())
+            .block();
+    }
+
+    public Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) throws MailboxException {
+        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
+
+        return Flux.fromStream(uids.stream())
             .limitRate(cassandraConfiguration.getExpungeChunkSize())
             .flatMap(messageUid -> expungeOne(mailboxId, messageUid))
             .collect(Guavate.<SimpleMailboxMessage, MessageUid, MessageMetaData>toImmutableMap(MailboxMessage::getUid, MailboxMessage::metaData))

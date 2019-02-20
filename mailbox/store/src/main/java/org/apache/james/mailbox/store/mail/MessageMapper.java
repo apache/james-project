@@ -57,12 +57,12 @@ public interface MessageMapper extends Mapper {
             throws MailboxException;
 
     /**
-     * Return a {@link Iterator} which holds the uids for all deleted Messages for the given {@link MessageRange} which are marked for deletion
-     * The list must be ordered
+     *
+     * @param mailbox
+     * @param messageRange
+     * @return list of {@link MessageUid} which are marked as deleted
      */
-    Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(
-            Mailbox mailbox, MessageRange set)
-            throws MailboxException;
+    List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange);
 
     /**
      * Return the count of messages in the mailbox
@@ -79,7 +79,7 @@ public interface MessageMapper extends Mapper {
      * 
      * @param mailbox
      * @return unseenCount
-     * @throws StorageException
+     * @throws MailboxException
      */
     long countUnseenMessagesInMailbox(Mailbox mailbox)
             throws MailboxException;
@@ -91,9 +91,19 @@ public interface MessageMapper extends Mapper {
      * 
      * @param mailbox
      * @param message
-     * @throws StorageException
+     * @throws MailboxException
      */
     void delete(Mailbox mailbox, MailboxMessage message) throws MailboxException;
+
+    /**
+     * Delete the given list of {@link MessageUid}
+     *
+     * @param mailbox
+     * @param uids
+     * @return a {@link Map} which holds the uids and metadata for all deleted messages
+     * @throws MailboxException
+     */
+    Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) throws MailboxException;
 
     /**
      * Return the uid of the first unseen message. If non can be found null will get returned
@@ -101,7 +111,7 @@ public interface MessageMapper extends Mapper {
      * 
      * @param mailbox
      * @return uid or null
-     * @throws StorageException
+     * @throws MailboxException
      */
     MessageUid findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException;
 
@@ -120,7 +130,7 @@ public interface MessageMapper extends Mapper {
      * @param mailbox
      * @param message
      * @return uid
-     * @throws StorageException
+     * @throws MailboxException
      */
     MessageMetaData add(Mailbox mailbox, MailboxMessage message) throws MailboxException;
     
@@ -142,7 +152,7 @@ public interface MessageMapper extends Mapper {
      * 
      * @param mailbox the Mailbox to copy to
      * @param original the original to copy
-     * @throws StorageException
+     * @throws MailboxException
      */
     MessageMetaData copy(Mailbox mailbox,MailboxMessage original) throws MailboxException;
     
@@ -152,7 +162,7 @@ public interface MessageMapper extends Mapper {
      * 
      * @param mailbox the Mailbox to move to
      * @param original the original to move
-     * @throws StorageException
+     * @throws MailboxException
      */
     MessageMetaData move(Mailbox mailbox,MailboxMessage original) throws MailboxException;
     
