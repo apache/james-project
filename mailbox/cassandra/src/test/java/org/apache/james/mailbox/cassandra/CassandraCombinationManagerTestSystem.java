@@ -26,6 +26,7 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
@@ -39,7 +40,7 @@ public class CassandraCombinationManagerTestSystem extends CombinationManagerTes
     public static CombinationManagerTestSystem createTestingData(CassandraCluster cassandra, QuotaManager quotaManager, EventBus eventBus) {
         CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory(cassandra);
 
-        return new CassandraCombinationManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, eventBus),
+        return new CassandraCombinationManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, eventBus, PreDeletionHook.NO_PRE_DELETION_HOOK),
             mapperFactory,
             CassandraTestSystemFixture.createMailboxManager(mapperFactory));
     }

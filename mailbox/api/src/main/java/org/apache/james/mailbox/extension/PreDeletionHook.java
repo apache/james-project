@@ -21,10 +21,13 @@ package org.apache.james.mailbox.extension;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.reactivestreams.Publisher;
+
+import com.google.common.collect.ImmutableSet;
 
 public interface PreDeletionHook {
 
@@ -101,6 +104,8 @@ public interface PreDeletionHook {
             return Objects.hash(deletionId, deletionMetadataList);
         }
     }
+
+    Set<PreDeletionHook> NO_PRE_DELETION_HOOK = ImmutableSet.of();
 
     Publisher<Void> notifyDelete(DeleteOperation deleteOperation);
 }

@@ -37,10 +37,12 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.model.DeleteResult;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
@@ -95,17 +97,19 @@ public class StoreMessageIdManager implements MessageIdManager {
     private final MessageId.Factory messageIdFactory;
     private final QuotaManager quotaManager;
     private final QuotaRootResolver quotaRootResolver;
+    private final Set<PreDeletionHook> preDeletionHooks;
 
     @Inject
     public StoreMessageIdManager(MailboxManager mailboxManager, MailboxSessionMapperFactory mailboxSessionMapperFactory,
                                  EventBus eventBus, MessageId.Factory messageIdFactory,
-                                 QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) {
+                                 QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, Set<PreDeletionHook> preDeletionHooks) {
         this.mailboxManager = mailboxManager;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.eventBus = eventBus;
         this.messageIdFactory = messageIdFactory;
         this.quotaManager = quotaManager;
         this.quotaRootResolver = quotaRootResolver;
+        this.preDeletionHooks = preDeletionHooks;
     }
 
     @Override
@@ -167,7 +171,7 @@ public class StoreMessageIdManager implements MessageIdManager {
             .collect(Guavate.toImmutableList());
 
         if (!messageList.isEmpty()) {
-            delete(messageIdMapper, messageList, mailboxSession);
+            deleteWithPreHooks(messageIdMapper, messageList, mailboxSession);
             return DeleteResult.destroyed(messageId);
         }
         return DeleteResult.notFound(messageId);
@@ -187,7 +191,7 @@ public class StoreMessageIdManager implements MessageIdManager {
             .collect(Guavate.toImmutableSet());
         Sets.SetView<MessageId> nonAccessibleMessages = Sets.difference(ImmutableSet.copyOf(messageIds), accessibleMessages);
 
-        delete(messageIdMapper, messageList, mailboxSession);
+        deleteWithPreHooks(messageIdMapper, messageList, mailboxSession);
 
         return DeleteResult.builder()
             .addDestroyed(accessibleMessages)
@@ -195,11 +199,21 @@ public class StoreMessageIdManager implements MessageIdManager {
             .build();
     }
 
-    private void delete(MessageIdMapper messageIdMapper, List<MailboxMessage> messageList, MailboxSession mailboxSession) throws MailboxException {
+    private void deleteWithPreHooks(MessageIdMapper messageIdMapper, List<MailboxMessage> messageList, MailboxSession mailboxSession) throws MailboxException {
         ImmutableList<MetadataWithMailboxId> metadataWithMailbox = messageList.stream()
-            .map(MetadataWithMailboxId::from)
+            .map(mailboxMessage -> MetadataWithMailboxId.from(mailboxMessage.metaData(), mailboxMessage.getMailboxId()))
             .collect(Guavate.toImmutableList());
 
+        PreDeletionHook.DeleteOperation deleteOperation = PreDeletionHook.DeleteOperation.from(metadataWithMailbox);
+        Flux.fromIterable(preDeletionHooks)
+            .flatMap(preDeletionHook -> preDeletionHook.notifyDelete(deleteOperation))
+            .then(Mono.fromRunnable(Throwing.runnable(
+                () -> delete(messageIdMapper, messageList, mailboxSession, metadataWithMailbox))))
+            .block();
+    }
+
+    private void delete(MessageIdMapper messageIdMapper, List<MailboxMessage> messageList, MailboxSession mailboxSession,
+                        ImmutableList<MetadataWithMailboxId> metadataWithMailbox) throws MailboxException {
         messageIdMapper.delete(
             messageList.stream()
                 .collect(Guavate.toImmutableListMultimap(

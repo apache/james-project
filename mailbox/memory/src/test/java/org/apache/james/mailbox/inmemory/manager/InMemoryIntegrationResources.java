@@ -26,6 +26,7 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -193,7 +194,8 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             mailboxManager.getEventBus(),
             factory,
             quotaComponents.getQuotaManager(),
-            quotaComponents.getQuotaRootResolver());
+            quotaComponents.getQuotaRootResolver(),
+            PreDeletionHook.NO_PRE_DELETION_HOOK);
     }
     
     @Override

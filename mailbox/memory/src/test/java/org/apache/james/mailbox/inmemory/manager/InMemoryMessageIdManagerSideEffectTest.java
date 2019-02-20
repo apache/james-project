@@ -19,9 +19,12 @@
 
 package org.apache.james.mailbox.inmemory.manager;
 
+import java.util.Set;
+
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -55,7 +58,7 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
     }
 
     @Override
-    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, EventBus eventBus) {
+    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, EventBus eventBus, Set<PreDeletionHook> preDeletionHooks) {
         InMemoryMailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
 
         FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
@@ -87,7 +90,8 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
             eventBus,
             messageIdFactory,
             quotaManager,
-            quotaComponents.getQuotaRootResolver());
+            quotaComponents.getQuotaRootResolver(),
+            preDeletionHooks);
         return new MessageIdManagerTestSystem(messageIdManager, messageIdFactory, mapperFactory, mailboxManager);
     }
 }

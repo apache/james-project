@@ -19,10 +19,13 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import java.util.Set;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.AbstractMessageIdManagerSideEffectTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
@@ -60,7 +63,7 @@ public class CassandraMessageIdManagerSideEffectTest extends AbstractMessageIdMa
     }
 
     @Override
-    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, EventBus eventBus) {
-        return CassandraMessageIdManagerTestSystem.createTestingData(cassandra, quotaManager, eventBus);
+    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, EventBus eventBus, Set<PreDeletionHook> preDeletionHooks) {
+        return CassandraMessageIdManagerTestSystem.createTestingData(cassandra, quotaManager, eventBus, preDeletionHooks);
     }
 }

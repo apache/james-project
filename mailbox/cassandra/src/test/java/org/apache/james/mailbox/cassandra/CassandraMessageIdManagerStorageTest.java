@@ -24,6 +24,7 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.store.AbstractMessageIdManagerStorageTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
@@ -64,6 +65,6 @@ public class CassandraMessageIdManagerStorageTest extends AbstractMessageIdManag
     @Override
     protected MessageIdManagerTestSystem createTestingData() {
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
-        return CassandraMessageIdManagerTestSystem.createTestingData(cassandra, new NoQuotaManager(), eventBus);
+        return CassandraMessageIdManagerTestSystem.createTestingData(cassandra, new NoQuotaManager(), eventBus, PreDeletionHook.NO_PRE_DELETION_HOOK);
     }
 }

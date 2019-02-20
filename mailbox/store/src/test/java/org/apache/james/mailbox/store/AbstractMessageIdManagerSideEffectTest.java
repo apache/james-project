@@ -21,11 +21,16 @@ package org.apache.james.mailbox.store;
 
 import static org.apache.james.mailbox.fixture.MailboxFixture.ALICE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 import javax.mail.Flags;
 
@@ -37,6 +42,7 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.MailboxListener;
@@ -44,6 +50,7 @@ import org.apache.james.mailbox.events.MessageMoveEvent;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MessageId;
@@ -58,12 +65,17 @@ import org.apache.james.mailbox.util.EventCollector;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.assertj.core.api.AbstractListAssert;
 import org.assertj.core.api.ObjectAssert;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentCaptor;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+
+import reactor.core.publisher.Mono;
 
 public abstract class AbstractMessageIdManagerSideEffectTest {
     private static final Quota<QuotaCount> OVER_QUOTA = Quota.<QuotaCount>builder()
@@ -87,8 +99,10 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
     private MessageIdManagerTestSystem testingData;
     private EventCollector eventCollector;
     private EventBus eventBus;
+    private PreDeletionHook preDeletionHook1;
+    private PreDeletionHook preDeletionHook2;
 
-    protected abstract MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, EventBus eventBus) throws Exception;
+    protected abstract MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, EventBus eventBus, Set<PreDeletionHook> preDeletionHooks) throws Exception;
 
     public void setUp() throws Exception {
         eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
@@ -96,7 +110,8 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         quotaManager = mock(QuotaManager.class);
 
         session = MailboxSessionUtil.create(ALICE);
-        testingData = createTestSystem(quotaManager, eventBus);
+        setupMockForPreDeletionHooks();
+        testingData = createTestSystem(quotaManager, eventBus, ImmutableSet.of(preDeletionHook1, preDeletionHook2));
         messageIdManager = testingData.getMessageIdManager();
 
         mailbox1 = testingData.createMailbox(MailboxFixture.INBOX_ALICE, session);
@@ -104,6 +119,15 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         mailbox3 = testingData.createMailbox(MailboxFixture.SENT_ALICE, session);
     }
 
+    private void setupMockForPreDeletionHooks() {
+        preDeletionHook1 = mock(PreDeletionHook.class);
+        when(preDeletionHook1.notifyDelete(any(PreDeletionHook.DeleteOperation.class)))
+            .thenReturn(Mono.empty());
+
+        preDeletionHook2 = mock(PreDeletionHook.class);
+        when(preDeletionHook2.notifyDelete(any(PreDeletionHook.DeleteOperation.class)))
+            .thenReturn(Mono.empty());
+    }
     @Test
     public void deleteShouldCallEventDispatcher() throws Exception {
         givenUnlimitedQuota();
@@ -161,6 +185,128 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
 
         assertThat(eventCollector.getEvents()).isEmpty();
+    }
+
+    @Test
+    public void deletesShouldCallAllPreDeletionHooks() throws Exception {
+        givenUnlimitedQuota();
+
+        MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
+        messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
+
+        ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor1 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+        ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor2 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+        verify(preDeletionHook1, times(1)).notifyDelete(preDeleteCaptor1.capture());
+        verify(preDeletionHook2, times(1)).notifyDelete(preDeleteCaptor2.capture());
+
+        assertThat(preDeleteCaptor1.getValue().getDeletionMetadataList())
+            .hasSize(1)
+            .hasSameElementsAs(preDeleteCaptor2.getValue().getDeletionMetadataList())
+            .allSatisfy(deleteMetadata -> SoftAssertions.assertSoftly(softy -> {
+                softy.assertThat(deleteMetadata.getMailboxId()).isEqualTo(mailbox1.getMailboxId());
+                softy.assertThat(deleteMetadata.getMessageMetaData().getMessageId()).isEqualTo(messageId);
+                softy.assertThat(deleteMetadata.getMessageMetaData().getFlags()).isEqualTo(FLAGS);
+            }));
+
+    }
+
+    @Test
+    public void deletesShouldCallAllPreDeletionHooksOnEachMessageDeletionCall() throws Exception {
+        givenUnlimitedQuota();
+
+        MessageId messageId1 = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
+        MessageId messageId2 = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
+        messageIdManager.delete(messageId1, ImmutableList.of(mailbox1.getMailboxId()), session);
+        messageIdManager.delete(messageId2, ImmutableList.of(mailbox1.getMailboxId()), session);
+
+        ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor1 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+        ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor2 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+        verify(preDeletionHook1, times(2)).notifyDelete(preDeleteCaptor1.capture());
+        verify(preDeletionHook2, times(2)).notifyDelete(preDeleteCaptor2.capture());
+
+        assertThat(preDeleteCaptor1.getAllValues())
+            .hasSize(2)
+            .hasSameElementsAs(preDeleteCaptor2.getAllValues())
+            .flatExtracting(PreDeletionHook.DeleteOperation::getDeletionMetadataList)
+            .allSatisfy(deleteMetadata -> SoftAssertions.assertSoftly(softy -> {
+                softy.assertThat(deleteMetadata.getMailboxId()).isEqualTo(mailbox1.getMailboxId());
+                softy.assertThat(deleteMetadata.getMessageMetaData().getFlags()).isEqualTo(FLAGS);
+            }))
+            .extracting(deleteMetadata -> deleteMetadata.getMessageMetaData().getMessageId())
+            .containsOnly(messageId1, messageId2);
+
+    }
+
+    @Test
+    public void deletesShouldCallAllPreDeletionHooksOnEachMessageDeletionOnDifferentMailboxes() throws Exception {
+        givenUnlimitedQuota();
+
+        MessageId messageId1 = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
+        MessageId messageId2 = testingData.persist(mailbox2.getMailboxId(), messageUid1, FLAGS, session);
+        messageIdManager.delete(messageId1, ImmutableList.of(mailbox1.getMailboxId()), session);
+        messageIdManager.delete(messageId2, ImmutableList.of(mailbox2.getMailboxId()), session);
+
+        ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor1 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+        ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor2 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+        verify(preDeletionHook1, times(2)).notifyDelete(preDeleteCaptor1.capture());
+        verify(preDeletionHook2, times(2)).notifyDelete(preDeleteCaptor2.capture());
+
+        assertThat(preDeleteCaptor1.getAllValues())
+            .hasSameElementsAs(preDeleteCaptor2.getAllValues())
+            .flatExtracting(PreDeletionHook.DeleteOperation::getDeletionMetadataList)
+            .extracting(deleteMetadata -> deleteMetadata.getMessageMetaData().getMessageId())
+            .containsOnly(messageId1, messageId2);
+
+        assertThat(preDeleteCaptor1.getAllValues())
+            .hasSameElementsAs(preDeleteCaptor2.getAllValues())
+            .flatExtracting(PreDeletionHook.DeleteOperation::getDeletionMetadataList)
+            .extracting(MetadataWithMailboxId::getMailboxId)
+            .containsOnly(mailbox1.getMailboxId(), mailbox2.getMailboxId());
+    }
+
+    @Test
+    public void deletesShouldNotBeExecutedWhenOneOfPreDeleteHooksFails() throws Exception {
+        givenUnlimitedQuota();
+        when(preDeletionHook1.notifyDelete(any(PreDeletionHook.DeleteOperation.class)))
+            .thenThrow(new RuntimeException("throw at hook 1"));
+
+        MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
+        assertThatThrownBy(() -> messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), session))
+            .isInstanceOf(RuntimeException.class);
+
+        assertThat(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session)
+                .stream()
+                .map(MessageResult::getMessageId))
+            .hasSize(1)
+            .containsOnly(messageId);
+    }
+
+    @Test
+    public void deletesShouldBeExecutedAfterAllHooksFinish() throws Exception {
+        givenUnlimitedQuota();
+
+        CountDownLatch latchForHook1 = new CountDownLatch(1);
+        when(preDeletionHook1.notifyDelete(any(PreDeletionHook.DeleteOperation.class)))
+            .thenAnswer(invocation -> {
+                latchForHook1.countDown();
+                return Mono.empty();
+            });
+
+        CountDownLatch latchForHook2 = new CountDownLatch(1);
+        when(preDeletionHook2.notifyDelete(any(PreDeletionHook.DeleteOperation.class)))
+            .thenAnswer(invocation -> {
+                latchForHook2.countDown();
+                return Mono.empty();
+            });
+
+        MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
+        messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
+
+        latchForHook1.await();
+        latchForHook2.await();
+
+        assertThat(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session))
+            .isEmpty();
     }
 
     @Test
