@@ -167,7 +167,7 @@ interface EventDeadLettersContract {
                 .operation((threadNumber, step) -> {
                     Event.EventId eventId = Event.EventId.random();
                     storedEventIds.put(threadNumber, eventId);
-                    eventDeadLetters.store(groups.get(threadNumber), event(eventId));
+                    eventDeadLetters.store(groups.get(threadNumber), event(eventId)).subscribe();
                 })
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
@@ -175,7 +175,7 @@ interface EventDeadLettersContract {
 
             groups.forEach((groupId, group) -> {
                 Group storedGroup = groups.get(groupId);
-                assertThat(eventDeadLetters.failedEventIds(storedGroup).toStream())
+                assertThat(eventDeadLetters.failedEventIds(storedGroup).collectList().block())
                     .hasSameElementsAs(storedEventIds.get(groupId));
             });
         }
@@ -265,7 +265,8 @@ interface EventDeadLettersContract {
             ConcurrentTestRunner.builder()
                 .operation((threadNumber, step) -> {
                     int operationIndex = threadNumber * OPERATION_COUNT + step;
-                    eventDeadLetters.remove(groups.get(threadNumber), storedEventIds.get(operationIndex));
+                    eventDeadLetters.remove(groups.get(threadNumber), storedEventIds.get(operationIndex))
+                        .subscribe();
                 })
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)

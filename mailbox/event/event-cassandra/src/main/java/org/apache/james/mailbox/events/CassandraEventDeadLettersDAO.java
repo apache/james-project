@@ -110,7 +110,7 @@ public class CassandraEventDeadLettersDAO {
         return executor.executeSingleRow(selectEventStatement.bind()
                 .setString(GROUP, group.asString())
                 .setUUID(EVENT_ID, failedEventId.getId()))
-                .map(row -> deserializeEvent(row.getString(EVENT)));
+            .map(row -> deserializeEvent(row.getString(EVENT)));
     }
 
     Flux<Event.EventId> retrieveEventIdsWithGroup(Group group) {

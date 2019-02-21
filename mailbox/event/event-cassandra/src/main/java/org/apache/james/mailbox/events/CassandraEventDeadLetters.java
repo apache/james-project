@@ -19,21 +19,20 @@
 
 package org.apache.james.mailbox.events;
 
+import javax.inject.Inject;
+
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoProcessor;
 
-public class MemoryEventDeadLetters implements EventDeadLetters {
+public class CassandraEventDeadLetters implements EventDeadLetters {
 
-    private final Multimap<Group, Event> deadLetters;
+    private final CassandraEventDeadLettersDAO cassandraEventDeadLettersDAO;
 
-    public MemoryEventDeadLetters() {
-        this.deadLetters = Multimaps.synchronizedSetMultimap(HashMultimap.create());
+    @Inject
+    public CassandraEventDeadLetters(CassandraEventDeadLettersDAO cassandraEventDeadLettersDAO) {
+        this.cassandraEventDeadLettersDAO = cassandraEventDeadLettersDAO;
     }
 
     @Override
@@ -41,9 +40,7 @@ public class MemoryEventDeadLetters implements EventDeadLetters {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
         Preconditions.checkArgument(failDeliveredEvent != null, FAIL_DELIVERED_EVENT_CANNOT_BE_NULL);
 
-        return Mono.fromRunnable(() -> deadLetters.put(registeredGroup, failDeliveredEvent))
-            .subscribeWith(MonoProcessor.create())
-            .then();
+        return cassandraEventDeadLettersDAO.store(registeredGroup, failDeliveredEvent);
     }
 
     @Override
@@ -51,12 +48,7 @@ public class MemoryEventDeadLetters implements EventDeadLetters {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
         Preconditions.checkArgument(failDeliveredEventId != null, FAIL_DELIVERED_ID_EVENT_CANNOT_BE_NULL);
 
-        return Flux.fromIterable(deadLetters.get(registeredGroup))
-            .filter(event -> event.getEventId().equals(failDeliveredEventId))
-            .next()
-            .doOnNext(event -> deadLetters.remove(registeredGroup, event))
-            .subscribeWith(MonoProcessor.create())
-            .then();
+        return cassandraEventDeadLettersDAO.removeEvent(registeredGroup, failDeliveredEventId);
     }
 
     @Override
@@ -64,21 +56,18 @@ public class MemoryEventDeadLetters implements EventDeadLetters {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
         Preconditions.checkArgument(failDeliveredEventId != null, FAIL_DELIVERED_ID_EVENT_CANNOT_BE_NULL);
 
-        return Flux.fromIterable(deadLetters.get(registeredGroup))
-            .filter(event -> event.getEventId().equals(failDeliveredEventId))
-            .next();
+        return cassandraEventDeadLettersDAO.retrieveFailedEvent(registeredGroup, failDeliveredEventId);
     }
 
     @Override
     public Flux<Event.EventId> failedEventIds(Group registeredGroup) {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
 
-        return Flux.fromIterable(deadLetters.get(registeredGroup))
-            .map(Event::getEventId);
+        return cassandraEventDeadLettersDAO.retrieveEventIdsWithGroup(registeredGroup);
     }
 
     @Override
     public Flux<Group> groupsWithFailedEvents() {
-        return Flux.fromIterable(deadLetters.keySet());
+        return cassandraEventDeadLettersDAO.retrieveAllGroups();
     }
 }

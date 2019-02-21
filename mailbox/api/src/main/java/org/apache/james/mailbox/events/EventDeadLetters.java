@@ -23,6 +23,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface EventDeadLetters {
+
+    String REGISTERED_GROUP_CANNOT_BE_NULL = "registeredGroup cannot be null";
+    String FAIL_DELIVERED_EVENT_CANNOT_BE_NULL = "failDeliveredEvent cannot be null";
+    String FAIL_DELIVERED_ID_EVENT_CANNOT_BE_NULL = "failDeliveredEventId cannot be null";
+
     Mono<Void> store(Group registeredGroup, Event failDeliveredEvent);
 
     Mono<Void> remove(Group registeredGroup, Event.EventId failDeliveredEventId);
