@@ -198,7 +198,7 @@ class EventDeadLettersRoutesTest {
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
-                .body(".", contains(UUID_1));
+                .body(".", containsInAnyOrder(UUID_1));
         }
 
         @Test
@@ -211,7 +211,7 @@ class EventDeadLettersRoutesTest {
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
-                .body(".", contains(UUID_1));
+                .body(".", containsInAnyOrder(UUID_1));
         }
 
         @Test
@@ -235,7 +235,7 @@ class EventDeadLettersRoutesTest {
             deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
 
             String response = when()
-                .get("/events/deadLetter/groups/" + new EventBusTestFixture.GroupA().asString() + "/events/" + UUID_1)
+                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/events/" + UUID_1)
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -248,7 +248,7 @@ class EventDeadLettersRoutesTest {
         @Test
         void getEventShouldReturn404WhenNotFound() {
             when()
-                .get("/events/deadLetter/groups/" + new EventBusTestFixture.GroupA().asString() + "/events/" + UUID_1)
+                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/events/" + UUID_1)
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404);
         }
@@ -256,7 +256,7 @@ class EventDeadLettersRoutesTest {
         @Test
         void getEventShouldFailWhenInvalidEventId() {
             when()
-                .get("/events/deadLetter/groups/" + new EventBusTestFixture.GroupA().asString() + "/events/invalid")
+                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/events/invalid")
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
