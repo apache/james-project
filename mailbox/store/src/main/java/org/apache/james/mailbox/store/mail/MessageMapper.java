@@ -57,11 +57,7 @@ public interface MessageMapper extends Mapper {
             throws MailboxException;
 
     /**
-     *
-     * @param mailbox
-     * @param messageRange
-     * @return list of {@link MessageUid} which are marked as deleted
-     * @throws MailboxException
+     * Returns a list of {@link MessageUid} which are marked as deleted
      */
     List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) throws MailboxException;
 
@@ -98,11 +94,7 @@ public interface MessageMapper extends Mapper {
 
     /**
      * Delete the given list of {@link MessageUid}
-     *
-     * @param mailbox
-     * @param uids
-     * @return a {@link Map} which holds the uids and metadata for all deleted messages
-     * @throws MailboxException
+     * and return a {@link Map} which holds the uids and metadata for all deleted messages
      */
     Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) throws MailboxException;
 
