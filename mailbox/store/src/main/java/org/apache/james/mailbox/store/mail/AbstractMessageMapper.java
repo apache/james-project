@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
@@ -78,7 +79,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
     @Override
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange set) throws MailboxException {
         final List<UpdatedFlags> updatedFlags = new ArrayList<>();
-        Iterator<MailboxMessage> messages = findInMailbox(mailbox, set, FetchType.Metadata, -1);
+        Iterator<MailboxMessage> messages = findInMailbox(mailbox, set, FetchType.Metadata, UNLIMITED);
         
         long modSeq = -1;
         if (messages.hasNext()) {

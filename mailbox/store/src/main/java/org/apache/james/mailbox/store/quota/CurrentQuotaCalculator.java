@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store.quota;
 
+import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
+
 import java.util.Iterator;
 import java.util.List;
 
@@ -56,7 +58,7 @@ public class CurrentQuotaCalculator {
         long messagesSizes = 0;
         long messageCount = 0;
         for (Mailbox mailbox : mailboxes) {
-            Iterator<MailboxMessage> messages = mapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, -1);
+            Iterator<MailboxMessage> messages = mapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, UNLIMITED);
             messageCount += mapper.countMessagesInMailbox(mailbox);
             while (messages.hasNext()) {
                 messagesSizes +=  messages.next().getFullContentOctets();

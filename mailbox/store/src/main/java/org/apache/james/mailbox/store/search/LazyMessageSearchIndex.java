@@ -116,7 +116,7 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
                 done = oldDone;
             }
             synchronized (done) {
-                Iterator<MailboxMessage> messages = factory.getMessageMapper(session).findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
+                Iterator<MailboxMessage> messages = factory.getMessageMapper(session).findInMailbox(mailbox, MessageRange.all(), FetchType.Full, UNLIMITED);
                 while (messages.hasNext()) {
                     final MailboxMessage message = messages.next();
                     try {

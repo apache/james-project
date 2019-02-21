@@ -153,7 +153,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         final List<UpdatedFlags> updatedFlags = new ArrayList<>();
         final MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
 
-        Iterator<MailboxMessage> it = findInMailbox(mailbox, set, FetchType.Metadata, -1);
+        Iterator<MailboxMessage> it = findInMailbox(mailbox, set, FetchType.Metadata, UNLIMITED);
         while (it.hasNext()) {
             final MailboxMessage member = it.next();
             Flags originalFlags = member.createFlags();

@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store;
 
 import static org.apache.james.mailbox.extension.PreDeletionHook.DeleteOperation;
+import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -94,12 +95,10 @@ import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
 import org.apache.james.util.BodyOffsetInputStream;
 import org.apache.james.util.IteratorWrapper;
-import org.apache.james.util.StreamUtils;
 import org.apache.james.util.streams.Iterators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -120,8 +119,6 @@ import reactor.core.scheduler.Schedulers;
  * 
  */
 public class StoreMessageManager implements MessageManager {
-
-    private static final int NO_LIMIT = -1;
     private static final MailboxCounters ZERO_MAILBOX_COUNTERS = MailboxCounters.builder()
         .count(0)
         .unseen(0)
@@ -734,7 +731,7 @@ public class StoreMessageManager implements MessageManager {
 
         DeleteOperation deleteOperation = Flux.fromIterable(MessageRange.toRanges(uids))
             .publishOn(Schedulers.elastic())
-            .flatMap(range -> Mono.fromCallable(() -> messageMapper.findInMailbox(mailbox, range, FetchType.Metadata, NO_LIMIT))
+            .flatMap(range -> Mono.fromCallable(() -> messageMapper.findInMailbox(mailbox, range, FetchType.Metadata, UNLIMITED))
                 .flatMapMany(iterator -> Flux.fromStream(Iterators.toStream(iterator))))
             .map(mailboxMessage -> MetadataWithMailboxId.from(mailboxMessage.metaData(), mailboxMessage.getMailboxId()))
             .collect(Guavate.toImmutableList())
@@ -862,7 +859,7 @@ public class StoreMessageManager implements MessageManager {
 
     private Iterator<MailboxMessage> retrieveOriginalRows(MessageRange set, MailboxSession session) throws MailboxException {
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
-        return messageMapper.findInMailbox(mailbox, set, FetchType.Full, -1);
+        return messageMapper.findInMailbox(mailbox, set, FetchType.Full, UNLIMITED);
     }
 
     private SortedMap<MessageUid, MessageMetaData> collectMetadata(Iterator<MessageMetaData> ids) {

@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
+
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -393,7 +395,7 @@ public class StoreMailboxManager implements MailboxManager {
 
             QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
             long messageCount = messageMapper.countMessagesInMailbox(mailbox);
-            long totalSize = Iterators.toStream(messageMapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, -1))
+            long totalSize = Iterators.toStream(messageMapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, UNLIMITED))
                 .mapToLong(Message::getFullContentOctets)
                 .sum();
 

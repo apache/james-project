@@ -48,7 +48,7 @@ import com.google.common.collect.ImmutableList;
 public abstract class ListeningMessageSearchIndex implements MessageSearchIndex, MailboxListener.GroupMailboxListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListeningMessageSearchIndex.class);
 
-    private static final int UNLIMITED = -1;
+    protected static final int UNLIMITED = -1;
     private final MailboxSessionMapperFactory factory;
     private final SessionProvider sessionProvider;
     private static final ImmutableList<Class<? extends Event>> INTERESTING_EVENTS = ImmutableList.of(Added.class, Expunged.class, FlagsUpdated.class, MailboxDeletion.class);

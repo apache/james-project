@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.search;
 
+import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
+
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -124,14 +126,14 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
             // only fetching this uid range
             UidRange[] ranges = uidCrit.getOperator().getRange();
             for (UidRange r : ranges) {
-                Iterator<MailboxMessage> it = mapper.findInMailbox(mailbox, MessageRange.range(r.getLowValue(), r.getHighValue()), FetchType.Metadata, -1);
+                Iterator<MailboxMessage> it = mapper.findInMailbox(mailbox, MessageRange.range(r.getLowValue(), r.getHighValue()), FetchType.Metadata, UNLIMITED);
                 while (it.hasNext()) {
                     hitSet.add(it.next());
                 }
             }
         } else {
             // we have to fetch all messages
-            Iterator<MailboxMessage> messages = mapper.findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
+            Iterator<MailboxMessage> messages = mapper.findInMailbox(mailbox, MessageRange.all(), FetchType.Full, UNLIMITED);
             while (messages.hasNext()) {
                 MailboxMessage m = messages.next();
                 hitSet.add(m);
