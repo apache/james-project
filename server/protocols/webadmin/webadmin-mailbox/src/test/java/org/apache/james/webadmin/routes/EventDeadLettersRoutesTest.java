@@ -85,6 +85,7 @@ class EventDeadLettersRoutesTest {
         "     \"sessionId\":452" +
         "  }" +
         "}";
+    public static final String SERIALIZED_GROUP_A = new EventBusTestFixture.GroupA().asString();
 
     private WebAdminServer webAdminServer;
     private EventDeadLetters deadLetters;
@@ -134,7 +135,7 @@ class EventDeadLettersRoutesTest {
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
-                .body(".", contains(EventBusTestFixture.GroupA.class.getName()));
+                .body(".", containsInAnyOrder(EventBusTestFixture.GroupA.class.getName()));
         }
 
         @Test
@@ -147,7 +148,7 @@ class EventDeadLettersRoutesTest {
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
-                .body(".", contains(EventBusTestFixture.GroupA.class.getName()));
+                .body(".", containsInAnyOrder(EventBusTestFixture.GroupA.class.getName()));
         }
 
         @Test
@@ -181,7 +182,7 @@ class EventDeadLettersRoutesTest {
         @Test
         void listEventsShouldReturnEmptyWhenNone() {
             when()
-                .get("/events/deadLetter/groups/" + new EventBusTestFixture.GroupA().asString() + "/events")
+                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/events")
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -193,7 +194,7 @@ class EventDeadLettersRoutesTest {
             deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
 
             when()
-                .get("/events/deadLetter/groups/" + new EventBusTestFixture.GroupA().asString() + "/events")
+                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/events")
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -206,7 +207,7 @@ class EventDeadLettersRoutesTest {
             deadLetters.store(new EventBusTestFixture.GroupB(), EVENT_2).block();
 
             when()
-                .get("/events/deadLetter/groups/" + new EventBusTestFixture.GroupA().asString() + "/events")
+                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/events")
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -219,7 +220,7 @@ class EventDeadLettersRoutesTest {
             deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_2).block();
 
             when()
-                .get("/events/deadLetter/groups/" + new EventBusTestFixture.GroupA().asString() + "/events")
+                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/events")
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
