@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -176,7 +177,12 @@ public class MailboxAdapter implements Mailbox {
             mailboxManager.startProcessingRequest(session);
             manager.delete(uidList, session);
         } catch (MailboxException e) {
-            throw new IOException("Unable to remove messages", e);
+            String serializedUids = uidList
+                .stream()
+                .map(uid -> uid.toString())
+                .collect(Collectors.joining(",", "[", "]"));
+
+            throw new IOException("Unable to remove messages: " + serializedUids, e);
         } finally {
             mailboxManager.endProcessingRequest(session);
         }
