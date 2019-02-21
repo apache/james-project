@@ -42,6 +42,7 @@
         <constructor-arg index="7" ref="storeRightManager" />
         <constructor-arg index="8" ref="quotaComponents" />
         <constructor-arg index="9" ref="indexer" />
+        <constructor-arg index="10"><set/></constructor-arg>
     </bean>
 
     <bean id ="memory-subscriptionManager" class="org.apache.james.mailbox.store.StoreSubscriptionManager">
