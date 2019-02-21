@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 public class JPAMailboxManagerTest extends MailboxManagerTest<OpenJPAMailboxManager> {
 
     @Disabled("JPAMailboxManager is using DefaultMessageId which doesn't support full feature of a messageId, which is an essential" +
-        "element of the Vault")
+        " element of the Vault")
     @Nested
     class HookTests {
     }
