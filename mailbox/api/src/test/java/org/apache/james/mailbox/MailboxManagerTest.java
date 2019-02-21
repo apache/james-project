@@ -475,6 +475,23 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void deleteMessageShouldFireExpungedEvent() throws Exception {
+            ComposedMessageId messageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder().build(message), session);
+            inboxManager.setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.ADD, MessageRange.all(), session);
+
+            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
+            inboxManager.delete(ImmutableList.of(messageId.getUid()), session);
+
+            assertThat(listener.getEvents())
+                .filteredOn(event -> event instanceof MailboxListener.Expunged)
+                .hasSize(1)
+                .extracting(event -> (MailboxListener.Expunged) event)
+                .element(0)
+                .satisfies(event -> assertThat(event.getMailboxId()).isEqualTo(inboxId))
+                .satisfies(event -> assertThat(event.getUids()).hasSize(1));
+        }
+
+        @Test
         void setFlagsShouldFireFlagsUpdatedEvent() throws Exception {
             inboxManager.appendMessage(MessageManager.AppendCommand.builder().build(message), session);
 

@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.manager;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import javax.mail.Flags;
 
@@ -29,6 +30,7 @@ import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.mock.MockMail;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -121,7 +123,7 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
     }
 
     @Test
-    public void testRetrievalOverMaxMessage() throws Exception {
+    public void testRetrievalOverMaxMessageAfterExpunge() throws Exception {
         QuotaCount maxMessageCount = QuotaCount.count(15L);
         maxQuotaManager.setMaxMessage(quotaRootResolver.getQuotaRoot(inbox), maxMessageCount);
         try {
@@ -135,7 +137,7 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
     }
 
     @Test
-    public void testRetrievalOverMaxStorage() throws Exception {
+    public void testRetrievalOverMaxStorageAfterExpunge() throws Exception {
         QuotaSize maxQuotaSize = QuotaSize.size(15 * MockMail.MAIL_TEXT_PLAIN.getBytes(StandardCharsets.UTF_8).length + 1);
         maxQuotaManager.setMaxStorage(quotaRootResolver.getQuotaRoot(inbox), maxQuotaSize);
         try {
@@ -144,6 +146,38 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
             // We are here over quota
         }
         messageManager.expunge(MessageRange.all(), session);
+        // We have suppressed at list one message. Ensure we can add an other message. If is impossible, an exception will be thrown.
+        resources.appendMessage(messageManager, session, new FlagsBuilder().add(Flags.Flag.SEEN).build());
+    }
+
+    @Test
+    public void testRetrievalOverMaxMessageAfterDelete() throws Exception {
+        QuotaCount maxMessageCount = QuotaCount.count(15L);
+        maxQuotaManager.setMaxMessage(quotaRootResolver.getQuotaRoot(inbox), maxMessageCount);
+        try {
+            resources.fillMailbox();
+        } catch (OverQuotaException overQuotaException) {
+            // We are here over quota
+        }
+
+        List<MessageUid> uids = messageManager.getMetaData(true, session, MessageManager.MetaData.FetchGroup.UNSEEN_COUNT).getRecent();
+        messageManager.delete(uids, session);
+        // We have suppressed at list one message. Ensure we can add an other message. If is impossible, an exception will be thrown.
+        resources.appendMessage(messageManager, session, new FlagsBuilder().add(Flags.Flag.SEEN).build());
+    }
+
+    @Test
+    public void testRetrievalOverMaxStorageAfterDelete() throws Exception {
+        QuotaSize maxQuotaSize = QuotaSize.size(15 * MockMail.MAIL_TEXT_PLAIN.getBytes(StandardCharsets.UTF_8).length + 1);
+        maxQuotaManager.setMaxStorage(quotaRootResolver.getQuotaRoot(inbox), maxQuotaSize);
+        try {
+            resources.fillMailbox();
+        } catch (OverQuotaException overQuotaException) {
+            // We are here over quota
+        }
+
+        List<MessageUid> uids = messageManager.getMetaData(true, session, MessageManager.MetaData.FetchGroup.UNSEEN_COUNT).getRecent();
+        messageManager.delete(uids, session);
         // We have suppressed at list one message. Ensure we can add an other message. If is impossible, an exception will be thrown.
         resources.appendMessage(messageManager, session, new FlagsBuilder().add(Flags.Flag.SEEN).build());
     }
