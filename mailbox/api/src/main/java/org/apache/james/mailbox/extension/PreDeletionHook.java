@@ -27,6 +27,7 @@ import java.util.UUID;
 import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.reactivestreams.Publisher;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 public interface PreDeletionHook {
@@ -44,6 +45,7 @@ public interface PreDeletionHook {
         private final UUID id;
 
         private DeletionId(UUID id) {
+            Preconditions.checkNotNull(id, "id for deletion cannot be null");
             this.id = id;
         }
 

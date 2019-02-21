@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.extension;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +34,13 @@ class PreDeletionHookTest {
         void shouldMatchBeanContract() {
             EqualsVerifier.forClass(PreDeletionHook.DeletionId.class)
                 .verify();
+        }
+
+        @Test
+        void shouldThrowWhenPassingNullId() {
+            assertThatThrownBy(() -> PreDeletionHook.DeletionId.of(null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("id for deletion cannot be null");
         }
     }
 
