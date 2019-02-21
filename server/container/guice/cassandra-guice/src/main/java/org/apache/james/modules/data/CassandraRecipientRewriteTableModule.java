@@ -24,8 +24,10 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;
 import org.apache.james.rrt.cassandra.CassandraRRTModule;
 import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTable;
+import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTableDAO;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
 
@@ -41,6 +43,8 @@ public class CassandraRecipientRewriteTableModule extends AbstractModule {
     @Override
     public void configure() {
         bind(CassandraRecipientRewriteTable.class).in(Scopes.SINGLETON);
+        bind(CassandraRecipientRewriteTableDAO.class).in(Scopes.SINGLETON);
+        bind(CassandraMappingsSourcesDAO.class).in(Scopes.SINGLETON);
         bind(RecipientRewriteTable.class).to(CassandraRecipientRewriteTable.class);
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraRRTModule.MODULE);
