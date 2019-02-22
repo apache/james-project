@@ -396,7 +396,7 @@ interface EventDeadLettersContract {
             eventDeadLetters.store(GROUP_A, EVENT_1).block();
             eventDeadLetters.store(GROUP_B, EVENT_1).block();
 
-            assertThat(eventDeadLetters.groupsWithFailedEvents().toStream())
+            assertThat(eventDeadLetters.groupsWithFailedEvents().collectList().block())
                 .containsOnly(GROUP_A, GROUP_B);
         }
 

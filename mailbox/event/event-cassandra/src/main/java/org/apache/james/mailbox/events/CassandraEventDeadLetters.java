@@ -29,10 +29,13 @@ import reactor.core.publisher.Mono;
 public class CassandraEventDeadLetters implements EventDeadLetters {
 
     private final CassandraEventDeadLettersDAO cassandraEventDeadLettersDAO;
+    private final CassandraEventDeadLettersGroupDAO cassandraEventDeadLettersGroupDAO;
 
     @Inject
-    public CassandraEventDeadLetters(CassandraEventDeadLettersDAO cassandraEventDeadLettersDAO) {
+    public CassandraEventDeadLetters(CassandraEventDeadLettersDAO cassandraEventDeadLettersDAO,
+                                     CassandraEventDeadLettersGroupDAO cassandraEventDeadLettersGroupDAO) {
         this.cassandraEventDeadLettersDAO = cassandraEventDeadLettersDAO;
+        this.cassandraEventDeadLettersGroupDAO = cassandraEventDeadLettersGroupDAO;
     }
 
     @Override
@@ -40,7 +43,8 @@ public class CassandraEventDeadLetters implements EventDeadLetters {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
         Preconditions.checkArgument(failDeliveredEvent != null, FAIL_DELIVERED_EVENT_CANNOT_BE_NULL);
 
-        return cassandraEventDeadLettersDAO.store(registeredGroup, failDeliveredEvent);
+        return cassandraEventDeadLettersDAO.store(registeredGroup, failDeliveredEvent)
+            .then(cassandraEventDeadLettersGroupDAO.storeGroup(registeredGroup));
     }
 
     @Override
@@ -68,6 +72,6 @@ public class CassandraEventDeadLetters implements EventDeadLetters {
 
     @Override
     public Flux<Group> groupsWithFailedEvents() {
-        return cassandraEventDeadLettersDAO.retrieveAllGroups();
+        return cassandraEventDeadLettersGroupDAO.retrieveAllGroups();
     }
 }

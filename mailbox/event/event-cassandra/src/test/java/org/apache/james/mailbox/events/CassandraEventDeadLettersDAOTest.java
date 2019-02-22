@@ -58,7 +58,7 @@ class CassandraEventDeadLettersDAOTest {
         cassandraEventDeadLettersDAO.removeEvent(GROUP_A, EVENT_ID_1).block();
 
         assertThat(cassandraEventDeadLettersDAO
-                .retrieveAllGroups()
+                .retrieveEventIdsWithGroup(GROUP_A)
                 .collectList().block())
             .isEmpty();
     }
@@ -100,25 +100,5 @@ class CassandraEventDeadLettersDAOTest {
                 .retrieveEventIdsWithGroup(GROUP_B)
                 .collectList().block())
             .containsOnly(EVENT_ID_1, EVENT_ID_2, EVENT_ID_3);
-    }
-
-    @Test
-    void retrieveAllGroupsShouldReturnEmptyWhenDefault() {
-        assertThat(cassandraEventDeadLettersDAO
-                .retrieveAllGroups()
-                .collectList().block())
-            .isEmpty();
-    }
-
-    @Test
-    void retrieveAllGroupsShouldReturnStoredGroups() {
-        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1).block();
-        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_2).block();
-        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_3).block();
-
-        assertThat(cassandraEventDeadLettersDAO
-                .retrieveAllGroups()
-                .collectList().block())
-            .containsOnly(GROUP_A, GROUP_B);
     }
 }

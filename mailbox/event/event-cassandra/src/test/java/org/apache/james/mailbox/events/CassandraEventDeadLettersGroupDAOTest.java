@@ -19,36 +19,42 @@
 
 package org.apache.james.mailbox.events;
 
+import static org.apache.james.mailbox.events.EventDeadLettersContract.GROUP_A;
+import static org.apache.james.mailbox.events.EventDeadLettersContract.GROUP_B;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.event.json.EventSerializer;
-import org.apache.james.mailbox.events.EventDeadLettersContract.FailedEventContract;
-import org.apache.james.mailbox.events.EventDeadLettersContract.FailedEventsContract;
-import org.apache.james.mailbox.events.EventDeadLettersContract.GroupsWithFailedEventsContract;
-import org.apache.james.mailbox.events.EventDeadLettersContract.RemoveContract;
-import org.apache.james.mailbox.events.EventDeadLettersContract.StoreContract;
-import org.apache.james.mailbox.model.TestId;
-import org.apache.james.mailbox.model.TestMessageId;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraEventDeadLettersTest implements StoreContract, RemoveContract, FailedEventContract, FailedEventsContract,
-    GroupsWithFailedEventsContract {
+public class CassandraEventDeadLettersGroupDAOTest {
 
     @RegisterExtension
     static CassandraClusterExtension cassandraClusterExtension = new CassandraClusterExtension(CassandraEventDeadLettersModule.MODULE);
 
-    private CassandraEventDeadLetters eventDeadLetters;
+    private static CassandraEventDeadLettersGroupDAO GROUP_DAO;
 
-    @BeforeEach
-    void setUp(CassandraCluster cassandraCluster) {
-        EventSerializer eventSerializer = new EventSerializer(new TestId.Factory(), new TestMessageId.Factory());
-        eventDeadLetters = new CassandraEventDeadLetters(new CassandraEventDeadLettersDAO(cassandraCluster.getConf(), eventSerializer),
-                                                         new CassandraEventDeadLettersGroupDAO(cassandraCluster.getConf()));
+    @BeforeAll
+    static void setUp(CassandraCluster cassandraCluster) {
+        GROUP_DAO = new CassandraEventDeadLettersGroupDAO(cassandraCluster.getConf());
     }
 
-    @Override
-    public EventDeadLetters eventDeadLetters() {
-        return eventDeadLetters;
+    @Test
+    void retrieveAllGroupsShouldReturnEmptyWhenDefault() {
+        assertThat(GROUP_DAO.retrieveAllGroups()
+                .collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    void retrieveAllGroupsShouldReturnStoredGroups() {
+        GROUP_DAO.storeGroup(GROUP_A).block();
+        GROUP_DAO.storeGroup(GROUP_B).block();
+
+        assertThat(GROUP_DAO.retrieveAllGroups()
+                .collectList().block())
+            .containsOnly(GROUP_A, GROUP_B);
     }
 }
