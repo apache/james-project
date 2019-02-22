@@ -101,6 +101,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 
 import reactor.core.publisher.Flux;
@@ -291,6 +292,10 @@ public class StoreMessageManager implements MessageManager {
     }
 
     private Map<MessageUid, MessageMetaData> deleteMessages(List<MessageUid> messageUids, MailboxSession session) throws MailboxException {
+        if (messageUids.isEmpty()) {
+            return ImmutableMap.of();
+        }
+
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
         runPredeletionHooks(messageUids, session);

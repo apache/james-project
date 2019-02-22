@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
@@ -1362,6 +1363,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             @Test
             void expungeShouldCallAllPreDeletionHooks() throws Exception {
                 ComposedMessageId composeId = inboxManager.appendMessage(AppendCommand.builder()
+                    .withFlags(new Flags(Flags.Flag.DELETED))
                     .build(message), session);
                 inboxManager.expunge(MessageRange.one(composeId.getUid()), session);
 
@@ -1381,8 +1383,12 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             @Test
             void expungeShouldCallAllPreDeletionHooksOnEachMessageDeletionCall() throws Exception {
-                ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder().build(message), session);
-                ComposedMessageId composeId2 = inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+                ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder()
+                    .withFlags(new Flags(Flags.Flag.DELETED))
+                    .build(message), session);
+                ComposedMessageId composeId2 = inboxManager.appendMessage(AppendCommand.builder()
+                    .withFlags(new Flags(Flags.Flag.DELETED))
+                    .build(message), session);
 
                 inboxManager.expunge(MessageRange.one(composeId1.getUid()), session);
                 inboxManager.expunge(MessageRange.one(composeId2.getUid()), session);
@@ -1402,9 +1408,48 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             }
 
             @Test
+            void expungeShouldCallAllPreDeletionHooksOnlyOnMessagesMarkedAsDeleted() throws Exception {
+                ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder()
+                    .withFlags(new Flags(Flags.Flag.DELETED))
+                    .build(message), session);
+                inboxManager.appendMessage(AppendCommand.builder()
+                    .build(message), session);
+
+                inboxManager.expunge(MessageRange.all(), session);
+
+                ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor1 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+                ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor2 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+                verify(preDeletionHook1, times(1)).notifyDelete(preDeleteCaptor1.capture());
+                verify(preDeletionHook2, times(1)).notifyDelete(preDeleteCaptor2.capture());
+
+                assertThat(preDeleteCaptor1.getValue().getDeletionMetadataList())
+                    .hasSize(1)
+                    .hasSameElementsAs(preDeleteCaptor2.getValue().getDeletionMetadataList())
+                    .allSatisfy(deleteMetadata -> SoftAssertions.assertSoftly(softy -> {
+                        softy.assertThat(deleteMetadata.getMailboxId()).isEqualTo(inboxId);
+                        softy.assertThat(deleteMetadata.getMessageMetaData().getMessageId()).isEqualTo(composeId1.getMessageId());
+                    }));
+            }
+
+            @Test
+            void expungeShouldNotCallPredeletionHooksWhenNoMessagesMarkedAsDeleted() throws Exception {
+                inboxManager.appendMessage(AppendCommand.builder()
+                    .build(message), session);
+
+                inboxManager.expunge(MessageRange.all(), session);
+
+                verifyZeroInteractions(preDeletionHook1);
+                verifyZeroInteractions(preDeletionHook2);
+            }
+
+            @Test
             void expungeShouldCallAllPreDeletionHooksOnEachMessageDeletionOnDifferentMailboxes() throws Exception {
-                ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder().build(message), session);
-                ComposedMessageId composeId2 = anotherMailboxManager.appendMessage(AppendCommand.builder().build(message), session);
+                ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder()
+                    .withFlags(new Flags(Flags.Flag.DELETED))
+                    .build(message), session);
+                ComposedMessageId composeId2 = anotherMailboxManager.appendMessage(AppendCommand.builder()
+                    .withFlags(new Flags(Flags.Flag.DELETED))
+                    .build(message), session);
 
                 inboxManager.expunge(MessageRange.one(composeId1.getUid()), session);
                 anotherMailboxManager.expunge(MessageRange.one(composeId2.getUid()), session);
@@ -1432,7 +1477,9 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 when(preDeletionHook1.notifyDelete(any(PreDeletionHook.DeleteOperation.class)))
                     .thenThrow(new RuntimeException("throw at hook 1"));
 
-                ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+                ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder()
+                    .withFlags(new Flags(Flags.Flag.DELETED))
+                    .build(message), session);
                 assertThatThrownBy(() -> inboxManager.expunge(MessageRange.one(composeId1.getUid()), session))
                     .isInstanceOf(RuntimeException.class);
 
