@@ -1,0 +1,124 @@
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
+
+package org.apache.james.mailbox.events;
+
+import static org.apache.james.mailbox.events.EventDeadLettersContract.EVENT_1;
+import static org.apache.james.mailbox.events.EventDeadLettersContract.EVENT_2;
+import static org.apache.james.mailbox.events.EventDeadLettersContract.EVENT_3;
+import static org.apache.james.mailbox.events.EventDeadLettersContract.EVENT_ID_1;
+import static org.apache.james.mailbox.events.EventDeadLettersContract.EVENT_ID_2;
+import static org.apache.james.mailbox.events.EventDeadLettersContract.EVENT_ID_3;
+import static org.apache.james.mailbox.events.EventDeadLettersContract.GROUP_A;
+import static org.apache.james.mailbox.events.EventDeadLettersContract.GROUP_B;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.event.json.EventSerializer;
+import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.TestMessageId;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+class CassandraEventDeadLettersDAOTest {
+
+    @RegisterExtension
+    static CassandraClusterExtension cassandraClusterExtension = new CassandraClusterExtension(CassandraEventDeadLettersModule.MODULE);
+
+    private CassandraEventDeadLettersDAO cassandraEventDeadLettersDAO;
+
+    @BeforeEach
+    void setUp(CassandraCluster cassandraCluster) {
+        EventSerializer eventSerializer = new EventSerializer(new TestId.Factory(), new TestMessageId.Factory());
+        cassandraEventDeadLettersDAO = new CassandraEventDeadLettersDAO(cassandraCluster.getConf(), eventSerializer);
+    }
+
+    @Test
+    void removeEventShouldSucceededWhenRemoveStoredEvent() {
+        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1).block();
+
+        cassandraEventDeadLettersDAO.removeEvent(GROUP_A, EVENT_ID_1).block();
+
+        assertThat(cassandraEventDeadLettersDAO
+                .retrieveAllGroups()
+                .collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    void retrieveFailedEventShouldReturnEmptyWhenDefault() {
+        assertThat(cassandraEventDeadLettersDAO
+                .retrieveFailedEvent(GROUP_A, EVENT_ID_1)
+                .blockOptional().isPresent())
+            .isFalse();
+    }
+
+    @Test
+    void retrieveFailedEventShouldReturnStoredEvent() {
+        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_2).block();
+
+        assertThat(cassandraEventDeadLettersDAO
+                .retrieveFailedEvent(GROUP_B, EVENT_ID_2)
+                .blockOptional().get())
+            .isEqualTo(EVENT_2);
+    }
+
+    @Test
+    void retrieveEventIdsWithGroupShouldReturnEmptyWhenDefault() {
+        assertThat(cassandraEventDeadLettersDAO
+                .retrieveEventIdsWithGroup(GROUP_A)
+                .collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    void retrieveEventIdsWithGroupShouldReturnStoredEventId() {
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_2).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_3).block();
+
+        assertThat(cassandraEventDeadLettersDAO
+                .retrieveEventIdsWithGroup(GROUP_B)
+                .collectList().block())
+            .containsOnly(EVENT_ID_1, EVENT_ID_2, EVENT_ID_3);
+    }
+
+    @Test
+    void retrieveAllGroupsShouldReturnEmptyWhenDefault() {
+        assertThat(cassandraEventDeadLettersDAO
+                .retrieveAllGroups()
+                .collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    void retrieveAllGroupsShouldReturnStoredGroups() {
+        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_2).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_3).block();
+
+        assertThat(cassandraEventDeadLettersDAO
+                .retrieveAllGroups()
+                .collectList().block())
+            .containsOnly(GROUP_A, GROUP_B);
+    }
+}
