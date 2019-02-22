@@ -24,9 +24,7 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 
 public class Query {
-    public static Query all() {
-        return new Query(ImmutableList.of());
-    }
+    public static final Query ALL = new Query(ImmutableList.of());
 
     interface Criterion {
 
