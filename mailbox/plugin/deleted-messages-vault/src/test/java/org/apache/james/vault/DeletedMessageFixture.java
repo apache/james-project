@@ -26,6 +26,7 @@ import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.apache.james.core.MaybeSender;
@@ -45,7 +46,17 @@ public interface DeletedMessageFixture {
     byte[] CONTENT = "header: value\r\n\r\ncontent".getBytes(StandardCharsets.UTF_8);
     String SUBJECT = "subject";
 
-
+    Function<Long, DeletedMessage> DELETED_MESSAGE_GENERATOR = i -> DeletedMessage.builder()
+        .messageId(InMemoryMessageId.of(i))
+        .originMailboxes(MAILBOX_ID_1, MAILBOX_ID_2)
+        .user(USER)
+        .deliveryDate(DELIVERY_DATE)
+        .deletionDate(DELETION_DATE)
+        .content(() -> new ByteArrayInputStream(CONTENT))
+        .sender(MaybeSender.of(SENDER))
+        .recipients(RECIPIENT1, RECIPIENT2)
+        .hasAttachment(false)
+        .build();
     Supplier<DeletedMessage.Builder.FinalStage> FINAL_STAGE = () -> DeletedMessage.builder()
         .messageId(MESSAGE_ID)
         .originMailboxes(MAILBOX_ID_1, MAILBOX_ID_2)
@@ -60,15 +71,5 @@ public interface DeletedMessageFixture {
         .subject(SUBJECT)
         .build();
     DeletedMessage DELETED_MESSAGE = FINAL_STAGE.get().build();
-    DeletedMessage DELETED_MESSAGE_2 = DeletedMessage.builder()
-        .messageId(MESSAGE_ID_2)
-        .originMailboxes(MAILBOX_ID_1, MAILBOX_ID_2)
-        .user(USER)
-        .deliveryDate(DELIVERY_DATE)
-        .deletionDate(DELETION_DATE)
-        .content(() -> new ByteArrayInputStream(CONTENT))
-        .sender(MaybeSender.of(SENDER))
-        .recipients(RECIPIENT1, RECIPIENT2)
-        .hasAttachment(false)
-        .build();
+    DeletedMessage DELETED_MESSAGE_2 = DELETED_MESSAGE_GENERATOR.apply(MESSAGE_ID_2.getRawId());
 }

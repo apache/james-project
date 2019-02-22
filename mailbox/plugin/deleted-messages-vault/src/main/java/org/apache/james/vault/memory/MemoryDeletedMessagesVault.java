@@ -40,7 +40,7 @@ public class MemoryDeletedMessagesVault implements DeletedMessageVault {
     }
 
     @Override
-    public Mono<Void> append(User user, DeletedMessage deletedMessage) {
+    public synchronized Mono<Void> append(User user, DeletedMessage deletedMessage) {
         Preconditions.checkNotNull(user);
         Preconditions.checkNotNull(deletedMessage);
 
@@ -49,7 +49,7 @@ public class MemoryDeletedMessagesVault implements DeletedMessageVault {
     }
 
     @Override
-    public Mono<Void> delete(User user, MessageId messageId) {
+    public synchronized Mono<Void> delete(User user, MessageId messageId) {
         Preconditions.checkNotNull(user);
         Preconditions.checkNotNull(messageId);
 
@@ -58,7 +58,7 @@ public class MemoryDeletedMessagesVault implements DeletedMessageVault {
     }
 
     @Override
-    public Flux<DeletedMessage> search(User user, Query query) {
+    public synchronized Flux<DeletedMessage> search(User user, Query query) {
         Preconditions.checkNotNull(user);
         Preconditions.checkNotNull(query);
         Preconditions.checkArgument(query.getCriteria().isEmpty(), "Search is not supported yet...");
