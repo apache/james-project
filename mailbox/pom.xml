@@ -51,6 +51,7 @@
         <module>maildir</module>
         <module>memory</module>
 
+        <module>plugin/deleted-messages-vault</module>
         <module>plugin/quota-mailing</module>
         <module>plugin/quota-mailing-cassandra</module>
         <module>plugin/quota-mailing-memory</module>
