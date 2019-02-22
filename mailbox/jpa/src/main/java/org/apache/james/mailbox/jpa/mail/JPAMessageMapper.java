@@ -237,7 +237,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
             case ALL:
                 return findDeletedMessagesInMailbox(mailboxId);
             default:
-                throw new RuntimeException();
+                throw new RuntimeException("Cannot find deleted messages, range type " + messageRange.getType() + " doesn't exist");
         }
     }
 
@@ -259,7 +259,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
                 deleteDeletedMessagesInMailbox(mailboxId);
                 break;
             default:
-                throw new RuntimeException();
+                throw new RuntimeException("Cannot delete messages, range type " + messageRange.getType() + " doesn't exist");
         }
     }
 

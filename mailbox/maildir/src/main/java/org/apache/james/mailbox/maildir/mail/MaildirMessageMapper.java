@@ -242,7 +242,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
             case ALL:
                 return findMessagesInMailbox(mailbox, MaildirMessageName.FILTER_DELETED_MESSAGES, -1);
             default:
-                throw new RuntimeException();
+                throw new RuntimeException("Cannot find deleted messages, range type " + messageRange.getType() + " doesn't exist");
         }
     }
 
