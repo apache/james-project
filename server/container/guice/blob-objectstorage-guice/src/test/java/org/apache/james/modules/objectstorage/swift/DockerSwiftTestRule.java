@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.GuiceModuleTestRule;
 import org.apache.james.blob.objectstorage.ContainerName;
+import org.apache.james.blob.objectstorage.DockerSwiftRule;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
 import org.apache.james.blob.objectstorage.PayloadCodec;
 import org.apache.james.blob.objectstorage.swift.Credentials;
@@ -36,7 +37,6 @@ import org.apache.james.blob.objectstorage.swift.UserName;
 import org.apache.james.modules.objectstorage.ObjectStorageBlobConfiguration;
 import org.apache.james.modules.objectstorage.ObjectStorageProvider;
 import org.apache.james.modules.objectstorage.PayloadCodecFactory;
-import org.apache.james.modules.objectstorage.swift.SwiftAuthConfiguration;
 import org.apache.james.utils.GuiceProbe;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -78,8 +78,7 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
     }
 
     private final PayloadCodecFactory payloadCodecFactory;
-    private org.apache.james.blob.objectstorage.DockerSwiftRule swiftContainer =
-        new org.apache.james.blob.objectstorage.DockerSwiftRule();
+    private DockerSwiftRule swiftContainer = new DockerSwiftRule();
 
     public DockerSwiftTestRule() {
         this(PayloadCodecFactory.DEFAULT);

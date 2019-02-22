@@ -27,6 +27,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.PayloadCodec;
+import org.apache.james.modules.objectstorage.aws.s3.AwsS3ConfigurationReader;
 import org.apache.james.modules.objectstorage.swift.SwiftAuthConfiguration;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -69,12 +70,21 @@ public class ObjectStorageBlobConfiguration {
             .codec(payloadCodecFactory)
             .provider(ObjectStorageProvider.from(provider))
             .container(ContainerName.of(namespace))
-            .authConfiguration(SwiftAuthConfiguration.defineAuthApi(configuration))
+            .authConfiguration(authConfiguration(provider, configuration))
             .aesSalt(aesSalt)
             .aesPassword(aesPassword)
             .build();
     }
 
+    private static SpecificAuthConfiguration authConfiguration(String provider, Configuration configuration) throws ConfigurationException {
+        switch (ObjectStorageProvider.from(provider)) {
+            case SWIFT:
+                return SwiftAuthConfiguration.defineAuthApi(configuration);
+            case AWSS3:
+                return AwsS3ConfigurationReader.readAwsS3Configuration(configuration);
+        }
+        throw new ConfigurationException("Unknown object storage provider: " + provider);
+    }
 
     public static Builder.RequirePayloadCodec builder() {
         return payloadCodec -> provider -> container -> authConfiguration -> new Builder.ReadyToBuild(payloadCodec, provider, container, authConfiguration);
@@ -107,6 +117,7 @@ public class ObjectStorageBlobConfiguration {
             private final ObjectStorageProvider provider;
             private final ContainerName container;
             private final SpecificAuthConfiguration specificAuthConfiguration;
+
             private Optional<String> aesSalt;
             private Optional<char[]> aesPassword;
 

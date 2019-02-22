@@ -30,12 +30,19 @@ class ObjectStorageProviderTest {
     @Test
     void fromShouldThrowWhenUnkownObjectStorage() {
         assertThatThrownBy(() -> ObjectStorageProvider.from("unknown"))
-            .isInstanceOf(RuntimeException.class)
+            .isInstanceOf(ConfigurationException.class)
             .hasMessage("Unknown object storage provider: unknown");
     }
 
     @Test
-    void fromShouldReturnThenObjectStorage() throws ConfigurationException {
-        assertThat(ObjectStorageProvider.from("swift")).isEqualTo(ObjectStorageProvider.SWIFT);
+    void fromShouldMatchSwift() throws ConfigurationException {
+        assertThat(ObjectStorageProvider.from("swift"))
+            .isEqualTo(ObjectStorageProvider.SWIFT);
+    }
+
+    @Test
+    void fromShouldMatchAwsS3() throws ConfigurationException {
+        assertThat(ObjectStorageProvider.from("aws-s3"))
+            .isEqualTo(ObjectStorageProvider.AWSS3);
     }
 }

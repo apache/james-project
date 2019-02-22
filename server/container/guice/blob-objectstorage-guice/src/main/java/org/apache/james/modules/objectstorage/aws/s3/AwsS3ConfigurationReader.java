@@ -17,26 +17,23 @@
  * under the License.
  */
 
-package org.apache.james.modules.objectstorage;
+package org.apache.james.modules.objectstorage.aws.s3;
 
-import java.util.Arrays;
+import org.apache.commons.configuration.Configuration;
 
-import org.apache.commons.configuration.ConfigurationException;
+public class AwsS3ConfigurationReader {
 
-public enum ObjectStorageProvider {
-    SWIFT("swift"),
-    AWSS3("aws-s3");
+    static final String OBJECTSTORAGE_ENDPOINT = "objectstorage.s3.endPoint";
+    static final String OBJECTSTORAGE_ACCESKEYID = "objectstorage.s3.accessKeyId";
+    static final String OBJECTSTORAGE_SECRETKEY = "objectstorage.s3.secretKey";
 
-    private final String name;
+    public static AwsS3AuthConfiguration readAwsS3Configuration(Configuration configuration) {
 
-    ObjectStorageProvider(String name) {
-        this.name = name;
-    }
-
-    public static ObjectStorageProvider from(String provider) throws ConfigurationException {
-        return Arrays.stream(values())
-            .filter(value -> value.name.equals(provider))
-            .findFirst()
-            .orElseThrow(() -> new ConfigurationException("Unknown object storage provider: " + provider));
+        return AwsS3AuthConfiguration.builder()
+                .endpoint(configuration.getString(OBJECTSTORAGE_ENDPOINT))
+                .accessKeyId(configuration.getString(OBJECTSTORAGE_ACCESKEYID))
+                .secretKey(configuration.getString(OBJECTSTORAGE_SECRETKEY))
+                .build();
     }
 }
+

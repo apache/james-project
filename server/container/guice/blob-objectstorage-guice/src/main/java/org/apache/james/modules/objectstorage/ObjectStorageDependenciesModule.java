@@ -71,7 +71,10 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
     }
 
     private ObjectStorageBlobsDAOBuilder.RequireContainerName selectDaoBuilder(ObjectStorageBlobConfiguration configuration) {
-        return SwiftObjectStorage.builder(configuration);
+        if (configuration.getProvider() == ObjectStorageProvider.SWIFT) {
+            return SwiftObjectStorage.builder(configuration);
+        }
+        throw new IllegalArgumentException("unknown provider " + configuration.getProvider());
     }
 
 }

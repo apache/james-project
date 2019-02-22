@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.james.blob.objectstorage.aws;
+package org.apache.james.modules.objectstorage.aws.s3;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
@@ -26,25 +26,30 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class AwsS3ObjectStorageConfigurationTest {
+public class AwsS3AuthConfigurationTest {
 
     @Test
     public void credentialsShouldRespectBeanContract() {
-        EqualsVerifier.forClass(AwsS3ObjectStorageConfiguration.class).verify();
+        EqualsVerifier.forClass(AwsS3AuthConfiguration.class).verify();
     }
 
     @Test
     public void builderShouldThrowWhenEndpointIsNull() {
-        assertThatThrownBy(() -> AwsS3ObjectStorageConfiguration.builder()
+        assertThatThrownBy(() -> AwsS3AuthConfiguration.builder()
+                                    .endpoint(null)
+                                    .accessKeyId("myAccessKeyId")
+                                    .secretKey("mySecretKey")
                                     .build())
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(NullPointerException.class)
             .hasMessage("'endpoint' is mandatory");
     }
 
     @Test
     public void builderShouldThrowWhenEndpointIsEmpty() {
-        assertThatThrownBy(() -> AwsS3ObjectStorageConfiguration.builder()
+        assertThatThrownBy(() -> AwsS3AuthConfiguration.builder()
                                     .endpoint("")
+                                    .accessKeyId("myAccessKeyId")
+                                    .secretKey("mySecretKey")
                                     .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("'endpoint' is mandatory");
@@ -52,18 +57,21 @@ public class AwsS3ObjectStorageConfigurationTest {
 
     @Test
     public void builderShouldThrowWhenAccessKeyIdIsNull() {
-        assertThatThrownBy(() -> AwsS3ObjectStorageConfiguration.builder()
+        assertThatThrownBy(() -> AwsS3AuthConfiguration.builder()
                                     .endpoint("myEndpoint")
+                                    .accessKeyId(null)
+                                    .secretKey("mySecretKey")
                                     .build())
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(NullPointerException.class)
             .hasMessage("'accessKeyId' is mandatory");
     }
 
     @Test
     public void builderShouldThrowWhenAccessKeyIdIsEmpty() {
-        assertThatThrownBy(() -> AwsS3ObjectStorageConfiguration.builder()
+        assertThatThrownBy(() -> AwsS3AuthConfiguration.builder()
                                     .endpoint("myEndpoint")
                                     .accessKeyId("")
+                                    .secretKey("mySecretKey")
                                     .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("'accessKeyId' is mandatory");
@@ -71,17 +79,18 @@ public class AwsS3ObjectStorageConfigurationTest {
 
     @Test
     public void builderShouldThrowWhenSecretKeyIsNull() {
-        assertThatThrownBy(() -> AwsS3ObjectStorageConfiguration.builder()
+        assertThatThrownBy(() -> AwsS3AuthConfiguration.builder()
                                     .endpoint("myEndpoint")
                                     .accessKeyId("myAccessKeyId")
+                                    .secretKey(null)
                                     .build())
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(NullPointerException.class)
             .hasMessage("'secretKey' is mandatory");
     }
 
     @Test
     public void builderShouldThrowWhenSecretKeyIsEmpty() {
-        assertThatThrownBy(() -> AwsS3ObjectStorageConfiguration.builder()
+        assertThatThrownBy(() -> AwsS3AuthConfiguration.builder()
                                     .endpoint("myEndpoint")
                                     .accessKeyId("myAccessKeyId")
                                     .secretKey("")
@@ -95,7 +104,7 @@ public class AwsS3ObjectStorageConfigurationTest {
         String endpoint = "myEndpoint";
         String accessKeyId = "myAccessKeyId";
         String secretKey = "mySecretKey";
-        AwsS3ObjectStorageConfiguration configuration = AwsS3ObjectStorageConfiguration.builder()
+        AwsS3AuthConfiguration configuration = AwsS3AuthConfiguration.builder()
             .endpoint(endpoint)
             .accessKeyId(accessKeyId)
             .secretKey(secretKey)

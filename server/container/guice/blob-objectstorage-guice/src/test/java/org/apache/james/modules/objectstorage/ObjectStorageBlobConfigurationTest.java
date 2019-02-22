@@ -157,4 +157,17 @@ class ObjectStorageBlobConfigurationTest {
         assertThatThrownBy(() -> ObjectStorageBlobConfiguration.from(configuration)).isInstanceOf(IllegalStateException.class);
     }
 
+    @Test
+    void shouldThrowWhenUnknownProvider() throws Exception {
+        MapConfiguration configuration = new MapConfiguration(
+            ImmutableMap.<String, Object>builder()
+                .put("objectstorage.payload.codec", PayloadCodecFactory.DEFAULT.name())
+                .put("objectstorage.provider", "unknown")
+                .put("objectstorage.namespace", "foo")
+                .build());
+
+        assertThatThrownBy(() -> ObjectStorageBlobConfiguration.from(configuration))
+            .isInstanceOf(ConfigurationException.class)
+            .hasMessage("Unknown object storage provider: unknown");
+    }
 }
