@@ -31,7 +31,11 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.vault.DeletedMessage.Builder.FinalStage;
+import org.apache.james.vault.DeletedMessage.Builder.Steps.RequireMetadata;
+import org.apache.james.vault.DeletedMessage.Builder.Steps.RequirePayload;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
 public class DeletedMessage {
@@ -97,6 +101,18 @@ public class DeletedMessage {
             T content(Supplier<InputStream> content);
         }
 
+        interface Steps {
+            interface RequireMailboxContext<T> extends RequireMessageId<RequireOriginMailboxes<RequireUser<T>>> {}
+
+            interface RequireEnvelope<T> extends RequireSender<RequireRecipients<T>> {}
+
+            interface RequireDates<T> extends RequireDeliveryDate<RequireDeletionDate<T>> {}
+
+            interface RequireMetadata<T> extends RequireMailboxContext<RequireDates<RequireEnvelope<T>>> {}
+
+            interface RequirePayload<T> extends RequireContent<RequireHasAttachment<T>> {}
+        }
+
         public static class FinalStage {
             private final MessageId messageId;
             private final List<MailboxId> originMailboxes;
@@ -136,12 +152,9 @@ public class DeletedMessage {
         }
     }
 
-    public static Builder.RequireMessageId<Builder.RequireOriginMailboxes<Builder.RequireUser<Builder.RequireDeliveryDate<
-        Builder.RequireDeletionDate<Builder.RequireContent<Builder.RequireSender<Builder.RequireRecipients<
-            Builder.RequireHasAttachment<Builder.FinalStage>>>>>>>>> builder() {
-
-        return messageId -> originMailboxes -> user -> deliveryDate -> deletionDate -> content -> sender -> recipients ->
-            hasAttachment -> new Builder.FinalStage(messageId, originMailboxes, user, deliveryDate, deletionDate, sender,
+    public static RequireMetadata<RequirePayload<FinalStage>> builder() {
+        return messageId -> originMailboxes -> user -> deliveryDate -> deletionDate -> sender -> recipients -> content -> hasAttachment ->
+            new Builder.FinalStage(messageId, originMailboxes, user, deliveryDate, deletionDate, sender,
                 recipients, hasAttachment, content);
 
     }
@@ -235,5 +248,13 @@ public class DeletedMessage {
     public final int hashCode() {
         return Objects.hash(messageId, originMailboxes, owner, content, deliveryDate, deletionDate, sender, recipients,
             subject, hasAttachment);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("owner", owner)
+            .add("messageId", messageId)
+            .toString();
     }
 }

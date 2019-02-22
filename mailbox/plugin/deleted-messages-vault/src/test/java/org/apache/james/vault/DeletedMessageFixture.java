@@ -52,9 +52,9 @@ public interface DeletedMessageFixture {
         .user(USER)
         .deliveryDate(DELIVERY_DATE)
         .deletionDate(DELETION_DATE)
-        .content(() -> new ByteArrayInputStream(CONTENT))
         .sender(MaybeSender.of(SENDER))
         .recipients(RECIPIENT1, RECIPIENT2)
+        .content(() -> new ByteArrayInputStream(CONTENT))
         .hasAttachment(false)
         .build();
     Supplier<DeletedMessage.Builder.FinalStage> FINAL_STAGE = () -> DeletedMessage.builder()
@@ -63,9 +63,9 @@ public interface DeletedMessageFixture {
         .user(USER)
         .deliveryDate(DELIVERY_DATE)
         .deletionDate(DELETION_DATE)
-        .content(() -> new ByteArrayInputStream(CONTENT))
         .sender(MaybeSender.of(SENDER))
         .recipients(RECIPIENT1, RECIPIENT2)
+        .content(() -> new ByteArrayInputStream(CONTENT))
         .hasAttachment(false);
     DeletedMessage DELETED_MESSAGE_WITH_SUBJECT = FINAL_STAGE.get()
         .subject(SUBJECT)
