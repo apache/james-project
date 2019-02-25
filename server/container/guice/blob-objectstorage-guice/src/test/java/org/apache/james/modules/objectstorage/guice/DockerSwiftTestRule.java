@@ -33,6 +33,7 @@ import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.TenantName;
 import org.apache.james.blob.objectstorage.swift.UserName;
 import org.apache.james.modules.objectstorage.ObjectStorageBlobConfiguration;
+import org.apache.james.modules.objectstorage.ObjectStorageProvider;
 import org.apache.james.modules.objectstorage.PayloadCodecFactory;
 import org.apache.james.utils.GuiceProbe;
 import org.junit.runner.Description;
@@ -107,7 +108,7 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
         ContainerName containerName = ContainerName.of(UUID.randomUUID().toString());
         ObjectStorageBlobConfiguration configuration = ObjectStorageBlobConfiguration.builder()
             .codec(payloadCodecFactory)
-            .swift()
+            .provider(ObjectStorageProvider.SWIFT)
             .container(containerName)
             .keystone2(authConfiguration)
             .aesSalt("c603a7327ee3dcbc031d8d34b1096c605feca5e1")

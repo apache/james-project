@@ -176,7 +176,7 @@ class ObjectStorageBlobConfigurationTest {
             .isEqualTo(
                 ObjectStorageBlobConfiguration.builder()
                     .codec(PayloadCodecFactory.DEFAULT)
-                    .swift()
+                    .provider(ObjectStorageProvider.SWIFT)
                     .container(ContainerName.of("foo"))
                     .tempAuth(SwiftTempAuthObjectStorage.configBuilder()
                             .endpoint(URI.create("http://swift/endpoint"))
@@ -206,7 +206,7 @@ class ObjectStorageBlobConfigurationTest {
             .isEqualTo(
                 ObjectStorageBlobConfiguration.builder()
                     .codec(PayloadCodecFactory.DEFAULT)
-                    .swift()
+                    .provider(ObjectStorageProvider.SWIFT)
                     .container(ContainerName.of("foo"))
                     .keystone2(SwiftKeystone2ObjectStorage.configBuilder()
                         .endpoint(URI.create("http://swift/endpoint"))
@@ -235,7 +235,7 @@ class ObjectStorageBlobConfigurationTest {
             .isEqualTo(
                 ObjectStorageBlobConfiguration.builder()
                     .codec(PayloadCodecFactory.DEFAULT)
-                    .swift()
+                    .provider(ObjectStorageProvider.SWIFT)
                     .container(ContainerName.of("foo"))
                     .keystone3(SwiftKeystone3ObjectStorage.configBuilder()
                         .endpoint(URI.create("http://swift/endpoint"))

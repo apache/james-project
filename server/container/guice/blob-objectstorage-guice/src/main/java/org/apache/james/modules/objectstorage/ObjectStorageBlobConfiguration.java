@@ -74,7 +74,7 @@ public class ObjectStorageBlobConfiguration {
 
         Builder.RequireAuthConfiguration requireAuthConfiguration = builder()
             .codec(payloadCodecFactory)
-            .swift()
+            .provider(ObjectStorageProvider.from(provider))
             .container(ContainerName.of(namespace));
 
         return defineAuthApi(configuration, authApi, requireAuthConfiguration)
@@ -97,7 +97,7 @@ public class ObjectStorageBlobConfiguration {
 
 
     public static Builder.RequirePayloadCodec builder() {
-        return payloadCodec -> () -> container -> new Builder.RequireAuthConfiguration(payloadCodec,"swift", container);
+        return payloadCodec -> provider -> container -> new Builder.RequireAuthConfiguration(payloadCodec, provider, container);
     }
 
     public interface Builder {
@@ -108,7 +108,7 @@ public class ObjectStorageBlobConfiguration {
 
         @FunctionalInterface
         public interface RequireProvider {
-            RequireContainerName swift();
+            RequireContainerName provider(ObjectStorageProvider provider);
         }
 
         @FunctionalInterface
@@ -119,10 +119,10 @@ public class ObjectStorageBlobConfiguration {
         public static class RequireAuthConfiguration {
 
             private final PayloadCodecFactory payloadCodec;
-            private final String provider;
+            private final ObjectStorageProvider provider;
             private final ContainerName container;
 
-            private RequireAuthConfiguration(PayloadCodecFactory payloadCodec, String provider, ContainerName container) {
+            private RequireAuthConfiguration(PayloadCodecFactory payloadCodec, ObjectStorageProvider provider, ContainerName container) {
                 this.payloadCodec = payloadCodec;
                 this.provider = provider;
                 this.container = container;
@@ -144,7 +144,7 @@ public class ObjectStorageBlobConfiguration {
         public static class ReadyToBuild {
 
             private final PayloadCodecFactory payloadCodecFactory;
-            private final String provider;
+            private final ObjectStorageProvider provider;
             private final ContainerName container;
             private final String authApiName;
             private final Optional<SwiftTempAuthObjectStorage.Configuration> tempAuth;
@@ -153,7 +153,8 @@ public class ObjectStorageBlobConfiguration {
             private Optional<String> aesSalt;
             private Optional<char[]> aesPassword;
 
-            public ReadyToBuild(PayloadCodecFactory payloadCodecFactory, String provider, ContainerName container, String authApiName,
+            public ReadyToBuild(PayloadCodecFactory payloadCodecFactory, ObjectStorageProvider provider,
+                                ContainerName container, String authApiName,
                                 Optional<SwiftTempAuthObjectStorage.Configuration> tempAuth,
                                 Optional<SwiftKeystone2ObjectStorage.Configuration> keystone2Configuration,
                                 Optional<SwiftKeystone3ObjectStorage.Configuration> keystone3Configuration) {
@@ -205,7 +206,7 @@ public class ObjectStorageBlobConfiguration {
     private final PayloadCodecFactory payloadCodec;
     private final String authApi;
     private final ContainerName namespace;
-    private final String provider;
+    private final ObjectStorageProvider provider;
     private final Optional<SwiftTempAuthObjectStorage.Configuration> tempAuth;
     private final Optional<SwiftKeystone2ObjectStorage.Configuration> keystone2Configuration;
     private final Optional<SwiftKeystone3ObjectStorage.Configuration> keystone3Configuration;
@@ -213,7 +214,8 @@ public class ObjectStorageBlobConfiguration {
     private Optional<char[]> aesPassword;
 
     @VisibleForTesting
-    ObjectStorageBlobConfiguration(PayloadCodecFactory payloadCodec, String provider, ContainerName namespace,
+    ObjectStorageBlobConfiguration(PayloadCodecFactory payloadCodec, ObjectStorageProvider provider,
+                                   ContainerName namespace,
                                    Optional<String> aesSalt,
                                    Optional<char[]> aesPassword, String authApi,
                                    Optional<SwiftTempAuthObjectStorage.Configuration> tempAuth,
@@ -238,7 +240,7 @@ public class ObjectStorageBlobConfiguration {
         return namespace;
     }
 
-    public String getProvider() {
+    public ObjectStorageProvider getProvider() {
         return provider;
     }
 

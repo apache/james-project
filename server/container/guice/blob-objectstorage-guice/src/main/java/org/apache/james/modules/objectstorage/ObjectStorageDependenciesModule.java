@@ -44,8 +44,6 @@ import com.google.inject.Scopes;
 
 public class ObjectStorageDependenciesModule extends AbstractModule {
 
-    private static final String OBJECTSTORAGE_PROVIDER_SWIFT = "swift";
-
     @Override
     protected void configure() {
         bind(BlobId.Factory.class).to(HashBlobId.Factory.class).in(Scopes.SINGLETON);
@@ -75,7 +73,7 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
     }
 
     private ObjectStorageBlobsDAOBuilder.RequireContainerName selectDaoBuilder(ObjectStorageBlobConfiguration configuration) {
-        if (!configuration.getProvider().equals(OBJECTSTORAGE_PROVIDER_SWIFT)) {
+        if (configuration.getProvider() != ObjectStorageProvider.SWIFT) {
             throw new IllegalArgumentException("unknown provider " + configuration.getProvider());
         }
         switch (configuration.getAuthApi()) {

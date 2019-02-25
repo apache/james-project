@@ -73,7 +73,7 @@ class ObjectStorageBlobStoreModuleTest {
 
             ObjectStorageBlobConfiguration tmpAuth = ObjectStorageBlobConfiguration.builder()
                 .codec(PayloadCodecFactory.DEFAULT)
-                .swift()
+                .provider(ObjectStorageProvider.SWIFT)
                 .container(generateContainerName())
                 .tempAuth(SwiftTempAuthObjectStorage.configBuilder()
                     .endpoint(dockerSwift.swiftEndpoint())
@@ -86,7 +86,7 @@ class ObjectStorageBlobStoreModuleTest {
                 .build();
             ObjectStorageBlobConfiguration keystone2 = ObjectStorageBlobConfiguration.builder()
                 .codec(PayloadCodecFactory.DEFAULT)
-                .swift()
+                .provider(ObjectStorageProvider.SWIFT)
                 .container(generateContainerName())
                 .keystone2(SwiftKeystone2ObjectStorage.configBuilder()
                     .endpoint(dockerSwift.keystoneV2Endpoint())
@@ -97,7 +97,7 @@ class ObjectStorageBlobStoreModuleTest {
                 .build();
             ObjectStorageBlobConfiguration keystone3 = ObjectStorageBlobConfiguration.builder()
                 .codec(PayloadCodecFactory.DEFAULT)
-                .swift()
+                .provider(ObjectStorageProvider.SWIFT)
                 .container(generateContainerName())
                 .keystone3(SwiftKeystone3ObjectStorage.configBuilder()
                     .endpoint(dockerSwift.keystoneV3Endpoint())
