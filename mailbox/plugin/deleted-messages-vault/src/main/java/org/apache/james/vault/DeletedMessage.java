@@ -132,6 +132,11 @@ public class DeletedMessage {
                 return this;
             }
 
+            public FinalStage subject(Optional<String> subject) {
+                this.subject = subject;
+                return this;
+            }
+
             public DeletedMessage build() {
                 return new DeletedMessage(messageId, originMailboxes, owner, deliveryDate, deletionDate, sender,
                     recipients, subject, hasAttachment);
