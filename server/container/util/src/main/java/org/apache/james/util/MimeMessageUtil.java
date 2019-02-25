@@ -31,9 +31,13 @@ import javax.mail.internet.MimeMessage;
 public class MimeMessageUtil {
 
     public static String asString(MimeMessage mimeMessage) throws Exception {
+        return new String(asBytes(mimeMessage), StandardCharsets.UTF_8);
+    }
+
+    public static byte[] asBytes(MimeMessage mimeMessage) throws Exception {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         mimeMessage.writeTo(byteArrayOutputStream);
-        return new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8);
+        return byteArrayOutputStream.toByteArray();
     }
 
     public static MimeMessage defaultMimeMessage() {
