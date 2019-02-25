@@ -29,6 +29,7 @@ import org.apache.james.event.json.EventSerializer;
 import org.apache.james.metrics.api.MetricFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
 import com.rabbitmq.client.Connection;
 
 import reactor.core.publisher.Mono;
@@ -37,6 +38,7 @@ import reactor.rabbitmq.Sender;
 import reactor.rabbitmq.SenderOptions;
 
 public class RabbitMQEventBus implements EventBus {
+    private static final String NOT_RUNNING_ERROR_MESSAGE = "Event Bus is not running";
     static final String MAILBOX_EVENT = "mailboxEvent";
     static final String MAILBOX_EVENT_EXCHANGE_NAME = MAILBOX_EVENT + "-exchange";
     static final String EVENT_BUS_ID = "eventBusId";
@@ -100,28 +102,31 @@ public class RabbitMQEventBus implements EventBus {
 
     @Override
     public Registration register(MailboxListener listener, RegistrationKey key) {
-        if (isRunning) {
-            return keyRegistrationHandler.register(listener, key);
-        }
-        throw new IllegalStateException("Event Bus is not running");
+        Preconditions.checkState(isRunning, NOT_RUNNING_ERROR_MESSAGE);
+        return keyRegistrationHandler.register(listener, key);
     }
 
     @Override
     public Registration register(MailboxListener listener, Group group) {
-        if (isRunning) {
-            return groupRegistrationHandler.register(listener, group);
-        }
-        throw new IllegalStateException("Event Bus is not running");
+        Preconditions.checkState(isRunning, NOT_RUNNING_ERROR_MESSAGE);
+        return groupRegistrationHandler.register(listener, group);
     }
 
     @Override
     public Mono<Void> dispatch(Event event, Set<RegistrationKey> key) {
-        if (isRunning) {
-            if (!event.isNoop()) {
-                return eventDispatcher.dispatch(event, key);
-            }
-            return Mono.empty();
+        Preconditions.checkState(isRunning, NOT_RUNNING_ERROR_MESSAGE);
+        if (!event.isNoop()) {
+            return eventDispatcher.dispatch(event, key);
         }
-        throw new IllegalStateException("Event Bus is not running");
+        return Mono.empty();
+    }
+
+    @Override
+    public Mono<Void> reDeliver(Group group, Event event) {
+        Preconditions.checkState(isRunning, NOT_RUNNING_ERROR_MESSAGE);
+        if (!event.isNoop()) {
+            return groupRegistrationHandler.retrieveGroupRegistration(group).reDeliver(event);
+        }
+        return Mono.empty();
     }
 }

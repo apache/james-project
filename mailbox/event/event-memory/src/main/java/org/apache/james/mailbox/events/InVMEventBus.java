@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.events;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -84,6 +85,21 @@ public class InVMEventBus implements EventBus {
                 .onErrorResume(throwable -> Mono.empty());
         }
         return Mono.empty();
+    }
+
+    @Override
+    public Mono<Void> reDeliver(Group group, Event event) {
+        if (!event.isNoop()) {
+            return Mono.fromCallable(() -> groupDelivery(event, retrieveListenerFromGroup(group), group))
+                .flatMap(EventDelivery.ExecutionStages::synchronousListenerFuture)
+                .then();
+        }
+        return Mono.empty();
+    }
+
+    private MailboxListener retrieveListenerFromGroup(Group group) {
+        return Optional.ofNullable(groups.get(group))
+            .orElseThrow(() -> new GroupRegistrationNotFound(group));
     }
 
     private Flux<EventDelivery.ExecutionStages> keyDeliveries(Event event, Set<RegistrationKey> keys) {

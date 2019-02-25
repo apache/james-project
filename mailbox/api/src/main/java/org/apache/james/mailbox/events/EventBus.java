@@ -50,6 +50,8 @@ public interface EventBus {
 
     Mono<Void> dispatch(Event event, Set<RegistrationKey> key);
 
+    Mono<Void> reDeliver(Group group, Event event);
+
     default Mono<Void> dispatch(Event event, RegistrationKey key) {
         return dispatch(event, ImmutableSet.of(key));
     }

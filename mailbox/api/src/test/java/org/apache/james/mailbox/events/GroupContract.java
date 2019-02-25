@@ -24,7 +24,7 @@ import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT_2;
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT_ID;
 import static org.apache.james.mailbox.events.EventBusTestFixture.FIVE_HUNDRED_MS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_A;
-import static org.apache.james.mailbox.events.EventBusTestFixture.GroupB;
+import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_B;
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.ONE_SECOND;
 import static org.apache.james.mailbox.events.EventBusTestFixture.WAIT_CONDITION;
@@ -158,7 +158,7 @@ public interface GroupContract {
             MailboxListener listener = newListener();
             MailboxListener listener2 = newListener();
             eventBus().register(listener, GROUP_A);
-            eventBus().register(listener2, new GroupB());
+            eventBus().register(listener2, GROUP_B);
 
             eventBus().dispatch(EVENT, NO_KEYS).block();
 
@@ -255,7 +255,7 @@ public interface GroupContract {
             doThrow(new RuntimeException()).when(failingListener).event(any());
 
             eventBus().register(failingListener, GROUP_A);
-            eventBus().register(listener, new GroupB());
+            eventBus().register(listener, GROUP_B);
 
             eventBus().dispatch(EVENT, NO_KEYS).block();
 
@@ -275,17 +275,102 @@ public interface GroupContract {
             verify(listener1, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
             verify(listener2, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
+
+        @Test
+        default void groupListenerShouldReceiveEventWhenRedeliver() throws Exception {
+            MailboxListener listener = newListener();
+
+            eventBus().register(listener, GROUP_A);
+
+            eventBus().reDeliver(GROUP_A, EVENT).block();
+
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+        }
+
+        @Test
+        default void redeliverShouldNotThrowWhenAGroupListenerFails() throws Exception {
+            MailboxListener listener = newListener();
+            doThrow(new RuntimeException()).when(listener).event(any());
+
+            eventBus().register(listener, GROUP_A);
+
+            assertThatCode(() -> eventBus().reDeliver(GROUP_A, EVENT).block())
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        default void redeliverShouldThrowWhenGroupNotRegistered() {
+            assertThatThrownBy(() -> eventBus().reDeliver(GROUP_A, EVENT).block())
+                .isInstanceOf(GroupRegistrationNotFound.class);
+        }
+
+        @Test
+        default void redeliverShouldThrowAfterGroupIsUnregistered() {
+            MailboxListener listener = newListener();
+
+            eventBus().register(listener, GROUP_A).unregister();
+
+            assertThatThrownBy(() -> eventBus().reDeliver(GROUP_A, EVENT).block())
+                .isInstanceOf(GroupRegistrationNotFound.class);
+        }
+
+        @Test
+        default void redeliverShouldOnlySendEventToDefinedGroup() throws Exception {
+            MailboxListener listener = newListener();
+            MailboxListener listener2 = newListener();
+            eventBus().register(listener, GROUP_A);
+            eventBus().register(listener2, GROUP_B);
+
+            eventBus().reDeliver(GROUP_A, EVENT).block();
+
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener2, after(FIVE_HUNDRED_MS.toMillis()).never()).event(any());
+        }
+
+        @Test
+        default void groupListenersShouldNotReceiveNoopRedeliveredEvents() throws Exception {
+            MailboxListener listener = newListener();
+
+            eventBus().register(listener, GROUP_A);
+
+            MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), User.fromUsername("bob"), MailboxPath.forUser("bob", "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
+            eventBus().reDeliver(GROUP_A, noopEvent).block();
+
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never()).event(any());
+        }
     }
 
     interface MultipleEventBusGroupContract extends EventBusContract.MultipleEventBusContract {
 
         @Test
-        default void groupsDefinedOnlyOnSomeNodesShouldBeNotified() throws Exception {
+        default void groupsDefinedOnlyOnSomeNodesShouldBeNotifiedWhenDispatch() throws Exception {
             MailboxListener mailboxListener = newListener();
 
             eventBus().register(mailboxListener, GROUP_A);
 
             eventBus2().dispatch(EVENT, NO_KEYS).block();
+
+            verify(mailboxListener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+        }
+
+        @Test
+        default void groupsDefinedOnlyOnSomeNodesShouldNotBeNotifiedWhenRedeliver() {
+            MailboxListener mailboxListener = newListener();
+
+            eventBus().register(mailboxListener, GROUP_A);
+
+            assertThatThrownBy(() -> eventBus2().reDeliver(GROUP_A, EVENT).block())
+                .isInstanceOf(GroupRegistrationNotFound.class);
+        }
+
+        @Test
+        default void groupListenersShouldBeExecutedOnceWhenRedeliverInADistributedEnvironment() throws Exception {
+            MailboxListener mailboxListener = newListener();
+
+            eventBus().register(mailboxListener, GROUP_A);
+            eventBus2().register(mailboxListener, GROUP_A);
+
+            eventBus2().reDeliver(GROUP_A, EVENT).block();
 
             verify(mailboxListener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }

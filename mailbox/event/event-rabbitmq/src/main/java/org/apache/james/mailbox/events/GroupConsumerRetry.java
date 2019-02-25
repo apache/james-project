@@ -25,6 +25,9 @@ import static org.apache.james.backend.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.mailbox.events.GroupRegistration.RETRY_COUNT;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT;
 
+import java.nio.charset.StandardCharsets;
+
+import org.apache.james.event.json.EventSerializer;
 import org.apache.james.util.MDCStructuredLogger;
 import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
@@ -70,13 +73,16 @@ class GroupConsumerRetry {
     private final RetryBackoffConfiguration retryBackoff;
     private final EventDeadLetters eventDeadLetters;
     private final Group group;
+    private final EventSerializer eventSerializer;
 
-    GroupConsumerRetry(Sender sender, Group group, RetryBackoffConfiguration retryBackoff, EventDeadLetters eventDeadLetters) {
+    GroupConsumerRetry(Sender sender, Group group, RetryBackoffConfiguration retryBackoff,
+                       EventDeadLetters eventDeadLetters, EventSerializer eventSerializer) {
         this.sender = sender;
         this.retryExchangeName = RetryExchangeName.of(group);
         this.retryBackoff = retryBackoff;
         this.eventDeadLetters = eventDeadLetters;
         this.group = group;
+        this.eventSerializer = eventSerializer;
     }
 
     Mono<Void> createRetryExchange(GroupRegistration.WorkQueueName queueName) {
@@ -91,27 +97,33 @@ class GroupConsumerRetry {
             .then();
     }
 
-    Mono<Void> handleRetry(byte[] eventAsBytes, Event event, int currentRetryCount, Throwable throwable) {
+    Mono<Void> handleRetry(Event event, int currentRetryCount, Throwable throwable) {
         createStructuredLogger(event).log(logger -> logger.error("Exception happens when handling event after {} retries", currentRetryCount, throwable));
 
-        return retryOrStoreToDeadLetter(event, eventAsBytes, currentRetryCount);
+        return handleRetry(event, currentRetryCount);
     }
 
-    private Mono<Void> retryOrStoreToDeadLetter(Event event, byte[] eventAsByte, int currentRetryCount) {
+    Mono<Void> handleRetry(Event event, int currentRetryCount) {
+        return retryOrStoreToDeadLetter(event, currentRetryCount);
+    }
+
+    private Mono<Void> retryOrStoreToDeadLetter(Event event, int currentRetryCount) {
         if (currentRetryCount >= retryBackoff.getMaxRetries()) {
             return eventDeadLetters.store(group, event);
         }
-        return sendRetryMessage(event, eventAsByte, currentRetryCount);
+        return sendRetryMessage(event, currentRetryCount);
     }
 
-    private Mono<Void> sendRetryMessage(Event event, byte[] eventAsByte, int currentRetryCount) {
+    private Mono<Void> sendRetryMessage(Event event, int currentRetryCount) {
+        byte[] eventAsBytes = eventSerializer.toJson(event).getBytes(StandardCharsets.UTF_8);
+
         Mono<OutboundMessage> retryMessage = Mono.just(new OutboundMessage(
             retryExchangeName.asString(),
             EMPTY_ROUTING_KEY,
             new AMQP.BasicProperties.Builder()
                 .headers(ImmutableMap.of(RETRY_COUNT, currentRetryCount + 1))
                 .build(),
-            eventAsByte));
+            eventAsBytes));
 
         return sender.send(retryMessage)
             .doOnError(throwable -> createStructuredLogger(event)

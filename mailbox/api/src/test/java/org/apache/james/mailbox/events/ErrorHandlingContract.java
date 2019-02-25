@@ -239,7 +239,7 @@ interface ErrorHandlingContract extends EventBusContract {
     }
 
     @Test
-    default void deadLetterShouldStoreWhenFailsGreaterThanMaxRetries() throws Exception {
+    default void deadLetterShouldStoreWhenDispatchFailsGreaterThanMaxRetries() {
         EventCollector eventCollector = eventCollector();
 
         doThrow(new RuntimeException())
@@ -256,5 +256,39 @@ interface ErrorHandlingContract extends EventBusContract {
             .containsOnly(EVENT.getEventId()));
         assertThat(eventCollector.getEvents())
             .isEmpty();
+    }
+
+    @Test
+    default void deadLetterShouldStoreWhenRedeliverFailsGreaterThanMaxRetries() {
+        EventCollector eventCollector = eventCollector();
+
+        doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doThrow(new RuntimeException())
+            .doCallRealMethod()
+            .when(eventCollector).event(EVENT);
+
+        eventBus().register(eventCollector, GROUP_A);
+        eventBus().reDeliver(GROUP_A, EVENT).block();
+
+        WAIT_CONDITION.until(() -> assertThat(deadLetter().failedEventIds(GROUP_A).toIterable())
+            .containsOnly(EVENT.getEventId()));
+        assertThat(eventCollector.getEvents())
+            .isEmpty();
+    }
+
+    @Test
+    default void redeliverShouldNotSendEventsToKeyListeners() {
+        EventCollector eventCollector = eventCollector();
+        EventCollector eventCollector2 = eventCollector();
+
+        eventBus().register(eventCollector, GROUP_A);
+        eventBus().register(eventCollector2, KEY_1);
+        eventBus().reDeliver(GROUP_A, EVENT).block();
+
+        WAIT_CONDITION
+            .until(() -> assertThat(eventCollector.getEvents()).hasSize(1));
+        assertThat(eventCollector2.getEvents()).isEmpty();
     }
 }

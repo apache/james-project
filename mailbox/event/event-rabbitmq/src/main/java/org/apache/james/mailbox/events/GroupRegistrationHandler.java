@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.events;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.james.event.json.EventSerializer;
@@ -48,6 +49,11 @@ class GroupRegistrationHandler {
         this.eventDeadLetters = eventDeadLetters;
         this.mailboxListenerExecutor = mailboxListenerExecutor;
         this.groupRegistrations = new ConcurrentHashMap<>();
+    }
+
+    GroupRegistration retrieveGroupRegistration(Group group) {
+        return Optional.ofNullable(groupRegistrations.get(group))
+            .orElseThrow(() -> new GroupRegistrationNotFound(group));
     }
 
     void stop() {

@@ -19,11 +19,11 @@
 
 package org.apache.james.mailbox.events;
 
-public class GroupAlreadyRegistered extends RuntimeException {
+public class GroupRegistrationNotFound extends RuntimeException {
     private final Group group;
 
-    public GroupAlreadyRegistered(Group group) {
-        super(group.asString() + " is already Registered and thus can not be used.");
+    public GroupRegistrationNotFound(Group group) {
+        super("Cannot retrieve group registration of group: " + group.asString());
         this.group = group;
     }
 

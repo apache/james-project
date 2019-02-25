@@ -345,6 +345,31 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
 
             @Test
+            void redeliverShouldWorkAfterRestartForOldRegistration() throws Exception {
+                eventBus.start();
+                MailboxListener listener = newListener();
+                eventBus.register(listener, GROUP_A);
+
+                rabbitMQExtension.getRabbitMQ().restart();
+
+                eventBus.reDeliver(GROUP_A, EVENT).block();
+                verify(listener, after(THIRTY_SECONDS.toMillis()).times(1)).event(EVENT);
+            }
+
+            @Test
+            void redeliverShouldWorkAfterRestartForNewRegistration() throws Exception {
+                eventBus.start();
+                MailboxListener listener = newListener();
+
+                rabbitMQExtension.getRabbitMQ().restart();
+
+                eventBus.register(listener, GROUP_A);
+
+                eventBus.reDeliver(GROUP_A, EVENT).block();
+                verify(listener, after(THIRTY_SECONDS.toMillis()).times(1)).event(EVENT);
+            }
+
+            @Test
             void dispatchShouldWorkAfterRestartForOldKeyRegistration() throws Exception {
                 eventBus.start();
                 MailboxListener listener = newListener();
@@ -383,6 +408,23 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
                 eventBus.register(listener, GROUP_A);
                 eventBus.dispatch(EVENT, NO_KEYS).block();
+                verify(listener, after(THIRTY_SECONDS.toMillis()).times(1)).event(EVENT);
+            }
+
+            @Test
+            void redeliverShouldWorkAfterNetworkIssuesForNewRegistration() throws Exception {
+                eventBus.start();
+                MailboxListener listener = newListener();
+
+                rabbitMQExtension.getRabbitMQ().pause();
+
+                assertThatThrownBy(() -> eventBus.reDeliver(GROUP_A, EVENT).block())
+                    .isInstanceOf(GroupRegistrationNotFound.class);
+
+                rabbitMQExtension.getRabbitMQ().unpause();
+
+                eventBus.register(listener, GROUP_A);
+                eventBus.reDeliver(GROUP_A, EVENT).block();
                 verify(listener, after(THIRTY_SECONDS.toMillis()).times(1)).event(EVENT);
             }
 
