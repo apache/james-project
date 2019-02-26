@@ -22,7 +22,6 @@ package org.apache.james.server.core;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OptionalDataException;
@@ -151,7 +150,7 @@ public class MailImpl implements Disposable, Mail {
             return this;
         }
 
-        public Builder addRecipients(List<MailAddress> recipients) {
+        public Builder addRecipients(Collection<MailAddress> recipients) {
             this.recipients.addAll(recipients);
             return this;
         }
@@ -439,28 +438,6 @@ public class MailImpl implements Disposable, Mail {
         } catch (IOException | ClassNotFoundException e) {
             LOGGER.error("Error while deserializing attributes", e);
             setAttributesRaw(new HashMap<>());
-        }
-    }
-
-    /**
-     * A constructor that creates a MailImpl with the specified name, sender,
-     * recipients, and message data.
-     *
-     * @param name       the name of the MailImpl
-     * @param sender     the sender for this MailImpl
-     * @param recipients the collection of recipients of this MailImpl
-     * @param messageIn  a stream containing the message source
-     */
-    public MailImpl(String name, MailAddress sender, Collection<MailAddress> recipients, InputStream messageIn) throws MessagingException {
-        this(name, sender, recipients);
-        MimeMessageSource source = new MimeMessageInputStreamSource(name, messageIn);
-        // if MimeMessageCopyOnWriteProxy throws an error in the constructor we
-        // have to manually care disposing our source.
-        try {
-            this.setMessage(new MimeMessageCopyOnWriteProxy(source));
-        } catch (MessagingException e) {
-            LifecycleUtil.dispose(source);
-            throw e;
         }
     }
 
