@@ -25,7 +25,7 @@ import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_GENER
 import static org.apache.james.vault.DeletedMessageFixture.MESSAGE_ID;
 import static org.apache.james.vault.DeletedMessageFixture.USER;
 import static org.apache.james.vault.DeletedMessageFixture.USER_2;
-import static org.apache.james.vault.Query.ALL;
+import static org.apache.james.vault.search.Query.ALL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

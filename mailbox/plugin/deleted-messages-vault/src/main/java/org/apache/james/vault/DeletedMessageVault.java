@@ -21,6 +21,7 @@ package org.apache.james.vault;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.vault.search.Query;
 import org.reactivestreams.Publisher;
 
 public interface DeletedMessageVault {

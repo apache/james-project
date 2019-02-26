@@ -17,17 +17,20 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault;
+package org.apache.james.vault.search;
 
 import java.util.List;
+import java.util.function.Predicate;
+
+import org.apache.james.vault.DeletedMessage;
 
 import com.google.common.collect.ImmutableList;
 
 public class Query {
     public static final Query ALL = new Query(ImmutableList.of());
 
-    interface Criterion {
-
+    public static Query of(Criterion... criteria) {
+        return new Query(ImmutableList.copyOf(criteria));
     }
 
     private final List<Criterion> criteria;
@@ -36,7 +39,9 @@ public class Query {
         this.criteria = criteria;
     }
 
-    public List<Criterion> getCriteria() {
-        return criteria;
+    public Predicate<DeletedMessage> toPredicate() {
+        return criteria.stream()
+            .map(Criterion::toPredicate)
+            .reduce(any -> true, Predicate::and);
     }
 }
