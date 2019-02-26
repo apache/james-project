@@ -103,9 +103,12 @@ public class MailImpl implements Disposable, Mail {
     }
 
     public static MailImpl fromMimeMessage(String name, MimeMessage mimeMessage) throws MessagingException {
-        MailAddress sender = getSender(mimeMessage);
-        ImmutableList<MailAddress> recipients = getRecipients(mimeMessage);
-        return new MailImpl(name, sender, recipients, mimeMessage);
+        return MailImpl.builder()
+            .name(name)
+            .sender(getSender(mimeMessage))
+            .addRecipients(getRecipients(mimeMessage))
+            .mimeMessage(mimeMessage)
+            .build();
     }
 
     public static Builder builder() {
@@ -407,7 +410,8 @@ public class MailImpl implements Disposable, Mail {
 
     @SuppressWarnings({"unchecked", "deprecation"})
     private MailImpl(Mail mail, String newName) throws MessagingException {
-        this(newName, mail.getSender(), mail.getRecipients(), mail.getMessage());
+        this(newName, Optional.ofNullable(mail.getSender()), mail.getRecipients());
+        setMessage(new MimeMessageCopyOnWriteProxy(mail.getMessage()));
         setRemoteHost(mail.getRemoteHost());
         setRemoteAddr(mail.getRemoteAddr());
         setLastUpdated(mail.getLastUpdated());
@@ -427,15 +431,6 @@ public class MailImpl implements Disposable, Mail {
             LOGGER.error("Error while deserializing attributes", e);
             setAttributesRaw(new HashMap<>());
         }
-    }
-
-    /**
-     * A constructor that creates a MailImpl with the specified name, sender,
-     * recipients, and MimeMessage.
-     */
-    private MailImpl(String name, MailAddress sender, Collection<MailAddress> recipients, MimeMessage message) throws MessagingException {
-        this(name, Optional.ofNullable(sender), recipients);
-        this.setMessage(new MimeMessageCopyOnWriteProxy(message));
     }
 
     /**
