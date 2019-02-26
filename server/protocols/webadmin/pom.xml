@@ -38,6 +38,7 @@
         <module>webadmin-core</module>
         <module>webadmin-data</module>
         <module>webadmin-mailbox</module>
+        <module>webadmin-mailbox-deleted-message-vault</module>
         <module>webadmin-mailqueue</module>
         <module>webadmin-mailrepository</module>
         <module>webadmin-swagger</module>

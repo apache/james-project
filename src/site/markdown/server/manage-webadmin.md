@@ -44,6 +44,7 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
  - [Administrating Sieve quotas](#Administrating_Sieve_quotas)
  - [ReIndexing](#ReIndexing)
  - [Event Dead Letter](#Event_Dead_Letter)
+ - [Deleted Messages Vault](#Deleted_Messages_Vault)
  - [Task management](#Task_management)
  - [Cassandra extra operations](#Cassandra_extra_operations)
 
@@ -2495,6 +2496,50 @@ Response codes:
 ### Rescheduling group execution
 
 Not implemented yet.
+
+## Deleted Messages Vault
+
+The 'Deleted Message Vault plugin' allows you to keep users deleted messages during a given retention time. This set of routes allow you to *restore* users deleted messages or export them in an archive (not implemented yet).
+
+To move deleted messages in the vault, you need to specifically configure the DeletedMessageVault PreDeletionHook.
+
+Here are the following actions available on the 'Deleted Messages Vault'
+
+ - [Restore Deleted Messages](#Restore_deleted_messages)
+
+ Note that the 'Deleted Messages Vault' feature is only supported on top of Cassandra-Guice.
+
+### Restore Deleted Messages
+
+Deleted messages of a specific user can be restored by calling the following endpoint:
+
+```
+curl -XPOST http://ip:port/deletedMessages/user/userToRestore@domain.ext
+```
+
+**All** messages in the Deleted Messages Vault of an specified user will be appended to his 'Restored-Messages' mailbox, which will be created if needed.
+
+**Note**: Restoring matched messages by queries is not supported yet 
+
+Response code:
+
+ - 201: Task for restoring deleted has been created
+ - 400: Bad request, user parameter is invalid
+
+The scheduled task will have the following type `deletedMessages/restore` and the following `additionalInformation`:
+
+```
+{
+  "successfulRestoreCount": 47,
+  "errorRestoreCount": 0
+  "user": "userToRestore@domain.ext"
+}
+```
+
+while:
+ - successfulRestoreCount: number of restored messages
+ - errorRestoreCount: number of messages that failed to restore
+ - user: owner of deleted messages need to restore
 
 ## Task management
 
