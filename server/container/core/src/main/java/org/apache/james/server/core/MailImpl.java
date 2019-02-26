@@ -430,22 +430,6 @@ public class MailImpl implements Disposable, Mail {
         }
     }
 
-    /**
-     * Duplicate the MailImpl, replacing the mail name with the one passed in as
-     * an argument.
-     *
-     * @param newName the name for the duplicated mail
-     * @return a MailImpl that is a duplicate of this one with a different name
-     */
-    @VisibleForTesting Mail duplicate(String newName) {
-        try {
-            return new MailImpl(this, newName);
-        } catch (MessagingException me) {
-            // Ignored. Return null in the case of an error.
-        }
-        return null;
-    }
-
     @Override
     public String getErrorMessage() {
         return errorMessage;

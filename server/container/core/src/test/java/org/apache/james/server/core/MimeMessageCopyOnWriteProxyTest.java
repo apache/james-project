@@ -105,7 +105,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         assertThat("new Subject").isEqualTo(m2.getMessage().getSubject());
         assertThat("foo").isEqualTo(mail.getMessage().getSubject());
         // cloning again the messages
-        Mail m2clone = m2.duplicate("clone2");
+        Mail m2clone = MailImpl.duplicate(m2);
         assertThat(isSameMimeMessage(m2clone.getMessage(), m2.getMessage())).isTrue();
         MimeMessage mm = getWrappedMessage(m2.getMessage());
         assertThat(m2clone.getMessage()).isNotSameAs(m2.getMessage());
