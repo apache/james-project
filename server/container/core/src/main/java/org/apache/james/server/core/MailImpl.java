@@ -394,18 +394,6 @@ public class MailImpl implements Disposable, Mail {
         this.recipients = null;
     }
 
-    /**
-     * A constructor that creates a MailImpl with the specified name, sender,
-     * and recipients.
-     *
-     * @param name       the name of the MailImpl
-     * @param sender     the sender for this MailImpl
-     * @param recipients the collection of recipients of this MailImpl
-     */
-    private MailImpl(String name, MailAddress sender, Collection<MailAddress> recipients) {
-        this(name, Optional.ofNullable(sender), recipients);
-    }
-
     private MailImpl(String name, Optional<MailAddress> sender, Collection<MailAddress> recipients) {
         this();
         setName(name);
@@ -446,7 +434,7 @@ public class MailImpl implements Disposable, Mail {
      * recipients, and MimeMessage.
      */
     private MailImpl(String name, MailAddress sender, Collection<MailAddress> recipients, MimeMessage message) throws MessagingException {
-        this(name, sender, recipients);
+        this(name, Optional.ofNullable(sender), recipients);
         this.setMessage(new MimeMessageCopyOnWriteProxy(message));
     }
 
