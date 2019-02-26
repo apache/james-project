@@ -19,11 +19,7 @@
 
 package org.apache.james.server.core;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OptionalDataException;
 import java.io.OutputStream;
 import java.io.Serializable;
@@ -67,7 +63,6 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Chars;
@@ -99,7 +94,26 @@ public class MailImpl implements Disposable, Mail {
      * @throws MessagingException when the message is not clonable
      */
     public static MailImpl duplicate(Mail mail) throws MessagingException {
-        return new MailImpl(mail, deriveNewName(mail.getName()));
+        return MailImpl.builder()
+            .name(deriveNewName(mail.getName()))
+            .sender(mail.getMaybeSender())
+            .addRecipients(mail.getRecipients())
+            .mimeMessage(new MimeMessageCopyOnWriteProxy(mail.getMessage()))
+            .remoteHost(mail.getRemoteHost())
+            .remoteAddr(mail.getRemoteAddr())
+            .lastUpdated(mail.getLastUpdated())
+            .errorMessage(mail.getErrorMessage())
+            .addAttributes(duplicateAttributes(mail))
+            .build();
+    }
+
+    private static ImmutableList<Attribute> duplicateAttributes(Mail mail) {
+        try {
+            return mail.attributes().map(Attribute::duplicate).collect(Guavate.toImmutableList());
+        } catch (IllegalStateException e) {
+            LOGGER.error("Error while cloning Mail attributes", e);
+            return ImmutableList.of();
+        }
     }
 
     public static MailImpl fromMimeMessage(String name, MimeMessage mimeMessage) throws MessagingException {
@@ -395,39 +409,6 @@ public class MailImpl implements Disposable, Mail {
         attributes = new HashMap<>();
         perRecipientSpecificHeaders = new PerRecipientHeaders();
         this.recipients = null;
-    }
-
-
-    @SuppressWarnings({"unchecked"})
-    private MailImpl(Mail mail, String newName) throws MessagingException {
-        setName(newName);
-        Optional.ofNullable(sender).ifPresent(this::setSender);
-
-        // Copy the recipient list
-        Collection<MailAddress> recipients = mail.getRecipients();
-        if (recipients != null) {
-            setRecipients(recipients);
-        }
-        setMessage(new MimeMessageCopyOnWriteProxy(mail.getMessage()));
-        setRemoteHost(mail.getRemoteHost());
-        setRemoteAddr(mail.getRemoteAddr());
-        setLastUpdated(mail.getLastUpdated());
-        setErrorMessage(mail.getErrorMessage());
-        try {
-            if (mail instanceof MailImpl) {
-                setAttributesRaw((Map<String, Object>) cloneSerializableObject(((MailImpl) mail).getAttributesRaw()));
-            } else {
-                ImmutableMap<String, Object> attributesMap = mail.attributes()
-                    .collect(Guavate.toImmutableMap(
-                            attribute -> attribute.getName().asString(),
-                            Throwing.function(attribute -> cloneSerializableObject(attribute.getValue().getValue()))));
-
-                setAttributesRaw(attributesMap);
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            LOGGER.error("Error while deserializing attributes", e);
-            setAttributesRaw(new HashMap<>());
-        }
     }
 
     @Override
@@ -761,27 +742,6 @@ public class MailImpl implements Disposable, Mail {
     @Override
     public boolean hasAttributes() {
         return !attributes.isEmpty();
-    }
-
-    /**
-     * This methods provide cloning for serializable objects. Mail Attributes
-     * are Serializable but not Clonable so we need a deep copy
-     *
-     * @param o Object to be cloned
-     * @return the cloned Object
-     * @throws IOException
-     * @throws ClassNotFoundException
-     */
-    private static Object cloneSerializableObject(Object o) throws IOException, ClassNotFoundException {
-        ByteArrayOutputStream b = new ByteArrayOutputStream();
-        try (ObjectOutputStream out = new ObjectOutputStream(b)) {
-            out.writeObject(o);
-            out.flush();
-        }
-        ByteArrayInputStream bi = new ByteArrayInputStream(b.toByteArray());
-        try (ObjectInputStream in = new ObjectInputStream(bi)) {
-            return in.readObject();
-        }
     }
 
     /**
