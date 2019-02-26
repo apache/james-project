@@ -44,9 +44,11 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.jms.JMSMailQueue;
+import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.server.core.MimeMessageSource;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,26 +115,26 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
     }
 
     @Override
-    protected void populateMailMimeMessage(Message message, Mail mail) throws MessagingException, JMSException {
+    protected void populateMailMimeMessage(Message message, MailImpl.Builder builder) throws MessagingException, JMSException {
         if (message instanceof BlobMessage) {
             try {
                 BlobMessage blobMessage = (BlobMessage) message;
                 try {
                     // store URL and queueName for later usage
-                    mail.setAttribute(JAMES_BLOB_URL, blobMessage.getURL());
-                    mail.setAttribute(JAMES_QUEUE_NAME, queueName);
+                    builder.addAttribute(Attribute.convertToAttribute(JAMES_BLOB_URL, blobMessage.getURL()));
+                    builder.addAttribute(Attribute.convertToAttribute(JAMES_QUEUE_NAME, queueName));
                 } catch (MalformedURLException e) {
                     // Ignore on error
-                    LOGGER.debug("Unable to get url from blobmessage for mail {}", mail.getName());
+                    LOGGER.debug("Unable to get url from blobmessage for mail");
                 }
                 MimeMessageSource source = new MimeMessageBlobMessageSource(blobMessage);
-                mail.setMessage(new MimeMessageCopyOnWriteProxy(source));
+                builder.mimeMessage(new MimeMessageCopyOnWriteProxy(source));
             
             } catch (JMSException e) {
-                throw new MailQueueException("Unable to populate MimeMessage for mail " + mail.getName(), e);
+                throw new MailQueueException("Unable to populate MimeMessage for mail", e);
             }
         } else {
-            super.populateMailMimeMessage(message, mail);
+            super.populateMailMimeMessage(message, builder);
         }
     }
 

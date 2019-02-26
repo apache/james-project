@@ -21,11 +21,11 @@ package org.apache.james.mailetcontainer.lib;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
@@ -67,10 +67,7 @@ public abstract class AbstractStateMailetProcessorTest {
     @Test
     public void testSimpleRouting() throws Exception {
         final CountDownLatch latch = new CountDownLatch(2);
-        final MailImpl mail = new MailImpl();
-        mail.setName(MailImpl.getId());
-        mail.setSender(new MailAddress("test@localhost"));
-        mail.setRecipients(Arrays.asList(new MailAddress("test@localhost"), new MailAddress("test2@localhost")));
+        final MailImpl mail = newMail();
 
         AbstractStateMailetProcessor processor = createProcessor(createConfig(MockMatcher.class, MockMailet.class, 1));
         processor.addListener(new MailetProcessorListener() {
@@ -115,10 +112,7 @@ public abstract class AbstractStateMailetProcessorTest {
     @Test
     public void testSimpleRoutingMatchAll() throws Exception {
         final CountDownLatch latch = new CountDownLatch(2);
-        final MailImpl mail = new MailImpl();
-        mail.setName(MailImpl.getId());
-        mail.setSender(new MailAddress("test@localhost"));
-        mail.setRecipients(Arrays.asList(new MailAddress("test@localhost"), new MailAddress("test2@localhost")));
+        final MailImpl mail = newMail();
 
         AbstractStateMailetProcessor processor = createProcessor(createConfig(MockMatcher.class, MockMailet.class, 2));
         processor.addListener(new MailetProcessorListener() {
@@ -164,10 +158,7 @@ public abstract class AbstractStateMailetProcessorTest {
     @Test
     public void matcherProcessingShouldNotResultInAnExceptionWhenMatcherThrows() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
-        final MailImpl mail = new MailImpl();
-        mail.setName(MailImpl.getId());
-        mail.setSender(new MailAddress("test@localhost"));
-        mail.setRecipients(Arrays.asList(new MailAddress("test@localhost"), new MailAddress("test2@localhost")));
+        final MailImpl mail = newMail();
 
         AbstractStateMailetProcessor processor = createProcessor(createConfig(ExceptionThrowingMatcher.class,
                 MockMailet.class, 0));
@@ -206,10 +197,7 @@ public abstract class AbstractStateMailetProcessorTest {
     @Test
     public void matcherProcessingShouldCaptureExceptionAsMailAttributeWhenMatcherThrows() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
-        final MailImpl mail = new MailImpl();
-        mail.setName(MailImpl.getId());
-        mail.setSender(new MailAddress("test@localhost"));
-        mail.setRecipients(Arrays.asList(new MailAddress("test@localhost"), new MailAddress("test2@localhost")));
+        final MailImpl mail = newMail();
 
         AbstractStateMailetProcessor processor = createProcessor(createConfig(ExceptionThrowingMatcher.class,
                 MockMailet.class, 0));
@@ -242,10 +230,7 @@ public abstract class AbstractStateMailetProcessorTest {
     @Test
     public void mailetProcessingShouldNotResultInAnExceptionWhenMailetThrows() throws Exception {
         final CountDownLatch latch = new CountDownLatch(2);
-        final MailImpl mail = new MailImpl();
-        mail.setName(MailImpl.getId());
-        mail.setSender(new MailAddress("test@localhost"));
-        mail.setRecipients(Arrays.asList(new MailAddress("test@localhost"), new MailAddress("test2@localhost")));
+        final MailImpl mail = newMail();
 
         AbstractStateMailetProcessor processor = createProcessor(createConfig(MockMatcher.class,
                 ExceptionThrowingMailet.class, 1));
@@ -283,5 +268,14 @@ public abstract class AbstractStateMailetProcessorTest {
         latch.await();
         processor.destroy();
 
+    }
+
+    private MailImpl newMail() throws AddressException {
+        return MailImpl.builder()
+            .name(MailImpl.getId())
+            .sender("test@localhost")
+            .addRecipient("test@localhost")
+            .addRecipient("test2@localhost")
+            .build();
     }
 }

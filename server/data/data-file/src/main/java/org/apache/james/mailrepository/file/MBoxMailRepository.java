@@ -532,16 +532,16 @@ public class MBoxMailRepository implements MailRepository, Configurable {
     public Mail retrieve(MailKey key) throws MessagingException {
 
         loadKeys();
-        MailImpl res;
 
         MimeMessage foundMessage = findMessage(key.asString());
         if (foundMessage == null) {
             LOGGER.error("found message is null!");
             return null;
         }
-        res = new MailImpl();
-        res.setMessage(foundMessage);
-        res.setName(key.asString());
+        MailImpl res = MailImpl.builder()
+            .mimeMessage(foundMessage)
+            .name(key.asString())
+            .build();
         LOGGER.debug("Retrieving entry for key {}", key);
         return res;
     }

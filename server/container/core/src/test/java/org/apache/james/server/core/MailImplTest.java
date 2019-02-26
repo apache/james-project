@@ -47,7 +47,7 @@ public class MailImplTest extends ContractMailTest {
 
     @Override
     public MailImpl newMail() {
-        return new MailImpl();
+        return MailImpl.builder().build();
     }
 
     private MimeMessage emptyMessage;

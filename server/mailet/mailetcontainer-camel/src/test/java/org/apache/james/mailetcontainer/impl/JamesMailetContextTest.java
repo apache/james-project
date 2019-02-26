@@ -173,19 +173,21 @@ public class JamesMailetContextTest {
 
     @Test
     public void bounceShouldNotFailWhenNonConfiguredPostmaster() throws Exception {
-        MailImpl mail = new MailImpl();
-        mail.setSender(mailAddress);
-        mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+        MailImpl mail = MailImpl.builder()
+            .sender(mailAddress)
+            .addRecipient(mailAddress)
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
         testee.bounce(mail, "message");
     }
 
     @Test
     public void bouncingToNullSenderShouldBeANoop() throws Exception {
-        MailImpl mail = new MailImpl();
-        mail.setSender(MailAddress.nullSender());
-        mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+        MailImpl mail = MailImpl.builder()
+            .sender(MailAddress.nullSender())
+            .addRecipient(mailAddress)
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
 
         testee.bounce(mail, "message");
 
@@ -194,9 +196,10 @@ public class JamesMailetContextTest {
 
     @Test
     public void bouncingToNoSenderShouldBeANoop() throws Exception {
-        MailImpl mail = new MailImpl();
-        mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+        MailImpl mail = MailImpl.builder()
+            .addRecipient(mailAddress)
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
 
         testee.bounce(mail, "message");
 
@@ -205,10 +208,12 @@ public class JamesMailetContextTest {
 
     @Test
     public void bounceShouldEnqueueEmailWithRootState() throws Exception {
-        MailImpl mail = new MailImpl();
-        mail.setSender(mailAddress);
-        mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+        MailImpl mail = MailImpl.builder()
+            .sender(mailAddress)
+            .addRecipient(mailAddress)
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
+
         testee.bounce(mail, "message");
 
         ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
@@ -220,10 +225,11 @@ public class JamesMailetContextTest {
 
     @Test
     public void sendMailShouldEnqueueEmailWithRootState() throws Exception {
-        MailImpl mail = new MailImpl();
-        mail.setSender(mailAddress);
-        mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+        MailImpl mail = MailImpl.builder()
+            .sender(mailAddress)
+            .addRecipient(mailAddress)
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
         testee.sendMail(mail);
 
         ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
@@ -235,10 +241,11 @@ public class JamesMailetContextTest {
 
     @Test
     public void sendMailShouldEnqueueEmailWithOtherStateWhenSpecified() throws Exception {
-        MailImpl mail = new MailImpl();
-        mail.setSender(mailAddress);
-        mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+        MailImpl mail = MailImpl.builder()
+            .sender(mailAddress)
+            .addRecipient(mailAddress)
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
         String other = "other";
         testee.sendMail(mail, other);
 
@@ -251,10 +258,11 @@ public class JamesMailetContextTest {
 
     @Test
     public void sendMailShouldEnqueueEmailWithRootStateAndDelayWhenSpecified() throws Exception {
-        MailImpl mail = new MailImpl();
-        mail.setSender(mailAddress);
-        mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+        MailImpl mail = MailImpl.builder()
+            .sender(mailAddress)
+            .addRecipient(mailAddress)
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
         testee.sendMail(mail, 5, TimeUnit.MINUTES);
 
         ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
@@ -270,10 +278,11 @@ public class JamesMailetContextTest {
 
     @Test
     public void sendMailShouldEnqueueEmailWithOtherStateAndDelayWhenSpecified() throws Exception {
-        MailImpl mail = new MailImpl();
-        mail.setSender(mailAddress);
-        mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+        MailImpl mail = MailImpl.builder()
+            .sender(mailAddress)
+            .addRecipient(mailAddress)
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
         String other = "other";
         testee.sendMail(mail, other, 5, TimeUnit.MINUTES);
 

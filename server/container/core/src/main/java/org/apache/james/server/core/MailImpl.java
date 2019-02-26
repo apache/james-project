@@ -388,7 +388,7 @@ public class MailImpl implements Disposable, Mail {
     /**
      * A constructor that creates a new, uninitialized MailImpl
      */
-    public MailImpl() {
+    private MailImpl() {
         setState(Mail.DEFAULT);
         attributes = new HashMap<>();
         perRecipientSpecificHeaders = new PerRecipientHeaders();

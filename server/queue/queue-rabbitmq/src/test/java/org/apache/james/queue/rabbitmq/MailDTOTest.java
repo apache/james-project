@@ -111,9 +111,10 @@ class MailDTOTest {
     }
 
     private MailReferenceDTO mailDTOMin() throws MessagingException {
-        MailImpl mail = new MailImpl();
+        MailImpl mail = MailImpl.builder()
+            .name("mail-name-558")
+            .build();
         mail.setState(null);
-        mail.setName("mail-name-558");
         mail.setLastUpdated(null);
         return MailReferenceDTO.fromMail(
             mail,

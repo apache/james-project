@@ -34,6 +34,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
@@ -66,6 +67,7 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.util.SerializationUtil;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
@@ -364,11 +366,11 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
      * @throws JMSException
      */
     protected final Mail createMail(Message message) throws MessagingException, JMSException {
-        MailImpl mail = new MailImpl();
+        MailImpl.Builder mail = MailImpl.builder();
         populateMail(message, mail);
         populateMailMimeMessage(message, mail);
 
-        return mail;
+        return mail.build();
     }
 
     /**
@@ -377,12 +379,12 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
      * a {@link BytesMessage}
      *
      * @param message
-     * @param mail
+     * @param builder
      * @throws MessagingException
      */
-    protected void populateMailMimeMessage(Message message, Mail mail) throws MessagingException, JMSException {
+    protected void populateMailMimeMessage(Message message, MailImpl.Builder builder) throws MessagingException, JMSException {
         if (message instanceof ObjectMessage) {
-            mail.setMessage(new MimeMessageCopyOnWriteProxy(new MimeMessageObjectMessageSource((ObjectMessage) message)));
+            builder.mimeMessage(new MimeMessageCopyOnWriteProxy(new MimeMessageObjectMessageSource((ObjectMessage) message)));
         } else {
             throw new MailQueueException("Not supported JMS Message received " + message);
         }
@@ -394,16 +396,17 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
      * {@link MimeMessage}
      *
      * @param message
-     * @param mail
+     * @param builder
      * @throws JMSException
      */
-    protected void populateMail(Message message, MailImpl mail) throws JMSException {
-        mail.setErrorMessage(message.getStringProperty(JAMES_MAIL_ERROR_MESSAGE));
-        mail.setLastUpdated(new Date(message.getLongProperty(JAMES_MAIL_LAST_UPDATED)));
-        mail.setName(message.getStringProperty(JAMES_MAIL_NAME));
+    protected void populateMail(Message message, MailImpl.Builder builder) throws JMSException {
+        String name = message.getStringProperty(JAMES_MAIL_NAME);
+        builder.name(name);
+        builder.errorMessage(message.getStringProperty(JAMES_MAIL_ERROR_MESSAGE));
+        builder.lastUpdated(new Date(message.getLongProperty(JAMES_MAIL_LAST_UPDATED)));
 
         Optional.ofNullable(SerializationUtil.<PerRecipientHeaders>deserialize(message.getStringProperty(JAMES_MAIL_PER_RECIPIENT_HEADERS)))
-                .ifPresent(mail::addAllSpecificHeaderForRecipient);
+                .ifPresent(builder::addAllHeadersForRecipients);
 
         List<MailAddress> rcpts = new ArrayList<>();
         String recipients = message.getStringProperty(JAMES_MAIL_RECIPIENTS);
@@ -412,44 +415,39 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             String token = recipientTokenizer.nextToken();
             try {
                 MailAddress rcpt = new MailAddress(token);
-                rcpts.add(rcpt);
+                builder.addRecipient(rcpt);
             } catch (AddressException e) {
                 // Should never happen as long as the user does not modify the
                 // the header by himself
-                LOGGER.error("Unable to parse the recipient address {} for mail {}, so we ignore it", token, mail.getName(), e);
+                LOGGER.error("Unable to parse the recipient address {} for builder {}, so we ignore it", token, name, e);
             }
         }
-        mail.setRecipients(rcpts);
-        mail.setRemoteAddr(message.getStringProperty(JAMES_MAIL_REMOTEADDR));
-        mail.setRemoteHost(message.getStringProperty(JAMES_MAIL_REMOTEHOST));
+        builder.remoteAddr(message.getStringProperty(JAMES_MAIL_REMOTEADDR));
+        builder.remoteHost(message.getStringProperty(JAMES_MAIL_REMOTEHOST));
 
         String attributeNames = message.getStringProperty(JAMES_MAIL_ATTRIBUTE_NAMES);
 
-        splitter.split(attributeNames)
-                .forEach(name -> setMailAttribute(message, mail, name));
+        builder.addAttributes(
+            splitter.splitToList(attributeNames)
+            .stream()
+            .flatMap(attributeName -> mailAttribute(message, attributeName))
+            .collect(Guavate.toImmutableList()));
 
-        MaybeSender.getMailSender(message.getStringProperty(JAMES_MAIL_SENDER))
-            .asOptional().ifPresent(mail::setSender);
-        mail.setState(message.getStringProperty(JAMES_MAIL_STATE));
+        builder.sender(MaybeSender.getMailSender(message.getStringProperty(JAMES_MAIL_SENDER)).asOptional());
+        builder.state(message.getStringProperty(JAMES_MAIL_STATE));
     }
 
-    /**
-     * Retrieves the attribute by {@code name} form {@code message} and tries to add it on {@code mail}.
-     *
-     * @param message The attribute source.
-     * @param mail    The mail on which attribute should be set.
-     * @param name    The attribute name.
-     */
-    private void setMailAttribute(Message message, Mail mail, String name) {
+    private Stream<Attribute> mailAttribute(Message message, String name) {
         // Now cast the property back to Serializable and set it as attribute.
         // See JAMES-1241
         Object attrValue = Throwing.function(message::getObjectProperty).apply(name);
 
         if (attrValue instanceof String) {
-            mail.setAttribute(name, SerializationUtil.deserialize((String) attrValue));
+            return Stream.of(Attribute.convertToAttribute(name, SerializationUtil.deserialize((String) attrValue)));
         } else {
-            LOGGER.error("Not supported mail attribute {} of type {} for mail {}", name, attrValue, mail.getName());
+            LOGGER.error("Not supported mail attribute {} of type {} for mail {}", name, attrValue, name);
         }
+        return Stream.empty();
     }
 
     private Gauge<Long> queueSizeGauge() {
