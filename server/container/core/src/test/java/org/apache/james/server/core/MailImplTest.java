@@ -22,7 +22,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -84,12 +83,10 @@ public class MailImplTest extends ContractMailTest {
 
     @Test
     public void mailImplConstructionShouldSetDefaultValuesOnUnspecifiedFields() throws MessagingException {
-        ArrayList<MailAddress> recipients = new ArrayList<>();
-        String name = MailUtil.newId();
-        String sender = "sender@localhost";
-        MailAddress senderMailAddress = new MailAddress(sender);
-        MailImpl mail = new MailImpl(name, senderMailAddress, recipients);
-
+        MailImpl mail = MailImpl.builder()
+            .name(MailUtil.newId())
+            .sender("sender@localhost")
+            .build();
 
         MailImpl expected = newMail();
         assertThat(mail).isEqualToIgnoringGivenFields(expected, "sender", "name", "recipients", "lastUpdated");
@@ -98,11 +95,12 @@ public class MailImplTest extends ContractMailTest {
 
     @Test
     public void mailImplConstructionShouldSetSpecifiedFields() throws MessagingException {
-        ImmutableList<MailAddress> recipients = ImmutableList.of();
-        String name = MailUtil.newId();
         String sender = "sender@localhost";
-        MailAddress senderMailAddress = new MailAddress(sender);
-        MailImpl mail = new MailImpl(name, senderMailAddress, recipients);
+        String name = MailUtil.newId();
+        MailImpl mail = MailImpl.builder()
+            .name(name)
+            .sender(sender)
+            .build();
 
         assertThat(mail.getMaybeSender().get().asString()).isEqualTo(sender);
         assertThat(mail.getName()).isEqualTo(name);
@@ -111,13 +109,19 @@ public class MailImplTest extends ContractMailTest {
 
     @Test
     public void mailImplConstructionWithMimeMessageShouldSetSpecifiedFields() throws MessagingException {
-        ImmutableList<MailAddress> recipients = ImmutableList.of();
         String name = MailUtil.newId();
         String sender = "sender@localhost";
-        MailAddress senderMailAddress = new MailAddress(sender);
 
-        MailImpl expected = new MailImpl(name, senderMailAddress, recipients);
-        MailImpl mail = new MailImpl(name, senderMailAddress, recipients, emptyMessage);
+        MailImpl expected = MailImpl.builder()
+            .name(name)
+            .sender(sender)
+            .build();
+
+        MailImpl mail = MailImpl.builder()
+            .name(name)
+            .sender(sender)
+            .mimeMessage(emptyMessage)
+            .build();
 
         assertThat(mail).isEqualToIgnoringGivenFields(expected, "message", "lastUpdated");
         assertThat(mail.getLastUpdated()).isCloseTo(new Date(), TimeUnit.SECONDS.toMillis(1));
