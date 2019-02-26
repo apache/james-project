@@ -224,7 +224,12 @@ public class JamesMailetContext implements MailetContext, Configurable {
         reply.setFrom(new InternetAddress(mail.getRecipients().iterator().next().toString()));
         reply.setText(bounceText);
         reply.setHeader(RFC2822Headers.MESSAGE_ID, "replyTo-" + mail.getName());
-        return new MailImpl("replyTo-" + mail.getName(), sender, recipients, reply);
+        return MailImpl.builder()
+            .name("replyTo-" + mail.getName())
+            .sender(sender)
+            .addRecipients(recipients)
+            .mimeMessage(reply)
+            .build();
     }
 
     @Override
@@ -422,7 +427,12 @@ public class JamesMailetContext implements MailetContext, Configurable {
 
     @Override
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage message, String state) throws MessagingException {
-        MailImpl mail = new MailImpl(MailImpl.getId(), sender, recipients, message);
+        MailImpl mail = MailImpl.builder()
+            .name(MailImpl.getId())
+            .sender(sender)
+            .addRecipients(recipients)
+            .mimeMessage(message)
+            .build();
         try {
             sendMail(mail, state);
         } finally {

@@ -190,31 +190,32 @@ class MailReferenceDTO {
     }
 
     MailImpl toMailWithMimeMessage(MimeMessage mimeMessage) throws MessagingException {
-        MailImpl mail = new MailImpl(name,
-            sender.map(MaybeSender::getMailSender).orElse(MaybeSender.nullSender()).asOptional().orElse(null),
-            recipients.stream()
+        MailImpl.Builder builder = MailImpl.builder()
+            .name(name)
+            .sender(sender.map(MaybeSender::getMailSender).orElse(MaybeSender.nullSender()))
+            .addRecipients(recipients.stream()
                 .map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow())
-                .collect(Guavate.toImmutableList()),
-            mimeMessage);
+                .toArray(MailAddress[]::new))
+            .mimeMessage(mimeMessage)
+            .errorMessage(errorMessage)
+            .remoteAddr(remoteAddr)
+            .remoteHost(remoteHost)
+            .state(state);
 
-        mail.setErrorMessage(errorMessage);
-        mail.setRemoteAddr(remoteAddr);
-        mail.setRemoteHost(remoteHost);
-        mail.setState(state);
         lastUpdated
             .map(Instant::toEpochMilli)
             .map(Date::new)
-            .ifPresent(mail::setLastUpdated);
+            .ifPresent(builder::lastUpdated);
 
         ThrowingBiConsumer<String, String> attributeSetter = (name, value) ->
-            mail.setAttribute(new Attribute(AttributeName.of(name), AttributeValue.fromJsonString(value)));
+            builder.addAttribute(new Attribute(AttributeName.of(name), AttributeValue.fromJsonString(value)));
 
         attributes
             .forEach(Throwing.biConsumer(attributeSetter).sneakyThrow());
 
-        mail.addAllSpecificHeaderForRecipient(retrievePerRecipientHeaders());
+        builder.addAllHeadersForRecipients(retrievePerRecipientHeaders());
 
-        return mail;
+        return builder.build();
     }
 
     private PerRecipientHeaders retrievePerRecipientHeaders() {

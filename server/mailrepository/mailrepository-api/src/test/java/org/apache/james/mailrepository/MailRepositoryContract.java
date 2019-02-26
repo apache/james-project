@@ -31,7 +31,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -70,23 +69,20 @@ public interface MailRepositoryContract {
     }
 
     default MailImpl createMail(MailKey key, String body) throws MessagingException {
-        MimeMessage mailContent = generateMailContent(body);
-        List<MailAddress> recipients = ImmutableList
-            .of(new MailAddress("rec1@domain.com"),
-                new MailAddress("rec2@domain.com"));
-        MailAddress sender = new MailAddress("sender@domain.com");
-        MailImpl mail = new MailImpl(key.asString(), sender, recipients, mailContent);
-        mail.setAttribute(TEST_ATTRIBUTE);
-        return mail;
-    }
-
-
-    default MimeMessage generateMailContent(String body) throws MessagingException {
-        return MimeMessageBuilder.mimeMessageBuilder()
-            .setSubject("test")
-            .setText(body)
+        return MailImpl.builder()
+            .name(key.asString())
+            .sender("sender@localhost")
+            .addRecipient("rec1@domain.com")
+            .addRecipient("rec2@domain.com")
+            .addAttribute(TEST_ATTRIBUTE)
+            .mimeMessage(MimeMessageBuilder
+                .mimeMessageBuilder()
+                .setSubject("test")
+                .setText(body)
+                .build())
             .build();
     }
+
 
     default void checkMailEquality(Mail actual, Mail expected) {
         assertSoftly(Throwing.consumer(softly -> {
@@ -148,7 +144,10 @@ public interface MailRepositoryContract {
             .sender(MailAddress.nullSender())
             .recipient(MailAddressFixture.RECIPIENT1)
             .name(MAIL_1.asString())
-            .mimeMessage(generateMailContent("String body"))
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setSubject("test")
+                .setText("String body")
+                .build())
             .build();
 
         testee.store(mail);

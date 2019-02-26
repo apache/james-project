@@ -40,7 +40,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
 
 public class MailImplTest extends ContractMailTest {
 
@@ -129,39 +128,24 @@ public class MailImplTest extends ContractMailTest {
 
     @Test
     public void mailImplConstructionWithMimeMessageShouldNotOverwriteMessageId() throws MessagingException {
-        ImmutableList<MailAddress> recipients = ImmutableList.of();
-        String name = MailUtil.newId();
-        String sender = "sender@localhost";
-        MailAddress senderMailAddress = new MailAddress(sender);
-
-        MailImpl mail = new MailImpl(name, senderMailAddress, recipients, emptyMessage);
+        MailImpl mail = MailImpl.builder()
+            .name(MailUtil.newId())
+            .sender("sender@localhost")
+            .mimeMessage(emptyMessage)
+            .build();
 
         assertThat(mail.getMessage().getMessageID()).isEqualTo(emptyMessage.getMessageID());
     }
 
     @Test
     public void duplicateFactoryMethodShouldGenerateNewObjectWithSameValuesButName() throws MessagingException, IOException {
-        ImmutableList<MailAddress> recipients = ImmutableList.of();
         String name = MailUtil.newId();
-        String sender = "sender@localhost";
-        MailAddress senderMailAddress = new MailAddress(sender);
+        MailImpl mail = MailImpl.builder()
+            .name(name)
+            .sender("sender@localhost")
+            .mimeMessage(emptyMessage)
+            .build();
 
-        MailImpl mail = new MailImpl(name, senderMailAddress, recipients, emptyMessage);
-        MailImpl duplicate = MailImpl.duplicate(mail);
-
-        assertThat(duplicate).isNotSameAs(mail).isEqualToIgnoringGivenFields(mail, "message", "name");
-        assertThat(duplicate.getName()).isNotEqualTo(name);
-        assertThat(duplicate.getMessage().getInputStream()).hasSameContentAs(mail.getMessage().getInputStream());
-    }
-
-    @Test
-    public void duplicateShouldGenerateNewObjectWithSameValuesButName() throws MessagingException, IOException {
-        ImmutableList<MailAddress> recipients = ImmutableList.of();
-        String name = MailUtil.newId();
-        String sender = "sender@localhost";
-        MailAddress senderMailAddress = new MailAddress(sender);
-
-        MailImpl mail = new MailImpl(name, senderMailAddress, recipients, emptyMessage);
         MailImpl duplicate = MailImpl.duplicate(mail);
 
         assertThat(duplicate).isNotSameAs(mail).isEqualToIgnoringGivenFields(mail, "message", "name");

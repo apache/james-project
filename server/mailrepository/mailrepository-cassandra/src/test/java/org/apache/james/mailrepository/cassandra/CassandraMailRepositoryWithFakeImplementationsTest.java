@@ -23,7 +23,6 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.List;
 import java.util.Optional;
 
 import javax.mail.internet.MimeMessage;
@@ -41,7 +40,6 @@ import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
-import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
@@ -55,7 +53,6 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
-import com.google.common.collect.ImmutableList;
 import reactor.core.publisher.Mono;
 
 @ExtendWith(CassandraMailRepositoryWithFakeImplementationsTest.MailRepositoryCassandraClusterExtension.class)
@@ -106,15 +103,17 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
 
         @Test
         void keysShouldNotBeStoredWhenStoringMimeMessageHasFailed() throws Exception {
-            MailKey mailKey = new MailKey("mymail");
-            List<MailAddress> recipients = ImmutableList
-                    .of(new MailAddress("rec1@domain.com"),
-                            new MailAddress("rec2@domain.com"));
-            MimeMessage mailContent = MimeMessageBuilder.mimeMessageBuilder()
+            MailImpl mail = MailImpl.builder()
+                .name("mymail")
+                .sender("sender@localhost")
+                .addRecipient("rec1@domain.com")
+                .addRecipient("rec2@domain.com")
+                .mimeMessage(MimeMessageBuilder
+                    .mimeMessageBuilder()
                     .setSubject("test")
                     .setText("this is the content")
-                    .build();
-            MailImpl mail = new MailImpl(mailKey.asString(), new MailAddress("sender@domain.com"), recipients, mailContent);
+                    .build())
+                .build();
 
             assertThatThrownBy(() -> cassandraMailRepository.store(mail))
                     .isInstanceOf(RuntimeException.class)
@@ -166,15 +165,17 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
 
         @Test
         void keysShouldNotBeStoredWhenStoringMailPartsHasFailed() throws Exception {
-            MailKey mailKey = new MailKey("mymail");
-            List<MailAddress> recipients = ImmutableList
-                    .of(new MailAddress("rec1@domain.com"),
-                            new MailAddress("rec2@domain.com"));
-            MimeMessage mailContent = MimeMessageBuilder.mimeMessageBuilder()
+            MailImpl mail = MailImpl.builder()
+                .name("mymail")
+                .sender("sender@localhost")
+                .addRecipient("rec1@domain.com")
+                .addRecipient("rec2@domain.com")
+                .mimeMessage(MimeMessageBuilder
+                    .mimeMessageBuilder()
                     .setSubject("test")
                     .setText("this is the content")
-                    .build();
-            MailImpl mail = new MailImpl(mailKey.asString(), new MailAddress("sender@domain.com"), recipients, mailContent);
+                    .build())
+                .build();
 
             assertThatThrownBy(() -> cassandraMailRepository.store(mail))
                     .isInstanceOf(RuntimeException.class)
@@ -185,15 +186,17 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
 
         @Test
         void mimeMessageShouldBeStoredWhenStoringMailPartsHasFailed(CassandraCluster cassandra) throws Exception {
-            MailKey mailKey = new MailKey("mymail");
-            List<MailAddress> recipients = ImmutableList
-                    .of(new MailAddress("rec1@domain.com"),
-                            new MailAddress("rec2@domain.com"));
-            MimeMessage mailContent = MimeMessageBuilder.mimeMessageBuilder()
+            MailImpl mail = MailImpl.builder()
+                .name("mymail")
+                .sender("sender@localhost")
+                .addRecipient("rec1@domain.com")
+                .addRecipient("rec2@domain.com")
+                .mimeMessage(MimeMessageBuilder
+                    .mimeMessageBuilder()
                     .setSubject("test")
                     .setText("this is the content")
-                    .build();
-            MailImpl mail = new MailImpl(mailKey.asString(), new MailAddress("sender@domain.com"), recipients, mailContent);
+                    .build())
+                .build();
 
             assertThatThrownBy(() -> cassandraMailRepository.store(mail))
                     .isInstanceOf(RuntimeException.class)
@@ -237,15 +240,17 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
 
         @Test
         void sizeShouldNotBeIncreasedWhenStoringKeysHasFailed() throws Exception {
-            MailKey mailKey = new MailKey("mymail");
-            List<MailAddress> recipients = ImmutableList
-                    .of(new MailAddress("rec1@domain.com"),
-                            new MailAddress("rec2@domain.com"));
-            MimeMessage mailContent = MimeMessageBuilder.mimeMessageBuilder()
+            MailImpl mail = MailImpl.builder()
+                .name("mymail")
+                .sender("sender@localhost")
+                .addRecipient("rec1@domain.com")
+                .addRecipient("rec2@domain.com")
+                .mimeMessage(MimeMessageBuilder
+                    .mimeMessageBuilder()
                     .setSubject("test")
                     .setText("this is the content")
-                    .build();
-            MailImpl mail = new MailImpl(mailKey.asString(), new MailAddress("sender@domain.com"), recipients, mailContent);
+                    .build())
+                .build();
 
             assertThatThrownBy(() -> cassandraMailRepository.store(mail))
                     .isInstanceOf(RuntimeException.class)
@@ -256,15 +261,17 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
 
         @Test
         void mimeMessageShouldBeStoredWhenStoringKeysHasFailed(CassandraCluster cassandra) throws Exception {
-            MailKey mailKey = new MailKey("mymail");
-            List<MailAddress> recipients = ImmutableList
-                    .of(new MailAddress("rec1@domain.com"),
-                            new MailAddress("rec2@domain.com"));
-            MimeMessage mailContent = MimeMessageBuilder.mimeMessageBuilder()
+            MailImpl mail = MailImpl.builder()
+                .name("mymail")
+                .sender("sender@localhost")
+                .addRecipient("rec1@domain.com")
+                .addRecipient("rec2@domain.com")
+                .mimeMessage(MimeMessageBuilder
+                    .mimeMessageBuilder()
                     .setSubject("test")
                     .setText("this is the content")
-                    .build();
-            MailImpl mail = new MailImpl(mailKey.asString(), new MailAddress("sender@domain.com"), recipients, mailContent);
+                    .build())
+                .build();
 
             assertThatThrownBy(() -> cassandraMailRepository.store(mail))
                     .isInstanceOf(RuntimeException.class)
@@ -277,15 +284,17 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
 
         @Test
         void mailPartsShouldBeStoredWhenStoringKeysHasFailed(CassandraCluster cassandra) throws Exception {
-            MailKey mailKey = new MailKey("mymail");
-            List<MailAddress> recipients = ImmutableList
-                    .of(new MailAddress("rec1@domain.com"),
-                            new MailAddress("rec2@domain.com"));
-            MimeMessage mailContent = MimeMessageBuilder.mimeMessageBuilder()
+            MailImpl mail = MailImpl.builder()
+                .name("mymail")
+                .sender("sender@localhost")
+                .addRecipient("rec1@domain.com")
+                .addRecipient("rec2@domain.com")
+                .mimeMessage(MimeMessageBuilder
+                    .mimeMessageBuilder()
                     .setSubject("test")
                     .setText("this is the content")
-                    .build();
-            MailImpl mail = new MailImpl(mailKey.asString(), new MailAddress("sender@domain.com"), recipients, mailContent);
+                    .build())
+                .build();
 
             assertThatThrownBy(() -> cassandraMailRepository.store(mail))
                     .isInstanceOf(RuntimeException.class)

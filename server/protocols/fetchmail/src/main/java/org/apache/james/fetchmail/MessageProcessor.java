@@ -20,8 +20,6 @@
 package org.apache.james.fetchmail;
 
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
 
@@ -595,23 +593,25 @@ public class MessageProcessor extends ProcessorAbstract {
      * @throws MessagingException
      */
     protected Mail createMail(MimeMessage message, MailAddress recipient) throws MessagingException, UnknownHostException {
-        Collection<MailAddress> recipients = new ArrayList<>(1);
-        recipients.add(recipient);
-        MailImpl mail = new MailImpl(MailImpl.getId(), getSender(), recipients, message);
+        MailImpl.Builder builder = MailImpl.builder()
+            .name(MailImpl.getId())
+            .sender(getSender())
+            .addRecipient(recipient)
+            .mimeMessage(message);
 
         try {
-            mail.setRemoteAddr(getRemoteAddress());
-            mail.setRemoteHost(getRemoteHostName());
+            builder.remoteAddr(getRemoteAddress());
+            builder.remoteHost(getRemoteHostName());
             setDefaultRemoteAddress(false);
         } catch (UnknownHostException e) {
             // check if we should ignore this
             // See: JAMES-795
             if (!isRejectRemoteReceivedHeaderInvalid()) {
-                // Ensure the mail is created with non-null remote host name and
+                // Ensure the builder is created with non-null remote host name and
                 // address,
                 // otherwise the Mailet chain may go splat!
-                mail.setRemoteAddr("127.0.0.1");
-                mail.setRemoteHost("localhost");
+                builder.remoteAddr("127.0.0.1");
+                builder.remoteHost("localhost");
                 setDefaultRemoteAddress(true);
                 logStatusInfo("Remote address could not be determined. Using localhost/127.0.0.1");
             } else {
@@ -619,6 +619,7 @@ public class MessageProcessor extends ProcessorAbstract {
             }
         }
 
+        MailImpl mail = builder.build();
         logMailCreation(mail);
         return mail;
     }
