@@ -185,14 +185,14 @@ public class CassandraMailRepositoryMailDaoV2 implements CassandraMailRepository
         MailImpl.Builder mailBuilder = MailImpl.builder()
             .name(name)
             .sender(sender)
-            .recipients(recipients)
+            .addRecipients(recipients)
             .lastUpdated(lastUpdated)
             .errorMessage(errorMessage)
             .remoteHost(remoteHost)
             .remoteAddr(remoteAddr)
             .state(state)
             .addAllHeadersForRecipients(perRecipientHeaders)
-            .attributes(toAttributes(rawAttributes));
+            .addAttributes(toAttributes(rawAttributes));
 
         return new MailDTO(mailBuilder,
             blobIdFactory.from(row.getString(HEADER_BLOB_ID)),

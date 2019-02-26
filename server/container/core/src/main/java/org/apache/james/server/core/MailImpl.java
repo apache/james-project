@@ -151,31 +151,27 @@ public class MailImpl implements Disposable, Mail {
             return this;
         }
 
-        public Builder recipients() {
-            return this;
-        }
-
-        public Builder recipients(List<MailAddress> recipients) {
+        public Builder addRecipients(List<MailAddress> recipients) {
             this.recipients.addAll(recipients);
             return this;
         }
 
-        public Builder recipients(MailAddress... recipients) {
-            return recipients(ImmutableList.copyOf(recipients));
+        public Builder addRecipients(MailAddress... recipients) {
+            return addRecipients(ImmutableList.copyOf(recipients));
         }
 
-        public Builder recipients(String... recipients) {
-            return recipients(Arrays.stream(recipients)
+        public Builder addRecipients(String... recipients) {
+            return addRecipients(Arrays.stream(recipients)
                 .map(Throwing.function(MailAddress::new))
-                .collect(ImmutableList.toImmutableList()));
+                .collect(Guavate.toImmutableList()));
         }
 
-        public Builder recipient(MailAddress recipient) {
-            return recipients(recipient);
+        public Builder addRecipient(MailAddress recipient) {
+            return addRecipients(recipient);
         }
 
-        public Builder recipient(String recipient) throws AddressException {
-            return recipients(recipient);
+        public Builder addRecipient(String recipient) throws AddressException {
+            return addRecipients(recipient);
         }
 
         public Builder name(String name) {
@@ -217,21 +213,17 @@ public class MailImpl implements Disposable, Mail {
         }
 
         @Deprecated
-        public Builder attribute(String name, Serializable object) {
-            attribute(Attribute.convertToAttribute(name, object));
-            return this;
+        public Builder addAttribute(String name, Serializable object) {
+            return addAttribute(Attribute.convertToAttribute(name, object));
         }
 
-        public Builder attribute(Attribute attribute) {
+        public Builder addAttribute(Attribute attribute) {
             this.attributes.put(attribute.getName(), attribute);
             return this;
         }
 
-        public Builder attributes(Collection<Attribute> attributes) {
-            this.attributes.putAll(attributes.stream()
-                .collect(ImmutableMap.toImmutableMap(
-                    Attribute::getName,
-                    Function.identity())));
+        public Builder addAttributes(Collection<Attribute> attributes) {
+            attributes.forEach(this::addAttribute);
             return this;
         }
 
@@ -284,7 +276,7 @@ public class MailImpl implements Disposable, Mail {
     private static ImmutableList<MailAddress> getRecipients(MimeMessage mimeMessage) throws MessagingException {
         return Arrays.stream(mimeMessage.getAllRecipients())
             .map(Throwing.function(MailImpl::castToMailAddress).sneakyThrow())
-            .collect(ImmutableList.toImmutableList());
+            .collect(Guavate.toImmutableList());
     }
 
     private static MailAddress getSender(MimeMessage mimeMessage) throws MessagingException {

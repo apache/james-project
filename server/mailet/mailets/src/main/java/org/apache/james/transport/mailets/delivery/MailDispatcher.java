@@ -99,7 +99,7 @@ public class MailDispatcher {
             // In the future we may wish to address this.
             Mail newMail = MailImpl.builder()
                 .sender(mail.getMaybeSender())
-                .recipients(errors)
+                .addRecipients(errors)
                 .mimeMessage(mail.getMessage())
                 .state(Mail.ERROR)
                 .build();

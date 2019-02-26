@@ -132,7 +132,7 @@ public class RecipientRewriteTableProcessor {
             MailImpl newMail = MailImpl.builder()
                 .name(mail.getName())
                 .sender(mail.getMaybeSender())
-                .recipients(executionResults.recipientWithError)
+                .addRecipients(executionResults.recipientWithError)
                 .mimeMessage(mail.getMessage())
                 .state(errorProcessor)
                 .build();
@@ -195,7 +195,7 @@ public class RecipientRewriteTableProcessor {
                     MailImpl.builder()
                         .name(mail.getName())
                         .sender(mail.getMaybeSender())
-                        .recipients(ImmutableList.copyOf(remoteRecipients))
+                        .addRecipients(ImmutableList.copyOf(remoteRecipients))
                         .mimeMessage(mail.getMessage())
                         .build());
                 LOGGER.info("Mail for {} forwarded to {}", recipient, remoteRecipients);

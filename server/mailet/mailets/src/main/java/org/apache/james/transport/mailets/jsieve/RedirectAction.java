@@ -59,7 +59,7 @@ public class RedirectAction implements MailAction {
 
         context.post(MailImpl.builder()
             .sender(aMail.getMaybeSender())
-            .recipient(new MailAddress(anAction.getAddress()))
+            .addRecipient(new MailAddress(anAction.getAddress()))
             .mimeMessage(aMail.getMessage())
             .build());
 
