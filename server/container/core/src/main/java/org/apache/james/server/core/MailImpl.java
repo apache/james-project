@@ -264,18 +264,15 @@ public class MailImpl implements Disposable, Mail {
         }
 
         public MailImpl build() {
-            MailImpl mail = new MailImpl();
+            MailImpl mail = new MailImpl(state.orElse(DEFAULT), attributes, recipients, perRecipientHeaders);
+
             mimeMessage.ifPresent(Throwing.consumer(mail::setMessage).sneakyThrow());
             name.ifPresent(mail::setName);
             sender.ifPresent(mail::setSender);
-            mail.setRecipients(recipients);
-            state.ifPresent(mail::setState);
             errorMessage.ifPresent(mail::setErrorMessage);
             lastUpdated.ifPresent(mail::setLastUpdated);
-            mail.setAttributes(attributes);
             remoteAddr.ifPresent(mail::setRemoteAddr);
             remoteHost.ifPresent(mail::setRemoteHost);
-            mail.perRecipientSpecificHeaders.addAll(perRecipientHeaders);
             return mail;
         }
     }
@@ -401,14 +398,14 @@ public class MailImpl implements Disposable, Mail {
      */
     private PerRecipientHeaders perRecipientSpecificHeaders;
 
-    /**
-     * A constructor that creates a new, uninitialized MailImpl
-     */
-    private MailImpl() {
-        setState(Mail.DEFAULT);
-        attributes = new HashMap<>();
-        perRecipientSpecificHeaders = new PerRecipientHeaders();
-        this.recipients = null;
+    private MailImpl(String state,
+                     Map<AttributeName, Attribute> attributes,
+                     List<MailAddress> recipients,
+                     PerRecipientHeaders perRecipientHeaders) {
+        setState(state);
+        setAttributes(attributes);
+        setRecipients(recipients);
+        perRecipientSpecificHeaders = perRecipientHeaders;
     }
 
     @Override
