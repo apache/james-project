@@ -45,7 +45,7 @@ public class MailImplTest extends ContractMailTest {
 
     @Override
     public MailImpl newMail() {
-        return MailImpl.builder().build();
+        return MailImpl.builder().name("mail-id").build();
     }
 
     private MimeMessage emptyMessage;
@@ -61,6 +61,7 @@ public class MailImplTest extends ContractMailTest {
     public void mailImplShouldHaveSensibleInitialValues() throws MessagingException {
         MailImpl mail = newMail();
 
+        assertThat(mail.getName()).isEqualTo("mail-id");
         assertThat(mail.hasAttributes()).describedAs("no initial attributes").isFalse();
         assertThat(mail.getErrorMessage()).describedAs("no initial error").isNull();
         assertThat(mail.getLastUpdated()).isCloseTo(new Date(), TimeUnit.SECONDS.toMillis(1));
@@ -70,7 +71,6 @@ public class MailImplTest extends ContractMailTest {
         assertThat(mail.getState()).describedAs("default initial state").isEqualTo(Mail.DEFAULT);
         assertThat(mail.getMessage()).isNull();
         assertThat(mail.getMaybeSender()).isEqualTo(MaybeSender.nullSender());
-        assertThat(mail.getName()).isNull();
     }
 
     @Test
@@ -210,6 +210,7 @@ public class MailImplTest extends ContractMailTest {
     public void getMaybeSenderShouldHandleNullSender() {
         assertThat(
             MailImpl.builder()
+                .name("mail-id")
                 .sender(MailAddress.nullSender())
                 .build()
                 .getMaybeSender())
@@ -220,6 +221,7 @@ public class MailImplTest extends ContractMailTest {
     public void getMaybeSenderShouldHandleNoSender() {
         assertThat(
             MailImpl.builder()
+                .name("mail-id")
                 .build()
                 .getMaybeSender())
             .isEqualTo(MaybeSender.nullSender());
@@ -229,6 +231,7 @@ public class MailImplTest extends ContractMailTest {
     public void getMaybeSenderShouldHandleSender() {
         assertThat(
             MailImpl.builder()
+                .name("mail-id")
                 .sender(MailAddressFixture.SENDER)
                 .build()
                 .getMaybeSender())
@@ -239,6 +242,7 @@ public class MailImplTest extends ContractMailTest {
     public void hasSenderShouldReturnFalseWhenSenderIsNull() {
         assertThat(
             MailImpl.builder()
+                .name("mail-id")
                 .sender(MailAddress.nullSender())
                 .build()
                 .hasSender())
@@ -249,6 +253,7 @@ public class MailImplTest extends ContractMailTest {
     public void hasSenderShouldReturnFalseWhenSenderIsNotSpecified() {
         assertThat(
             MailImpl.builder()
+                .name("mail-id")
                 .build()
                 .hasSender())
             .isFalse();
@@ -258,9 +263,34 @@ public class MailImplTest extends ContractMailTest {
     public void hasSenderShouldReturnTrueWhenSenderIsSpecified() {
         assertThat(
             MailImpl.builder()
+                .name("mail-id")
                 .sender(MailAddressFixture.SENDER)
                 .build()
                 .hasSender())
             .isTrue();
+    }
+
+    @Test
+    public void builderShouldNotAllowNullName() {
+        assertThatThrownBy(() -> MailImpl.builder().name(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void builderShouldNotAllowEmptyName() {
+        assertThatThrownBy(() -> MailImpl.builder().name(""))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void MailImplShouldNotAllowSettingNullName() {
+        assertThatThrownBy(() -> newMail().setName(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void MailImplShouldNotAllowSettingEmptyName() {
+        assertThatThrownBy(() -> newMail().setName(""))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }

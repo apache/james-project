@@ -132,6 +132,7 @@ public class ContactExtractorTest {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(SENDER, PASSWORD)
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipients(TO, TO2, CC, CC2, BCC, BCC2));

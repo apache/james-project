@@ -141,6 +141,7 @@ public class SmtpContentTypeTest {
 
     private Mail mailWithContentType(String contentType) throws MessagingException {
         return MailImpl.builder()
+            .name("mail1")
             .sender(FROM)
             .addRecipient(TO)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()

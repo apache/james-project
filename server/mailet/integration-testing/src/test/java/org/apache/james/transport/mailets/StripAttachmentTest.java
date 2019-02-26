@@ -120,6 +120,7 @@ public class StripAttachmentTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(FROM)
                 .recipient(RECIPIENT));

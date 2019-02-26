@@ -674,9 +674,8 @@ public class JDBCMailRepository extends AbstractMailRepository {
                 }
             }
 
-            MailImpl.Builder mc = MailImpl.builder();
+            MailImpl.Builder mc = MailImpl.builder().name(key.asString());
             mc.addAttributes(toAttributes(attributes));
-            mc.name(key.asString());
             mc.state(rsMessage.getString(1));
             mc.errorMessage(rsMessage.getString(2));
             String sender = rsMessage.getString(3);

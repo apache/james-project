@@ -34,6 +34,7 @@ import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TemporaryQueue;
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.BlobMessage;
@@ -115,26 +116,35 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
     }
 
     @Override
-    protected void populateMailMimeMessage(Message message, MailImpl.Builder builder) throws MessagingException, JMSException {
+    protected MailImpl.Builder populateMail(Message message) throws JMSException {
+        MailImpl.Builder builder = super.populateMail(message);
+        if (message instanceof BlobMessage) {
+            BlobMessage blobMessage = (BlobMessage) message;
+            try {
+                // store URL and queueName for later usage
+                builder.addAttribute(Attribute.convertToAttribute(JAMES_BLOB_URL, blobMessage.getURL()));
+                builder.addAttribute(Attribute.convertToAttribute(JAMES_QUEUE_NAME, queueName));
+            } catch (MalformedURLException e) {
+                // Ignore on error
+                LOGGER.debug("Unable to get url from blobmessage for mail");
+            }
+        }
+        return builder;
+    }
+
+    @Override
+    protected MimeMessage mimeMessage(Message message) throws MessagingException, JMSException {
         if (message instanceof BlobMessage) {
             try {
                 BlobMessage blobMessage = (BlobMessage) message;
-                try {
-                    // store URL and queueName for later usage
-                    builder.addAttribute(Attribute.convertToAttribute(JAMES_BLOB_URL, blobMessage.getURL()));
-                    builder.addAttribute(Attribute.convertToAttribute(JAMES_QUEUE_NAME, queueName));
-                } catch (MalformedURLException e) {
-                    // Ignore on error
-                    LOGGER.debug("Unable to get url from blobmessage for mail");
-                }
                 MimeMessageSource source = new MimeMessageBlobMessageSource(blobMessage);
-                builder.mimeMessage(new MimeMessageCopyOnWriteProxy(source));
+                return new MimeMessageCopyOnWriteProxy(source);
             
             } catch (JMSException e) {
                 throw new MailQueueException("Unable to populate MimeMessage for mail", e);
             }
         } else {
-            super.populateMailMimeMessage(message, builder);
+            return super.mimeMessage(message);
         }
     }
 

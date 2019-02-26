@@ -125,15 +125,19 @@ public class MailImpl implements Disposable, Mail {
             .build();
     }
 
-    public static Builder builder() {
-        return new Builder();
+    public static RequireName builder() {
+        return Builder::new;
+    }
+
+    public interface RequireName {
+        Builder name(String name);
     }
 
     public static class Builder {
 
+        private final String name;
         private Optional<MimeMessage> mimeMessage;
         private List<MailAddress> recipients;
-        private Optional<String> name;
         private Optional<MailAddress> sender;
         private Optional<String> state;
         private Optional<String> errorMessage;
@@ -143,10 +147,12 @@ public class MailImpl implements Disposable, Mail {
         private Optional<String> remoteHost;
         private PerRecipientHeaders perRecipientHeaders;
 
-        private Builder() {
+        private Builder(String name) {
+            Preconditions.checkNotNull(name);
+            Preconditions.checkArgument(!name.isEmpty(), "name must not be empty");
+            this.name = name;
             mimeMessage = Optional.empty();
             recipients = Lists.newArrayList();
-            name = Optional.empty();
             sender = Optional.empty();
             state = Optional.empty();
             errorMessage = Optional.empty();
@@ -188,11 +194,6 @@ public class MailImpl implements Disposable, Mail {
 
         public Builder addRecipient(String recipient) throws AddressException {
             return addRecipients(recipient);
-        }
-
-        public Builder name(String name) {
-            this.name = Optional.ofNullable(name);
-            return this;
         }
 
         public Builder sender(MailAddress sender) {
@@ -264,10 +265,9 @@ public class MailImpl implements Disposable, Mail {
         }
 
         public MailImpl build() {
-            MailImpl mail = new MailImpl(state.orElse(DEFAULT), attributes, recipients, perRecipientHeaders);
+            MailImpl mail = new MailImpl(name, state.orElse(DEFAULT), attributes, recipients, perRecipientHeaders);
 
             mimeMessage.ifPresent(Throwing.consumer(mail::setMessage).sneakyThrow());
-            name.ifPresent(mail::setName);
             sender.ifPresent(mail::setSender);
             errorMessage.ifPresent(mail::setErrorMessage);
             lastUpdated.ifPresent(mail::setLastUpdated);
@@ -398,10 +398,12 @@ public class MailImpl implements Disposable, Mail {
      */
     private PerRecipientHeaders perRecipientSpecificHeaders;
 
-    private MailImpl(String state,
+    private MailImpl(String name,
+                     String state,
                      Map<AttributeName, Attribute> attributes,
                      List<MailAddress> recipients,
                      PerRecipientHeaders perRecipientHeaders) {
+        setName(name);
         setState(state);
         setAttributes(attributes);
         setRecipients(recipients);
@@ -420,6 +422,8 @@ public class MailImpl implements Disposable, Mail {
 
     @Override
     public void setName(String name) {
+        Preconditions.checkNotNull(name);
+        Preconditions.checkArgument(!name.isEmpty(), "name must not be empty");
         this.name = name;
     }
 

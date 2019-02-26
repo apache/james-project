@@ -539,8 +539,8 @@ public class MBoxMailRepository implements MailRepository, Configurable {
             return null;
         }
         MailImpl res = MailImpl.builder()
-            .mimeMessage(foundMessage)
             .name(key.asString())
+            .mimeMessage(foundMessage)
             .build();
         LOGGER.debug("Retrieving entry for key {}", key);
         return res;

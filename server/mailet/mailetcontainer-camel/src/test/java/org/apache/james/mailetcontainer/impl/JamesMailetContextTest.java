@@ -174,6 +174,7 @@ public class JamesMailetContextTest {
     @Test
     public void bounceShouldNotFailWhenNonConfiguredPostmaster() throws Exception {
         MailImpl mail = MailImpl.builder()
+            .name("mail1")
             .sender(mailAddress)
             .addRecipient(mailAddress)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
@@ -184,6 +185,7 @@ public class JamesMailetContextTest {
     @Test
     public void bouncingToNullSenderShouldBeANoop() throws Exception {
         MailImpl mail = MailImpl.builder()
+            .name("mail1")
             .sender(MailAddress.nullSender())
             .addRecipient(mailAddress)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
@@ -197,6 +199,7 @@ public class JamesMailetContextTest {
     @Test
     public void bouncingToNoSenderShouldBeANoop() throws Exception {
         MailImpl mail = MailImpl.builder()
+            .name("mail1")
             .addRecipient(mailAddress)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
             .build();
@@ -209,6 +212,7 @@ public class JamesMailetContextTest {
     @Test
     public void bounceShouldEnqueueEmailWithRootState() throws Exception {
         MailImpl mail = MailImpl.builder()
+            .name("mail1")
             .sender(mailAddress)
             .addRecipient(mailAddress)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
@@ -226,6 +230,7 @@ public class JamesMailetContextTest {
     @Test
     public void sendMailShouldEnqueueEmailWithRootState() throws Exception {
         MailImpl mail = MailImpl.builder()
+            .name("mail1")
             .sender(mailAddress)
             .addRecipient(mailAddress)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
@@ -242,6 +247,7 @@ public class JamesMailetContextTest {
     @Test
     public void sendMailShouldEnqueueEmailWithOtherStateWhenSpecified() throws Exception {
         MailImpl mail = MailImpl.builder()
+            .name("mail1")
             .sender(mailAddress)
             .addRecipient(mailAddress)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
@@ -259,6 +265,7 @@ public class JamesMailetContextTest {
     @Test
     public void sendMailShouldEnqueueEmailWithRootStateAndDelayWhenSpecified() throws Exception {
         MailImpl mail = MailImpl.builder()
+            .name("mail1")
             .sender(mailAddress)
             .addRecipient(mailAddress)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
@@ -279,6 +286,7 @@ public class JamesMailetContextTest {
     @Test
     public void sendMailShouldEnqueueEmailWithOtherStateAndDelayWhenSpecified() throws Exception {
         MailImpl mail = MailImpl.builder()
+            .name("mail1")
             .sender(mailAddress)
             .addRecipient(mailAddress)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())

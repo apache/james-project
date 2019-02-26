@@ -58,6 +58,7 @@ public class RedirectAction implements MailAction {
         ActionUtils.detectAndHandleLocalLooping(aMail, context, "redirect");
 
         context.post(MailImpl.builder()
+            .name("redirect-" + aMail.getName())
             .sender(aMail.getMaybeSender())
             .addRecipient(new MailAddress(anAction.getAddress()))
             .mimeMessage(aMail.getMessage())

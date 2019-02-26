@@ -366,25 +366,20 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
      * @throws JMSException
      */
     protected final Mail createMail(Message message) throws MessagingException, JMSException {
-        MailImpl.Builder mail = MailImpl.builder();
-        populateMail(message, mail);
-        populateMailMimeMessage(message, mail);
-
-        return mail.build();
+        return populateMail(message).mimeMessage(mimeMessage(message)).build();
     }
 
     /**
-     * Populat the given {@link Mail} instance with a {@link MimeMessage}. The
+     * Return a MimeMessage extracted from the input Message. The
      * {@link MimeMessage} is read from the JMS Message. This implementation use
      * a {@link BytesMessage}
      *
      * @param message
-     * @param builder
      * @throws MessagingException
      */
-    protected void populateMailMimeMessage(Message message, MailImpl.Builder builder) throws MessagingException, JMSException {
+    protected MimeMessage mimeMessage(Message message) throws MessagingException, JMSException {
         if (message instanceof ObjectMessage) {
-            builder.mimeMessage(new MimeMessageCopyOnWriteProxy(new MimeMessageObjectMessageSource((ObjectMessage) message)));
+            return new MimeMessageCopyOnWriteProxy(new MimeMessageObjectMessageSource((ObjectMessage) message));
         } else {
             throw new MailQueueException("Not supported JMS Message received " + message);
         }
@@ -396,12 +391,11 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
      * {@link MimeMessage}
      *
      * @param message
-     * @param builder
      * @throws JMSException
      */
-    protected void populateMail(Message message, MailImpl.Builder builder) throws JMSException {
+    protected MailImpl.Builder populateMail(Message message) throws JMSException {
         String name = message.getStringProperty(JAMES_MAIL_NAME);
-        builder.name(name);
+        MailImpl.Builder builder = MailImpl.builder().name(name);
         builder.errorMessage(message.getStringProperty(JAMES_MAIL_ERROR_MESSAGE));
         builder.lastUpdated(new Date(message.getLongProperty(JAMES_MAIL_LAST_UPDATED)));
 
@@ -435,6 +429,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
 
         builder.sender(MaybeSender.getMailSender(message.getStringProperty(JAMES_MAIL_SENDER)).asOptional());
         builder.state(message.getStringProperty(JAMES_MAIL_STATE));
+        return builder;
     }
 
     private Stream<Attribute> mailAttribute(Message message, String name) {

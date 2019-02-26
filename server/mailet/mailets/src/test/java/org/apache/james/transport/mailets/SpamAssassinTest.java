@@ -150,6 +150,7 @@ public class SpamAssassinTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
+            .name("name")
             .recipient("user1@exemple.com")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient("user1@exemple.com")
@@ -183,6 +184,7 @@ public class SpamAssassinTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
+            .name("name")
             .recipient("user1@exemple.com")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient("user1@exemple.com")
@@ -218,6 +220,7 @@ public class SpamAssassinTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
+            .name("name")
             .recipient("user1@exemple.com")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient("user1@exemple.com")
