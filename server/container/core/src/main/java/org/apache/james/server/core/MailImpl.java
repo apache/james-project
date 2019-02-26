@@ -397,20 +397,17 @@ public class MailImpl implements Disposable, Mail {
         this.recipients = null;
     }
 
-    private MailImpl(String name, Optional<MailAddress> sender, Collection<MailAddress> recipients) {
-        this();
-        setName(name);
-        sender.ifPresent(this::setSender);
+
+    @SuppressWarnings({"unchecked"})
+    private MailImpl(Mail mail, String newName) throws MessagingException {
+        setName(newName);
+        Optional.ofNullable(sender).ifPresent(this::setSender);
 
         // Copy the recipient list
+        Collection<MailAddress> recipients = mail.getRecipients();
         if (recipients != null) {
             setRecipients(recipients);
         }
-    }
-
-    @SuppressWarnings({"unchecked", "deprecation"})
-    private MailImpl(Mail mail, String newName) throws MessagingException {
-        this(newName, Optional.ofNullable(mail.getSender()), mail.getRecipients());
         setMessage(new MimeMessageCopyOnWriteProxy(mail.getMessage()));
         setRemoteHost(mail.getRemoteHost());
         setRemoteAddr(mail.getRemoteAddr());
