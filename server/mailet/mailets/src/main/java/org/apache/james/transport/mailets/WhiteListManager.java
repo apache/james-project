@@ -55,6 +55,7 @@ import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
+import org.apache.mailet.MailetException;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
@@ -752,9 +753,12 @@ public class WhiteListManager extends GenericMailet {
             }
 
             /*
-      Holds value of property sqlFile.
-     */
-            File sqlFile = new File((String) mailetContext.getAttribute("confDir"), "sqlResources.xml").getCanonicalFile();
+                Holds value of property sqlFile.
+            */
+            String confDir = getInitParameterAsOptional("confDir")
+                .orElseThrow(() -> new MailetException("WhiteListManager has no 'confDir' configured"));
+
+            File sqlFile = new File(confDir, "sqlResources.xml").getCanonicalFile();
             sqlQueries.init(sqlFile, "WhiteList", conn, getSqlParameters());
 
             checkTables(conn);
