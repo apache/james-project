@@ -30,6 +30,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,7 +99,7 @@ public class ActionApplier {
 
             String mailboxName = messageManager.getMailboxPath().getName();
             String attributeNameForUser = DELIVERY_PATH_PREFIX + user.asString();
-            mail.setAttribute(attributeNameForUser, mailboxName);
+            mail.setAttribute(Attribute.convertToAttribute(attributeNameForUser, mailboxName));
         } catch (MailboxNotFoundException e) {
             LOGGER.info("Mailbox {} does not exist, but it was mentioned in a JMAP filtering rule", mailboxId, e);
         } catch (Exception e) {

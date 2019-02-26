@@ -39,6 +39,9 @@ import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailHook;
 import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.apache.james.smtpserver.JamesMessageHook;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,15 +59,15 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
      */
     private final Logger serviceLog = FALLBACK_LOG;
 
-    public static final String SPF_BLOCKLISTED = "SPF_BLOCKLISTED";
+    private static final String SPF_BLOCKLISTED = "SPF_BLOCKLISTED";
 
-    public static final String SPF_DETAIL = "SPF_DETAIL";
+    private static final String SPF_DETAIL = "SPF_DETAIL";
 
-    public static final String SPF_TEMPBLOCKLISTED = "SPF_TEMPBLOCKLISTED";
+    private static final String SPF_TEMPBLOCKLISTED = "SPF_TEMPBLOCKLISTED";
 
-    public static final String SPF_HEADER = "SPF_HEADER";
+    private static final String SPF_HEADER = "SPF_HEADER";
 
-    public static final String SPF_HEADER_MAIL_ATTRIBUTE_NAME = "org.apache.james.spf.header";
+    private static final AttributeName SPF_HEADER_MAIL_ATTRIBUTE_NAME = AttributeName.of("org.apache.james.spf.header");
 
     /** If set to true the mail will also be rejected on a softfail */
     private boolean blockSoftFail = false;
@@ -274,7 +277,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
     @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
         // Store the spf header as attribute for later using
-        mail.setAttribute(SPF_HEADER_MAIL_ATTRIBUTE_NAME, (String) session.getAttachment(SPF_HEADER, State.Transaction));
+        mail.setAttribute(new Attribute(SPF_HEADER_MAIL_ATTRIBUTE_NAME, AttributeValue.of((String) session.getAttachment(SPF_HEADER, State.Transaction))));
 
         return null;
     }

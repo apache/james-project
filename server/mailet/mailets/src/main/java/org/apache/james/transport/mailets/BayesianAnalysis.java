@@ -35,6 +35,9 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.util.bayesian.JDBCBayesianAnalyzer;
 import org.apache.james.util.sql.JDBCUtil;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -142,7 +145,7 @@ public class BayesianAnalysis extends GenericMailet {
 
     private DataSource datasource;
 
-    private static final String MAIL_ATTRIBUTE_NAME = "org.apache.james.spam.probability";
+    private static final AttributeName MAIL_ATTRIBUTE_NAME = AttributeName.of("org.apache.james.spam.probability");
     private static final String HEADER_NAME = "X-MessageIsSpamProbability";
     private static final long CORPUS_RELOAD_INTERVAL = 600000;
     private String headerName;
@@ -316,7 +319,7 @@ public class BayesianAnalysis extends GenericMailet {
                 probability = 0.0;
             }
 
-            mail.setAttribute(MAIL_ATTRIBUTE_NAME, probability);
+            mail.setAttribute(new Attribute(MAIL_ATTRIBUTE_NAME, AttributeValue.of(probability)));
             message.setHeader(headerName, Double.toString(probability));
 
             DecimalFormat probabilityForm = (DecimalFormat) DecimalFormat.getInstance();

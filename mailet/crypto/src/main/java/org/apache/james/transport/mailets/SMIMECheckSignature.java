@@ -34,6 +34,9 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.james.transport.KeyStoreHolder;
 import org.apache.james.transport.SMIMESignerInfo;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.base.GenericMailet;
@@ -103,13 +106,13 @@ import org.slf4j.LoggerFactory;
  */
 public class SMIMECheckSignature extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(SMIMECheckSignature.class);
+
+    private KeyStoreHolder trustedCertificateStore;
     
-    protected KeyStoreHolder trustedCertificateStore;
+    private boolean stripSignature = false;
+    private boolean onlyTrusted = true;
     
-    protected boolean stripSignature = false;
-    protected boolean onlyTrusted = true;
-    
-    protected String mailAttribute = "org.apache.james.SMIMECheckSignature";
+    private AttributeName mailAttribute = AttributeName.of("org.apache.james.SMIMECheckSignature");
     
     public SMIMECheckSignature() {
         super();
@@ -132,7 +135,7 @@ public class SMIMECheckSignature extends GenericMailet {
         
         String mailAttributeConf = config.getInitParameter("mailAttribute");
         if (mailAttributeConf != null) {
-            mailAttribute = mailAttributeConf;
+            mailAttribute = AttributeName.of(mailAttributeConf);
         }
         
         
@@ -213,7 +216,7 @@ public class SMIMECheckSignature extends GenericMailet {
             }
 
             if (signerinfolist.size() > 0) {
-                mail.setAttribute(mailAttribute, signerinfolist);
+                mail.setAttribute(new Attribute(mailAttribute, AttributeValue.ofAny(signerinfolist)));
             } else {
                 // if no valid signers are found the message is not modified.
                 strippedMessage = null;

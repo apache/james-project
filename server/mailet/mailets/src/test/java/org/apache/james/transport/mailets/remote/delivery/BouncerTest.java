@@ -34,6 +34,8 @@ import javax.mail.SendFailedException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.transport.mailets.remote.delivery.Bouncer;
 import org.apache.james.transport.mailets.remote.delivery.RemoteDeliveryConfiguration;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -344,7 +346,7 @@ public class BouncerTest {
 
         FakeMailContext.SentMail expected = FakeMailContext.sentMailBuilder()
             .sender(MailAddressFixture.ANY_AT_JAMES)
-            .attribute(DELIVERY_ERROR, errorMessage)
+            .attribute(new Attribute(DELIVERY_ERROR, AttributeValue.of(errorMessage)))
             .state(BOUNCE_PROCESSOR)
             .fromMailet()
             .build();
@@ -446,7 +448,7 @@ public class BouncerTest {
 
         FakeMailContext.SentMail expected = FakeMailContext.sentMailBuilder()
             .sender(MailAddressFixture.ANY_AT_JAMES)
-            .attribute(DELIVERY_ERROR, "null")
+            .attribute(new Attribute(DELIVERY_ERROR, AttributeValue.of("null")))
             .state(BOUNCE_PROCESSOR)
             .fromMailet()
             .build();

@@ -50,6 +50,7 @@ import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.server.core.MimeMessageSource;
 import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,8 +123,8 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
             BlobMessage blobMessage = (BlobMessage) message;
             try {
                 // store URL and queueName for later usage
-                builder.addAttribute(Attribute.convertToAttribute(JAMES_BLOB_URL, blobMessage.getURL()));
-                builder.addAttribute(Attribute.convertToAttribute(JAMES_QUEUE_NAME, queueName));
+                builder.addAttribute(new Attribute(JAMES_BLOB_URL, AttributeValue.of(blobMessage.getURL())));
+                builder.addAttribute(new Attribute(JAMES_QUEUE_NAME, AttributeValue.of(queueName)));
             } catch (MalformedURLException e) {
                 // Ignore on error
                 LOGGER.debug("Unable to get url from blobmessage for mail");

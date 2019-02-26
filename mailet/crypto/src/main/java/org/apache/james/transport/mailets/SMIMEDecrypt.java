@@ -35,6 +35,9 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.transport.SMIMEKeyHolder;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.base.GenericMailet;
@@ -79,7 +82,7 @@ public class SMIMEDecrypt extends GenericMailet {
 
     private SMIMEKeyHolder keyHolder;
     private X509CertificateHolder certificateHolder;
-    protected String mailAttribute = "org.apache.james.SMIMEDecrypt";
+    private AttributeName mailAttribute = AttributeName.of("org.apache.james.SMIMEDecrypt");
     
     @Override
     public void init() throws MessagingException {
@@ -101,7 +104,7 @@ public class SMIMEDecrypt extends GenericMailet {
         
         String mailAttributeConf = config.getInitParameter("mailAttribute");
         if (mailAttributeConf != null) {
-            mailAttribute = mailAttributeConf;
+            mailAttribute = AttributeName.of(mailAttributeConf);
         }
         
         try {
@@ -161,7 +164,7 @@ public class SMIMEDecrypt extends GenericMailet {
             // the result of the operation.
             ArrayList<X509Certificate> list = new ArrayList<>(1);
             list.add(keyHolder.getCertificate());
-            mail.setAttribute(mailAttribute, list);
+            mail.setAttribute(new Attribute(mailAttribute, AttributeValue.ofAny(list)));
 
             // I start the message stripping.
             try {

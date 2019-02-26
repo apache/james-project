@@ -32,6 +32,9 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.util.StreamUtils;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetException;
@@ -73,12 +76,13 @@ public class ContactExtractor extends GenericMailet implements Mailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ContactExtractor.class);
 
     @VisibleForTesting ObjectMapper objectMapper;
-    private String extractAttributeTo;
+    private AttributeName extractAttributeTo;
 
     @Override
     public void init() throws MessagingException {
         extractAttributeTo = getInitParameterAsOptional(Configuration.ATTRIBUTE)
-                .orElseThrow(() -> new MailetException("No value for " + Configuration.ATTRIBUTE + " parameter was provided."));
+            .map(AttributeName::of)
+            .orElseThrow(() -> new MailetException("No value for " + Configuration.ATTRIBUTE + " parameter was provided."));
 
         objectMapper = new ObjectMapper().registerModule(new Jdk8Module());
     }
@@ -93,7 +97,9 @@ public class ContactExtractor extends GenericMailet implements Mailet {
         try {
             Optional<String> payload = extractContacts(mail);
             LOGGER.debug("payload : {}", payload);
-            payload.ifPresent(x -> mail.setAttribute(extractAttributeTo, x));
+            payload
+                .map(AttributeValue::of)
+                .ifPresent(x -> mail.setAttribute(new Attribute(extractAttributeTo, x)));
         } catch (Exception e) {
             LOGGER.error("Error while extracting contacts", e);
         }

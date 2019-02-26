@@ -26,6 +26,9 @@ import org.apache.james.jspf.core.Logger;
 import org.apache.james.jspf.executor.SPFResult;
 import org.apache.james.jspf.impl.DefaultSPF;
 import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -57,8 +60,8 @@ public class SPF extends GenericMailet {
 
     private boolean addHeader = false;
     private org.apache.james.jspf.impl.SPF spf;
-    public static final String EXPLANATION_ATTRIBUTE = "org.apache.james.transport.mailets.spf.explanation";
-    public static final String RESULT_ATTRIBUTE = "org.apache.james.transport.mailets.spf.result";
+    private static final AttributeName EXPLANATION_ATTRIBUTE = AttributeName.of("org.apache.james.transport.mailets.spf.explanation");
+    private static final AttributeName RESULT_ATTRIBUTE = AttributeName.of("org.apache.james.transport.mailets.spf.result");
 
     @Override
     public void init() {
@@ -76,8 +79,8 @@ public class SPF extends GenericMailet {
         if (!remoteAddr.equals("127.0.0.1")) {
             String sender = mail.getMaybeSender().asString("");
             SPFResult result = spf.checkSPF(remoteAddr, sender, helo);
-            mail.setAttribute(EXPLANATION_ATTRIBUTE, result.getExplanation());
-            mail.setAttribute(RESULT_ATTRIBUTE, result.getResult());
+            mail.setAttribute(new Attribute(EXPLANATION_ATTRIBUTE, AttributeValue.of(result.getExplanation())));
+            mail.setAttribute(new Attribute(RESULT_ATTRIBUTE, AttributeValue.of(result.getResult())));
 
             LOGGER.debug("ip:{} from:{} helo:{} = {}", remoteAddr, sender, helo, result.getResult());
             if (addHeader) {

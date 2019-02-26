@@ -40,7 +40,9 @@ import org.apache.james.transport.KeyHolder;
 import org.apache.james.transport.SMIMEAttributeNames;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
@@ -514,13 +516,13 @@ public abstract class AbstractSign extends GenericMailet {
             mail.setMessage(newMessage);
             
             // marks this mail as server-signed
-            mail.setAttribute(SMIMEAttributeNames.SMIME_SIGNING_MAILET, this.getClass().getName());
+            mail.setAttribute(new Attribute(SMIMEAttributeNames.SMIME_SIGNING_MAILET, AttributeValue.of(this.getClass().getName())));
             // it is valid for us by definition (signed here by us)
-            mail.setAttribute(SMIMEAttributeNames.SMIME_SIGNATURE_VALIDITY, "valid");
+            mail.setAttribute(new Attribute(SMIMEAttributeNames.SMIME_SIGNATURE_VALIDITY, AttributeValue.of("valid")));
             
             // saves the trusted server signer address
             // warning: should be same as the mail address in the certificate, but it is not guaranteed
-            mail.setAttribute(SMIMEAttributeNames.SMIME_SIGNER_ADDRESS, getKeyHolder().getSignerAddress());
+            mail.setAttribute(new Attribute(SMIMEAttributeNames.SMIME_SIGNER_ADDRESS, AttributeValue.of(getKeyHolder().getSignerAddress())));
             
             if (isDebug()) {
                 LOGGER.debug("Message signed, reverse-path: {}, Id: {}", mail.getMaybeSender().asString(), messageId);
