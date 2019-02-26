@@ -25,17 +25,31 @@ import org.apache.james.vault.DeletedMessage;
 
 public class Criterion<T> {
 
+    interface ValueMatcher<T> {
+        boolean matches(T referenceValue);
+    }
+
+    interface ExpectMatcher<T> {
+        Criterion<T> withMatcher(ValueMatcher<T> valueMatcher);
+    }
+
+    interface Builder {
+        static <U> ExpectMatcher<U> forField(DeletedMessageField<U> field) {
+            return matcher -> new Criterion<>(field, matcher);
+        }
+    }
+
     private static final boolean DEFAULT_TO_NON_MATCHED_IF_NON_EXIST = false;
 
     private final DeletedMessageField<T> field;
     private final ValueMatcher<T> valueMatcher;
 
-    Criterion(DeletedMessageField<T> field, ValueMatcher<T> valueMatcher) {
+    private Criterion(DeletedMessageField<T> field, ValueMatcher<T> valueMatcher) {
         this.field = field;
         this.valueMatcher = valueMatcher;
     }
 
-    public Predicate<DeletedMessage> toPredicate() {
+    Predicate<DeletedMessage> toPredicate() {
         return deletedMessage -> field.valueExtractor().extract(deletedMessage)
             .map(valueMatcher::matches)
             .orElse(DEFAULT_TO_NON_MATCHED_IF_NON_EXIST);

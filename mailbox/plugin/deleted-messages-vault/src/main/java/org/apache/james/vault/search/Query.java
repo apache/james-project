@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 
 public class Query {
     public static final Query ALL = new Query(ImmutableList.of());
+    private static final Predicate<DeletedMessage> MATCH_ALL = any -> true;
 
     public static Query of(Criterion... criteria) {
         return new Query(ImmutableList.copyOf(criteria));
@@ -42,6 +43,7 @@ public class Query {
     public Predicate<DeletedMessage> toPredicate() {
         return criteria.stream()
             .map(Criterion::toPredicate)
-            .reduce(any -> true, Predicate::and);
+            .reduce(Predicate::and)
+            .orElse(MATCH_ALL);
     }
 }

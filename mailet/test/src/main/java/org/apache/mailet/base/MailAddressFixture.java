@@ -34,6 +34,8 @@ public class MailAddressFixture {
     public static final Domain JAMES2_APACHE_ORG_DOMAIN = Domain.of(JAMES2_APACHE_ORG);
 
     public static final MailAddress SENDER = createMailAddress("sender@" + JAMES_LOCAL);
+    public static final MailAddress SENDER2 = createMailAddress("sender2@" + JAMES_LOCAL);
+    public static final MailAddress SENDER3 = createMailAddress("sender3@" + JAMES_LOCAL);
     public static final MailAddress RECIPIENT1 = createMailAddress("recipient1@" + JAMES_LOCAL);
     public static final MailAddress RECIPIENT2 = createMailAddress("recipient2@" + JAMES_LOCAL);
     public static final MailAddress RECIPIENT3 = createMailAddress("recipient3@" + JAMES_LOCAL);

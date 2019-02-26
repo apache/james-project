@@ -21,9 +21,10 @@ package org.apache.james.vault.memory;
 
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.DeletedMessageVaultContract;
+import org.apache.james.vault.DeletedMessageVaultSearchContract;
 import org.junit.jupiter.api.BeforeEach;
 
-public class MemoryDeletedMessagesVaultTest implements DeletedMessageVaultContract {
+public class MemoryDeletedMessagesVaultTest implements DeletedMessageVaultContract, DeletedMessageVaultSearchContract.AllContracts {
 
     private MemoryDeletedMessagesVault memoryDeletedMessagesVault;
 
