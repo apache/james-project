@@ -20,6 +20,7 @@
 package org.apache.james.vault;
 
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -73,7 +74,7 @@ public class DeletedMessage {
 
         @FunctionalInterface
         interface RequireRecipients<T> {
-            T recipients(List<MailAddress> recipients);
+            T recipients(Collection<MailAddress> recipients);
 
             default T recipients(MailAddress... recipients) {
                 return recipients(ImmutableList.copyOf(recipients));
@@ -146,7 +147,7 @@ public class DeletedMessage {
 
     public static RequireMetadata<FinalStage> builder() {
         return messageId -> originMailboxes -> user -> deliveryDate -> deletionDate -> sender -> recipients -> hasAttachment ->
-            new Builder.FinalStage(messageId, originMailboxes, user, deliveryDate, deletionDate, sender, recipients, hasAttachment);
+            new Builder.FinalStage(messageId, originMailboxes, user, deliveryDate, deletionDate, sender, ImmutableList.copyOf(recipients), hasAttachment);
     }
 
     private final MessageId messageId;
