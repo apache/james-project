@@ -20,7 +20,6 @@
 package org.apache.james.webadmin.routes;
 
 import java.util.List;
-import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -28,11 +27,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.service.EventDeadLettersService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
@@ -57,15 +55,15 @@ public class EventDeadLettersRoutes implements Routes {
     private static final String GROUP_PARAM = ":group";
     private static final String EVENT_ID_PARAM = ":eventId";
 
-    private final EventDeadLetters deadLetters;
+    private static final String INTERNAL_SERVER_ERROR = "Internal server error - Something went bad on the server side.";
+
+    private final EventDeadLettersService eventDeadLettersService;
     private final JsonTransformer jsonTransformer;
-    private final EventSerializer eventSerializer;
 
     @Inject
-    EventDeadLettersRoutes(EventDeadLetters deadLetters, JsonTransformer jsonTransformer, EventSerializer eventSerializer) {
-        this.deadLetters = deadLetters;
+    EventDeadLettersRoutes(EventDeadLettersService eventDeadLettersService, JsonTransformer jsonTransformer) {
+        this.eventDeadLettersService = eventDeadLettersService;
         this.jsonTransformer = jsonTransformer;
-        this.eventSerializer = eventSerializer;
     }
 
     @Override
@@ -76,9 +74,9 @@ public class EventDeadLettersRoutes implements Routes {
     @Override
     public void define(Service service) {
         service.get(BASE_PATH + "/groups", this::listGroups, jsonTransformer);
-        service.get(BASE_PATH + "/groups/" + GROUP_PARAM + "/events", this::listFailedEvents, jsonTransformer);
-        service.get(BASE_PATH + "/groups/" + GROUP_PARAM + "/events/" + EVENT_ID_PARAM, this::getEventDetails);
-        service.delete(BASE_PATH + "/groups/" + GROUP_PARAM + "/events/" + EVENT_ID_PARAM, this::deleteEvent);
+        service.get(BASE_PATH + "/groups/" + GROUP_PARAM, this::listFailedEvents, jsonTransformer);
+        service.get(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + EVENT_ID_PARAM, this::getEventDetails);
+        service.delete(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + EVENT_ID_PARAM, this::deleteEvent);
     }
 
     @GET
@@ -86,17 +84,14 @@ public class EventDeadLettersRoutes implements Routes {
     @ApiOperation(value = "List groups")
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.OK_200, message = "OK - list group names", response = List.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
     private Iterable<String> listGroups(Request request, Response response) {
-        return deadLetters.groupsWithFailedEvents()
-            .map(Group::asString)
-            .collect(Guavate.toImmutableList())
-            .block();
+        return eventDeadLettersService.listGroups();
     }
 
     @GET
-    @Path("/groups/" + GROUP_PARAM + "/events")
+    @Path("/groups/" + GROUP_PARAM)
     @ApiOperation(value = "List failed events for a given group")
     @ApiImplicitParams({
         @ApiImplicitParam(
@@ -110,19 +105,15 @@ public class EventDeadLettersRoutes implements Routes {
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.OK_200, message = "OK - list of failed eventIds for a given group", response = List.class),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
     private Iterable<String> listFailedEvents(Request request, Response response) {
         Group group = parseGroup(request);
-        return deadLetters.failedEventIds(group)
-            .map(Event.EventId::getId)
-            .map(UUID::toString)
-            .collect(Guavate.toImmutableList())
-            .block();
+        return eventDeadLettersService.listGroupEvents(group);
     }
 
     @GET
-    @Path("/groups/" + GROUP_PARAM + "/events/" + EVENT_ID_PARAM)
+    @Path("/groups/" + GROUP_PARAM + "/" + EVENT_ID_PARAM)
     @ApiOperation(value = "Returns an event detail")
     @ApiImplicitParams({
         @ApiImplicitParam(
@@ -144,19 +135,17 @@ public class EventDeadLettersRoutes implements Routes {
         @ApiResponse(code = HttpStatus.OK_200, message = "OK - returns an event detail", response = Event.class),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name or event id"),
         @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "No event with this eventId"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
     private String getEventDetails(Request request, Response response) {
         Group group = parseGroup(request);
         Event.EventId eventId = parseEventId(request);
 
-        return deadLetters.failedEvent(group, eventId)
-            .map(eventSerializer::toJson)
-            .block();
+        return eventDeadLettersService.getSerializedEvent(group, eventId);
     }
 
     @DELETE
-    @Path("/groups/" + GROUP_PARAM + "/events/" + EVENT_ID_PARAM)
+    @Path("/groups/" + GROUP_PARAM + "/" + EVENT_ID_PARAM)
     @ApiOperation(value = "Deletes an event")
     @ApiImplicitParams({
         @ApiImplicitParam(
@@ -177,13 +166,13 @@ public class EventDeadLettersRoutes implements Routes {
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK - Event deleted"),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name or event id"),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
     private Response deleteEvent(Request request, Response response) {
         Group group = parseGroup(request);
         Event.EventId eventId = parseEventId(request);
 
-        deadLetters.remove(group, eventId).block();
+        eventDeadLettersService.deleteEvent(group, eventId);
         response.status(HttpStatus.NO_CONTENT_204);
         return response;
     }
