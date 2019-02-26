@@ -44,6 +44,10 @@ public class AttributeName {
         this.name = name;
     }
 
+    public Attribute withValue(AttributeValue<?> value) {
+        return new Attribute(this, value);
+    }
+
     public String asString() {
         return name;
     }
