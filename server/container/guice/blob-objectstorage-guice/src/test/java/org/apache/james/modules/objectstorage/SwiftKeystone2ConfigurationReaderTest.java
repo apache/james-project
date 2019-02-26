@@ -33,6 +33,7 @@ import org.apache.james.blob.objectstorage.swift.Region;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.TenantName;
 import org.apache.james.blob.objectstorage.swift.UserName;
+import org.apache.james.modules.objectstorage.swift.SwiftKeystone2ConfigurationReader;
 import org.junit.jupiter.api.Test;
 
 class SwiftKeystone2ConfigurationReaderTest {

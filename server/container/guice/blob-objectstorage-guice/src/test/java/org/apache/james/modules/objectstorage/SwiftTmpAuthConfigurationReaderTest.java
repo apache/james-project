@@ -35,6 +35,7 @@ import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
 import org.apache.james.blob.objectstorage.swift.TenantName;
 import org.apache.james.blob.objectstorage.swift.UserHeaderName;
 import org.apache.james.blob.objectstorage.swift.UserName;
+import org.apache.james.modules.objectstorage.swift.SwiftTmpAuthConfigurationReader;
 import org.junit.jupiter.api.Test;
 
 class SwiftTmpAuthConfigurationReaderTest {

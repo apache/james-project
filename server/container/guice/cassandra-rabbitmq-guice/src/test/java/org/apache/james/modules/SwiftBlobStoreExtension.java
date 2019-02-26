@@ -22,7 +22,7 @@ package org.apache.james.modules;
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
 import org.apache.james.modules.objectstorage.PayloadCodecFactory;
-import org.apache.james.modules.objectstorage.guice.DockerSwiftTestRule;
+import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;

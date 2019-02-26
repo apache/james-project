@@ -1,26 +1,27 @@
-/****************************************************************
- * Licensed to the Apache Software Foundation (ASF) under one   *
- * or more contributor license agreements.  See the NOTICE file *
- * distributed with this work for additional information        *
- * regarding copyright ownership.  The ASF licenses this file   *
- * to you under the Apache License, Version 2.0 (the            *
- * "License"); you may not use this file except in compliance   *
- * with the License.  You may obtain a copy of the License at   *
- *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
- *                                                              *
- * Unless required by applicable law or agreed to in writing,   *
- * software distributed under the License is distributed on an  *
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
- * KIND, either express or implied.  See the License for the    *
- * specific language governing permissions and limitations      *
- * under the License.                                           *
- ****************************************************************/
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 
-package org.apache.james.modules.objectstorage;
+package org.apache.james.modules.objectstorage.swift;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -42,6 +43,10 @@ import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
 import org.apache.james.blob.objectstorage.swift.TenantName;
 import org.apache.james.blob.objectstorage.swift.UserHeaderName;
 import org.apache.james.blob.objectstorage.swift.UserName;
+import org.apache.james.modules.objectstorage.ObjectStorageBlobConfiguration;
+import org.apache.james.modules.objectstorage.ObjectStorageBlobStoreModule;
+import org.apache.james.modules.objectstorage.ObjectStorageProvider;
+import org.apache.james.modules.objectstorage.PayloadCodecFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -75,36 +80,45 @@ class ObjectStorageBlobStoreModuleTest {
                 .codec(PayloadCodecFactory.DEFAULT)
                 .provider(ObjectStorageProvider.SWIFT)
                 .container(generateContainerName())
-                .tempAuth(SwiftTempAuthObjectStorage.configBuilder()
-                    .endpoint(dockerSwift.swiftEndpoint())
-                    .credentials(Credentials.of("testing"))
-                    .userName(UserName.of("tester"))
-                    .tenantName(TenantName.of("test"))
-                    .tempAuthHeaderUserName(UserHeaderName.of("X-Storage-User"))
-                    .tempAuthHeaderPassName(PassHeaderName.of("X-Storage-Pass"))
-                    .build())
+                .authConfiguration(new SwiftAuthConfiguration(SwiftTempAuthObjectStorage.AUTH_API_NAME,
+                    Optional.of(SwiftTempAuthObjectStorage.configBuilder()
+                        .endpoint(dockerSwift.swiftEndpoint())
+                        .credentials(Credentials.of("testing"))
+                        .userName(UserName.of("tester"))
+                        .tenantName(TenantName.of("test"))
+                        .tempAuthHeaderUserName(UserHeaderName.of("X-Storage-User"))
+                        .tempAuthHeaderPassName(PassHeaderName.of("X-Storage-Pass"))
+                        .build()),
+                    Optional.empty(),
+                    Optional.empty()))
                 .build();
             ObjectStorageBlobConfiguration keystone2 = ObjectStorageBlobConfiguration.builder()
                 .codec(PayloadCodecFactory.DEFAULT)
                 .provider(ObjectStorageProvider.SWIFT)
                 .container(generateContainerName())
-                .keystone2(SwiftKeystone2ObjectStorage.configBuilder()
-                    .endpoint(dockerSwift.keystoneV2Endpoint())
-                    .credentials(Credentials.of("demo"))
-                    .userName(UserName.of("demo"))
-                    .tenantName(TenantName.of("test"))
-                    .build())
+                .authConfiguration(new SwiftAuthConfiguration(SwiftKeystone2ObjectStorage.AUTH_API_NAME,
+                    Optional.empty(),
+                    Optional.of(SwiftKeystone2ObjectStorage.configBuilder()
+                        .endpoint(dockerSwift.keystoneV2Endpoint())
+                        .credentials(Credentials.of("demo"))
+                        .userName(UserName.of("demo"))
+                        .tenantName(TenantName.of("test"))
+                        .build()),
+                    Optional.empty()))
                 .build();
             ObjectStorageBlobConfiguration keystone3 = ObjectStorageBlobConfiguration.builder()
                 .codec(PayloadCodecFactory.DEFAULT)
                 .provider(ObjectStorageProvider.SWIFT)
                 .container(generateContainerName())
-                .keystone3(SwiftKeystone3ObjectStorage.configBuilder()
-                    .endpoint(dockerSwift.keystoneV3Endpoint())
-                    .credentials(Credentials.of("demo"))
-                    .project(Project.of(ProjectName.of("test")))
-                    .identity(IdentityV3.of(DomainName.of("Default"), UserName.of("demo")))
-                    .build())
+                .authConfiguration(new SwiftAuthConfiguration(SwiftKeystone3ObjectStorage.AUTH_API_NAME,
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.of(SwiftKeystone3ObjectStorage.configBuilder()
+                        .endpoint(dockerSwift.keystoneV3Endpoint())
+                        .credentials(Credentials.of("demo"))
+                        .project(Project.of(ProjectName.of("test")))
+                        .identity(IdentityV3.of(DomainName.of("Default"), UserName.of("demo")))
+                        .build())))
                 .build();
             return Stream.of(tmpAuth, keystone2, keystone3).map(Arguments::of);
         }

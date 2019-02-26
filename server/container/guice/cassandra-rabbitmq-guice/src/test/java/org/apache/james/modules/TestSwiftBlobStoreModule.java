@@ -20,7 +20,7 @@
 package org.apache.james.modules;
 
 import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
-import org.apache.james.modules.objectstorage.guice.DockerSwiftTestRule;
+import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;

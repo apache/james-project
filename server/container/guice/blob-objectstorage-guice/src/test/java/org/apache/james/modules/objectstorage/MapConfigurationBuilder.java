@@ -23,7 +23,7 @@ import org.apache.commons.configuration.MapConfiguration;
 
 import com.google.common.collect.ImmutableMap;
 
-class MapConfigurationBuilder {
+public class MapConfigurationBuilder {
     private ImmutableMap.Builder<String, Object> config;
 
     public MapConfigurationBuilder() {

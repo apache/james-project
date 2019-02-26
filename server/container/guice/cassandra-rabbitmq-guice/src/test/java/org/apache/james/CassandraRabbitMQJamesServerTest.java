@@ -31,7 +31,7 @@ import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.SwiftBlobStoreExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.objectstorage.PayloadCodecFactory;
-import org.apache.james.modules.objectstorage.guice.DockerSwiftTestRule;
+import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;

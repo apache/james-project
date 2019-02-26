@@ -19,7 +19,7 @@
 package org.apache.james.jmap.cassandra.cucumber;
 
 import org.apache.james.modules.objectstorage.PayloadCodecFactory;
-import org.apache.james.modules.objectstorage.guice.DockerSwiftTestRule;
+import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
 
 public class CucumberSwiftSingleton {
 

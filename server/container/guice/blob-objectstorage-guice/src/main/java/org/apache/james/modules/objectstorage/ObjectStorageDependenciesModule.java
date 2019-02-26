@@ -32,10 +32,8 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
-import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
-import org.apache.james.blob.objectstorage.swift.SwiftKeystone3ObjectStorage;
-import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
+import org.apache.james.modules.objectstorage.swift.SwiftObjectStorage;
 import org.apache.james.utils.PropertiesProvider;
 
 import com.google.inject.AbstractModule;
@@ -73,19 +71,7 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
     }
 
     private ObjectStorageBlobsDAOBuilder.RequireContainerName selectDaoBuilder(ObjectStorageBlobConfiguration configuration) {
-        if (configuration.getProvider() != ObjectStorageProvider.SWIFT) {
-            throw new IllegalArgumentException("unknown provider " + configuration.getProvider());
-        }
-        switch (configuration.getAuthApi()) {
-            case SwiftTempAuthObjectStorage.AUTH_API_NAME:
-                return ObjectStorageBlobsDAO.builder(configuration.getTempAuthConfiguration().get());
-            case SwiftKeystone2ObjectStorage.AUTH_API_NAME:
-                return ObjectStorageBlobsDAO.builder(configuration.getKeystone2Configuration().get());
-            case SwiftKeystone3ObjectStorage.AUTH_API_NAME:
-                return ObjectStorageBlobsDAO.builder(configuration.getKeystone3Configuration().get());
-            default:
-                throw new IllegalArgumentException("unknown auth api " + configuration.getAuthApi());
-        }
+        return SwiftObjectStorage.builder(configuration);
     }
 
 }
