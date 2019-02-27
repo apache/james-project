@@ -25,11 +25,14 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-import org.apache.james.filesystem.api.FileSystem;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.mailrepository.api.Protocol;
+import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
+import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryProvider;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
@@ -37,9 +40,6 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
-import org.apache.james.server.core.configuration.Configuration;
-import org.apache.james.server.core.configuration.FileConfigurationProvider;
-import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
@@ -178,15 +178,13 @@ public class ReprocessingServiceTest {
     }
 
     private MemoryMailRepositoryStore createMemoryMailRepositoryStore() throws Exception {
-        Configuration configuration = Configuration.builder()
-            .workingDirectory("../")
-            .configurationFromClasspath()
-            .build();
-        FileSystem fileSystem = new FileSystemImpl(configuration.directories());
         MemoryMailRepositoryUrlStore urlStore = new MemoryMailRepositoryUrlStore();
         MemoryMailRepositoryStore mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(new MemoryMailRepositoryProvider()));
-        mailRepositoryStore.configure(new FileConfigurationProvider(fileSystem, configuration)
-            .getConfiguration("mailrepositorystore"));
+        mailRepositoryStore.configure(new MailRepositoryStoreConfiguration(
+            ImmutableList.of(new MailRepositoryStoreConfiguration.Item(
+                ImmutableList.of(new Protocol("memory")),
+                MemoryMailRepository.class.getName(),
+                new HierarchicalConfiguration()))));
         mailRepositoryStore.init();
         return mailRepositoryStore;
     }

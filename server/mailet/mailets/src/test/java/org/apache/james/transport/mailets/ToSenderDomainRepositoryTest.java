@@ -29,15 +29,16 @@ import static org.mockito.Mockito.when;
 
 import javax.mail.MessagingException;
 
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.mailrepository.api.Protocol;
+import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
+import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryProvider;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
-import org.apache.james.server.core.configuration.Configuration;
-import org.apache.james.server.core.configuration.FileConfigurationProvider;
-import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -45,6 +46,7 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 class ToSenderDomainRepositoryTest {
@@ -58,8 +60,6 @@ class ToSenderDomainRepositoryTest {
 
     private ToSenderDomainRepository mailet;
     private MemoryMailRepositoryStore mailRepositoryStore;
-    private FileSystemImpl fileSystem;
-    private Configuration configuration;
 
     @BeforeEach
     void setup() throws Exception {
@@ -68,15 +68,13 @@ class ToSenderDomainRepositoryTest {
     }
 
     private void createMailRepositoryStore() throws Exception {
-        configuration = Configuration.builder()
-                .workingDirectory("../")
-                .configurationFromClasspath()
-                .build();
-        fileSystem = new FileSystemImpl(configuration.directories());
         MemoryMailRepositoryUrlStore urlStore = new MemoryMailRepositoryUrlStore();
         mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(new MemoryMailRepositoryProvider()));
-        mailRepositoryStore.configure(new FileConfigurationProvider(fileSystem, configuration)
-                .getConfiguration("mailrepositorystore"));
+        mailRepositoryStore.configure(new MailRepositoryStoreConfiguration(
+            ImmutableList.of(new MailRepositoryStoreConfiguration.Item(
+                ImmutableList.of(new Protocol("memory")),
+                MemoryMailRepository.class.getName(),
+                new HierarchicalConfiguration()))));
         mailRepositoryStore.init();
     }
 
