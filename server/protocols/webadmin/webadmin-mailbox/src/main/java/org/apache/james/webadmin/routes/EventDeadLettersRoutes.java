@@ -24,18 +24,22 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
+import org.apache.james.task.Task;
+import org.apache.james.task.TaskId;
+import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.dto.ActionEvents;
+import org.apache.james.webadmin.dto.TaskIdDto;
 import org.apache.james.webadmin.service.EventDeadLettersService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-
-import com.github.steveash.guavate.Guavate;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -43,6 +47,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.ResponseHeader;
 import spark.Request;
 import spark.Response;
 import spark.Service;
@@ -58,11 +63,13 @@ public class EventDeadLettersRoutes implements Routes {
     private static final String INTERNAL_SERVER_ERROR = "Internal server error - Something went bad on the server side.";
 
     private final EventDeadLettersService eventDeadLettersService;
+    private final TaskManager taskManager;
     private final JsonTransformer jsonTransformer;
 
     @Inject
-    EventDeadLettersRoutes(EventDeadLettersService eventDeadLettersService, JsonTransformer jsonTransformer) {
+    EventDeadLettersRoutes(EventDeadLettersService eventDeadLettersService, TaskManager taskManager, JsonTransformer jsonTransformer) {
         this.eventDeadLettersService = eventDeadLettersService;
+        this.taskManager = taskManager;
         this.jsonTransformer = jsonTransformer;
     }
 
@@ -73,10 +80,42 @@ public class EventDeadLettersRoutes implements Routes {
 
     @Override
     public void define(Service service) {
+        service.post(BASE_PATH, this::performActionOnAllEvents, jsonTransformer);
         service.get(BASE_PATH + "/groups", this::listGroups, jsonTransformer);
         service.get(BASE_PATH + "/groups/" + GROUP_PARAM, this::listFailedEvents, jsonTransformer);
+        service.post(BASE_PATH + "/groups/" + GROUP_PARAM, this::performActionOnGroupEvents, jsonTransformer);
         service.get(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + EVENT_ID_PARAM, this::getEventDetails);
         service.delete(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + EVENT_ID_PARAM, this::deleteEvent);
+        service.post(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + EVENT_ID_PARAM, this::performActionOnSingleEvent, jsonTransformer);
+    }
+
+    @POST
+    @Path("")
+    @ApiOperation(value = "Performing operations on all events")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            required = true,
+            dataType = "String",
+            name = "action",
+            paramType = "query",
+            example = "?action=reDeliver",
+            value = "Specify the action to perform on all events. For now only 'reDeliver' is supported as an action, "
+                + "and its purpose is to attempt a redelivery of all events present in dead letter."),
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "The taskId of the given scheduled task", response = TaskIdDto.class,
+            responseHeaders = {
+                @ResponseHeader(name = "Location", description = "URL of the resource associated with the scheduled task")
+            }),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid action argument"),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
+    })
+    public TaskIdDto performActionOnAllEvents(Request request, Response response) {
+        assertValidActionParameter(request);
+
+        Task task = eventDeadLettersService.createActionOnEventsTask();
+        TaskId taskId = taskManager.submit(task);
+        return TaskIdDto.respond(response, taskId);
     }
 
     @GET
@@ -87,7 +126,7 @@ public class EventDeadLettersRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
     private Iterable<String> listGroups(Request request, Response response) {
-        return eventDeadLettersService.listGroups();
+        return eventDeadLettersService.listGroupsAsStrings();
     }
 
     @GET
@@ -109,7 +148,44 @@ public class EventDeadLettersRoutes implements Routes {
     })
     private Iterable<String> listFailedEvents(Request request, Response response) {
         Group group = parseGroup(request);
-        return eventDeadLettersService.listGroupEvents(group);
+        return eventDeadLettersService.listGroupsEventIdsAsStrings(group);
+    }
+
+    @POST
+    @Path("/groups/" + GROUP_PARAM)
+    @ApiOperation(value = "Performing operations on events of a particular group")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            required = true,
+            name = "group",
+            paramType = "path parameter",
+            dataType = "String",
+            defaultValue = "none",
+            value = "Compulsory. Needs to be a valid group name"),
+        @ApiImplicitParam(
+            required = true,
+            dataType = "String",
+            name = "action",
+            paramType = "query",
+            example = "?action=reDeliver",
+            value = "Specify the action to perform on all events of a particular group. For now only 'reDeliver' is supported as an action, "
+                + "and its purpose is to attempt a redelivery of all events present in dead letter for the specified group."),
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "The taskId of the given scheduled task", response = TaskIdDto.class,
+            responseHeaders = {
+                @ResponseHeader(name = "Location", description = "URL of the resource associated with the scheduled task")
+            }),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name or action argument"),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
+    })
+    public TaskIdDto performActionOnGroupEvents(Request request, Response response) {
+        Group group = parseGroup(request);
+        assertValidActionParameter(request);
+
+        Task task = eventDeadLettersService.createActionOnEventsTask(group);
+        TaskId taskId = taskManager.submit(task);
+        return TaskIdDto.respond(response, taskId);
     }
 
     @GET
@@ -175,6 +251,60 @@ public class EventDeadLettersRoutes implements Routes {
         eventDeadLettersService.deleteEvent(group, eventId);
         response.status(HttpStatus.NO_CONTENT_204);
         return response;
+    }
+
+    @POST
+    @Path("/groups/" + GROUP_PARAM + "/" + EVENT_ID_PARAM)
+    @ApiOperation(value = "Performing operations on an event")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            required = true,
+            name = "group",
+            paramType = "path parameter",
+            dataType = "String",
+            defaultValue = "none",
+            value = "Compulsory. Needs to be a valid group name"),
+        @ApiImplicitParam(
+            required = true,
+            name = "eventId",
+            paramType = "path parameter",
+            dataType = "String",
+            defaultValue = "none",
+            value = "Compulsory. Needs to be a valid eventId"),
+        @ApiImplicitParam(
+            required = true,
+            dataType = "String",
+            name = "action",
+            paramType = "query",
+            example = "?action=reDeliver",
+            value = "Specify the action to perform on an unique event. For now only 'reDeliver' is supported as an action, "
+                + "and its purpose is to attempt a redelivery of the specified event."),
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "The taskId of the given scheduled task", response = TaskIdDto.class,
+            responseHeaders = {
+                @ResponseHeader(name = "Location", description = "URL of the resource associated with the scheduled task")
+            }),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name, event id or action argument"),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "No event with this eventId"),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
+    })
+    public TaskIdDto performActionOnSingleEvent(Request request, Response response) {
+        Group group = parseGroup(request);
+        Event.EventId eventId = parseEventId(request);
+        assertValidActionParameter(request);
+
+        Task task = eventDeadLettersService.createActionOnEventsTask(group, eventId);
+        TaskId taskId = taskManager.submit(task);
+        return TaskIdDto.respond(response, taskId);
+    }
+
+    private void assertValidActionParameter(Request request) {
+        ActionEvents action = ActionEvents.parse(request.queryParams("action"));
+
+        if (action != ActionEvents.reDeliver) {
+            throw new IllegalArgumentException(action + " is not a supported action");
+        }
     }
 
     private Group parseGroup(Request request) {
