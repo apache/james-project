@@ -29,6 +29,8 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.UnmodifiableIterator;
 
+import reactor.core.publisher.Flux;
+
 public class IteratorsTest {
 
     @Test
@@ -53,6 +55,24 @@ public class IteratorsTest {
 
         //Then
         assertThat(actual.collect(toList())).containsExactly("a", "b", "c");
+    }
+
+    @Test
+    void toFluxShouldReturnEmptyStreamWhenEmptyIterator() {
+        UnmodifiableIterator<String> emptyIterator = ImmutableList.<String>of().iterator();
+
+        Flux<String> actual = Iterators.toFlux(emptyIterator);
+
+        assertThat(actual.count().block()).isEqualTo(0);
+    }
+
+    @Test
+    void toFluxShouldReturnSameContent() {
+        UnmodifiableIterator<String> iterator = ImmutableList.of("a", "b", "c").iterator();
+
+        Flux<String> actual = Iterators.toFlux(iterator);
+
+        assertThat(actual.collect(toList()).block()).containsExactly("a", "b", "c");
     }
 
 }
