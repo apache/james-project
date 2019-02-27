@@ -79,9 +79,9 @@ public class ObjectStorageBlobConfiguration {
     private static SpecificAuthConfiguration authConfiguration(String provider, Configuration configuration) throws ConfigurationException {
         switch (ObjectStorageProvider.from(provider)) {
             case SWIFT:
-                return SwiftAuthConfiguration.defineAuthApi(configuration);
+                return SwiftAuthConfiguration.from(configuration);
             case AWSS3:
-                return AwsS3ConfigurationReader.readAwsS3Configuration(configuration);
+                return AwsS3ConfigurationReader.from(configuration);
         }
         throw new ConfigurationException("Unknown object storage provider: " + provider);
     }

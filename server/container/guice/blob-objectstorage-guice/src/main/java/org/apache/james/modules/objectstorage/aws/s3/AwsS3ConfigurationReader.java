@@ -27,7 +27,7 @@ public class AwsS3ConfigurationReader {
     static final String OBJECTSTORAGE_ACCESKEYID = "objectstorage.s3.accessKeyId";
     static final String OBJECTSTORAGE_SECRETKEY = "objectstorage.s3.secretKey";
 
-    public static AwsS3AuthConfiguration readAwsS3Configuration(Configuration configuration) {
+    public static AwsS3AuthConfiguration from(Configuration configuration) {
 
         return AwsS3AuthConfiguration.builder()
                 .endpoint(configuration.getString(OBJECTSTORAGE_ENDPOINT))

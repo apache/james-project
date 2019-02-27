@@ -38,7 +38,7 @@ public class SwiftAuthConfiguration implements SpecificAuthConfiguration {
 
     private static final String OBJECTSTORAGE_SWIFT_AUTH_API = "objectstorage.swift.authapi";
 
-    public static SwiftAuthConfiguration defineAuthApi(Configuration configuration) throws ConfigurationException {
+    public static SwiftAuthConfiguration from(Configuration configuration) throws ConfigurationException {
         String authApi = configuration.getString(OBJECTSTORAGE_SWIFT_AUTH_API, null);
         if (Strings.isNullOrEmpty(authApi)) {
             throw new ConfigurationException("Mandatory configuration value " + OBJECTSTORAGE_SWIFT_AUTH_API + " is missing from " + ObjectStorageBlobConfiguration.OBJECTSTORAGE_CONFIGURATION_NAME + " configuration");
