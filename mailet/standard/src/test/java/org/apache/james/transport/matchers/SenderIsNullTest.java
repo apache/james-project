@@ -44,6 +44,7 @@ class SenderIsNullTest {
     @Test
     void shouldMatchWhenNoSender() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipient(ANY_AT_JAMES)
             .build();
 
@@ -53,6 +54,7 @@ class SenderIsNullTest {
     @Test
     void shouldMatchWhenNullSender() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipient(ANY_AT_JAMES)
             .sender(MailAddress.nullSender())
             .build();
@@ -63,6 +65,7 @@ class SenderIsNullTest {
     @Test
     void shouldNotMatchWhenSenderIsPresent() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipient(ANY_AT_JAMES)
             .sender("other@james.apache.org")
             .build();

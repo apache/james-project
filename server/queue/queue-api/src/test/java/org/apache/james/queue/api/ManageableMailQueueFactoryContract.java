@@ -36,7 +36,7 @@ public interface ManageableMailQueueFactoryContract {
         MailQueueFactory<ManageableMailQueue> mailQueueFactory = getMailQueueFactory();
         MailQueue firstCreation = mailQueueFactory.createQueue(NAME_1);
 
-        firstCreation.enQueue(Mails.defaultMail().build());
+        firstCreation.enQueue(Mails.defaultMail().name("name").build());
 
         ManageableMailQueue secondCreation = mailQueueFactory.createQueue(NAME_1);
         assertThat(secondCreation.getSize()).isEqualTo(1);

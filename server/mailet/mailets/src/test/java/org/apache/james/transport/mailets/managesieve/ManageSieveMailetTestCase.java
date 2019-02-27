@@ -469,6 +469,7 @@ public class ManageSieveMailetTestCase {
     public final void manageSieveMailetShouldIgnoreNullSender() throws Exception {
         MimeMessage message = prepareMimeMessage("SETACTIVE");
         Mail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(message)
             .sender(MailAddress.nullSender())
             .recipient(SIEVE_LOCALHOST)
@@ -483,6 +484,7 @@ public class ManageSieveMailetTestCase {
     public final void manageSieveMailetShouldIgnoreMailWhenNoSender() throws Exception {
         MimeMessage message = prepareMimeMessage("SETACTIVE");
         Mail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(message)
             .recipient(SIEVE_LOCALHOST)
             .build();
@@ -508,6 +510,7 @@ public class ManageSieveMailetTestCase {
 
     private Mail createUnauthenticatedMail(MimeMessage message) throws Exception {
         return FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(USER.asString())
                 .recipient(SIEVE_LOCALHOST)

@@ -67,6 +67,7 @@ class OnlyTextTest {
         message.saveChanges();
 
         mail = FakeMail.builder()
+                .name("mail")
                 .mimeMessage(message)
                 .build();
         mailet.service(mail);
@@ -94,6 +95,7 @@ class OnlyTextTest {
         message.saveChanges();
 
         mail = FakeMail.builder()
+                .name("mail")
                 .mimeMessage(message)
                 .build();
         mailet.service(mail);
@@ -127,6 +129,7 @@ class OnlyTextTest {
         message.saveChanges();
 
         mail = FakeMail.builder()
+                .name("mail")
                 .mimeMessage(message)
                 .build();
         mailet.service(mail);
@@ -144,6 +147,7 @@ class OnlyTextTest {
         message.saveChanges();
 
         mail = FakeMail.builder()
+                .name("mail")
                 .mimeMessage(message)
                 .build();
         mailet.service(mail);
@@ -169,6 +173,7 @@ class OnlyTextTest {
         message.saveChanges();
 
         mail = FakeMail.builder()
+                .name("mail")
                 .mimeMessage(message)
                 .build();
         mailet.service(mail);

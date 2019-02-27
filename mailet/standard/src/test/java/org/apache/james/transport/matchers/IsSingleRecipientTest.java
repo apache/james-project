@@ -47,14 +47,14 @@ public class IsSingleRecipientTest {
 
     @Test
     public void matchShouldMatchOneRecipientsEmails() throws MessagingException {
-        FakeMail fakeMail = FakeMail.builder().recipient(ANY_AT_JAMES).build();
+        FakeMail fakeMail = FakeMail.builder().name("mail").recipient(ANY_AT_JAMES).build();
 
         assertThat(matcher.match(fakeMail)).containsExactly(ANY_AT_JAMES);
     }
 
     @Test
     public void matchShouldNotMatchMultiRecipientsEMail() throws MessagingException {
-        FakeMail fakeMail = FakeMail.builder().recipients(ANY_AT_JAMES, OTHER_AT_JAMES).build();
+        FakeMail fakeMail = FakeMail.builder().name("mail").recipients(ANY_AT_JAMES, OTHER_AT_JAMES).build();
 
         assertThat(matcher.match(fakeMail)).isNull();
     }

@@ -77,7 +77,7 @@ class RemoveMailAttributeTest {
                 .build();
         removeMailet.init(mailetConfig);
 
-        Mail mail = FakeMail.builder().build();
+        Mail mail = FakeMail.builder().name("mail").build();
         removeMailet.service(mail);
 
         assertThat(mail.attributes()).isEmpty();
@@ -92,6 +92,7 @@ class RemoveMailAttributeTest {
         removeMailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .attribute(VALUE_3)
             .build();
         removeMailet.service(mail);
@@ -108,6 +109,7 @@ class RemoveMailAttributeTest {
         removeMailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .attribute(VALUE_1)
             .attribute(VALUE_2)
             .attribute(VALUE_3)
@@ -126,6 +128,7 @@ class RemoveMailAttributeTest {
         removeMailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .attribute(VALUE_1)
             .attribute(VALUE_2)
             .attribute(VALUE_3)

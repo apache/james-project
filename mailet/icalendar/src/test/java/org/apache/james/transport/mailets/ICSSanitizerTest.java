@@ -45,6 +45,7 @@ class ICSSanitizerTest {
     @Test
     void serviceShouldEnhanceTextCalendarOnlyHeaders() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageUtil.mimeMessageFromStream(ClassLoaderUtils.getSystemResourceAsSharedStream("ics_in_header.eml")))
             .build();
 
@@ -94,6 +95,7 @@ class ICSSanitizerTest {
     @Test
     void validTextCalendarShouldNotBeSanitized() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(
                 MimeMessageBuilder.mimeMessageBuilder()
                     .setMultipartWithBodyParts(

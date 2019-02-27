@@ -154,6 +154,7 @@ public class GroupMappingRelayTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1));

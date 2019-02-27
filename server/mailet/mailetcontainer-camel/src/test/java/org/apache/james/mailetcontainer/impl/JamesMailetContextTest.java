@@ -371,6 +371,7 @@ public class JamesMailetContextTest {
 
         String otherState = "other";
         testee.sendMail(FakeMail.builder()
+            .name("name")
             .sender(MailAddressFixture.SENDER)
             .recipient(MailAddressFixture.RECIPIENT1)
             .mimeMessage(message)
@@ -393,6 +394,7 @@ public class JamesMailetContextTest {
             .build();
 
         testee.sendMail(FakeMail.builder()
+            .name("name")
             .sender(MailAddressFixture.SENDER)
             .recipient(MailAddressFixture.RECIPIENT1)
             .mimeMessage(message)

@@ -65,6 +65,7 @@ public class SenderHostIsLocalTest {
     public void shouldMatchWhenSenderHostIsLocal() throws MessagingException {
         //Given
         Mail mail = FakeMail.builder()
+            .name("mail")
             .sender(ANY_AT_JAMES)
             .recipient(ANY_AT_JAMES2)
             .build();
@@ -78,6 +79,7 @@ public class SenderHostIsLocalTest {
     public void shouldNotMatchWhenSenderHostIsNotLocal() throws MessagingException {
         //Given
         Mail mail = FakeMail.builder()
+            .name("mail")
             .sender(ANY_AT_JAMES2)
             .recipient(ANY_AT_JAMES)
             .build();
@@ -91,6 +93,7 @@ public class SenderHostIsLocalTest {
     public void shouldNotMatchWhenNullSender() throws MessagingException {
         //Given
         Mail mail = FakeMail.builder()
+            .name("mail")
             .sender(MailAddress.nullSender())
             .recipient(ANY_AT_JAMES)
             .build();
@@ -104,6 +107,7 @@ public class SenderHostIsLocalTest {
     public void shouldNotMatchWhenNoSender() throws MessagingException {
         //Given
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipient(ANY_AT_JAMES)
             .build();
         //When

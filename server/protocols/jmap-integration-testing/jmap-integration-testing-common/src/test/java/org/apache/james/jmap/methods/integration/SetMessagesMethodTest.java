@@ -5406,6 +5406,7 @@ public abstract class SetMessagesMethodTest {
         String fromAddress = USERNAME;
 
         Mail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(calendarMessage)
             .sender(fromAddress)
             .recipient(fromAddress)

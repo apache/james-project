@@ -63,6 +63,7 @@ public class HostIsLocalTest {
     @Test
     public void shouldMatchAddressesFromLocalDomain() throws MessagingException {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
             .build();
 
@@ -72,6 +73,7 @@ public class HostIsLocalTest {
     @Test
     public void shouldMatchOnlyAddressesFromLocalDomain() throws MessagingException {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipients(ANY_AT_JAMES, ANY_AT_JAMES2)
             .build();
 
@@ -81,6 +83,7 @@ public class HostIsLocalTest {
     @Test
     public void shouldNotMatchAddressesFromDistantDomains() throws MessagingException {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipients(ANY_AT_JAMES2, OTHER_AT_JAMES2)
             .build();
 

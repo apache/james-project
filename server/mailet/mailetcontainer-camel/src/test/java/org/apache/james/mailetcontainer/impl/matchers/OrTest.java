@@ -50,7 +50,7 @@ public class OrTest {
 
         testee = new Or();
 
-        mail = FakeMail.builder().recipients(ANY_AT_JAMES, OTHER_AT_JAMES, ANY_AT_JAMES2, OTHER_AT_JAMES2).build();
+        mail = FakeMail.builder().name("name").recipients(ANY_AT_JAMES, OTHER_AT_JAMES, ANY_AT_JAMES2, OTHER_AT_JAMES2).build();
     }
 
     @Test

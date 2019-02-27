@@ -95,6 +95,7 @@ class MailAttributesListToMimeHeadersTest {
         mailet.init(mailetConfig);
 
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MailUtil.createMimeMessage())
             .attribute(MAIL_ATTRIBUTE1)
             .attribute(MAIL_ATTRIBUTE2)
@@ -115,6 +116,7 @@ class MailAttributesListToMimeHeadersTest {
         mailet.init(mailetConfig);
 
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MailUtil.createMimeMessage())
             .attribute(MAIL_ATTRIBUTE1)
             .build();
@@ -140,6 +142,7 @@ class MailAttributesListToMimeHeadersTest {
         listWithNull.add(null);
         listWithNull.add("2");
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MailUtil.createMimeMessage())
             .attribute(Attribute.convertToAttribute(MAIL_ATTRIBUTE_NAME1, listWithNull))
             .build();
@@ -162,6 +165,7 @@ class MailAttributesListToMimeHeadersTest {
         mailet.init(mailetConfig);
 
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MailUtil.createMimeMessage())
             .attribute(MAIL_ATTRIBUTE1)
             .attribute(MAIL_ATTRIBUTE2)
@@ -187,6 +191,7 @@ class MailAttributesListToMimeHeadersTest {
 
         String firstValue = "first value";
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addHeader(HEADER_NAME1, firstValue))
             .attribute(MAIL_ATTRIBUTE1)
@@ -209,6 +214,7 @@ class MailAttributesListToMimeHeadersTest {
         mailet.init(mailetConfig);
 
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
             .attribute(Attribute.convertToAttribute(MAIL_ATTRIBUTE_NAME1, 3L))
             .attribute(MAIL_ATTRIBUTE2)
@@ -232,6 +238,7 @@ class MailAttributesListToMimeHeadersTest {
 
         String value = "value";
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
             .attribute(Attribute.convertToAttribute(MAIL_ATTRIBUTE_NAME1, ImmutableList.of(3L, value)))
             .build();

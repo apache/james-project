@@ -59,6 +59,7 @@ public class RemoteAddrNotInNetworkTest {
     @Test
     public void shouldMatchWhenOnDifferentNetwork() throws MessagingException {
         fakeMail = FakeMail.builder()
+                .name("name")
                 .recipient(testRecipient)
                 .remoteAddr("192.168.0.1")
                 .build();
@@ -71,6 +72,7 @@ public class RemoteAddrNotInNetworkTest {
     @Test
     public void shouldNotMatchWhenOnSameNetwork() throws MessagingException {
         fakeMail = FakeMail.builder()
+                .name("name")
                 .recipient(testRecipient)
                 .remoteAddr("192.168.200.1")
                 .build();
@@ -90,6 +92,7 @@ public class RemoteAddrNotInNetworkTest {
         matcher.init(matcherConfig);
 
         fakeMail = FakeMail.builder()
+                .name("name")
                 .recipient(testRecipient)
                 .build();
 
@@ -101,6 +104,7 @@ public class RemoteAddrNotInNetworkTest {
     @Test
     public void shouldMatchWhenInvalidAddress() throws MessagingException {
         fakeMail = FakeMail.builder()
+                .name("name")
                 .recipient(testRecipient)
                 .remoteAddr("invalid")
                 .build();

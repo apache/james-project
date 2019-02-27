@@ -118,6 +118,7 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
 
         public FakeMail asMail(MimeMessageBuilder mimeMessageBuilder) throws MessagingException {
             return FakeMail.builder()
+                .name("name")
                 .sender(USER_1_ADDRESS)
                 .recipients(RECIPIENT_1)
                 .mimeMessage(mimeMessageBuilder)

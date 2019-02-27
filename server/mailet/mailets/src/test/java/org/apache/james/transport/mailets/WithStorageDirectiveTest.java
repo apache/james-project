@@ -69,6 +69,7 @@ public class WithStorageDirectiveTest {
             .build());
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .recipients(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2)
             .build();
 
@@ -90,6 +91,7 @@ public class WithStorageDirectiveTest {
             .build());
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .recipients()
             .build();
 
@@ -111,6 +113,7 @@ public class WithStorageDirectiveTest {
             .build());
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .recipients(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2)
             .attribute(new Attribute(name2, AttributeValue.of("otherFolder")))
             .build();

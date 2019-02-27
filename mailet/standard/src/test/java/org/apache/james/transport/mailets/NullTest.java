@@ -40,7 +40,7 @@ public class NullTest {
 
     @Test
     public void shouldChangeStateToGhost() throws MessagingException {
-        FakeMail mail = FakeMail.builder().build();
+        FakeMail mail = FakeMail.builder().name("mail").build();
         
         mailet.service(mail);
 

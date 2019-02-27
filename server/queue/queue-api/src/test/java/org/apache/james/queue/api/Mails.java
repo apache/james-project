@@ -33,23 +33,28 @@ import org.apache.mailet.base.test.FakeMail;
 
 public interface Mails {
 
-    static FakeMail.Builder defaultMail() throws MessagingException {
-        return defaultMailNoRecipient()
+    static FakeMail.RequireName defaultMail() {
+        return name -> defaultMailNoRecipient()
+            .name(name)
             .recipients(RECIPIENT1, RECIPIENT2);
     }
 
-    static FakeMail.Builder defaultMailNoRecipient() throws MessagingException {
-        return FakeMail.builder()
-            .name("name")
-            .mimeMessage(createMimeMessage())
-            .sender(SENDER)
-            .lastUpdated(new Date());
+    static FakeMail.RequireName defaultMailNoRecipient() {
+        return name -> FakeMail.builder()
+                .name(name)
+                .mimeMessage(createMimeMessage())
+                .sender(SENDER)
+                .lastUpdated(new Date());
     }
 
-    static MimeMessage createMimeMessage() throws MessagingException {
-        return MimeMessageBuilder.mimeMessageBuilder()
-            .setText("test")
-            .addHeader("testheader", "testvalue")
-            .build();
+    static MimeMessage createMimeMessage() {
+        try {
+            return MimeMessageBuilder.mimeMessageBuilder()
+                .setText("test")
+                .addHeader("testheader", "testvalue")
+                .build();
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

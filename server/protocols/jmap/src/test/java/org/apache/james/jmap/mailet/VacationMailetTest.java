@@ -82,6 +82,7 @@ public class VacationMailetTest {
         originalRecipient = new MailAddress(USERNAME);
         recipientId = RecipientId.fromMailAddress(originalSender);
         mail = FakeMail.builder()
+            .name("name")
             .fileName("spamMail.eml")
             .recipient(originalRecipient)
             .sender(originalSender)
@@ -189,6 +190,7 @@ public class VacationMailetTest {
         AccountId secondAccountId = AccountId.fromString(secondUserName);
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .fileName("spamMail.eml")
             .recipients(originalRecipient, secondRecipient)
             .sender(originalSender)

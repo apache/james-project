@@ -70,6 +70,7 @@ public class FakeMail implements Mail {
 
     public static FakeMail fromMessage(MimeMessageBuilder message) throws MessagingException {
         return FakeMail.builder()
+            .name("from-message-builder")
             .mimeMessage(message)
             .build();
     }
@@ -78,12 +79,14 @@ public class FakeMail implements Mail {
         Properties javamailProperties = new Properties();
         javamailProperties.setProperty("mail.mime.charset", javamailDefaultEncodingCharset);
         return FakeMail.builder()
+                .name("from-mime-string")
                 .mimeMessage(MimeMessageUtil.mimeMessageFromBytes((text.getBytes(javaEncodingCharset))))
                 .build();
     }
 
     public static FakeMail from(MimeMessage message) throws MessagingException {
         return builder()
+                .name("from-message")
                 .mimeMessage(message)
                 .build();
     }
@@ -92,16 +95,20 @@ public class FakeMail implements Mail {
         return from(message.build());
     }
 
-    public static Builder builder() {
-        return new Builder();
+    public static RequireName builder() {
+        return Builder::new;
+    }
+
+    public interface RequireName {
+        Builder name(String name);
     }
 
     public static class Builder {
 
+        private final String name;
         private Optional<String> fileName;
         private Optional<MimeMessage> mimeMessage;
         private List<MailAddress> recipients;
-        private Optional<String> name;
         private Optional<MailAddress> sender;
         private Optional<String> state;
         private Optional<String> errorMessage;
@@ -112,11 +119,13 @@ public class FakeMail implements Mail {
         private Optional<String> remoteHost;
         private PerRecipientHeaders perRecipientHeaders;
 
-        private Builder() {
+        private Builder(String name) {
+            Preconditions.checkNotNull(name);
+            Preconditions.checkArgument(!name.isEmpty(), "name must not be empty");
+            this.name = name;
             fileName = Optional.empty();
             mimeMessage = Optional.empty();
             recipients = Lists.newArrayList();
-            name = Optional.empty();
             sender = Optional.empty();
             state = Optional.empty();
             errorMessage = Optional.empty();
@@ -182,17 +191,6 @@ public class FakeMail implements Mail {
 
         public Builder recipient(String recipient) throws AddressException {
             return recipients(recipient);
-        }
-
-        public Builder name(String name) {
-            Preconditions.checkNotNull(name, "'name' can not be null");
-            name(Optional.of(name));
-            return this;
-        }
-
-        public Builder name(Optional<String> name) {
-            this.name = name;
-            return this;
         }
 
         public Builder sender(MailAddress sender) {
@@ -285,7 +283,7 @@ public class FakeMail implements Mail {
         }
 
         public FakeMail build() throws MessagingException {
-            return new FakeMail(getMimeMessage(), recipients, name.orElse(null), sender.orElse(null), state.orElse(null), errorMessage.orElse(null), lastUpdated.orElse(null),
+            return new FakeMail(getMimeMessage(), recipients, name, sender.orElse(null), state.orElse(null), errorMessage.orElse(null), lastUpdated.orElse(null),
                 attributes, size.orElse(0L), remoteAddr.orElse(DEFAULT_REMOTE_ADDRESS), remoteHost.orElse(DEFAULT_REMOTE_HOST), perRecipientHeaders);
         }
 
@@ -299,7 +297,7 @@ public class FakeMail implements Mail {
     }
 
     public static FakeMail defaultFakeMail() throws MessagingException {
-        return FakeMail.builder().build();
+        return FakeMail.builder().name("default-id").build();
     }
 
     private static ImmutableMap<AttributeName, Attribute> toAttributeMap(Map<String, ?> attributes) {
@@ -343,9 +341,9 @@ public class FakeMail implements Mail {
     @Override
     public Mail duplicate() throws MessagingException {
         return builder()
+            .name(name)
             .mimeMessage(msg)
             .recipients(ImmutableList.copyOf(recipients))
-            .name(Optional.ofNullable(name))
             .sender(MaybeSender.of(sender))
             .state(Optional.ofNullable(state))
             .errorMessage(Optional.ofNullable(errorMessage))
@@ -364,6 +362,8 @@ public class FakeMail implements Mail {
 
     @Override
     public void setName(String newName) {
+        Preconditions.checkNotNull(newName);
+        Preconditions.checkArgument(!newName.isEmpty(), "name must not be empty");
         this.name = newName;
     }
 

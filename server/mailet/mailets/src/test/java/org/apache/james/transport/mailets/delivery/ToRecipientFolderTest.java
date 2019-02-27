@@ -181,6 +181,7 @@ public class ToRecipientFolderTest {
 
     private Mail createMail() throws MessagingException, IOException {
         return FakeMail.builder()
+            .name("name")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setSender("sender@any.com")
                 .setSubject("Subject")

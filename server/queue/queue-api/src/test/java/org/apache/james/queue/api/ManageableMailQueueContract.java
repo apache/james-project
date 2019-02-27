@@ -36,6 +36,7 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
+import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -54,7 +55,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void getSizeShouldReturnMessageCount() throws Exception {
-        enQueue(defaultMail().build());
+        enQueue(defaultMail().name("name").build());
 
         long size = getManageableMailQueue().getSize();
 
@@ -73,7 +74,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void dequeueShouldDecreaseQueueSize() throws Exception {
-        enQueue(defaultMail().build());
+        enQueue(defaultMail().name("name").build());
 
         getManageableMailQueue().deQueue().done(true);
 
@@ -84,7 +85,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void noAckShouldNotDecreaseSize() throws Exception {
-        enQueue(defaultMail().build());
+        enQueue(defaultMail().name("name").build());
 
         getManageableMailQueue().deQueue().done(false);
 
@@ -95,7 +96,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void processedMailsShouldNotDecreaseSize() throws Exception {
-        enQueue(defaultMail().build());
+        enQueue(defaultMail().name("name").build());
 
         getManageableMailQueue().deQueue();
 
@@ -464,8 +465,8 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         ManageableMailQueue mailQueue = getManageableMailQueue();
         mailQueue.enQueue(defaultMail()
-            .attributes(ImmutableList.of(attribute1, attribute2))
             .name("mail with blob")
+            .attributes(ImmutableList.of(attribute1, attribute2))
             .build());
 
         Mail mail = mailQueue.browse().next().getMail();
@@ -517,12 +518,12 @@ public interface ManageableMailQueueContract extends MailQueueContract {
     @Test
     default void removeBySenderShouldRemoveSpecificEmail() throws Exception {
         enQueue(defaultMail()
-            .sender(OTHER_AT_LOCAL)
             .name("name1")
+            .sender(OTHER_AT_LOCAL)
             .build());
         enQueue(defaultMail()
-            .sender(SENDER)
             .name("name2")
+            .sender(SENDER)
             .build());
 
         getManageableMailQueue().remove(ManageableMailQueue.Type.Sender, OTHER_AT_LOCAL.asString());

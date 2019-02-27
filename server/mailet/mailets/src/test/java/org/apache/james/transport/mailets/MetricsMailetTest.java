@@ -67,7 +67,7 @@ public class MetricsMailetTest {
             .setProperty(MetricsMailet.METRIC_NAME, "metricName")
             .build());
 
-        mailet.service(FakeMail.builder().build());
+        mailet.service(FakeMail.builder().name("name").build());
 
         verify(metric).increment();
         verifyNoMoreInteractions(metric);

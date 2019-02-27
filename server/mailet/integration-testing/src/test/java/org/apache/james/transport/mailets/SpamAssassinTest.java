@@ -176,6 +176,7 @@ public class SpamAssassinTest {
 
     private FakeMail.Builder mailWithContent(String textContent, String... recipients) throws MessagingException {
         return FakeMail.builder()
+            .name("name")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setSender(FROM)
                 .addToRecipient(recipients)

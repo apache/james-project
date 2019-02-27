@@ -53,6 +53,7 @@ public class HostIsTest {
     @Test
     public void shouldMatchWhenRightDomain() throws MessagingException {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
             .build();
 
@@ -62,6 +63,7 @@ public class HostIsTest {
     @Test
     public void shouldMatchOnlyWhenRightDomain() throws MessagingException {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipients(ANY_AT_JAMES, ANY_AT_JAMES2)
             .build();
 
@@ -71,6 +73,7 @@ public class HostIsTest {
     @Test
     public void shouldNotMatchWhenWrongDomain() throws MessagingException {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipients(ANY_AT_JAMES2, OTHER_AT_JAMES2)
             .build();
 

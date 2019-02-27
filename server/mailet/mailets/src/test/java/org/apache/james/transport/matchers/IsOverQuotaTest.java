@@ -69,6 +69,7 @@ public class IsOverQuotaTest {
     @Test
     public void matchShouldAcceptMailWhenNoQuota() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .size(1000)
             .build();
@@ -82,6 +83,7 @@ public class IsOverQuotaTest {
         maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(100));
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .size(1000)
             .build();
@@ -95,6 +97,7 @@ public class IsOverQuotaTest {
         maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1000));
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .size(1000)
             .build();
@@ -108,6 +111,7 @@ public class IsOverQuotaTest {
         maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(0));
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .build();
         Collection<MailAddress> result = testee.match(fakeMail);
@@ -120,6 +124,7 @@ public class IsOverQuotaTest {
         maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(1));
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .build();
         Collection<MailAddress> result = testee.match(fakeMail);
@@ -134,6 +139,7 @@ public class IsOverQuotaTest {
         maxQuotaManager.setMaxStorage(quotaRoot, QuotaSize.size(100));
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .recipient(MailAddressFixture.OTHER_AT_JAMES)
             .size(150)
@@ -152,6 +158,7 @@ public class IsOverQuotaTest {
         maxQuotaManager.setMaxStorage(quotaRoot, QuotaSize.size(100));
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .recipient(MailAddressFixture.OTHER_AT_JAMES)
             .size(150)

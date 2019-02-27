@@ -73,6 +73,7 @@ public class MailDispatcherTest {
             .build();
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .state("state")
@@ -94,6 +95,7 @@ public class MailDispatcherTest {
             .build();
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .state("state")
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
@@ -113,6 +115,7 @@ public class MailDispatcherTest {
 
         String state = "state";
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
             .state(state)
@@ -139,6 +142,7 @@ public class MailDispatcherTest {
                     .data("toto"));
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .mimeMessage(mimeMessage)
             .recipients(MailAddressFixture.ANY_AT_JAMES)
@@ -166,6 +170,7 @@ public class MailDispatcherTest {
             .build();
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
@@ -190,6 +195,7 @@ public class MailDispatcherTest {
             .build();
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
@@ -212,6 +218,7 @@ public class MailDispatcherTest {
             .build();
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
@@ -234,6 +241,7 @@ public class MailDispatcherTest {
             .build();
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
@@ -258,6 +266,7 @@ public class MailDispatcherTest {
             .build();
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
@@ -283,6 +292,7 @@ public class MailDispatcherTest {
             .build();
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
@@ -306,6 +316,7 @@ public class MailDispatcherTest {
 
         String headerValue = "arbitraryValue";
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()

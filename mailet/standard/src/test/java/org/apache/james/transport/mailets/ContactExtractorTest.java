@@ -88,7 +88,9 @@ public class ContactExtractorTest {
 
     @Test
     public void serviceShouldNotThrowWhenJsonProcessingFails() throws Exception {
-        FakeMail mail = FakeMail.builder().mimeMessage(MimeMessageUtil.defaultMimeMessage())
+        FakeMail mail = FakeMail.builder()
+                .name("mail")
+                .mimeMessage(MimeMessageUtil.defaultMimeMessage())
                 .sender(SENDER)
                 .recipient(TO)
                 .build();
@@ -111,7 +113,9 @@ public class ContactExtractorTest {
                 .addToRecipient(TO)
                 .setSubject("Contact collection Rocks")
                 .setText("This is my email");
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .recipient(TO)
             .build();
@@ -131,7 +135,9 @@ public class ContactExtractorTest {
             .addToRecipient("To <" + TO + ">")
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .recipient(TO)
             .build();
@@ -151,7 +157,9 @@ public class ContactExtractorTest {
             .addToRecipient("=?ISO-8859-1?Q?Beno=EEt_TELLIER?= <tellier@linagora.com>")
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .recipient(TO)
             .build();
@@ -172,7 +180,9 @@ public class ContactExtractorTest {
             + "\r\n"
             + "Please!";
         MimeMessage message = MimeMessageUtil.mimeMessageFromString(rawMessage);
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .recipient("recipient@example.com")
             .build();
@@ -193,7 +203,9 @@ public class ContactExtractorTest {
             + "\r\n"
             + "Please!";
         MimeMessage message = MimeMessageUtil.mimeMessageFromString(rawMessage);
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .recipient("recipient@example.com")
             .build();
@@ -214,7 +226,9 @@ public class ContactExtractorTest {
             + "\r\n"
             + "Please!";
         MimeMessage message = MimeMessageUtil.mimeMessageFromString(rawMessage);
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .recipient("recipient@example.com")
             .build();
@@ -234,7 +248,8 @@ public class ContactExtractorTest {
             .addToRecipient("To <" + TO + ">")
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail").mimeMessage(message)
             .sender(SENDER)
             .recipient(TO)
             .build();
@@ -254,7 +269,9 @@ public class ContactExtractorTest {
             .addToRecipient("To <" + TO + ">")
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .recipient(TO)
             .build();
@@ -273,7 +290,9 @@ public class ContactExtractorTest {
             .addToRecipient("To <" + TO + ">")
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .recipient(TO)
             .build();
         mailet.init(mailetConfig);
@@ -290,7 +309,9 @@ public class ContactExtractorTest {
                 .setSender(SENDER)
                 .setSubject("Contact collection Rocks")
                 .setText("This is my email");
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .build();
         mailet.init(mailetConfig);
@@ -307,7 +328,9 @@ public class ContactExtractorTest {
                 .setSender(SENDER)
                 .setSubject("Contact collection Rocks")
                 .setText("This is my email");
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .build();
 

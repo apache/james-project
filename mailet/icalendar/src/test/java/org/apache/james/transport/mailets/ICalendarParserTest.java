@@ -133,6 +133,7 @@ public class ICalendarParserTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .build();
 
         mailet.service(mail);
@@ -150,6 +151,7 @@ public class ICalendarParserTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .attribute(new Attribute(SOURCE_CUSTOM_ATTRIBUTE_NAME, AttributeValue.of(ImmutableMap.of())))
             .build();
 
@@ -170,6 +172,7 @@ public class ICalendarParserTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .attribute(new Attribute(SOURCE_CUSTOM_ATTRIBUTE_NAME, AttributeValue.of("anyValue")))
             .build();
 
@@ -193,6 +196,7 @@ public class ICalendarParserTest {
             .build();
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .attribute(SOURCE_CUSTOM_ATTRIBUTE, (Serializable) attachments)
             .build();
 
@@ -220,6 +224,7 @@ public class ICalendarParserTest {
             .put("key2", RIGHT_ICAL_VALUE.getBytes())
             .build();
         Mail mail = FakeMail.builder()
+            .name("mail")
             .attribute(SOURCE_CUSTOM_ATTRIBUTE, (Serializable) attachments)
             .build();
 
@@ -253,6 +258,7 @@ public class ICalendarParserTest {
             .build();
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .attribute(SOURCE_CUSTOM_ATTRIBUTE, (Serializable) attachments)
             .build();
 

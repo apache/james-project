@@ -46,6 +46,7 @@ public class SubjectStartsWithTest {
     @Test
     public void shouldMatchWhenSubjectStartsWithConfiguredValue() throws MessagingException {
         FakeMail mail = FakeMail.builder()
+                .name("mail")
                 .recipients(roger)
                 .mimeMessage(MailUtil.createMimeMessageWithSubject("testSubject"))
                 .build();
@@ -63,6 +64,7 @@ public class SubjectStartsWithTest {
     @Test
     public void shouldNotMatchWhenSubjectDoesntStartWithConfiguredValue() throws MessagingException {
         FakeMail mail = FakeMail.builder()
+                .name("mail")
                 .recipients(roger)
                 .mimeMessage(MailUtil.createMimeMessageWithSubject("foobar"))
                 .build();
@@ -81,6 +83,7 @@ public class SubjectStartsWithTest {
     @Test
     public void shouldNotMatchWhenNoSubject() throws MessagingException {
         FakeMail mail = FakeMail.builder()
+                .name("mail")
                 .recipients(roger)
                 .mimeMessage(MailUtil.createMimeMessageWithSubject(null))
                 .build();

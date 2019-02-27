@@ -45,6 +45,7 @@ class RelayLimitTest {
         testee = new RelayLimit();
         mimeMessage = MimeMessageUtil.defaultMimeMessage();
         mail = FakeMail.builder()
+                .name("mail")
                 .recipient(ANY_AT_JAMES)
                 .mimeMessage(mimeMessage)
                 .build();

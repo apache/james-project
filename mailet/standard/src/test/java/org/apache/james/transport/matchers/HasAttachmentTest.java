@@ -46,6 +46,7 @@ public class HasAttachmentTest {
 
         mimeMessage = MimeMessageUtil.defaultMimeMessage();
         mail = FakeMail.builder()
+            .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(mimeMessage)
             .build();

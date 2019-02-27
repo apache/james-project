@@ -85,6 +85,7 @@ public interface MailQueueContract {
     @Test
     default void queueShouldPreserveMailRecipients() throws Exception {
         enQueue(defaultMail()
+            .name("mail")
             .recipients(RECIPIENT1, RECIPIENT2)
             .build());
 
@@ -125,6 +126,7 @@ public interface MailQueueContract {
     @Test
     default void queueShouldPreserveMailSender() throws Exception {
         enQueue(defaultMail()
+            .name("mail")
             .sender(SENDER)
             .build());
 
@@ -137,6 +139,7 @@ public interface MailQueueContract {
     default void queueShouldPreserveMimeMessage() throws Exception {
         MimeMessage originalMimeMessage = createMimeMessage();
         enQueue(defaultMail()
+            .name("mail")
             .mimeMessage(originalMimeMessage)
             .build());
 
@@ -149,6 +152,7 @@ public interface MailQueueContract {
     default void queueShouldPreserveMailAttribute() throws Exception {
         Attribute attribute = Attribute.convertToAttribute("any", "value");
         enQueue(defaultMail()
+            .name("mail")
             .attribute(attribute)
             .build());
 
@@ -161,6 +165,7 @@ public interface MailQueueContract {
     default void queueShouldPreserveErrorMessage() throws Exception {
         String errorMessage = "ErrorMessage";
         enQueue(defaultMail()
+            .name("mail")
             .errorMessage(errorMessage)
             .build());
 
@@ -173,6 +178,7 @@ public interface MailQueueContract {
     default void queueShouldPreserveState() throws Exception {
         String state = "state";
         enQueue(defaultMail()
+            .name("mail")
             .state(state)
             .build());
 
@@ -185,6 +191,7 @@ public interface MailQueueContract {
     default void queueShouldPreserveRemoteAddress() throws Exception {
         String remoteAddress = "remote";
         enQueue(defaultMail()
+            .name("mail")
             .remoteAddr(remoteAddress)
             .build());
 
@@ -197,6 +204,7 @@ public interface MailQueueContract {
     default void queueShouldPreserveRemoteHost() throws Exception {
         String remoteHost = "remote";
         enQueue(defaultMail()
+            .name("mail")
             .remoteHost(remoteHost)
             .build());
 
@@ -209,6 +217,7 @@ public interface MailQueueContract {
     default void queueShouldPreserveLastUpdated() throws Exception {
         Date lastUpdated = new Date();
         enQueue(defaultMail()
+            .name("mail")
             .lastUpdated(lastUpdated)
             .build());
 
@@ -236,6 +245,7 @@ public interface MailQueueContract {
             .value("any")
             .build();
         enQueue(defaultMail()
+            .name("mail")
             .addHeaderForRecipient(header, RECIPIENT1)
             .build());
 
@@ -249,6 +259,7 @@ public interface MailQueueContract {
     default void queueShouldPreserveNonStringMailAttribute() throws Exception {
         Attribute attribute = Attribute.convertToAttribute("any", new SerializableAttribute("value"));
         enQueue(defaultMail()
+                .name("mail")
                 .attribute(attribute)
                 .build());
 

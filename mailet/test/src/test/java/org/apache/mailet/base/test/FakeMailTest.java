@@ -39,7 +39,7 @@ public class FakeMailTest extends ContractMailTest {
     @Override
     public FakeMail newMail() {
         try {
-            return FakeMail.builder().build();
+            return FakeMail.builder().name("mail").build();
         } catch (MessagingException e) {
             throw new RuntimeException(e);
         }
@@ -57,6 +57,7 @@ public class FakeMailTest extends ContractMailTest {
     public void getMaybeSenderShouldHandleNullSender() throws MessagingException {
         assertThat(
             FakeMail.builder()
+                .name("mail")
                 .sender(MailAddress.nullSender())
                 .build()
                 .getMaybeSender())
@@ -67,6 +68,7 @@ public class FakeMailTest extends ContractMailTest {
     public void getMaybeSenderShouldHandleNoSender() throws MessagingException {
         assertThat(
             FakeMail.builder()
+                .name("mail")
                 .build()
                 .getMaybeSender())
             .isEqualTo(MaybeSender.nullSender());
@@ -76,6 +78,7 @@ public class FakeMailTest extends ContractMailTest {
     public void getMaybeSenderShouldHandleSender() throws MessagingException {
         assertThat(
             FakeMail.builder()
+                .name("mail")
                 .sender(MailAddressFixture.SENDER)
                 .build()
                 .getMaybeSender())
@@ -86,6 +89,7 @@ public class FakeMailTest extends ContractMailTest {
     public void hasSenderShouldReturnFalseWhenSenderIsNull() throws MessagingException {
         assertThat(
             FakeMail.builder()
+                .name("mail")
                 .sender(MailAddress.nullSender())
                 .build()
                 .hasSender())
@@ -96,6 +100,7 @@ public class FakeMailTest extends ContractMailTest {
     public void hasSenderShouldReturnFalseWhenSenderIsNotSpecified() throws MessagingException {
         assertThat(
             FakeMail.builder()
+                .name("mail")
                 .build()
                 .hasSender())
             .isFalse();
@@ -105,6 +110,7 @@ public class FakeMailTest extends ContractMailTest {
     public void hasSenderShouldReturnTrueWhenSenderIsSpecified() throws MessagingException {
         assertThat(
             FakeMail.builder()
+                .name("mail")
                 .sender(MailAddressFixture.SENDER)
                 .build()
                 .hasSender())

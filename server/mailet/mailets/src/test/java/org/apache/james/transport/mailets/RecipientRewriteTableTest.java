@@ -61,7 +61,7 @@ public class RecipientRewriteTableTest {
             .mailetContext(mailetContext)
             .build();
 
-        mail = FakeMail.builder().build();
+        mail = FakeMail.builder().name("name").build();
     }
 
     @Test
@@ -83,6 +83,7 @@ public class RecipientRewriteTableTest {
     public void serviceShouldWork() throws Exception {
         mailet.init(mailetConfig);
         mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(message)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES)
             .build();

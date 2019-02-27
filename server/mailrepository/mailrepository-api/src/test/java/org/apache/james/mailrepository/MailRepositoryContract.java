@@ -141,9 +141,9 @@ public interface MailRepositoryContract {
     default void storeRegularMailShouldNotFailWhenNullSender() throws Exception {
         MailRepository testee = retrieveRepository();
         Mail mail = FakeMail.builder()
+            .name(MAIL_1.asString())
             .sender(MailAddress.nullSender())
             .recipient(MailAddressFixture.RECIPIENT1)
-            .name(MAIL_1.asString())
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setSubject("test")
                 .setText("String body")

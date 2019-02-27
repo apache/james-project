@@ -50,6 +50,7 @@ public class SMTPAuthSuccessfulTest {
     public void matchShouldReturnRecipientsWhenAuthUserAttributeIsPresent() throws Exception {
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipient(recipient)
             .attribute(new Attribute(Mail.SMTP_AUTH_USER, AttributeValue.of("other")))
             .build();
@@ -62,6 +63,7 @@ public class SMTPAuthSuccessfulTest {
     @Test
     public void matchShouldNotReturnRecipientsWhenAuthUserAttributeIsAbsent() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(MailAddressFixture.OTHER_AT_JAMES)
             .build();
 

@@ -127,6 +127,7 @@ public class ICALToJsonAttributeTest {
         testee.init(FakeMailetConfig.builder().build());
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .sender(SENDER)
             .recipient(MailAddressFixture.OTHER_AT_JAMES)
             .build();
@@ -141,6 +142,7 @@ public class ICALToJsonAttributeTest {
         testee.init(FakeMailetConfig.builder().build());
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .sender(SENDER)
             .recipient(MailAddressFixture.OTHER_AT_JAMES)
             .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_SOURCE, AttributeValue.of("wrong type")))
@@ -156,6 +158,7 @@ public class ICALToJsonAttributeTest {
         testee.init(FakeMailetConfig.builder().build());
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .sender(SENDER)
             .recipient(MailAddressFixture.OTHER_AT_JAMES)
             .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE, AttributeValue.of("wrong type")))
@@ -172,6 +175,7 @@ public class ICALToJsonAttributeTest {
 
         ImmutableMap<String, String> wrongParametrizedMap = ImmutableMap.of("key", "value");
         Mail mail = FakeMail.builder()
+            .name("mail")
             .sender(SENDER)
             .recipient(MailAddressFixture.OTHER_AT_JAMES)
             .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_SOURCE, AttributeValue.ofAny(wrongParametrizedMap)))
@@ -188,6 +192,7 @@ public class ICALToJsonAttributeTest {
 
         ImmutableMap<String, String> wrongParametrizedMap = ImmutableMap.of("key", "value");
         Mail mail = FakeMail.builder()
+            .name("mail")
             .sender(SENDER)
             .recipient(MailAddressFixture.OTHER_AT_JAMES)
             .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE, AttributeValue.ofAny(wrongParametrizedMap)))
@@ -206,6 +211,7 @@ public class ICALToJsonAttributeTest {
         Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
         ImmutableMap<String, Calendar> icals = ImmutableMap.of("key", calendar);
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipient(MailAddressFixture.OTHER_AT_JAMES)
             .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_SOURCE, AttributeValue.ofAny(icals)))
             .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE, AttributeValue.ofAny(icals)))
@@ -226,6 +232,7 @@ public class ICALToJsonAttributeTest {
         ImmutableMap<String, Calendar> icals = ImmutableMap.of("key", calendar);
         ImmutableMap<String, byte[]> rawIcals = ImmutableMap.of("key", ics);
         Mail mail = FakeMail.builder()
+            .name("mail")
             .sender(SENDER)
             .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_SOURCE, AttributeValue.ofAny(icals)))
             .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE, AttributeValue.ofAny(rawIcals)))
@@ -247,6 +254,7 @@ public class ICALToJsonAttributeTest {
         ImmutableMap<String, byte[]> rawIcals = ImmutableMap.of("key", ics);
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES2;
         Mail mail = FakeMail.builder()
+            .name("mail")
             .sender(SENDER)
             .recipient(recipient)
             .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_SOURCE, AttributeValue.ofAny(icals)))
@@ -285,6 +293,7 @@ public class ICALToJsonAttributeTest {
         ImmutableMap<String, Calendar> icals = ImmutableMap.of("key", calendar);
         ImmutableMap<String, byte[]> rawIcals = ImmutableMap.of("key", ics);
         Mail mail = FakeMail.builder()
+            .name("mail")
             .sender(SENDER)
             .recipients(MailAddressFixture.OTHER_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_SOURCE, AttributeValue.ofAny(icals)))
@@ -333,6 +342,7 @@ public class ICALToJsonAttributeTest {
         ImmutableMap<String, byte[]> rawIcals = ImmutableMap.of("key", ics, "key2", ics2);
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
         Mail mail = FakeMail.builder()
+            .name("mail")
             .sender(SENDER)
             .recipient(recipient)
             .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_SOURCE, AttributeValue.ofAny(icals)))
@@ -381,6 +391,7 @@ public class ICALToJsonAttributeTest {
         ImmutableMap<String, byte[]> rawIcals = ImmutableMap.of("key", ics, "key2", ics2);
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
         Mail mail = FakeMail.builder()
+            .name("mail")
             .sender(SENDER)
             .recipient(recipient)
             .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_SOURCE, AttributeValue.ofAny(icals)))
@@ -419,6 +430,7 @@ public class ICALToJsonAttributeTest {
         ImmutableMap<String, byte[]> rawIcals = ImmutableMap.of("key", ics);
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
         Mail mail = FakeMail.builder()
+            .name("mail")
             .sender(SENDER)
             .recipient(recipient)
             .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_SOURCE, AttributeValue.ofAny(icals)))
@@ -456,6 +468,7 @@ public class ICALToJsonAttributeTest {
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES2;
         String from = MailAddressFixture.OTHER_AT_JAMES.asString();
         Mail mail = FakeMail.builder()
+            .name("mail")
             .sender(SENDER)
             .recipient(recipient)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -493,6 +506,7 @@ public class ICALToJsonAttributeTest {
         ImmutableMap<String, byte[]> rawIcals = ImmutableMap.of("key", ics);
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES2;
         Mail mail = FakeMail.builder()
+            .name("mail")
             .sender(SENDER)
             .recipient(recipient)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
@@ -530,6 +544,7 @@ public class ICALToJsonAttributeTest {
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES2;
         String from = MailAddressFixture.OTHER_AT_JAMES.asString();
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipient(recipient)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addFrom(from))

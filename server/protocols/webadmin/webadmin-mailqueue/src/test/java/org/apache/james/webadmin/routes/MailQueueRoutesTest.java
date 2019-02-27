@@ -234,8 +234,8 @@ public class MailQueueRoutesTest {
             @Test
             public void listMailsShouldReturnMailsWhenSome() throws Exception {
                 MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
-                queue.enQueue(Mails.defaultMail().build());
-                queue.enQueue(Mails.defaultMail().build());
+                queue.enQueue(Mails.defaultMail().name("name").build());
+                queue.enQueue(Mails.defaultMail().name("name").build());
 
                 when()
                     .get(FIRST_QUEUE + "/mails")
@@ -248,7 +248,7 @@ public class MailQueueRoutesTest {
             @Test
             public void listMailsShouldReturnMailDetailsWhenSome() throws Exception {
                 MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
-                FakeMail mail = Mails.defaultMail().build();
+                FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail);
 
                 String firstMail = "[0]";
@@ -270,7 +270,7 @@ public class MailQueueRoutesTest {
             @Test
             public void listMailsShouldReturnEmptyWhenNoDelayedMailsAndAskFor() throws Exception {
                 MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
-                FakeMail mail = Mails.defaultMail().build();
+                FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail);
 
                 given()
@@ -286,7 +286,7 @@ public class MailQueueRoutesTest {
             @Test
             public void listMailsShouldReturnCurrentMailsWhenMailsAndAskForNotDelayed() throws Exception {
                 MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
-                FakeMail mail = Mails.defaultMail().build();
+                FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail);
 
                 given()
@@ -302,7 +302,7 @@ public class MailQueueRoutesTest {
             @Test
             public void listMailsShouldReturnDelayedMailsWhenAskFor() throws Exception {
                 MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
-                FakeMail mail = Mails.defaultMail().build();
+                FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail, 10, TimeUnit.MINUTES);
 
                 given()
@@ -318,7 +318,7 @@ public class MailQueueRoutesTest {
             @Test
             public void listMailsShouldReturnOneMailWhenMailsAndAskForALimitOfOne() throws Exception {
                 MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
-                FakeMail mail = Mails.defaultMail().build();
+                FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail);
                 queue.enQueue(mail);
                 queue.enQueue(mail);
@@ -341,7 +341,7 @@ public class MailQueueRoutesTest {
         @Test
         public void getMailQueueShouldReturnTheMailQueueDataWhenMailQueueExists() throws Exception {
             MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
-            queue.enQueue(Mails.defaultMail().build());
+            queue.enQueue(Mails.defaultMail().name("name").build());
 
             when()
                 .get(FIRST_QUEUE)
@@ -514,7 +514,7 @@ public class MailQueueRoutesTest {
             @Test
             public void forcingDelayedMailsDeliveryShouldActuallyChangePropertyOnMails() throws Exception {
                 MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
-                FakeMail mail = Mails.defaultMail().build();
+                FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail, 10L, TimeUnit.MINUTES);
                 queue.enQueue(mail, 10L, TimeUnit.MINUTES);
                 queue.enQueue(mail);
@@ -883,10 +883,11 @@ public class MailQueueRoutesTest {
                 MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
                 String recipient = "recipient@james.org";
                 queue.enQueue(Mails.defaultMail()
+                        .name("name")
                         .recipient(recipient)
                         .build());
-                queue.enQueue(Mails.defaultMail().build());
-                queue.enQueue(Mails.defaultMail().build());
+                queue.enQueue(Mails.defaultMail().name("name").build());
+                queue.enQueue(Mails.defaultMail().name("name").build());
 
                 String taskId = with()
                     .param("recipient", recipient)

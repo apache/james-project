@@ -43,6 +43,7 @@ public interface DelayedMailQueueContract {
     @Test
     default void enqueueShouldDelayMailsWhenSpecified(ExecutorService executorService) throws Exception {
         getMailQueue().enQueue(defaultMail()
+            .name("name")
             .build(),
             2L,
             TimeUnit.SECONDS);
@@ -55,6 +56,7 @@ public interface DelayedMailQueueContract {
     @Test
     default void enqueueWithNegativeDelayShouldNotDelayDelivery(ExecutorService executorService) throws Exception {
         getMailQueue().enQueue(defaultMail()
+            .name("name")
             .build(),
             -30L,
             TimeUnit.SECONDS);
@@ -66,6 +68,7 @@ public interface DelayedMailQueueContract {
     @Test
     default void enqueueWithReasonablyLongDelayShouldDelayMail(ExecutorService executorService) throws Exception {
         getMailQueue().enQueue(defaultMail()
+            .name("name")
             .build(),
             365 * 10,
             TimeUnit.DAYS);
@@ -78,6 +81,7 @@ public interface DelayedMailQueueContract {
     @Test
     default void enqueueWithVeryLongDelayShouldDelayMail(ExecutorService executorService) throws Exception {
         getMailQueue().enQueue(defaultMail()
+            .name("name")
             .build(),
             Long.MAX_VALUE,
             TimeUnit.DAYS);
@@ -106,6 +110,7 @@ public interface DelayedMailQueueContract {
         Stopwatch started = Stopwatch.createStarted();
 
         getMailQueue().enQueue(defaultMail()
+            .name("name")
             .build(),
             delay,
             unit);

@@ -42,7 +42,7 @@ class DeleteConditionTest {
         void allShouldReturnTrue() throws Exception {
             assertThat(
                 DeleteCondition.all()
-                    .shouldBeDeleted(FakeMail.builder().build()))
+                    .shouldBeDeleted(FakeMail.builder().name("name").build()))
                 .isTrue();
         }
 
@@ -82,6 +82,7 @@ class DeleteConditionTest {
             assertThat(
                 DeleteCondition.withSender(ADDRESS)
                     .shouldBeDeleted(FakeMail.builder()
+                        .name("name")
                         .sender(ADDRESS)
                         .build()))
                 .isTrue();
@@ -92,6 +93,7 @@ class DeleteConditionTest {
             assertThat(
                 DeleteCondition.withSender(ADDRESS)
                     .shouldBeDeleted(FakeMail.builder()
+                        .name("name")
                         .sender(ADDRESS_2)
                         .recipient(ADDRESS)
                         .build()))
@@ -103,6 +105,7 @@ class DeleteConditionTest {
             assertThat(
                 DeleteCondition.withSender(ADDRESS)
                     .shouldBeDeleted(FakeMail.builder()
+                        .name("name")
                         .sender(MailAddress.nullSender())
                         .build()))
                 .isFalse();
@@ -113,6 +116,7 @@ class DeleteConditionTest {
             assertThat(
                 DeleteCondition.withSender(MailAddress.NULL_SENDER_AS_STRING)
                     .shouldBeDeleted(FakeMail.builder()
+                        .name("name")
                         .sender(MailAddress.nullSender())
                         .build()))
                 .isTrue();
@@ -189,6 +193,7 @@ class DeleteConditionTest {
             assertThat(
                 DeleteCondition.withRecipient(ADDRESS)
                     .shouldBeDeleted(FakeMail.builder()
+                        .name("name")
                         .recipient(ADDRESS)
                         .build()))
                 .isTrue();
@@ -199,6 +204,7 @@ class DeleteConditionTest {
             assertThat(
                 DeleteCondition.withRecipient(ADDRESS)
                     .shouldBeDeleted(FakeMail.builder()
+                        .name("name")
                         .recipients(ADDRESS, ADDRESS_2)
                         .build()))
                 .isTrue();
@@ -209,6 +215,7 @@ class DeleteConditionTest {
             assertThat(
                 DeleteCondition.withRecipient(ADDRESS)
                     .shouldBeDeleted(FakeMail.builder()
+                        .name("name")
                         .sender(ADDRESS)
                         .recipient(ADDRESS_2)
                         .build()))
@@ -220,6 +227,7 @@ class DeleteConditionTest {
             assertThat(
                 DeleteCondition.withRecipient(ADDRESS)
                     .shouldBeDeleted(FakeMail.builder()
+                        .name("name")
                         .build()))
                 .isFalse();
         }

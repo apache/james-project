@@ -33,6 +33,7 @@ public class DiscardActionTest {
     @Test
     public void removeRecipientShouldWorkWhenOnlyOneRecipient() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .build();
         ActionContext actionContext = mock(ActionContext.class);
@@ -46,6 +47,7 @@ public class DiscardActionTest {
     @Test
     public void removeRecipientShouldNotThrowWhenRecipientIsAbsent() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .build();
         ActionContext actionContext = mock(ActionContext.class);
@@ -59,6 +61,7 @@ public class DiscardActionTest {
     @Test
     public void removeRecipientShouldNotThrowWhenRecipientIsNull() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .build();
         ActionContext actionContext = mock(ActionContext.class);
@@ -72,6 +75,7 @@ public class DiscardActionTest {
     @Test
     public void removeRecipientShouldRemoveOnlyTheConcernedRecipient() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES)
             .build();
         ActionContext actionContext = mock(ActionContext.class);

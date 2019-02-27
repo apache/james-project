@@ -114,7 +114,7 @@ public class WithPriorityTest {
             .build();
 
         mailet.init(mockedMailetConfig);
-        Mail mail = FakeMail.builder().build();
+        Mail mail = FakeMail.builder().name("name").build();
         mailet.service(mail);
 
         assertThat(mail.getAttribute(MailPrioritySupport.MAIL_PRIORITY)).contains(PROPERTY_PRIORITY);
@@ -129,6 +129,7 @@ public class WithPriorityTest {
 
         mailet.init(mockedMailetConfig);
         Mail mail = FakeMail.builder()
+                .name("name")
                 .attribute(new Attribute(MailPrioritySupport.MAIL_PRIORITY, AttributeValue.of(5)))
                 .build();
         mailet.service(mail);

@@ -68,6 +68,7 @@ public class SimpleMailStoreTest {
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
         when(usersRepository.getUser(recipient)).thenReturn(recipient.asString());
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(mimeMessage)
             .build();
         testee.storeMail(recipient, mail);
@@ -80,6 +81,7 @@ public class SimpleMailStoreTest {
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
         when(usersRepository.getUser(recipient)).thenReturn(recipient.getLocalPart());
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(mimeMessage)
             .build();
         testee.storeMail(recipient, mail);
@@ -92,6 +94,7 @@ public class SimpleMailStoreTest {
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
         when(usersRepository.getUser(recipient)).thenThrow(new UsersRepositoryException("Any message"));
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(mimeMessage)
             .build();
         testee.storeMail(recipient, mail);

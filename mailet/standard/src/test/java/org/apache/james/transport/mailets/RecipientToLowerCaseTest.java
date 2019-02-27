@@ -40,6 +40,7 @@ public class RecipientToLowerCaseTest {
     @Test
     public void serviceShouldPutRecipientToLowerCase() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipient("THienan1234@gmail.com")
             .build();
 
@@ -55,6 +56,7 @@ public class RecipientToLowerCaseTest {
     @Test
     public void serviceShouldHaveNoEffectWhenNoRecipient() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .build();
 
         testee.service(fakeMail);

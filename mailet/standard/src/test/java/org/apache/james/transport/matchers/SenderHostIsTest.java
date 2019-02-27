@@ -62,6 +62,7 @@ public class SenderHostIsTest {
         matcher.init(mci);
 
         Mail mail = FakeMail.builder()
+                .name("mail")
                 .sender(ANY_AT_JAMES2)
                 .recipient(ANY_AT_JAMES2)
                 .build();
@@ -81,6 +82,7 @@ public class SenderHostIsTest {
                 .build());
 
         Mail mail = FakeMail.builder()
+                .name("mail")
                 .sender(ANY_AT_JAMES2)
                 .recipient(ANY_AT_JAMES2)
                 .build();
@@ -101,6 +103,7 @@ public class SenderHostIsTest {
                 .build());
 
         Mail mail = FakeMail.builder()
+                .name("mail")
                 .sender(ANY_AT_JAMES2)
                 .recipient(ANY_AT_JAMES2)
                 .build();
@@ -120,6 +123,7 @@ public class SenderHostIsTest {
                 .build());
 
         Mail mail = FakeMail.builder()
+                .name("mail")
                 .sender(ANY_AT_JAMES2)
                 .recipient(ANY_AT_JAMES2)
                 .build();
@@ -139,6 +143,7 @@ public class SenderHostIsTest {
                 .build());
 
         Mail mail = FakeMail.builder()
+                .name("mail")
                 .recipient(ANY_AT_JAMES2)
                 .build();
         //When

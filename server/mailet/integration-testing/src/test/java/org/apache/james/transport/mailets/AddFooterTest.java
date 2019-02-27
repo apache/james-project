@@ -86,6 +86,7 @@ public class AddFooterTest {
     public void shouldAddFooterWhenSimpleMessage() throws Exception {
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .setText("Any content")
                     .setSubject("test"))
@@ -104,6 +105,7 @@ public class AddFooterTest {
     public void shouldAddFooterWhenMultipartMessage() throws Exception {
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .setMultipartWithBodyParts(
                         MimeMessageBuilder.bodyPartBuilder()

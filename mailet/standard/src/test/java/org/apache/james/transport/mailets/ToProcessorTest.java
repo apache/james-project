@@ -76,6 +76,7 @@ class ToProcessorTest {
         mailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder()
+                .name("mail")
                 .recipients(new MailAddress("test@james.apache.org"), new MailAddress("test2@james.apache.org"))
                 .build();
         mailet.service(mail);
@@ -96,6 +97,7 @@ class ToProcessorTest {
         mailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder()
+                .name("mail")
                 .recipients(new MailAddress("test@james.apache.org"), new MailAddress("test2@james.apache.org"))
                 .build();
         mailet.service(mail);
@@ -116,6 +118,7 @@ class ToProcessorTest {
         mailet.init(mailetConfig);
 
         Mail mail = FakeMail.builder()
+                .name("mail")
                 .recipients(new MailAddress("test@james.apache.org"), new MailAddress("test2@james.apache.org"))
                 .build();
         String initialErrorMessage = "first";

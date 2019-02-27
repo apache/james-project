@@ -43,6 +43,7 @@ public class MatcherInverterTest {
             }
         });
         FakeMail mail = FakeMail.builder()
+                .name("mail")
                 .recipient(new MailAddress("user", "domain"))
                 .build();
 
@@ -62,6 +63,7 @@ public class MatcherInverterTest {
             }
         });
         FakeMail mail = FakeMail.builder()
+                .name("mail")
                 .recipients(address1, address2)
                 .build();
 
@@ -81,6 +83,7 @@ public class MatcherInverterTest {
             }
         });
         FakeMail mail = FakeMail.builder()
+                .name("mail")
                 .recipients(address1, address2)
                 .build();
 

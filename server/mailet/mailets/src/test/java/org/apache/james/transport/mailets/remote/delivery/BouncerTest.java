@@ -63,7 +63,7 @@ public class BouncerTest {
             mock(DomainList.class));
         Bouncer testee = new Bouncer(configuration, mailetContext);
 
-        Mail mail = FakeMail.builder().state(Mail.DEFAULT)
+        Mail mail = FakeMail.builder().name("name").state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
             .build();
         testee.bounce(mail, new Exception("Exception message"));
@@ -89,7 +89,7 @@ public class BouncerTest {
             mock(DomainList.class));
         Bouncer testee = new Bouncer(configuration, mailetContext);
 
-        Mail mail = FakeMail.builder().state(Mail.DEFAULT)
+        Mail mail = FakeMail.builder().name("name").state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
             .build();
         String exceptionMessage = "Exception message";
@@ -118,7 +118,7 @@ public class BouncerTest {
             mock(DomainList.class));
         Bouncer testee = new Bouncer(configuration, mailetContext);
 
-        Mail mail = FakeMail.builder().state(Mail.DEFAULT)
+        Mail mail = FakeMail.builder().name("name").state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
             .build();
         String exceptionMessage = "Error from remote server";
@@ -147,7 +147,7 @@ public class BouncerTest {
             mock(DomainList.class));
         Bouncer testee = new Bouncer(configuration, mailetContext);
 
-        Mail mail = FakeMail.builder().state(Mail.DEFAULT)
+        Mail mail = FakeMail.builder().name("name").state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
             .build();
         String exceptionMessage = "I don't know him";
@@ -177,7 +177,7 @@ public class BouncerTest {
             mock(DomainList.class));
         Bouncer testee = new Bouncer(configuration, mailetContext);
 
-        Mail mail = FakeMail.builder().state(Mail.DEFAULT)
+        Mail mail = FakeMail.builder().name("name").state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
             .build();
         String exceptionMessage = "Can not connect";
@@ -206,7 +206,7 @@ public class BouncerTest {
             mock(DomainList.class));
         Bouncer testee = new Bouncer(configuration, mailetContext);
 
-        Mail mail = FakeMail.builder().state(Mail.DEFAULT)
+        Mail mail = FakeMail.builder().name("name").state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
             .build();
         String exceptionMessage = "Can not connect";
@@ -235,7 +235,7 @@ public class BouncerTest {
             mock(DomainList.class));
         Bouncer testee = new Bouncer(configuration, mailetContext);
 
-        Mail mail = FakeMail.builder().state(Mail.DEFAULT)
+        Mail mail = FakeMail.builder().name("name").state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
             .build();
         String exceptionMessage = "Can not connect";
@@ -264,7 +264,7 @@ public class BouncerTest {
             mock(DomainList.class));
         Bouncer testee = new Bouncer(configuration, mailetContext);
 
-        Mail mail = FakeMail.builder().state(Mail.DEFAULT)
+        Mail mail = FakeMail.builder().name("name").state(Mail.DEFAULT)
             .build();
         String exceptionMessage = "Can not connect";
         testee.bounce(mail, new MessagingException("Exception message", new ConnectException(exceptionMessage)));
@@ -283,7 +283,7 @@ public class BouncerTest {
             mock(DomainList.class));
         Bouncer testee = new Bouncer(configuration, mailetContext);
 
-        Mail mail = FakeMail.builder().state(Mail.DEFAULT)
+        Mail mail = FakeMail.builder().name("name").state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
             .build();
         testee.bounce(mail, new Exception("Exception message"));
@@ -309,7 +309,7 @@ public class BouncerTest {
             mock(DomainList.class));
         Bouncer testee = new Bouncer(configuration, mailetContext);
 
-        Mail mail = FakeMail.builder().state(Mail.DEFAULT)
+        Mail mail = FakeMail.builder().name("name").state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
             .build();
         testee.bounce(mail, new MessagingException());
@@ -336,7 +336,7 @@ public class BouncerTest {
             mock(DomainList.class));
         Bouncer testee = new Bouncer(configuration, mailetContext);
 
-        Mail mail = FakeMail.builder().state(Mail.DEFAULT)
+        Mail mail = FakeMail.builder().name("name").state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
             .build();
         String errorMessage = "message";
@@ -363,7 +363,7 @@ public class BouncerTest {
             mock(DomainList.class));
         Bouncer testee = new Bouncer(configuration, mailetContext);
 
-        Mail mail = FakeMail.builder().state(Mail.DEFAULT)
+        Mail mail = FakeMail.builder().name("name").state(Mail.DEFAULT)
             .build();
         testee.bounce(mail, new MessagingException("message"));
 
@@ -381,7 +381,7 @@ public class BouncerTest {
             mock(DomainList.class));
         Bouncer testee = new Bouncer(configuration, mailetContext);
 
-        Mail mail = FakeMail.builder().state(Mail.DEFAULT)
+        Mail mail = FakeMail.builder().name("name").state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
             .recipient(MailAddressFixture.ANY_AT_JAMES2)
             .build();
@@ -409,7 +409,7 @@ public class BouncerTest {
             mock(DomainList.class));
         Bouncer testee = new Bouncer(configuration, mailetContext);
 
-        Mail mail = FakeMail.builder().state(Mail.DEFAULT)
+        Mail mail = FakeMail.builder().name("name").state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES2, MailAddressFixture.OTHER_AT_JAMES2)
             .build();
@@ -439,7 +439,7 @@ public class BouncerTest {
             mock(DomainList.class));
         Bouncer testee = new Bouncer(configuration, mailetContext);
 
-        Mail mail = FakeMail.builder().state(Mail.DEFAULT)
+        Mail mail = FakeMail.builder().name("name").state(Mail.DEFAULT)
             .sender(MailAddressFixture.ANY_AT_JAMES)
             .build();
         testee.bounce(mail, new MessagingException());

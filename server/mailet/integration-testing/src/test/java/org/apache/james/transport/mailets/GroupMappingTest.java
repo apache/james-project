@@ -156,6 +156,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1));
@@ -173,6 +174,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1));
@@ -192,6 +194,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1));
@@ -214,6 +217,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1));
@@ -235,6 +239,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1));
@@ -251,6 +256,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipients(GROUP_ON_DOMAIN1, USER_DOMAIN1));
@@ -271,6 +277,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1));
@@ -298,6 +305,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1));
@@ -315,6 +323,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipients(GROUP_ON_DOMAIN1, USER_DOMAIN2));
@@ -333,6 +342,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipients(GROUP_ON_DOMAIN1, USER_DOMAIN2));
@@ -351,6 +361,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipients(GROUP_ON_DOMAIN1, USER_DOMAIN2));
@@ -369,6 +380,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipients(GROUP_ON_DOMAIN1, USER_DOMAIN2));
@@ -386,6 +398,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1));
@@ -404,6 +417,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1));
@@ -422,6 +436,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient((GROUP_ON_DOMAIN1)));
@@ -440,6 +455,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(groupWithSlash));
@@ -459,6 +475,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1));
@@ -477,6 +494,7 @@ public class GroupMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1));

@@ -58,6 +58,7 @@ public class ReplyToUtilsTest {
 
         MailAddress expectedMailAddress = new MailAddress("sender", "james.org");
         FakeMail fakeMail = FakeMail.builder()
+                .name("name")
                 .sender(expectedMailAddress)
                 .build();
 

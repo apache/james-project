@@ -133,6 +133,7 @@ public class DlpIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .addToRecipient(RECIPIENT)
                     .setSender(FROM)
@@ -165,6 +166,7 @@ public class DlpIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .addToRecipient(RECIPIENT)
                     .setSender(FROM)
@@ -203,6 +205,7 @@ public class DlpIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .addToRecipient(RECIPIENT)
                     .setSender(FROM)
@@ -241,6 +244,7 @@ public class DlpIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .addToRecipient(RECIPIENT)
                     .setSender(FROM)

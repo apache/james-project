@@ -49,6 +49,7 @@ class RecipientIsRegexTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipient(ANY_AT_JAMES)
             .build();
 
@@ -63,6 +64,7 @@ class RecipientIsRegexTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipient(ANY_AT_JAMES)
             .build();
 
@@ -77,6 +79,7 @@ class RecipientIsRegexTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
             .build();
 
@@ -91,6 +94,7 @@ class RecipientIsRegexTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
             .build();
 

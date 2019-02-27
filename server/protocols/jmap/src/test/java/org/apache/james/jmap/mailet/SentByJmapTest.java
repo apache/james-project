@@ -50,6 +50,7 @@ public class SentByJmapTest {
     public void matchShouldReturnRecipientsWhenUserAttributeIsPresent() throws Exception {
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipient(recipient)
             .attribute(new Attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of("true")))
             .build();
@@ -62,6 +63,7 @@ public class SentByJmapTest {
     @Test
     public void matchShouldReturnEmptyCollectionWhenUserAttributeIsAbsent() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .build();
 
@@ -73,6 +75,7 @@ public class SentByJmapTest {
     @Test
     public void matchShouldReturnEmptyCollectionWhenUserAttributeIsAbsentAndThereIsNoRecipient() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipients()
             .build();
 
@@ -84,6 +87,7 @@ public class SentByJmapTest {
     @Test
     public void matchShouldReturnEmptyCollectionWhenUserAttributeIsPresentAndThereIsNoRecipient() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipients()
             .attribute(new Attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of("true")))
             .build();

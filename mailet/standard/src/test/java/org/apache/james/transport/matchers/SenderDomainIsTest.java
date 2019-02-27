@@ -50,6 +50,7 @@ class SenderDomainIsTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
+                .name("mail")
                 .sender(SENDER_NAME)
                 .recipient(recipient)
                 .build();
@@ -67,6 +68,7 @@ class SenderDomainIsTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
+                .name("mail")
                 .recipient(recipient)
                 .sender("other@james7.apache.org")
                 .build();
@@ -84,6 +86,7 @@ class SenderDomainIsTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
+                .name("mail")
                 .recipient(recipient)
                 .build();
 
@@ -100,6 +103,7 @@ class SenderDomainIsTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
+                .name("mail")
                 .sender(MailAddress.nullSender())
                 .recipient(recipient)
                 .build();

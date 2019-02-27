@@ -44,6 +44,7 @@ class SizeGreaterThanTest {
     @Test
     void matchShouldMatchWhenMailAboveSize() throws MessagingException {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .size(2000000)
             .recipient(ANY_AT_JAMES)
             .build();
@@ -61,6 +62,7 @@ class SizeGreaterThanTest {
     @Test
     void matchShouldNotMatchWhenMailUnderSize() throws MessagingException {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .size(200000)
             .recipient(ANY_AT_JAMES)
             .build();
@@ -78,6 +80,7 @@ class SizeGreaterThanTest {
     @Test
     void matchShouldNotMatchMailsWithSpecifiedSize() throws MessagingException {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .size(1024)
             .recipient(ANY_AT_JAMES)
             .build();
@@ -95,6 +98,7 @@ class SizeGreaterThanTest {
     @Test
     void matchShouldMatchMailsWithSizeSuperiorToSpecifiedSize() throws MessagingException {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .size(1025)
             .recipient(ANY_AT_JAMES)
             .build();
@@ -112,6 +116,7 @@ class SizeGreaterThanTest {
     @Test
     void matchShouldReturnNullWhenUnderLimitNoUnit() throws MessagingException {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .size(4)
             .recipient(ANY_AT_JAMES)
             .build();
@@ -129,6 +134,7 @@ class SizeGreaterThanTest {
     @Test
     void matchShouldMatchOverLimitWhenNoUnit() throws MessagingException {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .size(5)
             .recipient(ANY_AT_JAMES)
             .build();

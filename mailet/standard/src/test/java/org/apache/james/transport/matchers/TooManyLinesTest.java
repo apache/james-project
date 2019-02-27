@@ -97,7 +97,7 @@ class TooManyLinesTest {
             .matcherName("name")
             .build());
 
-        Collection<MailAddress> result = testee.match(FakeMail.builder().build());
+        Collection<MailAddress> result = testee.match(FakeMail.builder().name("mail").build());
 
         assertThat(result).isEmpty();
 
@@ -111,6 +111,7 @@ class TooManyLinesTest {
             .build());
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setMultipartWithBodyParts(MimeMessageBuilder.bodyPartBuilder()
                     .data("content")))
@@ -126,6 +127,7 @@ class TooManyLinesTest {
         testee.init(FakeMatcherConfig.builder().condition("10").matcherName("name").build());
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setMultipartWithBodyParts(
                     MimeMessageBuilder.bodyPartBuilder()

@@ -610,7 +610,7 @@ class StripAttachmentTest {
                     .filename("removeMe.tmp"))
             .build();
 
-        Mail mail = FakeMail.builder().build();
+        Mail mail = FakeMail.builder().name("mail").build();
         //When
         boolean actual = mailet.processMultipartPartMessage(mimeMessage, mail);
         //Then
@@ -645,7 +645,7 @@ class StripAttachmentTest {
                     .filename("removeMe2.tmp"))
             .build();
         
-        Mail mail = FakeMail.builder().build();
+        Mail mail = FakeMail.builder().name("mail").build();
         
         //When
         boolean actual = mailet.processMultipartPartMessage(mimeMessage, mail);
@@ -758,7 +758,7 @@ class StripAttachmentTest {
                     .build())
             .build();
 
-        Mail mail = FakeMail.builder().build();
+        Mail mail = FakeMail.builder().name("mail").build();
         //When
         boolean actual = mailet.processMultipartPartMessage(mimeMessage, mail);
         //Then

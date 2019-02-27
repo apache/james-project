@@ -50,6 +50,7 @@ public class SentByMailetTest {
     public void matchShouldReturnRecipientsWhenAuthUserAttributeIsPresent() throws Exception {
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipient(recipient)
             .attribute(Mail.SENT_BY_MAILET_ATTRIBUTE)
             .build();
@@ -62,6 +63,7 @@ public class SentByMailetTest {
     @Test
     public void matchShouldReturnEmptyCollectionWhenAuthUserAttributeIsAbsent() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .build();
 
@@ -73,6 +75,7 @@ public class SentByMailetTest {
     @Test
     public void matchShouldReturnEmptyCollectionWhenAuthUserAttributeIsAbsentAndThereIsNoRecipient() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients()
             .build();
 
@@ -84,6 +87,7 @@ public class SentByMailetTest {
     @Test
     public void matchShouldReturnEmptyCollectionWhenAuthUserAttributeIsPresentAndThereIsNoRecipient() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients()
             .attribute(Mail.SENT_BY_MAILET_ATTRIBUTE)
             .build();

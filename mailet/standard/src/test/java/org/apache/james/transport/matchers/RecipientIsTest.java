@@ -50,6 +50,7 @@ class RecipientIsTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipient(ANY_AT_JAMES)
             .build();
 
@@ -64,6 +65,7 @@ class RecipientIsTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
             .build();
 
@@ -78,6 +80,7 @@ class RecipientIsTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(OTHER_AT_JAMES, ANY_AT_JAMES2)
             .build();
 
@@ -110,6 +113,7 @@ class RecipientIsTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES, ANY_AT_JAMES2)
             .build();
 

@@ -113,7 +113,7 @@ public class DeliveryRunnableTest {
 
     @Test
     public void deliveryTemporaryFailureShouldNotIncrementDeliveryMetric() throws Exception {
-        FakeMail fakeMail = FakeMail.builder().state(Mail.DEFAULT).build();
+        FakeMail fakeMail = FakeMail.builder().name("name").state(Mail.DEFAULT).build();
         Exception exception = new Exception();
         when(mailDelivrer.deliver(fakeMail)).thenReturn(ExecutionResult.temporaryFailure(exception));
 
@@ -135,13 +135,14 @@ public class DeliveryRunnableTest {
 
     @Test
     public void deliveryTemporaryFailureShouldRetryDelivery() throws Exception {
-        FakeMail fakeMail = FakeMail.builder().state(Mail.DEFAULT).build();
+        FakeMail fakeMail = FakeMail.builder().name("name").state(Mail.DEFAULT).build();
         Exception exception = new Exception();
         when(mailDelivrer.deliver(fakeMail)).thenReturn(ExecutionResult.temporaryFailure(exception));
 
         testee.attemptDelivery(fakeMail);
 
         verify(mailQueue).enQueue(FakeMail.builder()
+                .name("name")
                 .attribute(DeliveryRetriesHelper.makeAttribute(1))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
@@ -154,6 +155,7 @@ public class DeliveryRunnableTest {
     @Test
     public void deliveryTemporaryFailureShouldRetryDeliveryWithRightDelay() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .state(Mail.ERROR)
             .attribute(DeliveryRetriesHelper.makeAttribute(2))
             .build();
@@ -163,6 +165,7 @@ public class DeliveryRunnableTest {
         testee.attemptDelivery(fakeMail);
 
         verify(mailQueue).enQueue(FakeMail.builder()
+                .name("name")
                 .attribute(DeliveryRetriesHelper.makeAttribute(3))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
@@ -175,6 +178,7 @@ public class DeliveryRunnableTest {
     @Test
     public void deliveryTemporaryFailureShouldRetryDeliveryOnMaximumRetryNumber() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .state(Mail.ERROR)
             .attribute(DeliveryRetriesHelper.makeAttribute(4))
             .build();
@@ -184,6 +188,7 @@ public class DeliveryRunnableTest {
         testee.attemptDelivery(fakeMail);
 
         verify(mailQueue).enQueue(FakeMail.builder()
+                .name("name")
                 .attribute(DeliveryRetriesHelper.makeAttribute(5))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
@@ -196,6 +201,7 @@ public class DeliveryRunnableTest {
     @Test
     public void deliveryTemporaryFailureShouldNotRetryDeliveryOverMaximumRetryNumber() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .state(Mail.ERROR)
             .attribute(DeliveryRetriesHelper.makeAttribute(5))
             .build();
@@ -210,6 +216,7 @@ public class DeliveryRunnableTest {
     @Test
     public void deliveryTemporaryFailureShouldBounceWhenRetryExceeded() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .state(Mail.ERROR)
             .attribute(DeliveryRetriesHelper.makeAttribute(5))
             .build();
@@ -225,6 +232,7 @@ public class DeliveryRunnableTest {
     @Test
     public void deliveryTemporaryFailureShouldResetDeliveryCountOnNonErrorState() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .state(Mail.DEFAULT)
             .attribute(DeliveryRetriesHelper.makeAttribute(5))
             .build();
@@ -234,6 +242,7 @@ public class DeliveryRunnableTest {
         testee.attemptDelivery(fakeMail);
 
         verify(mailQueue).enQueue(FakeMail.builder()
+                .name("name")
                 .attribute(DeliveryRetriesHelper.makeAttribute(1))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)

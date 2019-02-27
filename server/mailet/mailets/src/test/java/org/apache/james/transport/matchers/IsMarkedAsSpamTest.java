@@ -40,6 +40,7 @@ public class IsMarkedAsSpamTest {
     @Test
     public void isMarkedAsSpamShouldNotMatchWhenNoHeader() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender("sender@james.org")
             .recipient("to@james.org")
             .build();
@@ -51,6 +52,7 @@ public class IsMarkedAsSpamTest {
     @Test
     public void isMarkedAsSpamShouldNotMatchWhenHeaderButEmptyValue() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender("sender@james.org")
             .recipient("to@james.org")
             .addHeaderForRecipient(PerRecipientHeaders.Header.builder()
@@ -67,6 +69,7 @@ public class IsMarkedAsSpamTest {
     @Test
     public void isMarkedAsSpamShouldNotMatchWhenHeaderButOtherValue() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender("sender@james.org")
             .recipient("to@james.org")
             .addHeaderForRecipient(PerRecipientHeaders.Header.builder()
@@ -83,6 +86,7 @@ public class IsMarkedAsSpamTest {
     @Test
     public void isMarkedAsSpamShouldNotMatchWhenHeaderButNoValue() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender("sender@james.org")
             .recipient("to@james.org")
             .addHeaderForRecipient(PerRecipientHeaders.Header.builder()
@@ -99,6 +103,7 @@ public class IsMarkedAsSpamTest {
     @Test
     public void isMarkedAsSpamShouldMatchWhenHeaderAndYesValue() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender("sender@james.org")
             .recipient("to@james.org")
             .addHeaderForRecipient(PerRecipientHeaders.Header.builder()
@@ -116,6 +121,7 @@ public class IsMarkedAsSpamTest {
     @Test
     public void isMarkedAsSpamShouldMatchOnlyRecipientsWithHeaderAndYesValue() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender("sender@james.org")
             .recipients("to1@james.org", "to2@james.org")
             .addHeaderForRecipient(PerRecipientHeaders.Header.builder()
@@ -132,6 +138,7 @@ public class IsMarkedAsSpamTest {
     @Test
     public void isMarkedAsSpamShouldMatchWhenHeaderAndYesValueInOtherCase() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender("sender@james.org")
             .recipient("to@james.org")
             .addHeaderForRecipient(PerRecipientHeaders.Header.builder()

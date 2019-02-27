@@ -86,6 +86,7 @@ class MailDTOTest {
     private MailReferenceDTO mailDTO1() throws MessagingException {
         return MailReferenceDTO.fromMail(
             FakeMail.builder()
+                .name("mail-name-558")
                 .recipients(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2)
                 .sender(MailAddressFixture.SENDER)
                 .attribute(new Attribute(AttributeName.of("att1"), AttributeValue.of("value")))
@@ -102,7 +103,6 @@ class MailDTOTest {
                     .value("uedcgukrcg")
                     .build(), MailAddressFixture.RECIPIENT2)
                 .state("state")
-                .name("mail-name-558")
                 .build(),
             MimeMessagePartsId.builder()
                 .headerBlobId(BLOB_ID_FACTORY.from("210e7136-ede3-44eb-9495-3ed816d6e23b"))

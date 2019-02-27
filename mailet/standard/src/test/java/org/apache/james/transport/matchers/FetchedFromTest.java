@@ -52,6 +52,7 @@ public class FetchedFromTest {
     @Test
     public void matchShouldReturnMatchWhenFetchFromHeaderHoldsRightValue() throws MessagingException {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
             .mimeMessage(MailUtil.createMimeMessage(FetchedFrom.X_FETCHED_FROM, EXPECTED_HEADER_VALUE))
             .build();
@@ -62,6 +63,7 @@ public class FetchedFromTest {
     @Test
     public void matchShouldReturnNotMatchWhenFetchFromHeaderHoldsWrongValue() throws MessagingException {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
             .mimeMessage(MailUtil.createMimeMessage(FetchedFrom.X_FETCHED_FROM, WRONG_HEADER_VALUE))
             .build();
@@ -72,6 +74,7 @@ public class FetchedFromTest {
     @Test
     public void matchShouldRemoveMatchingHeaders() throws MessagingException {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
             .mimeMessage(MailUtil.createMimeMessage(FetchedFrom.X_FETCHED_FROM, EXPECTED_HEADER_VALUE))
             .build();
@@ -84,6 +87,7 @@ public class FetchedFromTest {
     @Test
     public void matchShouldNotRemoveNonMatchingHeaders() throws MessagingException {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
             .mimeMessage(MailUtil.createMimeMessage(FetchedFrom.X_FETCHED_FROM, WRONG_HEADER_VALUE))
             .build();

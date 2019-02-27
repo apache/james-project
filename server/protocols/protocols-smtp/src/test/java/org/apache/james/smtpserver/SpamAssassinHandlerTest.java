@@ -110,6 +110,7 @@ public class SpamAssassinHandlerTest {
 
     private Mail setupMockedMail(MimeMessage message) throws MessagingException {
         return FakeMail.builder()
+            .name("name")
             .mimeMessage(message)
             .build();
     }

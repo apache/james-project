@@ -49,6 +49,7 @@ class RecipientDomainIsTest {
                 .condition("james.apache.org")
                 .build());
         FakeMail fakeMail = FakeMail.builder()
+                .name("mail")
                 .recipient(ANY_AT_JAMES)
                 .build();
         assertThat(matcher.match(fakeMail)).containsOnly(ANY_AT_JAMES);
@@ -63,6 +64,7 @@ class RecipientDomainIsTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
+                .name("mail")
                 .recipients(ANY_AT_JAMES, ANY_AT_JAMES2)
                 .build();
 
@@ -78,6 +80,7 @@ class RecipientDomainIsTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
+                .name("mail")
                 .recipients(OTHER_AT_JAMES2, ANY_AT_JAMES2)
                 .build();
 
@@ -103,6 +106,7 @@ class RecipientDomainIsTest {
                 .build());
 
         FakeMail fakeMail = FakeMail.builder()
+                .name("mail")
                 .recipients(ANY_AT_JAMES, OTHER_AT_JAMES2, ANY_AT_JAMES2)
                 .build();
 

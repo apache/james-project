@@ -278,6 +278,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/headerEncodedFolded.script");
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("eml/gmail.eml")))
             .state(Mail.DEFAULT)
@@ -960,6 +961,7 @@ public class SieveIntegrationTest {
 
     private FakeMail createMailWithSubjectAndHeaders(String subject, MimeMessageBuilder.Header... headers) throws MessagingException, IOException {
         return FakeMail.builder()
+            .name("name")
             .mimeMessage(
                 MimeMessageBuilder.mimeMessageBuilder()
                     .setSubject(subject)

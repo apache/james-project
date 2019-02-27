@@ -99,7 +99,7 @@ class TooManyRecipientsTest {
             .matcherName("matcherName")
             .build());
 
-        Collection<MailAddress> result = testee.match(FakeMail.builder().build());
+        Collection<MailAddress> result = testee.match(FakeMail.builder().name("mail").build());
 
         assertThat(result).isEmpty();
     }
@@ -112,6 +112,7 @@ class TooManyRecipientsTest {
             .build());
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipient("cuong.tran@gmail.com")
             .build();
 
@@ -129,6 +130,7 @@ class TooManyRecipientsTest {
             .build());
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients("cuong.tran@gmail.com", "suu.tran@gmail.com", "tuan.tran@gmail.com")
             .build();
 
@@ -152,6 +154,7 @@ class TooManyRecipientsTest {
 
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(mailAddresses)
             .build();
 

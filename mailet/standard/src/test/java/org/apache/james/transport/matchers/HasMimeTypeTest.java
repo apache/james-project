@@ -64,6 +64,7 @@ public class HasMimeTypeTest {
             .setSubject("test");
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(message)
             .sender(FROM)
             .recipient(RECIPIENT)
@@ -94,6 +95,7 @@ public class HasMimeTypeTest {
             .setSubject("test");
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(message)
             .sender(FROM)
             .recipient(RECIPIENT)
@@ -114,6 +116,7 @@ public class HasMimeTypeTest {
             .setSubject("test");
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(message)
             .sender(FROM)
             .recipient(RECIPIENT)

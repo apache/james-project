@@ -58,6 +58,7 @@ public class NotifyMailetsMessageTest {
     @Test
     public void generateMessageShouldReturnTheMessageWhenSimpleMimeMessage() throws Exception {
         FakeMail mail = FakeMail.builder()
+                .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
                 .sender(new MailAddress("user", "james.org"))
                 .build();
@@ -106,6 +107,7 @@ public class NotifyMailetsMessageTest {
     @Test
     public void generateMessageShouldAddRecipientsWhenMimeMessageAsSome() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
             .recipients("user@james.org", "user2@james.org")
             .build();

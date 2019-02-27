@@ -82,6 +82,7 @@ class LogMessageTest {
         mailet.init(mailetConfig);
 
         mailet.service(FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addHeader("Date", "Tue, 16 Jan 2018 10:23:03 +0100")
                 .setSubject("subject")
@@ -247,8 +248,8 @@ class LogMessageTest {
                 "\r\n" +
                 "This is a fake mail");
         return FakeMail.builder()
-                .mimeMessage(message)
                 .name("name")
+                .mimeMessage(message)
                 .state(Mail.DEFAULT)
                 .recipient("receiver@domain.com")
                 .sender("sender@any.com")

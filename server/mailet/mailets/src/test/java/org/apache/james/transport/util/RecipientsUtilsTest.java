@@ -103,6 +103,7 @@ public class RecipientsUtilsTest {
         MailAddress to = new MailAddress("to", "james.org");
         MailAddress to2 = new MailAddress("to2", "james.org");
         FakeMail fakeMail = FakeMail.builder()
+                .name("name")
                 .sender(from)
                 .recipients(to, to2)
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()

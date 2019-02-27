@@ -52,6 +52,7 @@ public class RecipientIsLocalTest {
         mailAddress1 = new MailAddress("mail1@domain.com");
         mailAddress2 = new MailAddress("mail2@domain.com");
         mail = FakeMail.builder()
+                .name("mail")
                 .recipients(mailAddress1, mailAddress2)
                 .build();
     }

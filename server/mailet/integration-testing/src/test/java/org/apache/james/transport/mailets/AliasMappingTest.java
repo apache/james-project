@@ -161,6 +161,7 @@ public class AliasMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(ALICE_ADDRESS)
                 .recipient(BOB_ALIAS));
@@ -179,6 +180,7 @@ public class AliasMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(ALICE_ADDRESS)
                 .recipient(BOB_ALIAS));
@@ -197,6 +199,7 @@ public class AliasMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(CEDRIC_ADDRESS)
                 .recipient(ALICE_ADDRESS));
@@ -215,6 +218,7 @@ public class AliasMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(ALICE_ADDRESS)
                 .recipient(GROUP_ADDRESS));
@@ -233,6 +237,7 @@ public class AliasMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(ALICE_ADDRESS)
                 .recipient(GROUP_ALIAS));
@@ -251,6 +256,7 @@ public class AliasMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(ALICE_ADDRESS)
                 .recipient(BOB_ALIAS_2));
@@ -269,6 +275,7 @@ public class AliasMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(CEDRIC_ADDRESS)
                 .recipient(BOB_ALIAS));
@@ -295,6 +302,7 @@ public class AliasMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(ALICE_ADDRESS)
                 .recipient(aliasWithSlash));
@@ -314,6 +322,7 @@ public class AliasMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(ALICE_ADDRESS)
                 .recipient(BOB_ALIAS));
@@ -332,6 +341,7 @@ public class AliasMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(ALICE_ADDRESS)
                 .recipient(BOB_ALIAS));
@@ -354,6 +364,7 @@ public class AliasMappingTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(ALICE_ADDRESS)
                 .recipient(BOB_ALIAS));
