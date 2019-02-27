@@ -93,4 +93,28 @@ public class MailRepositoryUrlTest {
         assertThat(MailRepositoryUrl.from("proto://abc://def").getPath())
             .isEqualTo(MailRepositoryPath.from("abc://def"));
     }
+
+    @Test
+    void subUrlShouldAppendSuffix() {
+        assertThat(MailRepositoryUrl.from("proto://abc://def").subUrl("ghi"))
+            .isEqualTo(MailRepositoryUrl.from("proto://abc://def/ghi"));
+    }
+
+    @Test
+    void subUrlShouldAppendSuffixWhenMultipleParts() {
+        assertThat(MailRepositoryUrl.from("proto://abc://def").subUrl("ghi/jkl"))
+            .isEqualTo(MailRepositoryUrl.from("proto://abc://def/ghi/jkl"));
+    }
+
+    @Test
+    void subUrlShouldBeANoopWhenEmptySuffix() {
+        assertThat(MailRepositoryUrl.from("proto://abc://def").subUrl(""))
+            .isEqualTo(MailRepositoryUrl.from("proto://abc://def"));
+    }
+
+    @Test
+    void subUrlShouldRejectSuffixesStartingBySlash() {
+        assertThatThrownBy(() -> MailRepositoryUrl.from("proto://abc://def").subUrl("/ghi"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
 }

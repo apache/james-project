@@ -25,23 +25,43 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 public class MailRepositoryPath implements Comparable<MailRepositoryPath> {
-    public static final MailRepositoryPath fromEncoded(String encodedPath) throws UnsupportedEncodingException {
-        return new MailRepositoryPath(URLDecoder.decode(encodedPath, StandardCharsets.UTF_8.displayName()));
+
+    private static final String PATH_DELIMITER = "/";
+
+    public static MailRepositoryPath fromEncoded(String encodedPath) throws UnsupportedEncodingException {
+        Preconditions.checkNotNull(encodedPath, "Supplied MailRepositoryPath value is null");
+
+        return from(URLDecoder.decode(encodedPath, StandardCharsets.UTF_8.displayName()));
     }
 
-    public static final MailRepositoryPath from(String path) {
-        return new MailRepositoryPath(path);
+    public static MailRepositoryPath from(String path) {
+        Preconditions.checkNotNull(path, "Supplied MailRepositoryPath value is null");
+
+        return new MailRepositoryPath(sanitizePath(path));
+    }
+
+    private static String sanitizePath(String path) {
+        return StringUtils.stripEnd(path, "/");
     }
 
     private final String value;
 
     private MailRepositoryPath(String value) {
         Preconditions.checkNotNull(value);
+
         this.value = value;
+    }
+
+    public MailRepositoryPath subPath(String suffix) {
+        Preconditions.checkArgument(!suffix.startsWith(PATH_DELIMITER), "The suffix used can not start by the path delimiter");
+
+        return from(value + PATH_DELIMITER + suffix);
     }
 
     public String asString() {

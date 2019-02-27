@@ -129,24 +129,24 @@ public class WebAdminServerIntegrationTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("repository", containsInAnyOrder(
-                "var/mail/error/",
-                "var/mail/relay-denied/",
-                "var/mail/address-error/"));
+                "var/mail/error",
+                "var/mail/relay-denied",
+                "var/mail/address-error"));
     }
 
     @Test
     public void gettingANonExistingMailRepositoryShouldNotCreateIt() {
         given()
-            .get(MailRepositoriesRoutes.MAIL_REPOSITORIES + "file%3A%2F%2Fvar%2Fmail%2Fcustom%2F");
+            .get(MailRepositoriesRoutes.MAIL_REPOSITORIES + "file%3A%2F%2Fvar%2Fmail%2Fcustom");
 
         when()
             .get(MailRepositoriesRoutes.MAIL_REPOSITORIES)
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("repository", containsInAnyOrder(
-                "var/mail/error/",
-                "var/mail/relay-denied/",
-                "var/mail/address-error/"));
+                "var/mail/error",
+                "var/mail/relay-denied",
+                "var/mail/address-error"));
     }
 
     @Test
