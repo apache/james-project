@@ -20,7 +20,6 @@
 package org.apache.james.mailrepository.memory;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -47,7 +46,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
 
 public class MemoryMailRepositoryStore implements MailRepositoryStore, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMailRepositoryStore.class);
@@ -57,7 +55,7 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Configura
     private final ConcurrentMap<MailRepositoryUrl, MailRepository> destinationToRepositoryAssociations;
     private final Map<Protocol, MailRepositoryProvider> protocolToRepositoryProvider;
     private final Map<Protocol, HierarchicalConfiguration> perProtocolMailRepositoryDefaultConfiguration;
-    private HierarchicalConfiguration configuration;
+    private MailRepositoryStoreConfiguration configuration;
 
     @Inject
     public MemoryMailRepositoryStore(MailRepositoryUrlStore urlStore, Set<MailRepositoryProvider> mailRepositories) {
@@ -75,25 +73,21 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Configura
 
     @Override
     public void configure(HierarchicalConfiguration configuration) {
+        this.configuration = MailRepositoryStoreConfiguration.parse(configuration);
+    }
+
+    public void configure(MailRepositoryStoreConfiguration configuration) {
         this.configuration = configuration;
     }
 
     public void init() throws Exception {
         LOGGER.info("JamesMailStore init... {}", this);
-        List<HierarchicalConfiguration> registeredClasses = retrieveRegisteredClassConfiguration();
-        for (HierarchicalConfiguration registeredClass : registeredClasses) {
-            readConfigurationEntry(registeredClass);
+
+        for (MailRepositoryStoreConfiguration.Item item : configuration.getItems()) {
+            initEntry(item);
         }
     }
 
-    private List<HierarchicalConfiguration> retrieveRegisteredClassConfiguration() {
-        try {
-            return configuration.configurationsAt("mailrepositories.mailrepository");
-        } catch (Exception e) {
-            LOGGER.warn("Could not process configuration. Skipping Mail Repository initialization.", e);
-            return ImmutableList.of();
-        }
-    }
 
     @Override
     public Optional<MailRepository> get(MailRepositoryUrl url) {
@@ -127,25 +121,17 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Configura
             .orElse(newMailRepository);
     }
 
-    private void readConfigurationEntry(HierarchicalConfiguration repositoryConfiguration) throws ConfigurationException {
-        String className = repositoryConfiguration.getString("[@class]");
+    private void initEntry(MailRepositoryStoreConfiguration.Item item) throws ConfigurationException {
+        String className = item.getClassFqdn();
+
         MailRepositoryProvider usedMailRepository = mailRepositories.stream()
             .filter(mailRepositoryProvider -> mailRepositoryProvider.canonicalName().equals(className))
             .findAny()
             .orElseThrow(() -> new ConfigurationException("MailRepository " + className + " has not been registered"));
-        for (String protocol : repositoryConfiguration.getStringArray("protocols.protocol")) {
-            protocolToRepositoryProvider.put(new Protocol(protocol), usedMailRepository);
-            registerRepositoryDefaultConfiguration(repositoryConfiguration, new Protocol(protocol));
-        }
-    }
 
-    private void registerRepositoryDefaultConfiguration(HierarchicalConfiguration repositoryConfiguration, Protocol protocol) {
-        HierarchicalConfiguration defConf = null;
-        if (repositoryConfiguration.getKeys("config").hasNext()) {
-            defConf = repositoryConfiguration.configurationAt("config");
-        }
-        if (defConf != null) {
-            perProtocolMailRepositoryDefaultConfiguration.put(protocol, defConf);
+        for (Protocol protocol : item.getProtocols()) {
+            protocolToRepositoryProvider.put(protocol, usedMailRepository);
+            perProtocolMailRepositoryDefaultConfiguration.put(protocol, item.getConfiguration());
         }
     }
 
