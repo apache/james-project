@@ -52,7 +52,6 @@ public class CassandraConfiguration {
     private static final String MAILBOX_MAX_RETRY_MESSAGE_FLAGS_UPDATE = "mailbox.max.retry.message.flags.update";
     private static final String MAILBOX_MAX_RETRY_MESSAGE_ID_FLAGS_UPDATE = "mailbox.max.retry.message.id.flags.update";
     private static final String FETCH_ADVANCE_ROW_COUNT = "fetch.advance.row.count";
-    private static final String CHUNK_SIZE_FLAGS_UPDATE = "chunk.size.flags.update";
     private static final String CHUNK_SIZE_MESSAGE_READ = "chunk.size.message.read";
     private static final String CHUNK_SIZE_EXPUNGE = "chunk.size.expunge";
     private static final String BLOB_PART_SIZE = "mailbox.blob.part.size";
@@ -64,7 +63,6 @@ public class CassandraConfiguration {
     public static class Builder {
         private Optional<Integer> messageReadChunkSize = Optional.empty();
         private Optional<Integer> expungeChunkSize = Optional.empty();
-        private Optional<Integer> flagsUpdateChunkSize = Optional.empty();
         private Optional<Integer> flagsUpdateMessageIdMaxRetry = Optional.empty();
         private Optional<Integer> flagsUpdateMessageMaxRetry = Optional.empty();
         private Optional<Integer> modSeqMaxRetry = Optional.empty();
@@ -84,12 +82,6 @@ public class CassandraConfiguration {
         public Builder expungeChunkSize(int value) {
             Preconditions.checkArgument(value > 0, "expungeChunkSize needs to be strictly positive");
             this.expungeChunkSize = Optional.of(value);
-            return this;
-        }
-
-        public Builder flagsUpdateChunkSize(int value) {
-            Preconditions.checkArgument(value > 0, "flagsUpdateChunkSize needs to be strictly positive");
-            this.flagsUpdateChunkSize = Optional.of(value);
             return this;
         }
 
@@ -157,11 +149,6 @@ public class CassandraConfiguration {
             return this;
         }
 
-        public Builder flagsUpdateChunkSize(Optional<Integer> value) {
-            value.ifPresent(this::flagsUpdateChunkSize);
-            return this;
-        }
-
         public Builder flagsUpdateMessageIdMaxRetry(Optional<Integer> value) {
             value.ifPresent(this::flagsUpdateMessageIdMaxRetry);
             return this;
@@ -211,7 +198,6 @@ public class CassandraConfiguration {
             return new CassandraConfiguration(aclMaxRetry.orElse(DEFAULT_ACL_MAX_RETRY),
                 messageReadChunkSize.orElse(DEFAULT_MESSAGE_CHUNK_SIZE_ON_READ),
                 expungeChunkSize.orElse(DEFAULT_EXPUNGE_BATCH_SIZE),
-                flagsUpdateChunkSize.orElse(DEFAULT_UPDATE_FLAGS_BATCH_SIZE),
                 flagsUpdateMessageIdMaxRetry.orElse(DEFAULT_FLAGS_UPDATE_MESSAGE_ID_MAX_RETRY),
                 flagsUpdateMessageMaxRetry.orElse(DEFAULT_FLAGS_UPDATE_MESSAGE_MAX_RETRY),
                 modSeqMaxRetry.orElse(DEFAULT_MODSEQ_MAX_RETRY),
@@ -241,8 +227,6 @@ public class CassandraConfiguration {
                 propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_MESSAGE_ID_FLAGS_UPDATE, null)))
             .fetchNextPageInAdvanceRow(Optional.ofNullable(
                 propertiesConfiguration.getInteger(FETCH_ADVANCE_ROW_COUNT, null)))
-            .flagsUpdateChunkSize(Optional.ofNullable(
-                propertiesConfiguration.getInteger(CHUNK_SIZE_FLAGS_UPDATE, null)))
             .messageReadChunkSize(Optional.ofNullable(
                 propertiesConfiguration.getInteger(CHUNK_SIZE_MESSAGE_READ, null)))
             .expungeChunkSize(Optional.ofNullable(
@@ -258,7 +242,6 @@ public class CassandraConfiguration {
 
     private final int messageReadChunkSize;
     private final int expungeChunkSize;
-    private final int flagsUpdateChunkSize;
     private final int flagsUpdateMessageIdMaxRetry;
     private final int flagsUpdateMessageMaxRetry;
     private final int modSeqMaxRetry;
@@ -271,7 +254,7 @@ public class CassandraConfiguration {
 
     @VisibleForTesting
     CassandraConfiguration(int aclMaxRetry, int messageReadChunkSize, int expungeChunkSize,
-                           int flagsUpdateChunkSize, int flagsUpdateMessageIdMaxRetry, int flagsUpdateMessageMaxRetry,
+                           int flagsUpdateMessageIdMaxRetry, int flagsUpdateMessageMaxRetry,
                            int modSeqMaxRetry, int uidMaxRetry, int fetchNextPageInAdvanceRow,
                            int blobPartSize, final int attachmentV2MigrationReadTimeout, int messageAttachmentIdsReadTimeout) {
         this.aclMaxRetry = aclMaxRetry;
@@ -282,7 +265,6 @@ public class CassandraConfiguration {
         this.modSeqMaxRetry = modSeqMaxRetry;
         this.uidMaxRetry = uidMaxRetry;
         this.fetchNextPageInAdvanceRow = fetchNextPageInAdvanceRow;
-        this.flagsUpdateChunkSize = flagsUpdateChunkSize;
         this.blobPartSize = blobPartSize;
         this.attachmentV2MigrationReadTimeout = attachmentV2MigrationReadTimeout;
         this.messageAttachmentIdsReadTimeout = messageAttachmentIdsReadTimeout;
@@ -290,10 +272,6 @@ public class CassandraConfiguration {
 
     public int getBlobPartSize() {
         return blobPartSize;
-    }
-
-    public int getFlagsUpdateChunkSize() {
-        return flagsUpdateChunkSize;
     }
 
     public int getAclMaxRetry() {
@@ -348,7 +326,6 @@ public class CassandraConfiguration {
                 && Objects.equals(this.flagsUpdateMessageMaxRetry, that.flagsUpdateMessageMaxRetry)
                 && Objects.equals(this.modSeqMaxRetry, that.modSeqMaxRetry)
                 && Objects.equals(this.uidMaxRetry, that.uidMaxRetry)
-                && Objects.equals(this.flagsUpdateChunkSize, that.flagsUpdateChunkSize)
                 && Objects.equals(this.fetchNextPageInAdvanceRow, that.fetchNextPageInAdvanceRow)
                 && Objects.equals(this.blobPartSize, that.blobPartSize)
                 && Objects.equals(this.attachmentV2MigrationReadTimeout, that.attachmentV2MigrationReadTimeout)
@@ -360,7 +337,7 @@ public class CassandraConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(aclMaxRetry, messageReadChunkSize, expungeChunkSize, flagsUpdateMessageIdMaxRetry,
-            flagsUpdateMessageMaxRetry, modSeqMaxRetry, uidMaxRetry, fetchNextPageInAdvanceRow, flagsUpdateChunkSize,
+            flagsUpdateMessageMaxRetry, modSeqMaxRetry, uidMaxRetry, fetchNextPageInAdvanceRow,
             blobPartSize, attachmentV2MigrationReadTimeout, messageAttachmentIdsReadTimeout);
     }
 
@@ -374,7 +351,6 @@ public class CassandraConfiguration {
             .add("flagsUpdateMessageMaxRetry", flagsUpdateMessageMaxRetry)
             .add("modSeqMaxRetry", modSeqMaxRetry)
             .add("fetchNextPageInAdvanceRow", fetchNextPageInAdvanceRow)
-            .add("flagsUpdateChunkSize", flagsUpdateChunkSize)
             .add("uidMaxRetry", uidMaxRetry)
             .add("blobPartSize", blobPartSize)
             .add("attachmentV2MigrationReadTimeout", attachmentV2MigrationReadTimeout)

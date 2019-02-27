@@ -110,8 +110,6 @@
         <dd>Optional. Defaults to 1000.<br/> Controls the number of retries upon Cassandra flags update, in MessageIdMapper.</dd>
         <dt><strong>fetch.advance.row.count</strong></dt>
         <dd>Optional. Defaults to 1000.<br/> Controls the number of remaining rows we should wait before prefetch when paging.</dd>
-        <dt><strong>chunk.size.flags.update</strong></dt>
-        <dd>Optional. Defaults to 20.<br/> Controls the number of messages flags updates to be performed concurently by MessageMapper.</dd>
         <dt><strong>chunk.size.message.read</strong></dt>
         <dd>Optional. Defaults to 100.<br/> Controls the number of messages to be retrieved in parallel.</dd>
         <dt><strong>chunk.size.expunge</strong></dt>
