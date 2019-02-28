@@ -39,6 +39,7 @@ import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.TableMetadata;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -51,7 +52,11 @@ class CassandraTableTest {
     @Test
     void shouldRespectBeanContract() {
         EqualsVerifier.forClass(CassandraTable.class)
-                .verify();
+            .withPrefabValues(
+                Statement.class,
+                QueryBuilder.select("foo").from("foo"),
+                QueryBuilder.select("bar").from("bar"))
+            .verify();
     }
 
     @Test
