@@ -21,7 +21,7 @@ package org.apache.james.modules.data;
 import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.jpa.JPAUsersRepository;
@@ -65,7 +65,7 @@ public class JPAUsersRepositoryModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Configurable>> forClasses() {
+        public List<Class<? extends Startable>> forClasses() {
             return ImmutableList.of(JPAUsersRepository.class);
         }
     }

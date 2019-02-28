@@ -23,49 +23,40 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Serializable;
 
-import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.utils.Configurables;
+import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.utils.Startables;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.MembersInjector;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
+import com.google.inject.spi.InjectionListener;
 import com.google.inject.spi.TypeEncounter;
-import com.google.inject.spi.TypeListener;
 
-public class ConfigurablesModule extends AbstractModule {
+public class StartablesModule extends AbstractModule {
+
+    private final Startables startables;
+
+    public StartablesModule() {
+        startables = new Startables();
+    }
 
     @Override
     protected void configure() {
-        Configurables configurables = new Configurables();
-        bind(Configurables.class).toInstance(configurables);
+        bind(Startables.class).toInstance(startables);
 
-        bindListener(new SubclassesOf(Configurable.class), new ConfigurableTypeListener(configurables));
+        bindListener(new SubclassesOf(Startable.class), this::hear);
     }
 
-    private static class ConfigurableTypeListener implements TypeListener {
-
-        private final Configurables configurables;
-
-        public ConfigurableTypeListener(Configurables configurables) {
-            this.configurables = configurables;
-        }
-
-        @Override
-        public <I> void hear(TypeLiteral<I> type, TypeEncounter<I> encounter) {
-            MembersInjector<? super I> membersInjector = x -> {
-                Class<? super I> rawType = type.getRawType();
-                configurables.add(rawType.asSubclass(Configurable.class));
-            };
-            encounter.register(membersInjector);
-        }
+    private <I> void hear(TypeLiteral<I> type, TypeEncounter<I> encounter) {
+        InjectionListener<? super I> injectionListener = ignored -> startables.add(type.getRawType().asSubclass(Startable.class));
+        encounter.register(injectionListener);
     }
 
     private static class SubclassesOf extends AbstractMatcher<TypeLiteral<?>> implements Serializable {
 
         private final Class<?> superclass;
 
-        public SubclassesOf(Class<?> superclass) {
+        private SubclassesOf(Class<?> superclass) {
             this.superclass = checkNotNull(superclass, "superclass");
         }
 

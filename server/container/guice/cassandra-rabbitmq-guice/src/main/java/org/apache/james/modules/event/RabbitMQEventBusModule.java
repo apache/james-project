@@ -22,7 +22,7 @@ package org.apache.james.modules.event;
 import java.util.List;
 
 import org.apache.james.event.json.EventSerializer;
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.events.RabbitMQEventBus;
@@ -68,8 +68,8 @@ public class RabbitMQEventBusModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Configurable>> forClasses() {
-            return ImmutableList.of();
+        public List<Class<? extends Startable>> forClasses() {
+            return ImmutableList.of(RabbitMQEventBus.class);
         }
     }
 }

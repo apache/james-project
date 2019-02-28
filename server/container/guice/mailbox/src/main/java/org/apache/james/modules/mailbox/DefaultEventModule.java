@@ -24,7 +24,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.InVMEventBus;
@@ -84,8 +84,8 @@ public class DefaultEventModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Configurable>> forClasses() {
-            return ImmutableList.of();
+        public List<Class<? extends Startable>> forClasses() {
+            return ImmutableList.of(MailboxListenersLoaderImpl.class);
         }
     }
 }

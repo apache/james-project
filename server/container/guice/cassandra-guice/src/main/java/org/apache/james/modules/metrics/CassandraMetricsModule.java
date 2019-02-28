@@ -21,7 +21,7 @@ package org.apache.james.modules.metrics;
 
 import java.util.List;
 
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.ConfigurationPerformer;
 
 import com.codahale.metrics.MetricRegistry;
@@ -64,7 +64,7 @@ public class CassandraMetricsModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Configurable>> forClasses() {
+        public List<Class<? extends Startable>> forClasses() {
             return ImmutableList.of();
         }
     }

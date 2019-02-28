@@ -21,24 +21,24 @@ package org.apache.james.utils;
 
 import java.util.Set;
 
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-public class Configurables {
+public class Startables {
 
-    private final Set<Class<? extends Configurable>> configurables;
+    private final Set<Class<? extends Startable>> startables;
 
-    public Configurables() {
-        this.configurables = Sets.newLinkedHashSet();
+    public Startables() {
+        this.startables = Sets.newLinkedHashSet();
     }
 
-    public void add(Class<? extends Configurable> configurable) {
-        configurables.add(configurable);
+    public void add(Class<? extends Startable> configurable) {
+        startables.add(configurable);
     }
 
-    public Set<Class<? extends Configurable>> get() {
-        return ImmutableSet.copyOf(configurables);
+    public Set<Class<? extends Startable>> get() {
+        return ImmutableSet.copyOf(startables);
     }
 }

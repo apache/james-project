@@ -28,6 +28,7 @@ import javax.inject.Inject;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationsPerformer;
 import org.junit.Test;
@@ -42,7 +43,7 @@ public class ConfigurationsPerformerTest {
 
     @Test
     public void initModulesShouldNotFailWhenBindingsInWrongOrder() throws Exception {
-        Injector injector = Guice.createInjector(new ConfigurablesModule(),
+        Injector injector = Guice.createInjector(new StartablesModule(),
                 new UnorderedBindingsModule());
 
         injector.getInstance(ConfigurationsPerformer.class).initModules();
@@ -51,7 +52,7 @@ public class ConfigurationsPerformerTest {
         assertThat(injector.getInstance(B.class).isConfigured()).isTrue();
     }
 
-    private static class UnorderedBindingsModule extends ConfigurablesModule {
+    private static class UnorderedBindingsModule extends StartablesModule {
 
         @Override
         protected void configure() {
@@ -83,7 +84,7 @@ public class ConfigurationsPerformerTest {
         }
 
         @Override
-        public List<Class<? extends Configurable>> forClasses() {
+        public List<Class<? extends Startable>> forClasses() {
             return ImmutableList.of(A.class);
         }
     }
@@ -107,7 +108,7 @@ public class ConfigurationsPerformerTest {
         }
 
         @Override
-        public List<Class<? extends Configurable>> forClasses() {
+        public List<Class<? extends Startable>> forClasses() {
             return ImmutableList.of(B.class);
         }
     }
@@ -163,7 +164,7 @@ public class ConfigurationsPerformerTest {
 
     @Test
     public void initModulesShouldBePerformedOneTimeWhenConfigurableModuleContainsMultipleDependencies() throws Exception {
-        Injector injector = Guice.createInjector(new ConfigurablesModule(),
+        Injector injector = Guice.createInjector(new StartablesModule(),
                 new DualResponsibilityConfigurationPerformerModule());
 
         injector.getInstance(ConfigurationsPerformer.class).initModules();
@@ -201,12 +202,12 @@ public class ConfigurationsPerformerTest {
         }
 
         @Override
-        public List<Class<? extends Configurable>> forClasses() {
+        public List<Class<? extends Startable>> forClasses() {
             return ImmutableList.of(A.class, B.class);
         }
     }
 
-    private static class DualResponsibilityConfigurationPerformerModule extends ConfigurablesModule {
+    private static class DualResponsibilityConfigurationPerformerModule extends StartablesModule {
 
         @Override
         protected void configure() {

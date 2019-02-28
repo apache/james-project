@@ -34,12 +34,13 @@ import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
 
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.util.RestrictingRMISocketFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableMap;
 
-public class JMXServer {
+public class JMXServer implements Startable {
     private final JmxConfiguration jmxConfiguration;
     private final Set<String> registeredKeys;
     private final Object lock;

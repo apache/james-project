@@ -23,17 +23,17 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 
 import com.google.inject.Inject;
 
 public class ConfigurationsPerformer {
 
     private final Set<ConfigurationPerformer> configurationPerformers;
-    private final Configurables configurables;
+    private final Startables configurables;
 
     @Inject
-    public ConfigurationsPerformer(Set<ConfigurationPerformer> configurationPerformers, Configurables configurables) {
+    public ConfigurationsPerformer(Set<ConfigurationPerformer> configurationPerformers, Startables configurables) {
         this.configurationPerformers = configurationPerformers;
         this.configurables = configurables;
     }
@@ -53,7 +53,7 @@ public class ConfigurationsPerformer {
             .collect(Collectors.toSet());
     }
 
-    private Stream<ConfigurationPerformer> configurationPerformerFor(Class<? extends Configurable> configurable) {
+    private Stream<ConfigurationPerformer> configurationPerformerFor(Class<? extends Startable> configurable) {
         return configurationPerformers.stream()
                 .filter(x -> x.forClasses().contains(configurable));
     }

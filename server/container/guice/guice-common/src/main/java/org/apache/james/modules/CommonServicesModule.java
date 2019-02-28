@@ -54,7 +54,7 @@ public class CommonServicesModule extends AbstractModule {
     
     @Override
     protected void configure() {
-        install(new ConfigurablesModule());
+        install(new StartablesModule());
         install(new PreDestroyModule());
         install(new DNSServiceModule());
         install(new AsyncTasksExecutorModule());
