@@ -19,12 +19,10 @@
 
 package org.apache.james.vault;
 
-import java.io.InputStream;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -33,7 +31,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.vault.DeletedMessage.Builder.FinalStage;
 import org.apache.james.vault.DeletedMessage.Builder.Steps.RequireMetadata;
-import org.apache.james.vault.DeletedMessage.Builder.Steps.RequirePayload;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -96,11 +93,6 @@ public class DeletedMessage {
             }
         }
 
-        @FunctionalInterface
-        interface RequireContent<T> {
-            T content(Supplier<InputStream> content);
-        }
-
         interface Steps {
             interface RequireMailboxContext<T> extends RequireMessageId<RequireOriginMailboxes<RequireUser<T>>> {}
 
@@ -108,9 +100,7 @@ public class DeletedMessage {
 
             interface RequireDates<T> extends RequireDeliveryDate<RequireDeletionDate<T>> {}
 
-            interface RequireMetadata<T> extends RequireMailboxContext<RequireDates<RequireEnvelope<T>>> {}
-
-            interface RequirePayload<T> extends RequireContent<RequireHasAttachment<T>> {}
+            interface RequireMetadata<T> extends RequireMailboxContext<RequireDates<RequireEnvelope<RequireHasAttachment<T>>>> {}
         }
 
         public static class FinalStage {
@@ -122,12 +112,10 @@ public class DeletedMessage {
             private final MaybeSender sender;
             private final List<MailAddress> recipients;
             private final boolean hasAttachment;
-            private final Supplier<InputStream> content;
             private Optional<String> subject;
 
-            public FinalStage(MessageId messageId, List<MailboxId> originMailboxes, User owner, ZonedDateTime deliveryDate,
-                              ZonedDateTime deletionDate, MaybeSender sender, List<MailAddress> recipients, boolean hasAttachment,
-                              Supplier<InputStream> content) {
+            FinalStage(MessageId messageId, List<MailboxId> originMailboxes, User owner, ZonedDateTime deliveryDate,
+                       ZonedDateTime deletionDate, MaybeSender sender, List<MailAddress> recipients, boolean hasAttachment) {
                 this.messageId = messageId;
                 this.originMailboxes = originMailboxes;
                 this.owner = owner;
@@ -136,7 +124,6 @@ public class DeletedMessage {
                 this.sender = sender;
                 this.recipients = recipients;
                 this.hasAttachment = hasAttachment;
-                this.content = content;
                 this.subject = Optional.empty();
             }
 
@@ -146,17 +133,15 @@ public class DeletedMessage {
             }
 
             public DeletedMessage build() {
-                return new DeletedMessage(messageId, originMailboxes, owner, content, deliveryDate, deletionDate, sender,
+                return new DeletedMessage(messageId, originMailboxes, owner, deliveryDate, deletionDate, sender,
                     recipients, subject, hasAttachment);
             }
         }
     }
 
-    public static RequireMetadata<RequirePayload<FinalStage>> builder() {
-        return messageId -> originMailboxes -> user -> deliveryDate -> deletionDate -> sender -> recipients -> content -> hasAttachment ->
-            new Builder.FinalStage(messageId, originMailboxes, user, deliveryDate, deletionDate, sender,
-                recipients, hasAttachment, content);
-
+    public static RequireMetadata<FinalStage> builder() {
+        return messageId -> originMailboxes -> user -> deliveryDate -> deletionDate -> sender -> recipients -> hasAttachment ->
+            new Builder.FinalStage(messageId, originMailboxes, user, deliveryDate, deletionDate, sender, recipients, hasAttachment);
     }
 
     private final MessageId messageId;
@@ -168,15 +153,13 @@ public class DeletedMessage {
     private final List<MailAddress> recipients;
     private final Optional<String> subject;
     private final boolean hasAttachment;
-    private final Supplier<InputStream> content;
 
-    public DeletedMessage(MessageId messageId, List<MailboxId> originMailboxes, User owner, Supplier<InputStream> content,
+    public DeletedMessage(MessageId messageId, List<MailboxId> originMailboxes, User owner,
                           ZonedDateTime deliveryDate, ZonedDateTime deletionDate, MaybeSender sender, List<MailAddress> recipients,
                           Optional<String> subject, boolean hasAttachment) {
         this.messageId = messageId;
         this.originMailboxes = originMailboxes;
         this.owner = owner;
-        this.content = content;
         this.deliveryDate = deliveryDate;
         this.deletionDate = deletionDate;
         this.sender = sender;
@@ -195,10 +178,6 @@ public class DeletedMessage {
 
     public User getOwner() {
         return owner;
-    }
-
-    public Supplier<InputStream> getContent() {
-        return content;
     }
 
     public ZonedDateTime getDeliveryDate() {
@@ -234,7 +213,6 @@ public class DeletedMessage {
                 && Objects.equals(this.messageId, that.messageId)
                 && Objects.equals(this.originMailboxes, that.originMailboxes)
                 && Objects.equals(this.owner, that.owner)
-                && Objects.equals(this.content, that.content)
                 && Objects.equals(this.deliveryDate, that.deliveryDate)
                 && Objects.equals(this.deletionDate, that.deletionDate)
                 && Objects.equals(this.sender, that.sender)
@@ -246,7 +224,7 @@ public class DeletedMessage {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(messageId, originMailboxes, owner, content, deliveryDate, deletionDate, sender, recipients,
+        return Objects.hash(messageId, originMailboxes, owner, deliveryDate, deletionDate, sender, recipients,
             subject, hasAttachment);
     }
 

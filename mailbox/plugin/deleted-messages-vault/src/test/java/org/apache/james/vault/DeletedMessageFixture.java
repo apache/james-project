@@ -23,7 +23,6 @@ import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT2;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.function.Function;
@@ -55,7 +54,6 @@ public interface DeletedMessageFixture {
         .deletionDate(DELETION_DATE)
         .sender(MaybeSender.of(SENDER))
         .recipients(RECIPIENT1, RECIPIENT2)
-        .content(() -> new ByteArrayInputStream(CONTENT))
         .hasAttachment(false)
         .build();
     Supplier<DeletedMessage.Builder.FinalStage> FINAL_STAGE = () -> DeletedMessage.builder()
@@ -66,7 +64,6 @@ public interface DeletedMessageFixture {
         .deletionDate(DELETION_DATE)
         .sender(MaybeSender.of(SENDER))
         .recipients(RECIPIENT1, RECIPIENT2)
-        .content(() -> new ByteArrayInputStream(CONTENT))
         .hasAttachment(false);
     DeletedMessage DELETED_MESSAGE_WITH_SUBJECT = FINAL_STAGE.get()
         .subject(SUBJECT)

@@ -19,6 +19,13 @@
 
 package org.apache.james.vault.memory;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Optional;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.vault.DeletedMessage;
@@ -27,34 +34,57 @@ import org.apache.james.vault.search.Query;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MemoryDeletedMessagesVault implements DeletedMessageVault {
-    private final Table<User, MessageId, DeletedMessage> table;
+    private final Table<User, MessageId, Pair<DeletedMessage, byte[]>> table;
 
     MemoryDeletedMessagesVault() {
         table = HashBasedTable.create();
     }
 
     @Override
-    public synchronized Mono<Void> append(User user, DeletedMessage deletedMessage) {
+    public Mono<Void> append(User user, DeletedMessage deletedMessage, InputStream mimeMessage) {
         Preconditions.checkNotNull(user);
         Preconditions.checkNotNull(deletedMessage);
 
-        table.put(user, deletedMessage.getMessageId(), deletedMessage);
-        return Mono.empty();
+        synchronized (table) {
+            try {
+                table.put(user, deletedMessage.getMessageId(),
+                    Pair.of(deletedMessage, IOUtils.toByteArray(mimeMessage)));
+                return Mono.empty();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
-    public synchronized Mono<Void> delete(User user, MessageId messageId) {
+    public Mono<Void> delete(User user, MessageId messageId) {
         Preconditions.checkNotNull(user);
         Preconditions.checkNotNull(messageId);
 
-        table.remove(user, messageId);
-        return Mono.empty();
+        synchronized (table) {
+            table.remove(user, messageId);
+            return Mono.empty();
+        }
+    }
+
+    @Override
+    public synchronized Mono<InputStream> loadMimeMessage(User user, MessageId messageId) {
+        Preconditions.checkNotNull(user);
+        Preconditions.checkNotNull(messageId);
+
+
+        synchronized (table) {
+            return Mono.justOrEmpty(Optional.ofNullable(table.get(user, messageId)))
+                .map(Pair::getRight)
+                .map(ByteArrayInputStream::new);
+        }
     }
 
     @Override
@@ -67,6 +97,9 @@ public class MemoryDeletedMessagesVault implements DeletedMessageVault {
     }
 
     private Flux<DeletedMessage> listAll(User user) {
-        return Flux.fromIterable(table.row(user).values());
+        synchronized (table) {
+            return Flux.fromIterable(ImmutableList.copyOf(table.row(user).values()))
+                .map(Pair::getLeft);
+        }
     }
 }

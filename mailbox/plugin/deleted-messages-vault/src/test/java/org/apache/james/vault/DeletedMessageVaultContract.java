@@ -19,6 +19,7 @@
 
 package org.apache.james.vault;
 
+import static org.apache.james.vault.DeletedMessageFixture.CONTENT;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_2;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_GENERATOR;
@@ -29,6 +30,7 @@ import static org.apache.james.vault.search.Query.ALL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.ByteArrayInputStream;
 import java.time.Duration;
 
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -55,13 +57,19 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void appendShouldThrowOnNullMessage() {
-       assertThatThrownBy(() -> getVault().append(USER, null))
+       assertThatThrownBy(() -> getVault().append(USER, null, new ByteArrayInputStream(CONTENT)))
            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     default void appendShouldThrowOnNullUser() {
-       assertThatThrownBy(() -> getVault().append(null, DELETED_MESSAGE))
+       assertThatThrownBy(() -> getVault().append(null, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)))
+           .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    default void appendShouldThrowOnNullContent() {
+       assertThatThrownBy(() -> getVault().append(USER, DELETED_MESSAGE, null))
            .isInstanceOf(NullPointerException.class);
     }
 
@@ -78,6 +86,18 @@ public interface DeletedMessageVaultContract {
     }
 
     @Test
+    default void loadMimeMessageShouldThrowOnNullMessageId() {
+       assertThatThrownBy(() -> getVault().loadMimeMessage(null, MESSAGE_ID))
+           .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    default void loadMimeMessageShouldThrowOnNullUser() {
+       assertThatThrownBy(() -> getVault().loadMimeMessage(USER, null))
+           .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
     default void searchAllShouldReturnEmptyWhenNoItem() {
         assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
             .isEmpty();
@@ -85,7 +105,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void searchAllShouldReturnContainedItems() {
-        Mono.from(getVault().append(USER, DELETED_MESSAGE)).block();
+        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
             .containsOnly(DELETED_MESSAGE);
@@ -93,8 +113,8 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void searchAllShouldReturnAllContainedItems() {
-        Mono.from(getVault().append(USER, DELETED_MESSAGE)).block();
-        Mono.from(getVault().append(USER, DELETED_MESSAGE_2)).block();
+        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
         assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
             .containsOnly(DELETED_MESSAGE, DELETED_MESSAGE_2);
@@ -102,7 +122,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void vaultShouldBePartitionnedByUser() {
-        Mono.from(getVault().append(USER, DELETED_MESSAGE)).block();
+        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         assertThat(Flux.from(getVault().search(USER_2, ALL)).collectList().block())
             .isEmpty();
@@ -110,7 +130,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void searchAllShouldNotReturnDeletedItems() {
-        Mono.from(getVault().append(USER, DELETED_MESSAGE)).block();
+        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         Mono.from(getVault().delete(USER, MESSAGE_ID)).block();
 
@@ -119,11 +139,38 @@ public interface DeletedMessageVaultContract {
     }
 
     @Test
+    default void loadMimeMessageShouldReturnEmptyWhenNone() {
+        assertThat(Mono.from(getVault().loadMimeMessage(USER, MESSAGE_ID)).blockOptional())
+            .isEmpty();
+    }
+
+    @Test
+    default void loadMimeMessageShouldReturnStoredValue() {
+        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+        assertThat(Mono.from(getVault().loadMimeMessage(USER, MESSAGE_ID)).blockOptional())
+            .isNotEmpty()
+            .satisfies(maybeContent -> assertThat(maybeContent.get()).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+    }
+
+    @Test
+    default void loadMimeMessageShouldReturnEmptyWhenDeleted() {
+        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+        Mono.from(getVault().delete(USER, MESSAGE_ID)).block();
+
+        assertThat(Mono.from(getVault().loadMimeMessage(USER, MESSAGE_ID)).blockOptional())
+            .isEmpty();
+    }
+
+    @Test
     default void appendShouldRunSuccessfullyInAConcurrentContext() throws Exception {
         int operationCount = 10;
         int threadCount = 10;
         ConcurrentTestRunner.builder()
-            .operation((a, b) -> Mono.from(getVault().append(USER, DELETED_MESSAGE_GENERATOR.apply(Long.valueOf(a * threadCount + b)))).block())
+            .operation((a, b) -> Mono.from(getVault().append(USER,
+                DELETED_MESSAGE_GENERATOR.apply(Long.valueOf(a * threadCount + b)),
+                new ByteArrayInputStream(CONTENT))).block())
             .threadCount(threadCount)
             .operationCount(operationCount)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
@@ -137,7 +184,9 @@ public interface DeletedMessageVaultContract {
         int operationCount = 10;
         int threadCount = 10;
         Flux.range(0, operationCount * threadCount)
-            .flatMap(i -> Mono.from(getVault().append(USER, DELETED_MESSAGE_GENERATOR.apply(Long.valueOf(i)))))
+            .flatMap(i -> Mono.from(getVault().append(USER,
+                DELETED_MESSAGE_GENERATOR.apply(Long.valueOf(i)),
+                new ByteArrayInputStream(CONTENT))))
             .blockLast();
 
         ConcurrentTestRunner.builder()

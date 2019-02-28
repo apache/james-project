@@ -19,13 +19,17 @@
 
 package org.apache.james.vault;
 
+import java.io.InputStream;
+
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.vault.search.Query;
 import org.reactivestreams.Publisher;
 
 public interface DeletedMessageVault {
-    Publisher<Void> append(User user, DeletedMessage deletedMessage);
+    Publisher<Void> append(User user, DeletedMessage deletedMessage, InputStream mimeMessage);
+
+    Publisher<InputStream> loadMimeMessage(User user, MessageId messageId);
 
     Publisher<Void> delete(User user, MessageId messageId);
 

@@ -19,7 +19,6 @@
 
 package org.apache.james.vault;
 
-import static org.apache.james.vault.DeletedMessageFixture.CONTENT;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_WITH_SUBJECT;
 import static org.apache.james.vault.DeletedMessageFixture.DELETION_DATE;
@@ -33,8 +32,6 @@ import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT2;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.ByteArrayInputStream;
 
 import org.apache.james.core.MaybeSender;
 import org.assertj.core.api.SoftAssertions;
@@ -58,7 +55,6 @@ class DeletedMessageTest {
                 soft.assertThat(DELETED_MESSAGE.getOwner()).isEqualTo(USER);
                 soft.assertThat(DELETED_MESSAGE.getDeliveryDate()).isEqualTo(DELIVERY_DATE);
                 soft.assertThat(DELETED_MESSAGE.getDeletionDate()).isEqualTo(DELETION_DATE);
-                soft.assertThat(DELETED_MESSAGE.getContent().get()).hasSameContentAs(new ByteArrayInputStream(CONTENT));
                 soft.assertThat(DELETED_MESSAGE.getSender()).isEqualTo(MaybeSender.of(SENDER));
                 soft.assertThat(DELETED_MESSAGE.getRecipients()).containsOnly(RECIPIENT1, RECIPIENT2);
                 soft.assertThat(DELETED_MESSAGE.hasAttachment()).isFalse();
