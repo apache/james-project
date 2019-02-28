@@ -61,11 +61,14 @@ public class MemoryMailRepositoryStoreTest {
             .build();
         fileSystem = new FileSystemImpl(configuration.directories());
         urlStore = new MemoryMailRepositoryUrlStore();
+
+        MailRepositoryStoreConfiguration storeConfiguration = MailRepositoryStoreConfiguration.parse(
+            new FileConfigurationProvider(fileSystem, configuration).getConfiguration("mailrepositorystore"));
+
         repositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(
                 new MemoryMailRepositoryProvider(),
-                new MemoryMailRepositoryProvider()));
-        repositoryStore.configure(new FileConfigurationProvider(fileSystem, configuration)
-            .getConfiguration("mailrepositorystore"));
+                new MemoryMailRepositoryProvider()),
+            storeConfiguration);
         repositoryStore.init();
     }
 
@@ -94,9 +97,11 @@ public class MemoryMailRepositoryStoreTest {
 
     @Test
     public void configureShouldThrowWhenNonValidClassesAreProvided() throws Exception {
+        MailRepositoryStoreConfiguration storeConfiguration = MailRepositoryStoreConfiguration.parse(
+            new FileConfigurationProvider(fileSystem, configuration).getConfiguration("fakemailrepositorystore"));
+
         repositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(
-            new MemoryMailRepositoryProvider()));
-        repositoryStore.configure(new FileConfigurationProvider(fileSystem, configuration).getConfiguration("fakemailrepositorystore"));
+            new MemoryMailRepositoryProvider()), storeConfiguration);
 
         assertThatThrownBy(() -> repositoryStore.init())
             .isInstanceOf(ConfigurationException.class);
@@ -104,9 +109,10 @@ public class MemoryMailRepositoryStoreTest {
 
     @Test
     public void configureShouldNotThrowOnEmptyConfiguration() throws Exception {
+        MailRepositoryStoreConfiguration configuration = MailRepositoryStoreConfiguration.parse(new HierarchicalConfiguration());
+
         repositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(
-            new MemoryMailRepositoryProvider()));
-        repositoryStore.configure(new HierarchicalConfiguration());
+            new MemoryMailRepositoryProvider()), configuration);
 
         repositoryStore.init();
     }

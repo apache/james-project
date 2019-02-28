@@ -179,12 +179,13 @@ public class ReprocessingServiceTest {
 
     private MemoryMailRepositoryStore createMemoryMailRepositoryStore() throws Exception {
         MemoryMailRepositoryUrlStore urlStore = new MemoryMailRepositoryUrlStore();
-        MemoryMailRepositoryStore mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(new MemoryMailRepositoryProvider()));
-        mailRepositoryStore.configure(new MailRepositoryStoreConfiguration(
+        MailRepositoryStoreConfiguration configuration = new MailRepositoryStoreConfiguration(
             ImmutableList.of(new MailRepositoryStoreConfiguration.Item(
                 ImmutableList.of(new Protocol("memory")),
                 MemoryMailRepository.class.getName(),
-                new HierarchicalConfiguration()))));
+                new HierarchicalConfiguration())));
+
+        MemoryMailRepositoryStore mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(new MemoryMailRepositoryProvider()), configuration);
         mailRepositoryStore.init();
         return mailRepositoryStore;
     }

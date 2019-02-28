@@ -34,6 +34,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryProvider;
@@ -47,7 +48,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 
-public class MemoryMailRepositoryStore implements MailRepositoryStore, Configurable {
+public class MemoryMailRepositoryStore implements MailRepositoryStore, Startable {
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMailRepositoryStore.class);
 
     private final MailRepositoryUrlStore urlStore;
@@ -55,24 +56,16 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Configura
     private final ConcurrentMap<MailRepositoryUrl, MailRepository> destinationToRepositoryAssociations;
     private final Map<Protocol, MailRepositoryProvider> protocolToRepositoryProvider;
     private final Map<Protocol, HierarchicalConfiguration> perProtocolMailRepositoryDefaultConfiguration;
-    private MailRepositoryStoreConfiguration configuration;
+    private final MailRepositoryStoreConfiguration configuration;
 
     @Inject
-    public MemoryMailRepositoryStore(MailRepositoryUrlStore urlStore, Set<MailRepositoryProvider> mailRepositories) {
+    public MemoryMailRepositoryStore(MailRepositoryUrlStore urlStore, Set<MailRepositoryProvider> mailRepositories, MailRepositoryStoreConfiguration configuration) {
         this.urlStore = urlStore;
         this.mailRepositories = mailRepositories;
+        this.configuration = configuration;
         this.destinationToRepositoryAssociations = new ConcurrentHashMap<>();
         this.protocolToRepositoryProvider = new HashMap<>();
         this.perProtocolMailRepositoryDefaultConfiguration = new HashMap<>();
-    }
-
-    @Override
-    public void configure(HierarchicalConfiguration configuration) {
-        configure(MailRepositoryStoreConfiguration.parse(configuration));
-    }
-
-    public void configure(MailRepositoryStoreConfiguration configuration) {
-        this.configuration = configuration;
     }
 
     public void init() throws Exception {

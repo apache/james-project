@@ -21,10 +21,13 @@ package org.apache.james.modules.server;
 
 import java.util.List;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailrepository.api.MailRepositoryProvider;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.file.FileMailRepositoryProvider;
+import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
@@ -34,6 +37,7 @@ import org.apache.james.utils.MailRepositoryProbeImpl;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
@@ -51,23 +55,25 @@ public class MailStoreRepositoryModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MailRepositoryProbeImpl.class);
     }
 
+    @Provides
+    @Singleton
+    MailRepositoryStoreConfiguration provideConfiguration(ConfigurationProvider configurationProvider) throws ConfigurationException {
+        HierarchicalConfiguration configuration = configurationProvider.getConfiguration("mailrepositorystore");
+        return MailRepositoryStoreConfiguration.parse(configuration);
+    }
+
     @Singleton
     public static class MailRepositoryStoreModuleConfigurationPerformer implements ConfigurationPerformer {
-
-        private final ConfigurationProvider configurationProvider;
         private final MemoryMailRepositoryStore javaMailRepositoryStore;
 
         @Inject
-        public MailRepositoryStoreModuleConfigurationPerformer(ConfigurationProvider configurationProvider,
-                                                               MemoryMailRepositoryStore javaMailRepositoryStore) {
-            this.configurationProvider = configurationProvider;
+        public MailRepositoryStoreModuleConfigurationPerformer(MemoryMailRepositoryStore javaMailRepositoryStore) {
             this.javaMailRepositoryStore = javaMailRepositoryStore;
         }
 
         @Override
         public void initModule() {
             try {
-                javaMailRepositoryStore.configure(configurationProvider.getConfiguration("mailrepositorystore"));
                 javaMailRepositoryStore.init();
             } catch (Exception e) {
                 throw new RuntimeException(e);
