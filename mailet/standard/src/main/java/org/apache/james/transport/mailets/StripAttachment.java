@@ -91,6 +91,7 @@ import com.google.common.collect.ImmutableMap;
  */
 public class StripAttachment extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(StripAttachment.class);
+    @SuppressWarnings("unchecked")
     private static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
 
     @SuppressWarnings("unchecked")

@@ -68,6 +68,7 @@ import net.fortuna.ical4j.model.Calendar;
  */
 public class ICalendarParser extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ICalendarParser.class);
+    @SuppressWarnings("unchecked")
     private static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
 
     public static final String SOURCE_ATTRIBUTE_PARAMETER_NAME = "sourceAttribute";

@@ -283,13 +283,13 @@ public class MailImplTest extends ContractMailTest {
     }
 
     @Test
-    public void MailImplShouldNotAllowSettingNullName() {
+    public void mailImplShouldNotAllowSettingNullName() {
         assertThatThrownBy(() -> newMail().setName(null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void MailImplShouldNotAllowSettingEmptyName() {
+    public void mailImplShouldNotAllowSettingEmptyName() {
         assertThatThrownBy(() -> newMail().setName(""))
             .isInstanceOf(IllegalArgumentException.class);
     }

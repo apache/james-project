@@ -128,6 +128,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         when(preDeletionHook2.notifyDelete(any(PreDeletionHook.DeleteOperation.class)))
             .thenReturn(Mono.empty());
     }
+
     @Test
     public void deleteShouldCallEventDispatcher() throws Exception {
         givenUnlimitedQuota();

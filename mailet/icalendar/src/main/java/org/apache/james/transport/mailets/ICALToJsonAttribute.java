@@ -87,7 +87,9 @@ import net.fortuna.ical4j.model.Calendar;
  */
 public class ICALToJsonAttribute extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ICALToJsonAttribute.class);
+    @SuppressWarnings("unchecked")
     private static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
+    @SuppressWarnings("unchecked")
     private static final Class<Map<String, Calendar>> MAP_STRING_CALENDAR_CLASS = (Class<Map<String, Calendar>>) (Object) Map.class;
 
     public static final String SOURCE_ATTRIBUTE_NAME = "source";

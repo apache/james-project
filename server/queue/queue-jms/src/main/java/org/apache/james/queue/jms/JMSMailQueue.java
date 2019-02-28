@@ -403,7 +403,6 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         Optional.ofNullable(SerializationUtil.<PerRecipientHeaders>deserialize(message.getStringProperty(JAMES_MAIL_PER_RECIPIENT_HEADERS)))
                 .ifPresent(builder::addAllHeadersForRecipients);
 
-        List<MailAddress> rcpts = new ArrayList<>();
         String recipients = message.getStringProperty(JAMES_MAIL_RECIPIENTS);
         StringTokenizer recipientTokenizer = new StringTokenizer(recipients, JAMES_MAIL_SEPARATOR);
         while (recipientTokenizer.hasMoreTokens()) {

@@ -36,7 +36,6 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
-import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;

@@ -1340,7 +1340,6 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         @Nested
         class PreDeletion {
 
-            private final QuotaRoot quotaRoot = QuotaRoot.quotaRoot("#private&USER_1", Optional.empty());
             private MailboxPath inbox;
             private MailboxId inboxId;
             private MailboxId anotherMailboxId;

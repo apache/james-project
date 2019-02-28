@@ -65,6 +65,7 @@ import com.github.fge.lambdas.Throwing;
 @Experimental
 public class RecoverAttachment extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecoverAttachment.class);
+    @SuppressWarnings("unchecked")
     private static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
 
     private static final String ATTRIBUTE_PARAMETER_NAME = "attribute";
