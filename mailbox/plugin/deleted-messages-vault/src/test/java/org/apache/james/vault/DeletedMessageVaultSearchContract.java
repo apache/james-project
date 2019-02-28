@@ -39,6 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.core.MailAddress;
@@ -48,6 +49,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.vault.search.CriterionFactory;
 import org.apache.james.vault.search.Query;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Flux;
@@ -57,7 +59,7 @@ public interface DeletedMessageVaultSearchContract {
     DeletedMessageVault getVault();
 
     interface AllContracts extends SubjectContract, DeletionDateContract, DeliveryDateContract, RecipientsContract, SenderContract,
-        HasAttachmentsContract, OriginMailboxesContract, PerUserContract, MultipleSearchCriterionsContract {
+        HasAttachmentsContract, OriginMailboxesContract, PerUserContract, MultipleSearchCriterionsContract, StringByLocaleContract {
     }
 
     interface DeliveryDateContract extends DeletedMessageVaultSearchContract {
@@ -518,6 +520,22 @@ public interface DeletedMessageVaultSearchContract {
 
             assertThat(search(USER, Query.ALL))
                 .containsOnly(message1, message2);
+        }
+    }
+
+    interface StringByLocaleContract extends DeletedMessageVaultSearchContract {
+
+        @Disabled("MAILBOX-384 DeletedMessageVault search will return a wrong result in case of using string " +
+            "equalsIgnoreCase with a special locale")
+        @Test
+        default void shouldReturnsMessageWhenPassingAStringInDifferentLocaleToContainsIgnoreCase() {
+            Locale TURKISH_LOCALE = Locale.forLanguageTag("tr");
+            String subjectInTurkishLanguage = "TITLE";
+            DeletedMessage message1 = storeMessageWithSubject(subjectInTurkishLanguage);
+
+            String subjectLowercase = subjectInTurkishLanguage.toLowerCase(TURKISH_LOCALE);
+            assertThat(search(Query.of(CriterionFactory.subject().containsIgnoreCase(subjectLowercase))))
+                .contains(message1);
         }
     }
 
