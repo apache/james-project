@@ -67,13 +67,8 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Configura
     }
 
     @Override
-    public Stream<MailRepositoryUrl> getUrls() {
-        return urlStore.listDistinct();
-    }
-
-    @Override
     public void configure(HierarchicalConfiguration configuration) {
-        this.configuration = MailRepositoryStoreConfiguration.parse(configuration);
+        configure(MailRepositoryStoreConfiguration.parse(configuration));
     }
 
     public void configure(MailRepositoryStoreConfiguration configuration) {
@@ -86,39 +81,6 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Configura
         for (MailRepositoryStoreConfiguration.Item item : configuration.getItems()) {
             initEntry(item);
         }
-    }
-
-
-    @Override
-    public Optional<MailRepository> get(MailRepositoryUrl url) {
-        if (urlStore.contains(url)) {
-            return Optional.of(select(url));
-        }
-        return Optional.empty();
-    }
-
-    @Override
-    public Stream<MailRepository> getByPath(MailRepositoryPath path) {
-        return urlStore.listDistinct()
-            .filter(url -> url.getPath().equals(path))
-            .map(this::select);
-    }
-
-    @Override
-    public MailRepository select(MailRepositoryUrl mailRepositoryUrl) {
-        return Optional.ofNullable(destinationToRepositoryAssociations.get(mailRepositoryUrl))
-            .orElseGet(Throwing.supplier(
-                () -> createNewMailRepository(mailRepositoryUrl))
-                .sneakyThrow());
-    }
-
-    private MailRepository createNewMailRepository(MailRepositoryUrl mailRepositoryUrl) throws MailRepositoryStoreException {
-        MailRepository newMailRepository = retrieveMailRepository(mailRepositoryUrl);
-        urlStore.add(mailRepositoryUrl);
-        newMailRepository = initializeNewRepository(newMailRepository, createRepositoryCombinedConfig(mailRepositoryUrl));
-        MailRepository previousRepository = destinationToRepositoryAssociations.putIfAbsent(mailRepositoryUrl, newMailRepository);
-        return Optional.ofNullable(previousRepository)
-            .orElse(newMailRepository);
     }
 
     private void initEntry(MailRepositoryStoreConfiguration.Item item) throws ConfigurationException {
@@ -135,19 +97,52 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Configura
         }
     }
 
+    @Override
+    public Stream<MailRepositoryUrl> getUrls() {
+        return urlStore.listDistinct();
+    }
+
+    @Override
+    public Optional<MailRepository> get(MailRepositoryUrl url) {
+        return Optional.of(url)
+            .filter(urlStore::contains)
+            .map(this::select);
+    }
+
+    @Override
+    public Stream<MailRepository> getByPath(MailRepositoryPath path) {
+        return urlStore.listDistinct()
+            .filter(url -> url.getPath().equals(path))
+            .map(this::select);
+    }
+
+    @Override
+    public MailRepository select(MailRepositoryUrl mailRepositoryUrl) {
+        return destinationToRepositoryAssociations.computeIfAbsent(mailRepositoryUrl,
+            Throwing.function(this::createNewMailRepository).sneakyThrow());
+    }
+
+    private MailRepository createNewMailRepository(MailRepositoryUrl mailRepositoryUrl) throws MailRepositoryStoreException {
+        MailRepository newMailRepository = retrieveMailRepository(mailRepositoryUrl);
+        initializeNewRepository(newMailRepository, createRepositoryCombinedConfig(mailRepositoryUrl));
+        urlStore.add(mailRepositoryUrl);
+
+        return newMailRepository;
+    }
+
     private CombinedConfiguration createRepositoryCombinedConfig(MailRepositoryUrl mailRepositoryUrl) {
         CombinedConfiguration config = new CombinedConfiguration();
-        HierarchicalConfiguration defaultProtocolConfig = perProtocolMailRepositoryDefaultConfiguration.get(mailRepositoryUrl.getProtocol());
-        if (defaultProtocolConfig != null) {
-            config.addConfiguration(defaultProtocolConfig);
-        }
+
+        Optional.ofNullable(perProtocolMailRepositoryDefaultConfiguration.get(mailRepositoryUrl.getProtocol()))
+            .ifPresent(config::addConfiguration);
+
         DefaultConfigurationBuilder builder = new DefaultConfigurationBuilder();
         builder.addProperty("[@destinationURL]", mailRepositoryUrl.asString());
         config.addConfiguration(builder);
         return config;
     }
 
-    private MailRepository initializeNewRepository(MailRepository mailRepository, CombinedConfiguration config) throws MailRepositoryStoreException {
+    private void initializeNewRepository(MailRepository mailRepository, CombinedConfiguration config) throws MailRepositoryStoreException {
         try {
             if (mailRepository instanceof Configurable) {
                 ((Configurable) mailRepository).configure(config);
@@ -155,7 +150,6 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Configura
             if (mailRepository instanceof Initializable) {
                 ((Initializable) mailRepository).init();
             }
-            return mailRepository;
         } catch (Exception e) {
             throw new MailRepositoryStoreException("Cannot init mail repository", e);
         }
@@ -167,5 +161,4 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Configura
             .orElseThrow(() -> new MailRepositoryStoreException("No Mail Repository associated with " + protocol.getValue()))
             .provide(mailRepositoryUrl);
     }
-
 }
