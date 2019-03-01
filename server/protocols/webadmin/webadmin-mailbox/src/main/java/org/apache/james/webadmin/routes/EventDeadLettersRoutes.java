@@ -29,6 +29,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.task.Task;
@@ -64,12 +65,15 @@ public class EventDeadLettersRoutes implements Routes {
     private static final String INTERNAL_SERVER_ERROR = "Internal server error - Something went bad on the server side.";
 
     private final EventDeadLettersService eventDeadLettersService;
+    private final EventSerializer eventSerializer;
     private final TaskManager taskManager;
     private final JsonTransformer jsonTransformer;
 
     @Inject
-    EventDeadLettersRoutes(EventDeadLettersService eventDeadLettersService, TaskManager taskManager, JsonTransformer jsonTransformer) {
+    EventDeadLettersRoutes(EventDeadLettersService eventDeadLettersService, EventSerializer eventSerializer,
+                           TaskManager taskManager, JsonTransformer jsonTransformer) {
         this.eventDeadLettersService = eventDeadLettersService;
+        this.eventSerializer = eventSerializer;
         this.taskManager = taskManager;
         this.jsonTransformer = jsonTransformer;
     }
@@ -218,7 +222,9 @@ public class EventDeadLettersRoutes implements Routes {
         Group group = parseGroup(request);
         Event.EventId eventId = parseEventId(request);
 
-        return eventDeadLettersService.getSerializedEvent(group, eventId);
+        return eventDeadLettersService.getEvent(group, eventId)
+            .map(eventSerializer::toJson)
+            .block();
     }
 
     @DELETE

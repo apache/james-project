@@ -25,7 +25,6 @@ import java.util.function.Supplier;
 
 import javax.inject.Inject;
 
-import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.EventDeadLetters;
@@ -41,13 +40,11 @@ import reactor.util.function.Tuple2;
 public class EventDeadLettersService {
     private final EventDeadLetters deadLetters;
     private final EventBus eventBus;
-    private final EventSerializer eventSerializer;
 
     @Inject
-    public EventDeadLettersService(EventDeadLetters deadLetters, EventBus eventBus, EventSerializer eventSerializer) {
+    public EventDeadLettersService(EventDeadLetters deadLetters, EventBus eventBus) {
         this.deadLetters = deadLetters;
         this.eventBus = eventBus;
-        this.eventSerializer = eventSerializer;
     }
 
     public List<String> listGroupsAsStrings() {
@@ -78,13 +75,7 @@ public class EventDeadLettersService {
             .flatMap(eventId -> getEvent(group, eventId));
     }
 
-    public String getSerializedEvent(Group group, Event.EventId eventId) {
-        return getEvent(group, eventId)
-            .map(eventSerializer::toJson)
-            .block();
-    }
-
-    private Mono<Event> getEvent(Group group, Event.EventId eventId) {
+    public Mono<Event> getEvent(Group group, Event.EventId eventId) {
         return deadLetters.failedEvent(group, eventId);
     }
 

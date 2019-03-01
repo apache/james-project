@@ -111,12 +111,12 @@ class EventDeadLettersRoutesTest {
         JsonTransformer jsonTransformer = new JsonTransformer();
         EventSerializer eventSerializer = new EventSerializer(new InMemoryId.Factory(), new InMemoryMessageId.Factory());
         eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()), RetryBackoffConfiguration.DEFAULT, deadLetters);
-        EventDeadLettersService service = new EventDeadLettersService(deadLetters, eventBus, eventSerializer);
+        EventDeadLettersService service = new EventDeadLettersService(deadLetters, eventBus);
 
         taskManager = new MemoryTaskManager();
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
-            new EventDeadLettersRoutes(service, taskManager, jsonTransformer),
+            new EventDeadLettersRoutes(service, eventSerializer, taskManager, jsonTransformer),
             new TasksRoutes(taskManager, jsonTransformer));
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
