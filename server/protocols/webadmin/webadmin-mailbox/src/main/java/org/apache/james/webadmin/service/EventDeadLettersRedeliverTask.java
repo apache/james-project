@@ -23,8 +23,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
-import javax.inject.Inject;
-
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.EventDeadLetters;
@@ -66,7 +64,6 @@ public class EventDeadLettersRedeliverTask implements Task {
     private final AtomicLong successfulRedeliveriesCount;
     private final AtomicLong failedRedeliveriesCount;
 
-    @Inject
     EventDeadLettersRedeliverTask(EventBus eventBus, EventDeadLetters deadLetters, Supplier<Flux<Tuple2<Group, Event>>> groupsWithEvents) {
         this.eventBus = eventBus;
         this.deadLetters = deadLetters;

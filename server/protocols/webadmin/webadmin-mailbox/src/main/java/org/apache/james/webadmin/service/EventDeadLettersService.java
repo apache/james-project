@@ -97,23 +97,23 @@ public class EventDeadLettersService {
             .flatMap(event -> Flux.zip(Mono.just(group), Mono.just(event)));
     }
 
-    public Task createActionOnEventsTask() {
+    public Task redeliverAllEvents() {
         Supplier<Flux<Tuple2<Group, Event>>> groupsWithEvents = () -> listGroups().flatMap(this::getGroupWithEvents);
 
-        return redeliverEvents(groupsWithEvents);
+        return createRedeliverEventsTask(groupsWithEvents);
     }
 
-    public Task createActionOnEventsTask(Group group) {
-        return redeliverEvents(() -> getGroupWithEvents(group));
+    public Task redeliverGroupEvents(Group group) {
+        return createRedeliverEventsTask(() -> getGroupWithEvents(group));
     }
 
-    public Task createActionOnEventsTask(Group group, Event.EventId eventId) {
+    public Task redeliverSingleEvent(Group group, Event.EventId eventId) {
         Supplier<Flux<Tuple2<Group, Event>>> groupWithEvent = () -> Flux.just(group).zipWith(getEvent(group, eventId));
 
-        return redeliverEvents(groupWithEvent);
+        return createRedeliverEventsTask(groupWithEvent);
     }
 
-    private Task redeliverEvents(Supplier<Flux<Tuple2<Group, Event>>> groupsWithEvents) {
+    private Task createRedeliverEventsTask(Supplier<Flux<Tuple2<Group, Event>>> groupsWithEvents) {
         return new EventDeadLettersRedeliverTask(eventBus, deadLetters, groupsWithEvents);
     }
 }

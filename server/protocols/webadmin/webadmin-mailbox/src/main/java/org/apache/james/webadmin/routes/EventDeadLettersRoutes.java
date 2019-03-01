@@ -92,7 +92,7 @@ public class EventDeadLettersRoutes implements Routes {
 
     @POST
     @Path("")
-    @ApiOperation(value = "Performing operations on all events")
+    @ApiOperation(value = "Performing action on all events")
     @ApiImplicitParams({
         @ApiImplicitParam(
             required = true,
@@ -100,7 +100,7 @@ public class EventDeadLettersRoutes implements Routes {
             name = "action",
             paramType = "query",
             example = "?action=reDeliver",
-            value = "Specify the action to perform on all events. For now only 'reDeliver' is supported as an action, "
+            value = "Specify the action to perform on all events. 'reDeliver' is supported as an action, "
                 + "and its purpose is to attempt a redelivery of all events present in dead letter."),
     })
     @ApiResponses(value = {
@@ -114,7 +114,7 @@ public class EventDeadLettersRoutes implements Routes {
     public TaskIdDto performActionOnAllEvents(Request request, Response response) {
         assertValidActionParameter(request);
 
-        Task task = eventDeadLettersService.createActionOnEventsTask();
+        Task task = eventDeadLettersService.redeliverAllEvents();
         TaskId taskId = taskManager.submit(task);
         return TaskIdDto.respond(response, taskId);
     }
@@ -154,7 +154,7 @@ public class EventDeadLettersRoutes implements Routes {
 
     @POST
     @Path("/groups/" + GROUP_PARAM)
-    @ApiOperation(value = "Performing operations on events of a particular group")
+    @ApiOperation(value = "Performing action on events of a particular group")
     @ApiImplicitParams({
         @ApiImplicitParam(
             required = true,
@@ -169,7 +169,7 @@ public class EventDeadLettersRoutes implements Routes {
             name = "action",
             paramType = "query",
             example = "?action=reDeliver",
-            value = "Specify the action to perform on all events of a particular group. For now only 'reDeliver' is supported as an action, "
+            value = "Specify the action to perform on all events of a particular group. 'reDeliver' is supported as an action, "
                 + "and its purpose is to attempt a redelivery of all events present in dead letter for the specified group."),
     })
     @ApiResponses(value = {
@@ -184,7 +184,7 @@ public class EventDeadLettersRoutes implements Routes {
         Group group = parseGroup(request);
         assertValidActionParameter(request);
 
-        Task task = eventDeadLettersService.createActionOnEventsTask(group);
+        Task task = eventDeadLettersService.redeliverGroupEvents(group);
         TaskId taskId = taskManager.submit(task);
         return TaskIdDto.respond(response, taskId);
     }
@@ -256,7 +256,7 @@ public class EventDeadLettersRoutes implements Routes {
 
     @POST
     @Path("/groups/" + GROUP_PARAM + "/" + EVENT_ID_PARAM)
-    @ApiOperation(value = "Performing operations on an event")
+    @ApiOperation(value = "Performing action on an event")
     @ApiImplicitParams({
         @ApiImplicitParam(
             required = true,
@@ -278,7 +278,7 @@ public class EventDeadLettersRoutes implements Routes {
             name = "action",
             paramType = "query",
             example = "?action=reDeliver",
-            value = "Specify the action to perform on an unique event. For now only 'reDeliver' is supported as an action, "
+            value = "Specify the action to perform on an unique event. 'reDeliver' is supported as an action, "
                 + "and its purpose is to attempt a redelivery of the specified event."),
     })
     @ApiResponses(value = {
@@ -295,7 +295,7 @@ public class EventDeadLettersRoutes implements Routes {
         Event.EventId eventId = parseEventId(request);
         assertValidActionParameter(request);
 
-        Task task = eventDeadLettersService.createActionOnEventsTask(group, eventId);
+        Task task = eventDeadLettersService.redeliverSingleEvent(group, eventId);
         TaskId taskId = taskManager.submit(task);
         return TaskIdDto.respond(response, taskId);
     }
