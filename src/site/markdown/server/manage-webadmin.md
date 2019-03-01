@@ -2428,6 +2428,9 @@ failing, then the event will be stored in the "Event Dead Letter". This API allo
  - [Listing failed events](#Listing_failed_events)
  - [Getting event details](#Getting_event_details)
  - [Deleting an event](#Deleting_an_event)
+ - [Redeliver all events](#Redeliver_all_events)
+ - [Redeliver group events](#Redeliver_group_events)
+ - [Redeliver a single event](#Redeliver_a_single_event)
  - [Rescheduling group execution](#Rescheduling_group_execution)
 
 ### Listing groups
@@ -2453,7 +2456,7 @@ Response codes:
 This endpoint allows listing failed events for a given group:
 
 ```
-curl -XGET http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA/events
+curl -XGET http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA
 ```
 
 Will return a list of event ids:
@@ -2470,7 +2473,7 @@ Response codes:
 ### Getting event details
 
 ```
-curl -XGET http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA/events/6e0dd59d-660e-4d9b-b22f-0354479f47b4
+curl -XGET http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA/6e0dd59d-660e-4d9b-b22f-0354479f47b4
 ```
 
 Will return the full JSON associated with this event.
@@ -2483,7 +2486,7 @@ Response codes:
 ### Deleting an event
 
 ```
-curl -XDELETE http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA/events/6e0dd59d-660e-4d9b-b22f-0354479f47b4
+curl -XDELETE http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA/6e0dd59d-660e-4d9b-b22f-0354479f47b4
 ```
 
 Will delete this event.
@@ -2492,6 +2495,49 @@ Response codes:
 
  - 204: Success
  - 400: Invalid group name or eventId
+
+### Redeliver all events
+
+```
+curl -XPOST http://ip:port/events/deadLetter
+```
+
+Will create a task that will attempt to redeliver all events stored in "Event Dead Letter".
+If successful, redelivered events will then be removed from "Dead Letter".
+
+Response codes:
+
+ - 201: the taskId of the created task
+ - 400: Invalid action argument
+
+### Redeliver group events
+
+```
+curl -XPOST http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA
+```
+
+Will create a task that will attempt to redeliver all events of a particular group stored in "Event Dead Letter".
+If successful, redelivered events will then be removed from "Dead Letter".
+
+Response codes:
+
+ - 201: the taskId of the created task
+ - 400: Invalid group name or action argument
+
+### Redeliver a single event
+
+```
+curl -XPOST http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA/6e0dd59d-660e-4d9b-b22f-0354479f47b4
+```
+
+Will create a task that will attempt to redeliver a single event of a particular group stored in "Event Dead Letter".
+If successful, redelivered event will then be removed from "Dead Letter".
+
+Response codes:
+
+ - 201: the taskId of the created task
+ - 400: Invalid group name, event id or action argument
+ - 404: No event with this eventId
 
 ### Rescheduling group execution
 
