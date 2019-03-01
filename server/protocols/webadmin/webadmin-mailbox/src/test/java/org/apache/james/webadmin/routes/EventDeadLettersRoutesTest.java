@@ -483,7 +483,7 @@ class EventDeadLettersRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("'invalid-action' is not a valid action query parameter"));
+                .body("details", is("invalid-action is not a supported action"));
         }
 
         @Test
@@ -622,7 +622,7 @@ class EventDeadLettersRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("'invalid-action' is not a valid action query parameter"));
+                .body("details", is("invalid-action is not a supported action"));
         }
 
         @Test
@@ -754,7 +754,7 @@ class EventDeadLettersRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("'invalid-action' is not a valid action query parameter"));
+                .body("details", is("invalid-action is not a supported action"));
         }
 
         @Test

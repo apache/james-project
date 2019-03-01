@@ -19,18 +19,19 @@
 
 package org.apache.james.webadmin.dto;
 
-import java.util.Arrays;
+import java.util.Optional;
 
 import com.google.common.base.Preconditions;
 
 public enum ActionEvents {
-    reDeliver;
+    REDELIVER;
 
-    public static ActionEvents parse(String action) {
+    public static Optional<ActionEvents> find(String action) {
         Preconditions.checkArgument(action != null, "'action' url parameter is mandatory");
-        return Arrays.stream(ActionEvents.values())
-            .filter(element -> element.toString().equalsIgnoreCase(action))
-            .findAny()
-            .orElseThrow(() -> new IllegalArgumentException("'" + action + "' is not a valid action query parameter"));
+
+        if (action.equalsIgnoreCase(ActionEvents.REDELIVER.toString())) {
+            return Optional.of(ActionEvents.REDELIVER);
+        }
+        return Optional.empty();
     }
 }

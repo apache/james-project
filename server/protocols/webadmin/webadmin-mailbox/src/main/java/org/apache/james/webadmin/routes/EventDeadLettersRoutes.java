@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.routes;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -300,9 +301,10 @@ public class EventDeadLettersRoutes implements Routes {
     }
 
     private void assertValidActionParameter(Request request) {
-        ActionEvents action = ActionEvents.parse(request.queryParams("action"));
+        String action = request.queryParams("action");
+        Optional<ActionEvents> actionEvent = ActionEvents.find(action);
 
-        if (action != ActionEvents.reDeliver) {
+        if (!actionEvent.isPresent()) {
             throw new IllegalArgumentException(action + " is not a supported action");
         }
     }

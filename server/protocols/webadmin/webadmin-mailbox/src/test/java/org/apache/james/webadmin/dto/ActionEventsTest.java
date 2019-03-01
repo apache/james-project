@@ -22,26 +22,28 @@ package org.apache.james.webadmin.dto;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 
 class ActionEventsTest {
-    private static final String ACTION = "reDeliver";
+    private static final String ACTION = "redeliver";
 
     @Test
     void parseShouldSucceedWithCorrectActionEventsArgument() {
-        assertThat(ActionEvents.parse(ACTION)).isEqualTo(ActionEvents.reDeliver);
+        assertThat(ActionEvents.find(ACTION))
+            .isEqualTo(Optional.of(ActionEvents.REDELIVER));
     }
 
     @Test
     void parseShouldFailWithIncorrectActionEventsArgument() {
-        assertThatThrownBy(() -> ActionEvents.parse("incorrect-action"))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("'incorrect-action' is not a valid action query parameter");
+        assertThat(ActionEvents.find("incorrect-action"))
+            .isEqualTo(Optional.empty());
     }
 
     @Test
     void parseShouldFailWithMissingActionEventsArgument() {
-        assertThatThrownBy(() -> ActionEvents.parse(null))
+        assertThatThrownBy(() -> ActionEvents.find(null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("'action' url parameter is mandatory");
     }
