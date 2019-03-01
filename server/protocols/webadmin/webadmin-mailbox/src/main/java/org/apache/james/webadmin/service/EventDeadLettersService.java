@@ -26,7 +26,6 @@ import java.util.function.Supplier;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.task.Task;
@@ -38,13 +37,13 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
 public class EventDeadLettersService {
+    private final EventDeadLettersRedeliverService redeliverService;
     private final EventDeadLetters deadLetters;
-    private final EventBus eventBus;
 
     @Inject
-    public EventDeadLettersService(EventDeadLetters deadLetters, EventBus eventBus) {
+    public EventDeadLettersService(EventDeadLettersRedeliverService redeliverService, EventDeadLetters deadLetters) {
+        this.redeliverService = redeliverService;
         this.deadLetters = deadLetters;
-        this.eventBus = eventBus;
     }
 
     public List<String> listGroupsAsStrings() {
@@ -105,6 +104,6 @@ public class EventDeadLettersService {
     }
 
     private Task createRedeliverEventsTask(Supplier<Flux<Tuple2<Group, Event>>> groupsWithEvents) {
-        return new EventDeadLettersRedeliverTask(eventBus, deadLetters, groupsWithEvents);
+        return new EventDeadLettersRedeliverTask(redeliverService, groupsWithEvents);
     }
 }

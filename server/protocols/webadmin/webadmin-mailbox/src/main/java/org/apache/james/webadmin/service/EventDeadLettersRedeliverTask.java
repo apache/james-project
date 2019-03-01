@@ -19,13 +19,13 @@
 
 package org.apache.james.webadmin.service;
 
+import static org.apache.james.webadmin.service.EventDeadLettersRedeliverService.RedeliverResult;
+
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.EventBus;
-import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
@@ -33,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
 public class EventDeadLettersRedeliverTask implements Task {
@@ -58,15 +57,13 @@ public class EventDeadLettersRedeliverTask implements Task {
         }
     }
 
-    private final EventBus eventBus;
-    private final EventDeadLetters deadLetters;
+    private final EventDeadLettersRedeliverService service;
     private final Supplier<Flux<Tuple2<Group, Event>>> groupsWithEvents;
     private final AtomicLong successfulRedeliveriesCount;
     private final AtomicLong failedRedeliveriesCount;
 
-    EventDeadLettersRedeliverTask(EventBus eventBus, EventDeadLetters deadLetters, Supplier<Flux<Tuple2<Group, Event>>> groupsWithEvents) {
-        this.eventBus = eventBus;
-        this.deadLetters = deadLetters;
+    EventDeadLettersRedeliverTask(EventDeadLettersRedeliverService service, Supplier<Flux<Tuple2<Group, Event>>> groupsWithEvents) {
+        this.service = service;
         this.groupsWithEvents = groupsWithEvents;
         this.successfulRedeliveriesCount = new AtomicLong(0L);
         this.failedRedeliveriesCount = new AtomicLong(0L);
@@ -74,28 +71,22 @@ public class EventDeadLettersRedeliverTask implements Task {
 
     @Override
     public Result run() {
-        return groupsWithEvents.get().flatMap(entry -> redeliverGroupEvent(entry.getT1(), entry.getT2()))
+        return service.redeliverEvents(groupsWithEvents)
+            .map(this::updateCounters)
             .reduce(Result.COMPLETED, Task::combine)
-            .onErrorResume(e -> {
-                LOGGER.error("Error while redelivering events", e);
-                return Mono.just(Result.PARTIAL);
-            })
             .block();
     }
 
-    private Mono<Result> redeliverGroupEvent(Group group, Event event) {
-        return eventBus.reDeliver(group, event)
-            .then(Mono.fromCallable(() -> {
-                deadLetters.remove(group, event.getEventId());
+    private Result updateCounters(RedeliverResult redeliverResult) {
+        switch (redeliverResult) {
+            case REDELIVER_SUCCESS:
                 successfulRedeliveriesCount.incrementAndGet();
                 return Result.COMPLETED;
-            }))
-            .onErrorResume(e -> {
-                LOGGER.error("Error while performing redelivery of event: {} for group: {}",
-                    event.getEventId().toString(), group.asString(), e);
+            case REDELIVER_FAIL:
+            default:
                 failedRedeliveriesCount.incrementAndGet();
-                return Mono.just(Result.PARTIAL);
-            });
+                return Result.PARTIAL;
+        }
     }
 
     @Override

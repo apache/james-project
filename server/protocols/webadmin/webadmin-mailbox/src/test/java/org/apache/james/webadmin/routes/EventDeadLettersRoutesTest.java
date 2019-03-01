@@ -52,6 +52,7 @@ import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.service.EventDeadLettersRedeliverService;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliverTask;
 import org.apache.james.webadmin.service.EventDeadLettersService;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -111,7 +112,8 @@ class EventDeadLettersRoutesTest {
         JsonTransformer jsonTransformer = new JsonTransformer();
         EventSerializer eventSerializer = new EventSerializer(new InMemoryId.Factory(), new InMemoryMessageId.Factory());
         eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()), RetryBackoffConfiguration.DEFAULT, deadLetters);
-        EventDeadLettersService service = new EventDeadLettersService(deadLetters, eventBus);
+        EventDeadLettersRedeliverService redeliverService = new EventDeadLettersRedeliverService(eventBus, deadLetters);
+        EventDeadLettersService service = new EventDeadLettersService(redeliverService, deadLetters);
 
         taskManager = new MemoryTaskManager();
         webAdminServer = WebAdminUtils.createWebAdminServer(

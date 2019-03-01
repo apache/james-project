@@ -1,0 +1,67 @@
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
+
+package org.apache.james.webadmin.service;
+
+import java.util.function.Supplier;
+
+import org.apache.james.mailbox.events.Event;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.EventDeadLetters;
+import org.apache.james.mailbox.events.Group;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+
+public class EventDeadLettersRedeliverService {
+    enum RedeliverResult {
+        REDELIVER_SUCCESS,
+        REDELIVER_FAIL
+    }
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventDeadLettersRedeliverService.class);
+
+    private final EventBus eventBus;
+    private final EventDeadLetters deadLetters;
+
+    public EventDeadLettersRedeliverService(EventBus eventBus, EventDeadLetters deadLetters) {
+        this.eventBus = eventBus;
+        this.deadLetters = deadLetters;
+    }
+
+    Flux<RedeliverResult> redeliverEvents(Supplier<Flux<Tuple2<Group, Event>>> groupsWithEvents) {
+        return groupsWithEvents.get().flatMap(entry -> redeliverGroupEvents(entry.getT1(), entry.getT2()));
+    }
+
+    private Mono<RedeliverResult> redeliverGroupEvents(Group group, Event event) {
+        return eventBus.reDeliver(group, event)
+            .then(Mono.fromCallable(() -> {
+                deadLetters.remove(group, event.getEventId());
+                return RedeliverResult.REDELIVER_SUCCESS;
+            }))
+            .onErrorResume(e -> {
+                LOGGER.error("Error while performing redelivery of event: {} for group: {}",
+                    event.getEventId().toString(), group.asString(), e);
+                return Mono.just(RedeliverResult.REDELIVER_FAIL);
+            });
+    }
+}
