@@ -21,6 +21,7 @@ package org.apache.james.webadmin.service;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
 
@@ -61,12 +62,12 @@ public class EventDeadLettersRedeliverTask implements Task {
 
     private final EventBus eventBus;
     private final EventDeadLetters deadLetters;
-    private final Flux<Tuple2<Group, Event>> groupsWithEvents;
+    private final Supplier<Flux<Tuple2<Group, Event>>> groupsWithEvents;
     private final AtomicLong successfulRedeliveriesCount;
     private final AtomicLong failedRedeliveriesCount;
 
     @Inject
-    EventDeadLettersRedeliverTask(EventBus eventBus, EventDeadLetters deadLetters, Flux<Tuple2<Group, Event>> groupsWithEvents) {
+    EventDeadLettersRedeliverTask(EventBus eventBus, EventDeadLetters deadLetters, Supplier<Flux<Tuple2<Group, Event>>> groupsWithEvents) {
         this.eventBus = eventBus;
         this.deadLetters = deadLetters;
         this.groupsWithEvents = groupsWithEvents;
@@ -76,7 +77,7 @@ public class EventDeadLettersRedeliverTask implements Task {
 
     @Override
     public Result run() {
-        return groupsWithEvents.flatMap(entry -> redeliverGroupEvent(entry.getT1(), entry.getT2()))
+        return groupsWithEvents.get().flatMap(entry -> redeliverGroupEvent(entry.getT1(), entry.getT2()))
             .reduce(Result.COMPLETED, Task::combine)
             .onErrorResume(e -> {
                 LOGGER.error("Error while redelivering events", e);

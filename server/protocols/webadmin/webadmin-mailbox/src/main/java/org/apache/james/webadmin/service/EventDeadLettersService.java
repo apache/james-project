@@ -21,6 +21,7 @@ package org.apache.james.webadmin.service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
 
@@ -97,22 +98,22 @@ public class EventDeadLettersService {
     }
 
     public Task createActionOnEventsTask() {
-        Flux<Tuple2<Group, Event>> groupsWithEvents = listGroups().flatMap(this::getGroupWithEvents);
+        Supplier<Flux<Tuple2<Group, Event>>> groupsWithEvents = () -> listGroups().flatMap(this::getGroupWithEvents);
 
         return redeliverEvents(groupsWithEvents);
     }
 
     public Task createActionOnEventsTask(Group group) {
-        return redeliverEvents(getGroupWithEvents(group));
+        return redeliverEvents(() -> getGroupWithEvents(group));
     }
 
     public Task createActionOnEventsTask(Group group, Event.EventId eventId) {
-        Flux<Tuple2<Group, Event>> groupWithEvent = Flux.just(group).zipWith(getEvent(group, eventId));
+        Supplier<Flux<Tuple2<Group, Event>>> groupWithEvent = () -> Flux.just(group).zipWith(getEvent(group, eventId));
 
         return redeliverEvents(groupWithEvent);
     }
 
-    private Task redeliverEvents(Flux<Tuple2<Group, Event>> groupsWithEvents) {
+    private Task redeliverEvents(Supplier<Flux<Tuple2<Group, Event>>> groupsWithEvents) {
         return new EventDeadLettersRedeliverTask(eventBus, deadLetters, groupsWithEvents);
     }
 }

@@ -21,8 +21,9 @@ package org.apache.james.mailbox.events;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -33,7 +34,7 @@ public class MemoryEventDeadLetters implements EventDeadLetters {
     private final Multimap<Group, Event> deadLetters;
 
     public MemoryEventDeadLetters() {
-        this.deadLetters = Multimaps.synchronizedSetMultimap(HashMultimap.create());
+        this.deadLetters = HashMultimap.create();
     }
 
     @Override
@@ -41,9 +42,11 @@ public class MemoryEventDeadLetters implements EventDeadLetters {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
         Preconditions.checkArgument(failDeliveredEvent != null, FAIL_DELIVERED_EVENT_CANNOT_BE_NULL);
 
-        return Mono.fromRunnable(() -> deadLetters.put(registeredGroup, failDeliveredEvent))
-            .subscribeWith(MonoProcessor.create())
-            .then();
+        synchronized (deadLetters) {
+            return Mono.fromRunnable(() -> deadLetters.put(registeredGroup, failDeliveredEvent))
+                .subscribeWith(MonoProcessor.create())
+                .then();
+        }
     }
 
     @Override
@@ -51,12 +54,14 @@ public class MemoryEventDeadLetters implements EventDeadLetters {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
         Preconditions.checkArgument(failDeliveredEventId != null, FAIL_DELIVERED_ID_EVENT_CANNOT_BE_NULL);
 
-        return Flux.fromIterable(deadLetters.get(registeredGroup))
-            .filter(event -> event.getEventId().equals(failDeliveredEventId))
-            .next()
-            .doOnNext(event -> deadLetters.remove(registeredGroup, event))
-            .subscribeWith(MonoProcessor.create())
-            .then();
+        synchronized (deadLetters) {
+            return Flux.fromIterable(ImmutableList.copyOf(deadLetters.get(registeredGroup)))
+                .filter(event -> event.getEventId().equals(failDeliveredEventId))
+                .next()
+                .doOnNext(event -> deadLetters.remove(registeredGroup, event))
+                .subscribeWith(MonoProcessor.create())
+                .then();
+        }
     }
 
     @Override
@@ -64,21 +69,27 @@ public class MemoryEventDeadLetters implements EventDeadLetters {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
         Preconditions.checkArgument(failDeliveredEventId != null, FAIL_DELIVERED_ID_EVENT_CANNOT_BE_NULL);
 
-        return Flux.fromIterable(deadLetters.get(registeredGroup))
-            .filter(event -> event.getEventId().equals(failDeliveredEventId))
-            .next();
+        synchronized (deadLetters) {
+            return Flux.fromIterable(ImmutableList.copyOf(deadLetters.get(registeredGroup)))
+                .filter(event -> event.getEventId().equals(failDeliveredEventId))
+                .next();
+        }
     }
 
     @Override
     public Flux<Event.EventId> failedEventIds(Group registeredGroup) {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
 
-        return Flux.fromIterable(deadLetters.get(registeredGroup))
-            .map(Event::getEventId);
+        synchronized (deadLetters) {
+            return Flux.fromIterable(ImmutableList.copyOf(deadLetters.get(registeredGroup)))
+                .map(Event::getEventId);
+        }
     }
 
     @Override
     public Flux<Group> groupsWithFailedEvents() {
-        return Flux.fromIterable(deadLetters.keySet());
+        synchronized (deadLetters) {
+            return Flux.fromIterable(ImmutableSet.copyOf(deadLetters.keySet()));
+        }
     }
 }
