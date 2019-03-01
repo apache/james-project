@@ -24,6 +24,7 @@ import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -359,11 +360,13 @@ class EventDeadLettersRoutesTest {
     class RedeliverAllEvents {
         private Group groupA;
         private Group groupB;
+        private EventCollector eventCollectorA;
+        private EventCollector eventCollectorB;
 
         @BeforeEach
         void nestedBeforeEach() {
-            EventCollector eventCollectorA = new EventCollector();
-            EventCollector eventCollectorB = new EventCollector();
+            eventCollectorA = new EventCollector();
+            eventCollectorB = new EventCollector();
             groupA = new EventBusTestFixture.GroupA();
             groupB = new EventBusTestFixture.GroupB();
             eventBus.register(eventCollectorA, groupA);
@@ -372,8 +375,6 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverAllEventsShouldCreateATask() {
-            deadLetters.store(groupA, EVENT_1).block();
-
             given()
                 .queryParam("action", EVENTS_ACTION)
             .when()
@@ -435,6 +436,28 @@ class EventDeadLettersRoutesTest {
         }
 
         @Test
+        void postRedeliverAllEventsShouldRedeliverEventFromDeadLetters() {
+            deadLetters.store(groupA, EVENT_1).block();
+
+            String taskId = with()
+                .queryParam("action", EVENTS_ACTION)
+                .post("/events/deadLetter")
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+                .when()
+                .get(taskId + "/await")
+                .then()
+                .body("status", is("completed"))
+                .body("additionalInformation.successfulRedeliveriesCount", is(1))
+                .body("additionalInformation.failedRedeliveriesCount", is(0));
+
+            assertThat(eventCollectorA.getEvents()).hasSize(1);
+        }
+
+        @Test
         void postRedeliverAllEventsShouldRemoveAllEventsFromDeadLetters() {
             deadLetters.store(groupA, EVENT_1).block();
             deadLetters.store(groupA, EVENT_2).block();
@@ -456,19 +479,36 @@ class EventDeadLettersRoutesTest {
                 .body("additionalInformation.failedRedeliveriesCount", is(0));
 
             when()
-                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + UUID_1)
+                .get("/events/deadLetter/groups")
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404);
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .body(".", hasSize(0));
+        }
 
-            when()
-                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + UUID_2)
-            .then()
-                .statusCode(HttpStatus.NOT_FOUND_404);
+        @Test
+        void postRedeliverAllEventsShouldRedeliverAllEventsFromDeadLetters() {
+            deadLetters.store(groupA, EVENT_1).block();
+            deadLetters.store(groupA, EVENT_2).block();
+            deadLetters.store(groupB, EVENT_2).block();
 
-            when()
-                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_B + "/" + UUID_2)
+            String taskId = with()
+                .queryParam("action", EVENTS_ACTION)
+                .post("/events/deadLetter")
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404);
+                .body("status", is("completed"))
+                .body("additionalInformation.successfulRedeliveriesCount", is(3))
+                .body("additionalInformation.failedRedeliveriesCount", is(0));
+
+            assertThat(eventCollectorA.getEvents()).hasSize(2);
+            assertThat(eventCollectorB.getEvents()).hasSize(1);
         }
 
         @Test
@@ -507,10 +547,11 @@ class EventDeadLettersRoutesTest {
     @Nested
     class RedeliverGroupEvents {
         private Group groupA;
+        private EventCollector eventCollector;
 
         @BeforeEach
         void nestedBeforeEach() {
-            EventCollector eventCollector = new EventCollector();
+            eventCollector = new EventCollector();
             groupA = new EventBusTestFixture.GroupA();
             eventBus.register(eventCollector, groupA);
         }
@@ -580,6 +621,28 @@ class EventDeadLettersRoutesTest {
         }
 
         @Test
+        void postRedeliverGroupEventsShouldRedeliverEventFromDeadLetters() {
+            deadLetters.store(groupA, EVENT_1).block();
+
+            String taskId = with()
+                .queryParam("action", EVENTS_ACTION)
+                .post("/events/deadLetter/groups/" + SERIALIZED_GROUP_A)
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("status", is("completed"))
+                .body("additionalInformation.successfulRedeliveriesCount", is(1))
+                .body("additionalInformation.failedRedeliveriesCount", is(0));
+
+            assertThat(eventCollector.getEvents()).hasSize(1);
+        }
+
+        @Test
         void postRedeliverGroupEventsShouldRemoveAllGroupEventsFromDeadLetters() {
             deadLetters.store(groupA, EVENT_1).block();
             deadLetters.store(groupA, EVENT_2).block();
@@ -600,14 +663,34 @@ class EventDeadLettersRoutesTest {
                 .body("additionalInformation.failedRedeliveriesCount", is(0));
 
             when()
-                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + UUID_1)
+                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A)
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404);
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .body(".", hasSize(0));
+        }
 
-            when()
-                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + UUID_2)
+        @Test
+        void postRedeliverGroupEventsShouldRedeliverAllGroupEventsFromDeadLetters() {
+            deadLetters.store(groupA, EVENT_1).block();
+            deadLetters.store(groupA, EVENT_2).block();
+
+            String taskId = with()
+                .queryParam("action", EVENTS_ACTION)
+                .post("/events/deadLetter/groups/" + SERIALIZED_GROUP_A)
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404);
+                .body("status", is("completed"))
+                .body("additionalInformation.successfulRedeliveriesCount", is(2))
+                .body("additionalInformation.failedRedeliveriesCount", is(0));
+
+            assertThat(eventCollector.getEvents()).hasSize(2);
         }
 
         @Test
@@ -660,10 +743,11 @@ class EventDeadLettersRoutesTest {
     @Nested
     class RedeliverSingleEvent {
         private Group groupA;
+        private EventCollector eventCollector;
 
         @BeforeEach
         void nestedBeforeEach() {
-            EventCollector eventCollector = new EventCollector();
+            eventCollector = new EventCollector();
             groupA = new EventBusTestFixture.GroupA();
             eventBus.register(eventCollector, groupA);
         }
@@ -730,6 +814,28 @@ class EventDeadLettersRoutesTest {
                 .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + UUID_1)
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404);
+        }
+
+        @Test
+        void postRedeliverSingleEventShouldRedeliverEventFromDeadLetters() {
+            deadLetters.store(groupA, EVENT_1).block();
+
+            String taskId = with()
+                .queryParam("action", EVENTS_ACTION)
+                .post("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + UUID_1)
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("status", is("completed"))
+                .body("additionalInformation.successfulRedeliveriesCount", is(1))
+                .body("additionalInformation.failedRedeliveriesCount", is(0));
+
+            assertThat(eventCollector.getEvents()).hasSize(1);
         }
 
         @Test
