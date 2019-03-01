@@ -20,7 +20,6 @@
 package org.apache.james.vault;
 
 import java.io.IOException;
-import java.time.Clock;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Date;
@@ -34,7 +33,6 @@ import javax.mail.internet.AddressException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.core.User;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mime4j.MimeIOException;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.Message;
@@ -54,53 +52,47 @@ class DeletedMessageConverter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeletedMessageConverter.class);
 
-    private final Clock clock;
+    DeletedMessage convert(DeletedMessageVaultHook.DeletedMessageMailboxContext deletedMessageMailboxContext, org.apache.james.mailbox.store.mail.model.Message message, ZonedDateTime deletionDate) throws IOException {
+        Preconditions.checkNotNull(deletedMessageMailboxContext);
+        Preconditions.checkNotNull(message);
 
-    DeletedMessageConverter(Clock clock) {
-        this.clock = clock;
-    }
-
-    DeletedMessage convert(DeletedMessageMetadata deletedMessageMetadata, MailboxMessage mailboxMessage) throws IOException {
-        Preconditions.checkNotNull(deletedMessageMetadata);
-        Preconditions.checkNotNull(mailboxMessage);
-
-        Optional<Message> mimeMessage = parseMessage(mailboxMessage);
+        Optional<Message> mimeMessage = parseMessage(message);
 
         return DeletedMessage.builder()
-            .messageId(deletedMessageMetadata.getMessageId())
-            .originMailboxes(deletedMessageMetadata.getOwnerMailboxes())
-            .user(retrieveOwner(deletedMessageMetadata))
-            .deliveryDate(retrieveDeliveryDate(mimeMessage, mailboxMessage))
-            .deletionDate(ZonedDateTime.ofInstant(clock.instant(), ZoneOffset.UTC))
+            .messageId(deletedMessageMailboxContext.getMessageId())
+            .originMailboxes(deletedMessageMailboxContext.getOwnerMailboxes())
+            .user(retrieveOwner(deletedMessageMailboxContext))
+            .deliveryDate(retrieveDeliveryDate(mimeMessage, message))
+            .deletionDate(deletionDate)
             .sender(retrieveSender(mimeMessage))
             .recipients(retrieveRecipients(mimeMessage))
-            .hasAttachment(mailboxMessage.getAttachments().iterator().hasNext())
+            .hasAttachment(!message.getAttachments().isEmpty())
             .subject(mimeMessage.map(Message::getSubject))
             .build();
     }
 
-    private Optional<Message> parseMessage(MailboxMessage mailboxMessage) throws IOException {
+    private Optional<Message> parseMessage(org.apache.james.mailbox.store.mail.model.Message message) throws IOException {
         DefaultMessageBuilder messageBuilder = new DefaultMessageBuilder();
         messageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
         messageBuilder.setDecodeMonitor(DecodeMonitor.SILENT);
         try {
-            return Optional.ofNullable(messageBuilder.parseMessage(mailboxMessage.getFullContent()));
+            return Optional.ofNullable(messageBuilder.parseMessage(message.getFullContent()));
         } catch (MimeIOException e) {
-            LOGGER.warn("Can not parse the message {}", mailboxMessage.getUid(), e);
+            LOGGER.warn("Can not parse the message {}", message.getMessageId(), e);
             return Optional.empty();
         }
     }
 
-    private User retrieveOwner(DeletedMessageMetadata metadata) {
-        Preconditions.checkNotNull(metadata.getOwner(), "Deleted mail is missing owner");
-        return metadata.getOwner();
+    private User retrieveOwner(DeletedMessageVaultHook.DeletedMessageMailboxContext deletedMessageMailboxContext) {
+        Preconditions.checkNotNull(deletedMessageMailboxContext.getOwner(), "Deleted mail is missing owner");
+        return deletedMessageMailboxContext.getOwner();
     }
 
-    private ZonedDateTime retrieveDeliveryDate(Optional<Message> mimeMessage, MailboxMessage mailboxMessage) {
+    private ZonedDateTime retrieveDeliveryDate(Optional<Message> mimeMessage, org.apache.james.mailbox.store.mail.model.Message message) {
         return mimeMessage.map(Message::getDate)
             .map(Date::toInstant)
             .map(instant -> ZonedDateTime.ofInstant(instant, ZoneOffset.UTC))
-            .orElse(ZonedDateTime.ofInstant(mailboxMessage.getInternalDate().toInstant(), ZoneOffset.UTC));
+            .orElse(ZonedDateTime.ofInstant(message.getInternalDate().toInstant(), ZoneOffset.UTC));
     }
 
     private MaybeSender retrieveSender(Optional<Message> mimeMessage) {
@@ -113,11 +105,10 @@ class DeletedMessageConverter {
 
     private List<MailAddress> retrieveRecipients(Optional<Message> message) {
         return StreamUtils.flatten(combineRecipients(message)
-                .filter(Objects::nonNull)
-                .map(AddressList::flatten)
-                .flatMap(MailboxList::stream)
-                .map(Mailbox::getAddress)
-                .map(this::retrieveAddress))
+            .map(AddressList::flatten)
+            .flatMap(MailboxList::stream)
+            .map(Mailbox::getAddress)
+            .map(this::retrieveAddress))
             .collect(Guavate.toImmutableList());
     }
 
@@ -132,8 +123,9 @@ class DeletedMessageConverter {
 
     private Stream<AddressList> combineRecipients(Optional<Message> message) {
         return message.map(mimeMessage -> Stream.of(mimeMessage.getTo(),
-                mimeMessage.getCc(),
-                mimeMessage.getBcc()))
+                    mimeMessage.getCc(),
+                    mimeMessage.getBcc())
+                .filter(Objects::nonNull))
             .orElse(Stream.of());
     }
 }

@@ -24,8 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class DeletedMessageMetadataTest {
-
+class DeletedMessageMailboxContextTest {
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(PreDeletionHook.DeleteOperation.class)

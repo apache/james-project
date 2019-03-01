@@ -25,6 +25,7 @@ import static org.apache.mailet.base.MailAddressFixture.SENDER;
 
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -43,6 +44,7 @@ public interface DeletedMessageFixture {
     User USER_2 = User.fromUsername("dimitri@apache.org");
     ZonedDateTime DELIVERY_DATE = ZonedDateTime.parse("2014-10-30T14:12:00Z");
     ZonedDateTime DELETION_DATE = ZonedDateTime.parse("2015-10-30T14:12:00Z");
+    Date INTERNAL_DATE = Date.from(DELIVERY_DATE.toInstant());
     byte[] CONTENT = "header: value\r\n\r\ncontent".getBytes(StandardCharsets.UTF_8);
     String SUBJECT = "subject";
 
