@@ -33,6 +33,7 @@ import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.util.streams.Iterators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,9 +97,8 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
 
     private Stream<MailboxMessage> retrieveMailboxMessages(MailboxSession session, Mailbox mailbox, MessageRange range) {
         try {
-            return Stream.of(factory.getMessageMapper(session)
-                .findInMailbox(mailbox, range, FetchType.Full, UNLIMITED)
-                .next());
+            return Iterators.toStream(factory.getMessageMapper(session)
+                    .findInMailbox(mailbox, range, FetchType.Full, UNLIMITED));
         } catch (Exception e) {
             LOGGER.error("Could not retrieve message {} in mailbox {}", range.toString(), mailbox.getMailboxId().serialize(), e);
             return Stream.empty();

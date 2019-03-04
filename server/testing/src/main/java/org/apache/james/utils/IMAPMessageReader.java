@@ -142,6 +142,11 @@ public class IMAPMessageReader extends ExternalResource implements Closeable, Af
         return imapClient.getReplyString();
     }
 
+    public String copyAllMessagesInMailboxTo(String mailboxName) throws IOException {
+        imapClient.copy("1:*", mailboxName);
+        return imapClient.getReplyString();
+    }
+
     private String readFirstMessageInMailbox(String parameters) throws IOException {
         imapClient.fetch("1:1", parameters);
         return imapClient.getReplyString();
