@@ -23,11 +23,11 @@ import java.util.Optional;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.blob.objectstorage.SpecificAuthConfiguration;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone3ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
 import org.apache.james.modules.objectstorage.ObjectStorageBlobConfiguration;
-import org.apache.james.modules.objectstorage.SpecificAuthConfiguration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;

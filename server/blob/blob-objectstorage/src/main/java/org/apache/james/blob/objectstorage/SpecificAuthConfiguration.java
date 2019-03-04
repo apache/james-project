@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.james.modules.objectstorage;
+package org.apache.james.blob.objectstorage;
 
 
 public interface SpecificAuthConfiguration {

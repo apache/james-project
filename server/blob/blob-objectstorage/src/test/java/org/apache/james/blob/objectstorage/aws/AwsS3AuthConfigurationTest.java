@@ -17,11 +17,12 @@
  * under the License.
  */
 
-package org.apache.james.modules.objectstorage.aws.s3;
+package org.apache.james.blob.objectstorage.aws;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
+import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;

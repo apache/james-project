@@ -27,6 +27,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.PayloadCodec;
+import org.apache.james.blob.objectstorage.SpecificAuthConfiguration;
 import org.apache.james.modules.objectstorage.aws.s3.AwsS3ConfigurationReader;
 import org.apache.james.modules.objectstorage.swift.SwiftAuthConfiguration;
 

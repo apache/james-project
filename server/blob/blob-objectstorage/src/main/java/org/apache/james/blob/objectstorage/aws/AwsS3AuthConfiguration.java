@@ -17,9 +17,9 @@
  * under the License.
  */
 
-package org.apache.james.modules.objectstorage.aws.s3;
+package org.apache.james.blob.objectstorage.aws;
 
-import org.apache.james.modules.objectstorage.SpecificAuthConfiguration;
+import org.apache.james.blob.objectstorage.SpecificAuthConfiguration;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;

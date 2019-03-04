@@ -20,6 +20,7 @@
 package org.apache.james.modules.objectstorage.aws.s3;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 
 public class AwsS3ConfigurationReader {
 
