@@ -26,6 +26,8 @@ import java.io.ByteArrayInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
@@ -37,7 +39,7 @@ import org.junit.jupiter.api.Test;
 import com.google.crypto.tink.subtle.Hex;
 
 class AESPayloadCodecTest implements PayloadCodecContract {
-    private static final byte[] ENCRYPTED_BYTES = Hex.decode("28cdfb53c283185598ec7c49c415c6b56e85d3d74af89740270c2d2cd8006e1265a301436d919ed7acfc14586b5bd193e34c744ef1641230457dae3475");
+    private static final byte[] ENCRYPTED_BYTES = Hex.decode("0d5321372dae79366a2cc4ca7f52a9acd9bb6408e50a6bcb7b0008d0b10c90db46");
 
     @Override
     public PayloadCodec codec() {
@@ -83,10 +85,6 @@ class AESPayloadCodecTest implements PayloadCodecContract {
                 }
             }),
             Optional.empty());
-        int i = ENCRYPTED_BYTES.length / 2;
-        byte[] bytes = new byte[i];
-        InputStream is = codec().read(payload);
-        assertThatThrownBy(() -> is.read(bytes, 0, i)).isInstanceOf(IOException.class);
-
+        assertThatThrownBy(() -> codec().read(payload)).isInstanceOf(IOException.class);
     }
 }

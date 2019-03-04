@@ -32,6 +32,8 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
+import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
+import org.apache.james.blob.objectstorage.aws.AwsS3ObjectStorage;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
 import org.apache.james.modules.objectstorage.swift.SwiftObjectStorage;
 import org.apache.james.utils.PropertiesProvider;
@@ -71,8 +73,11 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
     }
 
     private ObjectStorageBlobsDAOBuilder.RequireContainerName selectDaoBuilder(ObjectStorageBlobConfiguration configuration) {
-        if (configuration.getProvider() == ObjectStorageProvider.SWIFT) {
-            return SwiftObjectStorage.builder(configuration);
+        switch (configuration.getProvider()) {
+            case SWIFT:
+                return SwiftObjectStorage.builder(configuration);
+            case AWSS3:
+                return AwsS3ObjectStorage.daoBuilder((AwsS3AuthConfiguration) configuration.getSpecificAuthConfiguration());
         }
         throw new IllegalArgumentException("unknown provider " + configuration.getProvider());
     }
