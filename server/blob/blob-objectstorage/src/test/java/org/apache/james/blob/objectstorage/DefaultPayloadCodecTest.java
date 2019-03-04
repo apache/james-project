@@ -22,8 +22,8 @@ package org.apache.james.blob.objectstorage;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
+import java.util.Optional;
 
-import org.jclouds.io.Payload;
 import org.jclouds.io.Payloads;
 import org.junit.jupiter.api.Test;
 
@@ -37,12 +37,12 @@ class DefaultPayloadCodecTest implements PayloadCodecContract {
     void defaultCodecShouldNotChangePayloadContentWhenWriting() throws Exception {
         Payload payload = codec().write(expected());
 
-        assertThat(payload.openStream()).hasSameContentAs(expected());
+        assertThat(payload.getPayload().openStream()).hasSameContentAs(expected());
     }
 
     @Test
     void defaultCodecShouldNotChangePayloadContentWhenReading() throws Exception {
-        Payload payload = Payloads.newInputStreamPayload(expected());
+        Payload payload = new Payload(Payloads.newInputStreamPayload(expected()), Optional.empty());
 
         InputStream actual = codec().read(payload);
 

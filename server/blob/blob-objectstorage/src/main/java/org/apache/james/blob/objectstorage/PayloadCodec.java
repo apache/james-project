@@ -22,8 +22,6 @@ package org.apache.james.blob.objectstorage;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.jclouds.io.Payload;
-
 public interface PayloadCodec {
     Payload write(InputStream is);
 

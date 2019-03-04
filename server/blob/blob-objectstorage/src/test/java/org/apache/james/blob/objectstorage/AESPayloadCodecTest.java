@@ -26,10 +26,10 @@ import java.io.ByteArrayInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.objectstorage.crypto.CryptoConfig;
-import org.jclouds.io.Payload;
 import org.jclouds.io.Payloads;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ class AESPayloadCodecTest implements PayloadCodecContract {
     @Test
     void aesCodecShouldEncryptPayloadContentWhenWriting() throws Exception {
         Payload payload = codec().write(expected());
-        byte[] bytes = IOUtils.toByteArray(payload.openStream());
+        byte[] bytes = IOUtils.toByteArray(payload.getPayload().openStream());
         // authenticated encryption uses a random salt for the authentication
         // header all we can say for sure is that the output is not the same as
         // the input.
@@ -59,7 +59,7 @@ class AESPayloadCodecTest implements PayloadCodecContract {
 
     @Test
     void aesCodecShouldDecryptPayloadContentWhenReading() throws Exception {
-        Payload payload = Payloads.newInputStreamPayload(new ByteArrayInputStream(ENCRYPTED_BYTES));
+        Payload payload = new Payload(Payloads.newInputStreamPayload(new ByteArrayInputStream(ENCRYPTED_BYTES)), Optional.empty());
 
         InputStream actual = codec().read(payload);
 
@@ -69,7 +69,7 @@ class AESPayloadCodecTest implements PayloadCodecContract {
     @Test
     void aesCodecShouldRaiseExceptionWhenUnderliyingInputStreamFails() throws Exception {
         Payload payload =
-            Payloads.newInputStreamPayload(new FilterInputStream(new ByteArrayInputStream(ENCRYPTED_BYTES)) {
+            new Payload(Payloads.newInputStreamPayload(new FilterInputStream(new ByteArrayInputStream(ENCRYPTED_BYTES)) {
                 private int readCount = 0;
 
                 @Override
@@ -81,7 +81,8 @@ class AESPayloadCodecTest implements PayloadCodecContract {
                         return super.read(b, off, len);
                     }
                 }
-            });
+            }),
+            Optional.empty());
         int i = ENCRYPTED_BYTES.length / 2;
         byte[] bytes = new byte[i];
         InputStream is = codec().read(payload);

@@ -25,11 +25,12 @@ import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.security.GeneralSecurityException;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.objectstorage.crypto.CryptoConfig;
 import org.apache.james.blob.objectstorage.crypto.PBKDF2StreamingAeadFactory;
-import org.jclouds.io.Payload;
 import org.jclouds.io.Payloads;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,11 +49,12 @@ public class AESPayloadCodec implements PayloadCodec {
     public Payload write(InputStream is) {
         PipedInputStream snk = new PipedInputStream();
         try {
+            AtomicLong length = new AtomicLong();
             PipedOutputStream src = new PipedOutputStream(snk);
             OutputStream outputStream = streamingAead.newEncryptingStream(src, PBKDF2StreamingAeadFactory.EMPTY_ASSOCIATED_DATA);
             Thread copyThread = new Thread(() -> {
                 try (OutputStream stream = outputStream) {
-                    IOUtils.copy(is, stream);
+                    length.addAndGet(IOUtils.copy(is, stream));
                 } catch (IOException e) {
                     throw new RuntimeException("Stream copy failure ", e);
                 }
@@ -61,7 +63,7 @@ public class AESPayloadCodec implements PayloadCodec {
                 LOGGER.error("Unable to encrypt payload's input stream",e)
             );
             copyThread.start();
-            return Payloads.newInputStreamPayload(snk);
+            return new Payload(Payloads.newInputStreamPayload(snk), Optional.of(length.get()));
         } catch (IOException | GeneralSecurityException e) {
             throw new RuntimeException("Unable to build payload for object storage, failed to " +
                 "encrypt", e);
@@ -71,7 +73,7 @@ public class AESPayloadCodec implements PayloadCodec {
     @Override
     public InputStream read(Payload payload) throws IOException {
         try {
-            return streamingAead.newDecryptingStream(payload.openStream(), PBKDF2StreamingAeadFactory.EMPTY_ASSOCIATED_DATA);
+            return streamingAead.newDecryptingStream(payload.getPayload().openStream(), PBKDF2StreamingAeadFactory.EMPTY_ASSOCIATED_DATA);
         } catch (GeneralSecurityException e) {
             throw new IOException("Incorrect crypto setup", e);
         }

@@ -21,18 +21,18 @@ package org.apache.james.blob.objectstorage;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
-import org.jclouds.io.Payload;
 import org.jclouds.io.Payloads;
 
 public class DefaultPayloadCodec implements PayloadCodec {
     @Override
     public Payload write(InputStream is) {
-        return Payloads.newInputStreamPayload(is);
+        return new Payload(Payloads.newInputStreamPayload(is), Optional.empty());
     }
 
     @Override
     public InputStream read(Payload payload) throws IOException {
-        return payload.openStream();
+        return payload.getPayload().openStream();
     }
 }
