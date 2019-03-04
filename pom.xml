@@ -1290,6 +1290,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-deleted-messages-vault</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-dnsservice-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1654,6 +1659,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-webadmin-mailbox</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-webadmin-mailbox-deleted-message-vault</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

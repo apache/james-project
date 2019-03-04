@@ -21,6 +21,7 @@ package org.apache.james.webadmin.vault.routes;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
+import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -60,6 +61,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
     private final JsonTransformer jsonTransformer;
     private final TaskManager taskManager;
 
+    @Inject
     @VisibleForTesting
     DeletedMessagesVaultRoutes(RestoreService vaultRestore, JsonTransformer jsonTransformer,
                                TaskManager taskManager) {

@@ -23,6 +23,8 @@ import static org.apache.james.mailbox.MessageManager.AppendCommand;
 import static org.apache.james.webadmin.vault.routes.RestoreService.RestoreResult.RESTORE_FAILED;
 import static org.apache.james.webadmin.vault.routes.RestoreService.RestoreResult.RESTORE_SUCCEED;
 
+import javax.inject.Inject;
+
 import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -57,6 +59,7 @@ class RestoreService {
     private final DeletedMessageVault deletedMessageVault;
     private final MailboxManager mailboxManager;
 
+    @Inject
     RestoreService(DeletedMessageVault deletedMessageVault, MailboxManager mailboxManager) {
         this.deletedMessageVault = deletedMessageVault;
         this.mailboxManager = mailboxManager;

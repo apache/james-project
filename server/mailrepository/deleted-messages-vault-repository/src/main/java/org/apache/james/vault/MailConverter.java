@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 
+import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
@@ -52,6 +53,7 @@ class MailConverter {
     private final MailboxId.Factory mailboxIdFactory;
     private final MessageId.Factory messageIdFactory;
 
+    @Inject
     MailConverter(MailboxId.Factory mailboxIdFactory, MessageId.Factory messageIdFactory) {
         this.mailboxIdFactory = mailboxIdFactory;
         this.messageIdFactory = messageIdFactory;

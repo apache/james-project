@@ -59,6 +59,10 @@ public class MailRepositoryUrl {
         return new MailRepositoryUrl(path, new Protocol(protocol));
     }
 
+    public static MailRepositoryUrl fromPathAndProtocol(Protocol protocol, MailRepositoryPath path) {
+        return new MailRepositoryUrl(path, protocol);
+    }
+
     private final String value;
     private final MailRepositoryPath path;
     private final Protocol protocol;
