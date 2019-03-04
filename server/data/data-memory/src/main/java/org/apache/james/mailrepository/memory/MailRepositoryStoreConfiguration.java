@@ -21,6 +21,7 @@ package org.apache.james.mailrepository.memory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.mailrepository.api.Protocol;
@@ -103,5 +104,11 @@ public class MailRepositoryStoreConfiguration {
 
     public List<Item> getItems() {
         return items;
+    }
+
+    public Optional<Protocol> defaultProtocol() {
+        return items.stream()
+            .flatMap(item -> item.getProtocols().stream())
+            .findFirst();
     }
 }
