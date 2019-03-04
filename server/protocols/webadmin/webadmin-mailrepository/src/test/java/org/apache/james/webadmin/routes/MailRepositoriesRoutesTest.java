@@ -1754,15 +1754,15 @@ public class MailRepositoriesRoutesTest {
 
     private void createMailRepositoryStore() throws Exception {
         MemoryMailRepositoryUrlStore urlStore = new MemoryMailRepositoryUrlStore();
-        MailRepositoryStoreConfiguration configuration = new MailRepositoryStoreConfiguration(
-            ImmutableList.of(new MailRepositoryStoreConfiguration.Item(
-                    ImmutableList.of(new Protocol("memory")),
-                    MemoryMailRepository.class.getName(),
-                    new HierarchicalConfiguration()),
-                new MailRepositoryStoreConfiguration.Item(
-                    ImmutableList.of(new Protocol("other")),
-                    MemoryMailRepository.class.getName(),
-                    new HierarchicalConfiguration())));
+        MailRepositoryStoreConfiguration configuration = MailRepositoryStoreConfiguration.forItems(
+            new MailRepositoryStoreConfiguration.Item(
+                ImmutableList.of(new Protocol("memory")),
+                MemoryMailRepository.class.getName(),
+                new HierarchicalConfiguration()),
+            new MailRepositoryStoreConfiguration.Item(
+                ImmutableList.of(new Protocol("other")),
+                MemoryMailRepository.class.getName(),
+                new HierarchicalConfiguration()));
         mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(new MemoryMailRepositoryProvider()), configuration);
 
         mailRepositoryStore.init();

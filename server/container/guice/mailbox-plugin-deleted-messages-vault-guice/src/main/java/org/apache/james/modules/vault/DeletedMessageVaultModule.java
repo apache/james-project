@@ -51,7 +51,7 @@ public class DeletedMessageVaultModule extends AbstractModule {
             return MailRepositoryDeletedMessageVault.Configuration.from(configuration);
         } catch (Exception e) {
             LOGGER.warn("Error encountered while retrieving Deleted message vault configuration. Using default MailRepository URL instead.");
-            Protocol defaultProtocol = mailRepositoryStoreConfiguration.defaultProtocol()
+            Protocol defaultProtocol = mailRepositoryStoreConfiguration.getDefaultProtocol()
                 .orElseThrow(() -> new IllegalStateException("No default MailRepository Protocol could be inferred. We can not configure the default deletedMessages vault."));
 
             return new MailRepositoryDeletedMessageVault.Configuration(

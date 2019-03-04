@@ -69,11 +69,11 @@ class ToSenderDomainRepositoryTest {
 
     private void createMailRepositoryStore() throws Exception {
         MemoryMailRepositoryUrlStore urlStore = new MemoryMailRepositoryUrlStore();
-        MailRepositoryStoreConfiguration configuration = new MailRepositoryStoreConfiguration(
-            ImmutableList.of(new MailRepositoryStoreConfiguration.Item(
+        MailRepositoryStoreConfiguration configuration = MailRepositoryStoreConfiguration.forItems(
+           new MailRepositoryStoreConfiguration.Item(
                 ImmutableList.of(new Protocol("memory")),
                 MemoryMailRepository.class.getName(),
-                new HierarchicalConfiguration())));
+                new HierarchicalConfiguration()));
 
         mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(new MemoryMailRepositoryProvider()), configuration);
         mailRepositoryStore.init();

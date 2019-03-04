@@ -21,45 +21,47 @@ package org.apache.james.mailrepository.memory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
+
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.mailrepository.api.Protocol;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class MailRepositoryStoreConfigurationTest {
+class MailRepositoryStoreConfigurationTest {
     @Test
     void defaultProtocolShouldReturnEmptyWhenEmpty() {
-        MailRepositoryStoreConfiguration configuration = new MailRepositoryStoreConfiguration(ImmutableList.of());
+        Optional<Protocol> defaultProtocol = MailRepositoryStoreConfiguration.computeDefaultProtocol(ImmutableList.of());
 
-        assertThat(configuration.defaultProtocol()).isEmpty();
+        assertThat(defaultProtocol).isEmpty();
     }
 
     @Test
     void defaultProtocolShouldReturnEmptyWhenEmptyItems() {
-        MailRepositoryStoreConfiguration configuration = new MailRepositoryStoreConfiguration(ImmutableList.of(
+        Optional<Protocol> defaultProtocol = MailRepositoryStoreConfiguration.computeDefaultProtocol(ImmutableList.of(
             new MailRepositoryStoreConfiguration.Item(
                 ImmutableList.of(),
                 "class.fqdn",
                 new HierarchicalConfiguration())));
 
-        assertThat(configuration.defaultProtocol()).isEmpty();
+        assertThat(defaultProtocol).isEmpty();
     }
 
     @Test
     void defaultProtocolShouldReturnFirstConfiguredProtocol() {
-        MailRepositoryStoreConfiguration configuration = new MailRepositoryStoreConfiguration(ImmutableList.of(
+        Optional<Protocol> defaultProtocol = MailRepositoryStoreConfiguration.computeDefaultProtocol(ImmutableList.of(
             new MailRepositoryStoreConfiguration.Item(
                 ImmutableList.of(new Protocol("1"), new Protocol("2")),
                 "class.fqdn",
                 new HierarchicalConfiguration())));
 
-        assertThat(configuration.defaultProtocol()).contains(new Protocol("1"));
+        assertThat(defaultProtocol).contains(new Protocol("1"));
     }
 
     @Test
     void defaultProtocolShouldSkipItemsWithNoProtocols() {
-        MailRepositoryStoreConfiguration configuration = new MailRepositoryStoreConfiguration(ImmutableList.of(
+        Optional<Protocol> defaultProtocol = MailRepositoryStoreConfiguration.computeDefaultProtocol(ImmutableList.of(
             new MailRepositoryStoreConfiguration.Item(
                 ImmutableList.of(),
                 "class.fqdn",
@@ -69,6 +71,6 @@ public class MailRepositoryStoreConfigurationTest {
                 "class.fqdn",
                 new HierarchicalConfiguration())));
 
-        assertThat(configuration.defaultProtocol()).contains(new Protocol("1"));
+        assertThat(defaultProtocol).contains(new Protocol("1"));
     }
 }

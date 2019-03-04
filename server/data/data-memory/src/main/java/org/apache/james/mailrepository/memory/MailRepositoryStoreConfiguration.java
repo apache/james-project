@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.mailrepository.api.Protocol;
+import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,12 +64,27 @@ public class MailRepositoryStoreConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MailRepositoryStoreConfiguration.class);
 
+    public static MailRepositoryStoreConfiguration forItems(Item... items) {
+        return forItems(ImmutableList.copyOf(items));
+    }
+
+    public static MailRepositoryStoreConfiguration forItems(List<Item> items) {
+        Optional<Protocol> defaultProtocol = computeDefaultProtocol(items);
+
+        return new MailRepositoryStoreConfiguration(items, defaultProtocol);
+    }
+
     public static MailRepositoryStoreConfiguration parse(HierarchicalConfiguration configuration) {
-        return new MailRepositoryStoreConfiguration(
-            retrieveRegisteredClassConfiguration(configuration)
+        ImmutableList<Item> items = retrieveRegisteredClassConfiguration(configuration)
             .stream()
             .map(MailRepositoryStoreConfiguration::readItem)
-            .collect(Guavate.toImmutableList()));
+            .collect(Guavate.toImmutableList());
+
+        Optional<Protocol> defaultProtocol = OptionalUtils.or(
+            Optional.ofNullable(configuration.getString("defaultProtocol", null)).map(Protocol::new),
+            computeDefaultProtocol(items));
+
+        return new MailRepositoryStoreConfiguration(items, defaultProtocol);
     }
 
     private static List<HierarchicalConfiguration> retrieveRegisteredClassConfiguration(HierarchicalConfiguration configuration) {
@@ -78,6 +94,12 @@ public class MailRepositoryStoreConfiguration {
             LOGGER.warn("Could not process configuration. Skipping Mail Repository initialization.", e);
             return ImmutableList.of();
         }
+    }
+
+    static Optional<Protocol> computeDefaultProtocol(List<Item> items) {
+        return items.stream()
+            .flatMap(item -> item.getProtocols().stream())
+            .findFirst();
     }
 
     private static Item readItem(HierarchicalConfiguration configuration) {
@@ -97,18 +119,18 @@ public class MailRepositoryStoreConfiguration {
 
 
     private final List<Item> items;
+    private final Optional<Protocol> defaultProtocol;
 
-    public MailRepositoryStoreConfiguration(List<Item> items) {
+    public MailRepositoryStoreConfiguration(List<Item> items, Optional<Protocol> defaultProtocol) {
         this.items = items;
+        this.defaultProtocol = defaultProtocol;
     }
 
     public List<Item> getItems() {
         return items;
     }
 
-    public Optional<Protocol> defaultProtocol() {
-        return items.stream()
-            .flatMap(item -> item.getProtocols().stream())
-            .findFirst();
+    public Optional<Protocol> getDefaultProtocol() {
+        return defaultProtocol;
     }
 }

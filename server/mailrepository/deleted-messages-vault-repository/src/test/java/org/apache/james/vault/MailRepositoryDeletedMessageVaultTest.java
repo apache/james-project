@@ -40,11 +40,11 @@ public class MailRepositoryDeletedMessageVaultTest implements DeletedMessageVaul
 
     @BeforeEach
     void setUp() throws Exception {
-        MailRepositoryStoreConfiguration configuration = new MailRepositoryStoreConfiguration(
-            ImmutableList.of(new MailRepositoryStoreConfiguration.Item(
+        MailRepositoryStoreConfiguration configuration = MailRepositoryStoreConfiguration.forItems(
+            new MailRepositoryStoreConfiguration.Item(
                 ImmutableList.of(new Protocol("memory")),
                 MemoryMailRepository.class.getName(),
-                new HierarchicalConfiguration())));
+                new HierarchicalConfiguration()));
         
         MemoryMailRepositoryUrlStore urlStore = new MemoryMailRepositoryUrlStore();
         MemoryMailRepositoryStore mailRepositoryStore = new MemoryMailRepositoryStore(urlStore,
