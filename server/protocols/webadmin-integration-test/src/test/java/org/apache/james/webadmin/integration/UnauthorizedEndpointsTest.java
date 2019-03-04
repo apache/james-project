@@ -41,6 +41,7 @@ import org.apache.james.webadmin.routes.TasksRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserQuotaRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
+import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -109,6 +110,7 @@ class UnauthorizedEndpointsTest {
     @ValueSource(strings = {
             CassandraMigrationRoutes.VERSION_BASE + "/upgrade",
             CassandraMigrationRoutes.VERSION_BASE + "/upgrade/latest",
+            DeletedMessagesVaultRoutes.ROOT_PATH + "/joe@perdu.com",
             CassandraMappingsRoutes.ROOT_PATH
     })
     void checkUrlProtectionOnPost(String url) {
