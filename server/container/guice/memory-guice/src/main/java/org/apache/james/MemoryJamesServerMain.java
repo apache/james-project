@@ -45,6 +45,8 @@ import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
+import org.apache.james.modules.vault.DeletedMessageVaultModule;
+import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.inject.Module;
@@ -55,6 +57,7 @@ public class MemoryJamesServerMain {
     public static final Module WEBADMIN = Modules.combine(
         new WebAdminServerModule(),
         new DataRoutesModules(),
+        new DeletedMessageVaultRoutesModule(),
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
@@ -76,6 +79,7 @@ public class MemoryJamesServerMain {
         new JMAPServerModule());
 
     public static final Module IN_MEMORY_SERVER_MODULE = Modules.combine(
+        new DeletedMessageVaultModule(),
         new MemoryDataModule(),
         new MemoryEventStoreModule(),
         new MemoryMailboxModule(),
