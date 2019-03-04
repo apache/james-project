@@ -59,6 +59,8 @@ import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
+import org.apache.james.modules.vault.DeletedMessageVaultModule;
+import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.inject.Module;
@@ -70,6 +72,7 @@ public class CassandraJamesServerMain {
         new CassandraRoutesModule(),
         new CassandraDataRoutesModules(),
         new DataRoutesModules(),
+        new DeletedMessageVaultRoutesModule(),
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
@@ -110,6 +113,7 @@ public class CassandraJamesServerMain {
 
     public static final Module CASSANDRA_MAILBOX_MODULE = Modules.combine(
         new CassandraMailboxModule(),
+        new DeletedMessageVaultModule(),
         new ElasticSearchMailboxModule(),
         new ElasticSearchMetricReporterModule(),
         new MailboxModule(),
