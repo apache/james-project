@@ -53,9 +53,11 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
 
     @Override
     public void configure(HierarchicalConfiguration configuration) {
-        LOGGER.info("Loading user registered mailbox listeners");
+        configure(ListenersConfiguration.from(configuration));
+    }
 
-        ListenersConfiguration listenersConfiguration = ListenersConfiguration.from(configuration);
+    public void configure(ListenersConfiguration listenersConfiguration) {
+        LOGGER.info("Loading user registered mailbox listeners");
 
         guiceDefinedListeners.forEach(eventBus::register);
 
