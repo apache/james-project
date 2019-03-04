@@ -1,0 +1,48 @@
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
+package org.apache.james.modules.mailbox;
+
+import org.apache.james.mailbox.extension.PreDeletionHook;
+import org.apache.james.utils.ExtendedClassLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
+public class PreDeletionHookLoaderImpl implements PreDeletionHookLoader {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PreDeletionHookLoaderImpl.class);
+
+    private final Injector injector;
+    private final ExtendedClassLoader classLoader;
+
+    @Inject
+    PreDeletionHookLoaderImpl(Injector injector, ExtendedClassLoader classLoader) {
+        this.injector = injector;
+        this.classLoader = classLoader;
+    }
+
+    @Override
+    public PreDeletionHook createHook(PreDeletionHookConfiguration configuration) throws ClassNotFoundException {
+        String hookClass = configuration.getClazz();
+        LOGGER.info("Loading user registered mailbox listener {}", hookClass);
+        Class<PreDeletionHook> clazz = classLoader.locateClass(hookClass);
+        return injector.getInstance(clazz);
+    }
+}
