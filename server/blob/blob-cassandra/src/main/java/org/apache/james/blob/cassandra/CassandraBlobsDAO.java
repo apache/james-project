@@ -211,7 +211,7 @@ public class CassandraBlobsDAO implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(InputStream data) {
+    public Mono<BlobId> save(InputStream data, long contentLength) {
         Preconditions.checkNotNull(data);
         return Mono.fromCallable(() -> IOUtils.toByteArray(data))
             .flatMap(this::saveAsMono);

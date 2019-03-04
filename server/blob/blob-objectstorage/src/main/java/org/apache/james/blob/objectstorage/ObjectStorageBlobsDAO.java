@@ -22,6 +22,7 @@ package org.apache.james.blob.objectstorage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
@@ -82,15 +83,15 @@ public class ObjectStorageBlobsDAO implements BlobStore {
 
     @Override
     public Mono<BlobId> save(byte[] data) {
-        return save(new ByteArrayInputStream(data));
+        return save(new ByteArrayInputStream(data), data.length);
     }
 
     @Override
-    public Mono<BlobId> save(InputStream data) {
+    public Mono<BlobId> save(InputStream data, long contentLength) {
         Preconditions.checkNotNull(data);
 
         BlobId tmpId = blobIdFactory.randomId();
-        return save(data, tmpId)
+        return save(data, contentLength, tmpId)
             .flatMap(id -> updateBlobId(tmpId, id));
     }
 
@@ -102,11 +103,14 @@ public class ObjectStorageBlobsDAO implements BlobStore {
             .thenReturn(to);
     }
 
-    private Mono<BlobId> save(InputStream data, BlobId id) {
+    private Mono<BlobId> save(InputStream data, long contentLength, BlobId id) {
         String containerName = this.containerName.value();
         HashingInputStream hashingInputStream = new HashingInputStream(Hashing.sha256(), data);
         Payload payload = payloadCodec.write(hashingInputStream);
-        Blob blob = blobStore.blobBuilder(id.asString()).payload(payload).build();
+        Blob blob = blobStore.blobBuilder(id.asString())
+                            .payload(payload.getPayload())
+                            .contentLength(payload.getLength().orElse(contentLength))
+                            .build();
 
         return Mono.fromCallable(() -> blobStore.putBlob(containerName, blob))
             .then(Mono.fromCallable(() -> blobIdFactory.from(hashingInputStream.hash().toString())));
@@ -123,7 +127,7 @@ public class ObjectStorageBlobsDAO implements BlobStore {
 
         try {
             if (blob != null) {
-                return payloadCodec.read(blob.getPayload());
+                return payloadCodec.read(new Payload(blob.getPayload(), Optional.empty()));
             } else {
                 throw new ObjectStoreException("fail to load blob with id " + blobId);
             }

@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -46,6 +47,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -123,18 +125,21 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     }
 
     @Test
-    void supportsEncryptionWithCustomPayloadCodec() {
+    void supportsEncryptionWithCustomPayloadCodec() throws IOException {
         ObjectStorageBlobsDAO encryptedDao = ObjectStorageBlobsDAO
             .builder(testConfig)
             .container(containerName)
             .blobIdFactory(blobIdFactory())
             .payloadCodec(new AESPayloadCodec(CRYPTO_CONFIG))
             .build();
-        byte[] bytes = "James is the best!".getBytes(StandardCharsets.UTF_8);
+        String content = "James is the best!";
+        byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
         BlobId blobId = encryptedDao.save(bytes).block();
 
         InputStream read = encryptedDao.read(blobId);
-        assertThat(read).hasSameContentAs(new ByteArrayInputStream(bytes));
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+        String expectedContent = IOUtils.toString(inputStream, Charsets.UTF_8);
+        assertThat(content).isEqualTo(expectedContent);
     }
 
     @Test
@@ -145,7 +150,8 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
             .blobIdFactory(blobIdFactory())
             .payloadCodec(new AESPayloadCodec(CRYPTO_CONFIG))
             .build();
-        byte[] bytes = "James is the best!".getBytes(StandardCharsets.UTF_8);
+        String content = "James is the best!";
+        byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
         BlobId blobId = encryptedDao.save(bytes).block();
 
         InputStream encryptedIs = testee.read(blobId);
@@ -154,7 +160,9 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
         assertThat(encryptedBytes).isNotEqualTo(bytes);
 
         InputStream clearTextIs = encryptedDao.read(blobId);
-        assertThat(clearTextIs).hasSameContentAs(new ByteArrayInputStream(bytes));
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+        String expectedContent = IOUtils.toString(inputStream, Charsets.UTF_8);
+        assertThat(content).isEqualTo(expectedContent);
     }
 
     @Test
@@ -176,7 +184,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     @Test
     void saveInputStreamShouldNotCompleteWhenDoesNotAwait() {
         Mono<BlobId> blobIdFuture = testee
-            .save(new ByteArrayInputStream(BIG_STRING.getBytes(StandardCharsets.UTF_8)))
+            .save(new ByteArrayInputStream(BIG_STRING.getBytes(StandardCharsets.UTF_8)), BIG_STRING.length())
             .subscribeOn(Schedulers.elastic());
         assertThat(blobIdFuture.toFuture()).isNotCompleted();
     }

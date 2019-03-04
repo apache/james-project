@@ -81,7 +81,7 @@ public class CassandraBlobsDAOTest implements MetricableBlobStoreContract {
 
     @Test
     void blobStoreShouldSupport100MBBlob() {
-        BlobId blobId = testee.save(new ZeroedInputStream(100_000_000)).block();
+        BlobId blobId = testee.save(new ZeroedInputStream(100_000_000), 100_000_000).block();
         InputStream bytes = testee.read(blobId);
         assertThat(bytes).hasSameContentAs(new ZeroedInputStream(100_000_000));
     }
