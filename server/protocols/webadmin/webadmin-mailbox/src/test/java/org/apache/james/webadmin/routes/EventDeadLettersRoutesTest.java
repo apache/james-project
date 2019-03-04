@@ -29,6 +29,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 import org.apache.james.core.User;
 import org.apache.james.event.json.EventSerializer;
@@ -100,7 +101,6 @@ class EventDeadLettersRoutesTest {
         "  }" +
         "}";
     private static final String SERIALIZED_GROUP_A = new EventBusTestFixture.GroupA().asString();
-    private static final String SERIALIZED_GROUP_B = new EventBusTestFixture.GroupB().asString();
 
     private WebAdminServer webAdminServer;
     private EventDeadLetters deadLetters;
@@ -404,6 +404,8 @@ class EventDeadLettersRoutesTest {
                 .body("taskId", is(taskId))
                 .body("additionalInformation.successfulRedeliveriesCount", is(1))
                 .body("additionalInformation.failedRedeliveriesCount", is(0))
+                .body("additionalInformation.group", is(nullValue()))
+                .body("additionalInformation.eventId", is(nullValue()))
                 .body("type", is(EventDeadLettersRedeliverTask.TYPE))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
@@ -589,6 +591,8 @@ class EventDeadLettersRoutesTest {
                 .body("taskId", is(taskId))
                 .body("additionalInformation.successfulRedeliveriesCount", is(1))
                 .body("additionalInformation.failedRedeliveriesCount", is(0))
+                .body("additionalInformation.group", is(SERIALIZED_GROUP_A))
+                .body("additionalInformation.eventId", is(nullValue()))
                 .body("type", is(EventDeadLettersRedeliverTask.TYPE))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
@@ -612,7 +616,8 @@ class EventDeadLettersRoutesTest {
             .then()
                 .body("status", is("completed"))
                 .body("additionalInformation.successfulRedeliveriesCount", is(1))
-                .body("additionalInformation.failedRedeliveriesCount", is(0));
+                .body("additionalInformation.failedRedeliveriesCount", is(0))
+                .body("additionalInformation.group", is(SERIALIZED_GROUP_A));
 
             when()
                 .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + UUID_1)
@@ -637,7 +642,8 @@ class EventDeadLettersRoutesTest {
             .then()
                 .body("status", is("completed"))
                 .body("additionalInformation.successfulRedeliveriesCount", is(1))
-                .body("additionalInformation.failedRedeliveriesCount", is(0));
+                .body("additionalInformation.failedRedeliveriesCount", is(0))
+                .body("additionalInformation.group", is(SERIALIZED_GROUP_A));
 
             assertThat(eventCollector.getEvents()).hasSize(1);
         }
@@ -660,7 +666,8 @@ class EventDeadLettersRoutesTest {
             .then()
                 .body("status", is("completed"))
                 .body("additionalInformation.successfulRedeliveriesCount", is(2))
-                .body("additionalInformation.failedRedeliveriesCount", is(0));
+                .body("additionalInformation.failedRedeliveriesCount", is(0))
+                .body("additionalInformation.group", is(SERIALIZED_GROUP_A));
 
             when()
                 .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A)
@@ -688,7 +695,8 @@ class EventDeadLettersRoutesTest {
             .then()
                 .body("status", is("completed"))
                 .body("additionalInformation.successfulRedeliveriesCount", is(2))
-                .body("additionalInformation.failedRedeliveriesCount", is(0));
+                .body("additionalInformation.failedRedeliveriesCount", is(0))
+                .body("additionalInformation.group", is(SERIALIZED_GROUP_A));
 
             assertThat(eventCollector.getEvents()).hasSize(2);
         }
@@ -785,6 +793,8 @@ class EventDeadLettersRoutesTest {
                 .body("taskId", is(taskId))
                 .body("additionalInformation.successfulRedeliveriesCount", is(1))
                 .body("additionalInformation.failedRedeliveriesCount", is(0))
+                .body("additionalInformation.group", is(SERIALIZED_GROUP_A))
+                .body("additionalInformation.eventId", is(UUID_1))
                 .body("type", is(EventDeadLettersRedeliverTask.TYPE))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
@@ -808,7 +818,9 @@ class EventDeadLettersRoutesTest {
             .then()
                 .body("status", is("completed"))
                 .body("additionalInformation.successfulRedeliveriesCount", is(1))
-                .body("additionalInformation.failedRedeliveriesCount", is(0));
+                .body("additionalInformation.failedRedeliveriesCount", is(0))
+                .body("additionalInformation.group", is(SERIALIZED_GROUP_A))
+                .body("additionalInformation.eventId", is(UUID_1));
 
             when()
                 .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + UUID_1)
@@ -833,7 +845,9 @@ class EventDeadLettersRoutesTest {
             .then()
                 .body("status", is("completed"))
                 .body("additionalInformation.successfulRedeliveriesCount", is(1))
-                .body("additionalInformation.failedRedeliveriesCount", is(0));
+                .body("additionalInformation.failedRedeliveriesCount", is(0))
+                .body("additionalInformation.group", is(SERIALIZED_GROUP_A))
+                .body("additionalInformation.eventId", is(UUID_1));
 
             assertThat(eventCollector.getEvents()).hasSize(1);
         }

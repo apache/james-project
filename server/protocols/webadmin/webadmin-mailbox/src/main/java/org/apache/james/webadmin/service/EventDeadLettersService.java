@@ -21,7 +21,6 @@ package org.apache.james.webadmin.service;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Supplier;
 
 import javax.inject.Inject;
 
@@ -32,9 +31,7 @@ import org.apache.james.task.Task;
 
 import com.github.steveash.guavate.Guavate;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
 
 public class EventDeadLettersService {
     private final EventDeadLettersRedeliverService redeliverService;
@@ -47,31 +44,18 @@ public class EventDeadLettersService {
     }
 
     public List<String> listGroupsAsStrings() {
-        return listGroups()
+        return deadLetters.groupsWithFailedEvents()
             .map(Group::asString)
             .collect(Guavate.toImmutableList())
             .block();
     }
 
-    private Flux<Group> listGroups() {
-        return deadLetters.groupsWithFailedEvents();
-    }
-
     public List<String> listGroupsEventIdsAsStrings(Group group) {
-        return listGroupEventIds(group)
+        return deadLetters.failedEventIds(group)
             .map(Event.EventId::getId)
             .map(UUID::toString)
             .collect(Guavate.toImmutableList())
             .block();
-    }
-
-    private Flux<Event.EventId> listGroupEventIds(Group group) {
-        return deadLetters.failedEventIds(group);
-    }
-
-    private Flux<Event> listGroupEvents(Group group) {
-        return listGroupEventIds(group)
-            .flatMap(eventId -> getEvent(group, eventId));
     }
 
     public Mono<Event> getEvent(Group group, Event.EventId eventId) {
@@ -82,28 +66,15 @@ public class EventDeadLettersService {
         deadLetters.remove(group, eventId).block();
     }
 
-    private Flux<Tuple2<Group, Event>> getGroupWithEvents(Group group) {
-        return listGroupEvents(group)
-            .flatMap(event -> Flux.zip(Mono.just(group), Mono.just(event)));
-    }
-
     public Task redeliverAllEvents() {
-        Supplier<Flux<Tuple2<Group, Event>>> groupsWithEvents = () -> listGroups().flatMap(this::getGroupWithEvents);
-
-        return createRedeliverEventsTask(groupsWithEvents);
+        return new EventDeadLettersRedeliverTask(redeliverService, EventRetriever.allEvents());
     }
 
     public Task redeliverGroupEvents(Group group) {
-        return createRedeliverEventsTask(() -> getGroupWithEvents(group));
+        return new EventDeadLettersRedeliverTask(redeliverService, EventRetriever.groupEvents(group));
     }
 
     public Task redeliverSingleEvent(Group group, Event.EventId eventId) {
-        Supplier<Flux<Tuple2<Group, Event>>> groupWithEvent = () -> Flux.just(group).zipWith(getEvent(group, eventId));
-
-        return createRedeliverEventsTask(groupWithEvent);
-    }
-
-    private Task createRedeliverEventsTask(Supplier<Flux<Tuple2<Group, Event>>> groupsWithEvents) {
-        return new EventDeadLettersRedeliverTask(redeliverService, groupsWithEvents);
+        return new EventDeadLettersRedeliverTask(redeliverService, EventRetriever.singleEvent(group, eventId));
     }
 }
