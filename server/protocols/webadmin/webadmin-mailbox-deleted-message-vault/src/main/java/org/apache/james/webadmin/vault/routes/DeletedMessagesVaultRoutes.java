@@ -21,22 +21,31 @@ package org.apache.james.webadmin.vault.routes;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
 import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.User;
+import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.TaskIdDto;
-import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -53,9 +62,39 @@ import spark.Service;
 @Produces(Constants.JSON_CONTENT_TYPE)
 public class DeletedMessagesVaultRoutes implements Routes {
 
+    enum UserVaultAction {
+        RESTORE("restore");
+
+        static Optional<UserVaultAction> getAction(String value) {
+            Preconditions.checkNotNull(value, "action cannot be null");
+            Preconditions.checkArgument(StringUtils.isNotBlank(value), "action cannot be empty or blank");
+
+            return Stream.of(values())
+                .filter(action -> action.value.equals(value))
+                .findFirst();
+        }
+
+        private static List<String> plainValues() {
+            return Stream.of(values())
+                .map(UserVaultAction::getValue)
+                .collect(Guavate.toImmutableList());
+        }
+
+        private final String value;
+
+        UserVaultAction(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
+
     public static final String ROOT_PATH = "deletedMessages/user";
     private static final String USER_PATH_PARAM = "user";
     private static final String RESTORE_PATH = ROOT_PATH + SEPARATOR + ":" + USER_PATH_PARAM;
+    private static final String ACTION_QUERY_PARAM = "action";
 
     private final RestoreService vaultRestore;
     private final JsonTransformer jsonTransformer;
@@ -77,7 +116,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
 
     @Override
     public void define(Service service) {
-        service.post(RESTORE_PATH, this::restore, jsonTransformer);
+        service.post(RESTORE_PATH, this::userActions, jsonTransformer);
     }
 
     @POST
@@ -91,28 +130,51 @@ public class DeletedMessagesVaultRoutes implements Routes {
             dataType = "String",
             defaultValue = "none",
             example = "user@james.org",
-            value = "Compulsory. Needs to be a valid username represent for an user had requested to restore deleted emails")
+            value = "Compulsory. Needs to be a valid username represent for an user had requested to restore deleted emails"),
+        @ApiImplicitParam(
+            required = true,
+            dataType = "String",
+            name = "action",
+            paramType = "query",
+            example = "?action=restore",
+            value = "Compulsory. Needs to be a valid action represent for an operation to perform on the Deleted Message Vault, " +
+                "valid action should be in the list (restore)")
     })
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - user param is invalid"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
-    private TaskIdDto restore(Request request, Response response) {
-        User userToRestore = extractUser(request);
-        TaskId taskId = taskManager.submit(new DeletedMessagesVaultRestoreTask(userToRestore, vaultRestore));
+    private TaskIdDto userActions(Request request, Response response) {
+        UserVaultAction requestedAction = extractUserVaultAction(request);
+
+        Task requestedTask = generateTask(requestedAction, request);
+        TaskId taskId = taskManager.submit(requestedTask);
         return TaskIdDto.respond(response, taskId);
     }
 
-    private User extractUser(Request request) {
-        try {
-            return User.fromUsername(request.params(USER_PATH_PARAM));
-        } catch (IllegalArgumentException e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message(e.getMessage())
-                .haltError();
+    private Task generateTask(UserVaultAction requestedAction, Request request) {
+        User userToRestore = User.fromUsername(request.params(USER_PATH_PARAM));
+
+        switch (requestedAction) {
+            case RESTORE:
+                return new DeletedMessagesVaultRestoreTask(userToRestore, vaultRestore);
+            default:
+                throw new NotImplementedException(requestedAction + " is not yet handled.");
         }
+    }
+
+    private UserVaultAction extractUserVaultAction(Request request) {
+        String actionParam = request.queryParams(ACTION_QUERY_PARAM);
+        return Optional.ofNullable(actionParam)
+            .map(this::getUserVaultAction)
+            .orElseThrow(() -> new IllegalArgumentException("action parameter is missing"));
+    }
+
+    private UserVaultAction getUserVaultAction(String actionString) {
+        return UserVaultAction.getAction(actionString)
+            .orElseThrow(() -> new IllegalArgumentException(String.format("'%s' is not a valid action. Supported values are: (%s)",
+                actionString,
+                Joiner.on(",").join(UserVaultAction.plainValues()))));
     }
 }

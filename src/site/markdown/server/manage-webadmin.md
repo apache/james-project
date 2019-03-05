@@ -2560,17 +2560,22 @@ Here are the following actions available on the 'Deleted Messages Vault'
 Deleted messages of a specific user can be restored by calling the following endpoint:
 
 ```
-curl -XPOST http://ip:port/deletedMessages/user/userToRestore@domain.ext
+curl -XPOST http://ip:port/deletedMessages/user/userToRestore@domain.ext?action=restore
 ```
 
 **All** messages in the Deleted Messages Vault of an specified user will be appended to his 'Restored-Messages' mailbox, which will be created if needed.
 
-**Note**: Restoring matched messages by queries is not supported yet 
-
+**Note**: 
+ - Restoring matched messages by queries is not supported yet 
+ - Query parameter `action` is required and should have value `restore` to represent for restoring feature. Otherwise, a bad request response will be returned
+ - Query parameter `action` is case sensitive
 Response code:
 
  - 201: Task for restoring deleted has been created
- - 400: Bad request, user parameter is invalid
+ - 400: Bad request: 
+   - action query param is not present
+   - action query param is not a valid action
+   - user parameter is invalid
 
 The scheduled task will have the following type `deletedMessages/restore` and the following `additionalInformation`:
 

@@ -116,19 +116,78 @@ class DeletedMessagesVaultRoutesTest {
     class ValidationTest {
 
         @Test
-        void restoreShouldReturnInvalidWhenUserIsInvalid() {
+        void restoreShouldReturnInvalidWhenActionIsMissing() {
             when()
+                .post(USER.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is(notNullValue()))
+                .body("details", is(notNullValue()));
+        }
+
+        @Test
+        void restoreShouldReturnInvalidWhenPassingEmptyAction() {
+            given()
+                .queryParam("action", "")
+            .when()
+                .post(USER.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is(notNullValue()))
+                .body("details", is(notNullValue()));
+        }
+
+        @Test
+        void restoreShouldReturnInvalidWhenActionIsInValid() {
+            given()
+                .queryParam("action", "invalid action")
+            .when()
+                .post(USER.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is(notNullValue()))
+                .body("details", is(notNullValue()));
+        }
+
+        @Test
+        void restoreShouldReturnInvalidWhenPassingCaseInsensitiveAction() {
+            given()
+                .queryParam("action", "RESTORE")
+            .when()
+                .post(USER.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is(notNullValue()))
+                .body("details", is(notNullValue()));
+        }
+
+        @Test
+        void restoreShouldReturnInvalidWhenUserIsInvalid() {
+            given()
+                .queryParam("action", "restore")
+            .when()
                 .post("not@valid@user.com")
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                .body("message", is("The username should not contain multiple domain delimiter."));
+                .body("message", is(notNullValue()))
+                .body("details", is(notNullValue()));
         }
 
         @Test
         void postShouldReturnNotFoundWhenNoUserPathParameter() {
-            when()
+            given()
+                .queryParam("action", "restore")
+            .when()
                 .post()
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404)
@@ -151,11 +210,13 @@ class DeletedMessagesVaultRoutesTest {
                 .search(any(), any());
 
             String taskId = with()
+                .queryParam("action", "restore")
                 .post(USER.asString())
                 .jsonPath()
                 .get("taskId");
 
             given()
+                .queryParam("action", "restore")
                 .basePath(TasksRoutes.BASE)
             .when()
                 .get(taskId + "/await")
@@ -185,6 +246,7 @@ class DeletedMessagesVaultRoutesTest {
                 .appendMessage(any(), any());
 
             String taskId = with()
+                .queryParam("action", "restore")
                 .post(USER.asString())
                 .jsonPath()
                 .get("taskId");
@@ -214,6 +276,7 @@ class DeletedMessagesVaultRoutesTest {
                 .createMailbox(any(MailboxPath.class), any(MailboxSession.class));
 
             String taskId = with()
+                .queryParam("action", "restore")
                 .post(USER.asString())
                 .jsonPath()
                 .get("taskId");
@@ -236,7 +299,9 @@ class DeletedMessagesVaultRoutesTest {
 
     @Test
     void restoreShouldReturnATaskCreated() {
-        when()
+        given()
+            .queryParam("action", "restore")
+        .when()
             .post(USER.asString())
         .then()
             .statusCode(HttpStatus.CREATED_201)
@@ -249,6 +314,7 @@ class DeletedMessagesVaultRoutesTest {
         vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
 
         String taskId = with()
+            .queryParam("action", "restore")
             .post(USER.asString())
             .jsonPath()
             .get("taskId");
@@ -275,6 +341,7 @@ class DeletedMessagesVaultRoutesTest {
         vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
 
         String taskId = with()
+            .queryParam("action", "restore")
             .post(USER.asString())
             .jsonPath()
             .get("taskId");
@@ -304,6 +371,7 @@ class DeletedMessagesVaultRoutesTest {
         vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
 
         String taskId = with()
+            .queryParam("action", "restore")
             .post(USER.asString())
             .jsonPath()
             .get("taskId");
@@ -325,6 +393,7 @@ class DeletedMessagesVaultRoutesTest {
         vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
 
         String taskId = with()
+            .queryParam("action", "restore")
             .post(USER.asString())
             .jsonPath()
             .get("taskId");
@@ -348,6 +417,7 @@ class DeletedMessagesVaultRoutesTest {
         vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
 
         String taskId = with()
+            .queryParam("action", "restore")
             .post(USER.asString())
             .jsonPath()
             .get("taskId");
