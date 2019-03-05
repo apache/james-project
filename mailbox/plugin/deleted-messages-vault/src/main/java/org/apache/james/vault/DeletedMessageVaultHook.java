@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
@@ -109,6 +111,7 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
     private final MailboxSessionMapperFactory mapperFactory;
     private final Clock clock;
 
+    @Inject
     DeletedMessageVaultHook(SessionProvider sessionProvider,
                             DeletedMessageVault deletedMessageVault,
                             DeletedMessageConverter deletedMessageConverter,
