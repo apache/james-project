@@ -20,6 +20,7 @@
 package org.apache.james.modules.server;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -33,6 +34,8 @@ import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.MailRepositoryProbeImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
@@ -43,6 +46,10 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class MailStoreRepositoryModule extends AbstractModule {
+
+    public static final Logger LOGGER = LoggerFactory.getLogger(MailStoreRepositoryModule.class);
+
+    public interface DefaultItemSupplier extends Supplier<MailRepositoryStoreConfiguration.Item> {}
 
     @Override
     protected void configure() {
@@ -57,9 +64,14 @@ public class MailStoreRepositoryModule extends AbstractModule {
 
     @Provides
     @Singleton
-    MailRepositoryStoreConfiguration provideConfiguration(ConfigurationProvider configurationProvider) throws ConfigurationException {
+    MailRepositoryStoreConfiguration provideConfiguration(ConfigurationProvider configurationProvider, DefaultItemSupplier defaultItemSupplier) throws ConfigurationException {
         HierarchicalConfiguration configuration = configurationProvider.getConfiguration("mailrepositorystore");
-        return MailRepositoryStoreConfiguration.parse(configuration);
+        MailRepositoryStoreConfiguration userConfiguration = MailRepositoryStoreConfiguration.parse(configuration);
+        if (!userConfiguration.getItems().isEmpty()) {
+            return userConfiguration;
+        }
+        LOGGER.warn("Empty MailRepository store configuration supplied. Defaulting to default configuration for this product");
+        return MailRepositoryStoreConfiguration.forItems(defaultItemSupplier.get());
     }
 
     @Singleton
