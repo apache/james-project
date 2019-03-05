@@ -36,7 +36,7 @@ import com.google.inject.Provides;
 
 public class DeletedMessageVaultModule extends AbstractModule {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeletedMessageVaultModule.class);
-    private static final MailRepositoryPath DEFAULT_PATH = MailRepositoryPath.from("/var/deletedMessages/vault");
+    private static final MailRepositoryPath DEFAULT_PATH = MailRepositoryPath.from("var/deletedMessages/vault");
 
     @Override
     protected void configure() {
