@@ -23,7 +23,6 @@ import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.store.SystemMailboxesProviderImpl;
 import org.apache.james.modules.mailbox.PreDeletionHookModule;
 import org.apache.james.utils.GuiceProbe;
@@ -52,8 +51,6 @@ public class MailboxModule extends AbstractModule {
 
         bind(SystemMailboxesProviderImpl.class).in(Scopes.SINGLETON);
         bind(SystemMailboxesProvider.class).to(SystemMailboxesProviderImpl.class);
-
-        Multibinder<PreDeletionHook> noPreDeletionHooks = Multibinder.newSetBinder(binder(), PreDeletionHook.class);
     }
 
 }
