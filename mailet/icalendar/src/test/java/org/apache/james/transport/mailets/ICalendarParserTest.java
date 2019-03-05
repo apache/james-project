@@ -197,7 +197,7 @@ public class ICalendarParserTest {
 
         Mail mail = FakeMail.builder()
             .name("mail")
-            .attribute(SOURCE_CUSTOM_ATTRIBUTE, (Serializable) attachments)
+            .attribute(makeCustomSourceAttribute((Serializable) attachments))
             .build();
 
         mailet.service(mail);
@@ -225,7 +225,7 @@ public class ICalendarParserTest {
             .build();
         Mail mail = FakeMail.builder()
             .name("mail")
-            .attribute(SOURCE_CUSTOM_ATTRIBUTE, (Serializable) attachments)
+            .attribute(makeCustomSourceAttribute((Serializable) attachments))
             .build();
 
         mailet.service(mail);
@@ -259,7 +259,7 @@ public class ICalendarParserTest {
 
         Mail mail = FakeMail.builder()
             .name("mail")
-            .attribute(SOURCE_CUSTOM_ATTRIBUTE, (Serializable) attachments)
+            .attribute(makeCustomSourceAttribute((Serializable) attachments))
             .build();
 
         mailet.service(mail);
@@ -268,5 +268,9 @@ public class ICalendarParserTest {
         assertThat(expectedCalendars).hasValueSatisfying(calendars ->
                 assertThat(calendars)
                         .hasSize(1));
+    }
+
+    private Attribute makeCustomSourceAttribute(Serializable attachments) {
+        return new Attribute(SOURCE_CUSTOM_ATTRIBUTE_NAME, AttributeValue.ofSerializable(attachments));
     }
 }

@@ -77,6 +77,7 @@ import org.apache.james.webadmin.service.ReprocessingOneMailTask;
 import org.apache.james.webadmin.service.ReprocessingService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.test.FakeMail;
@@ -620,8 +621,8 @@ public class MailRepositoriesRoutesTest {
         MailAddress recipientHeaderAddress = new MailAddress("third@party");
         FakeMail mail = FakeMail.builder()
             .name(name)
-            .attribute("name1", "value1")
-            .attribute("name2", "value2")
+            .attribute(Attribute.convertToAttribute("name1", "value1"))
+            .attribute(Attribute.convertToAttribute("name2", "value2"))
             .mimeMessage(mimeMessage)
             .size(42424242)
             .addHeaderForRecipient(Header.builder()
