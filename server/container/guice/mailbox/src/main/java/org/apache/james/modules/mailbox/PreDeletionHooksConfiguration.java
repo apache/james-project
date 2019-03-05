@@ -40,6 +40,10 @@ public class PreDeletionHooksConfiguration {
                     .collect(Guavate.toImmutableList()));
     }
 
+    public static PreDeletionHooksConfiguration forHooks(PreDeletionHookConfiguration... hooks) {
+        return new PreDeletionHooksConfiguration(ImmutableList.copyOf(hooks));
+    }
+
     public static PreDeletionHooksConfiguration none() {
         return new PreDeletionHooksConfiguration(ImmutableList.of());
     }

@@ -22,6 +22,7 @@ import java.util.Objects;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -38,6 +39,10 @@ public class PreDeletionHookConfiguration {
         } catch (Exception e) {
             throw new ConfigurationException("Exception encountered in PreDeletionHook configuration", e);
         }
+    }
+
+    public static PreDeletionHookConfiguration forClass(Class<? extends PreDeletionHook> clazz) {
+        return forClass(clazz.getName());
     }
 
     public static PreDeletionHookConfiguration forClass(String clazz) {
