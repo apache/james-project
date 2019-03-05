@@ -110,7 +110,7 @@ public abstract class DeletedMessagesVaultTest {
 
     @Category(BasicFeature.class)
     @Test
-    public void shouldSendANoticeWhenThresholdExceeded() {
+    public void postShouldRestoreJmapDeletedEmail() {
         bartSendMessageToHomer();
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
 

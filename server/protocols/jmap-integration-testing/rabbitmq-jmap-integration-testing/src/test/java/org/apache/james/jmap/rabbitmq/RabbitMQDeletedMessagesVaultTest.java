@@ -17,12 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory;
+package org.apache.james.jmap.rabbitmq;
 
 import java.io.IOException;
 
+import org.apache.james.CassandraRabbitMQSwiftJmapTestRule;
+import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.jmap.methods.integration.DeletedMessagesVaultTest;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.mailbox.PreDeletionHookConfiguration;
@@ -30,21 +31,26 @@ import org.apache.james.modules.mailbox.PreDeletionHooksConfiguration;
 import org.apache.james.vault.DeletedMessageVaultHook;
 import org.apache.james.vault.MailRepositoryDeletedMessageVault;
 import org.apache.james.webadmin.WebAdminConfiguration;
+import org.junit.ClassRule;
 import org.junit.Rule;
 
-public class MemoryFileRepositoryDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
+public class RabbitMQDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
+
+    @ClassRule
+    public static DockerCassandraRule cassandra = new DockerCassandraRule();
 
     @Rule
-    public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
+    public CassandraRabbitMQSwiftJmapTestRule rule = CassandraRabbitMQSwiftJmapTestRule.defaultTestRule();
 
     @Override
     protected GuiceJamesServer createJmapServer() throws IOException {
-        return memoryJmap.jmapServer(
+        return rule.jmapServer(cassandra.getModule(),
             binder -> binder.bind(PreDeletionHooksConfiguration.class)
                 .toInstance(PreDeletionHooksConfiguration.forHooks(
                     PreDeletionHookConfiguration.forClass(DeletedMessageVaultHook.class))),
             binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION),
             binder -> binder.bind(MailRepositoryDeletedMessageVault.Configuration.class)
-                .toInstance(new MailRepositoryDeletedMessageVault.Configuration(MailRepositoryUrl.from("file://var/deletedMessages/user"))));
+                .toInstance(new MailRepositoryDeletedMessageVault.Configuration(MailRepositoryUrl.from("cassandra://var/deletedMessages/user"))));
     }
+    
 }
