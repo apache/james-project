@@ -21,7 +21,12 @@ package org.apache.james.server.core;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Date;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
@@ -31,14 +36,18 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.ContractMailTest;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 public class MailImplTest extends ContractMailTest {
 
@@ -291,5 +300,69 @@ public class MailImplTest extends ContractMailTest {
     void mailImplShouldNotAllowSettingEmptyName() {
         assertThatThrownBy(() -> newMail().setName(""))
             .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void mailImplShouldBeSerializable() throws Exception {
+        MailImpl mail = MailImpl.builder()
+            .name("mail-id")
+            .sender(MailAddress.nullSender())
+            .build();
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+        objectOutputStream.writeObject(mail);
+        objectOutputStream.close();
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+        ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+        Object unserialized = objectInputStream.readObject();
+
+        assertThat(unserialized)
+            .isInstanceOf(MailImpl.class)
+            .isEqualToComparingFieldByField(mail);
+    }
+
+    @Disabled("JAMES-2665: Throws java.io.NotSerializableException: java.util.Optional")
+    @Test
+    void mailImplShouldBeSerializableWithOptionalAttribute() throws Exception {
+        MailImpl mail = MailImpl.builder()
+            .name("mail-id")
+            .sender(MailAddress.nullSender())
+            .addAttribute(AttributeName.of("name").withValue(AttributeValue.of(Optional.empty())))
+            .build();
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+        objectOutputStream.writeObject(mail);
+        objectOutputStream.close();
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+        ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+        Object unserialized = objectInputStream.readObject();
+
+        assertThat(unserialized)
+            .isInstanceOf(MailImpl.class)
+            .isEqualToComparingFieldByField(mail);
+    }
+
+    @Disabled("JAMES-2665: Throws java.io.NotSerializableException: java.io.NotSerializableException: org.apache.mailet.AttributeValue")
+    @Test
+    void mailImplShouldBeSerializableWithCollectionAttribute() throws Exception {
+        MailImpl mail = MailImpl.builder()
+            .name("mail-id")
+            .sender(MailAddress.nullSender())
+            .addAttribute(AttributeName.of("name").withValue(AttributeValue.of(ImmutableList.of(AttributeValue.of("a")))))
+            .build();
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+        objectOutputStream.writeObject(mail);
+        objectOutputStream.close();
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+        ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+        Object unserialized = objectInputStream.readObject();
+
+        assertThat(unserialized)
+            .isInstanceOf(MailImpl.class)
+            .isEqualToComparingFieldByField(mail);
     }
 }
