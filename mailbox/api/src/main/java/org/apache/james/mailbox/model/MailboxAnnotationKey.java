@@ -46,7 +46,7 @@ public class MailboxAnnotationKey {
     public MailboxAnnotationKey(String key) {
         this.key = key;
         Preconditions.checkArgument(isValid(),
-            "Key must start with '/' and not end with '/' and does not contain charater with hex from '\u0000' to '\u00019' or {'*', '%', two consecutive '/'} ");
+            "Key must start with '/' and not end with '/' and does not contain character with hex from '\u0000' to '\u00019' or {'*', '%', two consecutive '/'} ");
     }
 
     private boolean isValid() {

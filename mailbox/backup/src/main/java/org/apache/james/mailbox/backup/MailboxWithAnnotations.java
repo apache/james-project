@@ -18,19 +18,33 @@
  ****************************************************************/
 package org.apache.james.mailbox.backup;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Objects;
 
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.model.MailboxAnnotation;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 
-public interface Backup {
+public class MailboxWithAnnotations {
+    public final Mailbox mailbox;
+    public final List<MailboxAnnotation> annotations;
 
-    /**
-     * @param mailboxes   list of mailboxes and their annotations to be stored in the archive
-     * @param messages    a stream of MailboxMessages that will be consumed
-     * @param destination an OutputStream in which the zip will be written
-     */
-    void archive(List<MailboxWithAnnotations> mailboxes, Stream<MailboxMessage> messages, OutputStream destination) throws IOException;
+    public MailboxWithAnnotations(Mailbox mailbox, List<MailboxAnnotation> annotations) {
+        this.mailbox = mailbox;
+        this.annotations = annotations;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof MailboxAnnotation) {
+            MailboxWithAnnotations that = (MailboxWithAnnotations) o;
+            return Objects.equals(mailbox, that.mailbox) &&
+                Objects.equals(annotations, that.annotations);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mailbox, annotations);
+    }
 }
