@@ -19,7 +19,6 @@
 package org.apache.james.modules.rabbitmq;
 
 import java.io.FileNotFoundException;
-import java.time.Clock;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.inject.Named;
@@ -63,7 +62,6 @@ public class RabbitMQModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(Clock.class).toInstance(Clock.systemUTC());
         bind(ThreadLocalRandom.class).toInstance(ThreadLocalRandom.current());
 
         bind(EnqueuedMailsDAO.class).in(Scopes.SINGLETON);
