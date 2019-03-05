@@ -21,7 +21,6 @@ package org.apache.james.server.core;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -51,14 +50,14 @@ public class MailImplTest extends ContractMailTest {
     private MimeMessage emptyMessage;
 
     @BeforeEach
-    void setup() throws MessagingException {
+    void setup() throws Exception {
         emptyMessage = MimeMessageBuilder.mimeMessageBuilder()
             .setText("")
             .build();
     }
 
     @Test
-    void mailImplShouldHaveSensibleInitialValues() throws MessagingException {
+    void mailImplShouldHaveSensibleInitialValues() throws Exception {
         MailImpl mail = newMail();
 
         assertThat(mail.getName()).isEqualTo("mail-id");
@@ -81,7 +80,7 @@ public class MailImplTest extends ContractMailTest {
     }
 
     @Test
-    void mailImplConstructionShouldSetDefaultValuesOnUnspecifiedFields() throws MessagingException {
+    void mailImplConstructionShouldSetDefaultValuesOnUnspecifiedFields() throws Exception {
         MailImpl mail = MailImpl.builder()
             .name(MailUtil.newId())
             .sender("sender@localhost")
@@ -93,7 +92,7 @@ public class MailImplTest extends ContractMailTest {
     }
 
     @Test
-    void mailImplConstructionShouldSetSpecifiedFields() throws MessagingException {
+    void mailImplConstructionShouldSetSpecifiedFields() throws Exception {
         String sender = "sender@localhost";
         String name = MailUtil.newId();
         MailImpl mail = MailImpl.builder()
@@ -107,7 +106,7 @@ public class MailImplTest extends ContractMailTest {
      }
 
     @Test
-    void mailImplConstructionWithMimeMessageShouldSetSpecifiedFields() throws MessagingException {
+    void mailImplConstructionWithMimeMessageShouldSetSpecifiedFields() throws Exception {
         String name = MailUtil.newId();
         String sender = "sender@localhost";
 
@@ -127,7 +126,7 @@ public class MailImplTest extends ContractMailTest {
     }
 
     @Test
-    void mailImplConstructionWithMimeMessageShouldNotOverwriteMessageId() throws MessagingException {
+    void mailImplConstructionWithMimeMessageShouldNotOverwriteMessageId() throws Exception {
         MailImpl mail = MailImpl.builder()
             .name(MailUtil.newId())
             .sender("sender@localhost")
@@ -138,7 +137,7 @@ public class MailImplTest extends ContractMailTest {
     }
 
     @Test
-    void duplicateFactoryMethodShouldGenerateNewObjectWithSameValuesButName() throws MessagingException, IOException {
+    void duplicateFactoryMethodShouldGenerateNewObjectWithSameValuesButName() throws Exception {
         String name = MailUtil.newId();
         MailImpl mail = MailImpl.builder()
             .name(name)
@@ -167,12 +166,12 @@ public class MailImplTest extends ContractMailTest {
     }
 
     @Test
-    void deriveNewNameShouldGenerateNonEmptyStringOnEmpty() throws MessagingException {
+    void deriveNewNameShouldGenerateNonEmptyStringOnEmpty() throws Exception {
         assertThat(MailImpl.deriveNewName("")).isNotEmpty();
     }
 
     @Test
-    void deriveNewNameShouldNeverGenerateMoreThan86Characters() throws MessagingException {
+    void deriveNewNameShouldNeverGenerateMoreThan86Characters() throws Exception {
         String longString = "mu1Eeseemu1Eeseemu1Eeseemu1Eeseemu1Eeseemu1Eeseemu1Eeseemu1Eeseemu1Eeseeseemu1Eesee";
         assertThat(MailImpl.deriveNewName(longString).length()).isLessThan(86);
     }
@@ -202,7 +201,7 @@ public class MailImplTest extends ContractMailTest {
     }
 
     @Test
-    void deriveNewNameShouldGenerateNotEqualsCurrentName() throws MessagingException {
+    void deriveNewNameShouldGenerateNotEqualsCurrentName() throws Exception {
         assertThat(MailImpl.deriveNewName("current")).isNotEqualTo("current");
     }
 
