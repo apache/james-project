@@ -29,10 +29,12 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.mailrepository.api.MailRepositoryProvider;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.file.FileMailRepository;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
+import org.apache.james.mailrepository.memory.MemoryMailRepositoryProvider;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
 import org.apache.james.modules.server.MailStoreRepositoryModule;
 import org.apache.james.rrt.api.RecipientRewriteTable;
@@ -81,6 +83,9 @@ public class MemoryDataModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MemoryDataConfigurationPerformer.class);
 
         bind(MailStoreRepositoryModule.DefaultItemSupplier.class).toInstance(() -> FILE_MAILREPOSITORY_DEFAULT_DECLARATION);
+
+        Multibinder<MailRepositoryProvider> multibinder = Multibinder.newSetBinder(binder(), MailRepositoryProvider.class);
+        multibinder.addBinding().to(MemoryMailRepositoryProvider.class);
     }
 
     @Provides
