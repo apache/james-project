@@ -42,6 +42,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
@@ -74,6 +75,7 @@ public abstract class DeletedMessagesVaultTest {
     private static final ConditionFactory WAIT_TWO_MINUTES = calmlyAwait.atMost(Duration.TWO_MINUTES);
     private static final String SUBJECT = "This mail will be restored from the vault!!";
     private static final String MAILBOX_NAME = "toBeDeleted";
+    private MailboxId otherMailboxId;
 
     protected abstract GuiceJamesServer createJmapServer() throws IOException;
 
@@ -101,7 +103,7 @@ public abstract class DeletedMessagesVaultTest {
         dataProbe.addUser(HOMER, PASSWORD);
         dataProbe.addUser(BART, BOB_PASSWORD);
         mailboxProbe.createMailbox("#private", HOMER, DefaultMailboxes.INBOX);
-        mailboxProbe.createMailbox("#private", HOMER, MAILBOX_NAME);
+        otherMailboxId = mailboxProbe.createMailbox("#private", HOMER, MAILBOX_NAME);
         homerAccessToken = authenticateJamesUser(baseUri(jmapServer), HOMER, PASSWORD);
         bartAccessToken = authenticateJamesUser(baseUri(jmapServer), BART, BOB_PASSWORD);
 
@@ -201,6 +203,43 @@ public abstract class DeletedMessagesVaultTest {
             .statusCode(200)
             .log().ifValidationFails()
             .body(ARGUMENTS + ".list.subject", hasItem(SUBJECT));
+    }
+
+    @Test
+    public void imapMovedMessageShouldNotEndUpInTheVault() throws Exception {
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        imapMessageReader.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(HOMER, PASSWORD)
+            .select(IMAPMessageReader.INBOX);
+
+        imapMessageReader.moveFirstMessage(MAILBOX_NAME);
+
+        //Moved messages should not be moved to the vault
+        restoreAllMessagesOfHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+
+        // No messages restored for bart
+        assertThat(listMessageIdsForAccount(bartAccessToken).size()).isEqualTo(1);
+    }
+
+    @Test
+    public void jmapMovedMessageShouldNotEndUpInTheVault() {
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+        String messageId = listMessageIdsForAccount(homerAccessToken).get(0);
+
+        homerMovesTheMailInAnotherMailbox(messageId);
+
+        //Moved messages should not be moved to the vault
+        restoreAllMessagesOfHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+
+        // No messages restored for bart
+        assertThat(listMessageIdsForAccount(bartAccessToken).size()).isEqualTo(1);
     }
 
     @Test
@@ -310,5 +349,25 @@ public abstract class DeletedMessagesVaultTest {
             .get("/tasks/" + taskId + "/await")
             .then()
             .body("status", is("completed"));
+    }
+
+    private void homerMovesTheMailInAnotherMailbox(String messageId) {
+        String updateRequestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"update\": { \"" + messageId  + "\" : {" +
+            "        \"mailboxIds\": [\"" + otherMailboxId.serialize() + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", bartAccessToken.serialize())
+            .body(updateRequestBody)
+            .when()
+            .post("/jmap");
     }
 }
