@@ -52,6 +52,11 @@ public class MemoryDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
                 .toInstance(new MailRepositoryDeletedMessageVault.Configuration(MailRepositoryUrl.from("memory://var/deletedMessages/user"))));
     }
 
+    @Override
+    protected void awaitSearchUpToDate() {
+
+    }
+
     @Disabled("MAILBOX-379 PreDeletionHook are not yet triggered upon mailbox deletion")
     @Category(BasicFeature.class)
     @Override

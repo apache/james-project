@@ -57,6 +57,11 @@ public class RabbitMQDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
                 .toInstance(new MailRepositoryDeletedMessageVault.Configuration(MailRepositoryUrl.from("cassandra://var/deletedMessages/user"))));
     }
 
+    @Override
+    protected void awaitSearchUpToDate() {
+        rule.await();
+    }
+
     @Disabled("MAILBOX-379 PreDeletionHook are not yet triggered upon mailbox deletion")
     @Category(BasicFeature.class)
     @Override
