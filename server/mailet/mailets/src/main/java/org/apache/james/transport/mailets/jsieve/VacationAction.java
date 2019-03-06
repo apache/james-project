@@ -67,6 +67,7 @@ public class VacationAction implements MailAction {
             .build();
 
         context.post(MailImpl.builder()
+            .name(MailImpl.getId())
             .sender(vacationReply.getSender())
             .recipients(vacationReply.getRecipients())
             .mimeMessage(vacationReply.getMimeMessage())

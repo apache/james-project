@@ -138,6 +138,7 @@ public class RejectAction implements MailAction {
         Address[] recipientAddresses = reply.getAllRecipients();
         if (recipientAddresses != null) {
             context.post(MailImpl.builder()
+                .name(MailImpl.getId())
                 .recipients(Arrays.stream(recipientAddresses)
                     .map(address -> (InternetAddress) address)
                     .map(Throwing.function(MailAddress::new))
