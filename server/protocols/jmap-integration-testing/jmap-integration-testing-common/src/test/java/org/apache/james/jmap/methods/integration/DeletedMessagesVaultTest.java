@@ -29,6 +29,7 @@ import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
 import static org.apache.james.jmap.TestingConstants.DOMAIN;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 
@@ -47,7 +48,6 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.routes.TasksRoutes;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.After;
@@ -132,6 +132,52 @@ public abstract class DeletedMessagesVaultTest {
             .body(ARGUMENTS + ".list.subject", hasItem(SUBJECT));
     }
 
+    @Test
+    public void restoreShouldNotImpactOtherUsers() {
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        bartDeletesMessages(listMessageIdsForAccount(bartAccessToken));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(bartAccessToken).size() == 0);
+
+        restoreAllMessagesOfHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        // No messages restored for bart
+        assertThat(listMessageIdsForAccount(bartAccessToken).size()).isEqualTo(0);
+    }
+
+    @Test
+    public void restoredMessagesShouldNotBeRemovedFromTheVault() {
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        restoreAllMessagesOfHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        restoreAllMessagesOfHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 2);
+    }
+
+    @Test
+    public void postShouldNotRestoreItemsWhenTheVaultIsEmpty() throws Exception {
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        restoreAllMessagesOfHomer();
+        Thread.sleep(Duration.FIVE_SECONDS.getValueInMS());
+
+        // No additional had been restored as the vault is empty
+        assertThat(listMessageIdsForAccount(homerAccessToken).size())
+            .isEqualTo(1);
+    }
+
     private void bartSendMessageToHomer() {
         String messageCreationId = "creationId";
         String outboxId = getOutboxId(bartAccessToken);
@@ -165,12 +211,20 @@ public abstract class DeletedMessagesVaultTest {
     }
 
     private void homerDeletesMessages(List<String> idsToDestroy) {
+        deleteMessages(homerAccessToken, idsToDestroy);
+    }
+
+    private void bartDeletesMessages(List<String> idsToDestroy) {
+        deleteMessages(bartAccessToken, idsToDestroy);
+    }
+
+    private void deleteMessages(AccessToken accessToken, List<String> idsToDestroy) {
         String idString = idsToDestroy.stream()
             .map(id -> "\"" + id + "\"")
             .collect(Collectors.joining(","));
 
         with()
-            .header("Authorization", homerAccessToken.serialize())
+            .header("Authorization", accessToken.serialize())
             .body("[[\"setMessages\", {\"destroy\": [" + idString + "]}, \"#0\"]]")
             .post("/jmap");
     }
@@ -182,9 +236,7 @@ public abstract class DeletedMessagesVaultTest {
             .get("taskId");
 
         webAdminApi.given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
+            .get("/tasks/" + taskId + "/await")
             .then()
             .body("status", is("completed"));
     }
