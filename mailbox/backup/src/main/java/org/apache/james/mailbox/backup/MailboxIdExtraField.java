@@ -24,9 +24,9 @@ import java.util.Optional;
 import org.apache.commons.compress.archivers.zip.ZipShort;
 import org.apache.james.mailbox.model.MailboxId;
 
-public class MailboxIdExtraField extends StringExtraField {
+public class MailboxIdExtraField extends StringExtraField implements WithZipHeader {
 
-    public static final ZipShort ID_AM = new ZipShort(0x6D61); // "am" in little-endian
+    public static final ZipShort ID_AM = new ZipShort(WithZipHeader.toLittleEndian('a', 'm'));
 
     public MailboxIdExtraField() {
         super();

@@ -16,41 +16,23 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.mailbox.backup;
 
-import java.util.Date;
-import java.util.Optional;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.commons.compress.archivers.zip.ZipShort;
+import org.junit.jupiter.api.Test;
 
-public class InternalDateExtraField extends LongExtraField implements WithZipHeader {
+class WithZipHeaderTest {
+    private static final short al = 0x6C61;
+    private static final short aq = 0x7161;
 
-    public static final ZipShort ID_AO = new ZipShort(WithZipHeader.toLittleEndian('a', 'o'));
-
-    public InternalDateExtraField() {
-        super();
+    @Test
+    void toLittleEndianShouldReturnLittleEndianRepresentationOfStringAl() {
+        assertThat(WithZipHeader.toLittleEndian('a', 'l')).isEqualTo(al);
     }
 
-    public InternalDateExtraField(Optional<Date> date) {
-        super(date
-            .map(Date::getTime));
-    }
-
-    public InternalDateExtraField(Date date) {
-        this(Optional.of(date));
-    }
-
-    public InternalDateExtraField(long timestamp) {
-        this(Optional.of(new Date(timestamp)));
-    }
-
-    @Override
-    public ZipShort getHeaderId() {
-        return ID_AO;
-    }
-
-    public Optional<Date> getDateValue() {
-        return getValue().map(Date::new);
+    @Test
+    void toLittleEndianShouldReturnLittleEndianRepresentationOfStringAq() {
+        assertThat(WithZipHeader.toLittleEndian('a', 'q')).isEqualTo(aq);
     }
 }

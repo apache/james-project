@@ -16,41 +16,17 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.mailbox.backup;
 
-import java.util.Date;
-import java.util.Optional;
+import java.nio.ByteOrder;
+import java.nio.CharBuffer;
 
-import org.apache.commons.compress.archivers.zip.ZipShort;
+import org.apache.james.mime4j.Charsets;
 
-public class InternalDateExtraField extends LongExtraField implements WithZipHeader {
+public interface WithZipHeader {
 
-    public static final ZipShort ID_AO = new ZipShort(WithZipHeader.toLittleEndian('a', 'o'));
-
-    public InternalDateExtraField() {
-        super();
-    }
-
-    public InternalDateExtraField(Optional<Date> date) {
-        super(date
-            .map(Date::getTime));
-    }
-
-    public InternalDateExtraField(Date date) {
-        this(Optional.of(date));
-    }
-
-    public InternalDateExtraField(long timestamp) {
-        this(Optional.of(new Date(timestamp)));
-    }
-
-    @Override
-    public ZipShort getHeaderId() {
-        return ID_AO;
-    }
-
-    public Optional<Date> getDateValue() {
-        return getValue().map(Date::new);
+    static int toLittleEndian(char lowByte, char highByte) {
+        char[] chars = new char[]{lowByte, highByte};
+        return Charsets.US_ASCII.encode(CharBuffer.wrap(chars)).order(ByteOrder.LITTLE_ENDIAN).getShort();
     }
 }

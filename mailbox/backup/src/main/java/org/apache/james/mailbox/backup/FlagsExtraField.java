@@ -28,9 +28,9 @@ import javax.mail.Flags;
 import org.apache.commons.compress.archivers.zip.ZipShort;
 import org.apache.james.util.StreamUtils;
 
-public class FlagsExtraField extends StringExtraField {
+public class FlagsExtraField extends StringExtraField implements WithZipHeader {
 
-    public static final ZipShort ID_AP = new ZipShort(0x7061); // "ap" in little-endian
+    public static final ZipShort ID_AP = new ZipShort(WithZipHeader.toLittleEndian('a', 'p'));
 
     private static String serializeFlags(Flags flags) {
         return Stream.concat(
