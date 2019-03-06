@@ -20,9 +20,10 @@
 package org.apache.james.jmap.methods.integration.cucumber;
 
 import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -103,20 +104,29 @@ public class GetMessageListMethodStepdefs {
 
     @Then("^the message list is empty$")
     public void assertEmpty() {
-        assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
-        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).isEmpty();
+        calmlyAwait
+            .atMost(30, TimeUnit.SECONDS)
+            .until(
+                () -> httpClient.response.getStatusLine().getStatusCode() == 200
+                    && httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds").isEmpty());
     }
 
     @Then("^the message list has size (\\d+)")
     public void assertSize(int size) {
-        assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
-        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).hasSize(size);
+        calmlyAwait
+            .atMost(30, TimeUnit.SECONDS)
+            .until(
+                () -> httpClient.response.getStatusLine().getStatusCode() == 200
+                    && httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds").size() == size);
     }
 
     @Then("^the message list contains \"([^\"]*)\"")
     public void assertContains(String message) {
         MessageId messageId = messageIdStepdefs.getMessageId(message);
-        assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
-        assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds")).contains(messageId.serialize());
+        calmlyAwait
+            .atMost(30, TimeUnit.SECONDS)
+            .until(
+                () -> httpClient.response.getStatusLine().getStatusCode() == 200
+                    && httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".messageIds").contains(messageId.serialize()));
     }
 }
