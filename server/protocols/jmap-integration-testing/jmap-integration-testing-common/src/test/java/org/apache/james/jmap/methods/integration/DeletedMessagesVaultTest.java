@@ -214,6 +214,72 @@ public abstract class DeletedMessagesVaultTest {
     }
 
     @Test
+    public void postShouldRestoreMatchingMessages() {
+        bartSendMessageToHomerWithSubject("aaaaa");
+        bartSendMessageToHomerWithSubject("bbbbb");
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 2);
+
+        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
+
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        String query = "{" +
+            "  \"combinator\": \"and\"," +
+            "  \"criteria\": [" +
+            "    {" +
+            "      \"fieldName\": \"subject\"," +
+            "      \"operator\": \"equals\"," +
+            "      \"value\": \"aaaaa\"" +
+            "    }" +
+            "  ]" +
+            "}";
+        restoreMessagesFor(HOMER, query);
+
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        String messageId = listMessageIdsForAccount(homerAccessToken).get(0);
+        given()
+            .header("Authorization", homerAccessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+            .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(ARGUMENTS + ".list.subject", hasItem("aaaaa"));
+    }
+
+    @Test
+    public void postShouldNotRestoreWhenNoMatchingMessages() throws Exception {
+        bartSendMessageToHomerWithSubject("aaaaa");
+        bartSendMessageToHomerWithSubject("bbbbb");
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 2);
+
+        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
+
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        String query = "{" +
+            "  \"combinator\": \"and\"," +
+            "  \"criteria\": [" +
+            "    {" +
+            "      \"fieldName\": \"subject\"," +
+            "      \"operator\": \"equals\"," +
+            "      \"value\": \"ccccc\"" +
+            "    }" +
+            "  ]" +
+            "}";
+        restoreMessagesFor(HOMER, query);
+
+
+        Thread.sleep(Duration.FIVE_SECONDS.getValueInMS());
+
+        // No additional had been restored for Bart as the vault is empty
+        assertThat(listMessageIdsForAccount(homerAccessToken).size())
+            .isEqualTo(0);
+    }
+
+    @Test
     public void imapMovedMessageShouldNotEndUpInTheVault() throws Exception {
         bartSendMessageToHomer();
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
@@ -365,6 +431,10 @@ public abstract class DeletedMessagesVaultTest {
     }
 
     private void bartSendMessageToHomer() {
+        bartSendMessageToHomerWithSubject(SUBJECT);
+    }
+
+    private void bartSendMessageToHomerWithSubject(String subject) {
         String messageCreationId = "creationId";
         String outboxId = getOutboxId(bartAccessToken);
         String bigEnoughBody = Strings.repeat("123456789\n", 12 * 100);
@@ -376,7 +446,7 @@ public abstract class DeletedMessagesVaultTest {
             "        \"headers\":{\"Disposition-Notification-To\":\"" + BART + "\"}," +
             "        \"from\": { \"name\": \"Bob\", \"email\": \"" + BART + "\"}," +
             "        \"to\": [{ \"name\": \"User\", \"email\": \"" + HOMER + "\"}]," +
-            "        \"subject\": \"" + SUBJECT + "\"," +
+            "        \"subject\": \"" + subject + "\"," +
             "        \"textBody\": \"" + bigEnoughBody + "\"," +
             "        \"htmlBody\": \"Test <b>body</b>, HTML version\"," +
             "        \"mailboxIds\": [\"" + outboxId + "\"] " +
@@ -420,8 +490,12 @@ public abstract class DeletedMessagesVaultTest {
     }
 
     private void restoreMessagesFor(String user) {
+        restoreMessagesFor(user, MATCH_ALL_QUERY);
+    }
+
+    private void restoreMessagesFor(String user, String criteria) {
         String taskId = webAdminApi.with()
-            .body(MATCH_ALL_QUERY)
+            .body(criteria)
             .post("/deletedMessages/user/" + user + "?action=restore")
             .jsonPath()
             .get("taskId");

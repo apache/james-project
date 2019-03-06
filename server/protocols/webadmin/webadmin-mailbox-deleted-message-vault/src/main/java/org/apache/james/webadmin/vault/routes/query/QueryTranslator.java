@@ -54,6 +54,7 @@ import org.apache.james.vault.search.Query;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableTable;
 
@@ -167,6 +168,7 @@ public class QueryTranslator {
     private final ImmutableTable<FieldName, Operator, Function<String, Criterion>> criterionRegistry;
 
     @Inject
+    @VisibleForTesting
     public QueryTranslator(MailboxId.Factory mailboxIdFactory) {
         criterionRegistry = withMailboxIdCriterionParser(mailboxIdFactory);
     }
