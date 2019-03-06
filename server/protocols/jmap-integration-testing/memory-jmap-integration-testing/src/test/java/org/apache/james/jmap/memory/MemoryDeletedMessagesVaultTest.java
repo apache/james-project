@@ -56,7 +56,7 @@ public class MemoryDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
     @Category(BasicFeature.class)
     @Override
     @Test
-    public void postShouldRestoreImapDeletedMailbox() {
+    public void vaultEndpointShouldRestoreImapDeletedMailbox() {
 
     }
 }

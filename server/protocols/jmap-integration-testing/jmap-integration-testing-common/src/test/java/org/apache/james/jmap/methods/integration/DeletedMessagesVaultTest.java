@@ -60,6 +60,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Disabled;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import com.google.common.base.Strings;
 
@@ -122,7 +123,7 @@ public abstract class DeletedMessagesVaultTest {
 
     @Category(BasicFeature.class)
     @Test
-    public void postShouldRestoreJmapDeletedEmail() {
+    public void vaultEndpointShouldRestoreJmapDeletedEmail() {
         bartSendMessageToHomer();
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
 
@@ -146,7 +147,7 @@ public abstract class DeletedMessagesVaultTest {
 
     @Category(BasicFeature.class)
     @Test
-    public void postShouldRestoreImapDeletedEmail() throws Exception {
+    public void vaultEndpointShouldRestoreImapDeletedEmail() throws Exception {
         bartSendMessageToHomer();
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
 
@@ -176,7 +177,7 @@ public abstract class DeletedMessagesVaultTest {
     @Disabled("MAILBOX-379 PreDeletionHook are not yet triggered upon mailbox deletion")
     @Category(BasicFeature.class)
     @Test
-    public void postShouldRestoreImapDeletedMailbox() throws Exception {
+    public void vaultEndpointShouldRestoreImapDeletedMailbox() throws Exception {
         bartSendMessageToHomer();
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
 
@@ -276,7 +277,7 @@ public abstract class DeletedMessagesVaultTest {
     }
 
     @Test
-    public void postShouldNotRestoreItemsWhenTheVaultIsEmpty() throws Exception {
+    public void vaultEndpointShouldNotRestoreItemsWhenTheVaultIsEmpty() {
         bartSendMessageToHomer();
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
 
@@ -286,6 +287,75 @@ public abstract class DeletedMessagesVaultTest {
         // No additional had been restored as the vault is empty
         assertThat(listMessageIdsForAccount(homerAccessToken).size())
             .isEqualTo(1);
+    }
+
+    @Test
+    public void vaultEndpointShouldNotRestoreMessageForSharee() {
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(bartAccessToken).size() == 1);
+
+        String messageId = listMessageIdsForAccount(homerAccessToken).get(0);
+        homerMovesTheMailInAnotherMailbox(messageId);
+
+        homerSharesHisMailboxWithBart();
+
+        bartDeletesMessages(ImmutableList.of(messageId));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        restoreMessagesFor(BART);
+
+        Thread.sleep(Duration.FIVE_SECONDS.getValueInMS());
+
+        // No additional had been restored for Bart as the vault is empty
+        assertThat(listMessageIdsForAccount(bartAccessToken).size())
+            .isEqualTo(1);
+    }
+
+    @Test
+    public void vaultEndpointShouldRestoreMessageForSharer() {
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        String messageId = listMessageIdsForAccount(homerAccessToken).get(0);
+        homerMovesTheMailInAnotherMailbox(messageId);
+
+        homerSharesHisMailboxWithBart();
+
+        bartDeletesMessages(ImmutableList.of(messageId));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        restoreAllMessagesOfHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        String newMessageId = listMessageIdsForAccount(homerAccessToken).get(0);
+        given()
+            .header("Authorization", homerAccessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + newMessageId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+            .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(ARGUMENTS + ".list.subject", hasItem(SUBJECT));
+    }
+
+    private void homerSharesHisMailboxWithBart() {
+        with()
+            .header("Authorization", homerAccessToken.serialize())
+            .body("[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"update\": {" +
+                "        \"" + otherMailboxId.serialize() + "\" : {" +
+                "          \"sharedWith\" : {\"" + BART + "\": [\"a\", \"w\", \"r\"]}" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]")
+            .post("/jmap");
     }
 
     private void bartSendMessageToHomer() {
@@ -340,8 +410,12 @@ public abstract class DeletedMessagesVaultTest {
     }
 
     private void restoreAllMessagesOfHomer() {
+        restoreMessagesFor(HOMER);
+    }
+
+    private void restoreMessagesFor(String user) {
         String taskId = webAdminApi.with()
-            .post("/deletedMessages/user/" + HOMER + "?action=restore")
+            .post("/deletedMessages/user/" + user + "?action=restore")
             .jsonPath()
             .get("taskId");
 
