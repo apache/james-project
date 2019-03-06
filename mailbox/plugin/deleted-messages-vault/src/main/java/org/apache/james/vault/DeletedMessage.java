@@ -39,17 +39,17 @@ import com.google.common.collect.ImmutableList;
 public class DeletedMessage {
     public static class Builder {
         @FunctionalInterface
-        interface RequireMessageId<T> {
+        public interface RequireMessageId<T> {
             T messageId(MessageId messageId);
         }
 
         @FunctionalInterface
-        interface RequireUser<T> {
+        public interface RequireUser<T> {
             T user(User user);
         }
 
         @FunctionalInterface
-        interface RequireOriginMailboxes<T> {
+        public interface RequireOriginMailboxes<T> {
             T originMailboxes(List<MailboxId> mailboxIds);
 
             default T originMailboxes(MailboxId... mailboxIds) {
@@ -58,22 +58,22 @@ public class DeletedMessage {
         }
 
         @FunctionalInterface
-        interface RequireDeliveryDate<T> {
+        public interface RequireDeliveryDate<T> {
             T deliveryDate(ZonedDateTime deliveryDate);
         }
 
         @FunctionalInterface
-        interface RequireDeletionDate<T> {
+        public interface RequireDeletionDate<T> {
             T deletionDate(ZonedDateTime deletionDate);
         }
 
         @FunctionalInterface
-        interface RequireSender<T> {
+        public interface RequireSender<T> {
             T sender(MaybeSender sender);
         }
 
         @FunctionalInterface
-        interface RequireRecipients<T> {
+        public interface RequireRecipients<T> {
             T recipients(Collection<MailAddress> recipients);
 
             default T recipients(MailAddress... recipients) {
@@ -82,7 +82,7 @@ public class DeletedMessage {
         }
 
         @FunctionalInterface
-        interface RequireHasAttachment<T> {
+        public interface RequireHasAttachment<T> {
             T hasAttachment(boolean value);
 
             default T hasAttachment() {

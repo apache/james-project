@@ -25,15 +25,15 @@ import org.apache.james.vault.DeletedMessage;
 
 public class Criterion<T> {
 
-    interface ValueMatcher<T> {
+    public interface ValueMatcher<T> {
         boolean matches(T referenceValue);
     }
 
-    interface ExpectMatcher<T> {
+    public interface ExpectMatcher<T> {
         Criterion<T> withMatcher(ValueMatcher<T> valueMatcher);
     }
 
-    interface Builder {
+    public interface Builder {
         static <U> ExpectMatcher<U> forField(DeletedMessageField<U> field) {
             return matcher -> new Criterion<>(field, matcher);
         }

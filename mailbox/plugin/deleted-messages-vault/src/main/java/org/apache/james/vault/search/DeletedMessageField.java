@@ -27,7 +27,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.vault.DeletedMessage;
 
-interface DeletedMessageField<T> {
+public interface DeletedMessageField<T> {
     interface ValueExtractor<T> {
         Optional<T> extract(DeletedMessage deletedMessage);
 
