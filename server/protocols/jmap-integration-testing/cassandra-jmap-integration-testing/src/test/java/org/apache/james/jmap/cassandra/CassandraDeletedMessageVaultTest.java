@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.jmap.methods.integration.DeletedMessagesVaultTest;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.mailbox.PreDeletionHookConfiguration;
@@ -33,6 +34,9 @@ import org.apache.james.vault.MailRepositoryDeletedMessageVault;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Disabled;
 
 public class CassandraDeletedMessageVaultTest extends DeletedMessagesVaultTest {
 
@@ -51,5 +55,13 @@ public class CassandraDeletedMessageVaultTest extends DeletedMessagesVaultTest {
             binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION),
             binder -> binder.bind(MailRepositoryDeletedMessageVault.Configuration.class)
                 .toInstance(new MailRepositoryDeletedMessageVault.Configuration(MailRepositoryUrl.from("cassandra://var/deletedMessages/user"))));
+    }
+
+    @Disabled("MAILBOX-379 PreDeletionHook are not yet triggered upon mailbox deletion")
+    @Category(BasicFeature.class)
+    @Override
+    @Test
+    public void postShouldRestoreImapDeletedMailbox() {
+
     }
 }

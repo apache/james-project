@@ -27,6 +27,7 @@ import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
 import static org.apache.james.jmap.TestingConstants.DOMAIN;
+import static org.apache.james.jmap.TestingConstants.LOCALHOST_IP;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,8 +44,10 @@ import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -52,8 +55,10 @@ import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Disabled;
 
 import com.google.common.base.Strings;
 
@@ -68,8 +73,12 @@ public abstract class DeletedMessagesVaultTest {
     private static final String BOB_PASSWORD = "bobPassword";
     private static final ConditionFactory WAIT_TWO_MINUTES = calmlyAwait.atMost(Duration.TWO_MINUTES);
     private static final String SUBJECT = "This mail will be restored from the vault!!";
+    private static final String MAILBOX_NAME = "toBeDeleted";
 
     protected abstract GuiceJamesServer createJmapServer() throws IOException;
+
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
 
     private AccessToken homerAccessToken;
     private AccessToken bartAccessToken;
@@ -92,6 +101,7 @@ public abstract class DeletedMessagesVaultTest {
         dataProbe.addUser(HOMER, PASSWORD);
         dataProbe.addUser(BART, BOB_PASSWORD);
         mailboxProbe.createMailbox("#private", HOMER, DefaultMailboxes.INBOX);
+        mailboxProbe.createMailbox("#private", HOMER, MAILBOX_NAME);
         homerAccessToken = authenticateJamesUser(baseUri(jmapServer), HOMER, PASSWORD);
         bartAccessToken = authenticateJamesUser(baseUri(jmapServer), BART, BOB_PASSWORD);
 
@@ -115,6 +125,67 @@ public abstract class DeletedMessagesVaultTest {
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
 
         homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        restoreAllMessagesOfHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        String messageId = listMessageIdsForAccount(homerAccessToken).get(0);
+        given()
+            .header("Authorization", homerAccessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(ARGUMENTS + ".list.subject", hasItem(SUBJECT));
+    }
+
+    @Category(BasicFeature.class)
+    @Test
+    public void postShouldRestoreImapDeletedEmail() throws Exception {
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        imapMessageReader.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(HOMER, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .setFlagsForAllMessagesInMailbox("\\Deleted");
+        imapMessageReader.expunge();
+
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        restoreAllMessagesOfHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        String messageId = listMessageIdsForAccount(homerAccessToken).get(0);
+        given()
+            .header("Authorization", homerAccessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(ARGUMENTS + ".list.subject", hasItem(SUBJECT));
+    }
+
+    @Disabled("MAILBOX-379 PreDeletionHook are not yet triggered upon mailbox deletion")
+    @Category(BasicFeature.class)
+    @Test
+    public void postShouldRestoreImapDeletedMailbox() throws Exception {
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        imapMessageReader.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(HOMER, PASSWORD)
+            .select(IMAPMessageReader.INBOX);
+
+        imapMessageReader.moveFirstMessage(MAILBOX_NAME);
+
+        imapMessageReader.delete(MAILBOX_NAME);
+
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
         restoreAllMessagesOfHomer();

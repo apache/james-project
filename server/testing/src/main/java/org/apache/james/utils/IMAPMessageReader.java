@@ -67,6 +67,11 @@ public class IMAPMessageReader extends ExternalResource implements Closeable, Af
         return this;
     }
 
+    public IMAPMessageReader delete(String mailbox) throws IOException {
+        imapClient.delete(mailbox);
+        return this;
+    }
+
     public boolean hasAMessage() throws IOException {
         imapClient.fetch("1:1", "ALL");
         return imapClient.getReplyString()
