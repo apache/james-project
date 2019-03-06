@@ -36,6 +36,8 @@ import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Test;
 
+import com.google.common.base.Joiner;
+
 public class AutomaticallySentMailDetectorImplTest {
 
     @Test
@@ -238,13 +240,17 @@ public class AutomaticallySentMailDetectorImplTest {
         scriptPart.setDataHandler(
                 new DataHandler(
                         new ByteArrayDataSource(
-                                "Disposition: MDN-sent-automatically",
+                            Joiner.on("\r\n").join(
+                                "Final-Recipient: rfc822;any@any.com",
+                                "Disposition: automatic-action/MDN-sent-automatically; displayed",
+                                ""),
                                 "message/disposition-notification;")
                         ));
         scriptPart.setHeader("Content-Type", "message/disposition-notification");
         multipart.addBodyPart(scriptPart);
         message.setContent(multipart);
-        
+        message.saveChanges();
+
         FakeMail fakeMail = FakeMail.builder()
                 .name("mail")
                 .sender("any@any.com")
@@ -262,12 +268,16 @@ public class AutomaticallySentMailDetectorImplTest {
         scriptPart.setDataHandler(
                 new DataHandler(
                         new ByteArrayDataSource(
-                                "Disposition: MDN-sent-manually",
+                            Joiner.on("\r\n").join(
+                                "Final-Recipient: rfc822;any@any.com",
+                                "Disposition: manual-action/MDN-sent-manually; displayed",
+                                ""),
                                 "message/disposition-notification; charset=UTF-8")
                         ));
         scriptPart.setHeader("Content-Type", "message/disposition-notification");
         multipart.addBodyPart(scriptPart);
         message.setContent(multipart);
+        message.saveChanges();
         
         FakeMail fakeMail = FakeMail.builder()
                 .name("mail")
@@ -292,6 +302,7 @@ public class AutomaticallySentMailDetectorImplTest {
         scriptPart.setHeader("Content-Type", "text/plain");
         multipart.addBodyPart(scriptPart);
         message.setContent(multipart);
+        message.saveChanges();
         
         FakeMail fakeMail = FakeMail.builder()
                 .name("mail")
