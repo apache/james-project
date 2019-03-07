@@ -31,6 +31,7 @@ import org.apache.james.webadmin.routes.DLPConfigurationRoutes;
 import org.apache.james.webadmin.routes.DomainMappingsRoutes;
 import org.apache.james.webadmin.routes.DomainQuotaRoutes;
 import org.apache.james.webadmin.routes.DomainsRoutes;
+import org.apache.james.webadmin.routes.EventDeadLettersRoutes;
 import org.apache.james.webadmin.routes.ForwardRoutes;
 import org.apache.james.webadmin.routes.GlobalQuotaRoutes;
 import org.apache.james.webadmin.routes.GroupsRoutes;
@@ -97,7 +98,10 @@ class UnauthorizedEndpointsTest {
             SieveQuotaRoutes.ROOT_PATH + "/users/user@james.org",
             TasksRoutes.BASE,
             TasksRoutes.BASE + "/taskId",
-            TasksRoutes.BASE + "/taskId/await"
+            TasksRoutes.BASE + "/taskId/await",
+            EventDeadLettersRoutes.BASE_PATH + "/groups",
+            EventDeadLettersRoutes.BASE_PATH + "/groups/group@james.org",
+            EventDeadLettersRoutes.BASE_PATH + "/groups/group@james.org/1"
     })
     void checkUrlProtectionOnGet(String url) {
         when()
@@ -111,7 +115,10 @@ class UnauthorizedEndpointsTest {
             CassandraMigrationRoutes.VERSION_BASE + "/upgrade",
             CassandraMigrationRoutes.VERSION_BASE + "/upgrade/latest",
             DeletedMessagesVaultRoutes.ROOT_PATH + "/joe@perdu.com",
-            CassandraMappingsRoutes.ROOT_PATH
+            CassandraMappingsRoutes.ROOT_PATH,
+            EventDeadLettersRoutes.BASE_PATH,
+            EventDeadLettersRoutes.BASE_PATH + "/groups/group@james.org",
+            EventDeadLettersRoutes.BASE_PATH + "/groups/group@james.org/1"
     })
     void checkUrlProtectionOnPost(String url) {
         when()
@@ -174,7 +181,8 @@ class UnauthorizedEndpointsTest {
             MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo/mails",
             SieveQuotaRoutes.DEFAULT_QUOTA_PATH,
             SieveQuotaRoutes.ROOT_PATH + "/users/user@james.org",
-            TasksRoutes.BASE + "/taskId"
+            TasksRoutes.BASE + "/taskId",
+            EventDeadLettersRoutes.BASE_PATH + "/groups/group@james.org/1"
     })
     void checkUrlProtectionOnDelete(String url) {
         when()
