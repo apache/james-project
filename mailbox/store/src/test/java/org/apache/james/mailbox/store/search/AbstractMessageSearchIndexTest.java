@@ -28,6 +28,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.Flags;
 
@@ -37,8 +38,10 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
@@ -59,6 +62,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.Duration;
 
 public abstract class AbstractMessageSearchIndexTest {
 
@@ -1450,6 +1456,27 @@ public abstract class AbstractMessageSearchIndexTest {
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsOnly(m3.getUid());
+    }
+
+    @Test
+    public void copiedMessageShouldAllBeIndexed() throws Exception {
+        MailboxPath newBoxPath = MailboxPath.forUser(USERNAME, "newBox");
+        MailboxId newBoxId = storeMailboxManager.createMailbox(newBoxPath, session).get();
+
+        storeMailboxManager.copyMessages(MessageRange.all(), inboxMessageManager.getId(), newBoxId, session);
+
+        SearchQuery searchQuery = new SearchQuery();
+
+        StoreMessageManager newBox = (StoreMessageManager) storeMailboxManager.getMailbox(newBoxId, session);
+
+        Awaitility.with()
+            .pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
+            .and().with()
+            .pollDelay(new Duration(1, TimeUnit.MILLISECONDS))
+            .await()
+            .atMost(30, TimeUnit.SECONDS)
+            .until(
+                () -> Iterators.size(messageSearchIndex.search(session, newBox.getMailboxEntity(), searchQuery)) == 9);
     }
 
     @Test
