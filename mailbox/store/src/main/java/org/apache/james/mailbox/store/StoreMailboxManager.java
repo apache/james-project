@@ -39,6 +39,7 @@ import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
@@ -59,6 +60,7 @@ import org.apache.james.mailbox.model.MailboxMetaData.Selectability;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageId.Factory;
+import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -70,7 +72,6 @@ import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
@@ -86,6 +87,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+
+import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * This base class of an {@link MailboxManager} implementation provides a high-level api for writing your own
@@ -395,9 +399,22 @@ public class StoreMailboxManager implements MailboxManager {
 
             QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
             long messageCount = messageMapper.countMessagesInMailbox(mailbox);
-            long totalSize = Iterators.toStream(messageMapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, UNLIMITED))
-                .mapToLong(Message::getFullContentOctets)
+
+            List<MetadataWithMailboxId> metadata = Iterators.toStream(messageMapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, UNLIMITED))
+                .map(message -> MetadataWithMailboxId.from(message.metaData(), message.getMailboxId()))
+                .collect(Guavate.toImmutableList());
+
+            long totalSize = metadata.stream()
+                .map(MetadataWithMailboxId::getMessageMetaData)
+                .mapToLong(MessageMetaData::getSize)
                 .sum();
+
+            PreDeletionHook.DeleteOperation deleteOperation = PreDeletionHook.DeleteOperation.from(metadata);
+
+            Flux.fromIterable(preDeletionHooks)
+                .publishOn(Schedulers.elastic())
+                .flatMap(hook -> hook.notifyDelete(deleteOperation))
+                .blockLast();
 
             // We need to create a copy of the mailbox as maybe we can not refer to the real
             // mailbox once we remove it

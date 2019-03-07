@@ -1381,6 +1381,27 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             }
 
             @Test
+            void deleteMailboxShouldCallAllPreDeletionHooks() throws Exception {
+                ComposedMessageId composeId = inboxManager.appendMessage(AppendCommand.builder()
+                    .withFlags(new Flags(Flags.Flag.DELETED))
+                    .build(message), session);
+                mailboxManager.deleteMailbox(inbox, session);
+
+                ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor1 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+                ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor2 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+                verify(preDeletionHook1, times(1)).notifyDelete(preDeleteCaptor1.capture());
+                verify(preDeletionHook2, times(1)).notifyDelete(preDeleteCaptor2.capture());
+
+                assertThat(preDeleteCaptor1.getValue().getDeletionMetadataList())
+                    .hasSize(1)
+                    .hasSameElementsAs(preDeleteCaptor2.getValue().getDeletionMetadataList())
+                    .allSatisfy(deleteMetadata -> SoftAssertions.assertSoftly(softy -> {
+                        softy.assertThat(deleteMetadata.getMailboxId()).isEqualTo(inboxId);
+                        softy.assertThat(deleteMetadata.getMessageMetaData().getMessageId()).isEqualTo(composeId.getMessageId());
+                    }));
+            }
+
+            @Test
             void expungeShouldCallAllPreDeletionHooksOnEachMessageDeletionCall() throws Exception {
                 ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder()
                     .withFlags(new Flags(Flags.Flag.DELETED))
