@@ -18,10 +18,12 @@
  ****************************************************************/
 package org.apache.james.mpt.smtp;
 
-import java.util.Iterator;
 import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.Domain;
+import org.apache.james.core.User;
+import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
@@ -38,7 +40,6 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
@@ -72,12 +73,9 @@ public class SmtpTestRule implements TestRule, SmtpHostSystem {
 
     @Override
     public boolean addUser(String userAtDomain, String password) throws Exception {
-        Preconditions.checkArgument(userAtDomain.contains("@"), "The 'user' should contain the 'domain'");
-        Iterator<String> split = Splitter.on("@").split(userAtDomain).iterator();
-        split.next();
-        String domain = split.next();
-
-        createDomainIfNeeded(domain);
+        Optional<Domain> domain = User.fromUsername(userAtDomain).getDomainPart();
+        Preconditions.checkArgument(domain.isPresent(), "The 'user' should contain the 'domain'");
+        createDomainIfNeeded(domain.get().asString());
         jamesServer.getProbe(DataProbeImpl.class).addUser(userAtDomain, password);
         return true;
     }

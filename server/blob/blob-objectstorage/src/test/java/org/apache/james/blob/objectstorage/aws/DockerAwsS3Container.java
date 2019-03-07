@@ -19,6 +19,9 @@
 
 package org.apache.james.blob.objectstorage.aws;
 
+import java.net.URI;
+
+import org.apache.james.blob.objectstorage.DockerAwsS3;
 import org.apache.james.util.Host;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -29,24 +32,27 @@ public class DockerAwsS3Container {
     private static final int AWS_S3_PORT = 8000;
     private static final int ONE_TIME = 1;
 
-    public static final String SCALITY_ACCESS_KEY_ID = "newAccessKey";
-    public static final String SCALITY_SECRET_ACCESS_KEY = "newSecretKey";
+    public static final String ACCESS_KEY_ID = "newAccessKey";
+    public static final String SECRET_ACCESS_KEY = "newSecretKey";
 
     private final GenericContainer<?> awsS3Container;
+    private DockerAwsS3 dockerAwsS3;
 
     public DockerAwsS3Container() {
         this.awsS3Container = new GenericContainer<>(AWS_S3_DOCKER_IMAGE);
         this.awsS3Container
             .withExposedPorts(AWS_S3_PORT)
             .withEnv("S3BACKEND", "mem")
-            .withEnv("SCALITY_ACCESS_KEY_ID", SCALITY_ACCESS_KEY_ID)
-            .withEnv("SCALITY_SECRET_ACCESS_KEY", SCALITY_SECRET_ACCESS_KEY)
+            .withEnv("SCALITY_ACCESS_KEY_ID", ACCESS_KEY_ID)
+            .withEnv("SCALITY_SECRET_ACCESS_KEY", SECRET_ACCESS_KEY)
             .withEnv("LOG_LEVEL", "trace")
             .waitingFor(Wait.forLogMessage(".*\"message\":\"server started\".*\\n", ONE_TIME));
     }
 
     public void start() {
         awsS3Container.start();
+
+        dockerAwsS3 = new DockerAwsS3(URI.create("http://" + getHost() + "/"));
     }
 
     public void stop() {
@@ -67,5 +73,13 @@ public class DockerAwsS3Container {
 
     public String getEndpoint() {
         return "http://" + getIp() + ":" + getPort() + "/";
+    }
+
+    public DockerAwsS3 dockerAwsS3() {
+        return dockerAwsS3;
+    }
+
+    public GenericContainer<?> getRawContainer() {
+        return awsS3Container;
     }
 }

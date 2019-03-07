@@ -43,8 +43,8 @@ class AwsS3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOCont
         containerName = ContainerName.of(UUID.randomUUID().toString());
         configuration = AwsS3AuthConfiguration.builder()
             .endpoint(dockerAwsS3Container.getEndpoint())
-            .accessKeyId(DockerAwsS3Container.SCALITY_ACCESS_KEY_ID)
-            .secretKey(DockerAwsS3Container.SCALITY_SECRET_ACCESS_KEY)
+            .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
+            .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
             .build();
     }
 
