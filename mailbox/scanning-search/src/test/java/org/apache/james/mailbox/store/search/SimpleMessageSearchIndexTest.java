@@ -21,8 +21,8 @@ package org.apache.james.mailbox.store.search;
 
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.junit.Ignore;
 
@@ -49,7 +49,7 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
             storeMailboxManager.getMessageIdFactory(),
             storeMailboxManager.getQuotaComponents().getQuotaManager(),
             storeMailboxManager.getQuotaComponents().getQuotaRootResolver(),
-            PreDeletionHook.NO_PRE_DELETION_HOOK);
+            PreDeletionHooks.NO_PRE_DELETION_HOOK);
     }
 
     /**

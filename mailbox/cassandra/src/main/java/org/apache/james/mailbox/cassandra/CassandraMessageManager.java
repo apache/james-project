@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra;
 
 import java.util.List;
-import java.util.Set;
 
 import javax.mail.Flags;
 
@@ -28,12 +27,12 @@ import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -56,7 +55,7 @@ public class CassandraMessageManager extends StoreMessageManager {
                             QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory,
                             BatchSizes batchSizes,
                             StoreRightManager storeRightManager,
-                            Set<PreDeletionHook> preDeletionHooks) {
+                            PreDeletionHooks preDeletionHooks) {
         super(CassandraMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
             quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, storeRightManager,
             preDeletionHooks);

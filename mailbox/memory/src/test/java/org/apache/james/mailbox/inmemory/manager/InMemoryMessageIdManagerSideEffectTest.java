@@ -35,6 +35,7 @@ import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
@@ -84,7 +85,7 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
             rightManager,
             quotaComponents,
             index,
-            preDeletionHooks);
+            new PreDeletionHooks(preDeletionHooks));
         StoreMessageIdManager messageIdManager = new StoreMessageIdManager(
             mailboxManager,
             mapperFactory,
@@ -92,7 +93,7 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
             messageIdFactory,
             quotaManager,
             quotaComponents.getQuotaRootResolver(),
-            preDeletionHooks);
+            new PreDeletionHooks(preDeletionHooks));
         return new MessageIdManagerTestSystem(messageIdManager, messageIdFactory, mapperFactory, mailboxManager);
     }
 }

@@ -16,29 +16,36 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.cassandra;
 
-import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.mailbox.MailboxManagerTest;
-import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
-import org.apache.james.mailbox.events.EventBus;
-import org.apache.james.mailbox.store.PreDeletionHooks;
-import org.junit.jupiter.api.extension.RegisterExtension;
+package org.apache.james.mailbox.store;
 
-public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMailboxManager> {
-    @RegisterExtension
-    static CassandraClusterExtension cassandra = new CassandraClusterExtension(MailboxAggregateModule.MODULE_WITH_QUOTA);
+import java.util.Set;
 
-    @Override
-    protected CassandraMailboxManager provideMailboxManager() {
-        return CassandraMailboxManagerProvider.provideMailboxManager(
-            cassandra.getCassandraCluster().getConf(),
-            cassandra.getCassandraCluster().getTypesProvider(),
-            new PreDeletionHooks(preDeletionHooks()));
+import javax.inject.Inject;
+
+import org.apache.james.mailbox.extension.PreDeletionHook;
+
+import com.google.common.collect.ImmutableSet;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+public class PreDeletionHooks {
+    public static final PreDeletionHooks NO_PRE_DELETION_HOOK = new PreDeletionHooks(ImmutableSet.of());
+
+    private final Set<PreDeletionHook> hooks;
+
+    @Inject
+    public PreDeletionHooks(Set<PreDeletionHook> hooks) {
+        this.hooks = hooks;
     }
 
-    @Override
-    protected EventBus retrieveEventBus(CassandraMailboxManager mailboxManager) {
-        return mailboxManager.getEventBus();
+    public Mono<Void> runHooks(PreDeletionHook.DeleteOperation deleteOperation) {
+        return Flux.fromIterable(hooks)
+            .publishOn(Schedulers.elastic())
+            .limitRate(1)
+            .flatMap(hook -> hook.notifyDelete(deleteOperation))
+            .then();
     }
 }

@@ -24,7 +24,6 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
@@ -33,6 +32,7 @@ import org.apache.james.mailbox.manager.ManagerTestResources;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
@@ -79,7 +79,7 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
             storeRightManager,
             quotaComponents,
             luceneMessageSearchIndex,
-            PreDeletionHook.NO_PRE_DELETION_HOOK);
+            PreDeletionHooks.NO_PRE_DELETION_HOOK);
 
         messageIdManager = new StoreMessageIdManager(
             storeMailboxManager,
@@ -88,7 +88,7 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
             storeMailboxManager.getMessageIdFactory(),
             quotaComponents.getQuotaManager(),
             quotaComponents.getQuotaRootResolver(),
-            PreDeletionHook.NO_PRE_DELETION_HOOK);
+            PreDeletionHooks.NO_PRE_DELETION_HOOK);
 
         eventBus.register(luceneMessageSearchIndex);
         this.messageSearchIndex = luceneMessageSearchIndex;

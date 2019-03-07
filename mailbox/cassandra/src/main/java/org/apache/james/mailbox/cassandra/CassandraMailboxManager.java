@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra;
 
 import java.util.EnumSet;
-import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -28,11 +27,11 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.EventBus;
-import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -67,7 +66,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
                                    StoreMailboxAnnotationManager annotationManager, StoreRightManager storeRightManager,
                                    QuotaComponents quotaComponents, MessageSearchIndex index,
                                    MailboxManagerConfiguration configuration,
-                                   Set<PreDeletionHook> preDeletionHooks) {
+                                   PreDeletionHooks preDeletionHooks) {
         super(mapperFactory,
             sessionProvider,
             locker,

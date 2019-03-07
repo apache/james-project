@@ -97,12 +97,12 @@ public class StoreMessageIdManager implements MessageIdManager {
     private final MessageId.Factory messageIdFactory;
     private final QuotaManager quotaManager;
     private final QuotaRootResolver quotaRootResolver;
-    private final Set<PreDeletionHook> preDeletionHooks;
+    private final PreDeletionHooks preDeletionHooks;
 
     @Inject
     public StoreMessageIdManager(MailboxManager mailboxManager, MailboxSessionMapperFactory mailboxSessionMapperFactory,
                                  EventBus eventBus, MessageId.Factory messageIdFactory,
-                                 QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, Set<PreDeletionHook> preDeletionHooks) {
+                                 QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, PreDeletionHooks preDeletionHooks) {
         this.mailboxManager = mailboxManager;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.eventBus = eventBus;
@@ -204,9 +204,7 @@ public class StoreMessageIdManager implements MessageIdManager {
             .map(mailboxMessage -> MetadataWithMailboxId.from(mailboxMessage.metaData(), mailboxMessage.getMailboxId()))
             .collect(Guavate.toImmutableList());
 
-        PreDeletionHook.DeleteOperation deleteOperation = PreDeletionHook.DeleteOperation.from(metadataWithMailbox);
-        Flux.fromIterable(preDeletionHooks)
-            .flatMap(preDeletionHook -> preDeletionHook.notifyDelete(deleteOperation))
+        preDeletionHooks.runHooks(PreDeletionHook.DeleteOperation.from(metadataWithMailbox))
             .then(Mono.fromRunnable(Throwing.runnable(
                 () -> delete(messageIdMapper, messageList, mailboxSession, metadataWithMailbox))))
             .block();

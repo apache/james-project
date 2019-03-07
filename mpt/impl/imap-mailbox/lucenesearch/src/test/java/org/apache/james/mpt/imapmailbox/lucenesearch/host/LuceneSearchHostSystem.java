@@ -44,6 +44,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
@@ -120,7 +121,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
                 rightManager,
                 QuotaComponents.disabled(sessionProvider, mapperFactory),
                 searchIndex,
-                PreDeletionHook.NO_PRE_DELETION_HOOK);
+                PreDeletionHooks.NO_PRE_DELETION_HOOK);
 
             searchIndex.setEnableSuffixMatch(true);
 

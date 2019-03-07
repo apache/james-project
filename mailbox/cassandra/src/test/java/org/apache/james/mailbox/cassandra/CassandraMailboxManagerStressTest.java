@@ -25,6 +25,7 @@ import org.apache.james.mailbox.MailboxManagerStressTest;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.extension.PreDeletionHook;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -49,7 +50,7 @@ public class CassandraMailboxManagerStressTest extends MailboxManagerStressTest<
     
     @Override
     protected CassandraMailboxManager provideManager() {
-        return CassandraMailboxManagerProvider.provideMailboxManager(cassandra.getConf(), cassandra.getTypesProvider(), PreDeletionHook.NO_PRE_DELETION_HOOK);
+        return CassandraMailboxManagerProvider.provideMailboxManager(cassandra.getConf(), cassandra.getTypesProvider(), PreDeletionHooks.NO_PRE_DELETION_HOOK);
     }
 
     @Override

@@ -26,10 +26,10 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public class CassandraCombinationManagerTestSystem extends CombinationManagerTestSystem {
@@ -40,7 +40,7 @@ public class CassandraCombinationManagerTestSystem extends CombinationManagerTes
     public static CombinationManagerTestSystem createTestingData(CassandraCluster cassandra, QuotaManager quotaManager, EventBus eventBus) {
         CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory(cassandra);
 
-        return new CassandraCombinationManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, eventBus, PreDeletionHook.NO_PRE_DELETION_HOOK),
+        return new CassandraCombinationManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, eventBus, PreDeletionHooks.NO_PRE_DELETION_HOOK),
             mapperFactory,
             CassandraTestSystemFixture.createMailboxManager(mapperFactory));
     }
@@ -48,7 +48,7 @@ public class CassandraCombinationManagerTestSystem extends CombinationManagerTes
     private CassandraCombinationManagerTestSystem(MessageIdManager messageIdManager, CassandraMailboxSessionMapperFactory mapperFactory, MailboxManager cassandraMailboxManager) {
         super(cassandraMailboxManager, messageIdManager);
         this.mapperFactory = mapperFactory;
-        this.cassandraMailboxManager = (CassandraMailboxManager)cassandraMailboxManager;
+        this.cassandraMailboxManager = (CassandraMailboxManager) cassandraMailboxManager;
     }
 
     @Override

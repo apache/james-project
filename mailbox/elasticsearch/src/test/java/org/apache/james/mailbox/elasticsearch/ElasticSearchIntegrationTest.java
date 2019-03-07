@@ -42,7 +42,6 @@ import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
-import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
@@ -54,6 +53,7 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
@@ -153,7 +153,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
             storeRightManager,
             quotaComponents,
             elasticSearchListeningMessageSearchIndex,
-            PreDeletionHook.NO_PRE_DELETION_HOOK);
+            PreDeletionHooks.NO_PRE_DELETION_HOOK);
 
         messageIdManager = new StoreMessageIdManager(
             storeMailboxManager,
@@ -162,7 +162,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
             storeMailboxManager.getMessageIdFactory(),
             quotaComponents.getQuotaManager(),
             quotaComponents.getQuotaRootResolver(),
-            PreDeletionHook.NO_PRE_DELETION_HOOK);
+            PreDeletionHooks.NO_PRE_DELETION_HOOK);
 
         eventBus.register(elasticSearchListeningMessageSearchIndex);
         this.messageSearchIndex = elasticSearchListeningMessageSearchIndex;

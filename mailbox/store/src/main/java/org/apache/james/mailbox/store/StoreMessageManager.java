@@ -32,7 +32,6 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -56,7 +55,6 @@ import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.ReadOnlyException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
-import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxCounters;
@@ -156,13 +154,13 @@ public class StoreMessageManager implements MessageManager {
     private final MessageParser messageParser;
     private final Factory messageIdFactory;
     private final BatchSizes batchSizes;
-    private final Set<PreDeletionHook> preDeletionHooks;
+    private final PreDeletionHooks preDeletionHooks;
 
     public StoreMessageManager(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities, MailboxSessionMapperFactory mapperFactory,
                                MessageSearchIndex index, EventBus eventBus,
                                MailboxPathLocker locker, Mailbox mailbox,
                                QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes,
-                               StoreRightManager storeRightManager, Set<PreDeletionHook> preDeletionHooks) {
+                               StoreRightManager storeRightManager, PreDeletionHooks preDeletionHooks) {
         this.messageCapabilities = messageCapabilities;
         this.eventBus = eventBus;
         this.mailbox = mailbox;
@@ -743,10 +741,7 @@ public class StoreMessageManager implements MessageManager {
             .map(DeleteOperation::from)
             .block();
 
-        Flux.fromIterable(preDeletionHooks)
-            .publishOn(Schedulers.elastic())
-            .flatMap(hook -> hook.notifyDelete(deleteOperation))
-            .blockLast();
+        preDeletionHooks.runHooks(deleteOperation).block();
     }
 
     @Override

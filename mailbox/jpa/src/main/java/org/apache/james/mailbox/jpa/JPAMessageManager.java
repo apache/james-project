@@ -28,7 +28,6 @@ import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
 import org.apache.james.mailbox.model.MessageAttachment;
@@ -37,6 +36,7 @@ import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -63,7 +63,7 @@ public class JPAMessageManager extends StoreMessageManager {
                              StoreRightManager storeRightManager) {
 
         super(JPAMailboxManager.DEFAULT_NO_MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
-            quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, storeRightManager, PreDeletionHook.NO_PRE_DELETION_HOOK);
+            quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, storeRightManager, PreDeletionHooks.NO_PRE_DELETION_HOOK);
     }
     
     @Override

@@ -80,4 +80,8 @@
         <constructor-arg index="5" ref="messageMapperFactory" />
     </bean>
 
+
+    <bean id ="preDeletionHooks" class="org.apache.james.mailbox.store.PreDeletionHooks">
+        <constructor-arg index="0"><set/></constructor-arg>
+    </bean>
 </beans>

@@ -45,6 +45,7 @@ import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -192,7 +193,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             storeRightManager,
             quotaComponents,
             index,
-            preDeletionHooks);
+            new PreDeletionHooks(preDeletionHooks));
 
         eventBus.register(listeningCurrentQuotaUpdater);
         eventBus.register(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider));
@@ -227,7 +228,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             storeRightManager,
             quotaComponents,
             index,
-            preDeletionHooks);
+            new PreDeletionHooks(preDeletionHooks));
 
         eventBus.register(listeningCurrentQuotaUpdater);
         eventBus.register(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider));

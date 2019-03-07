@@ -88,9 +88,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
-
 /**
  * This base class of an {@link MailboxManager} implementation provides a high-level api for writing your own
  * {@link MailboxManager} implementation. If you plan to write your own {@link MailboxManager} its most times so easiest
@@ -117,7 +114,7 @@ public class StoreMailboxManager implements MailboxManager {
     private final QuotaRootResolver quotaRootResolver;
     private final QuotaComponents quotaComponents;
     private final MessageSearchIndex index;
-    private final Set<PreDeletionHook> preDeletionHooks;
+    private final PreDeletionHooks preDeletionHooks;
     protected final MailboxManagerConfiguration configuration;
 
     @Inject
@@ -126,7 +123,7 @@ public class StoreMailboxManager implements MailboxManager {
                                MessageId.Factory messageIdFactory, MailboxAnnotationManager annotationManager,
                                EventBus eventBus, StoreRightManager storeRightManager,
                                QuotaComponents quotaComponents, MessageSearchIndex searchIndex, MailboxManagerConfiguration configuration,
-                               Set<PreDeletionHook> preDeletionHooks) {
+                               PreDeletionHooks preDeletionHooks) {
         Preconditions.checkNotNull(eventBus);
         Preconditions.checkNotNull(mailboxSessionMapperFactory);
 
@@ -212,7 +209,7 @@ public class StoreMailboxManager implements MailboxManager {
         return messageParser;
     }
 
-    public Set<PreDeletionHook> getPreDeletionHooks() {
+    public PreDeletionHooks getPreDeletionHooks() {
         return preDeletionHooks;
     }
 
@@ -409,12 +406,7 @@ public class StoreMailboxManager implements MailboxManager {
                 .mapToLong(MessageMetaData::getSize)
                 .sum();
 
-            PreDeletionHook.DeleteOperation deleteOperation = PreDeletionHook.DeleteOperation.from(metadata);
-
-            Flux.fromIterable(preDeletionHooks)
-                .publishOn(Schedulers.elastic())
-                .flatMap(hook -> hook.notifyDelete(deleteOperation))
-                .blockLast();
+            preDeletionHooks.runHooks(PreDeletionHook.DeleteOperation.from(metadata)).block();
 
             // We need to create a copy of the mailbox as maybe we can not refer to the real
             // mailbox once we remove it
