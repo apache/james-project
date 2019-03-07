@@ -17,37 +17,10 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault.search;
+package org.apache.james.webadmin.vault.routes.query;
 
-import java.util.List;
-import java.util.function.Predicate;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import org.apache.james.vault.DeletedMessage;
-
-import com.google.common.collect.ImmutableList;
-
-public class Query {
-    public static final Query ALL = new Query(ImmutableList.of());
-    private static final Predicate<DeletedMessage> MATCH_ALL = any -> true;
-
-    public static Query of(List<Criterion> criteria) {
-        return new Query(criteria);
-    }
-
-    public static Query of(Criterion... criteria) {
-        return new Query(ImmutableList.copyOf(criteria));
-    }
-
-    private final List<Criterion> criteria;
-
-    private Query(List<Criterion> criteria) {
-        this.criteria = criteria;
-    }
-
-    public Predicate<DeletedMessage> toPredicate() {
-        return criteria.stream()
-            .map(Criterion::toPredicate)
-            .reduce(Predicate::and)
-            .orElse(MATCH_ALL);
-    }
+@JsonDeserialize(using = QueryElementDeserializer.class)
+interface QueryElement {
 }
