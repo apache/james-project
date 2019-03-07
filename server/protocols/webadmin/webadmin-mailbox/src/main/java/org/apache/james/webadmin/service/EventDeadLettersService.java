@@ -30,6 +30,7 @@ import org.apache.james.mailbox.events.Group;
 import org.apache.james.task.Task;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
 
@@ -38,6 +39,7 @@ public class EventDeadLettersService {
     private final EventDeadLetters deadLetters;
 
     @Inject
+    @VisibleForTesting
     public EventDeadLettersService(EventDeadLettersRedeliverService redeliverService, EventDeadLetters deadLetters) {
         this.redeliverService = redeliverService;
         this.deadLetters = deadLetters;

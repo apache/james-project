@@ -29,6 +29,8 @@ import org.apache.james.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -40,6 +42,7 @@ public class EventDeadLettersRedeliverService {
     private final EventDeadLetters deadLetters;
 
     @Inject
+    @VisibleForTesting
     public EventDeadLettersRedeliverService(EventBus eventBus, EventDeadLetters deadLetters) {
         this.eventBus = eventBus;
         this.deadLetters = deadLetters;

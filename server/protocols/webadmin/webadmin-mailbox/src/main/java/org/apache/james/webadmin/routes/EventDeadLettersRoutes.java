@@ -59,7 +59,7 @@ import spark.Service;
 @Path("/events/deadLetter")
 @Produces("application/json")
 public class EventDeadLettersRoutes implements Routes {
-    private static final String BASE_PATH = "/events/deadLetter";
+    public static final String BASE_PATH = "/events/deadLetter";
     private static final String GROUP_PARAM = ":group";
     private static final String INSERTION_ID_PARAMETER = ":insertionId";
 
