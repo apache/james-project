@@ -39,7 +39,7 @@ import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.methods.ValueWithId.MessageWithId;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
-import org.apache.james.jmap.model.Envelope;
+import org.apache.james.jmap.model.EnvelopeUtils;
 import org.apache.james.jmap.model.Message;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
@@ -61,6 +61,7 @@ import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.server.core.Envelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -276,7 +277,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         assertUserIsSender(session, entry.getValue().getFrom());
         MetaDataWithContent newMessage = messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session);
         Message jmapMessage = messageFactory.fromMetaDataWithContent(newMessage);
-        Envelope envelope = Envelope.fromMessage(jmapMessage);
+        Envelope envelope = EnvelopeUtils.fromMessage(jmapMessage);
         messageSender.sendMessage(newMessage, envelope, session);
         referenceUpdater.updateReferences(entry.getValue().getHeaders(), session);
         return new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage);

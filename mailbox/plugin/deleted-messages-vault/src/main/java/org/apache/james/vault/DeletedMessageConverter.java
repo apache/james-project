@@ -23,12 +23,8 @@ import java.io.IOException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Date;
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
-
-import javax.mail.internet.AddressException;
+import java.util.Set;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -36,17 +32,15 @@ import org.apache.james.core.User;
 import org.apache.james.mime4j.MimeIOException;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.Message;
-import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Mailbox;
-import org.apache.james.mime4j.dom.address.MailboxList;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.stream.MimeConfig;
-import org.apache.james.util.StreamUtils;
+import org.apache.james.server.core.Envelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 class DeletedMessageConverter {
 
@@ -103,29 +97,9 @@ class DeletedMessageConverter {
             .orElse(MaybeSender.nullSender());
     }
 
-    private List<MailAddress> retrieveRecipients(Optional<Message> message) {
-        return StreamUtils.flatten(combineRecipients(message)
-            .map(AddressList::flatten)
-            .flatMap(MailboxList::stream)
-            .map(Mailbox::getAddress)
-            .map(this::retrieveAddress))
-            .collect(Guavate.toImmutableList());
-    }
-
-    private Stream<MailAddress> retrieveAddress(String address) {
-        try {
-            return Stream.of(new MailAddress(address));
-        } catch (AddressException e) {
-            LOGGER.warn("Can not create the mailAddress from {}", address, e);
-            return Stream.of();
-        }
-    }
-
-    private Stream<AddressList> combineRecipients(Optional<Message> message) {
-        return message.map(mimeMessage -> Stream.of(mimeMessage.getTo(),
-                    mimeMessage.getCc(),
-                    mimeMessage.getBcc())
-                .filter(Objects::nonNull))
-            .orElse(Stream.of());
+    private Set<MailAddress> retrieveRecipients(Optional<Message> maybeMessage) {
+        return maybeMessage.map(message -> Envelope.fromMime4JMessage(message, Envelope.ValidationPolicy.IGNORE))
+            .map(Envelope::getRecipients)
+            .orElse(ImmutableSet.of());
     }
 }

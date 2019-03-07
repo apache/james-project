@@ -33,7 +33,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
-import org.apache.james.jmap.model.Envelope;
+import org.apache.james.jmap.model.EnvelopeUtils;
 import org.apache.james.jmap.model.Keyword;
 import org.apache.james.jmap.model.Keywords;
 import org.apache.james.jmap.model.Message;
@@ -47,6 +47,7 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.BlobId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.server.core.Envelope;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.BeforeEach;
@@ -91,7 +92,7 @@ class MessageSenderTest {
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
         MessageFactory messageFactory = new MessageFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
         jmapMessage = messageFactory.fromMetaDataWithContent(message);
-        envelope = Envelope.fromMessage(jmapMessage);
+        envelope = EnvelopeUtils.fromMessage(jmapMessage);
     }
 
     @Test

@@ -17,76 +17,88 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.model;
+package org.apache.james.server.core;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import javax.mail.internet.AddressException;
+
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.address.MailboxList;
+import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.StreamUtils;
+import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 
 public class Envelope {
+    public interface ValidationPolicy {
+        ValidationPolicy THROW = e -> {
+            throw new RuntimeException(e);
+        };
+        ValidationPolicy IGNORE = e -> {
+            LoggerFactory.getLogger(Envelope.class).info("Failed to parse a mail address", e);
+            return Optional.empty();
+        };
 
-    public static Envelope fromMessage(Message jmapMessage) {
-        MailAddress sender = jmapMessage.getFrom()
-            .map(Emailer::toMailAddress)
-            .orElseThrow(() -> new RuntimeException("Sender is mandatory"));
-
-        Stream<MailAddress> to = emailersToMailAddresses(jmapMessage.getTo());
-        Stream<MailAddress> cc = emailersToMailAddresses(jmapMessage.getCc());
-        Stream<MailAddress> bcc = emailersToMailAddresses(jmapMessage.getBcc());
-
-        return new Envelope(sender,
-            StreamUtils.flatten(Stream.of(to, cc, bcc))
-                .collect(Guavate.toImmutableSet()));
+        Optional<MailAddress> handleParsingException(AddressException e);
     }
 
     public static Envelope fromMime4JMessage(org.apache.james.mime4j.dom.Message mime4JMessage) {
-        MailAddress sender = mime4JMessage.getFrom()
-            .stream()
+        return fromMime4JMessage(mime4JMessage, ValidationPolicy.THROW);
+    }
+
+    public static Envelope fromMime4JMessage(org.apache.james.mime4j.dom.Message mime4JMessage, ValidationPolicy validationPolicy) {
+        MaybeSender sender = Optional.ofNullable(mime4JMessage.getFrom())
+            .map(MailboxList::stream)
+            .orElse(Stream.empty())
             .findAny()
             .map(Mailbox::getAddress)
-            .map(Throwing.function(MailAddress::new))
-            .orElseThrow(() -> new RuntimeException("Sender is mandatory"));
+            .flatMap(addressAsString -> newMailAddress(validationPolicy, addressAsString))
+            .map(MaybeSender::of)
+            .orElse(MaybeSender.nullSender());
 
-        Stream<MailAddress> to = emailersToMailAddresses(mime4JMessage.getTo());
-        Stream<MailAddress> cc = emailersToMailAddresses(mime4JMessage.getCc());
-        Stream<MailAddress> bcc = emailersToMailAddresses(mime4JMessage.getBcc());
+        Stream<MailAddress> to = emailersToMailAddresses(mime4JMessage.getTo(), validationPolicy);
+        Stream<MailAddress> cc = emailersToMailAddresses(mime4JMessage.getCc(), validationPolicy);
+        Stream<MailAddress> bcc = emailersToMailAddresses(mime4JMessage.getBcc(), validationPolicy);
 
         return new Envelope(sender,
             StreamUtils.flatten(Stream.of(to, cc, bcc))
                 .collect(Guavate.toImmutableSet()));
     }
 
-    private static Stream<MailAddress> emailersToMailAddresses(List<Emailer> emailers) {
-        return emailers.stream()
-            .map(Emailer::toMailAddress);
+    private static Optional<MailAddress> newMailAddress(ValidationPolicy validationPolicy, String addressAsString) {
+        try {
+            if (addressAsString.isEmpty()) {
+                return Optional.empty();
+            }
+            return Optional.of(new MailAddress(addressAsString));
+        } catch (AddressException e) {
+            return validationPolicy.handleParsingException(e);
+        }
     }
 
-    private static Stream<MailAddress> emailersToMailAddresses(AddressList addresses) {
+    private static Stream<MailAddress> emailersToMailAddresses(AddressList addresses, ValidationPolicy validationPolicy) {
         return Optional.ofNullable(addresses)
             .map(AddressList::flatten)
             .map(MailboxList::stream)
             .orElse(Stream.of())
             .map(Mailbox::getAddress)
-            .map(Throwing.function(MailAddress::new));
+            .map(addressAsString -> newMailAddress(validationPolicy, addressAsString))
+            .flatMap(OptionalUtils::toStream);
     }
 
-
-    private final MailAddress from;
+    private final MaybeSender from;
     private final Set<MailAddress> recipients;
 
-    private Envelope(MailAddress from, Set<MailAddress> recipients) {
+    public Envelope(MaybeSender from, Set<MailAddress> recipients) {
         Preconditions.checkNotNull(from);
         Preconditions.checkNotNull(recipients);
 
@@ -94,7 +106,7 @@ public class Envelope {
         this.recipients = recipients;
     }
 
-    public MailAddress getFrom() {
+    public MaybeSender getFrom() {
         return from;
     }
 

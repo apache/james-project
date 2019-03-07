@@ -31,7 +31,6 @@ import javax.mail.MessagingException;
 
 import org.apache.james.jmap.exceptions.InvalidOriginMessageForMDNException;
 import org.apache.james.jmap.exceptions.MessageNotFoundException;
-import org.apache.james.jmap.model.Envelope;
 import org.apache.james.jmap.model.JmapMDN;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.SetError;
@@ -57,6 +56,7 @@ import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.field.ParseException;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.stream.MimeConfig;
+import org.apache.james.server.core.Envelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

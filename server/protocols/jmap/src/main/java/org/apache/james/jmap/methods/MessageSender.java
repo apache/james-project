@@ -25,13 +25,13 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.jmap.model.Envelope;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.send.MailMetadata;
 import org.apache.james.jmap.send.MailSpool;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.server.core.Envelope;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageInputStreamSource;
@@ -64,7 +64,7 @@ public class MessageSender {
         String name = message.getMessageId().serialize();
         return MailImpl.builder()
             .name(name)
-            .sender(envelope.getFrom())
+            .sender(envelope.getFrom().asOptional().orElseThrow(() -> new RuntimeException("Sender is mandatory")))
             .addRecipients(envelope.getRecipients())
             .mimeMessage(toMimeMessage(name, message.getContent()))
             .build();
