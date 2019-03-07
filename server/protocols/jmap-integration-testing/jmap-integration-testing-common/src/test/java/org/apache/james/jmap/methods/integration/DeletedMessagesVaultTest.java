@@ -76,6 +76,11 @@ public abstract class DeletedMessagesVaultTest {
     private static final ConditionFactory WAIT_TWO_MINUTES = calmlyAwait.atMost(Duration.TWO_MINUTES);
     private static final String SUBJECT = "This mail will be restored from the vault!!";
     private static final String MAILBOX_NAME = "toBeDeleted";
+    private static final String MATCH_ALL_QUERY = "{" +
+        "\"combinator\": \"and\"," +
+        "\"criteria\": []" +
+        "}";
+
     private MailboxId otherMailboxId;
 
     protected abstract GuiceJamesServer createJmapServer() throws IOException;
@@ -416,6 +421,7 @@ public abstract class DeletedMessagesVaultTest {
 
     private void restoreMessagesFor(String user) {
         String taskId = webAdminApi.with()
+            .body(MATCH_ALL_QUERY)
             .post("/deletedMessages/user/" + user + "?action=restore")
             .jsonPath()
             .get("taskId");

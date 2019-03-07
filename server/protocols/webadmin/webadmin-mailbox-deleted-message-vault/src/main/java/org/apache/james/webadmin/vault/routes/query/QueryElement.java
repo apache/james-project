@@ -22,5 +22,5 @@ package org.apache.james.webadmin.vault.routes.query;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @JsonDeserialize(using = QueryElementDeserializer.class)
-interface QueryElement {
+public interface QueryElement {
 }

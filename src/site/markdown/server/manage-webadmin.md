@@ -2561,14 +2561,104 @@ Deleted messages of a specific user can be restored by calling the following end
 
 ```
 curl -XPOST http://ip:port/deletedMessages/user/userToRestore@domain.ext?action=restore
+
+{"
+  "combinator": "and",
+  "criteria": [
+    {
+      "fieldName": "subject",
+      "operator": "containsIgnoreCase",
+      "value": "Apache James"
+    },
+    {
+      "fieldName": "deliveryDate",
+      "operator": "beforeOrEquals",
+      "value": "2014-10-30T14:12:00Z"
+    },
+    {
+      "fieldName": "deletionDate",
+      "operator": "afterOrEquals",
+      "value": "2015-10-20T09:08:00Z"
+    },
+    {
+      "fieldName": "recipients","
+      "operator": "contains","
+      "value": "recipient@james.org"
+    },
+    {
+      "fieldName": "hasAttachment",
+      "operator": "equals",
+      "value": "false"
+    },
+    {
+      "fieldName": "sender",
+      "operator": "equals",
+      "value": "sender@apache.org"
+    },
+    {
+      "fieldName": "originMailboxes",
+      "operator": "contains",
+      "value":  "02874f7c-d10e-102f-acda-0015176f7922"
+    }
+  ]
+};
 ```
 
-**All** messages in the Deleted Messages Vault of an specified user will be appended to his 'Restored-Messages' mailbox, which will be created if needed.
+The requested Json body is made from list of criterion objects which have following structure:
+```
+{
+  "fieldName": "supportedFieldName",
+  "operator": "supportedOperator",
+  "testedValue": "plain string represents for the matching value of corresponding field"
+}
+```
+Deleted Messages which are matched with **all** criterions in the query body will be restored. Here are list of supported fieldName for the restoring:
+ - subject: represents for deleted message `subject` field matching. Supports below string operators:
+   - contains
+   - containsIgnoreCase
+   - equals
+   - equalsIgnoreCase
+ - deliveryDate: represents for deleted message `deliveryDate` field matching. Tested value should follow the right date time with zone offset format (ISO-8601) like
+   `2008-09-15T15:53:00+05:00` or `2008-09-15T15:53:00Z` 
+   Supports below date time operators:
+   - beforeOrEquals: is the deleted message's `deliveryDate` before or equals the time of tested value.
+   - afterOrEquals: is the deleted message's `deliveryDate` after or equals the time of tested value
+ - deletionDate: represents for deleted message `deletionDate` field matching. Tested value & Supports operators: similar to `deliveryDate`
+ - sender: represents for deleted message `sender` field matching. Tested value should be a valid mail address. Supports mail address operator:
+   - equals: does the tested sender equal to the sender of the tested deleted message ?   
+ - recipients: represents for deleted message `recipients` field matching. Tested value should be a valid mail address. Supports list mail address operator:
+   - contains: does the tested deleted message's recipients contain tested recipient ?
+ - hasAttachment: represents for deleted message `hasAttachment` field matching. Tested value could be `false` or `true`. Supports boolean operator:
+   - equals: does the tested deleted message's hasAttachment property equal to the tested hasAttachment value?
+ - originMailboxes: represents for deleted message `originMailboxes` field matching. Tested value is a string serialized of mailbox id. Supports list mailbox id operators:
+   - contains: does the tested deleted message's originMailbox ids contain tested mailbox id ?
+   
+Messages in the Deleted Messages Vault of an specified user that are matched with Query Json Object in the body will be appended to his 'Restored-Messages' mailbox, which will be created if needed.
 
-**Note**: 
- - Restoring matched messages by queries is not supported yet 
+**Note**:
  - Query parameter `action` is required and should have value `restore` to represent for restoring feature. Otherwise, a bad request response will be returned
  - Query parameter `action` is case sensitive
+ - fieldName & operator for passing to the routes are case sensitive
+ - Currently, we only support query combinator `and` value, otherwise, requests will be rejected 
+ - If you only want to restore by only one criterion, the json body could be simplified to a single criterion:
+```
+{
+  "fieldName": "subject", 
+  "operator": "containsIgnoreCase", 
+  "value": "Apache James"
+}
+```
+ - For restoring all deleted messages, passing a query json with empty criterion list to represent `matching all deleted messages`: 
+```
+{
+  "combinator": "and",
+  "criteria": []
+}
+```
+
+**Warning**: Current web-admin uses `US` locale as the default. Therefore, there might be some conflicts when using String `containsIgnoreCase` comparators to apply 
+on the String data of other special locales stored in the Vault. More details at [JIRA](https://issues.apache.org/jira/browse/MAILBOX-384) 
+
 Response code:
 
  - 201: Task for restoring deleted has been created
@@ -2576,13 +2666,16 @@ Response code:
    - action query param is not present
    - action query param is not a valid action
    - user parameter is invalid
+   - can not parse the JSON body
+   - Json query object contains unsupported operator, fieldName
+   - Json query object values violate parsing rules 
 
 The scheduled task will have the following type `deletedMessages/restore` and the following `additionalInformation`:
 
 ```
 {
   "successfulRestoreCount": 47,
-  "errorRestoreCount": 0
+  "errorRestoreCount": 0,
   "user": "userToRestore@domain.ext"
 }
 ```

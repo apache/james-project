@@ -28,6 +28,7 @@ import org.apache.james.core.User;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.vault.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,8 +73,10 @@ class DeletedMessagesVaultRestoreTask implements Task {
     private final User userToRestore;
     private final RestoreService vaultRestore;
     private final AdditionalInformation additionalInformation;
+    private final Query query;
 
-    DeletedMessagesVaultRestoreTask(User userToRestore, RestoreService vaultRestore) {
+    DeletedMessagesVaultRestoreTask(RestoreService vaultRestore, User userToRestore, Query query) {
+        this.query = query;
         this.userToRestore = userToRestore;
         this.vaultRestore = vaultRestore;
         this.additionalInformation = new AdditionalInformation(userToRestore);
@@ -82,7 +85,7 @@ class DeletedMessagesVaultRestoreTask implements Task {
     @Override
     public Result run() {
         try {
-            return vaultRestore.restore(userToRestore).toStream()
+            return vaultRestore.restore(userToRestore, query).toStream()
                 .peek(this::updateInformation)
                 .map(this::restoreResultToTaskResult)
                 .reduce(Task::combine)

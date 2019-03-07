@@ -47,6 +47,13 @@ class QueryTranslatorTest {
     }
 
     @Test
+    void translateShouldNotThrowWhenPassingNullOperator() {
+        String nullOperator = null;
+        assertThatCode(() -> queryTranslator.translate(new QueryDTO(nullOperator, ImmutableList.of())))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
     void translateShouldThrowWhenPassingNestedQuery() {
         assertThatThrownBy(() -> queryTranslator.translate(QueryDTO.and(
                 QueryDTO.and(new CriterionDTO(FieldName.SUBJECT.getValue(), Operator.CONTAINS.getValue(), "james"))

@@ -36,10 +36,16 @@ import org.apache.james.core.User;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
+import org.apache.james.vault.search.Query;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.TaskIdDto;
+import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.JsonExtractException;
+import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.vault.routes.query.QueryElement;
+import org.apache.james.webadmin.vault.routes.query.QueryTranslator;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.github.steveash.guavate.Guavate;
@@ -53,6 +59,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import spark.HaltException;
 import spark.Request;
 import spark.Response;
 import spark.Service;
@@ -99,14 +106,18 @@ public class DeletedMessagesVaultRoutes implements Routes {
     private final RestoreService vaultRestore;
     private final JsonTransformer jsonTransformer;
     private final TaskManager taskManager;
+    private final JsonExtractor<QueryElement> jsonExtractor;
+    private final QueryTranslator queryTranslator;
 
     @Inject
     @VisibleForTesting
     DeletedMessagesVaultRoutes(RestoreService vaultRestore, JsonTransformer jsonTransformer,
-                               TaskManager taskManager) {
+                               TaskManager taskManager, QueryTranslator queryTranslator) {
         this.vaultRestore = vaultRestore;
         this.jsonTransformer = jsonTransformer;
         this.taskManager = taskManager;
+        this.queryTranslator = queryTranslator;
+        this.jsonExtractor = new JsonExtractor<>(QueryElement.class);
     }
 
     @Override
@@ -145,7 +156,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - user param is invalid"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
-    private TaskIdDto userActions(Request request, Response response) {
+    private TaskIdDto userActions(Request request, Response response) throws JsonExtractException {
         UserVaultAction requestedAction = extractUserVaultAction(request);
 
         Task requestedTask = generateTask(requestedAction, request);
@@ -153,15 +164,41 @@ public class DeletedMessagesVaultRoutes implements Routes {
         return TaskIdDto.respond(response, taskId);
     }
 
-    private Task generateTask(UserVaultAction requestedAction, Request request) {
-        User userToRestore = User.fromUsername(request.params(USER_PATH_PARAM));
+    private Task generateTask(UserVaultAction requestedAction, Request request) throws JsonExtractException {
+        User userToRestore = extractUser(request);
+        Query query = translate(jsonExtractor.parse(request.body()));
 
         switch (requestedAction) {
             case RESTORE:
-                return new DeletedMessagesVaultRestoreTask(userToRestore, vaultRestore);
+                return new DeletedMessagesVaultRestoreTask(vaultRestore, userToRestore, query);
             default:
                 throw new NotImplementedException(requestedAction + " is not yet handled.");
         }
+    }
+
+    private Query translate(QueryElement queryElement) {
+        try {
+            return queryTranslator.translate(queryElement);
+        } catch (QueryTranslator.QueryTranslatorException e) {
+            throw badRequest("Invalid payload passing to the route", e);
+        }
+    }
+
+    private User extractUser(Request request) {
+        try {
+            return User.fromUsername(request.params(USER_PATH_PARAM));
+        } catch (IllegalArgumentException e) {
+            throw badRequest("Invalid 'user' parameter", e);
+        }
+    }
+
+    private HaltException badRequest(String message, Exception e) {
+        return ErrorResponder.builder()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+            .message(message)
+            .cause(e)
+            .haltError();
     }
 
     private UserVaultAction extractUserVaultAction(Request request) {

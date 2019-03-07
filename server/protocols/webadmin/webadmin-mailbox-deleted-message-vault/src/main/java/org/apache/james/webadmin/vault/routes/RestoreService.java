@@ -65,11 +65,11 @@ class RestoreService {
         this.mailboxManager = mailboxManager;
     }
 
-    Flux<RestoreResult> restore(User userToRestore) throws MailboxException {
+    Flux<RestoreResult> restore(User userToRestore, Query searchQuery) throws MailboxException {
         MailboxSession session = mailboxManager.createSystemSession(userToRestore.asString());
         MessageManager restoreMessageManager = restoreMailboxManager(session);
 
-        return Flux.from(deletedMessageVault.search(userToRestore, Query.ALL))
+        return Flux.from(deletedMessageVault.search(userToRestore, searchQuery))
             .flatMap(deletedMessage -> appendToMailbox(restoreMessageManager, deletedMessage, session));
     }
 
