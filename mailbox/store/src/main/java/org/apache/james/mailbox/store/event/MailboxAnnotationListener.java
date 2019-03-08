@@ -34,7 +34,7 @@ import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 
 public class MailboxAnnotationListener implements MailboxListener.GroupMailboxListener {
-    private static final class MailboxAnnotationListenerGroup extends Group {}
+    public static final class MailboxAnnotationListenerGroup extends Group {}
 
     private static final Group GROUP = new MailboxAnnotationListenerGroup();
 

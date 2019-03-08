@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class CacheInvalidatingMailboxListener implements MailboxListener.GroupMailboxListener {
-    private static class CacheInvalidatingMailboxListenerGroup extends Group {}
+    public static class CacheInvalidatingMailboxListenerGroup extends Group {}
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CacheInvalidatingMailboxListener.class);
     private static final Group GROUP = new CacheInvalidatingMailboxListenerGroup();

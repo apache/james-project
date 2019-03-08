@@ -32,7 +32,7 @@ import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearc
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class ElasticSearchQuotaMailboxListener implements MailboxListener.GroupMailboxListener {
-    private static class ElasticSearchQuotaMailboxListenerGroup extends Group {}
+    public static class ElasticSearchQuotaMailboxListenerGroup extends Group {}
 
     private static final Group GROUP = new ElasticSearchQuotaMailboxListenerGroup();
 
