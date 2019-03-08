@@ -32,7 +32,7 @@ public class CassandraForwardSmtpTest extends ForwardSmtpTest {
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     @Rule
-    public CassandraSmtpTestRule cassandraSmtpTestRule = new CassandraSmtpTestRule(SMTP_GLOBAL_SERVER, cassandraServer.getHost());
+    public SmtpTestRule cassandraSmtpTestRule = CassandraSmtpTestRuleFactory.create(SMTP_GLOBAL_SERVER, cassandraServer.getHost());
 
     @Before
     @Override

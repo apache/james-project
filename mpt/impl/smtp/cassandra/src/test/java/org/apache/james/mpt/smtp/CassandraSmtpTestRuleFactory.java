@@ -20,16 +20,10 @@ package org.apache.james.mpt.smtp;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.CassandraJamesServerMain;
-import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.backend.rabbitmq.DockerRabbitMQSingleton;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.modules.TestRabbitMQModule;
-import org.apache.james.modules.TestSwiftBlobStoreModule;
-import org.apache.james.modules.blobstore.BlobStoreChoosingModule;
 import org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType;
-import org.apache.james.modules.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
@@ -37,7 +31,7 @@ import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.util.Host;
 import org.junit.rules.TemporaryFolder;
 
-public final class CassandraRabbitMQSwiftSmtpTestRule {
+public final class CassandraSmtpTestRuleFactory {
     public static SmtpTestRule create(SmtpServerConnectedType smtpServerConnectedType, Host cassandraHost) {
         SmtpTestRule.ServerBuilder createJamesServer = (folder, dnsService) -> createJamesServer(cassandraHost, folder, dnsService);
 
@@ -57,19 +51,13 @@ public final class CassandraRabbitMQSwiftSmtpTestRule {
                 binder -> binder.bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
                     .toInstance(DefaultConfigurationBuilder::new))
             .overrideWith(
-                new RabbitMQModule(),
-                new BlobStoreChoosingModule())
-            .overrideWith(
-                new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON),
-                new TestSwiftBlobStoreModule(),
                 binder -> binder.bind(ClusterConfiguration.class).toInstance(
                     ClusterConfiguration.builder()
                         .host(cassandraHost)
                         .keyspace("testing")
                         .replicationFactor(1)
                         .build()),
-                binder -> binder.bind(DNSService.class).toInstance(dnsService),
-                binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton());
+                binder -> binder.bind(DNSService.class).toInstance(dnsService));
     }
 }
 

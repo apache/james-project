@@ -32,7 +32,7 @@ public class RabbitMQForwardSmtpTest extends ForwardSmtpTest {
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     @Rule
-    public CassandraRabbitMQSwiftSmtpTestRule cassandraRabbitMQSwiftSmtpTestRule = new CassandraRabbitMQSwiftSmtpTestRule(SMTP_GLOBAL_SERVER, cassandraServer.getHost());
+    public SmtpTestRule cassandraRabbitMQSwiftSmtpTestRule = CassandraRabbitMQSwiftSmtpTestRule.create(SMTP_GLOBAL_SERVER, cassandraServer.getHost());
 
     @Before
     @Override

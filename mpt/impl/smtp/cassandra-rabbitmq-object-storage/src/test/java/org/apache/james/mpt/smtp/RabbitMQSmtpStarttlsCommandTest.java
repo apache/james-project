@@ -32,7 +32,7 @@ public class RabbitMQSmtpStarttlsCommandTest extends SmtpStarttlsCommandTest {
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     @Rule
-    public CassandraRabbitMQSwiftSmtpTestRule cassandraRabbitMQSwiftSmtpTestRule = new CassandraRabbitMQSwiftSmtpTestRule(SMTP_START_TLS_SERVER, cassandraServer.getHost());
+    public SmtpTestRule cassandraRabbitMQSwiftSmtpTestRule = CassandraRabbitMQSwiftSmtpTestRule.create(SMTP_START_TLS_SERVER, cassandraServer.getHost());
 
     @Before
     @Override

@@ -19,26 +19,17 @@
 package org.apache.james.mpt.smtp;
 
 import java.util.Iterator;
+import java.util.Optional;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
-import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
-import org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType;
-import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.mpt.api.Continuation;
 import org.apache.james.mpt.api.Session;
 import org.apache.james.mpt.monitor.SystemLoggingMonitor;
 import org.apache.james.mpt.session.ExternalSessionFactory;
-import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
-import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
-import org.apache.james.server.core.configuration.Configuration;
-import org.apache.james.util.Host;
 import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.junit.rules.TemporaryFolder;
@@ -51,23 +42,27 @@ import com.google.common.base.Splitter;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
-public class CassandraSmtpTestRule implements TestRule, SmtpHostSystem {
 
-    private static final Module SMTP_PROTOCOL_MODULE = Modules.combine(
+public class SmtpTestRule implements TestRule, SmtpHostSystem {
+    @FunctionalInterface
+    public interface ServerBuilder {
+        GuiceJamesServer build(TemporaryFolder folder, DNSService dnsService) throws Exception;
+    }
+
+    public static final Module SMTP_PROTOCOL_MODULE = Modules.combine(
         new ProtocolHandlerModule(),
         new SMTPServerModule());
 
-    private final Host cassandraHost;
-    private final SmtpServerConnectedType smtpServerConnectedType;
-
+    private final SmtpGuiceProbe.SmtpServerConnectedType smtpServerConnectedType;
+    private final ServerBuilder createJamesServer;
     private TemporaryFolder folder;
-    private GuiceJamesServer jamesServer;
     private InMemoryDNSService inMemoryDNSService;
+    private GuiceJamesServer jamesServer;
     private ExternalSessionFactory sessionFactory;
 
-    public CassandraSmtpTestRule(SmtpServerConnectedType smtpServerConnectedType, Host cassandraHost) {
+    public SmtpTestRule(SmtpGuiceProbe.SmtpServerConnectedType smtpServerConnectedType, ServerBuilder createJamesServer) {
         this.smtpServerConnectedType = smtpServerConnectedType;
-        this.cassandraHost = cassandraHost;
+        this.createJamesServer = createJamesServer;
     }
 
     @Override
@@ -108,7 +103,7 @@ public class CassandraSmtpTestRule implements TestRule, SmtpHostSystem {
         inMemoryDNSService = new InMemoryDNSService();
         folder = new TemporaryFolder();
         folder.create();
-        jamesServer = createJamesServer();
+        jamesServer = createJamesServer.build(folder, inMemoryDNSService);
         jamesServer.start();
 
         createSessionFactory();
@@ -123,29 +118,6 @@ public class CassandraSmtpTestRule implements TestRule, SmtpHostSystem {
     @Override
     public InMemoryDNSService getInMemoryDnsService() {
         return inMemoryDNSService;
-    }
-
-    private GuiceJamesServer createJamesServer() throws Exception {
-        Configuration configuration = Configuration.builder()
-            .workingDirectory(folder.newFolder())
-            .configurationFromClasspath()
-            .build();
-
-        return GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(
-                CassandraJamesServerMain.CASSANDRA_SERVER_CORE_MODULE,
-                SMTP_PROTOCOL_MODULE,
-                binder -> binder.bind(MailQueueItemDecoratorFactory.class).to(RawMailQueueItemDecoratorFactory.class),
-                binder -> binder.bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
-                    .toInstance(DefaultConfigurationBuilder::new))
-            .overrideWith(
-                binder -> binder.bind(ClusterConfiguration.class).toInstance(
-                    ClusterConfiguration.builder()
-                        .host(cassandraHost)
-                        .keyspace("testing")
-                        .replicationFactor(1)
-                        .build()),
-                binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
     }
 
     private void createSessionFactory() {

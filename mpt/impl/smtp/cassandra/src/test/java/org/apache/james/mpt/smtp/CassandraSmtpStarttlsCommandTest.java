@@ -32,7 +32,7 @@ public class CassandraSmtpStarttlsCommandTest extends SmtpStarttlsCommandTest {
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     @Rule
-    public CassandraSmtpTestRule cassandraSmtpTestRule = new CassandraSmtpTestRule(SMTP_START_TLS_SERVER, cassandraServer.getHost());
+    public SmtpTestRule cassandraSmtpTestRule = CassandraSmtpTestRuleFactory.create(SMTP_START_TLS_SERVER, cassandraServer.getHost());
 
     @Before
     @Override
