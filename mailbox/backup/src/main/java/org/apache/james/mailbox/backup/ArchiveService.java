@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
-public interface Backup {
+public interface ArchiveService {
 
     /**
      * @param mailboxes   list of mailboxes and their annotations to be stored in the archive

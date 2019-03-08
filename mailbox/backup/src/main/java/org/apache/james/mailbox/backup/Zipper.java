@@ -37,7 +37,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Charsets;
 
-public class Zipper implements Backup {
+public class Zipper implements ArchiveService {
 
     private static final String ANNOTATION_DIRECTORY = "annotations";
     private static final boolean AUTO_FLUSH = true;
