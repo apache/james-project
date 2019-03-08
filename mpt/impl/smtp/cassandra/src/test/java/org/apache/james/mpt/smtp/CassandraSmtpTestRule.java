@@ -19,7 +19,6 @@
 package org.apache.james.mpt.smtp;
 
 import java.util.Iterator;
-import java.util.function.Function;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.CassandraJamesServerMain;
@@ -30,6 +29,7 @@ import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType;
 import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.mpt.api.Continuation;
 import org.apache.james.mpt.api.Session;
@@ -52,21 +52,6 @@ import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
 public class CassandraSmtpTestRule implements TestRule, SmtpHostSystem {
-
-    enum SmtpServerConnectedType {
-        SMTP_GLOBAL_SERVER(probe -> Port.of(probe.getSmtpPort())),
-        SMTP_START_TLS_SERVER(probe -> Port.of(probe.getSmtpsPort()));
-
-        private final Function<SmtpGuiceProbe, Port> portExtractor;
-
-        private SmtpServerConnectedType(Function<SmtpGuiceProbe, Port> portExtractor) {
-            this.portExtractor = portExtractor;
-        }
-
-        public Function<SmtpGuiceProbe, Port> getPortExtractor() {
-            return portExtractor;
-        }
-    }
 
     private static final Module SMTP_PROTOCOL_MODULE = Modules.combine(
         new ProtocolHandlerModule(),

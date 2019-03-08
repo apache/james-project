@@ -19,6 +19,7 @@
 package org.apache.james.modules.protocols;
 
 import java.net.InetSocketAddress;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
@@ -26,9 +27,25 @@ import javax.inject.Inject;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.smtpserver.netty.SMTPServer;
 import org.apache.james.smtpserver.netty.SMTPServerFactory;
+import org.apache.james.util.Port;
 import org.apache.james.utils.GuiceProbe;
 
 public class SmtpGuiceProbe implements GuiceProbe {
+
+    public enum SmtpServerConnectedType {
+        SMTP_GLOBAL_SERVER(probe -> Port.of(probe.getSmtpPort())),
+        SMTP_START_TLS_SERVER(probe -> Port.of(probe.getSmtpsPort()));
+
+        private final Function<SmtpGuiceProbe, Port> portExtractor;
+
+        SmtpServerConnectedType(Function<SmtpGuiceProbe, Port> portExtractor) {
+            this.portExtractor = portExtractor;
+        }
+
+        public Function<SmtpGuiceProbe, Port> getPortExtractor() {
+            return portExtractor;
+        }
+    }
 
     private final SMTPServerFactory smtpServerFactory;
 
