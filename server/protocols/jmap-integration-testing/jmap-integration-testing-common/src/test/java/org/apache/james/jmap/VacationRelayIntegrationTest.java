@@ -111,7 +111,7 @@ public abstract class VacationRelayIntegrationTest {
         String externalMail = "ray@yopmail.com";
 
         SMTPClient smtpClient = new SMTPClient();
-        smtpClient.connect(LOCALHOST_IP, guiceJamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort());
+        smtpClient.connect(LOCALHOST_IP, guiceJamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue());
         smtpClient.helo(DOMAIN);
         smtpClient.setSender(externalMail);
         smtpClient.rcpt("<" + USER_WITH_DOMAIN + ">");

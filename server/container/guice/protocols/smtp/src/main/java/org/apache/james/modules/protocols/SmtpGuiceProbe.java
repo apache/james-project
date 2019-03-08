@@ -33,8 +33,8 @@ import org.apache.james.utils.GuiceProbe;
 public class SmtpGuiceProbe implements GuiceProbe {
 
     public enum SmtpServerConnectedType {
-        SMTP_GLOBAL_SERVER(probe -> Port.of(probe.getSmtpPort())),
-        SMTP_START_TLS_SERVER(probe -> Port.of(probe.getSmtpsPort()));
+        SMTP_GLOBAL_SERVER(SmtpGuiceProbe::getSmtpPort),
+        SMTP_START_TLS_SERVER(SmtpGuiceProbe::getSmtpsPort);
 
         private final Function<SmtpGuiceProbe, Port> portExtractor;
 
@@ -54,24 +54,25 @@ public class SmtpGuiceProbe implements GuiceProbe {
         this.smtpServerFactory = smtpServerFactory;
     }
 
-    public int getSmtpPort() {
+    public Port getSmtpPort() {
         return getPort(server -> true);
     }
 
-    public int getSmtpsPort() {
+    public Port getSmtpsPort() {
         return getPort(AbstractConfigurableAsyncServer::getStartTLSSupported);
     }
 
-    public Integer getSmtpAuthRequiredPort() {
+    public Port getSmtpAuthRequiredPort() {
         return getPort(server -> ((SMTPServer) server).getAuthRequired() == SMTPServer.AUTH_REQUIRED);
     }
 
-    private Integer getPort(Predicate<? super AbstractConfigurableAsyncServer> filter) {
+    private Port getPort(Predicate<? super AbstractConfigurableAsyncServer> filter) {
         return smtpServerFactory.getServers().stream()
             .filter(filter)
             .findFirst()
             .flatMap(server -> server.getListenAddresses().stream().findFirst())
             .map(InetSocketAddress::getPort)
+            .map(Port::new)
             .orElseThrow(() -> new IllegalStateException("SMTP server not defined"));
     }
 }

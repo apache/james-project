@@ -5411,7 +5411,7 @@ public abstract class SetMessagesMethodTest {
             .sender(fromAddress)
             .recipient(fromAddress)
             .build();
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, jmapServer.getProbe(SmtpGuiceProbe.class).getSmtpPort(), DOMAIN)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, jmapServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue(), DOMAIN)) {
             messageSender.sendMessage(mail);
         }
 

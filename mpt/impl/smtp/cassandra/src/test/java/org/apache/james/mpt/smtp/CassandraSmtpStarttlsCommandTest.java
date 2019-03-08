@@ -19,7 +19,7 @@
 
 package org.apache.james.mpt.smtp;
 
-import static org.apache.james.mpt.smtp.CassandraSmtpTestRule.SmtpServerConnectedType.SMTP_START_TLS_SERVER;
+import static org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType.SMTP_START_TLS_SERVER;
 
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.junit.After;
