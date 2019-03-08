@@ -37,7 +37,7 @@ import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.util.Host;
 import org.junit.rules.TemporaryFolder;
 
-public final class CassandraRabbitMQSwiftSmtpTestRule {
+public final class CassandraRabbitMQSwiftSmtpTestRuleFactory {
     public static SmtpTestRule create(SmtpServerConnectedType smtpServerConnectedType, Host cassandraHost) {
         SmtpTestRule.ServerBuilder createJamesServer = (folder, dnsService) -> createJamesServer(cassandraHost, folder, dnsService);
 
