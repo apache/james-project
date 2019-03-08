@@ -122,13 +122,6 @@ public class ImapStepdefs {
         mainStepdefs.awaitMethod.run();
     }
 
-    @Then("^the user copies via IMAP all messages from mailbox \"([^\"]*)\" to mailbox \"([^\"]*)\"$")
-    public void copyAllMessagesViaIMAPInMailbox(String sourceMailbox, String destinationMailbox) throws Throwable {
-        IMAPMessageReader imapMessageReader = imapConnections.get(sourceMailbox);
-        imapMessageReader.copyAllMessagesInMailboxTo(destinationMailbox);
-        mainStepdefs.awaitMethod.run();
-    }
-
     @Then("^the user has a IMAP RECENT and a notification about (\\d+) new messages on connection for mailbox \"([^\"]*)\"$")
     public void checkNotificationForNewMessageOnActiveConnection(int numberOfMessages, String mailbox) throws Throwable {
         IMAPMessageReader imapMessageReader = imapConnections.get(mailbox);

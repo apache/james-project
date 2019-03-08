@@ -20,6 +20,7 @@
 package org.apache.james.jmap.methods.integration;
 
 import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.with;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.ALICE;
@@ -29,7 +30,9 @@ import static org.apache.james.jmap.TestingConstants.BOB;
 import static org.apache.james.jmap.TestingConstants.BOB_PASSWORD;
 import static org.apache.james.jmap.TestingConstants.DOMAIN;
 import static org.apache.james.jmap.TestingConstants.NAME;
+import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
+import static org.apache.james.transport.mailets.remote.delivery.HeloNameProvider.LOCALHOST;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -45,6 +48,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.Flags;
 
@@ -69,10 +73,12 @@ import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.message.SingleBodyBuilder;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.date.ImapDateTimeFormatter;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
@@ -2168,5 +2174,53 @@ public abstract class GetMessageListMethodTest {
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
             .body(ARGUMENTS + ".description", containsString("value should be positive and less than 2^53"));
+    }
+
+    @Test
+    public void getMessageListShouldReturnTwoMessagesWhenCopiedAtOnceViaIMAP() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
+        MailboxId otherMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "otherMailbox");
+
+        mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "mailbox"),
+            MessageManager.AppendCommand.builder()
+            .build(Message.Builder.of()
+                    .setSubject("test 1")
+                    .setBody("content 1", StandardCharsets.UTF_8)));
+
+        mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "mailbox"),
+                MessageManager.AppendCommand.builder()
+                .build(Message.Builder.of()
+                        .setSubject("test 2")
+                        .setBody("content 2", StandardCharsets.UTF_8)));
+
+        try (IMAPMessageReader imap = new IMAPMessageReader()) {
+            imap.connect(LOCALHOST, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(ALICE, ALICE_PASSWORD)
+            .select("mailbox")
+            .copyAllMessagesInMailboxTo("otherMailbox");
+        }
+
+        await();
+
+        calmlyAwait
+            .atMost(30, TimeUnit.SECONDS)
+            .until(() -> twoMessagesFoundInMailbox(otherMailboxId));
+    }
+
+    private boolean twoMessagesFoundInMailbox(MailboxId mailboxId) {
+        try {
+            with()
+                .header("Authorization", aliceAccessToken.serialize())
+                .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId.serialize() + "\"]}}, \"#0\"]]")
+            .when()
+                .post("/jmap")
+            .then()
+                .statusCode(200)
+                .body(NAME, equalTo("messageList"))
+                .body(ARGUMENTS + ".messageIds", hasSize(2));
+            return true;
+        } catch (AssertionError e) {
+            return false;
+        }
     }
 }
