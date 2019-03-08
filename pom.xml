@@ -1145,6 +1145,12 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>blob-memory</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>blob-union</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1205,6 +1211,17 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>event-sourcing-pojo</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-blob</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-blob</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>

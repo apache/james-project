@@ -123,14 +123,7 @@ public class Zipper implements ArchiveService {
 
     private void storeInArchive(MessageResult message, ZipArchiveOutputStream archiveOutputStream) throws IOException {
         String entryId = message.getMessageId().serialize();
-        ZipArchiveEntry archiveEntry = (ZipArchiveEntry) archiveOutputStream.createArchiveEntry(new File(entryId), entryId);
-
-        archiveEntry.addExtraField(new SizeExtraField(message.getSize()));
-        archiveEntry.addExtraField(new UidExtraField(message.getUid().asLong()));
-        archiveEntry.addExtraField(new MessageIdExtraField(message.getMessageId().serialize()));
-        archiveEntry.addExtraField(new MailboxIdExtraField(message.getMailboxId().serialize()));
-        archiveEntry.addExtraField(new InternalDateExtraField(message.getInternalDate()));
-        archiveEntry.addExtraField(new FlagsExtraField(message.getFlags()));
+        ZipArchiveEntry archiveEntry = createMessageZipArchiveEntry(message, archiveOutputStream, entryId);
 
         archiveOutputStream.putArchiveEntry(archiveEntry);
         try {
@@ -143,5 +136,17 @@ public class Zipper implements ArchiveService {
         }
 
         archiveOutputStream.closeArchiveEntry();
+    }
+
+    private ZipArchiveEntry createMessageZipArchiveEntry(MessageResult message, ZipArchiveOutputStream archiveOutputStream, String entryId) throws IOException {
+        ZipArchiveEntry archiveEntry = (ZipArchiveEntry) archiveOutputStream.createArchiveEntry(new File(entryId), entryId);
+
+        archiveEntry.addExtraField(new SizeExtraField(message.getSize()));
+        archiveEntry.addExtraField(new UidExtraField(message.getUid().asLong()));
+        archiveEntry.addExtraField(new MessageIdExtraField(message.getMessageId().serialize()));
+        archiveEntry.addExtraField(new MailboxIdExtraField(message.getMailboxId().serialize()));
+        archiveEntry.addExtraField(new InternalDateExtraField(message.getInternalDate()));
+        archiveEntry.addExtraField(new FlagsExtraField(message.getFlags()));
+        return archiveEntry;
     }
 }
