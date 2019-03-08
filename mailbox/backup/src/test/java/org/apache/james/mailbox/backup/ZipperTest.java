@@ -48,6 +48,9 @@ import java.util.stream.Stream;
 
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
+import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.store.MessageResultImpl;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -61,6 +64,15 @@ class ZipperTest {
 
     private Zipper testee;
     private ByteArrayOutputStream output;
+
+    private static MessageResult MESSAGE_RESULT_1;
+    private static MessageResult MESSAGE_RESULT_2;
+
+    @BeforeAll
+    static void beforeAll() throws Exception {
+        MESSAGE_RESULT_1 = new MessageResultImpl(MESSAGE_1);
+        MESSAGE_RESULT_2 = new MessageResultImpl(MESSAGE_2);
+    }
 
     @BeforeEach
     void beforeEach() {
@@ -78,7 +90,7 @@ class ZipperTest {
 
     @Test
     void archiveShouldWriteOneMessageWhenOne() throws Exception {
-        testee.archive(NO_MAILBOXES, Stream.of(MESSAGE_1), output);
+        testee.archive(NO_MAILBOXES, Stream.of(new MessageResultImpl(MESSAGE_1)), output);
 
         try (ZipFile zipFile = new ZipFile(toSeekableByteChannel(output))) {
             assertThatZip(zipFile)
@@ -90,7 +102,7 @@ class ZipperTest {
 
     @Test
     void archiveShouldWriteTwoMessagesWhenTwo() throws Exception {
-        testee.archive(NO_MAILBOXES, Stream.of(MESSAGE_1, MESSAGE_2), output);
+        testee.archive(NO_MAILBOXES, Stream.of(MESSAGE_RESULT_1, MESSAGE_RESULT_2), output);
 
         try (ZipFile zipFile = new ZipFile(toSeekableByteChannel(output))) {
             assertThatZip(zipFile)
@@ -104,7 +116,7 @@ class ZipperTest {
 
     @Test
     void archiveShouldWriteMetadata() throws Exception {
-        testee.archive(NO_MAILBOXES, Stream.of(MESSAGE_1), output);
+        testee.archive(NO_MAILBOXES, Stream.of(MESSAGE_RESULT_1), output);
 
         try (ZipFile zipFile = new ZipFile(toSeekableByteChannel(output))) {
             assertThatZip(zipFile)

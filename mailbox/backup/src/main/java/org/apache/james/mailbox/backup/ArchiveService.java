@@ -23,14 +23,14 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.model.MessageResult;
 
-public interface Backup {
+public interface ArchiveService {
 
     /**
      * @param mailboxes   list of mailboxes and their annotations to be stored in the archive
      * @param messages    a stream of MailboxMessages that will be consumed
      * @param destination an OutputStream in which the zip will be written
      */
-    void archive(List<MailboxWithAnnotations> mailboxes, Stream<MailboxMessage> messages, OutputStream destination) throws IOException;
+    void archive(List<MailboxWithAnnotations> mailboxes, Stream<MessageResult> messages, OutputStream destination) throws IOException;
 }

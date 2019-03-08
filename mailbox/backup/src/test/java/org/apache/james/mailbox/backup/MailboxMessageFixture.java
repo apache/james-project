@@ -60,20 +60,31 @@ public interface MailboxMessageFixture {
     SharedByteArrayInputStream CONTENT_STREAM_2 = new SharedByteArrayInputStream(MESSAGE_CONTENT_2.getBytes(MESSAGE_CHARSET));
     MessageId MESSAGE_ID_1 = MESSAGE_ID_FACTORY.generate();
     MessageId MESSAGE_ID_2 = MESSAGE_ID_FACTORY.generate();
+
+    MessageId MESSAGE_ID_OTHER_USER_1 = MESSAGE_ID_FACTORY.generate();
+
     long SIZE_1 = 1000;
     long SIZE_2 = 2000;
     long MESSAGE_UID_1_VALUE = 1111L;
     long MESSAGE_UID_2_VALUE = 2222L;
+    long MESSAGE_UID_OTHER_USER_1_VALUE = 1111L;
     MessageUid MESSAGE_UID_1 = MessageUid.of(MESSAGE_UID_1_VALUE);
     MessageUid MESSAGE_UID_2 = MessageUid.of(MESSAGE_UID_2_VALUE);
+    MessageUid MESSAGE_UID_OTHER_USER_1 = MessageUid.of(MESSAGE_UID_OTHER_USER_1_VALUE);
     MailboxId MAILBOX_ID_1 = TestId.of(1L);
+    MailboxId MAILBOX_ID_2 = TestId.of(2L);
+    MailboxId MAILBOX_ID_11 = TestId.of(11L);
     Flags flags1 = new Flags("myFlags");
 
     MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create("user");
-    
-    Mailbox MAILBOX_1 = new SimpleMailbox(MailboxPath.forUser("user", "mailbox1"), 42, TestId.of(1L));
-    Mailbox MAILBOX_1_SUB_1 = new SimpleMailbox(MailboxPath.forUser("user", "mailbox1" + MAILBOX_SESSION.getPathDelimiter() + "sub1"), 420, TestId.of(11L));
-    Mailbox MAILBOX_2 = new SimpleMailbox(MailboxPath.forUser("user", "mailbox2"), 43, TestId.of(2L));
+
+    String MAILBOX_1_NAME = "mailbox1";
+    String MAILBOX_2_NAME = "mailbox2";
+    String MAILBOX_OTHER_USER_NAME = "mailbox_other";
+    Mailbox MAILBOX_1 = new SimpleMailbox(MailboxPath.forUser("user", MAILBOX_1_NAME), 42, MAILBOX_ID_1);
+    Mailbox MAILBOX_1_OTHER_USER = new SimpleMailbox(MailboxPath.forUser("otherUser", MAILBOX_OTHER_USER_NAME), 42, MAILBOX_ID_11);
+    Mailbox MAILBOX_1_SUB_1 = new SimpleMailbox(MailboxPath.forUser("user", MAILBOX_1_NAME + MAILBOX_SESSION.getPathDelimiter() + "sub1"), 420, TestId.of(11L));
+    Mailbox MAILBOX_2 = new SimpleMailbox(MailboxPath.forUser("user", MAILBOX_2_NAME), 43, MAILBOX_ID_2);
 
     List<MailboxAnnotation> NO_ANNOTATION = ImmutableList.of();
 
@@ -102,6 +113,19 @@ public interface MailboxMessageFixture {
         .propertyBuilder(new PropertyBuilder())
         .mailboxId(MAILBOX_ID_1)
         .build();
+
+    SimpleMailboxMessage MESSAGE_1_OTHER_USER = SimpleMailboxMessage.builder()
+        .messageId(MESSAGE_ID_OTHER_USER_1)
+        .uid(MESSAGE_UID_OTHER_USER_1)
+        .content(CONTENT_STREAM_1)
+        .size(SIZE_1)
+        .internalDate(new Date(DATE_1.toEpochSecond()))
+        .bodyStartOctet(0)
+        .flags(flags1)
+        .propertyBuilder(new PropertyBuilder())
+        .mailboxId(MAILBOX_ID_11)
+        .build();
+
     SimpleMailboxMessage MESSAGE_2 = SimpleMailboxMessage.builder()
         .messageId(MESSAGE_ID_2)
         .uid(MESSAGE_UID_2)
