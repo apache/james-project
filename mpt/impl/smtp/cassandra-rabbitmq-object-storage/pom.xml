@@ -25,10 +25,10 @@
         <version>3.4.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>apache-james-mpt-smtp-cassandra-rabbitmq-swift</artifactId>
+    <artifactId>apache-james-mpt-smtp-cassandra-rabbitmq-object-storage</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James MPT SMTP Cassandra RabbitMQ Swift</name>
+    <name>Apache James MPT SMTP Cassandra RabbitMQ Object Storage</name>
 
     <dependencies>
         <dependency>
