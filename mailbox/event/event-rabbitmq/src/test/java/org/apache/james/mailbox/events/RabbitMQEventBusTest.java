@@ -59,6 +59,7 @@ import org.apache.james.mailbox.events.EventBusTestFixture.GroupA;
 import org.apache.james.mailbox.events.EventBusTestFixture.MailboxListenerCountingSuccessfulExecution;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.util.EventCollector;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.AfterEach;
@@ -154,6 +155,12 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     @Disabled("This test is failing by design as the different registration keys are handled by distinct messages")
     public void dispatchShouldCallListenerOnceWhenSeveralKeysMatching() {
 
+    }
+
+    @Test
+    void deserializeEventCollectorGroup() throws Exception {
+        assertThat(Group.deserialize("org.apache.james.mailbox.util.EventCollector$EventCollectorGroup"))
+            .isEqualTo(new EventCollector.EventCollectorGroup());
     }
 
     @Test

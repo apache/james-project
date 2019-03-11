@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.elasticsearch.events;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -41,6 +42,7 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
+import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -91,6 +93,12 @@ public class ElasticSearchListeningMessageSearchIndexTest {
 
         mailbox = mock(Mailbox.class);
         when(mailbox.getMailboxId()).thenReturn(MAILBOX_ID);
+    }
+
+    @Test
+    public void deserializeElasticSearchListeningMessageSearchIndexGroup() throws Exception {
+        assertThat(Group.deserialize("org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex$ElasticSearchListeningMessageSearchIndexGroup"))
+            .isEqualTo(new ElasticSearchListeningMessageSearchIndex.ElasticSearchListeningMessageSearchIndexGroup());
     }
     
     @Test

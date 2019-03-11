@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store.quota;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.eq;
@@ -39,6 +40,7 @@ import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -74,6 +76,12 @@ public class ListeningCurrentQuotaUpdaterTest {
         when(eventBus.dispatch(any(Event.class), anySet())).thenReturn(Mono.empty());
         testee = new ListeningCurrentQuotaUpdater(mockedCurrentQuotaManager, mockedQuotaRootResolver,
             eventBus, mock(QuotaManager.class));
+    }
+
+    @Test
+    public void deserializeListeningCurrentQuotaUpdaterGroup() throws Exception {
+        assertThat(Group.deserialize("org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater$ListeningCurrentQuotaUpdaterGroup"))
+            .isEqualTo(new ListeningCurrentQuotaUpdater.ListeningCurrentQuotaUpdaterGroup());
     }
 
     @Test

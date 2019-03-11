@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.event;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -34,6 +35,7 @@ import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.events.Event;
+import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -92,6 +94,12 @@ public class MailboxAnnotationListenerTest {
         when(sessionProvider.createSystemSession(deleteEvent.getUser().asString()))
             .thenReturn(mailboxSession);
         when(mailboxSessionMapperFactory.getAnnotationMapper(eq(mailboxSession))).thenReturn(annotationMapper);
+    }
+
+    @Test
+    public void deserializeMailboxAnnotationListenerGroup() throws Exception {
+        assertThat(Group.deserialize("org.apache.james.mailbox.store.event.MailboxAnnotationListener$MailboxAnnotationListenerGroup"))
+            .isEqualTo(new MailboxAnnotationListener.MailboxAnnotationListenerGroup());
     }
 
     @Test

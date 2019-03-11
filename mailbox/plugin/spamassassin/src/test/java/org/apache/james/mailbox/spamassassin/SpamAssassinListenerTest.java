@@ -36,6 +36,7 @@ import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
+import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.events.MessageMoveEvent;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -96,6 +97,12 @@ public class SpamAssassinListenerTest {
         trashMailboxId = mailboxMapper.save(new SimpleMailbox(MailboxPath.forUser(USER, "Trash"), UID_VALIDITY));
 
         listener = new SpamAssassinListener(spamAssassin, systemMailboxesProvider, mailboxManager, mapperFactory, MailboxListener.ExecutionMode.SYNCHRONOUS);
+    }
+
+    @Test
+    public void deserializeSpamAssassinListenerGroup() throws Exception {
+        assertThat(Group.deserialize("org.apache.james.mailbox.spamassassin.SpamAssassinListener$SpamAssassinListenerGroup"))
+            .isEqualTo(new SpamAssassinListener.SpamAssassinListenerGroup());
     }
 
     @Test

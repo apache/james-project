@@ -34,6 +34,7 @@ import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.mailbox.events.Event;
+import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.quota.QuotaFixture.Counts;
 import org.apache.james.mailbox.quota.QuotaFixture.Sizes;
 import org.apache.james.mailbox.store.event.EventFactory;
@@ -76,6 +77,12 @@ public class ElasticSearchQuotaMailboxListenerTest {
                 QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE,
                 BATCH_SIZE),
             new QuotaRatioToElasticSearchJson());
+    }
+
+    @Test
+    public void deserializeElasticSearchQuotaMailboxListenerGroup() throws Exception {
+        assertThat(Group.deserialize("org.apache.james.quota.search.elasticsearch.events.ElasticSearchQuotaMailboxListener$ElasticSearchQuotaMailboxListenerGroup"))
+            .isEqualTo(new ElasticSearchQuotaMailboxListener.ElasticSearchQuotaMailboxListenerGroup());
     }
 
     @Test

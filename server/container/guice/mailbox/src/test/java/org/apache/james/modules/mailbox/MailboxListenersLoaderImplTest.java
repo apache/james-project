@@ -62,6 +62,12 @@ class MailboxListenersLoaderImplTest {
     }
 
     @Test
+    void deserializeNoopMailboxListenerGroup() throws Exception {
+        assertThat(Group.deserialize("org.apache.james.modules.mailbox.NoopMailboxListener$NoopMailboxListenerGroup"))
+            .isEqualTo(new NoopMailboxListener.NoopMailboxListenerGroup());
+    }
+
+    @Test
     void createListenerShouldThrowWhenClassCantBeLoaded() {
         ListenerConfiguration configuration = ListenerConfiguration.forClass("MyUnknownClass");
 
