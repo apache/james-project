@@ -20,6 +20,7 @@
 package org.apache.james.server.core;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.OptionalDataException;
 import java.io.OutputStream;
 import java.io.Serializable;
@@ -593,6 +594,36 @@ public class MailImpl implements Disposable, Mail {
         remoteHost = (String) in.readObject();
         remoteAddr = (String) in.readObject();
         setLastUpdated((Date) in.readObject());
+        try {
+            setAttributesUsingJsonable(in);
+        } catch (Exception e) {
+            setAttributesUsingJavaSerializable(in);
+        }
+        perRecipientSpecificHeaders = (PerRecipientHeaders) in.readObject();
+    }
+
+    /**
+     * Newest mailet API introduced {@link AttributeValue} which can encapsulate any class, possible not serializable.
+     *
+     * As such, algorithm relying on out of the box serialization can not handle non serializable attribute values as well as
+     * nested AttributeValue.
+     *
+     * Thus, rather than Java deserializing attributes we deserialize them as Json using AttributeValue capabilities.
+     */
+    private void setAttributesUsingJsonable(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        Map<String, String> attributesAsJson = (Map<String, String>) in.readObject();
+
+        this.attributes = attributesAsJson.entrySet().stream()
+            .map(Throwing.function(entry -> new Attribute(AttributeName.of(entry.getKey()), AttributeValue.fromJsonString(entry.getValue()))))
+            .collect(Collectors.toMap(
+                Attribute::getName,
+                Function.identity()));
+    }
+
+    /**
+     * Fallback to Java deserialization if {@link MailImpl#setAttributesUsingJsonable(ObjectInputStream)} fails.
+     */
+    private void setAttributesUsingJavaSerializable(ObjectInputStream in) throws IOException, ClassNotFoundException {
         // the following is under try/catch to be backwards compatible
         // with messages created with James version <= 2.2.0a8
         try {
@@ -604,7 +635,6 @@ public class MailImpl implements Disposable, Mail {
                 throw ode;
             }
         }
-        perRecipientSpecificHeaders = (PerRecipientHeaders) in.readObject();
     }
 
     /**
@@ -622,7 +652,7 @@ public class MailImpl implements Disposable, Mail {
         out.writeObject(remoteHost);
         out.writeObject(remoteAddr);
         out.writeObject(lastUpdated);
-        out.writeObject(getAttributesRaw());
+        out.writeObject(getAttributesAsJson());
         out.writeObject(perRecipientSpecificHeaders);
     }
 
@@ -651,6 +681,19 @@ public class MailImpl implements Disposable, Mail {
             .collect(Collectors.toMap(
                 attribute -> attribute.getName().asString(),
                 attribute -> attribute.getValue().value()));
+    }
+
+    /**
+     * Newly serialized emails are serialized using {@link AttributeValue}.
+     *
+     * Upon deserialization, fallback to Java deserialization is handled to not introduce retro-compatibility issues.
+     */
+    private Map<String, String> getAttributesAsJson() {
+        return attributes.values()
+            .stream()
+            .collect(Collectors.toMap(
+                attribute -> attribute.getName().asString(),
+                attribute -> attribute.getValue().toJson().toString()));
     }
 
     /**

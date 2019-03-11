@@ -43,7 +43,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
@@ -322,7 +321,6 @@ public class MailImplTest extends ContractMailTest {
             .isEqualToComparingFieldByField(mail);
     }
 
-    @Disabled("JAMES-2665: Throws java.io.NotSerializableException: java.util.Optional")
     @Test
     void mailImplShouldBeSerializableWithOptionalAttribute() throws Exception {
         MailImpl mail = MailImpl.builder()
@@ -344,7 +342,6 @@ public class MailImplTest extends ContractMailTest {
             .isEqualToComparingFieldByField(mail);
     }
 
-    @Disabled("JAMES-2665: Throws java.io.NotSerializableException: java.io.NotSerializableException: org.apache.mailet.AttributeValue")
     @Test
     void mailImplShouldBeSerializableWithCollectionAttribute() throws Exception {
         MailImpl mail = MailImpl.builder()
