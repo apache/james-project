@@ -20,7 +20,6 @@
 package org.apache.james.queue.api;
 
 import static org.apache.james.queue.api.MailQueue.DEQUEUED_METRIC_NAME_PREFIX;
-import static org.apache.james.queue.api.MailQueue.DEQUEUED_TIMER_METRIC_NAME_PREFIX;
 import static org.apache.james.queue.api.MailQueue.ENQUEUED_METRIC_NAME_PREFIX;
 import static org.apache.james.queue.api.MailQueue.ENQUEUED_TIMER_METRIC_NAME_PREFIX;
 import static org.mockito.ArgumentMatchers.startsWith;
@@ -97,8 +96,6 @@ public class MailQueueMetricExtension implements BeforeEachCallback, ParameterRe
 
         when(testSystem.spyMetricFactory.timer(startsWith(ENQUEUED_TIMER_METRIC_NAME_PREFIX)))
             .thenReturn(testSystem.spyEnqueuedMailsTimeMetric);
-        when(testSystem.spyMetricFactory.timer(startsWith(DEQUEUED_TIMER_METRIC_NAME_PREFIX)))
-            .thenReturn(testSystem.spyDequeuedMailsTimeMetric);
     }
 
     @Override

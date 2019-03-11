@@ -123,32 +123,4 @@ public interface MailQueueMetricContract extends MailQueueContract {
         verify(testSystem.getSpyEnqueuedMailsTimeMetric(), times(2)).stopAndPublish();
     }
 
-    @Test
-    default void enqueueShouldNotPublishDequeueTimeMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
-        enQueueMail(2);
-
-        verify(testSystem.getSpyEnqueuedMailsTimeMetric(), times(2)).stopAndPublish();
-        verifyNoMoreInteractions(testSystem.getSpyDequeuedMailsTimeMetric());
-    }
-
-    @Disabled("what do we want to measure ?")
-    @Test
-    default void dequeueShouldPublishDequeueTimeMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
-        enQueueMail(2);
-        deQueueMail(2);
-
-        verify(testSystem.getSpyDequeuedMailsTimeMetric(), times(2)).stopAndPublish();
-    }
-
-    @Disabled("what do we want to measure ?")
-    @Test
-    default void dequeueShouldNotPublishEnqueueTimeMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
-        enQueueMail(2);
-        verify(testSystem.getSpyEnqueuedMailsTimeMetric(), times(2)).stopAndPublish();
-
-        deQueueMail(2);
-        verify(testSystem.getSpyDequeuedMailsTimeMetric(), times(2)).stopAndPublish();
-        verifyNoMoreInteractions(testSystem.getSpyEnqueuedMailsTimeMetric());
-    }
-
 }

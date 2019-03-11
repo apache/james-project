@@ -227,7 +227,6 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     private Mono<MailQueueItem> deQueueOneItem() {
         Session session = null;
         MessageConsumer consumer = null;
-        TimeMetric timeMetric = metricFactory.timer(DEQUEUED_TIMER_METRIC_NAME_PREFIX + queueName);
         try {
             session = connection.createSession(true, Session.SESSION_TRANSACTED);
             Queue queue = session.createQueue(queueName);
@@ -249,8 +248,6 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             closeConsumer(consumer);
             closeSession(session);
             return Mono.error(new MailQueueException("Unable to dequeue next message", e));
-        } finally {
-            timeMetric.stopAndPublish();
         }
         return Mono.empty();
     }
