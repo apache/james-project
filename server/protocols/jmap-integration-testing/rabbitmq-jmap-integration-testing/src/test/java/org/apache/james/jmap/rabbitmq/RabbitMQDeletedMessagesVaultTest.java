@@ -24,7 +24,6 @@ import java.io.IOException;
 import org.apache.james.CassandraRabbitMQSwiftJmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.jmap.methods.integration.DeletedMessagesVaultTest;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.mailbox.PreDeletionHookConfiguration;
@@ -34,12 +33,8 @@ import org.apache.james.vault.MailRepositoryDeletedMessageVault;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.jupiter.api.Disabled;
 
 public class RabbitMQDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
-
     @ClassRule
     public static DockerCassandraRule cassandra = new DockerCassandraRule();
 
@@ -61,13 +56,4 @@ public class RabbitMQDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
     protected void awaitSearchUpToDate() {
         rule.await();
     }
-
-    @Disabled("MAILBOX-379 PreDeletionHook are not yet triggered upon mailbox deletion")
-    @Category(BasicFeature.class)
-    @Override
-    @Test
-    public void vaultEndpointShouldRestoreImapDeletedMailbox() {
-
-    }
-    
 }

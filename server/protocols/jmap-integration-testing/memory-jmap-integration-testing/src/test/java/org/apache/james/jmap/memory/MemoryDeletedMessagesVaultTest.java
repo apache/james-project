@@ -23,7 +23,6 @@ import java.io.IOException;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.jmap.methods.integration.DeletedMessagesVaultTest;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.mailbox.PreDeletionHookConfiguration;
@@ -32,12 +31,8 @@ import org.apache.james.vault.DeletedMessageVaultHook;
 import org.apache.james.vault.MailRepositoryDeletedMessageVault;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.jupiter.api.Disabled;
 
 public class MemoryDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
-
     @Rule
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 
@@ -54,14 +49,6 @@ public class MemoryDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
 
     @Override
     protected void awaitSearchUpToDate() {
-
-    }
-
-    @Disabled("MAILBOX-379 PreDeletionHook are not yet triggered upon mailbox deletion")
-    @Category(BasicFeature.class)
-    @Override
-    @Test
-    public void vaultEndpointShouldRestoreImapDeletedMailbox() {
 
     }
 }

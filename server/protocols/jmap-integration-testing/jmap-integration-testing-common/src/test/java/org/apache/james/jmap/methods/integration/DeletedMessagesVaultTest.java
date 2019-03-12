@@ -59,7 +59,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.jupiter.api.Disabled;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import com.google.common.base.Strings;
@@ -181,7 +180,6 @@ public abstract class DeletedMessagesVaultTest {
             .body(ARGUMENTS + ".list.subject", hasItem(SUBJECT));
     }
 
-    @Disabled("MAILBOX-379 PreDeletionHook are not yet triggered upon mailbox deletion")
     @Category(BasicFeature.class)
     @Test
     public void vaultEndpointShouldRestoreImapDeletedMailbox() throws Exception {
