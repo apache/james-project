@@ -27,10 +27,12 @@ import org.apache.james.blob.objectstorage.AESPayloadCodec;
 import org.apache.james.blob.objectstorage.DefaultPayloadCodec;
 import org.apache.james.blob.objectstorage.PayloadCodec;
 import org.apache.james.core.Domain;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.SwiftBlobStoreExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.objectstorage.PayloadCodecFactory;
+import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
@@ -130,9 +132,46 @@ class CassandraRabbitMQJamesServerTest {
 
     @Nested
     @TestInstance(Lifecycle.PER_METHOD)
-    class WithoutSwift implements ContractSuite {
+    class WithoutSwiftOrAwsS3 implements ContractSuite {
         @RegisterExtension
         JamesServerExtension testExtension = baseExtensionBuilder().build();
+    }
+
+    @Nested
+    @TestInstance(Lifecycle.PER_METHOD)
+    class WithEncryptedAwsS3 implements ContractSuite {
+        @RegisterExtension
+        JamesServerExtension testExtension = baseExtensionBuilder()
+            .extension(new AwsS3BlobStoreExtension(PayloadCodecFactory.AES256))
+            .server(CONFIGURATION_BUILDER)
+            .build();
+
+        @Test
+        void encryptedPayloadShouldBeConfiguredWhenProvidingEncryptedPayloadConfiguration(GuiceJamesServer jamesServer) {
+            PayloadCodec payloadCodec = jamesServer.getProbe(DockerAwsS3TestRule.TestAwsS3BlobStoreProbe.class)
+                .getAwsS3PayloadCodec();
+
+            assertThat(payloadCodec)
+                .isInstanceOf(AESPayloadCodec.class);
+        }
+    }
+
+    @Nested
+    @TestInstance(Lifecycle.PER_METHOD)
+    class WithDefaultAwsS3 implements ContractSuite {
+        @RegisterExtension
+        JamesServerExtension testExtension = baseExtensionBuilder()
+            .extension(new AwsS3BlobStoreExtension())
+            .build();
+
+        @Test
+        void defaultPayloadShouldBeByDefault(GuiceJamesServer jamesServer) {
+            PayloadCodec payloadCodec = jamesServer.getProbe(DockerAwsS3TestRule.TestAwsS3BlobStoreProbe.class)
+                .getAwsS3PayloadCodec();
+
+            assertThat(payloadCodec)
+                .isInstanceOf(DefaultPayloadCodec.class);
+        }
     }
 
     private static JamesServerBuilder baseExtensionBuilder() {
