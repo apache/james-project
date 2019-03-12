@@ -19,37 +19,15 @@
 package org.apache.james.backend.rabbitmq;
 
 import java.time.Duration;
-import java.util.Optional;
-import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class RabbitMQConnectionFactory {
-    private class ConnectionCallable implements Callable<Connection> {
-        private final ConnectionFactory connectionFactory;
-        private Optional<Connection> connection;
-
-        ConnectionCallable(ConnectionFactory connectionFactory) {
-            this.connectionFactory = connectionFactory;
-            connection = Optional.empty();
-        }
-
-        @Override
-        public synchronized Connection call() throws Exception {
-            if (connection.map(Connection::isOpen).orElse(false)) {
-                return connection.get();
-            }
-            Connection newConnection = connectionFactory.newConnection();
-            connection = Optional.of(newConnection);
-            return newConnection;
-        }
-    }
 
     private final ConnectionFactory connectionFactory;
 
@@ -71,12 +49,12 @@ public class RabbitMQConnectionFactory {
         }
     }
 
-    public Connection create() {
+    Connection create() {
         return connectionMono().block();
     }
 
-    public Mono<Connection> connectionMono() {
-        return Mono.fromCallable(new ConnectionCallable(connectionFactory))
+    Mono<Connection> connectionMono() {
+        return Mono.fromCallable(connectionFactory::newConnection)
             .retryBackoff(configuration.getMaxRetries(), Duration.ofMillis(configuration.getMinDelayInMs()))
             .publishOn(Schedulers.elastic());
     }

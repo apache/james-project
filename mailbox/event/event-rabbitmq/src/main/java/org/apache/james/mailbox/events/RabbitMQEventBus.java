@@ -24,7 +24,7 @@ import java.util.Set;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
-import org.apache.james.backend.rabbitmq.RabbitMQConnectionFactory;
+import org.apache.james.backend.rabbitmq.SimpleConnectionPool;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.MetricFactory;
@@ -59,13 +59,13 @@ public class RabbitMQEventBus implements EventBus, Startable {
     private Sender sender;
 
     @Inject
-    public RabbitMQEventBus(RabbitMQConnectionFactory rabbitMQConnectionFactory, EventSerializer eventSerializer,
+    public RabbitMQEventBus(SimpleConnectionPool simpleConnectionPool, EventSerializer eventSerializer,
                      RetryBackoffConfiguration retryBackoff,
                      RoutingKeyConverter routingKeyConverter,
                      EventDeadLetters eventDeadLetters, MetricFactory metricFactory) {
         this.mailboxListenerExecutor = new MailboxListenerExecutor(metricFactory);
         this.eventBusId = EventBusId.random();
-        this.connectionMono = rabbitMQConnectionFactory.connectionMono();
+        this.connectionMono = simpleConnectionPool.getResilientConnection();
         this.eventSerializer = eventSerializer;
         this.routingKeyConverter = routingKeyConverter;
         this.retryBackoff = retryBackoff;

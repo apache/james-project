@@ -49,5 +49,7 @@ public interface RabbitMQChannelPool {
 
     Flux<AcknowledgableDelivery> receive(String queueName);
 
+    boolean tryConnection();
+
     void close() throws Exception;
 }

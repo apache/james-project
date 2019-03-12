@@ -19,7 +19,10 @@
 
 package org.apache.james.backend.rabbitmq;
 
+import java.io.IOException;
+import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.PreDestroy;
@@ -28,8 +31,9 @@ import javax.inject.Inject;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.AcknowledgableDelivery;
 import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Receiver;
@@ -37,18 +41,16 @@ import reactor.rabbitmq.ReceiverOptions;
 
 public class SimpleChannelPool implements RabbitMQChannelPool {
     private final AtomicReference<Channel> channelReference;
-    private final AtomicReference<Connection> connectionReference;
-    private final RabbitMQConnectionFactory connectionFactory;
     private final Receiver rabbitFlux;
+    private final SimpleConnectionPool connectionPool;
 
     @Inject
     @VisibleForTesting
-    SimpleChannelPool(RabbitMQConnectionFactory factory) {
-        this.connectionFactory = factory;
-        this.connectionReference = new AtomicReference<>();
+    SimpleChannelPool(SimpleConnectionPool connectionPool) {
+        this.connectionPool = connectionPool;
         this.channelReference = new AtomicReference<>();
         this.rabbitFlux = RabbitFlux
-            .createReceiver(new ReceiverOptions().connectionMono(connectionFactory.connectionMono()));
+            .createReceiver(new ReceiverOptions().connectionMono(connectionPool.getResilientConnection()));
     }
 
     @Override
@@ -57,25 +59,21 @@ public class SimpleChannelPool implements RabbitMQChannelPool {
     }
 
     @Override
-    public synchronized <T, E extends Throwable> T execute(RabbitFunction<T, E> f) throws E, ConnectionFailedException {
-        return f.execute(getResilientChannel());
+    public <T, E extends Throwable> T execute(RabbitFunction<T, E> f) throws E, ConnectionFailedException {
+        return f.execute(getResilientChannel().block());
     }
 
     @Override
-    public synchronized <E extends Throwable> void execute(RabbitConsumer<E> f) throws E, ConnectionFailedException {
-        f.execute(getResilientChannel());
+    public <E extends Throwable> void execute(RabbitConsumer<E> f) throws E, ConnectionFailedException {
+        f.execute(getResilientChannel().block());
     }
 
     @PreDestroy
     @Override
-    public synchronized void close() {
+    public void close() {
         Optional.ofNullable(channelReference.get())
             .filter(Channel::isOpen)
             .ifPresent(Throwing.<Channel>consumer(Channel::close).orDoNothing());
-
-        Optional.ofNullable(connectionReference.get())
-            .filter(Connection::isOpen)
-            .ifPresent(Throwing.<Connection>consumer(Connection::close).orDoNothing());
 
         try {
             rabbitFlux.close();
@@ -84,24 +82,47 @@ public class SimpleChannelPool implements RabbitMQChannelPool {
         }
     }
 
-    private Connection getResilientConnection() {
-        return connectionReference.updateAndGet(this::getOpenConnection);
+    private Mono<Channel> getResilientChannel() {
+        int numRetries = 100;
+        Duration initialDelay = Duration.ofMillis(100);
+        return Mono.defer(this::getOpenChannel)
+            .publishOn(Schedulers.elastic())
+            .retryBackoff(numRetries, initialDelay);
     }
 
-    private Connection getOpenConnection(Connection checkedConnection) {
-        return Optional.ofNullable(checkedConnection)
-            .filter(Connection::isOpen)
-            .orElseGet(connectionFactory::create);
-    }
-
-    private Channel getResilientChannel() {
-        return channelReference.updateAndGet(Throwing.unaryOperator(this::getOpenChannel));
-    }
-
-    private Channel getOpenChannel(Channel checkedChannel) {
-        return Optional.ofNullable(checkedChannel)
+    private Mono<Channel> getOpenChannel() {
+        Channel previous = channelReference.get();
+        return Mono.justOrEmpty(previous)
+            .publishOn(Schedulers.elastic())
             .filter(Channel::isOpen)
-            .orElseGet(Throwing.supplier(() -> getResilientConnection().createChannel())
-                .sneakyThrow());
+            .switchIfEmpty(connectionPool.getResilientConnection()
+                .flatMap(connection -> Mono.fromCallable(connection::createChannel)))
+            .flatMap(current -> replaceCurrentChannel(previous, current))
+            .onErrorMap(t -> new RuntimeException("unable to create and register a new Channel", t));
+    }
+
+    private Mono<Channel> replaceCurrentChannel(Channel previous, Channel current) {
+        if (channelReference.compareAndSet(previous, current)) {
+            return Mono.just(current);
+        } else {
+            try {
+                current.close();
+            } catch (IOException | TimeoutException e) {
+                //error below
+            }
+            return Mono.error(new RuntimeException("unable to create and register a new Channel"));
+        }
+    }
+
+    @Override
+    public boolean tryConnection() {
+        try {
+            return connectionPool.tryConnection() &&
+                getOpenChannel()
+                    .blockOptional()
+                    .isPresent();
+        } catch (Throwable t) {
+            return false;
+        }
     }
 }

@@ -51,7 +51,6 @@ import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.backend.rabbitmq.RabbitMQConnectionFactory;
 import org.apache.james.backend.rabbitmq.RabbitMQExtension;
 import org.apache.james.backend.rabbitmq.RabbitMQManagementAPI;
 import org.apache.james.event.json.EventSerializer;
@@ -71,7 +70,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.stubbing.Answer;
 
 import com.rabbitmq.client.Connection;
-
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
@@ -94,16 +92,14 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     private RabbitMQEventBus eventBus2;
     private RabbitMQEventBus eventBus3;
     private Sender sender;
-    private RabbitMQConnectionFactory connectionFactory;
     private EventSerializer eventSerializer;
     private RoutingKeyConverter routingKeyConverter;
     private MemoryEventDeadLetters memoryEventDeadLetters;
+    private Mono<Connection> resilientConnection;
 
     @BeforeEach
     void setUp() {
-        connectionFactory = rabbitMQExtension.getConnectionFactory();
         memoryEventDeadLetters = new MemoryEventDeadLetters();
-        Mono<Connection> connectionMono = Mono.fromSupplier(connectionFactory::create).cache();
 
         TestId.Factory mailboxIdFactory = new TestId.Factory();
         eventSerializer = new EventSerializer(mailboxIdFactory, new TestMessageId.Factory());
@@ -116,7 +112,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         eventBus.start();
         eventBus2.start();
         eventBus3.start();
-        sender = RabbitFlux.createSender(new SenderOptions().connectionMono(connectionMono));
+        resilientConnection = rabbitMQExtension.getRabbitConnectionPool().getResilientConnection();
+        sender = RabbitFlux.createSender(new SenderOptions().connectionMono(resilientConnection));
     }
 
     @AfterEach
@@ -132,7 +129,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     }
 
     private RabbitMQEventBus newEventBus() {
-        return new RabbitMQEventBus(connectionFactory, eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter, memoryEventDeadLetters, new NoopMetricFactory());
+        return new RabbitMQEventBus(rabbitMQExtension.getRabbitConnectionPool(), eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter, memoryEventDeadLetters, new NoopMetricFactory());
     }
 
     @Override
@@ -232,28 +229,29 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     @Nested
     class PublishingTest {
         private static final String MAILBOX_WORK_QUEUE_NAME = MAILBOX_EVENT + "-workQueue";
+        private Sender sender1;
 
         @BeforeEach
         void setUp() {
-            createQueue();
-        }
+            SenderOptions senderOption = new SenderOptions().connectionMono(resilientConnection);
+            sender1 = RabbitFlux.createSender(senderOption);
 
-        private void createQueue() {
-            SenderOptions senderOption = new SenderOptions()
-                .connectionMono(Mono.fromSupplier(connectionFactory::create));
-            Sender sender = RabbitFlux.createSender(senderOption);
-
-            sender.declareQueue(QueueSpecification.queue(MAILBOX_WORK_QUEUE_NAME)
+            sender1.declareQueue(QueueSpecification.queue(MAILBOX_WORK_QUEUE_NAME)
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
                 .arguments(NO_ARGUMENTS))
                 .block();
-            sender.bind(BindingSpecification.binding()
+            sender1.bind(BindingSpecification.binding()
                 .exchange(MAILBOX_EVENT_EXCHANGE_NAME)
                 .queue(MAILBOX_WORK_QUEUE_NAME)
                 .routingKey(EMPTY_ROUTING_KEY))
                 .block();
+        }
+
+        @AfterEach
+        void tearDown() {
+            sender1.close();
         }
 
         @Test
@@ -271,15 +269,14 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         }
 
         private Event dequeueEvent() {
-            RabbitMQConnectionFactory connectionFactory = rabbitMQExtension.getConnectionFactory();
-            Receiver receiver = RabbitFlux.createReceiver(new ReceiverOptions().connectionMono(Mono.just(connectionFactory.create())));
+            try (Receiver receiver = RabbitFlux.createReceiver(new ReceiverOptions().connectionMono(resilientConnection))) {
+                byte[] eventInBytes = receiver.consumeAutoAck(MAILBOX_WORK_QUEUE_NAME)
+                    .blockFirst()
+                    .getBody();
 
-            byte[] eventInBytes = receiver.consumeAutoAck(MAILBOX_WORK_QUEUE_NAME)
-                .blockFirst()
-                .getBody();
-
-            return eventSerializer.fromJson(new String(eventInBytes, StandardCharsets.UTF_8))
-                .get();
+                return eventSerializer.fromJson(new String(eventInBytes, StandardCharsets.UTF_8))
+                    .get();
+            }
         }
     }
 

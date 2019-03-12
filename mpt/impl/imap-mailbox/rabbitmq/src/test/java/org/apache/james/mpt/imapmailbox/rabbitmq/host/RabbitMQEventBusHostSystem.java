@@ -24,7 +24,7 @@ import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
-import org.apache.james.backend.rabbitmq.RabbitMQConnectionFactory;
+import org.apache.james.backend.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.event.json.EventSerializer;
@@ -61,6 +61,7 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
     private final DockerRabbitMQ dockerRabbitMQ;
     private RabbitMQEventBus eventBus;
     private InMemoryIntegrationResources.Resources resources;
+    private SimpleConnectionPool connectionPool;
 
     RabbitMQEventBusHostSystem(DockerRabbitMQ dockerRabbitMQ) {
         this.dockerRabbitMQ = dockerRabbitMQ;
@@ -70,6 +71,7 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
     public void beforeTest() throws Exception {
         super.beforeTest();
 
+        connectionPool = new SimpleConnectionPool(dockerRabbitMQ.createRabbitConnectionFactory());
         eventBus = createEventBus();
         eventBus.start();
 
@@ -95,14 +97,14 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
         InMemoryId.Factory mailboxIdFactory = new InMemoryId.Factory();
         EventSerializer eventSerializer = new EventSerializer(mailboxIdFactory, messageIdFactory);
         RoutingKeyConverter routingKeyConverter = new RoutingKeyConverter(ImmutableSet.of(new MailboxIdRegistrationKey.Factory(mailboxIdFactory)));
-        RabbitMQConnectionFactory rabbitConnectionFactory = dockerRabbitMQ.createRabbitConnectionFactory();
-        return new RabbitMQEventBus(rabbitConnectionFactory, eventSerializer, RetryBackoffConfiguration.DEFAULT,
+        return new RabbitMQEventBus(connectionPool, eventSerializer, RetryBackoffConfiguration.DEFAULT,
             routingKeyConverter, new MemoryEventDeadLetters(), new NoopMetricFactory());
     }
 
     @Override
     public void afterTest() {
         eventBus.stop();
+        connectionPool.close();
     }
 
     @Override

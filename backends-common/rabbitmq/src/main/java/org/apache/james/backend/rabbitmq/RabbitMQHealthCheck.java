@@ -19,10 +19,6 @@
 
 package org.apache.james.backend.rabbitmq;
 
-import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-
 import javax.inject.Inject;
 
 import org.apache.james.core.healthcheck.ComponentName;
@@ -38,7 +34,7 @@ public class RabbitMQHealthCheck implements HealthCheck {
     private final RabbitMQChannelPool rabbitChannelPoolImpl;
 
     @Inject
-    public RabbitMQHealthCheck(RabbitMQChannelPool rabbitChannelPoolImpl) throws NoSuchAlgorithmException, KeyManagementException, URISyntaxException {
+    public RabbitMQHealthCheck(RabbitMQChannelPool rabbitChannelPoolImpl) {
         this.rabbitChannelPoolImpl = rabbitChannelPoolImpl;
     }
 
@@ -50,13 +46,12 @@ public class RabbitMQHealthCheck implements HealthCheck {
     @Override
     public Result check() {
         try {
-            return rabbitChannelPoolImpl.execute(channel -> {
-                    if (channel.isOpen()) {
-                        return Result.healthy(COMPONENT_NAME);
-                    }
-                    LOGGER.error("The created connection was not opened");
-                    return Result.unhealthy(COMPONENT_NAME);
-            });
+            if (rabbitChannelPoolImpl.tryConnection()) {
+                return Result.healthy(COMPONENT_NAME);
+            } else {
+                LOGGER.error("The created connection was not opened");
+                return Result.unhealthy(COMPONENT_NAME);
+            }
         } catch (Exception e) {
             LOGGER.error("Unhealthy RabbitMQ instances: could not establish a connection", e);
             return Result.unhealthy(COMPONENT_NAME);
