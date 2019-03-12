@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- * http://www.apache.org/licenses/LICENSE-2.0                   *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -16,29 +16,14 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.jmap.rabbitmq.cucumber;
 
-package org.apache.james.jmap.rabbitmq;
+import org.apache.james.modules.objectstorage.PayloadCodecFactory;
+import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 
-import java.io.IOException;
+public class CucumberAwsS3Singleton {
 
-import org.apache.james.CassandraRabbitMQSwiftJmapTestRule;
-import org.apache.james.DockerCassandraRule;
-import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.ProvisioningTest;
-import org.junit.ClassRule;
-import org.junit.Rule;
-
-public class RabbitMQProvisioningTest extends ProvisioningTest {
-
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
-
-    @Rule
-    public CassandraRabbitMQSwiftJmapTestRule rule = CassandraRabbitMQSwiftJmapTestRule.defaultTestRule();
-
-    @Override
-    protected GuiceJamesServer createJmapServer() throws IOException {
-        return rule.jmapServer(cassandra.getModule());
-    }
-
+    public static DockerAwsS3TestRule swiftServer = new DockerAwsS3TestRule();
+    public static DockerAwsS3TestRule encryptedAwsS3Server = new DockerAwsS3TestRule(PayloadCodecFactory.AES256);
 }
+

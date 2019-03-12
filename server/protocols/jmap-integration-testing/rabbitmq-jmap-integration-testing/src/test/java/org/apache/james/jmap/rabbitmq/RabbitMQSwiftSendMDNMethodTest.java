@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.jmap.rabbitmq;
 
 import org.apache.james.CassandraExtension;
@@ -24,30 +25,35 @@ import org.apache.james.EmbeddedElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.jmap.methods.integration.SpamAssassinContract;
-import org.apache.james.jmap.methods.integration.SpamAssassinModuleExtension;
+import org.apache.james.jmap.methods.integration.SendMDNMethodTest;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.SwiftBlobStoreExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class RabbitMQSpamAssassinContractTest implements SpamAssassinContract {
+public class RabbitMQSwiftSendMDNMethodTest extends SendMDNMethodTest {
 
-    private static final int LIMIT_TO_20_MESSAGES = 20;
+    private static final long LIMIT_TO_10_MESSAGES = 10;
 
-    private static final SpamAssassinModuleExtension spamAssassinExtension = new SpamAssassinModuleExtension();
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder()
+    JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(new EmbeddedElasticSearchExtension())
         .extension(new CassandraExtension())
-        .extension(new RabbitMQExtension())
         .extension(new SwiftBlobStoreExtension())
-        .extension(spamAssassinExtension)
+        .extension(new RabbitMQExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_20_MESSAGES)))
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
         .build();
+
+    @Override
+    protected MessageId randomMessageId() {
+        return new CassandraMessageId.Factory().generate();
+    }
+    
 }

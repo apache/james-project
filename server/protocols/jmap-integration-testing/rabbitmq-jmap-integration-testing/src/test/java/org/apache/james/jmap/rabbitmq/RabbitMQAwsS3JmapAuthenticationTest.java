@@ -16,34 +16,32 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.jmap.rabbitmq;
 
 import java.io.IOException;
 
-import org.apache.james.CassandraRabbitMQSwiftJmapTestRule;
+import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.methods.integration.SetMailboxesMethodTest;
+import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
+import org.apache.james.jmap.JMAPAuthenticationTest;
+import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
-public class RabbitMQSetMailboxesMethodTest extends SetMailboxesMethodTest {
+public class RabbitMQAwsS3JmapAuthenticationTest extends JMAPAuthenticationTest {
 
     @ClassRule
     public static DockerCassandraRule cassandra = new DockerCassandraRule();
 
     @Rule
-    public CassandraRabbitMQSwiftJmapTestRule rule = CassandraRabbitMQSwiftJmapTestRule.defaultTestRule();
-    
-    @Override
-    protected GuiceJamesServer createJmapServer() throws IOException {
-        return rule.jmapServer(cassandra.getModule());
-    }
+    public CassandraRabbitMQAwsS3JmapTestRule rule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();
 
     @Override
-    protected void await() {
-        rule.await();
+    protected GuiceJamesServer createJmapServer(FixedDateZonedDateTimeProvider zonedDateTimeProvider) throws IOException {
+        return rule.jmapServer(cassandra.getModule())
+            .overrideWith(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(zonedDateTimeProvider));
     }
 
 }
+

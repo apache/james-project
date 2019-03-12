@@ -24,11 +24,12 @@ import java.io.IOException;
 import org.apache.james.CassandraRabbitMQSwiftJmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.VacationIntegrationTest;
+import org.apache.james.jmap.methods.integration.ForwardIntegrationTest;
+import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
-public class RabbitMQVacationIntegrationTest extends VacationIntegrationTest {
+public class RabbitMQSwiftForwardIntegrationTest extends ForwardIntegrationTest {
 
     @ClassRule
     public static DockerCassandraRule cassandra = new DockerCassandraRule();
@@ -38,12 +39,9 @@ public class RabbitMQVacationIntegrationTest extends VacationIntegrationTest {
     
     @Override
     protected GuiceJamesServer createJmapServer() throws IOException {
-        return rule.jmapServer(cassandra.getModule());
-    }
-
-    @Override
-    protected void await() {
-        rule.await();
+        return rule.jmapServer(cassandra.getModule(),
+            binder -> binder.bind(WebAdminConfiguration.class)
+                .toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
     }
     
 }

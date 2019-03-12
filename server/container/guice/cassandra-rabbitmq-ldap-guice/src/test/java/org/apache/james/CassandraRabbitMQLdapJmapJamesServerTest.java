@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 
 import org.apache.commons.net.imap.IMAPClient;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.SwiftBlobStoreExtension;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -66,7 +67,17 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    class WithoutSwift implements ContractSuite {
+    class WithAwsS3 implements ContractSuite {
+        @RegisterExtension
+        JamesServerExtension testExtension = baseJamesServerExtensionBuilder()
+                .extension(new AwsS3BlobStoreExtension())
+                .server(configuration -> buildGuiceServer(configuration, BlobStoreChoosingConfiguration.objectStorage()))
+                .build();
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    class WithoutSwiftOrAwsS3 implements ContractSuite {
         @RegisterExtension
         JamesServerExtension testExtension = baseJamesServerExtensionBuilder()
             .server(configuration -> buildGuiceServer(configuration, BlobStoreChoosingConfiguration.cassandra()))
