@@ -28,7 +28,8 @@ mvn clean install
  * Cassandra 3.11.3
  * ElasticSearch 2.4.6
  * RabbitMQ-Management 3.7.7
- * Swift ObjectStorage 2.15.1
+ * Swift ObjectStorage 2.15.1 or Scality S3 server or AWS S3
+
 ### James Launch
 
 To run james, you have to create a directory containing required configuration files.
@@ -57,6 +58,25 @@ Once everything is set up, you just have to run the jar with:
 ```bash
 $ java -Dworking.directory=. -jar target/james-server-cassandra-rabbitmq-guice.jar
 ```
+
+#### Using AWS S3 of Scality S3 server
+In order to use AWS S3 or a compatible implementation, `blobstore.propeties` has to be filled with:
+
+```
+objectstorage.provider=aws-s3
+objectstorage.namespace=james
+objectstorage.s3.endPoint=http://scality:8080/
+objectstorage.s3.accessKeyId=accessKey1
+objectstorage.s3.secretKey=verySecretKey1
+```
+
+To use Scality S3 server you have to launch it instead of swift container:
+
+```
+$ docker run -d --port 8080:8000 --name=s3 scality/s3server:6018536a
+```
+
+More informations about available options [here](https://hub.docker.com/r/scality/s3server).
 
 ## Guice-cassandra-rabbitmq-ldap
 
