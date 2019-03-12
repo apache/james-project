@@ -20,17 +20,15 @@ package org.apache.james.mailbox.backup;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.List;
-import java.util.stream.Stream;
 
-import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.core.User;
+import org.apache.james.mailbox.exception.MailboxException;
 
-public interface ArchiveService {
+public interface MailboxBackup {
 
     /**
-     * @param mailboxes   list of mailboxes and their annotations to be stored in the archive
-     * @param messages    a stream of MessageResult that will be consumed
-     * @param destination an OutputStream in which the zip will be written
+     * @param user the user account to export
      */
-    void archive(List<MailboxWithAnnotations> mailboxes, Stream<MessageResult> messages, OutputStream destination) throws IOException;
+    void backupAccount(User user, OutputStream destination) throws IOException, MailboxException;
+
 }
