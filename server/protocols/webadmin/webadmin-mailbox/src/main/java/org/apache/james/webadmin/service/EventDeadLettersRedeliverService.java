@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.service;
 
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.EventDeadLetters;
@@ -37,6 +39,7 @@ public class EventDeadLettersRedeliverService {
     private final EventBus eventBus;
     private final EventDeadLetters deadLetters;
 
+    @Inject
     public EventDeadLettersRedeliverService(EventBus eventBus, EventDeadLetters deadLetters) {
         this.eventBus = eventBus;
         this.deadLetters = deadLetters;
