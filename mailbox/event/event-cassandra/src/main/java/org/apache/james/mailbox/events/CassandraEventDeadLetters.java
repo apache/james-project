@@ -39,35 +39,36 @@ public class CassandraEventDeadLetters implements EventDeadLetters {
     }
 
     @Override
-    public Mono<Void> store(Group registeredGroup, Event failDeliveredEvent) {
+    public Mono<Void> store(Group registeredGroup, Event failDeliveredEvent, InsertionId insertionId) {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
         Preconditions.checkArgument(failDeliveredEvent != null, FAIL_DELIVERED_EVENT_CANNOT_BE_NULL);
+        Preconditions.checkArgument(insertionId != null, FAIL_DELIVERED_ID_INSERTION_CANNOT_BE_NULL);
 
-        return cassandraEventDeadLettersDAO.store(registeredGroup, failDeliveredEvent)
+        return cassandraEventDeadLettersDAO.store(registeredGroup, failDeliveredEvent, insertionId)
             .then(cassandraEventDeadLettersGroupDAO.storeGroup(registeredGroup));
     }
 
     @Override
-    public Mono<Void> remove(Group registeredGroup, Event.EventId failDeliveredEventId) {
+    public Mono<Void> remove(Group registeredGroup, InsertionId failDeliveredInsertionId) {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
-        Preconditions.checkArgument(failDeliveredEventId != null, FAIL_DELIVERED_ID_EVENT_CANNOT_BE_NULL);
+        Preconditions.checkArgument(failDeliveredInsertionId != null, FAIL_DELIVERED_ID_INSERTION_CANNOT_BE_NULL);
 
-        return cassandraEventDeadLettersDAO.removeEvent(registeredGroup, failDeliveredEventId);
+        return cassandraEventDeadLettersDAO.removeEvent(registeredGroup, failDeliveredInsertionId);
     }
 
     @Override
-    public Mono<Event> failedEvent(Group registeredGroup, Event.EventId failDeliveredEventId) {
+    public Mono<Event> failedEvent(Group registeredGroup, InsertionId failDeliveredInsertionId) {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
-        Preconditions.checkArgument(failDeliveredEventId != null, FAIL_DELIVERED_ID_EVENT_CANNOT_BE_NULL);
+        Preconditions.checkArgument(failDeliveredInsertionId != null, FAIL_DELIVERED_ID_INSERTION_CANNOT_BE_NULL);
 
-        return cassandraEventDeadLettersDAO.retrieveFailedEvent(registeredGroup, failDeliveredEventId);
+        return cassandraEventDeadLettersDAO.retrieveFailedEvent(registeredGroup, failDeliveredInsertionId);
     }
 
     @Override
-    public Flux<Event.EventId> failedEventIds(Group registeredGroup) {
+    public Flux<InsertionId> failedIds(Group registeredGroup) {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
 
-        return cassandraEventDeadLettersDAO.retrieveEventIdsWithGroup(registeredGroup);
+        return cassandraEventDeadLettersDAO.retrieveInsertionIdsWithGroup(registeredGroup);
     }
 
     @Override

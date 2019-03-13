@@ -36,7 +36,7 @@ public interface CassandraEventDeadLettersModule {
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> statement
             .addPartitionKey(CassandraEventDeadLettersTable.GROUP, DataType.text())
-            .addClusteringColumn(CassandraEventDeadLettersTable.EVENT_ID, DataType.uuid())
+            .addClusteringColumn(CassandraEventDeadLettersTable.INSERTION_ID, DataType.uuid())
             .addColumn(CassandraEventDeadLettersTable.EVENT, DataType.text()))
         .table(CassandraEventDeadLettersGroupTable.TABLE_NAME)
         .comment("Projection table for retrieving groups for all failed events")

@@ -22,11 +22,11 @@ package org.apache.james.mailbox.events;
 import static org.apache.james.mailbox.events.EventDeadLettersContract.EVENT_1;
 import static org.apache.james.mailbox.events.EventDeadLettersContract.EVENT_2;
 import static org.apache.james.mailbox.events.EventDeadLettersContract.EVENT_3;
-import static org.apache.james.mailbox.events.EventDeadLettersContract.EVENT_ID_1;
-import static org.apache.james.mailbox.events.EventDeadLettersContract.EVENT_ID_2;
-import static org.apache.james.mailbox.events.EventDeadLettersContract.EVENT_ID_3;
 import static org.apache.james.mailbox.events.EventDeadLettersContract.GROUP_A;
 import static org.apache.james.mailbox.events.EventDeadLettersContract.GROUP_B;
+import static org.apache.james.mailbox.events.EventDeadLettersContract.INSERTION_ID_1;
+import static org.apache.james.mailbox.events.EventDeadLettersContract.INSERTION_ID_2;
+import static org.apache.james.mailbox.events.EventDeadLettersContract.INSERTION_ID_3;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -53,12 +53,12 @@ class CassandraEventDeadLettersDAOTest {
 
     @Test
     void removeEventShouldSucceededWhenRemoveStoredEvent() {
-        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1).block();
+        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1, INSERTION_ID_1).block();
 
-        cassandraEventDeadLettersDAO.removeEvent(GROUP_A, EVENT_ID_1).block();
+        cassandraEventDeadLettersDAO.removeEvent(GROUP_A, INSERTION_ID_1).block();
 
         assertThat(cassandraEventDeadLettersDAO
-                .retrieveEventIdsWithGroup(GROUP_A)
+                .retrieveInsertionIdsWithGroup(GROUP_A)
                 .collectList().block())
             .isEmpty();
     }
@@ -66,39 +66,39 @@ class CassandraEventDeadLettersDAOTest {
     @Test
     void retrieveFailedEventShouldReturnEmptyWhenDefault() {
         assertThat(cassandraEventDeadLettersDAO
-                .retrieveFailedEvent(GROUP_A, EVENT_ID_1)
+                .retrieveFailedEvent(GROUP_A, INSERTION_ID_1)
                 .blockOptional().isPresent())
             .isFalse();
     }
 
     @Test
     void retrieveFailedEventShouldReturnStoredEvent() {
-        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1).block();
-        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_2).block();
+        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1, INSERTION_ID_1).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_2, INSERTION_ID_2).block();
 
         assertThat(cassandraEventDeadLettersDAO
-                .retrieveFailedEvent(GROUP_B, EVENT_ID_2)
+                .retrieveFailedEvent(GROUP_B, INSERTION_ID_2)
                 .blockOptional().get())
             .isEqualTo(EVENT_2);
     }
 
     @Test
-    void retrieveEventIdsWithGroupShouldReturnEmptyWhenDefault() {
+    void retrieveInsertionIdsWithGroupShouldReturnEmptyWhenDefault() {
         assertThat(cassandraEventDeadLettersDAO
-                .retrieveEventIdsWithGroup(GROUP_A)
+                .retrieveInsertionIdsWithGroup(GROUP_A)
                 .collectList().block())
             .isEmpty();
     }
 
     @Test
-    void retrieveEventIdsWithGroupShouldReturnStoredEventId() {
-        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1).block();
-        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_2).block();
-        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_3).block();
+    void retrieveInsertionIdsWithGroupShouldReturnStoredInsertionId() {
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1, INSERTION_ID_1).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_2, INSERTION_ID_2).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_3, INSERTION_ID_3).block();
 
         assertThat(cassandraEventDeadLettersDAO
-                .retrieveEventIdsWithGroup(GROUP_B)
+                .retrieveInsertionIdsWithGroup(GROUP_B)
                 .collectList().block())
-            .containsOnly(EVENT_ID_1, EVENT_ID_2, EVENT_ID_3);
+            .containsOnly(INSERTION_ID_1, INSERTION_ID_2, INSERTION_ID_3);
     }
 }

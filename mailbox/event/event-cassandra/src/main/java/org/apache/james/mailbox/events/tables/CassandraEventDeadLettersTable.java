@@ -24,6 +24,6 @@ public interface CassandraEventDeadLettersTable {
     String TABLE_NAME = "event_dead_letters";
 
     String GROUP = "group";
-    String EVENT_ID = "eventId";
+    String INSERTION_ID = "insertionId";
     String EVENT = "event";
 }

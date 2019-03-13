@@ -25,8 +25,8 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.apache.james.mailbox.events.tables.CassandraEventDeadLettersTable.EVENT;
-import static org.apache.james.mailbox.events.tables.CassandraEventDeadLettersTable.EVENT_ID;
 import static org.apache.james.mailbox.events.tables.CassandraEventDeadLettersTable.GROUP;
+import static org.apache.james.mailbox.events.tables.CassandraEventDeadLettersTable.INSERTION_ID;
 import static org.apache.james.mailbox.events.tables.CassandraEventDeadLettersTable.TABLE_NAME;
 
 import javax.inject.Inject;
@@ -36,7 +36,6 @@ import org.apache.james.event.json.EventSerializer;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
-import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -46,7 +45,6 @@ public class CassandraEventDeadLettersDAO {
     private final EventSerializer eventSerializer;
     private final PreparedStatement insertStatement;
     private final PreparedStatement deleteStatement;
-    private final PreparedStatement selectAllGroupStatement;
     private final PreparedStatement selectEventStatement;
     private final PreparedStatement selectEventIdsWithGroupStatement;
 
@@ -56,15 +54,14 @@ public class CassandraEventDeadLettersDAO {
         this.eventSerializer = eventSerializer;
         this.insertStatement = prepareInsertStatement(session);
         this.deleteStatement = prepareDeleteStatement(session);
-        this.selectAllGroupStatement = prepareSelectAllGroupStatement(session);
         this.selectEventStatement = prepareSelectEventStatement(session);
-        this.selectEventIdsWithGroupStatement = prepareSelectEventIdsWithGroupStatement(session);
+        this.selectEventIdsWithGroupStatement = prepareSelectInsertionIdsWithGroupStatement(session);
     }
 
     private PreparedStatement prepareInsertStatement(Session session) {
         return session.prepare(insertInto(TABLE_NAME)
             .value(GROUP, bindMarker(GROUP))
-            .value(EVENT_ID, bindMarker(EVENT_ID))
+            .value(INSERTION_ID, bindMarker(INSERTION_ID))
             .value(EVENT, bindMarker(EVENT)));
     }
 
@@ -72,57 +69,46 @@ public class CassandraEventDeadLettersDAO {
         return session.prepare(delete()
             .from(TABLE_NAME)
             .where(eq(GROUP, bindMarker(GROUP)))
-            .and(eq(EVENT_ID, bindMarker(EVENT_ID))));
-    }
-
-    private PreparedStatement prepareSelectAllGroupStatement(Session session) {
-        return session.prepare(select(GROUP)
-            .from(TABLE_NAME));
+            .and(eq(INSERTION_ID, bindMarker(INSERTION_ID))));
     }
 
     private PreparedStatement prepareSelectEventStatement(Session session) {
         return session.prepare(select(EVENT)
             .from(TABLE_NAME)
             .where(eq(GROUP, bindMarker(GROUP)))
-            .and(eq(EVENT_ID, bindMarker(EVENT_ID))));
+            .and(eq(INSERTION_ID, bindMarker(INSERTION_ID))));
     }
 
-    private PreparedStatement prepareSelectEventIdsWithGroupStatement(Session session) {
-        return session.prepare(select(EVENT_ID)
+    private PreparedStatement prepareSelectInsertionIdsWithGroupStatement(Session session) {
+        return session.prepare(select(INSERTION_ID)
             .from(TABLE_NAME)
             .where(eq(GROUP, bindMarker(GROUP))));
     }
 
-    Mono<Void> store(Group group, Event failedEvent) {
+    Mono<Void> store(Group group, Event failedEvent, EventDeadLetters.InsertionId insertionId) {
         return executor.executeVoid(insertStatement.bind()
                 .setString(GROUP, group.asString())
-                .setUUID(EVENT_ID, failedEvent.getEventId().getId())
+                .setUUID(INSERTION_ID, insertionId.getId())
                 .setString(EVENT, eventSerializer.toJson(failedEvent)));
     }
 
-    Mono<Void> removeEvent(Group group, Event.EventId failedEventId) {
+    Mono<Void> removeEvent(Group group, EventDeadLetters.InsertionId failedInsertionId) {
         return executor.executeVoid(deleteStatement.bind()
                 .setString(GROUP, group.asString())
-                .setUUID(EVENT_ID, failedEventId.getId()));
+                .setUUID(INSERTION_ID, failedInsertionId.getId()));
     }
 
-    Mono<Event> retrieveFailedEvent(Group group, Event.EventId failedEventId) {
+    Mono<Event> retrieveFailedEvent(Group group, EventDeadLetters.InsertionId insertionId) {
         return executor.executeSingleRow(selectEventStatement.bind()
                 .setString(GROUP, group.asString())
-                .setUUID(EVENT_ID, failedEventId.getId()))
+                .setUUID(INSERTION_ID, insertionId.getId()))
             .map(row -> deserializeEvent(row.getString(EVENT)));
     }
 
-    Flux<Event.EventId> retrieveEventIdsWithGroup(Group group) {
+    Flux<EventDeadLetters.InsertionId> retrieveInsertionIdsWithGroup(Group group) {
         return executor.executeRows(selectEventIdsWithGroupStatement.bind()
                 .setString(GROUP, group.asString()))
-            .map(row -> Event.EventId.of(row.getUUID(EVENT_ID)));
-    }
-
-    Flux<Group> retrieveAllGroups() {
-        return executor.executeRows(selectAllGroupStatement.bind())
-            .map(Throwing.function(row -> Group.deserialize(row.getString(GROUP))))
-            .distinct();
+            .map(row -> EventDeadLetters.InsertionId.of(row.getUUID(INSERTION_ID)));
     }
 
     private Event deserializeEvent(String serializedEvent) {
