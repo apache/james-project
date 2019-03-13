@@ -252,8 +252,10 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().register(eventCollector, GROUP_A);
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
-        WAIT_CONDITION.until(() -> assertThat(deadLetter().failedEventIds(GROUP_A).toIterable())
-            .containsOnly(EVENT.getEventId()));
+        WAIT_CONDITION.until(() -> assertThat(deadLetter().failedIds(GROUP_A)
+                .flatMap(insertionId -> deadLetter().failedEvent(GROUP_A, insertionId))
+                .toIterable())
+            .containsOnly(EVENT));
         assertThat(eventCollector.getEvents())
             .isEmpty();
     }
@@ -272,8 +274,10 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().register(eventCollector, GROUP_A);
         eventBus().reDeliver(GROUP_A, EVENT).block();
 
-        WAIT_CONDITION.until(() -> assertThat(deadLetter().failedEventIds(GROUP_A).toIterable())
-            .containsOnly(EVENT.getEventId()));
+        WAIT_CONDITION.until(() -> assertThat(deadLetter().failedIds(GROUP_A)
+                .flatMap(insertionId -> deadLetter().failedEvent(GROUP_A, insertionId))
+                .toIterable())
+            .containsOnly(EVENT));
         assertThat(eventCollector.getEvents())
             .isEmpty();
     }

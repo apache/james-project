@@ -109,7 +109,7 @@ class GroupConsumerRetry {
 
     private Mono<Void> retryOrStoreToDeadLetter(Event event, int currentRetryCount) {
         if (currentRetryCount >= retryBackoff.getMaxRetries()) {
-            return eventDeadLetters.store(group, event);
+            return eventDeadLetters.store(group, event, EventDeadLetters.InsertionId.random());
         }
         return sendRetryMessage(event, currentRetryCount);
     }
@@ -128,7 +128,7 @@ class GroupConsumerRetry {
         return sender.send(retryMessage)
             .doOnError(throwable -> createStructuredLogger(event)
                 .log(logger -> logger.error("Exception happens when publishing event to retry exchange, this event will be stored in deadLetter", throwable)))
-            .onErrorResume(e -> eventDeadLetters.store(group, event));
+            .onErrorResume(e -> eventDeadLetters.store(group, event, EventDeadLetters.InsertionId.random()));
     }
 
     private StructuredLogger createStructuredLogger(Event event) {

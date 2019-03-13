@@ -20,10 +20,8 @@
 package org.apache.james.mailbox.events;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -31,65 +29,59 @@ import reactor.core.publisher.MonoProcessor;
 
 public class MemoryEventDeadLetters implements EventDeadLetters {
 
-    private final Multimap<Group, Event> deadLetters;
+    private final Table<Group, InsertionId, Event> deadLetters;
 
     public MemoryEventDeadLetters() {
-        this.deadLetters = HashMultimap.create();
+        this.deadLetters = HashBasedTable.create();
     }
 
     @Override
-    public Mono<Void> store(Group registeredGroup, Event failDeliveredEvent) {
+    public Mono<Void> store(Group registeredGroup, Event failDeliveredEvent, InsertionId insertionId) {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
         Preconditions.checkArgument(failDeliveredEvent != null, FAIL_DELIVERED_EVENT_CANNOT_BE_NULL);
+        Preconditions.checkArgument(insertionId != null, FAIL_DELIVERED_ID_INSERTION_CANNOT_BE_NULL);
 
         synchronized (deadLetters) {
-            return Mono.fromRunnable(() -> deadLetters.put(registeredGroup, failDeliveredEvent))
+            return Mono.fromRunnable(() -> deadLetters.put(registeredGroup, insertionId, failDeliveredEvent))
                 .subscribeWith(MonoProcessor.create())
                 .then();
         }
     }
 
     @Override
-    public Mono<Void> remove(Group registeredGroup, Event.EventId failDeliveredEventId) {
+    public Mono<Void> remove(Group registeredGroup, InsertionId failDeliveredInsertionId) {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
-        Preconditions.checkArgument(failDeliveredEventId != null, FAIL_DELIVERED_ID_EVENT_CANNOT_BE_NULL);
+        Preconditions.checkArgument(failDeliveredInsertionId != null, FAIL_DELIVERED_ID_INSERTION_CANNOT_BE_NULL);
 
         synchronized (deadLetters) {
-            return Flux.fromIterable(ImmutableList.copyOf(deadLetters.get(registeredGroup)))
-                .filter(event -> event.getEventId().equals(failDeliveredEventId))
-                .next()
-                .doOnNext(event -> deadLetters.remove(registeredGroup, event))
-                .subscribeWith(MonoProcessor.create())
+            return Mono.justOrEmpty(deadLetters.remove(registeredGroup, failDeliveredInsertionId))
                 .then();
         }
     }
 
     @Override
-    public Mono<Event> failedEvent(Group registeredGroup, Event.EventId failDeliveredEventId) {
+    public Mono<Event> failedEvent(Group registeredGroup, InsertionId failDeliveredInsertionId) {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
-        Preconditions.checkArgument(failDeliveredEventId != null, FAIL_DELIVERED_ID_EVENT_CANNOT_BE_NULL);
+        Preconditions.checkArgument(failDeliveredInsertionId != null, FAIL_DELIVERED_ID_INSERTION_CANNOT_BE_NULL);
 
         synchronized (deadLetters) {
-            return Flux.fromIterable(ImmutableList.copyOf(deadLetters.get(registeredGroup)))
-                .filter(event -> event.getEventId().equals(failDeliveredEventId))
-                .next();
+            return Mono.justOrEmpty(deadLetters.get(registeredGroup, failDeliveredInsertionId));
         }
     }
 
     @Override
-    public Flux<Event.EventId> failedEventIds(Group registeredGroup) {
+    public Flux<InsertionId> failedIds(Group registeredGroup) {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
 
         synchronized (deadLetters) {
-            return Flux.fromIterable(ImmutableList.copyOf(deadLetters.get(registeredGroup)))
-                .map(Event::getEventId);
+            return Flux.fromIterable(deadLetters.row(registeredGroup).keySet());
         }
     }
 
     @Override
     public Flux<Group> groupsWithFailedEvents() {
         synchronized (deadLetters) {
-            return Flux.fromIterable(ImmutableSet.copyOf(deadLetters.keySet()));
+            return Flux.fromIterable(deadLetters.rowKeySet());
         }
     }
 }

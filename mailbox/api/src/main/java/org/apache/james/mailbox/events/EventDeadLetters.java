@@ -80,15 +80,15 @@ public interface EventDeadLetters {
 
     String REGISTERED_GROUP_CANNOT_BE_NULL = "registeredGroup cannot be null";
     String FAIL_DELIVERED_EVENT_CANNOT_BE_NULL = "failDeliveredEvent cannot be null";
-    String FAIL_DELIVERED_ID_EVENT_CANNOT_BE_NULL = "failDeliveredEventId cannot be null";
+    String FAIL_DELIVERED_ID_INSERTION_CANNOT_BE_NULL = "failDeliveredInsertionId cannot be null";
 
-    Mono<Void> store(Group registeredGroup, Event failDeliveredEvent);
+    Mono<Void> store(Group registeredGroup, Event failDeliveredEvent, InsertionId insertionId);
 
-    Mono<Void> remove(Group registeredGroup, Event.EventId failDeliveredEventId);
+    Mono<Void> remove(Group registeredGroup, InsertionId failDeliveredInsertionId);
 
-    Mono<Event> failedEvent(Group registeredGroup, Event.EventId failDeliveredEventId);
+    Mono<Event> failedEvent(Group registeredGroup, InsertionId failDeliveredInsertionId);
 
-    Flux<Event.EventId> failedEventIds(Group registeredGroup);
+    Flux<InsertionId> failedIds(Group registeredGroup);
 
     Flux<Group> groupsWithFailedEvents();
 }
