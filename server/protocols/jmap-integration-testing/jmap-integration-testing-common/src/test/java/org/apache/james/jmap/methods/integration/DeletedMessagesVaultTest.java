@@ -114,12 +114,7 @@ public abstract class DeletedMessagesVaultTest {
         homerAccessToken = authenticateJamesUser(baseUri(jmapServer), HOMER, PASSWORD);
         bartAccessToken = authenticateJamesUser(baseUri(jmapServer), BART, BOB_PASSWORD);
 
-        WebAdminGuiceProbe webAdminGuiceProbe = jmapServer.getProbe(WebAdminGuiceProbe.class);
-        webAdminGuiceProbe.await();
-        webAdminApi = given()
-            .spec(WebAdminUtils
-                .buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort())
-                .build());
+        webAdminApi = WebAdminUtils.spec(jmapServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
     }
 
     @After

@@ -102,9 +102,7 @@ public class DlpIntegrationTest {
             .addUser(FROM, PASSWORD)
             .addUser(RECIPIENT, PASSWORD)
             .addUser(RECIPIENT2, PASSWORD);
-        WebAdminGuiceProbe webAdminGuiceProbe = jamesServer.getProbe(WebAdminGuiceProbe.class);
-        webAdminGuiceProbe.await();
-        specification = WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort()).build();
+        specification = WebAdminUtils.spec(jamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
     }
 
     @After

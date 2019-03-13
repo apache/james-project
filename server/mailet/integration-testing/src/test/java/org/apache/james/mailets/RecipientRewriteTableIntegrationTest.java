@@ -19,7 +19,6 @@
 
 package org.apache.james.mailets;
 
-import static io.restassured.RestAssured.given;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
@@ -80,10 +79,7 @@ public class RecipientRewriteTableIntegrationTest {
         dataProbe.addUser(ANY_AT_JAMES, PASSWORD);
         dataProbe.addUser(OTHER_AT_JAMES, PASSWORD);
 
-        WebAdminGuiceProbe webAdminGuiceProbe = jamesServer.getProbe(WebAdminGuiceProbe.class);
-        webAdminGuiceProbe.await();
-        webAdminApi = given()
-            .spec(WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort()).build());
+        webAdminApi = WebAdminUtils.spec(jamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
     }
 
     @After

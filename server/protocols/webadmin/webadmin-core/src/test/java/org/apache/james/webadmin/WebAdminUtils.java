@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin;
 
+import static io.restassured.RestAssured.given;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 
@@ -34,6 +35,7 @@ import com.github.steveash.guavate.Guavate;
 
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
+import io.restassured.specification.RequestSpecification;
 
 public class WebAdminUtils {
 
@@ -68,5 +70,9 @@ public class WebAdminUtils {
             .setAccept(ContentType.JSON)
             .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
             .setPort(port.getValue());
+    }
+
+    public static RequestSpecification spec(Port port) {
+        return given().spec(buildRequestSpecification(port).build());
     }
 }
