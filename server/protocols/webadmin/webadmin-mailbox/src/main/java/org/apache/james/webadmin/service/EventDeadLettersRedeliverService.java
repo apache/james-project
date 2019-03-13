@@ -44,13 +44,13 @@ public class EventDeadLettersRedeliverService {
 
     Flux<Task.Result> redeliverEvents(EventRetriever eventRetriever) {
         return eventRetriever.retrieveEvents(deadLetters)
-            .flatMap(entry -> redeliverGroupEvents(entry.getT1(), entry.getT2()));
+            .flatMap(entry -> redeliverGroupEvents(entry.getT1(), entry.getT2(), entry.getT3()));
     }
 
-    private Mono<Task.Result> redeliverGroupEvents(Group group, Event event) {
+    private Mono<Task.Result> redeliverGroupEvents(Group group, Event event, EventDeadLetters.InsertionId insertionId) {
         return eventBus.reDeliver(group, event)
             .then(Mono.fromCallable(() -> {
-                deadLetters.remove(group, event.getEventId());
+                deadLetters.remove(group, insertionId);
                 return Task.Result.COMPLETED;
             }))
             .onErrorResume(e -> {

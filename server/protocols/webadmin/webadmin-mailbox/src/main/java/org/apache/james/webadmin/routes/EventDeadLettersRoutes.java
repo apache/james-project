@@ -31,6 +31,7 @@ import javax.ws.rs.Produces;
 
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.events.Event;
+import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
@@ -60,7 +61,7 @@ import spark.Service;
 public class EventDeadLettersRoutes implements Routes {
     private static final String BASE_PATH = "/events/deadLetter";
     private static final String GROUP_PARAM = ":group";
-    private static final String EVENT_ID_PARAM = ":eventId";
+    private static final String INSERTION_ID_PARAMETER = ":insertionId";
 
     private static final String INTERNAL_SERVER_ERROR = "Internal server error - Something went bad on the server side.";
 
@@ -89,9 +90,9 @@ public class EventDeadLettersRoutes implements Routes {
         service.get(BASE_PATH + "/groups", this::listGroups, jsonTransformer);
         service.get(BASE_PATH + "/groups/" + GROUP_PARAM, this::listFailedEvents, jsonTransformer);
         service.post(BASE_PATH + "/groups/" + GROUP_PARAM, this::performActionOnGroupEvents, jsonTransformer);
-        service.get(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + EVENT_ID_PARAM, this::getEventDetails);
-        service.delete(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + EVENT_ID_PARAM, this::deleteEvent);
-        service.post(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + EVENT_ID_PARAM, this::performActionOnSingleEvent, jsonTransformer);
+        service.get(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER, this::getEventDetails);
+        service.delete(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER, this::deleteEvent);
+        service.post(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER, this::performActionOnSingleEvent, jsonTransformer);
     }
 
     @POST
@@ -147,13 +148,13 @@ public class EventDeadLettersRoutes implements Routes {
             value = "Compulsory. Needs to be a valid group name")
     })
     @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK - list of failed eventIds for a given group", response = List.class),
+        @ApiResponse(code = HttpStatus.OK_200, message = "OK - list of insertionIds of failed event for a given group", response = List.class),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
     private Iterable<String> listFailedEvents(Request request, Response response) {
         Group group = parseGroup(request);
-        return eventDeadLettersService.listGroupsEventIdsAsStrings(group);
+        return eventDeadLettersService.listGroupsInsertionIdsAsStrings(group);
     }
 
     @POST
@@ -194,7 +195,7 @@ public class EventDeadLettersRoutes implements Routes {
     }
 
     @GET
-    @Path("/groups/" + GROUP_PARAM + "/" + EVENT_ID_PARAM)
+    @Path("/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER)
     @ApiOperation(value = "Returns an event detail")
     @ApiImplicitParams({
         @ApiImplicitParam(
@@ -206,29 +207,29 @@ public class EventDeadLettersRoutes implements Routes {
             value = "Compulsory. Needs to be a valid group name"),
         @ApiImplicitParam(
             required = true,
-            name = "eventId",
+            name = "insertionId",
             paramType = "path parameter",
             dataType = "String",
             defaultValue = "none",
-            value = "Compulsory. Needs to be a valid eventId")
+            value = "Compulsory. Needs to be a valid insertionId")
     })
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.OK_200, message = "OK - returns an event detail", response = Event.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name or event id"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "No event with this eventId"),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name or insertion id"),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "No event with this insertionId"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
     private String getEventDetails(Request request, Response response) {
         Group group = parseGroup(request);
-        Event.EventId eventId = parseEventId(request);
+        EventDeadLetters.InsertionId insertionId = parseInsertionId(request);
 
-        return eventDeadLettersService.getEvent(group, eventId)
+        return eventDeadLettersService.getEvent(group, insertionId)
             .map(eventSerializer::toJson)
             .block();
     }
 
     @DELETE
-    @Path("/groups/" + GROUP_PARAM + "/" + EVENT_ID_PARAM)
+    @Path("/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER)
     @ApiOperation(value = "Deletes an event")
     @ApiImplicitParams({
         @ApiImplicitParam(
@@ -240,28 +241,28 @@ public class EventDeadLettersRoutes implements Routes {
             value = "Compulsory. Needs to be a valid group name"),
         @ApiImplicitParam(
             required = true,
-            name = "eventId",
+            name = "insertionId",
             paramType = "path parameter",
             dataType = "String",
             defaultValue = "none",
-            value = "Compulsory. Needs to be a valid eventId")
+            value = "Compulsory. Needs to be a valid insertionId")
     })
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK - Event deleted"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name or event id"),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name or insertion id"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
     private Response deleteEvent(Request request, Response response) {
         Group group = parseGroup(request);
-        Event.EventId eventId = parseEventId(request);
+        EventDeadLetters.InsertionId insertionId = parseInsertionId(request);
 
-        eventDeadLettersService.deleteEvent(group, eventId);
+        eventDeadLettersService.deleteEvent(group, insertionId);
         response.status(HttpStatus.NO_CONTENT_204);
         return response;
     }
 
     @POST
-    @Path("/groups/" + GROUP_PARAM + "/" + EVENT_ID_PARAM)
+    @Path("/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER)
     @ApiOperation(value = "Performing action on an event")
     @ApiImplicitParams({
         @ApiImplicitParam(
@@ -273,11 +274,11 @@ public class EventDeadLettersRoutes implements Routes {
             value = "Compulsory. Needs to be a valid group name"),
         @ApiImplicitParam(
             required = true,
-            name = "eventId",
+            name = "insertionId",
             paramType = "path parameter",
             dataType = "String",
             defaultValue = "none",
-            value = "Compulsory. Needs to be a valid eventId"),
+            value = "Compulsory. Needs to be a valid insertionId"),
         @ApiImplicitParam(
             required = true,
             dataType = "String",
@@ -292,16 +293,16 @@ public class EventDeadLettersRoutes implements Routes {
             responseHeaders = {
                 @ResponseHeader(name = "Location", description = "URL of the resource associated with the scheduled task")
             }),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name, event id or action argument"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "No event with this eventId"),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name, insertion id or action argument"),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "No event with this insertionId"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
     public TaskIdDto performActionOnSingleEvent(Request request, Response response) {
         Group group = parseGroup(request);
-        Event.EventId eventId = parseEventId(request);
+        EventDeadLetters.InsertionId insertionId = parseInsertionId(request);
         assertValidActionParameter(request);
 
-        Task task = eventDeadLettersService.redeliverSingleEvent(group, eventId);
+        Task task = eventDeadLettersService.redeliverSingleEvent(group, insertionId);
         TaskId taskId = taskManager.submit(task);
         return TaskIdDto.respond(response, taskId);
     }
@@ -329,14 +330,14 @@ public class EventDeadLettersRoutes implements Routes {
         }
     }
 
-    private Event.EventId parseEventId(Request request) {
-        String eventIdAsString = request.params(EVENT_ID_PARAM);
+    private EventDeadLetters.InsertionId parseInsertionId(Request request) {
+        String insertionIdAsString = request.params(INSERTION_ID_PARAMETER);
         try {
-            return Event.EventId.of(eventIdAsString);
+            return EventDeadLetters.InsertionId.of(insertionIdAsString);
         } catch (Exception e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
-                .message("Can not deserialize the supplied eventId: " + eventIdAsString)
+                .message("Can not deserialize the supplied insertionId: " + insertionIdAsString)
                 .cause(e)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .haltError();

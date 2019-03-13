@@ -27,7 +27,7 @@ import org.apache.james.mailbox.events.Group;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
 
 public interface EventRetriever {
     static EventRetriever allEvents() {
@@ -38,20 +38,19 @@ public interface EventRetriever {
         return new GroupEventsRetriever(group);
     }
 
-    static EventRetriever singleEvent(Group group, Event.EventId eventId) {
-        return new SingleEventRetriever(group, eventId);
+    static EventRetriever singleEvent(Group group, EventDeadLetters.InsertionId insertionId) {
+        return new SingleEventRetriever(group, insertionId);
     }
 
     Optional<Group> forGroup();
 
-    Optional<Event.EventId> forEvent();
+    Optional<EventDeadLetters.InsertionId> forEvent();
 
-    Flux<Tuple2<Group, Event>> retrieveEvents(EventDeadLetters deadLetters);
+    Flux<Tuple3<Group, Event, EventDeadLetters.InsertionId>> retrieveEvents(EventDeadLetters deadLetters);
 
-    default Flux<Tuple2<Group, Event>> listGroupEvents(EventDeadLetters deadLetters, Group group) {
-        return deadLetters.failedEventIds(group)
-            .flatMap(eventId -> deadLetters.failedEvent(group, eventId))
-            .flatMap(event -> Flux.zip(Mono.just(group), Mono.just(event)));
+    default Flux<Tuple3<Group, Event, EventDeadLetters.InsertionId>> listGroupEvents(EventDeadLetters deadLetters, Group group) {
+        return deadLetters.failedIds(group)
+            .flatMap(insertionId -> Flux.zip(Mono.just(group), deadLetters.failedEvent(group, insertionId), Mono.just(insertionId)));
     }
 
     class AllEventsRetriever implements EventRetriever {
@@ -61,12 +60,12 @@ public interface EventRetriever {
         }
 
         @Override
-        public Optional<Event.EventId> forEvent() {
+        public Optional<EventDeadLetters.InsertionId> forEvent() {
             return Optional.empty();
         }
 
         @Override
-        public Flux<Tuple2<Group, Event>> retrieveEvents(EventDeadLetters deadLetters) {
+        public Flux<Tuple3<Group, Event, EventDeadLetters.InsertionId>> retrieveEvents(EventDeadLetters deadLetters) {
             return deadLetters.groupsWithFailedEvents()
                 .flatMap(group -> listGroupEvents(deadLetters, group));
         }
@@ -85,23 +84,23 @@ public interface EventRetriever {
         }
 
         @Override
-        public Optional<Event.EventId> forEvent() {
+        public Optional<EventDeadLetters.InsertionId> forEvent() {
             return Optional.empty();
         }
 
         @Override
-        public Flux<Tuple2<Group, Event>> retrieveEvents(EventDeadLetters deadLetters) {
+        public Flux<Tuple3<Group, Event, EventDeadLetters.InsertionId>> retrieveEvents(EventDeadLetters deadLetters) {
             return listGroupEvents(deadLetters, group);
         }
     }
 
     class SingleEventRetriever implements EventRetriever {
         private final Group group;
-        private final Event.EventId eventId;
+        private final EventDeadLetters.InsertionId insertionId;
 
-        SingleEventRetriever(Group group, Event.EventId eventId) {
+        SingleEventRetriever(Group group, EventDeadLetters.InsertionId insertionId) {
             this.group = group;
-            this.eventId = eventId;
+            this.insertionId = insertionId;
         }
 
         @Override
@@ -110,13 +109,13 @@ public interface EventRetriever {
         }
 
         @Override
-        public Optional<Event.EventId> forEvent() {
-            return Optional.of(eventId);
+        public Optional<EventDeadLetters.InsertionId> forEvent() {
+            return Optional.of(insertionId);
         }
 
         @Override
-        public Flux<Tuple2<Group, Event>> retrieveEvents(EventDeadLetters deadLetters) {
-            return Flux.just(group).zipWith(deadLetters.failedEvent(group, eventId));
+        public Flux<Tuple3<Group, Event, EventDeadLetters.InsertionId>> retrieveEvents(EventDeadLetters deadLetters) {
+            return Flux.zip(Mono.just(group), deadLetters.failedEvent(group, insertionId), Mono.just(insertionId));
         }
     }
 }

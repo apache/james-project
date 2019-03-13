@@ -50,20 +50,20 @@ public class EventDeadLettersService {
             .block();
     }
 
-    public List<String> listGroupsEventIdsAsStrings(Group group) {
-        return deadLetters.failedEventIds(group)
-            .map(Event.EventId::getId)
+    public List<String> listGroupsInsertionIdsAsStrings(Group group) {
+        return deadLetters.failedIds(group)
+            .map(EventDeadLetters.InsertionId::getId)
             .map(UUID::toString)
             .collect(Guavate.toImmutableList())
             .block();
     }
 
-    public Mono<Event> getEvent(Group group, Event.EventId eventId) {
-        return deadLetters.failedEvent(group, eventId);
+    public Mono<Event> getEvent(Group group, EventDeadLetters.InsertionId insertionId) {
+        return deadLetters.failedEvent(group, insertionId);
     }
 
-    public void deleteEvent(Group group, Event.EventId eventId) {
-        deadLetters.remove(group, eventId).block();
+    public void deleteEvent(Group group, EventDeadLetters.InsertionId insertionId) {
+        deadLetters.remove(group, insertionId).block();
     }
 
     public Task redeliverAllEvents() {
@@ -74,7 +74,7 @@ public class EventDeadLettersService {
         return new EventDeadLettersRedeliverTask(redeliverService, EventRetriever.groupEvents(group));
     }
 
-    public Task redeliverSingleEvent(Group group, Event.EventId eventId) {
-        return new EventDeadLettersRedeliverTask(redeliverService, EventRetriever.singleEvent(group, eventId));
+    public Task redeliverSingleEvent(Group group, EventDeadLetters.InsertionId insertionId) {
+        return new EventDeadLettersRedeliverTask(redeliverService, EventRetriever.singleEvent(group, insertionId));
     }
 }

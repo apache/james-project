@@ -22,7 +22,7 @@ package org.apache.james.webadmin.service;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.james.mailbox.events.Event;
+import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
@@ -36,14 +36,14 @@ public class EventDeadLettersRedeliverTask implements Task {
         private final long successfulRedeliveriesCount;
         private final long failedRedeliveriesCount;
         private final Optional<Group> group;
-        private final Optional<Event.EventId> eventId;
+        private final Optional<EventDeadLetters.InsertionId> insertionId;
 
         AdditionalInformation(long successfulRedeliveriesCount, long failedRedeliveriesCount,
-                              Optional<Group> group, Optional<Event.EventId> eventId) {
+                              Optional<Group> group, Optional<EventDeadLetters.InsertionId> insertionId) {
             this.successfulRedeliveriesCount = successfulRedeliveriesCount;
             this.failedRedeliveriesCount = failedRedeliveriesCount;
             this.group = group;
-            this.eventId = eventId;
+            this.insertionId = insertionId;
         }
 
         public long getSuccessfulRedeliveriesCount() {
@@ -60,8 +60,8 @@ public class EventDeadLettersRedeliverTask implements Task {
         }
 
         @JsonInclude(JsonInclude.Include.NON_ABSENT)
-        public Optional<String> getEventId() {
-            return eventId.map(eventId -> eventId.getId().toString());
+        public Optional<String> getInsertionId() {
+            return insertionId.map(insertionId -> insertionId.getId().toString());
         }
     }
 

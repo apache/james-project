@@ -2459,7 +2459,7 @@ This endpoint allows listing failed events for a given group:
 curl -XGET http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA
 ```
 
-Will return a list of event ids:
+Will return a list of insertionIds:
 
 ```
 ["6e0dd59d-660e-4d9b-b22f-0354479f47b4", "58a8f59d-660e-4d9b-b22f-0354486322a2"]
@@ -2467,7 +2467,7 @@ Will return a list of event ids:
 
 Response codes:
 
- - 200: Success. A list of event ids is returned.
+ - 200: Success. A list of insertion ids is returned.
  - 400: Invalid group name
 
 ### Getting event details
@@ -2481,7 +2481,7 @@ Will return the full JSON associated with this event.
 Response codes:
 
  - 200: Success. A JSON representing this event is returned.
- - 400: Invalid group name or eventId
+ - 400: Invalid group name or insertionId
 
 ### Deleting an event
 
@@ -2494,7 +2494,7 @@ Will delete this event.
 Response codes:
 
  - 204: Success
- - 400: Invalid group name or eventId
+ - 400: Invalid group name or insertionId
 
 ### Redeliver all events
 
@@ -2536,8 +2536,8 @@ If successful, redelivered event will then be removed from "Dead Letter".
 Response codes:
 
  - 201: the taskId of the created task
- - 400: Invalid group name, event id or action argument
- - 404: No event with this eventId
+ - 400: Invalid group name, insertion id or action argument
+ - 404: No event with this insertionId
 
 ### Rescheduling group execution
 
