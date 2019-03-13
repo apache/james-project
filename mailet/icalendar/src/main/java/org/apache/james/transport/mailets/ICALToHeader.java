@@ -66,6 +66,7 @@ public class ICALToHeader extends GenericMailet {
 
     public static final String ATTRIBUTE_PROPERTY = "attribute";
     public static final String ATTRIBUTE_DEFAULT_NAME = "icalendar";
+    public static final AttributeName ATTRIBUTE_DEFAULT = AttributeName.of(ATTRIBUTE_DEFAULT_NAME);
 
     public static final String X_MEETING_UID_HEADER = "X-MEETING-UID";
     public static final String X_MEETING_METHOD_HEADER = "X-MEETING-METHOD";
