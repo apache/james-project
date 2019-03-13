@@ -148,7 +148,7 @@ class GroupRegistration implements Registration {
     }
 
     Mono<Void> reDeliver(Event event) {
-        return retryHandler.handleRetry(event, DEFAULT_RETRY_COUNT);
+        return retryHandler.retryOrStoreToDeadLetter(event, DEFAULT_RETRY_COUNT);
     }
 
     private void runListener(Event event) throws Exception {

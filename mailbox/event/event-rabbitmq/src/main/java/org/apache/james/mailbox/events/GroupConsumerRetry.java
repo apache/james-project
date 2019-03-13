@@ -100,14 +100,10 @@ class GroupConsumerRetry {
     Mono<Void> handleRetry(Event event, int currentRetryCount, Throwable throwable) {
         createStructuredLogger(event).log(logger -> logger.error("Exception happens when handling event after {} retries", currentRetryCount, throwable));
 
-        return handleRetry(event, currentRetryCount);
-    }
-
-    Mono<Void> handleRetry(Event event, int currentRetryCount) {
         return retryOrStoreToDeadLetter(event, currentRetryCount);
     }
 
-    private Mono<Void> retryOrStoreToDeadLetter(Event event, int currentRetryCount) {
+    Mono<Void> retryOrStoreToDeadLetter(Event event, int currentRetryCount) {
         if (currentRetryCount >= retryBackoff.getMaxRetries()) {
             return eventDeadLetters.store(group, event, EventDeadLetters.InsertionId.random());
         }
