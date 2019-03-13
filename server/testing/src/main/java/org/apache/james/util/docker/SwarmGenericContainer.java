@@ -122,11 +122,11 @@ public class SwarmGenericContainer implements TestRule {
     }
 
     public void pause() {
-        DockerClientFactory.instance().client().pauseContainerCmd(container.getContainerInfo().getId());
+        DockerClientFactory.instance().client().pauseContainerCmd(container.getContainerInfo().getId()).exec();
     }
 
     public void unpause() {
-        DockerClientFactory.instance().client().unpauseContainerCmd(container.getContainerInfo().getId());
+        DockerClientFactory.instance().client().unpauseContainerCmd(container.getContainerInfo().getId()).exec();
     }
 
     public Integer getMappedPort(int originalPort) {
