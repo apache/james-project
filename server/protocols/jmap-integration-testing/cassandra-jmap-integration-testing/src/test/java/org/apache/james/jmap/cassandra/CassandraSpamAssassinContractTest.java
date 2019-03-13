@@ -23,8 +23,8 @@ import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MO
 import org.apache.james.CassandraExtension;
 import org.apache.james.EmbeddedElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.JamesServerExtensionBuilder;
 import org.apache.james.jmap.methods.integration.SpamAssassinContract;
 import org.apache.james.jmap.methods.integration.SpamAssassinModuleExtension;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -38,7 +38,7 @@ class CassandraSpamAssassinContractTest implements SpamAssassinContract {
     private static final SpamAssassinModuleExtension spamAssassinExtension = new SpamAssassinModuleExtension();
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+    static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(new EmbeddedElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(spamAssassinExtension)

@@ -38,7 +38,7 @@ class JamesCapabilitiesServerTest {
     private static final int LIMIT_MAX_MESSAGES = 10;
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+    static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(new EmbeddedElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)

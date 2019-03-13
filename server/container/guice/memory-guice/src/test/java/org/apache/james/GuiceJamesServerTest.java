@@ -27,7 +27,7 @@ class GuiceJamesServerTest {
     @Nested
     class NormalBehaviour {
         @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
+        JamesServerExtension jamesServerExtension = new JamesServerBuilder()
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
                 .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
@@ -72,7 +72,7 @@ class GuiceJamesServerTest {
         };
 
         @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
+        JamesServerExtension jamesServerExtension = new JamesServerBuilder()
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
                 .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))

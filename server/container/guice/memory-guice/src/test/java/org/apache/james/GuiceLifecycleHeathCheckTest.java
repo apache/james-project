@@ -64,7 +64,7 @@ class GuiceLifecycleHeathCheckTest {
     @Nested
     class Healthy {
         @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
+        JamesServerExtension jamesServerExtension = new JamesServerBuilder()
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
                 .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
@@ -108,7 +108,7 @@ class GuiceLifecycleHeathCheckTest {
         CountDownLatch latch = new CountDownLatch(1);
 
         @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
+        JamesServerExtension jamesServerExtension = new JamesServerBuilder()
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
                 .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))

@@ -29,7 +29,7 @@ class CassandraWithTikaTest implements JamesServerContract {
 
     @RegisterExtension
     static JamesServerExtension testExtension =
-        new JamesServerExtensionBuilder()
+        new JamesServerBuilder()
             .extension(new CassandraExtension())
             .extension(new  TikaExtension())
             .extension(new EmbeddedElasticSearchExtension())

@@ -21,8 +21,8 @@ package org.apache.james.jmap.memory;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.JamesServerExtensionBuilder;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.methods.integration.SpamAssassinContract;
 import org.apache.james.jmap.methods.integration.SpamAssassinModuleExtension;
@@ -39,7 +39,7 @@ class MemorySpamAssassinContractTest implements SpamAssassinContract {
 
     private static final SpamAssassinModuleExtension spamAssassinExtension = new SpamAssassinModuleExtension();
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+    static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(spamAssassinExtension)
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)

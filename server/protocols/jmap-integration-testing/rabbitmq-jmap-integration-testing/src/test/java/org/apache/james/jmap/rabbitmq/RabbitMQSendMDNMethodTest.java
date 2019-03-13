@@ -23,8 +23,8 @@ import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.EmbeddedElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.JamesServerExtensionBuilder;
 import org.apache.james.jmap.methods.integration.SendMDNMethodTest;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -40,7 +40,7 @@ public class RabbitMQSendMDNMethodTest extends SendMDNMethodTest {
     private static final long LIMIT_TO_10_MESSAGES = 10;
 
     @RegisterExtension
-    JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+    JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(new EmbeddedElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(new SwiftBlobStoreExtension())

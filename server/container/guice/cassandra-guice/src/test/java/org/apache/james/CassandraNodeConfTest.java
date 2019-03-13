@@ -65,7 +65,7 @@ class CassandraNodeConfTest {
     @Nested
     class NormalBehaviour {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+        JamesServerExtension testExtension = new JamesServerBuilder()
             .extension(new EmbeddedElasticSearchExtension())
             .extension(new CassandraExtension())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
@@ -88,7 +88,7 @@ class CassandraNodeConfTest {
         private final DockerCassandraRule cassandra = new DockerCassandraRule();
 
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+        JamesServerExtension testExtension = new JamesServerBuilder()
             .extension(new EmbeddedElasticSearchExtension())
             .extension(new CassandraExtension(cassandra))
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
@@ -113,7 +113,7 @@ class CassandraNodeConfTest {
         private final DockerCassandraRule cassandra = new DockerCassandraRule();
 
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+        JamesServerExtension testExtension = new JamesServerBuilder()
             .extension(new EmbeddedElasticSearchExtension())
             .extension(new CassandraExtension(cassandra))
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)

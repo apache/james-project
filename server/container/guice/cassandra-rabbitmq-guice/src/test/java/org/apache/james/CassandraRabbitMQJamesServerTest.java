@@ -84,7 +84,7 @@ class CassandraRabbitMQJamesServerTest {
         .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
         .await();
 
-    private static final JamesServerExtensionBuilder.ServerProvider CONFIGURATION_BUILDER =
+    private static final JamesServerBuilder.ServerProvider CONFIGURATION_BUILDER =
         configuration -> GuiceJamesServer
             .forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
@@ -135,8 +135,8 @@ class CassandraRabbitMQJamesServerTest {
         JamesServerExtension testExtension = baseExtensionBuilder().build();
     }
 
-    private static JamesServerExtensionBuilder baseExtensionBuilder() {
-        return new JamesServerExtensionBuilder()
+    private static JamesServerBuilder baseExtensionBuilder() {
+        return new JamesServerBuilder()
             .extension(new EmbeddedElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())

@@ -64,7 +64,7 @@ class ESReporterTest {
     static final EmbeddedElasticSearchExtension embeddedElasticSearchExtension = new EmbeddedElasticSearchExtension();
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+    static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(embeddedElasticSearchExtension)
         .extension(new CassandraExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)

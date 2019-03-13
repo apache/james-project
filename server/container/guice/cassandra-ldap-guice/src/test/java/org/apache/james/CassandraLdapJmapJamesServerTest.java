@@ -26,7 +26,7 @@ class CassandraLdapJmapJamesServerTest implements JmapJamesServerContract {
     private static final int LIMIT_TO_10_MESSAGES = 10;
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+    static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(new EmbeddedElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(new LdapTestExtension())

@@ -55,7 +55,7 @@ class JamesServerWithRetryConnectionTest {
     private static final DockerCassandraRule cassandraRule = new DockerCassandraRule();
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+    static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(new DockerElasticSearchExtension(elasticSearchContainer))
         .extension(new CassandraExtension(cassandraRule))
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)

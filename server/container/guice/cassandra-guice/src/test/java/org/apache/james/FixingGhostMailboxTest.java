@@ -95,7 +95,7 @@ public class FixingGhostMailboxTest {
     public static final DockerCassandraRule cassandra = new DockerCassandraRule();
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+    static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(new EmbeddedElasticSearchExtension())
         .extension(new CassandraExtension(cassandra))
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)

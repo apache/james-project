@@ -30,7 +30,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 
-public class JamesServerExtensionBuilder {
+public class JamesServerBuilder {
     private static final boolean DEFAULT_AUTO_START = true;
 
     @FunctionalInterface
@@ -49,33 +49,33 @@ public class JamesServerExtensionBuilder {
     private Optional<ConfigurationProvider> configuration;
     private Optional<Boolean> autoStart;
 
-    public JamesServerExtensionBuilder() {
+    public JamesServerBuilder() {
         configuration = Optional.empty();
         extensions = ImmutableList.builder();
         folderRegistrableExtension = new TemporaryFolderRegistrableExtension();
         autoStart = Optional.empty();
     }
 
-    public JamesServerExtensionBuilder extensions(GuiceModuleTestExtension... extensions) {
+    public JamesServerBuilder extensions(GuiceModuleTestExtension... extensions) {
         this.extensions.add(extensions);
         return this;
     }
 
-    public JamesServerExtensionBuilder extension(GuiceModuleTestExtension extension) {
+    public JamesServerBuilder extension(GuiceModuleTestExtension extension) {
         return this.extensions(extension);
     }
 
-    public JamesServerExtensionBuilder configuration(ConfigurationProvider configuration) throws UncheckedIOException {
+    public JamesServerBuilder configuration(ConfigurationProvider configuration) throws UncheckedIOException {
         this.configuration = Optional.of(configuration);
         return this;
     }
 
-    public JamesServerExtensionBuilder server(ServerProvider server) {
+    public JamesServerBuilder server(ServerProvider server) {
         this.server = server;
         return this;
     }
 
-    public JamesServerExtensionBuilder disableAutoStart() {
+    public JamesServerBuilder disableAutoStart() {
         this.autoStart = Optional.of(false);
         return this;
     }

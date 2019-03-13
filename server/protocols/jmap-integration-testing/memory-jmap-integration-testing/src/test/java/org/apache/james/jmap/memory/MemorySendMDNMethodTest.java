@@ -24,8 +24,8 @@ import java.util.Random;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.JamesServerExtensionBuilder;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.methods.integration.SendMDNMethodTest;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -42,7 +42,7 @@ public class MemorySendMDNMethodTest extends SendMDNMethodTest {
     private static final long LIMIT_TO_10_MESSAGES = 10;
 
     @RegisterExtension
-    JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+    JamesServerExtension testExtension = new JamesServerBuilder()
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))

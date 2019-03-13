@@ -40,7 +40,7 @@ class JamesCapabilitiesServerTest {
     }
 
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder()
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(JPAJamesServerMain.JPA_MODULE_AGGREGATE)
             .overrideWith(new TestJPAConfigurationModule())
