@@ -30,6 +30,7 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -72,7 +73,10 @@ public class CassandraMailboxMapperTest {
 
     @BeforeClass
     public static void setUpClass() {
-        CassandraModule modules = CassandraModule.aggregateModules(CassandraMailboxModule.MODULE, CassandraAclModule.MODULE);
+        CassandraModule modules = CassandraModule.aggregateModules(
+            CassandraMailboxModule.MODULE,
+            CassandraSchemaVersionModule.MODULE,
+            CassandraAclModule.MODULE);
         cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
     }
 

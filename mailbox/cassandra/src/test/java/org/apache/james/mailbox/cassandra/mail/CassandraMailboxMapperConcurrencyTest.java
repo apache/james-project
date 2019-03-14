@@ -27,6 +27,7 @@ import java.util.List;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -48,6 +49,7 @@ class CassandraMailboxMapperConcurrencyTest {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
         CassandraModule.aggregateModules(
+            CassandraSchemaVersionModule.MODULE,
             CassandraMailboxModule.MODULE,
             CassandraAclModule.MODULE));
 
