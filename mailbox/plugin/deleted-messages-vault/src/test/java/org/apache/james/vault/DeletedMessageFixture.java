@@ -59,7 +59,7 @@ public interface DeletedMessageFixture {
         .hasAttachment(false)
         .size(CONTENT.length)
         .build();
-    Supplier<DeletedMessage.Builder.FinalStage> FINAL_STAGE = () -> DeletedMessage.builder()
+    DeletedMessage.Builder.RequireSize<DeletedMessage.Builder.FinalStage> SIZE_STAGE = DeletedMessage.builder()
         .messageId(MESSAGE_ID)
         .originMailboxes(MAILBOX_ID_1, MAILBOX_ID_2)
         .user(USER)
@@ -67,7 +67,8 @@ public interface DeletedMessageFixture {
         .deletionDate(DELETION_DATE)
         .sender(MaybeSender.of(SENDER))
         .recipients(RECIPIENT1, RECIPIENT2)
-        .hasAttachment(false)
+        .hasAttachment(false);
+    Supplier<DeletedMessage.Builder.FinalStage> FINAL_STAGE = () -> SIZE_STAGE
         .size(CONTENT.length);
     DeletedMessage DELETED_MESSAGE_WITH_SUBJECT = FINAL_STAGE.get()
         .subject(SUBJECT)

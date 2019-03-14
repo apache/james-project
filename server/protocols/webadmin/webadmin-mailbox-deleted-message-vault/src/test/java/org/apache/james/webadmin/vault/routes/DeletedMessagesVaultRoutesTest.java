@@ -799,7 +799,10 @@ class DeletedMessagesVaultRoutesTest {
 
             @Test
             void restoreShouldAppendMessageToMailboxWhenMatchingNoAttachment() throws Exception {
-                DeletedMessage deletedMessage = buildMessageWithHasAttachment(false);
+                DeletedMessage deletedMessage = messageWithAttachmentBuilder()
+                    .hasAttachment(false)
+                    .size(CONTENT.length)
+                    .build();
                 storeDeletedMessage(deletedMessage);
 
                 String query =
@@ -832,7 +835,10 @@ class DeletedMessagesVaultRoutesTest {
 
             @Test
             void restoreShouldAppendMessageToMailboxWhenMatchingHasAttachment() throws Exception {
-                DeletedMessage deletedMessage = buildMessageWithHasAttachment(true);
+                DeletedMessage deletedMessage = messageWithAttachmentBuilder()
+                    .hasAttachment()
+                    .size(CONTENT.length)
+                    .build();
                 storeDeletedMessage(deletedMessage);
 
                 String query =
@@ -865,7 +871,10 @@ class DeletedMessagesVaultRoutesTest {
 
             @Test
             void restoreShouldNotAppendMessageToMailboxWhenMatchingHasNoAttachment() throws Exception {
-                DeletedMessage deletedMessage = buildMessageWithHasAttachment(false);
+                DeletedMessage deletedMessage = messageWithAttachmentBuilder()
+                    .hasAttachment(false)
+                    .size(CONTENT.length)
+                    .build();
                 storeDeletedMessage(deletedMessage);
 
                 String query =
@@ -1610,7 +1619,7 @@ class DeletedMessagesVaultRoutesTest {
         return ImmutableList.copyOf(messageManager.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, session));
     }
 
-    private DeletedMessage buildMessageWithHasAttachment(boolean hasAttachment) {
+    private DeletedMessage.Builder.RequireHasAttachment<DeletedMessage.Builder.RequireSize<DeletedMessage.Builder.FinalStage>> messageWithAttachmentBuilder() {
         return DeletedMessage.builder()
             .messageId(InMemoryMessageId.of(MESSAGE_ID_GENERATOR.incrementAndGet()))
             .originMailboxes(MAILBOX_ID_1)
@@ -1618,10 +1627,7 @@ class DeletedMessagesVaultRoutesTest {
             .deliveryDate(DELIVERY_DATE)
             .deletionDate(DELETION_DATE)
             .sender(MaybeSender.of(SENDER))
-            .recipients(RECIPIENT1, RECIPIENT2)
-            .hasAttachment(hasAttachment)
-            .size(CONTENT.length)
-            .build();
+            .recipients(RECIPIENT1, RECIPIENT2);
     }
 
     private DeletedMessage storeDeletedMessage(DeletedMessage deletedMessage) {

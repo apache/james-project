@@ -27,12 +27,14 @@ import static org.apache.james.vault.DeletedMessageFixture.DELIVERY_DATE;
 import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_1;
 import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_2;
 import static org.apache.james.vault.DeletedMessageFixture.MESSAGE_ID;
+import static org.apache.james.vault.DeletedMessageFixture.SIZE_STAGE;
 import static org.apache.james.vault.DeletedMessageFixture.SUBJECT;
 import static org.apache.james.vault.DeletedMessageFixture.USER;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT2;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.MaybeSender;
 import org.assertj.core.api.SoftAssertions;
@@ -68,5 +70,19 @@ class DeletedMessageTest {
     @Test
     void buildShouldReturnDeletedMessageWithSubject() {
         assertThat(DELETED_MESSAGE_WITH_SUBJECT.getSubject()).contains(SUBJECT);
+    }
+
+    @Test
+    void buildShouldThrowWhenPassingZeroSize() {
+        assertThatThrownBy(() -> SIZE_STAGE.size(0L).build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("'size' is required to be a strictly positive number");
+    }
+
+    @Test
+    void buildShouldThrowWhenPassingNegativeSize() {
+        assertThatThrownBy(() -> SIZE_STAGE.size(-1L).build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("'size' is required to be a strictly positive number");
     }
 }

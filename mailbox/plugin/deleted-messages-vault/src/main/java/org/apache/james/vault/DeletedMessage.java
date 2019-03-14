@@ -34,6 +34,7 @@ import org.apache.james.vault.DeletedMessage.Builder.FinalStage;
 import org.apache.james.vault.DeletedMessage.Builder.Steps.RequireMetadata;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class DeletedMessage {
@@ -171,6 +172,8 @@ public class DeletedMessage {
     public DeletedMessage(MessageId messageId, List<MailboxId> originMailboxes, User owner,
                           ZonedDateTime deliveryDate, ZonedDateTime deletionDate, MaybeSender sender, List<MailAddress> recipients,
                           Optional<String> subject, boolean hasAttachment, long size) {
+        Preconditions.checkArgument(size > 0, "'size' is required to be a strictly positive number");
+
         this.messageId = messageId;
         this.originMailboxes = originMailboxes;
         this.owner = owner;
