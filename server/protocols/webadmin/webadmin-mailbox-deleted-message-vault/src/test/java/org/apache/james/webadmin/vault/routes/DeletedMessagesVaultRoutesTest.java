@@ -137,665 +137,668 @@ class DeletedMessagesVaultRoutesTest {
     }
 
     @Nested
-    class QueryTest {
+    class RestoreTest {
 
         @Nested
-        class SubjectTest {
+        class QueryTest {
 
-            @Test
-            void restoreShouldAppendMessageToMailboxWhenMatchingSubjectContains() throws Exception {
-                vault.append(USER, FINAL_STAGE.get()
-                    .subject("subject contains should match")
-                    .build(), new ByteArrayInputStream(CONTENT)).block();
+            @Nested
+            class SubjectTest {
 
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"subject\"," +
-                    "  \"operator\": \"contains\"," +
-                    "  \"value\": \"subject contains\"" +
-                    "}";
+                @Test
+                void restoreShouldAppendMessageToMailboxWhenMatchingSubjectContains() throws Exception {
+                    vault.append(USER, FINAL_STAGE.get()
+                        .subject("subject contains should match")
+                        .build(), new ByteArrayInputStream(CONTENT)).block();
 
-                String taskId =
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"subject\"," +
+                        "  \"operator\": \"contains\"," +
+                        "  \"value\": \"subject contains\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
                     given()
-                        .queryParam("action", "restore")
-                        .body(query)
+                        .basePath(TasksRoutes.BASE)
                     .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
 
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
+                    assertThat(restoreMessageContents(USER))
+                        .hasSize(1)
+                        .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                }
 
-                assertThat(restoreMessageContents(USER))
-                    .hasSize(1)
-                    .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                @Test
+                void restoreShouldNotAppendMessageToMailboxWhenSubjectDoesntContains() throws Exception {
+                    vault.append(USER, FINAL_STAGE.get()
+                        .subject("subject")
+                        .build(), new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"subject\"," +
+                        "  \"operator\": \"contains\"," +
+                        "  \"value\": \"james\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(hasAnyMail(USER)).isFalse();
+                }
+
+                @Test
+                void restoreShouldAppendMessageToMailboxWhenMatchingSubjectContainsIgnoreCase() throws Exception {
+                    vault.append(USER, FINAL_STAGE.get()
+                        .subject("SUBJECT contains should match")
+                        .build(), new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"subject\"," +
+                        "  \"operator\": \"containsIgnoreCase\"," +
+                        "  \"value\": \"subject contains\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(restoreMessageContents(USER))
+                        .hasSize(1)
+                        .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                }
+
+                @Test
+                void restoreShouldNotAppendMessageToMailboxWhenSubjectDoesntContainsIgnoreCase() throws Exception {
+                    vault.append(USER, FINAL_STAGE.get()
+                        .subject("subject")
+                        .build(), new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"subject\"," +
+                        "  \"operator\": \"containsIgnoreCase\"," +
+                        "  \"value\": \"JAMES\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(hasAnyMail(USER)).isFalse();
+                }
+
+                @Test
+                void restoreShouldAppendMessageToMailboxWhenMatchingSubjectEquals() throws Exception {
+                    vault.append(USER, FINAL_STAGE.get()
+                        .subject("subject should match")
+                        .build(), new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"subject\"," +
+                        "  \"operator\": \"equals\"," +
+                        "  \"value\": \"subject should match\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(restoreMessageContents(USER))
+                        .hasSize(1)
+                        .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                }
+
+                @Test
+                void restoreShouldNotAppendMessageToMailboxWhenSubjectDoesntEquals() throws Exception {
+                    vault.append(USER, FINAL_STAGE.get()
+                        .subject("subject")
+                        .build(), new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"subject\"," +
+                        "  \"operator\": \"equals\"," +
+                        "  \"value\": \"SUBJECT\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(hasAnyMail(USER)).isFalse();
+                }
+
+                @Test
+                void restoreShouldAppendMessageToMailboxWhenMatchingSubjectEqualsIgnoreCase() throws Exception {
+                    vault.append(USER, FINAL_STAGE.get()
+                        .subject("SUBJECT should MatCH")
+                        .build(), new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"subject\"," +
+                        "  \"operator\": \"equalsIgnoreCase\"," +
+                        "  \"value\": \"subject should match\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(restoreMessageContents(USER))
+                        .hasSize(1)
+                        .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                }
+
+                @Test
+                void restoreShouldNotAppendMessageToMailboxWhenSubjectDoesntEqualsIgnoreCase() throws Exception {
+                    vault.append(USER, FINAL_STAGE.get()
+                        .subject("subject")
+                        .build(), new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"subject\"," +
+                        "  \"operator\": \"equalsIgnoreCase\"," +
+                        "  \"value\": \"SUBJECT Of the mail\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(hasAnyMail(USER)).isFalse();
+                }
             }
 
-            @Test
-            void restoreShouldNotAppendMessageToMailboxWhenSubjectDoesntContains() throws Exception {
-                vault.append(USER, FINAL_STAGE.get()
-                    .subject("subject")
-                    .build(), new ByteArrayInputStream(CONTENT)).block();
+            @Nested
+            class DeletionDateTest {
 
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"subject\"," +
-                    "  \"operator\": \"contains\"," +
-                    "  \"value\": \"james\"" +
-                    "}";
+                @Test
+                void restoreShouldAppendMessageToMailboxWhenMatchingDeletionDateBeforeOrEquals() throws Exception {
+                    vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
 
-                String taskId =
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"deletionDate\"," +
+                        "  \"operator\": \"beforeOrEquals\"," +
+                        "  \"value\": \"" + DELETION_DATE.plusHours(1).toString() + "\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
                     given()
-                        .queryParam("action", "restore")
-                        .body(query)
+                        .basePath(TasksRoutes.BASE)
                     .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
 
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
+                    assertThat(restoreMessageContents(USER))
+                        .hasSize(1)
+                        .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                }
 
-                assertThat(hasAnyMail(USER)).isFalse();
+                @Test
+                void restoreShouldNotAppendMessageToMailboxWhenNotMatchingDeletionDateBeforeOrEquals() throws Exception {
+                    vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"deletionDate\"," +
+                        "  \"operator\": \"beforeOrEquals\"," +
+                        "  \"value\": \"" + DELETION_DATE.minusHours(1).toString() + "\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(hasAnyMail(USER)).isFalse();
+                }
+
+                @Test
+                void restoreShouldAppendMessageToMailboxWhenMatchingDeletionDateAfterOrEquals() throws Exception {
+                    vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"deletionDate\"," +
+                        "  \"operator\": \"afterOrEquals\"," +
+                        "  \"value\": \"" + DELETION_DATE.minusHours(1).toString() + "\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(restoreMessageContents(USER))
+                        .hasSize(1)
+                        .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                }
+
+                @Test
+                void restoreShouldNotAppendMessageToMailboxWhenNotMatchingDeletionDateAfterOrEquals() throws Exception {
+                    vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"deletionDate\"," +
+                        "  \"operator\": \"afterOrEquals\"," +
+                        "  \"value\": \"" + DELETION_DATE.plusHours(1).toString() + "\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(hasAnyMail(USER)).isFalse();
+                }
             }
 
-            @Test
-            void restoreShouldAppendMessageToMailboxWhenMatchingSubjectContainsIgnoreCase() throws Exception {
-                vault.append(USER, FINAL_STAGE.get()
-                    .subject("SUBJECT contains should match")
-                    .build(), new ByteArrayInputStream(CONTENT)).block();
+            @Nested
+            class DeliveryDateTest {
 
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"subject\"," +
-                    "  \"operator\": \"containsIgnoreCase\"," +
-                    "  \"value\": \"subject contains\"" +
-                    "}";
+                @Test
+                void restoreShouldAppendMessageToMailboxWhenMatchingDeliveryDateBeforeOrEquals() throws Exception {
+                    vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
 
-                String taskId =
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"deliveryDate\"," +
+                        "  \"operator\": \"beforeOrEquals\"," +
+                        "  \"value\": \"" + DELIVERY_DATE.plusHours(1).toString() + "\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
                     given()
-                        .queryParam("action", "restore")
-                        .body(query)
+                        .basePath(TasksRoutes.BASE)
                     .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
 
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
+                    assertThat(restoreMessageContents(USER))
+                        .hasSize(1)
+                        .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                }
 
-                assertThat(restoreMessageContents(USER))
-                    .hasSize(1)
-                    .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                @Test
+                void restoreShouldNotAppendMessageToMailboxWhenNotMatchingDeliveryDateBeforeOrEquals() throws Exception {
+                    vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"deliveryDate\"," +
+                        "  \"operator\": \"beforeOrEquals\"," +
+                        "  \"value\": \"" + DELIVERY_DATE.minusHours(1).toString() + "\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(hasAnyMail(USER)).isFalse();
+                }
+
+                @Test
+                void restoreShouldAppendMessageToMailboxWhenMatchingDeliveryDateAfterOrEquals() throws Exception {
+                    vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"deliveryDate\"," +
+                        "  \"operator\": \"afterOrEquals\"," +
+                        "  \"value\": \"" + DELIVERY_DATE.minusHours(1).toString() + "\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(restoreMessageContents(USER))
+                        .hasSize(1)
+                        .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                }
+
+                @Test
+                void restoreShouldNotAppendMessageToMailboxWhenNotMatchingDeliveryDateAfterOrEquals() throws Exception {
+                    vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"deliveryDate\"," +
+                        "  \"operator\": \"afterOrEquals\"," +
+                        "  \"value\": \"" + DELIVERY_DATE.plusHours(1).toString() + "\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(hasAnyMail(USER)).isFalse();
+                }
             }
 
-            @Test
-            void restoreShouldNotAppendMessageToMailboxWhenSubjectDoesntContainsIgnoreCase() throws Exception {
-                vault.append(USER, FINAL_STAGE.get()
-                    .subject("subject")
-                    .build(), new ByteArrayInputStream(CONTENT)).block();
+            @Nested
+            class RecipientsTest {
 
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"subject\"," +
-                    "  \"operator\": \"containsIgnoreCase\"," +
-                    "  \"value\": \"JAMES\"" +
-                    "}";
+                @Test
+                void restoreShouldAppendMessageToMailboxWhenMatchingRecipientContains() throws Exception {
+                    vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
 
-                String taskId =
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"recipients\"," +
+                        "  \"operator\": \"contains\"," +
+                        "  \"value\": \"" + RECIPIENT1.asString() + "\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
                     given()
-                        .queryParam("action", "restore")
-                        .body(query)
+                        .basePath(TasksRoutes.BASE)
                     .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
 
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
+                    assertThat(restoreMessageContents(USER))
+                        .hasSize(1)
+                        .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                }
 
-                assertThat(hasAnyMail(USER)).isFalse();
+                @Test
+                void restoreShouldNotAppendMessageToMailboxWhenMatchingRecipientsDoNotContain() throws Exception {
+                    vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"recipients\"," +
+                        "  \"operator\": \"contains\"," +
+                        "  \"value\": \"" + RECIPIENT3.asString() + "\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(hasAnyMail(USER)).isFalse();
+                }
             }
 
-            @Test
-            void restoreShouldAppendMessageToMailboxWhenMatchingSubjectEquals() throws Exception {
-                vault.append(USER, FINAL_STAGE.get()
-                    .subject("subject should match")
-                    .build(), new ByteArrayInputStream(CONTENT)).block();
+            @Nested
+            class SenderTest {
+                @Test
+                void restoreShouldAppendMessageToMailboxWhenMatchingSenderEquals() throws Exception {
+                    vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
 
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"subject\"," +
-                    "  \"operator\": \"equals\"," +
-                    "  \"value\": \"subject should match\"" +
-                    "}";
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"sender\"," +
+                        "  \"operator\": \"equals\"," +
+                        "  \"value\": \"" + SENDER.asString() + "\"" +
+                        "}";
 
-                String taskId =
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
                     given()
-                        .queryParam("action", "restore")
-                        .body(query)
+                        .basePath(TasksRoutes.BASE)
                     .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
 
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
+                    assertThat(restoreMessageContents(USER))
+                        .hasSize(1)
+                        .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                }
 
-                assertThat(restoreMessageContents(USER))
-                    .hasSize(1)
-                    .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                @Test
+                void restoreShouldAppendMessageToMailboxWhenMatchingSenderDoesntEquals() throws Exception {
+                    vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"sender\"," +
+                        "  \"operator\": \"equals\"," +
+                        "  \"value\": \"" + SENDER2.asString() + "\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(hasAnyMail(USER)).isFalse();
+                }
             }
 
-            @Test
-            void restoreShouldNotAppendMessageToMailboxWhenSubjectDoesntEquals() throws Exception {
-                vault.append(USER, FINAL_STAGE.get()
-                    .subject("subject")
-                    .build(), new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"subject\"," +
-                    "  \"operator\": \"equals\"," +
-                    "  \"value\": \"SUBJECT\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(hasAnyMail(USER)).isFalse();
-            }
-
-            @Test
-            void restoreShouldAppendMessageToMailboxWhenMatchingSubjectEqualsIgnoreCase() throws Exception {
-                vault.append(USER, FINAL_STAGE.get()
-                    .subject("SUBJECT should MatCH")
-                    .build(), new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"subject\"," +
-                    "  \"operator\": \"equalsIgnoreCase\"," +
-                    "  \"value\": \"subject should match\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(restoreMessageContents(USER))
-                    .hasSize(1)
-                    .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
-            }
-
-            @Test
-            void restoreShouldNotAppendMessageToMailboxWhenSubjectDoesntEqualsIgnoreCase() throws Exception {
-                vault.append(USER, FINAL_STAGE.get()
-                    .subject("subject")
-                    .build(), new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"subject\"," +
-                    "  \"operator\": \"equalsIgnoreCase\"," +
-                    "  \"value\": \"SUBJECT Of the mail\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(hasAnyMail(USER)).isFalse();
-            }
-        }
-
-        @Nested
-        class DeletionDateTest {
-
-            @Test
-            void restoreShouldAppendMessageToMailboxWhenMatchingDeletionDateBeforeOrEquals() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"deletionDate\"," +
-                    "  \"operator\": \"beforeOrEquals\"," +
-                    "  \"value\": \"" + DELETION_DATE.plusHours(1).toString() + "\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(restoreMessageContents(USER))
-                    .hasSize(1)
-                    .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
-            }
-
-            @Test
-            void restoreShouldNotAppendMessageToMailboxWhenNotMatchingDeletionDateBeforeOrEquals() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"deletionDate\"," +
-                    "  \"operator\": \"beforeOrEquals\"," +
-                    "  \"value\": \"" + DELETION_DATE.minusHours(1).toString() + "\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(hasAnyMail(USER)).isFalse();
-            }
-
-            @Test
-            void restoreShouldAppendMessageToMailboxWhenMatchingDeletionDateAfterOrEquals() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"deletionDate\"," +
-                    "  \"operator\": \"afterOrEquals\"," +
-                    "  \"value\": \"" + DELETION_DATE.minusHours(1).toString() + "\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(restoreMessageContents(USER))
-                    .hasSize(1)
-                    .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
-            }
-
-            @Test
-            void restoreShouldNotAppendMessageToMailboxWhenNotMatchingDeletionDateAfterOrEquals() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"deletionDate\"," +
-                    "  \"operator\": \"afterOrEquals\"," +
-                    "  \"value\": \"" + DELETION_DATE.plusHours(1).toString() + "\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(hasAnyMail(USER)).isFalse();
-            }
-        }
-
-        @Nested
-        class DeliveryDateTest {
-
-            @Test
-            void restoreShouldAppendMessageToMailboxWhenMatchingDeliveryDateBeforeOrEquals() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"deliveryDate\"," +
-                    "  \"operator\": \"beforeOrEquals\"," +
-                    "  \"value\": \"" + DELIVERY_DATE.plusHours(1).toString() + "\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(restoreMessageContents(USER))
-                    .hasSize(1)
-                    .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
-            }
-
-            @Test
-            void restoreShouldNotAppendMessageToMailboxWhenNotMatchingDeliveryDateBeforeOrEquals() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"deliveryDate\"," +
-                    "  \"operator\": \"beforeOrEquals\"," +
-                    "  \"value\": \"" + DELIVERY_DATE.minusHours(1).toString() + "\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(hasAnyMail(USER)).isFalse();
-            }
-
-            @Test
-            void restoreShouldAppendMessageToMailboxWhenMatchingDeliveryDateAfterOrEquals() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"deliveryDate\"," +
-                    "  \"operator\": \"afterOrEquals\"," +
-                    "  \"value\": \"" + DELIVERY_DATE.minusHours(1).toString() + "\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(restoreMessageContents(USER))
-                    .hasSize(1)
-                    .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
-            }
-
-            @Test
-            void restoreShouldNotAppendMessageToMailboxWhenNotMatchingDeliveryDateAfterOrEquals() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"deliveryDate\"," +
-                    "  \"operator\": \"afterOrEquals\"," +
-                    "  \"value\": \"" + DELIVERY_DATE.plusHours(1).toString() + "\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(hasAnyMail(USER)).isFalse();
-            }
-        }
-
-        @Nested
-        class RecipientsTest {
-
-            @Test
-            void restoreShouldAppendMessageToMailboxWhenMatchingRecipientContains() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"recipients\"," +
-                    "  \"operator\": \"contains\"," +
-                    "  \"value\": \"" + RECIPIENT1.asString() + "\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(restoreMessageContents(USER))
-                    .hasSize(1)
-                    .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
-            }
-
-            @Test
-            void restoreShouldNotAppendMessageToMailboxWhenMatchingRecipientsDoNotContain() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"recipients\"," +
-                    "  \"operator\": \"contains\"," +
-                    "  \"value\": \"" + RECIPIENT3.asString() + "\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(hasAnyMail(USER)).isFalse();
-            }
-        }
-
-        @Nested
-        class SenderTest {
-            @Test
-            void restoreShouldAppendMessageToMailboxWhenMatchingSenderEquals() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"sender\"," +
-                    "  \"operator\": \"equals\"," +
-                    "  \"value\": \"" + SENDER.asString() + "\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(restoreMessageContents(USER))
-                    .hasSize(1)
-                    .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
-            }
-
-            @Test
-            void restoreShouldAppendMessageToMailboxWhenMatchingSenderDoesntEquals() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"sender\"," +
-                    "  \"operator\": \"equals\"," +
-                    "  \"value\": \"" + SENDER2.asString() + "\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(hasAnyMail(USER)).isFalse();
-            }
-        }
-
-        @Nested
-        class HasAttachmentTest {
+            @Nested
+            class HasAttachmentTest {
 
             @Test
             void restoreShouldAppendMessageToMailboxWhenMatchingNoAttachment() throws Exception {
@@ -805,33 +808,33 @@ class DeletedMessagesVaultRoutesTest {
                     .build();
                 storeDeletedMessage(deletedMessage);
 
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"hasAttachment\"," +
-                    "  \"operator\": \"equals\"," +
-                    "  \"value\": \"false\"" +
-                    "}";
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"hasAttachment\"," +
+                        "  \"operator\": \"equals\"," +
+                        "  \"value\": \"false\"" +
+                        "}";
 
-                String taskId =
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
                     given()
-                        .queryParam("action", "restore")
-                        .body(query)
+                        .basePath(TasksRoutes.BASE)
                     .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
 
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(restoreMessageContents(USER))
-                    .hasSize(1)
-                    .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
-            }
+                    assertThat(restoreMessageContents(USER))
+                        .hasSize(1)
+                        .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                }
 
             @Test
             void restoreShouldAppendMessageToMailboxWhenMatchingHasAttachment() throws Exception {
@@ -841,33 +844,33 @@ class DeletedMessagesVaultRoutesTest {
                     .build();
                 storeDeletedMessage(deletedMessage);
 
-                String query =
-                    " {" +
-                    "  \"fieldName\": \"hasAttachment\"," +
-                    "  \"operator\": \"equals\"," +
-                    "  \"value\": \"true\"" +
-                    "}";
+                    String query =
+                        " {" +
+                        "  \"fieldName\": \"hasAttachment\"," +
+                        "  \"operator\": \"equals\"," +
+                        "  \"value\": \"true\"" +
+                        "}";
 
-                String taskId =
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
                     given()
-                        .queryParam("action", "restore")
-                        .body(query)
+                        .basePath(TasksRoutes.BASE)
                     .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
 
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(restoreMessageContents(USER))
-                    .hasSize(1)
-                    .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
-            }
+                    assertThat(restoreMessageContents(USER))
+                        .hasSize(1)
+                        .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                }
 
             @Test
             void restoreShouldNotAppendMessageToMailboxWhenMatchingHasNoAttachment() throws Exception {
@@ -877,191 +880,515 @@ class DeletedMessagesVaultRoutesTest {
                     .build();
                 storeDeletedMessage(deletedMessage);
 
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"hasAttachment\"," +
-                    "  \"operator\": \"equals\"," +
-                    "  \"value\": \"true\"" +
-                    "}";
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"hasAttachment\"," +
+                        "  \"operator\": \"equals\"," +
+                        "  \"value\": \"true\"" +
+                        "}";
 
-                String taskId =
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
                     given()
-                        .queryParam("action", "restore")
-                        .body(query)
+                        .basePath(TasksRoutes.BASE)
                     .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
 
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
+                    assertThat(hasAnyMail(USER)).isFalse();
+                }
+            }
 
-                assertThat(hasAnyMail(USER)).isFalse();
+            @Nested
+            class OriginMailboxIdsTest {
+
+                @Test
+                void restoreShouldAppendMessageToMailboxWhenContainsMailboxId() throws Exception {
+                    vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"originMailboxes\"," +
+                        "  \"operator\": \"contains\"," +
+                        "  \"value\": \"" + MAILBOX_ID_1.serialize() + "\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(restoreMessageContents(USER))
+                        .hasSize(1)
+                        .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                }
+
+                @Test
+                void restoreShouldNotAppendMessageToMailboxWhenDoNotContainsMailboxId() throws Exception {
+                    vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"originMailboxes\"," +
+                        "  \"operator\": \"contains\"," +
+                        "  \"value\": \"" + MAILBOX_ID_3.serialize() + "\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(hasAnyMail(USER)).isFalse();
+                }
+            }
+
+            @Nested
+            class MultipleCriteriaTest {
+
+                @Test
+                void restoreShouldAppendMessageToMailboxWhenAllcriteriaAreMatched() throws Exception {
+                    vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                    vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+
+                    String query = "" +
+                        "{" +
+                        "  \"combinator\": \"and\"," +
+                        "  \"criteria\": [" +
+                        "    {" +
+                        "      \"fieldName\": \"deliveryDate\"," +
+                        "      \"operator\": \"beforeOrEquals\"," +
+                        "      \"value\": \"" + DELIVERY_DATE.toString() + "\"" +
+                        "    }," +
+                        "    {" +
+                        "      \"fieldName\": \"recipients\"," +
+                        "      \"operator\": \"contains\"," +
+                        "      \"value\": \"" + RECIPIENT1.asString() + "\"" +
+                        "    }," +
+                        "    {" +
+                        "      \"fieldName\": \"hasAttachment\"," +
+                        "      \"operator\": \"equals\"," +
+                        "      \"value\": \"false\"" +
+                        "    }," +
+                        "    {" +
+                        "      \"fieldName\": \"originMailboxes\"," +
+                        "      \"operator\": \"contains\"," +
+                        "      \"value\": \"" + MAILBOX_ID_1.serialize() + "\"" +
+                        "    }" +
+                        "  ]" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(restoreMessageContents(USER))
+                        .hasSize(2)
+                        .allSatisfy(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                }
+
+                @Test
+                void restoreShouldNotAppendMessageToMailboxWhenASingleCriterionDoesntMatch() throws Exception {
+                    vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                    vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+
+                    String query = "" +
+                        "{" +
+                        "  \"combinator\": \"and\"," +
+                        "  \"criteria\": [" +
+                        "    {" +
+                        "      \"fieldName\": \"deliveryDate\"," +
+                        "      \"operator\": \"beforeOrEquals\"," +
+                        "      \"value\": \"" + DELIVERY_DATE.toString() + "\"" +
+                        "    }," +
+                        "    {" +
+                        "      \"fieldName\": \"recipients\"," +
+                        "      \"operator\": \"contains\"," +
+                        "      \"value\": \"allMessageDoNotHaveThisRecipient@domain.tld\"" +
+                        "    }," +
+                        "    {" +
+                        "      \"fieldName\": \"hasAttachment\"," +
+                        "      \"operator\": \"equals\"," +
+                        "      \"value\": \"false\"" +
+                        "    }," +
+                        "    {" +
+                        "      \"fieldName\": \"originMailboxes\"," +
+                        "      \"operator\": \"contains\"," +
+                        "      \"value\": \"" + MAILBOX_ID_1.serialize() + "\"" +
+                        "    }" +
+                        "  ]" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(USER.asString())
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(hasAnyMail(USER)).isFalse();
+                }
             }
         }
 
         @Nested
-        class OriginMailboxIdsTest {
+        class ValidationTest {
 
             @Test
-            void restoreShouldAppendMessageToMailboxWhenContainsMailboxId() throws Exception {
+            void restoreShouldReturnInvalidWhenActionIsMissing() {
+                when()
+                    .post(USER.asString())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is(notNullValue()))
+                    .body("details", is(notNullValue()));
+            }
+
+            @Test
+            void restoreShouldReturnInvalidWhenPassingEmptyAction() {
+                given()
+                    .queryParam("action", "")
+                .when()
+                    .post(USER.asString())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is(notNullValue()))
+                    .body("details", is(notNullValue()));
+            }
+
+            @Test
+            void restoreShouldReturnInvalidWhenActionIsInValid() {
+                given()
+                    .queryParam("action", "invalid action")
+                .when()
+                    .post(USER.asString())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is(notNullValue()))
+                    .body("details", is(notNullValue()));
+            }
+
+            @Test
+            void restoreShouldReturnInvalidWhenPassingCaseInsensitiveAction() {
+                given()
+                    .queryParam("action", "RESTORE")
+                .when()
+                    .post(USER.asString())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is(notNullValue()))
+                    .body("details", is(notNullValue()));
+            }
+
+            @Test
+            void restoreShouldReturnInvalidWhenUserIsInvalid() {
+                given()
+                    .queryParam("action", "restore")
+                .when()
+                    .post("not@valid@user.com")
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is(notNullValue()))
+                    .body("details", is(notNullValue()));
+            }
+
+            @Test
+            void postShouldReturnNotFoundWhenNoUserPathParameter() {
+                given()
+                    .queryParam("action", "restore")
+                .when()
+                    .post()
+                .then()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .body("statusCode", is(404))
+                    .body("type", is(notNullValue()))
+                    .body("message", is(notNullValue()));
+            }
+
+            @Test
+            void restoreShouldReturnBadRequestWhenPassingUnsupportedField() throws Exception {
                 vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
 
                 String query =
                     "{" +
-                    "  \"fieldName\": \"originMailboxes\"," +
-                    "  \"operator\": \"contains\"," +
-                    "  \"value\": \"" + MAILBOX_ID_1.serialize() + "\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(restoreMessageContents(USER))
-                    .hasSize(1)
-                    .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
-            }
-
-            @Test
-            void restoreShouldNotAppendMessageToMailboxWhenDoNotContainsMailboxId() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"fieldName\": \"originMailboxes\"," +
-                    "  \"operator\": \"contains\"," +
-                    "  \"value\": \"" + MAILBOX_ID_3.serialize() + "\"" +
-                    "}";
-
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("completed"));
-
-                assertThat(hasAnyMail(USER)).isFalse();
-            }
-        }
-
-        @Nested
-        class MultipleCriteriaTest {
-
-            @Test
-            void restoreShouldAppendMessageToMailboxWhenAllcriteriaAreMatched() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-                vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
-
-                String query = "" +
-                    "{" +
-                    "  \"combinator\": \"and\"," +
                     "  \"criteria\": [" +
                     "    {" +
-                    "      \"fieldName\": \"deliveryDate\"," +
-                    "      \"operator\": \"beforeOrEquals\"," +
-                    "      \"value\": \"" + DELIVERY_DATE.toString() + "\"" +
-                    "    }," +
-                    "    {" +
-                    "      \"fieldName\": \"recipients\"," +
-                    "      \"operator\": \"contains\"," +
-                    "      \"value\": \"" + RECIPIENT1.asString() + "\"" +
-                    "    }," +
-                    "    {" +
-                    "      \"fieldName\": \"hasAttachment\"," +
-                    "      \"operator\": \"equals\"," +
-                    "      \"value\": \"false\"" +
-                    "    }," +
-                    "    {" +
-                    "      \"fieldName\": \"originMailboxes\"," +
+                    "      \"fieldName\": \"unsupported\"," +
                     "      \"operator\": \"contains\"," +
                     "      \"value\": \"" + MAILBOX_ID_1.serialize() + "\"" +
                     "    }" +
                     "  ]" +
                     "}";
 
-                String taskId =
-                    given()
-                        .queryParam("action", "restore")
-                        .body(query)
-                    .when()
-                        .post(USER.asString())
-                        .jsonPath()
-                        .get("taskId");
-
                 given()
-                    .basePath(TasksRoutes.BASE)
+                    .body(query)
                 .when()
-                    .get(taskId + "/await")
+                    .post(USER.asString())
                 .then()
-                    .body("status", is("completed"));
-
-                assertThat(restoreMessageContents(USER))
-                    .hasSize(2)
-                    .allSatisfy(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is(notNullValue()))
+                    .body("details", is(notNullValue()));
             }
 
             @Test
-            void restoreShouldNotAppendMessageToMailboxWhenASingleCriterionDoesntMatch() throws Exception {
+            void restoreShouldReturnBadRequestWhenPassingUnsupportedOperator() throws Exception {
                 vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-                vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
 
-                String query = "" +
+                String query =
                     "{" +
-                    "  \"combinator\": \"and\"," +
                     "  \"criteria\": [" +
                     "    {" +
-                    "      \"fieldName\": \"deliveryDate\"," +
-                    "      \"operator\": \"beforeOrEquals\"," +
-                    "      \"value\": \"" + DELIVERY_DATE.toString() + "\"" +
-                    "    }," +
-                    "    {" +
-                    "      \"fieldName\": \"recipients\"," +
-                    "      \"operator\": \"contains\"," +
-                    "      \"value\": \"allMessageDoNotHaveThisRecipient@domain.tld\"" +
-                    "    }," +
-                    "    {" +
-                    "      \"fieldName\": \"hasAttachment\"," +
-                    "      \"operator\": \"equals\"," +
-                    "      \"value\": \"false\"" +
-                    "    }," +
-                    "    {" +
-                    "      \"fieldName\": \"originMailboxes\"," +
-                    "      \"operator\": \"contains\"," +
-                    "      \"value\": \"" + MAILBOX_ID_1.serialize() + "\"" +
+                    "      \"fieldName\": \"subject\"," +
+                    "      \"operator\": \"isLongerThan\"," +
+                    "      \"value\": \"" + SUBJECT + "\"" +
                     "    }" +
                     "  ]" +
                     "}";
 
+                given()
+                    .body(query)
+                .when()
+                    .post(USER.asString())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is(notNullValue()))
+                    .body("details", is(notNullValue()));
+            }
+
+            @Test
+            void restoreShouldReturnBadRequestWhenPassingUnsupportedPairOfFieldNameAndOperator() throws Exception {
+                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+                String query =
+                    "{" +
+                    "  \"criteria\": [" +
+                    "    {" +
+                    "      \"fieldName\": \"sender\"," +
+                    "      \"operator\": \"contains\"," +
+                    "      \"value\": \"" + SENDER.asString() + "\"" +
+                    "    }" +
+                    "  ]" +
+                    "}";
+
+                given()
+                    .body(query)
+                .when()
+                    .post(USER.asString())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is(notNullValue()))
+                    .body("details", is(notNullValue()));
+            }
+
+            @Test
+            void restoreShouldReturnBadRequestWhenPassingInvalidMailAddress() throws Exception {
+                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+                String query =
+                    "{" +
+                    "  \"criteria\": [" +
+                    "    {" +
+                    "      \"fieldName\": \"sender\"," +
+                    "      \"operator\": \"contains\"," +
+                    "      \"value\": \"invalid@mail@domain.tld\"" +
+                    "    }" +
+                    "  ]" +
+                    "}";
+
+                given()
+                    .body(query)
+                .when()
+                    .post(USER.asString())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is(notNullValue()))
+                    .body("details", is(notNullValue()));
+            }
+
+            @Test
+            void restoreShouldReturnBadRequestWhenPassingOrCombinator() throws Exception {
+                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+                String query =
+                    "{" +
+                    "  \"combinator\": \"or\"," +
+                    "  \"criteria\": [" +
+                    "    {" +
+                    "      \"fieldName\": \"sender\"," +
+                    "      \"operator\": \"contains\"," +
+                    "      \"value\": \"" + SENDER.asString() + "\"" +
+                    "    }" +
+                    "  ]" +
+                    "}";
+
+                given()
+                    .body(query)
+                .when()
+                    .post(USER.asString())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is(notNullValue()))
+                    .body("details", is(notNullValue()));
+            }
+
+            @Test
+            void restoreShouldReturnBadRequestWhenPassingNestedStructuredQuery() throws Exception {
+                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+                String query =
+                    "{" +
+                    "  \"combinator\": \"and\"," +
+                    "  \"criteria\": [" +
+                    "    {" +
+                    "      \"combinator\": \"or\"," +
+                    "      \"criteria\": [" +
+                    "        {\"fieldName\": \"subject\", \"operator\": \"containsIgnoreCase\", \"value\": \"Apache James\"}," +
+                    "        {\"fieldName\": \"subject\", \"operator\": \"containsIgnoreCase\", \"value\": \"Apache James\"}" +
+                    "      ]" +
+                    "    }," +
+                    "    {\"fieldName\": \"subject\", \"operator\": \"containsIgnoreCase\", \"value\": \"Apache James\"}" +
+                    "  ]" +
+                    "}";
+
+                given()
+                    .body(query)
+                .when()
+                    .post(USER.asString())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is(notNullValue()))
+                    .body("details", is(notNullValue()));
+            }
+        }
+
+        @Nested
+        class FailingRestoreTest {
+
+            @Test
+            void restoreShouldProduceFailedTaskWhenTheVaultGetsError() {
+                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+
+                doThrow(new RuntimeException("mock exception"))
+                    .when(vault)
+                    .search(any(), any());
+
                 String taskId =
                     given()
                         .queryParam("action", "restore")
-                        .body(query)
+                        .body(MATCH_ALL_QUERY)
+                    .when()
+                        .post(USER.asString())
+                        .jsonPath()
+                        .get("taskId");
+
+                given()
+                    .queryParam("action", "restore")
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", is("failed"))
+                    .body("taskId", is(taskId))
+                    .body("type", is(DeletedMessagesVaultRestoreTask.TYPE))
+                    .body("additionalInformation.successfulRestoreCount", is(0))
+                    .body("additionalInformation.errorRestoreCount", is(0))
+                    .body("additionalInformation.user", is(USER.asString()))
+                    .body("startedDate", is(notNullValue()))
+                    .body("submitDate", is(notNullValue()));
+            }
+
+            @Test
+            void restoreShouldProduceFailedTaskWithErrorRestoreCountWhenMessageAppendGetsError() throws Exception {
+                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+
+                MessageManager mockMessageManager = Mockito.mock(MessageManager.class);
+                doReturn(mockMessageManager)
+                    .when(mailboxManager)
+                    .getMailbox(any(MailboxId.class), any(MailboxSession.class));
+
+                doThrow(new MailboxException("mock exception"))
+                    .when(mockMessageManager)
+                    .appendMessage(any(), any());
+
+                String taskId =
+                    given()
+                        .queryParam("action", "restore")
+                        .body(MATCH_ALL_QUERY)
                     .when()
                         .post(USER.asString())
                         .jsonPath()
@@ -1072,276 +1399,66 @@ class DeletedMessagesVaultRoutesTest {
                 .when()
                     .get(taskId + "/await")
                 .then()
-                    .body("status", is("completed"));
+                    .body("status", is("failed"))
+                    .body("taskId", is(taskId))
+                    .body("type", is(DeletedMessagesVaultRestoreTask.TYPE))
+                    .body("additionalInformation.successfulRestoreCount", is(0))
+                    .body("additionalInformation.errorRestoreCount", is(2))
+                    .body("additionalInformation.user", is(USER.asString()))
+                    .body("startedDate", is(notNullValue()))
+                    .body("submitDate", is(notNullValue()));
+            }
 
-                assertThat(hasAnyMail(USER)).isFalse();
+            @Test
+            void restoreShouldProduceFailedTaskWhenMailboxMangerGetsError() throws Exception {
+                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+
+                doThrow(new RuntimeException("mock exception"))
+                    .when(mailboxManager)
+                    .createMailbox(any(MailboxPath.class), any(MailboxSession.class));
+
+                String taskId =
+                    given()
+                        .queryParam("action", "restore")
+                        .body(MATCH_ALL_QUERY)
+                    .when()
+                        .post(USER.asString())
+                        .jsonPath()
+                        .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", is("failed"))
+                    .body("taskId", is(taskId))
+                    .body("type", is(DeletedMessagesVaultRestoreTask.TYPE))
+                    .body("additionalInformation.successfulRestoreCount", is(0))
+                    .body("additionalInformation.errorRestoreCount", is(0))
+                    .body("additionalInformation.user", is(USER.asString()))
+                    .body("startedDate", is(notNullValue()))
+                    .body("submitDate", is(notNullValue()));
             }
         }
-    }
-
-    @Nested
-    class ValidationTest {
 
         @Test
-        void restoreShouldReturnInvalidWhenActionIsMissing() {
-            when()
-                .post(USER.asString())
-            .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .body("statusCode", is(400))
-                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                .body("message", is(notNullValue()))
-                .body("details", is(notNullValue()));
-        }
-
-        @Test
-        void restoreShouldReturnInvalidWhenPassingEmptyAction() {
-            given()
-                .queryParam("action", "")
-            .when()
-                .post(USER.asString())
-            .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .body("statusCode", is(400))
-                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                .body("message", is(notNullValue()))
-                .body("details", is(notNullValue()));
-        }
-
-        @Test
-        void restoreShouldReturnInvalidWhenActionIsInValid() {
-            given()
-                .queryParam("action", "invalid action")
-            .when()
-                .post(USER.asString())
-            .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .body("statusCode", is(400))
-                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                .body("message", is(notNullValue()))
-                .body("details", is(notNullValue()));
-        }
-
-        @Test
-        void restoreShouldReturnInvalidWhenPassingCaseInsensitiveAction() {
-            given()
-                .queryParam("action", "RESTORE")
-            .when()
-                .post(USER.asString())
-            .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .body("statusCode", is(400))
-                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                .body("message", is(notNullValue()))
-                .body("details", is(notNullValue()));
-        }
-
-        @Test
-        void restoreShouldReturnInvalidWhenUserIsInvalid() {
+        void restoreShouldReturnATaskCreated() {
             given()
                 .queryParam("action", "restore")
-            .when()
-                .post("not@valid@user.com")
-            .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .body("statusCode", is(400))
-                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                .body("message", is(notNullValue()))
-                .body("details", is(notNullValue()));
-        }
-
-        @Test
-        void postShouldReturnNotFoundWhenNoUserPathParameter() {
-            given()
-                .queryParam("action", "restore")
-            .when()
-                .post()
-            .then()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .body("statusCode", is(404))
-                .body("type", is(notNullValue()))
-                .body("message", is(notNullValue()));
-        }
-
-        @Test
-        void restoreShouldReturnBadRequestWhenPassingUnsupportedField() throws Exception {
-            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-            String query =
-                "{" +
-                "  \"criteria\": [" +
-                "    {" +
-                "      \"fieldName\": \"unsupported\"," +
-                "      \"operator\": \"contains\"," +
-                "      \"value\": \"" + MAILBOX_ID_1.serialize() + "\"" +
-                "    }" +
-                "  ]" +
-                "}";
-
-            given()
-                .body(query)
+                .body(MATCH_ALL_QUERY)
             .when()
                 .post(USER.asString())
             .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .body("statusCode", is(400))
-                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                .body("message", is(notNullValue()))
-                .body("details", is(notNullValue()));
+                .statusCode(HttpStatus.CREATED_201)
+                .body("taskId", notNullValue());
         }
 
         @Test
-        void restoreShouldReturnBadRequestWhenPassingUnsupportedOperator() throws Exception {
-            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-            String query =
-                "{" +
-                "  \"criteria\": [" +
-                "    {" +
-                "      \"fieldName\": \"subject\"," +
-                "      \"operator\": \"isLongerThan\"," +
-                "      \"value\": \"" + SUBJECT + "\"" +
-                "    }" +
-                "  ]" +
-                "}";
-
-            given()
-                .body(query)
-            .when()
-                .post(USER.asString())
-            .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .body("statusCode", is(400))
-                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                .body("message", is(notNullValue()))
-                .body("details", is(notNullValue()));
-        }
-
-        @Test
-        void restoreShouldReturnBadRequestWhenPassingUnsupportedPairOfFieldNameAndOperator() throws Exception {
-            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-            String query =
-                "{" +
-                "  \"criteria\": [" +
-                "    {" +
-                "      \"fieldName\": \"sender\"," +
-                "      \"operator\": \"contains\"," +
-                "      \"value\": \"" + SENDER.asString() + "\"" +
-                "    }" +
-                "  ]" +
-                "}";
-
-            given()
-                .body(query)
-            .when()
-                .post(USER.asString())
-            .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .body("statusCode", is(400))
-                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                .body("message", is(notNullValue()))
-                .body("details", is(notNullValue()));
-        }
-
-        @Test
-        void restoreShouldReturnBadRequestWhenPassingInvalidMailAddress() throws Exception {
-            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-            String query =
-                "{" +
-                "  \"criteria\": [" +
-                "    {" +
-                "      \"fieldName\": \"sender\"," +
-                "      \"operator\": \"contains\"," +
-                "      \"value\": \"invalid@mail@domain.tld\"" +
-                "    }" +
-                "  ]" +
-                "}";
-
-            given()
-                .body(query)
-            .when()
-                .post(USER.asString())
-            .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .body("statusCode", is(400))
-                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                .body("message", is(notNullValue()))
-                .body("details", is(notNullValue()));
-        }
-
-        @Test
-        void restoreShouldReturnBadRequestWhenPassingOrCombinator() throws Exception {
-            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-            String query =
-                "{" +
-                "  \"combinator\": \"or\"," +
-                "  \"criteria\": [" +
-                "    {" +
-                "      \"fieldName\": \"sender\"," +
-                "      \"operator\": \"contains\"," +
-                "      \"value\": \"" + SENDER.asString() + "\"" +
-                "    }" +
-                "  ]" +
-                "}";
-
-            given()
-                .body(query)
-            .when()
-                .post(USER.asString())
-            .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .body("statusCode", is(400))
-                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                .body("message", is(notNullValue()))
-                .body("details", is(notNullValue()));
-        }
-
-        @Test
-        void restoreShouldReturnBadRequestWhenPassingNestedStructuredQuery() throws Exception {
-            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-            String query =
-                "{" +
-                "  \"combinator\": \"and\"," +
-                "  \"criteria\": [" +
-                "    {" +
-                "      \"combinator\": \"or\"," +
-                "      \"criteria\": [" +
-                "        {\"fieldName\": \"subject\", \"operator\": \"containsIgnoreCase\", \"value\": \"Apache James\"}," +
-                "        {\"fieldName\": \"subject\", \"operator\": \"containsIgnoreCase\", \"value\": \"Apache James\"}" +
-                "      ]" +
-                "    }," +
-                "    {\"fieldName\": \"subject\", \"operator\": \"containsIgnoreCase\", \"value\": \"Apache James\"}" +
-                "  ]" +
-                "}";
-
-            given()
-                .body(query)
-            .when()
-                .post(USER.asString())
-            .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .body("statusCode", is(400))
-                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                .body("message", is(notNullValue()))
-                .body("details", is(notNullValue()));
-        }
-    }
-
-    @Nested
-    class FailingRestoreTest {
-
-        @Test
-        void restoreShouldProduceFailedTaskWhenTheVaultGetsError() {
+        void restoreShouldProduceASuccessfulTaskWithAdditionalInformation() {
             vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
             vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
-
-            doThrow(new RuntimeException("mock exception"))
-                .when(vault)
-                .search(any(), any());
 
             String taskId =
                 given()
@@ -1353,34 +1470,25 @@ class DeletedMessagesVaultRoutesTest {
                     .get("taskId");
 
             given()
-                .queryParam("action", "restore")
                 .basePath(TasksRoutes.BASE)
             .when()
                 .get(taskId + "/await")
             .then()
-                .body("status", is("failed"))
+                .body("status", is("completed"))
                 .body("taskId", is(taskId))
                 .body("type", is(DeletedMessagesVaultRestoreTask.TYPE))
-                .body("additionalInformation.successfulRestoreCount", is(0))
+                .body("additionalInformation.successfulRestoreCount", is(2))
                 .body("additionalInformation.errorRestoreCount", is(0))
                 .body("additionalInformation.user", is(USER.asString()))
                 .body("startedDate", is(notNullValue()))
-                .body("submitDate", is(notNullValue()));
+                .body("submitDate", is(notNullValue()))
+                .body("completedDate", is(notNullValue()));
         }
 
         @Test
-        void restoreShouldProduceFailedTaskWithErrorRestoreCountWhenMessageAppendGetsError() throws Exception {
+        void restoreShouldKeepAllMessagesInTheVaultOfCorrespondingUser() {
             vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
             vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
-
-            MessageManager mockMessageManager = Mockito.mock(MessageManager.class);
-            doReturn(mockMessageManager)
-                .when(mailboxManager)
-                .getMailbox(any(MailboxId.class), any(MailboxSession.class));
-
-            doThrow(new MailboxException("mock exception"))
-                .when(mockMessageManager)
-                .appendMessage(any(), any());
 
             String taskId =
                 given()
@@ -1396,24 +1504,24 @@ class DeletedMessagesVaultRoutesTest {
             .when()
                 .get(taskId + "/await")
             .then()
-                .body("status", is("failed"))
-                .body("taskId", is(taskId))
-                .body("type", is(DeletedMessagesVaultRestoreTask.TYPE))
-                .body("additionalInformation.successfulRestoreCount", is(0))
-                .body("additionalInformation.errorRestoreCount", is(2))
-                .body("additionalInformation.user", is(USER.asString()))
-                .body("startedDate", is(notNullValue()))
-                .body("submitDate", is(notNullValue()));
+                .body("status", is("completed"));
+
+            assertThat(Flux.from(vault.search(USER, Query.ALL)).toStream())
+                .containsOnly(DELETED_MESSAGE, DELETED_MESSAGE_2);
         }
 
         @Test
-        void restoreShouldProduceFailedTaskWhenMailboxMangerGetsError() throws Exception {
+        void restoreShouldNotDeleteExistingMessagesInTheUserMailbox() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER.asString());
+            MailboxPath restoreMailboxPath = MailboxPath.forUser(USER.asString(), RESTORE_MAILBOX_NAME);
+            mailboxManager.createMailbox(restoreMailboxPath, session);
+            MessageManager messageManager = mailboxManager.getMailbox(restoreMailboxPath, session);
+            messageManager.appendMessage(
+                MessageManager.AppendCommand.builder().build(new ByteArrayInputStream(CONTENT)),
+                session);
+
             vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
             vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
-
-            doThrow(new RuntimeException("mock exception"))
-                .when(mailboxManager)
-                .createMailbox(any(MailboxPath.class), any(MailboxSession.class));
 
             String taskId =
                 given()
@@ -1429,167 +1537,64 @@ class DeletedMessagesVaultRoutesTest {
             .when()
                 .get(taskId + "/await")
             .then()
-                .body("status", is("failed"))
-                .body("taskId", is(taskId))
-                .body("type", is(DeletedMessagesVaultRestoreTask.TYPE))
-                .body("additionalInformation.successfulRestoreCount", is(0))
-                .body("additionalInformation.errorRestoreCount", is(0))
-                .body("additionalInformation.user", is(USER.asString()))
-                .body("startedDate", is(notNullValue()))
-                .body("submitDate", is(notNullValue()));
+                .body("status", is("completed"));
+
+            assertThat(restoreMailboxMessages(USER))
+                .hasSize(3);
         }
-    }
 
-    @Test
-    void restoreShouldReturnATaskCreated() {
-        given()
-            .queryParam("action", "restore")
-            .body(MATCH_ALL_QUERY)
-        .when()
-            .post(USER.asString())
-        .then()
-            .statusCode(HttpStatus.CREATED_201)
-            .body("taskId", notNullValue());
-    }
+        @Test
+        void restoreShouldAppendAllMessageFromVaultToRestoreMailboxOfCorrespondingUser() throws Exception {
+            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+            vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
 
-    @Test
-    void restoreShouldProduceASuccessfulTaskWithAdditionalInformation() {
-        vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-        vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+            String taskId =
+                given()
+                    .queryParam("action", "restore")
+                    .body(MATCH_ALL_QUERY)
+                .when()
+                    .post(USER.asString())
+                    .jsonPath()
+                    .get("taskId");
 
-        String taskId =
             given()
-                .queryParam("action", "restore")
-                .body(MATCH_ALL_QUERY)
+                .basePath(TasksRoutes.BASE)
             .when()
-                .post(USER.asString())
-                .jsonPath()
-                .get("taskId");
+                .get(taskId + "/await")
+            .then()
+                .body("status", is("completed"));
 
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("taskId", is(taskId))
-            .body("type", is(DeletedMessagesVaultRestoreTask.TYPE))
-            .body("additionalInformation.successfulRestoreCount", is(2))
-            .body("additionalInformation.errorRestoreCount", is(0))
-            .body("additionalInformation.user", is(USER.asString()))
-            .body("startedDate", is(notNullValue()))
-            .body("submitDate", is(notNullValue()))
-            .body("completedDate", is(notNullValue()));
-    }
+            assertThat(restoreMailboxMessages(USER))
+                .hasSize(2)
+                .anySatisfy(messageResult -> assertThat(fullContent(messageResult)).hasSameContentAs(new ByteArrayInputStream(CONTENT)))
+                .anySatisfy(messageResult -> assertThat(fullContent(messageResult)).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+        }
 
-    @Test
-    void restoreShouldKeepAllMessagesInTheVaultOfCorrespondingUser() {
-        vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-        vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+        @Test
+        void restoreShouldNotAppendMessagesToAnOtherUserMailbox() throws Exception {
+            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+            vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
 
-        String taskId =
+            String taskId =
+                given()
+                    .queryParam("action", "restore")
+                    .body(MATCH_ALL_QUERY)
+                .when()
+                    .post(USER.asString())
+                    .jsonPath()
+                    .get("taskId");
+
             given()
-                .queryParam("action", "restore")
-                .body(MATCH_ALL_QUERY)
+                .basePath(TasksRoutes.BASE)
             .when()
-                .post(USER.asString())
-                .jsonPath()
-                .get("taskId");
+                .get(taskId + "/await")
+            .then()
+                .body("status", is("completed"));
 
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"));
+            assertThat(hasAnyMail(USER_2))
+                .isFalse();
+        }
 
-        assertThat(Flux.from(vault.search(USER, Query.ALL)).toStream())
-            .containsOnly(DELETED_MESSAGE, DELETED_MESSAGE_2);
-    }
-
-    @Test
-    void restoreShouldNotDeleteExistingMessagesInTheUserMailbox() throws Exception {
-        MailboxSession session = mailboxManager.createSystemSession(USER.asString());
-        MailboxPath restoreMailboxPath = MailboxPath.forUser(USER.asString(), RESTORE_MAILBOX_NAME);
-        mailboxManager.createMailbox(restoreMailboxPath, session);
-        MessageManager messageManager = mailboxManager.getMailbox(restoreMailboxPath, session);
-        messageManager.appendMessage(
-            MessageManager.AppendCommand.builder().build(new ByteArrayInputStream(CONTENT)),
-            session);
-
-        vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-        vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
-
-        String taskId =
-            given()
-                .queryParam("action", "restore")
-                .body(MATCH_ALL_QUERY)
-            .when()
-                .post(USER.asString())
-                .jsonPath()
-                .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"));
-
-        assertThat(restoreMailboxMessages(USER))
-            .hasSize(3);
-    }
-
-    @Test
-    void restoreShouldAppendAllMessageFromVaultToRestoreMailboxOfCorrespondingUser() throws Exception {
-        vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-        vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
-
-        String taskId =
-            given()
-                .queryParam("action", "restore")
-                .body(MATCH_ALL_QUERY)
-            .when()
-                .post(USER.asString())
-                .jsonPath()
-                .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"));
-
-        assertThat(restoreMailboxMessages(USER))
-            .hasSize(2)
-            .anySatisfy(messageResult -> assertThat(fullContent(messageResult)).hasSameContentAs(new ByteArrayInputStream(CONTENT)))
-            .anySatisfy(messageResult -> assertThat(fullContent(messageResult)).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
-    }
-
-    @Test
-    void restoreShouldNotAppendMessagesToAnOtherUserMailbox() throws Exception {
-        vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-        vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
-
-        String taskId =
-            given()
-                .queryParam("action", "restore")
-                .body(MATCH_ALL_QUERY)
-            .when()
-                .post(USER.asString())
-                .jsonPath()
-                .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"));
-
-        assertThat(hasAnyMail(USER_2))
-            .isFalse();
     }
 
     private boolean hasAnyMail(User user) throws MailboxException {
