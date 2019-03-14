@@ -19,6 +19,7 @@
 
 package org.apache.james.vault;
 
+import static org.apache.james.vault.DeletedMessageFixture.CONTENT;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_WITH_SUBJECT;
 import static org.apache.james.vault.DeletedMessageFixture.DELETION_DATE;
@@ -58,6 +59,7 @@ class DeletedMessageTest {
                 soft.assertThat(DELETED_MESSAGE.getSender()).isEqualTo(MaybeSender.of(SENDER));
                 soft.assertThat(DELETED_MESSAGE.getRecipients()).containsOnly(RECIPIENT1, RECIPIENT2);
                 soft.assertThat(DELETED_MESSAGE.hasAttachment()).isFalse();
+                soft.assertThat(DELETED_MESSAGE.getSize()).isEqualTo(CONTENT.length);
                 soft.assertThat(DELETED_MESSAGE.getSubject()).isEmpty();
             }
         );

@@ -94,6 +94,11 @@ public class DeletedMessage {
             }
         }
 
+        @FunctionalInterface
+        public interface RequireSize<T> {
+            T size(long size);
+        }
+
         interface Steps {
             interface RequireMailboxContext<T> extends RequireMessageId<RequireOriginMailboxes<RequireUser<T>>> {}
 
@@ -101,7 +106,7 @@ public class DeletedMessage {
 
             interface RequireDates<T> extends RequireDeliveryDate<RequireDeletionDate<T>> {}
 
-            interface RequireMetadata<T> extends RequireMailboxContext<RequireDates<RequireEnvelope<RequireHasAttachment<T>>>> {}
+            interface RequireMetadata<T> extends RequireMailboxContext<RequireDates<RequireEnvelope<RequireHasAttachment<RequireSize<T>>>>> {}
         }
 
         public static class FinalStage {
@@ -113,10 +118,11 @@ public class DeletedMessage {
             private final MaybeSender sender;
             private final List<MailAddress> recipients;
             private final boolean hasAttachment;
+            private final long size;
             private Optional<String> subject;
 
             FinalStage(MessageId messageId, List<MailboxId> originMailboxes, User owner, ZonedDateTime deliveryDate,
-                       ZonedDateTime deletionDate, MaybeSender sender, List<MailAddress> recipients, boolean hasAttachment) {
+                       ZonedDateTime deletionDate, MaybeSender sender, List<MailAddress> recipients, boolean hasAttachment, long size) {
                 this.messageId = messageId;
                 this.originMailboxes = originMailboxes;
                 this.owner = owner;
@@ -125,6 +131,7 @@ public class DeletedMessage {
                 this.sender = sender;
                 this.recipients = recipients;
                 this.hasAttachment = hasAttachment;
+                this.size = size;
                 this.subject = Optional.empty();
             }
 
@@ -140,14 +147,14 @@ public class DeletedMessage {
 
             public DeletedMessage build() {
                 return new DeletedMessage(messageId, originMailboxes, owner, deliveryDate, deletionDate, sender,
-                    recipients, subject, hasAttachment);
+                    recipients, subject, hasAttachment, size);
             }
         }
     }
 
     public static RequireMetadata<FinalStage> builder() {
-        return messageId -> originMailboxes -> user -> deliveryDate -> deletionDate -> sender -> recipients -> hasAttachment ->
-            new Builder.FinalStage(messageId, originMailboxes, user, deliveryDate, deletionDate, sender, ImmutableList.copyOf(recipients), hasAttachment);
+        return messageId -> originMailboxes -> user -> deliveryDate -> deletionDate -> sender -> recipients -> hasAttachment -> size ->
+            new Builder.FinalStage(messageId, originMailboxes, user, deliveryDate, deletionDate, sender, ImmutableList.copyOf(recipients), hasAttachment, size);
     }
 
     private final MessageId messageId;
@@ -159,10 +166,11 @@ public class DeletedMessage {
     private final List<MailAddress> recipients;
     private final Optional<String> subject;
     private final boolean hasAttachment;
+    private final long size;
 
     public DeletedMessage(MessageId messageId, List<MailboxId> originMailboxes, User owner,
                           ZonedDateTime deliveryDate, ZonedDateTime deletionDate, MaybeSender sender, List<MailAddress> recipients,
-                          Optional<String> subject, boolean hasAttachment) {
+                          Optional<String> subject, boolean hasAttachment, long size) {
         this.messageId = messageId;
         this.originMailboxes = originMailboxes;
         this.owner = owner;
@@ -172,6 +180,7 @@ public class DeletedMessage {
         this.recipients = recipients;
         this.subject = subject;
         this.hasAttachment = hasAttachment;
+        this.size = size;
     }
 
     public MessageId getMessageId() {
@@ -210,6 +219,10 @@ public class DeletedMessage {
         return hasAttachment;
     }
 
+    public long getSize() {
+        return size;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof DeletedMessage) {
@@ -223,7 +236,8 @@ public class DeletedMessage {
                 && Objects.equals(this.deletionDate, that.deletionDate)
                 && Objects.equals(this.sender, that.sender)
                 && Objects.equals(this.recipients, that.recipients)
-                && Objects.equals(this.subject, that.subject);
+                && Objects.equals(this.subject, that.subject)
+                && Objects.equals(this.size, that.size);
         }
         return false;
     }
@@ -231,7 +245,7 @@ public class DeletedMessage {
     @Override
     public final int hashCode() {
         return Objects.hash(messageId, originMailboxes, owner, deliveryDate, deletionDate, sender, recipients,
-            subject, hasAttachment);
+            subject, hasAttachment, size);
     }
 
     @Override
@@ -239,6 +253,14 @@ public class DeletedMessage {
         return MoreObjects.toStringHelper(this)
             .add("owner", owner)
             .add("messageId", messageId)
+            .add("originMailboxes", originMailboxes)
+            .add("owner", owner)
+            .add("deliveryDate", deliveryDate)
+            .add("deletionDate", deletionDate)
+            .add("sender", sender)
+            .add("recipients", recipients)
+            .add("subject", subject)
+            .add("size", size)
             .toString();
     }
 }

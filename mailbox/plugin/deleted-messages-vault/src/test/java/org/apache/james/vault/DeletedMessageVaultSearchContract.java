@@ -573,6 +573,7 @@ public interface DeletedMessageVaultSearchContract {
             .sender(MaybeSender.of(SENDER))
             .recipients(recipients)
             .hasAttachment(false)
+            .size(CONTENT.length)
             .build();
 
         return storeDeletedMessage(deletedMessage, USER);
@@ -588,6 +589,7 @@ public interface DeletedMessageVaultSearchContract {
             .sender(sender)
             .recipients(RECIPIENT1, RECIPIENT2)
             .hasAttachment(false)
+            .size(CONTENT.length)
             .build();
 
         return storeDeletedMessage(deletedMessage, USER);
@@ -603,6 +605,7 @@ public interface DeletedMessageVaultSearchContract {
             .sender(MaybeSender.of(SENDER))
             .recipients(RECIPIENT1, RECIPIENT2)
             .hasAttachment(hasAttachment)
+            .size(CONTENT.length)
             .build();
 
         return storeDeletedMessage(deletedMessage, USER);
@@ -618,6 +621,7 @@ public interface DeletedMessageVaultSearchContract {
             .sender(MaybeSender.of(SENDER))
             .recipients(RECIPIENT1, RECIPIENT2)
             .hasAttachment(true)
+            .size(CONTENT.length)
             .build();
 
         return storeDeletedMessage(deletedMessage, USER);
@@ -661,6 +665,7 @@ public interface DeletedMessageVaultSearchContract {
             .deletionDate(deletionDate)
             .sender(MaybeSender.of(SENDER))
             .recipients(RECIPIENT1)
-            .hasAttachment(false);
+            .hasAttachment(false)
+            .size(CONTENT.length);
     }
 }

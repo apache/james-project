@@ -61,6 +61,7 @@ class DeletedMessageConverter {
             .sender(retrieveSender(mimeMessage))
             .recipients(retrieveRecipients(mimeMessage))
             .hasAttachment(!message.getAttachments().isEmpty())
+            .size(message.getBodyOctets() + message.getHeaderOctets())
             .subject(mimeMessage.map(Message::getSubject))
             .build();
     }

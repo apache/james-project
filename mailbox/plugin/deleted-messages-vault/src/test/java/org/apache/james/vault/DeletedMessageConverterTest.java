@@ -19,6 +19,7 @@
 
 package org.apache.james.vault;
 
+import static org.apache.james.vault.DeletedMessageFixture.CONTENT;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_WITH_SUBJECT;
 import static org.apache.james.vault.DeletedMessageFixture.DELETION_DATE;
@@ -91,11 +92,14 @@ class DeletedMessageConverterTest {
     }
 
     private MailboxMessage buildMessage(MessageBuilder messageBuilder, Collection<MessageAttachment> attachments) throws Exception {
-        MailboxMessage mailboxMessage = messageBuilder.build(MESSAGE_ID);
+        MailboxMessage mailboxMessage = messageBuilder
+            .size(CONTENT.length)
+            .build(MESSAGE_ID);
         return SimpleMailboxMessage.fromWithoutAttachments(mailboxMessage)
             .mailboxId(mailboxMessage.getMailboxId())
             .internalDate(Date.from(DELIVERY_DATE.toInstant()))
-            .addAttachments(attachments).build();
+            .addAttachments(attachments)
+            .build();
     }
 
     @BeforeEach

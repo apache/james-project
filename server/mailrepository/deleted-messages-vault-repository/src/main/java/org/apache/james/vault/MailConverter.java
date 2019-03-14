@@ -34,15 +34,20 @@ import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.server.core.MailImpl;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 class MailConverter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailConverter.class);
+
     static final AttributeName ORIGIN_MAILBOXES_ATTRIBUTE_NAME = AttributeName.of("originMailboxes");
     static final AttributeName HAS_ATTACHMENT_ATTRIBUTE_NAME = AttributeName.of("hasAttachment");
     static final AttributeName OWNER_ATTRIBUTE_NAME = AttributeName.of("owner");
@@ -84,8 +89,27 @@ class MailConverter {
             .sender(mail.getMaybeSender())
             .recipients(mail.getRecipients())
             .hasAttachment(retrieveHasAttachment(mail))
+            .size(getMessageSize(mail))
             .subject(retrieveSubject(mail))
             .build();
+    }
+
+    private long getMessageSize(Mail mail) {
+        try {
+            return mail.getMessageSize();
+        } catch (MessagingException e) {
+            LOGGER.warn("can not get message size from message {}, fallback to use MimeMessageUtil.asBytes()", mail.getName(), e);
+            return getMimeMessageSize(mail);
+        }
+    }
+
+    private int getMimeMessageSize(Mail mail) {
+        try {
+            MimeMessage mimeMessage = mail.getMessage();
+            return MimeMessageUtil.asBytes(mimeMessage).length;
+        } catch (Exception e) {
+            throw new RuntimeException("can not calculate mime message size from mail " + mail.getName(), e);
+        }
     }
 
     private ImmutableList<AttributeValue<?>> serializedMailboxIds(DeletedMessage deletedMessage) {

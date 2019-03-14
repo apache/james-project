@@ -36,12 +36,15 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.vault.memory.MemoryDeletedMessagesVault;
@@ -58,6 +61,7 @@ class DeletedMessageVaultHookTest {
     private static final String TEST_ADDRESS = "test@james.com";
     private static final User ALICE = User.fromUsername(ALICE_ADDRESS);
     private static final User BOB = User.fromUsername(BOB_ADDRESS);
+    private static final String MESSAGE_BODY = "testmail";
 
     private static final MailboxPath MAILBOX_ALICE_ONE = MailboxPath.forUser(ALICE_ADDRESS, "ALICE_ONE");
     private static final MailboxPath MAILBOX_BOB_ONE = MailboxPath.forUser(BOB_ADDRESS, "BOB_ONE");
@@ -71,7 +75,7 @@ class DeletedMessageVaultHookTest {
     private MailboxSession bobSession;
     private SearchQuery searchQuery;
 
-    private DeletedMessage buildDeletedMessage(List<MailboxId> mailboxIds, MessageId messageId, User user) throws Exception {
+    private DeletedMessage buildDeletedMessage(List<MailboxId> mailboxIds, MessageId messageId, User user, long messageSize) throws Exception {
         return DeletedMessage.builder()
             .messageId(messageId)
             .originMailboxes(mailboxIds)
@@ -81,6 +85,7 @@ class DeletedMessageVaultHookTest {
             .sender(MaybeSender.getMailSender(ALICE_ADDRESS))
             .recipients(new MailAddress(TEST_ADDRESS))
             .hasAttachment(false)
+            .size(messageSize)
             .subject("test")
             .build();
     }
@@ -114,7 +119,7 @@ class DeletedMessageVaultHookTest {
 
         mailContent = Message.Builder.of()
             .setSubject("test")
-            .setBody("testmail", StandardCharsets.UTF_8)
+            .setBody(MESSAGE_BODY, StandardCharsets.UTF_8)
             .setSender(ALICE_ADDRESS)
             .setTo(TEST_ADDRESS)
             .setDate(INTERNAL_DATE)
@@ -131,11 +136,13 @@ class DeletedMessageVaultHookTest {
     void notifyDeleteShouldAppendMessageVault() throws Exception {
         MailboxId aliceMailbox = mailboxManager.createMailbox(MAILBOX_ALICE_ONE, aliceSession).get();
         MessageManager messageManager = mailboxManager.getMailbox(aliceMailbox, aliceSession);
-        MessageId messageId = appendMessage(messageManager).getMessageId();
+        ComposedMessageId composedId = appendMessage(messageManager);
+        MessageId messageId = composedId.getMessageId();
+        long messageSize = messageSize(messageManager, composedId);
 
         messageIdManager.delete(ImmutableList.of(messageId), aliceSession);
 
-        DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(aliceMailbox), messageId, ALICE);
+        DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(aliceMailbox), messageId, ALICE, messageSize);
         assertThat(messageVault.search(ALICE, Query.ALL).blockFirst())
             .isEqualTo(deletedMessage);
     }
@@ -155,9 +162,9 @@ class DeletedMessageVaultHookTest {
         MessageManager bobMessageManager = mailboxManager.getMailbox(aliceMailbox, bobSession);
         ComposedMessageId composedMessageId = appendMessage(aliceMessageManager);
         MessageId messageId = composedMessageId.getMessageId();
+        long messageSize = messageSize(bobMessageManager, composedMessageId);
 
-
-        DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(aliceMailbox), messageId, ALICE);
+        DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(aliceMailbox), messageId, ALICE, messageSize);
         bobMessageManager.delete(ImmutableList.copyOf(bobMessageManager.search(searchQuery, bobSession)), bobSession);
 
         assertThat(messageVault.search(ALICE, Query.ALL).blockFirst())
@@ -203,7 +210,8 @@ class DeletedMessageVaultHookTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(bobMailbox), bobSession);
 
-        DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(bobMailbox), messageId, BOB);
+        long messageSize = messageSize(bobMessageManager, composedMessageId);
+        DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(bobMailbox), messageId, BOB, messageSize);
         bobMessageManager.delete(ImmutableList.copyOf(bobMessageManager.search(searchQuery, bobSession)), bobSession);
 
         assertThat(messageVault.search(BOB, Query.ALL).blockFirst())
@@ -252,7 +260,8 @@ class DeletedMessageVaultHookTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox, bobMailbox), bobSession);
 
-        DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(bobMailbox), messageId, BOB);
+        long messageSize = messageSize(bobMessageManager, composedMessageId);
+        DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(bobMailbox), messageId, BOB, messageSize);
         bobMessageManager.delete(ImmutableList.copyOf(bobMessageManager.search(searchQuery, bobSession)), bobSession);
 
         assertThat(messageVault.search(BOB, Query.ALL).blockFirst())
@@ -283,4 +292,9 @@ class DeletedMessageVaultHookTest {
             .isEmpty();
     }
 
+    private long messageSize(MessageManager messageManager, ComposedMessageId composedMessageId) throws MailboxException {
+        return messageManager.getMessages(MessageRange.one(composedMessageId.getUid()), FetchGroupImpl.MINIMAL, aliceSession)
+            .next()
+            .getSize();
+    }
 }
