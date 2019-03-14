@@ -26,16 +26,20 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.mail.internet.AddressException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.User;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.vault.search.Query;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
@@ -70,7 +74,8 @@ import spark.Service;
 public class DeletedMessagesVaultRoutes implements Routes {
 
     enum UserVaultAction {
-        RESTORE("restore");
+        RESTORE("restore"),
+        EXPORT("export");
 
         static Optional<UserVaultAction> getAction(String value) {
             Preconditions.checkNotNull(value, "action cannot be null");
@@ -102,21 +107,26 @@ public class DeletedMessagesVaultRoutes implements Routes {
     private static final String USER_PATH_PARAM = "user";
     private static final String RESTORE_PATH = ROOT_PATH + SEPARATOR + ":" + USER_PATH_PARAM;
     private static final String ACTION_QUERY_PARAM = "action";
+    private static final String EXPORT_TO_QUERY_PARAM = "exportTo";
 
     private final RestoreService vaultRestore;
+    private final ExportService vaultExport;
     private final JsonTransformer jsonTransformer;
     private final TaskManager taskManager;
     private final JsonExtractor<QueryElement> jsonExtractor;
     private final QueryTranslator queryTranslator;
+    private final UsersRepository usersRepository;
 
     @Inject
     @VisibleForTesting
-    DeletedMessagesVaultRoutes(RestoreService vaultRestore, JsonTransformer jsonTransformer,
-                               TaskManager taskManager, QueryTranslator queryTranslator) {
+    DeletedMessagesVaultRoutes(RestoreService vaultRestore, ExportService vaultExport, JsonTransformer jsonTransformer,
+                               TaskManager taskManager, QueryTranslator queryTranslator, UsersRepository usersRepository) {
         this.vaultRestore = vaultRestore;
+        this.vaultExport = vaultExport;
         this.jsonTransformer = jsonTransformer;
         this.taskManager = taskManager;
         this.queryTranslator = queryTranslator;
+        this.usersRepository = usersRepository;
         this.jsonExtractor = new JsonExtractor<>(QueryElement.class);
     }
 
@@ -149,11 +159,19 @@ public class DeletedMessagesVaultRoutes implements Routes {
             paramType = "query",
             example = "?action=restore",
             value = "Compulsory. Needs to be a valid action represent for an operation to perform on the Deleted Message Vault, " +
-                "valid action should be in the list (restore)")
+                "valid action should be in the list (restore, export)"),
+        @ApiImplicitParam(
+            dataType = "String",
+            name = "exportTo",
+            paramType = "query",
+            example = "?exportTo=user@james.org",
+            value = "Compulsory if action is export. Needs to be a valid mail address to represent for the destination " +
+                "where deleted messages content is export to")
     })
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - user param is invalid"),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Not found - requested user is not existed in the system"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     private TaskIdDto userActions(Request request, Response response) throws JsonExtractException {
@@ -165,14 +183,60 @@ public class DeletedMessagesVaultRoutes implements Routes {
     }
 
     private Task generateTask(UserVaultAction requestedAction, Request request) throws JsonExtractException {
-        User userToRestore = extractUser(request);
+        User user = extractUser(request);
+        validateUserExist(user);
         Query query = translate(jsonExtractor.parse(request.body()));
 
         switch (requestedAction) {
             case RESTORE:
-                return new DeletedMessagesVaultRestoreTask(vaultRestore, userToRestore, query);
+                return new DeletedMessagesVaultRestoreTask(vaultRestore, user, query);
+            case EXPORT:
+                return new DeletedMessagesVaultExportTask(vaultExport, user, query, extractMailAddress(request));
             default:
                 throw new NotImplementedException(requestedAction + " is not yet handled.");
+        }
+    }
+
+    private void validateUserExist(User user) {
+        try {
+            if (!usersRepository.contains(user.asString())) {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorResponder.ErrorType.NOT_FOUND)
+                    .message("User '" + user.asString() + "' does not exist in the system")
+                    .haltError();
+            }
+        } catch (UsersRepositoryException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .type(ErrorResponder.ErrorType.SERVER_ERROR)
+                .message("Unable to validate 'user' parameter")
+                .cause(e)
+                .haltError();
+        }
+    }
+
+    private MailAddress extractMailAddress(Request request) {
+        return Optional.ofNullable(request.queryParams(EXPORT_TO_QUERY_PARAM))
+            .filter(StringUtils::isNotBlank)
+            .map(this::parseToMailAddress)
+            .orElseThrow(() -> ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("Invalid 'exportTo' parameter, null or blank value is not accepted")
+                .haltError());
+    }
+
+    private MailAddress parseToMailAddress(String addressString) {
+        try {
+            return new MailAddress(addressString);
+        } catch (AddressException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("Invalid 'exportTo' parameter")
+                .cause(e)
+                .haltError();
         }
     }
 
@@ -180,7 +244,12 @@ public class DeletedMessagesVaultRoutes implements Routes {
         try {
             return queryTranslator.translate(queryElement);
         } catch (QueryTranslator.QueryTranslatorException e) {
-            throw badRequest("Invalid payload passing to the route", e);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("Invalid payload passing to the route")
+                .cause(e)
+                .haltError();
         }
     }
 
@@ -188,17 +257,13 @@ public class DeletedMessagesVaultRoutes implements Routes {
         try {
             return User.fromUsername(request.params(USER_PATH_PARAM));
         } catch (IllegalArgumentException e) {
-            throw badRequest("Invalid 'user' parameter", e);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("Invalid 'user' parameter")
+                .cause(e)
+                .haltError();
         }
-    }
-
-    private HaltException badRequest(String message, Exception e) {
-        return ErrorResponder.builder()
-            .statusCode(HttpStatus.BAD_REQUEST_400)
-            .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-            .message(message)
-            .cause(e)
-            .haltError();
     }
 
     private UserVaultAction extractUserVaultAction(Request request) {

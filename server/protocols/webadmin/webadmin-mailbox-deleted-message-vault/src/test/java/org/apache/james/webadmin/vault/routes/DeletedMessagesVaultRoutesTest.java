@@ -21,6 +21,7 @@ package org.apache.james.webadmin.vault.routes;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
+import static io.restassured.RestAssured.with;
 import static org.apache.james.vault.DeletedMessageFixture.CONTENT;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_2;
@@ -44,17 +45,33 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.export.api.BlobExportMechanism;
+import org.apache.james.blob.memory.MemoryBlobStore;
+import org.apache.james.core.Domain;
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.core.User;
+import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
+import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -71,7 +88,9 @@ import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.task.MemoryTaskManager;
+import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.vault.DeletedMessage;
+import org.apache.james.vault.DeletedMessageZipper;
 import org.apache.james.vault.memory.MemoryDeletedMessagesVault;
 import org.apache.james.vault.search.Query;
 import org.apache.james.webadmin.WebAdminServer;
@@ -85,7 +104,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.google.common.collect.ImmutableList;
 
@@ -96,15 +116,33 @@ import reactor.core.publisher.Mono;
 
 class DeletedMessagesVaultRoutesTest {
 
+    private class NoopBlobExporting implements BlobExportMechanism {
+        @Override
+        public ShareeStage blobId(BlobId blobId) {
+            return exportTo -> explanation -> () -> export(exportTo, explanation);
+        }
+
+        void export(MailAddress exportTo, String explanation) {
+            // do nothing
+        }
+    }
+
     private static final String MATCH_ALL_QUERY = "{" +
         "\"combinator\": \"and\"," +
         "\"criteria\": []" +
         "}";
+    private static final Domain DOMAIN = Domain.of("apache.org");
 
     private WebAdminServer webAdminServer;
     private MemoryDeletedMessagesVault vault;
     private InMemoryMailboxManager mailboxManager;
     private MemoryTaskManager taskManager;
+    private NoopBlobExporting blobExporting;
+    private MemoryBlobStore blobStore;
+    private DeletedMessageZipper zipper;
+    private MemoryUsersRepository usersRepository;
+    private ExportService exportService;
+    private HashBlobId.Factory blobIdFactory;
 
     @BeforeEach
     void beforeEach() throws Exception {
@@ -116,11 +154,17 @@ class DeletedMessagesVaultRoutesTest {
         JsonTransformer jsonTransformer = new JsonTransformer();
 
         RestoreService vaultRestore = new RestoreService(vault, mailboxManager);
+        blobExporting = spy(new NoopBlobExporting());
+        blobIdFactory = new HashBlobId.Factory();
+        blobStore = new MemoryBlobStore(blobIdFactory);
+        zipper = new DeletedMessageZipper();
+        exportService = new ExportService(blobExporting, blobStore, zipper, vault);
         QueryTranslator queryTranslator = new QueryTranslator(new InMemoryId.Factory());
+        usersRepository = createUsersRepository();
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
             new TasksRoutes(taskManager, jsonTransformer),
-            new DeletedMessagesVaultRoutes(vaultRestore, jsonTransformer, taskManager, queryTranslator));
+            new DeletedMessagesVaultRoutes(vaultRestore, exportService, jsonTransformer, taskManager, queryTranslator, usersRepository));
 
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
@@ -130,10 +174,307 @@ class DeletedMessagesVaultRoutesTest {
             .build();
     }
 
+    private MemoryUsersRepository createUsersRepository() throws Exception {
+        DNSService dnsService = mock(DNSService.class);
+        MemoryDomainList domainList = new MemoryDomainList(dnsService);
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false));
+        domainList.addDomain(DOMAIN);
+
+        MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting();
+        usersRepository.setDomainList(domainList);
+        usersRepository.configure(new DefaultConfigurationBuilder());
+
+        usersRepository.addUser(USER.asString(), "userPassword");
+
+        return usersRepository;
+    }
+
     @AfterEach
     void afterEach() {
         webAdminServer.destroy();
         taskManager.stop();
+    }
+
+    @Nested
+    class UserVaultActionsValidationTest {
+
+        @Test
+        void userVaultAPIShouldReturnInvalidWhenActionIsMissing() {
+            when()
+                .post(USER.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is(notNullValue()))
+                .body("details", is(notNullValue()));
+        }
+
+        @Test
+        void userVaultAPIShouldReturnInvalidWhenPassingEmptyAction() {
+            given()
+                .queryParam("action", "")
+            .when()
+                .post(USER.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is(notNullValue()))
+                .body("details", is(notNullValue()));
+        }
+
+        @Test
+        void userVaultAPIShouldReturnInvalidWhenActionIsInValid() {
+            given()
+                .queryParam("action", "invalid action")
+            .when()
+                .post(USER.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is(notNullValue()))
+                .body("details", is(notNullValue()));
+        }
+
+        @Test
+        void userVaultAPIShouldReturnInvalidWhenPassingCaseInsensitiveAction() {
+            given()
+                .queryParam("action", "RESTORE")
+            .when()
+                .post(USER.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is(notNullValue()))
+                .body("details", is(notNullValue()));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"restore", "export"})
+        void userVaultAPIShouldReturnInvalidWhenUserIsInvalid(String action) {
+            given()
+                .queryParam("action", action)
+            .when()
+                .post("not@valid@user.com")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is(notNullValue()))
+                .body("details", is(notNullValue()));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"restore", "export"})
+        void userVaultAPIShouldReturnNotFoundWhenUserIsNotFoundInSystem(String action) {
+            given()
+                .queryParam("action", action)
+            .when()
+                .post(USER_2.asString())
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .body("statusCode", is(404))
+                .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()))
+                .body("message", is(notNullValue()));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"restore", "export"})
+        void userVaultAPIShouldReturnNotFoundWhenNoUserPathParameter(String action) {
+            given()
+                .queryParam("action", action)
+            .when()
+                .post()
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .body("statusCode", is(404))
+                .body("type", is(notNullValue()))
+                .body("message", is(notNullValue()));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"restore", "export"})
+        void userVaultAPIShouldReturnBadRequestWhenPassingUnsupportedField(String action) throws Exception {
+            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+            String query =
+                "{" +
+                "  \"criteria\": [" +
+                "    {" +
+                "      \"fieldName\": \"unsupported\"," +
+                "      \"operator\": \"contains\"," +
+                "      \"value\": \"" + MAILBOX_ID_1.serialize() + "\"" +
+                "    }" +
+                "  ]" +
+                "}";
+
+            given()
+                .queryParam("action", action)
+                .body(query)
+            .when()
+                .post(USER.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is(notNullValue()))
+                .body("details", is(notNullValue()));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"restore", "export"})
+        void userVaultAPIShouldReturnBadRequestWhenPassingUnsupportedOperator(String action) throws Exception {
+            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+            String query =
+                "{" +
+                "  \"criteria\": [" +
+                "    {" +
+                "      \"fieldName\": \"subject\"," +
+                "      \"operator\": \"isLongerThan\"," +
+                "      \"value\": \"" + SUBJECT + "\"" +
+                "    }" +
+                "  ]" +
+                "}";
+
+            given()
+                .queryParam("action", action)
+                .body(query)
+            .when()
+                .post(USER.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is(notNullValue()))
+                .body("details", is(notNullValue()));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"restore", "export"})
+        void userVaultAPIShouldReturnBadRequestWhenPassingUnsupportedPairOfFieldNameAndOperator(String action) throws Exception {
+            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+            String query =
+                "{" +
+                "  \"criteria\": [" +
+                "    {" +
+                "      \"fieldName\": \"sender\"," +
+                "      \"operator\": \"contains\"," +
+                "      \"value\": \"" + SENDER.asString() + "\"" +
+                "    }" +
+                "  ]" +
+                "}";
+
+            given()
+                .queryParam("action", action)
+                .body(query)
+            .when()
+                .post(USER.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is(notNullValue()))
+                .body("details", is(notNullValue()));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"restore", "export"})
+        void userVaultAPIShouldReturnBadRequestWhenPassingInvalidMailAddress(String action) throws Exception {
+            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+            String query =
+                "{" +
+                "  \"criteria\": [" +
+                "    {" +
+                "      \"fieldName\": \"sender\"," +
+                "      \"operator\": \"contains\"," +
+                "      \"value\": \"invalid@mail@domain.tld\"" +
+                "    }" +
+                "  ]" +
+                "}";
+
+            given()
+                .queryParam("action", action)
+                .body(query)
+            .when()
+                .post(USER.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is(notNullValue()))
+                .body("details", is(notNullValue()));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"restore", "export"})
+        void userVaultAPIShouldReturnBadRequestWhenPassingOrCombinator(String action) throws Exception {
+            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+            String query =
+                "{" +
+                "  \"combinator\": \"or\"," +
+                "  \"criteria\": [" +
+                "    {" +
+                "      \"fieldName\": \"sender\"," +
+                "      \"operator\": \"contains\"," +
+                "      \"value\": \"" + SENDER.asString() + "\"" +
+                "    }" +
+                "  ]" +
+                "}";
+
+            given()
+                .queryParam("action", action)
+                .body(query)
+            .when()
+                .post(USER.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is(notNullValue()))
+                .body("details", is(notNullValue()));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"restore", "export"})
+        void userVaultAPIShouldReturnBadRequestWhenPassingNestedStructuredQuery(String action) throws Exception {
+            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+
+            String query =
+                "{" +
+                "  \"combinator\": \"and\"," +
+                "  \"criteria\": [" +
+                "    {" +
+                "      \"combinator\": \"or\"," +
+                "      \"criteria\": [" +
+                "        {\"fieldName\": \"subject\", \"operator\": \"containsIgnoreCase\", \"value\": \"Apache James\"}," +
+                "        {\"fieldName\": \"subject\", \"operator\": \"containsIgnoreCase\", \"value\": \"Apache James\"}" +
+                "      ]" +
+                "    }," +
+                "    {\"fieldName\": \"subject\", \"operator\": \"containsIgnoreCase\", \"value\": \"Apache James\"}" +
+                "  ]" +
+                "}";
+
+            given()
+                .queryParam("action", action)
+                .body(query)
+            .when()
+                .post(USER.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is(notNullValue()))
+                .body("details", is(notNullValue()));
+        }
     }
 
     @Nested
@@ -1083,258 +1424,6 @@ class DeletedMessagesVaultRoutesTest {
         }
 
         @Nested
-        class ValidationTest {
-
-            @Test
-            void restoreShouldReturnInvalidWhenActionIsMissing() {
-                when()
-                    .post(USER.asString())
-                .then()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .body("statusCode", is(400))
-                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is(notNullValue()))
-                    .body("details", is(notNullValue()));
-            }
-
-            @Test
-            void restoreShouldReturnInvalidWhenPassingEmptyAction() {
-                given()
-                    .queryParam("action", "")
-                .when()
-                    .post(USER.asString())
-                .then()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .body("statusCode", is(400))
-                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is(notNullValue()))
-                    .body("details", is(notNullValue()));
-            }
-
-            @Test
-            void restoreShouldReturnInvalidWhenActionIsInValid() {
-                given()
-                    .queryParam("action", "invalid action")
-                .when()
-                    .post(USER.asString())
-                .then()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .body("statusCode", is(400))
-                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is(notNullValue()))
-                    .body("details", is(notNullValue()));
-            }
-
-            @Test
-            void restoreShouldReturnInvalidWhenPassingCaseInsensitiveAction() {
-                given()
-                    .queryParam("action", "RESTORE")
-                .when()
-                    .post(USER.asString())
-                .then()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .body("statusCode", is(400))
-                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is(notNullValue()))
-                    .body("details", is(notNullValue()));
-            }
-
-            @Test
-            void restoreShouldReturnInvalidWhenUserIsInvalid() {
-                given()
-                    .queryParam("action", "restore")
-                .when()
-                    .post("not@valid@user.com")
-                .then()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .body("statusCode", is(400))
-                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is(notNullValue()))
-                    .body("details", is(notNullValue()));
-            }
-
-            @Test
-            void postShouldReturnNotFoundWhenNoUserPathParameter() {
-                given()
-                    .queryParam("action", "restore")
-                .when()
-                    .post()
-                .then()
-                    .statusCode(HttpStatus.NOT_FOUND_404)
-                    .body("statusCode", is(404))
-                    .body("type", is(notNullValue()))
-                    .body("message", is(notNullValue()));
-            }
-
-            @Test
-            void restoreShouldReturnBadRequestWhenPassingUnsupportedField() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"criteria\": [" +
-                    "    {" +
-                    "      \"fieldName\": \"unsupported\"," +
-                    "      \"operator\": \"contains\"," +
-                    "      \"value\": \"" + MAILBOX_ID_1.serialize() + "\"" +
-                    "    }" +
-                    "  ]" +
-                    "}";
-
-                given()
-                    .body(query)
-                .when()
-                    .post(USER.asString())
-                .then()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .body("statusCode", is(400))
-                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is(notNullValue()))
-                    .body("details", is(notNullValue()));
-            }
-
-            @Test
-            void restoreShouldReturnBadRequestWhenPassingUnsupportedOperator() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"criteria\": [" +
-                    "    {" +
-                    "      \"fieldName\": \"subject\"," +
-                    "      \"operator\": \"isLongerThan\"," +
-                    "      \"value\": \"" + SUBJECT + "\"" +
-                    "    }" +
-                    "  ]" +
-                    "}";
-
-                given()
-                    .body(query)
-                .when()
-                    .post(USER.asString())
-                .then()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .body("statusCode", is(400))
-                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is(notNullValue()))
-                    .body("details", is(notNullValue()));
-            }
-
-            @Test
-            void restoreShouldReturnBadRequestWhenPassingUnsupportedPairOfFieldNameAndOperator() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"criteria\": [" +
-                    "    {" +
-                    "      \"fieldName\": \"sender\"," +
-                    "      \"operator\": \"contains\"," +
-                    "      \"value\": \"" + SENDER.asString() + "\"" +
-                    "    }" +
-                    "  ]" +
-                    "}";
-
-                given()
-                    .body(query)
-                .when()
-                    .post(USER.asString())
-                .then()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .body("statusCode", is(400))
-                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is(notNullValue()))
-                    .body("details", is(notNullValue()));
-            }
-
-            @Test
-            void restoreShouldReturnBadRequestWhenPassingInvalidMailAddress() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"criteria\": [" +
-                    "    {" +
-                    "      \"fieldName\": \"sender\"," +
-                    "      \"operator\": \"contains\"," +
-                    "      \"value\": \"invalid@mail@domain.tld\"" +
-                    "    }" +
-                    "  ]" +
-                    "}";
-
-                given()
-                    .body(query)
-                .when()
-                    .post(USER.asString())
-                .then()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .body("statusCode", is(400))
-                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is(notNullValue()))
-                    .body("details", is(notNullValue()));
-            }
-
-            @Test
-            void restoreShouldReturnBadRequestWhenPassingOrCombinator() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"combinator\": \"or\"," +
-                    "  \"criteria\": [" +
-                    "    {" +
-                    "      \"fieldName\": \"sender\"," +
-                    "      \"operator\": \"contains\"," +
-                    "      \"value\": \"" + SENDER.asString() + "\"" +
-                    "    }" +
-                    "  ]" +
-                    "}";
-
-                given()
-                    .body(query)
-                .when()
-                    .post(USER.asString())
-                .then()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .body("statusCode", is(400))
-                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is(notNullValue()))
-                    .body("details", is(notNullValue()));
-            }
-
-            @Test
-            void restoreShouldReturnBadRequestWhenPassingNestedStructuredQuery() throws Exception {
-                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-
-                String query =
-                    "{" +
-                    "  \"combinator\": \"and\"," +
-                    "  \"criteria\": [" +
-                    "    {" +
-                    "      \"combinator\": \"or\"," +
-                    "      \"criteria\": [" +
-                    "        {\"fieldName\": \"subject\", \"operator\": \"containsIgnoreCase\", \"value\": \"Apache James\"}," +
-                    "        {\"fieldName\": \"subject\", \"operator\": \"containsIgnoreCase\", \"value\": \"Apache James\"}" +
-                    "      ]" +
-                    "    }," +
-                    "    {\"fieldName\": \"subject\", \"operator\": \"containsIgnoreCase\", \"value\": \"Apache James\"}" +
-                    "  ]" +
-                    "}";
-
-                given()
-                    .body(query)
-                .when()
-                    .post(USER.asString())
-                .then()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .body("statusCode", is(400))
-                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is(notNullValue()))
-                    .body("details", is(notNullValue()));
-            }
-        }
-
-        @Nested
         class FailingRestoreTest {
 
             @Test
@@ -1376,7 +1465,7 @@ class DeletedMessagesVaultRoutesTest {
                 vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
                 vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
 
-                MessageManager mockMessageManager = Mockito.mock(MessageManager.class);
+                MessageManager mockMessageManager = mock(MessageManager.class);
                 doReturn(mockMessageManager)
                     .when(mailboxManager)
                     .getMailbox(any(MailboxId.class), any(MailboxSession.class));
@@ -1595,6 +1684,166 @@ class DeletedMessagesVaultRoutesTest {
                 .isFalse();
         }
 
+    }
+
+    @Nested
+    class ExportTest {
+
+        @Nested
+        class ValidationTest {
+
+            @Test
+            void exportShouldReturnBadRequestWhenExportToIsMissing() {
+                given()
+                    .queryParam("action", "export")
+                    .body(MATCH_ALL_QUERY)
+                .when()
+                    .post(USER.asString())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is(notNullValue()));
+            }
+
+            @Test
+            void exportShouldReturnBadRequestWhenExportToIsInvalid() {
+                given()
+                    .queryParam("action", "export")
+                    .queryParam("exportTo", "export@to#me@")
+                    .body(MATCH_ALL_QUERY)
+                .when()
+                    .post(USER.asString())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is(notNullValue()))
+                    .body("details", is(notNullValue()));
+            }
+        }
+
+        @Nested
+        class TaskGeneratingTest {
+
+            @Test
+            void exportShouldReturnATaskCreated() {
+                given()
+                    .queryParam("action", "export")
+                    .queryParam("exportTo", "exportTo@james.org")
+                    .body(MATCH_ALL_QUERY)
+                .when()
+                    .post(USER.asString())
+                .then()
+                    .statusCode(HttpStatus.CREATED_201)
+                    .body("taskId", notNullValue());
+            }
+
+            @Test
+            void exportShouldProduceASuccessfulTaskWithInformation() {
+                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+
+                String taskId =
+                    with()
+                        .queryParam("action", "export")
+                        .queryParam("exportTo", USER_2.asString())
+                        .body(MATCH_ALL_QUERY)
+                        .post(USER.asString())
+                    .jsonPath()
+                        .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", is("completed"))
+                    .body("taskId", is(taskId))
+                    .body("type", is(DeletedMessagesVaultExportTask.TYPE))
+                    .body("additionalInformation.userExportFrom", is(USER.asString()))
+                    .body("additionalInformation.exportTo", is(USER_2.asString()))
+                    .body("additionalInformation.totalExportedMessages", is(2))
+                    .body("startedDate", is(notNullValue()))
+                    .body("submitDate", is(notNullValue()))
+                    .body("completedDate", is(notNullValue()));
+            }
+        }
+
+        @Test
+        void exportShouldCallBlobExportingTargetToExportAddress() throws Exception {
+            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+            vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+
+            String taskId =
+                with()
+                    .queryParam("action", "export")
+                    .queryParam("exportTo", USER_2.asString())
+                    .body(MATCH_ALL_QUERY)
+                    .post(USER.asString())
+                .jsonPath()
+                    .get("taskId");
+
+            with()
+                .basePath(TasksRoutes.BASE)
+                .get(taskId + "/await");
+
+            verify(blobExporting, times(1))
+                .export(eq(USER_2.asMailAddress()), any());
+        }
+
+        @Test
+        void exportShouldNotDeleteMessagesInTheVault() {
+            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+            vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+
+            String taskId =
+                with()
+                    .queryParam("action", "restore")
+                    .body(MATCH_ALL_QUERY)
+                    .post(USER.asString())
+                .jsonPath()
+                    .get("taskId");
+
+            with()
+                .basePath(TasksRoutes.BASE)
+                .get(taskId + "/await");
+
+            assertThat(Flux.from(vault.search(USER, Query.ALL)).toStream())
+                .containsOnly(DELETED_MESSAGE, DELETED_MESSAGE_2);
+        }
+
+        @Test
+        void exportShouldSaveDeletedMessagesDataToBlobStore() throws Exception {
+            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+            vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+
+            String taskId =
+                with()
+                    .queryParam("action", "export")
+                    .queryParam("exportTo", USER_2.asString())
+                    .body(MATCH_ALL_QUERY)
+                    .post(USER.asString())
+                .jsonPath()
+                    .get("taskId");
+
+            with()
+                .basePath(TasksRoutes.BASE)
+                .get(taskId + "/await");
+
+            byte[] expectedZippedData = zippedMessagesData();
+
+            assertThat(blobStore.read(blobIdFactory.forPayload(expectedZippedData)))
+                .hasSameContentAs(new ByteArrayInputStream(expectedZippedData));
+        }
+
+        private byte[] zippedMessagesData() throws IOException {
+            ByteArrayOutputStream expectedZippedData = new ByteArrayOutputStream();
+            zipper.zip(message -> new ByteArrayInputStream(CONTENT),
+                Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2),
+                expectedZippedData);
+            return expectedZippedData.toByteArray();
+        }
     }
 
     private boolean hasAnyMail(User user) throws MailboxException {
