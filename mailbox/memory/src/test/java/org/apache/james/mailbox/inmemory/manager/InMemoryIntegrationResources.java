@@ -19,7 +19,10 @@
 
 package org.apache.james.mailbox.inmemory.manager;
 
+import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
@@ -63,6 +66,9 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.api.NoopMetricFactory;
 
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableSet;
+
 public class InMemoryIntegrationResources implements IntegrationResources<StoreMailboxManager> {
 
     public static class Resources {
@@ -104,6 +110,116 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
         public InMemoryPerUserMaxQuotaManager getMaxQuotaManager() {
             return maxQuotaManager;
+        }
+    }
+
+    public static class Factory {
+        private Optional<GroupMembershipResolver> groupMembershipResolver;
+        private Optional<Authenticator> authenticator;
+        private Optional<Authorizator> authorizator;
+        private Optional<EventBus> eventBus;
+        private Optional<Integer> limitAnnotationCount;
+        private Optional<Integer> limitAnnotationSize;
+        private ImmutableSet.Builder<BiFunction<SessionProvider, InMemoryMailboxSessionMapperFactory, PreDeletionHook>> preDeletionHooksInstanciators;
+
+        public Factory() {
+            this.groupMembershipResolver = Optional.empty();
+            this.authenticator = Optional.empty();
+            this.authorizator = Optional.empty();
+            this.eventBus = Optional.empty();
+            this.limitAnnotationCount = Optional.empty();
+            this.limitAnnotationSize = Optional.empty();
+            this.preDeletionHooksInstanciators = ImmutableSet.builder();
+        }
+
+        public Factory withAuthenticator(Authenticator authenticator) {
+            this.authenticator = Optional.of(authenticator);
+            return this;
+        }
+
+        public Factory withAuthorizator(Authorizator authorizator) {
+            this.authorizator = Optional.of(authorizator);
+            return this;
+        }
+
+        public Factory withEventBus(EventBus eventBus) {
+            this.eventBus = Optional.of(eventBus);
+            return this;
+        }
+
+        public Factory withGroupmembershipResolver(GroupMembershipResolver groupmembershipResolver) {
+            this.groupMembershipResolver = Optional.of(groupmembershipResolver);
+            return this;
+        }
+
+        public Factory withAnnotationLimits(int limitAnnotationCount, int limitAnnotationSize) {
+            this.limitAnnotationCount = Optional.of(limitAnnotationCount);
+            this.limitAnnotationSize = Optional.of(limitAnnotationSize);
+            return this;
+        }
+
+        public Factory withPreDeletionHooks(Collection<PreDeletionHook> preDeletionHooks) {
+            this.preDeletionHooksInstanciators.addAll(preDeletionHooks.stream()
+                .map(this::toInstanciator)
+                .collect(Guavate.toImmutableList()));
+            return this;
+        }
+
+        public Factory withPreDeletionHook(BiFunction<SessionProvider, InMemoryMailboxSessionMapperFactory, PreDeletionHook> preDeletionHook) {
+            this.preDeletionHooksInstanciators.add(preDeletionHook);
+            return this;
+        }
+
+        private BiFunction<SessionProvider, InMemoryMailboxSessionMapperFactory, PreDeletionHook> toInstanciator(PreDeletionHook preDeletionHook) {
+            return (a, b) -> preDeletionHook;
+        }
+
+        public Resources create() {
+            InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
+            EventBus eventBus = this.eventBus.orElseGet(() -> new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory())));
+            GroupMembershipResolver groupMembershipResolver = this.groupMembershipResolver.orElse(new SimpleGroupMembershipResolver());
+            StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), groupMembershipResolver, eventBus);
+            StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory,
+                storeRightManager, limitAnnotationCount.orElse(MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX),
+                limitAnnotationSize.orElse(MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE));
+
+            SessionProvider sessionProvider = new SessionProvider(
+                authenticator.orElse(new FakeAuthenticator()),
+                authorizator.orElse(FakeAuthorizator.defaultReject()));
+
+            InMemoryPerUserMaxQuotaManager maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
+            DefaultUserQuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mailboxSessionMapperFactory);
+            InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(new CurrentQuotaCalculator(mailboxSessionMapperFactory, quotaRootResolver), sessionProvider);
+            StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
+            ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, eventBus, quotaManager);
+            QuotaComponents quotaComponents = new QuotaComponents(maxQuotaManager, quotaManager, quotaRootResolver, listeningCurrentQuotaUpdater);
+
+            MessageSearchIndex index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
+
+            InMemoryMailboxManager manager = new InMemoryMailboxManager(
+                mailboxSessionMapperFactory,
+                sessionProvider,
+                new JVMMailboxPathLocker(),
+                new MessageParser(),
+                new InMemoryMessageId.Factory(),
+                eventBus,
+                annotationManager,
+                storeRightManager,
+                quotaComponents,
+                index,
+                createHooks(sessionProvider, mailboxSessionMapperFactory));
+
+            eventBus.register(listeningCurrentQuotaUpdater);
+            eventBus.register(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider));
+
+            return new Resources(manager, storeRightManager, new InMemoryMessageId.Factory(), currentQuotaManager, quotaRootResolver, maxQuotaManager);
+        }
+
+        PreDeletionHooks createHooks(SessionProvider sessionProvider, InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory) {
+            return new PreDeletionHooks(preDeletionHooksInstanciators.build()
+                .stream()
+                .map(biFunction -> biFunction.apply(sessionProvider, mailboxSessionMapperFactory))
+                .collect(Guavate.toImmutableSet()));
         }
     }
 
