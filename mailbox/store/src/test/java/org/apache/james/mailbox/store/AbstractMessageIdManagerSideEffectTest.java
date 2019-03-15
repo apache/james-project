@@ -141,8 +141,8 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
 
         assertThat(eventCollector.getEvents())
+            .filteredOn(event -> event instanceof MailboxListener.Expunged)
             .hasSize(1).first()
-            .isInstanceOf(MailboxListener.Expunged.class)
             .satisfies(e -> {
                 MailboxListener.Expunged event = (MailboxListener.Expunged) e;
                 assertThat(event.getMailboxId()).isEqualTo(mailbox1.getMailboxId());
@@ -168,8 +168,8 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
 
         AbstractListAssert<?, List<? extends MailboxListener.Expunged>, MailboxListener.Expunged, ObjectAssert<MailboxListener.Expunged>> events =
             assertThat(eventCollector.getEvents())
+                .filteredOn(event -> event instanceof MailboxListener.Expunged)
                 .hasSize(2)
-                .allSatisfy(event -> assertThat(event).isInstanceOf(MailboxListener.Expunged.class))
                 .extracting(event -> (MailboxListener.Expunged) event);
         events.extracting(MailboxListener.MailboxEvent::getMailboxId).containsOnly(mailbox1.getMailboxId(), mailbox1.getMailboxId());
         events.extracting(MailboxListener.Expunged::getExpunged)
@@ -329,7 +329,6 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         eventBus.register(eventCollector);
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        assertThat(eventCollector.getEvents()).hasSize(2);
         assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof MessageMoveEvent).hasSize(1);
         assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof MailboxListener.Added).hasSize(1)
             .extracting(event -> (MailboxListener.Added) event).extracting(MailboxListener.Added::getMailboxId)
@@ -346,7 +345,6 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
 
         messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session);
 
-        assertThat(eventCollector.getEvents()).hasSize(3);
         assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof MessageMoveEvent).hasSize(1);
         assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof MailboxListener.Added).hasSize(2)
             .extracting(event -> (MailboxListener.Added) event).extracting(MailboxListener.Added::getMailboxId)
@@ -380,7 +378,6 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         eventBus.register(eventCollector);
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox3.getMailboxId()), session);
 
-        assertThat(eventCollector.getEvents()).hasSize(3);
         assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof MessageMoveEvent).hasSize(1);
         assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof MailboxListener.Added).hasSize(1)
             .extracting(event -> (MailboxListener.Added) event).extracting(MailboxListener.Added::getMailboxId)

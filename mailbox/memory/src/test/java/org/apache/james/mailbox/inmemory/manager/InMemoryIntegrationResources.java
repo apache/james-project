@@ -75,6 +75,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         private Optional<Authorizator> authorizator;
         private Optional<EventBus> eventBus;
         private Optional<Integer> limitAnnotationCount;
+        private Optional<QuotaManager> quotaManager;
         private Optional<Integer> limitAnnotationSize;
         private Optional<MessageParser> messageParser;
         private Optional<Function<MailboxManagerPreInstanciationStage, MessageSearchIndex>> searchIndexInstanciator;
@@ -88,11 +89,17 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             this.limitAnnotationSize = Optional.empty();
             this.searchIndexInstanciator = Optional.empty();
             this.messageParser = Optional.empty();
+            this.quotaManager = Optional.empty();
             this.preDeletionHooksInstanciators = ImmutableSet.builder();
         }
 
         public Factory withMessageParser(MessageParser messageParser) {
             this.messageParser = Optional.of(messageParser);
+            return this;
+        }
+
+        public Factory withQuotaManager(QuotaManager quotaManager) {
+            this.quotaManager = Optional.of(quotaManager);
             return this;
         }
 
@@ -154,7 +161,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             InMemoryPerUserMaxQuotaManager maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
             DefaultUserQuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mailboxSessionMapperFactory);
             InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(new CurrentQuotaCalculator(mailboxSessionMapperFactory, quotaRootResolver), sessionProvider);
-            StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
+            QuotaManager quotaManager = this.quotaManager.orElseGet(() -> new StoreQuotaManager(currentQuotaManager, maxQuotaManager));
             ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, eventBus, quotaManager);
             QuotaComponents quotaComponents = new QuotaComponents(maxQuotaManager, quotaManager, quotaRootResolver, listeningCurrentQuotaUpdater);
 
