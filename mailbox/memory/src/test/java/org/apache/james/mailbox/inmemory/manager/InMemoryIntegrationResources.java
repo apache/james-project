@@ -76,6 +76,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         private Optional<EventBus> eventBus;
         private Optional<Integer> limitAnnotationCount;
         private Optional<Integer> limitAnnotationSize;
+        private Optional<MessageParser> messageParser;
         private Optional<Function<MailboxManagerPreInstanciationStage, MessageSearchIndex>> searchIndexInstanciator;
         private ImmutableSet.Builder<Function<MailboxManagerPreInstanciationStage, PreDeletionHook>> preDeletionHooksInstanciators;
 
@@ -86,7 +87,13 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             this.limitAnnotationCount = Optional.empty();
             this.limitAnnotationSize = Optional.empty();
             this.searchIndexInstanciator = Optional.empty();
+            this.messageParser = Optional.empty();
             this.preDeletionHooksInstanciators = ImmutableSet.builder();
+        }
+
+        public Factory withMessageParser(MessageParser messageParser) {
+            this.messageParser = Optional.of(messageParser);
+            return this;
         }
 
         public Factory withAuthenticator(Authenticator authenticator) {
@@ -161,7 +168,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
                 mailboxSessionMapperFactory,
                 sessionProvider,
                 new JVMMailboxPathLocker(),
-                new MessageParser(),
+                messageParser.orElse(new MessageParser()),
                 new InMemoryMessageId.Factory(),
                 eventBus,
                 annotationManager,
