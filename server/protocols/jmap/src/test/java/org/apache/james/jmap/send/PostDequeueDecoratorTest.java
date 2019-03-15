@@ -87,7 +87,7 @@ public class PostDequeueDecoratorTest {
         mail = FakeMail.defaultFakeMail();
         when(mockedMailQueueItem.getMail()).thenReturn(mail);
         testee = new PostDequeueDecorator(mockedMailQueueItem, mailboxManager, new InMemoryMessageId.Factory(), 
-                resources.createMessageIdManager(), new SystemMailboxesProviderImpl(mailboxManager));
+                resources.getMessageIdManager(), new SystemMailboxesProviderImpl(mailboxManager));
 
         message = Message.Builder.of()
             .setSubject("test")

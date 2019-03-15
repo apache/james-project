@@ -78,6 +78,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         private final DefaultUserQuotaRootResolver defaultUserQuotaRootResolver;
         private final InMemoryPerUserMaxQuotaManager maxQuotaManager;
         private final QuotaManager quotaManager;
+        private StoreMessageIdManager storeMessageIdManager;
 
         Resources(InMemoryMailboxManager mailboxManager, StoreRightManager storeRightManager, MessageId.Factory messageIdFactory, InMemoryCurrentQuotaManager currentQuotaManager, DefaultUserQuotaRootResolver defaultUserQuotaRootResolver, InMemoryPerUserMaxQuotaManager maxQuotaManager, QuotaManager quotaManager) {
             this.mailboxManager = mailboxManager;
@@ -87,6 +88,15 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             this.defaultUserQuotaRootResolver = defaultUserQuotaRootResolver;
             this.maxQuotaManager = maxQuotaManager;
             this.quotaManager = quotaManager;
+
+            this.storeMessageIdManager = new StoreMessageIdManager(
+                mailboxManager,
+                mailboxManager.getMapperFactory(),
+                mailboxManager.getEventBus(),
+                messageIdFactory,
+                quotaManager,
+                defaultUserQuotaRootResolver,
+                mailboxManager.getPreDeletionHooks());
         }
 
         public DefaultUserQuotaRootResolver getDefaultUserQuotaRootResolver() {
@@ -117,15 +127,8 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             return quotaManager;
         }
 
-        public MessageIdManager createMessageIdManager() {
-            return new StoreMessageIdManager(
-                mailboxManager,
-                mailboxManager.getMapperFactory(),
-                mailboxManager.getEventBus(),
-                messageIdFactory,
-                quotaManager,
-                defaultUserQuotaRootResolver,
-                mailboxManager.getPreDeletionHooks());
+        public MessageIdManager getMessageIdManager() {
+            return storeMessageIdManager;
         }
     }
 

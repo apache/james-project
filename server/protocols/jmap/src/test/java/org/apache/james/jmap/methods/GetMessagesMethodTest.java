@@ -112,7 +112,7 @@ public class GetMessagesMethodTest {
         customMailboxPath = new MailboxPath(inboxPath, "custom");
         mailboxManager.createMailbox(inboxPath, session);
         mailboxManager.createMailbox(customMailboxPath, session);
-        messageIdManager = resources.createMessageIdManager();
+        messageIdManager = resources.getMessageIdManager();
         testee = new GetMessagesMethod(messageFactory, messageIdManager, new DefaultMetricFactory());
 
         messageContent1 = org.apache.james.mime4j.dom.Message.Builder.of()

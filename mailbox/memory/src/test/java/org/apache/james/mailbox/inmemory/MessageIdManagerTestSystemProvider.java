@@ -33,7 +33,7 @@ public class MessageIdManagerTestSystemProvider {
 
         return new InMemoryCombinationManagerTestSystem(
             resources.getMailboxManager(),
-            resources.createMessageIdManager());
+            resources.getMessageIdManager());
     }
 
 }

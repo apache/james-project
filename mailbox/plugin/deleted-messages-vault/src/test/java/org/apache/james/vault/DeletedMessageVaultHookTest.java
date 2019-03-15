@@ -103,7 +103,7 @@ class DeletedMessageVaultHookTest {
             .create();
 
         mailboxManager = resources.getMailboxManager();
-        messageIdManager = resources.createMessageIdManager();
+        messageIdManager = resources.getMessageIdManager();
 
         mailContent = Message.Builder.of()
             .setSubject("test")

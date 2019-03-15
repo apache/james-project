@@ -29,7 +29,7 @@ public class InMemoryMessageIdManagerTestSystem {
 
         StoreMailboxManager mailboxManager = resources.getMailboxManager();
         return new MessageIdManagerTestSystem(
-            resources.createMessageIdManager(),
+            resources.getMessageIdManager(),
             resources.getMessageIdFactory(),
             resources.getMailboxManager().getMapperFactory(),
             mailboxManager);
