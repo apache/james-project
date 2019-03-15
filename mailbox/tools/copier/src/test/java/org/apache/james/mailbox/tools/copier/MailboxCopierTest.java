@@ -27,7 +27,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -136,9 +135,8 @@ public class MailboxCopierTest {
      * 
      * @return a new InMemoryMailboxManager
      */
-    private MailboxManager newInMemoryMailboxManager() throws MailboxException {
-        return new InMemoryIntegrationResources()
-            .createMailboxManager(new SimpleGroupMembershipResolver());
+    private MailboxManager newInMemoryMailboxManager() {
+        return new InMemoryIntegrationResources.Factory().create().getMailboxManager();
     }
 
 }

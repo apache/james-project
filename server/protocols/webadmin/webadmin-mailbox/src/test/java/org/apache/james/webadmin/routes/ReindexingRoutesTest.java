@@ -33,7 +33,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
@@ -77,7 +76,7 @@ class ReindexingRoutesTest {
 
     @BeforeEach
     void beforeEach() throws Exception {
-        mailboxManager = new InMemoryIntegrationResources().createMailboxManager(new SimpleGroupMembershipResolver());
+        mailboxManager = new InMemoryIntegrationResources.Factory().create().getMailboxManager();
         MemoryTaskManager taskManager = new MemoryTaskManager();
         InMemoryId.Factory mailboxIdFactory = new InMemoryId.Factory();
         searchIndex = mock(ListeningMessageSearchIndex.class);

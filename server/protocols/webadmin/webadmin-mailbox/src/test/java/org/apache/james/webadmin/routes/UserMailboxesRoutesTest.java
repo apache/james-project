@@ -36,7 +36,6 @@ import java.util.Map;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSessionUtil;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -96,9 +95,7 @@ class UserMailboxesRoutesTest {
 
         @BeforeEach
         void setUp() throws Exception {
-            InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
-
-            createServer(inMemoryIntegrationResources.createMailboxManager(new SimpleGroupMembershipResolver()));
+            createServer(new InMemoryIntegrationResources.Factory().create().getMailboxManager());
         }
 
         @Test

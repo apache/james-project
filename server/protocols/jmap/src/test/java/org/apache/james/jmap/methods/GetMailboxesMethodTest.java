@@ -42,7 +42,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.Role;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -71,9 +70,7 @@ public class GetMailboxesMethodTest {
     @Before
     public void setup() throws Exception {
         clientId = ClientId.of("#0");
-        InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
-        GroupMembershipResolver groupMembershipResolver = inMemoryIntegrationResources.createGroupMembershipResolver();
-        mailboxManager = inMemoryIntegrationResources.createMailboxManager(groupMembershipResolver);
+        mailboxManager = new InMemoryIntegrationResources.Factory().create().getMailboxManager();
         QuotaRootResolver quotaRootResolver = mailboxManager.getQuotaComponents().getQuotaRootResolver();
         QuotaManager quotaManager = mailboxManager.getQuotaComponents().getQuotaManager();
         mailboxFactory = new MailboxFactory(mailboxManager, quotaManager, quotaRootResolver);

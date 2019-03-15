@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailbox.inmemory;
 
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.AbstractMessageManagerTest;
 import org.apache.james.mailbox.store.MessageManagerTestSystem;
 import org.junit.Before;
@@ -32,7 +31,7 @@ public class InMemoryMessageManagerTest extends AbstractMessageManagerTest {
     }
     
     @Override
-    protected MessageManagerTestSystem createTestSystem() throws MailboxException {
+    protected MessageManagerTestSystem createTestSystem() {
         return MessageManagerTestSystemProvider.createTestSystem();
     }
 

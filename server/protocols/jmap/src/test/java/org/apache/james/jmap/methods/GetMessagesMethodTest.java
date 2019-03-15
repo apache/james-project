@@ -52,7 +52,6 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.BlobId;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -105,16 +104,15 @@ public class GetMessagesMethodTest {
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
         MessageFactory messageFactory = new MessageFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
-        InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
-        GroupMembershipResolver groupMembershipResolver = inMemoryIntegrationResources.createGroupMembershipResolver();
-        mailboxManager = inMemoryIntegrationResources.createMailboxManager(groupMembershipResolver);
+        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory().create();
+        mailboxManager = resources.getMailboxManager();
 
         session = MailboxSessionUtil.create(ROBERT.asString());
         inboxPath = MailboxPath.inbox(session);
         customMailboxPath = new MailboxPath(inboxPath, "custom");
         mailboxManager.createMailbox(inboxPath, session);
         mailboxManager.createMailbox(customMailboxPath, session);
-        messageIdManager = inMemoryIntegrationResources.createMessageIdManager(mailboxManager);
+        messageIdManager = resources.createMessageIdManager();
         testee = new GetMessagesMethod(messageFactory, messageIdManager, new DefaultMetricFactory());
 
         messageContent1 = org.apache.james.mime4j.dom.Message.Builder.of()

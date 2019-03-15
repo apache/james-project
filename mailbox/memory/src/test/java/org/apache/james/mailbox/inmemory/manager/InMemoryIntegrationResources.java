@@ -37,6 +37,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.manager.IntegrationResources;
+import org.apache.james.mailbox.manager.ManagerTestResources;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
@@ -199,7 +200,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
                 limitAnnotationSize.orElse(MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE));
 
             SessionProvider sessionProvider = new SessionProvider(
-                authenticator.orElse(new FakeAuthenticator()),
+                authenticator.orElse(defaultAuthenticator()),
                 authorizator.orElse(FakeAuthorizator.defaultReject()));
 
             InMemoryPerUserMaxQuotaManager maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
@@ -230,6 +231,13 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             return new Resources(manager, storeRightManager, new InMemoryMessageId.Factory(), currentQuotaManager, quotaRootResolver, maxQuotaManager, quotaManager);
         }
 
+        FakeAuthenticator defaultAuthenticator() {
+            FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
+            fakeAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
+            fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
+            return fakeAuthenticator;
+        }
+
         PreDeletionHooks createHooks(SessionProvider sessionProvider, InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory) {
             return new PreDeletionHooks(preDeletionHooksInstanciators.build()
                 .stream()
@@ -253,7 +261,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         return createMessageIdManager(mailboxManager, new InMemoryMessageId.Factory());
     }
 
-    public MessageIdManager createMessageIdManager(StoreMailboxManager mailboxManager, MessageId.Factory factory) {
+    private MessageIdManager createMessageIdManager(StoreMailboxManager mailboxManager, MessageId.Factory factory) {
         QuotaComponents quotaComponents = mailboxManager.getQuotaComponents();
         return new StoreMessageIdManager(
             mailboxManager,

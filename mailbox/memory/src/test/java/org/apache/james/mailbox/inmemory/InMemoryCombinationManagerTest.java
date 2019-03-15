@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailbox.inmemory;
 
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.AbstractCombinationManagerTest;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 import org.junit.Before;
@@ -32,7 +31,7 @@ public class InMemoryCombinationManagerTest extends AbstractCombinationManagerTe
     }
     
     @Override
-    public CombinationManagerTestSystem createTestingData() throws MailboxException {
+    public CombinationManagerTestSystem createTestingData() {
         return MessageIdManagerTestSystemProvider.createManagersTestingData();
     }
 }

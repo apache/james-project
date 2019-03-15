@@ -27,8 +27,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -52,8 +50,8 @@ public class MessageIdReIndexerImplTest {
     private MessageIdReIndexerImpl reIndexer;
 
     @BeforeEach
-    void setUp() throws MailboxException {
-        mailboxManager = new InMemoryIntegrationResources().createMailboxManager(new SimpleGroupMembershipResolver());
+    void setUp() {
+        mailboxManager = new InMemoryIntegrationResources.Factory().create().getMailboxManager();
         MailboxSessionMapperFactory mailboxSessionMapperFactory = mailboxManager.getMapperFactory();
         messageSearchIndex = mock(ListeningMessageSearchIndex.class);
         reIndexer = new MessageIdReIndexerImpl(mailboxManager, mailboxSessionMapperFactory, messageSearchIndex);

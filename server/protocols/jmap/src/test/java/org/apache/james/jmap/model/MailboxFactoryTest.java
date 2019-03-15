@@ -57,8 +57,7 @@ public class MailboxFactoryTest {
 
     @Before
     public void setup() throws Exception {
-        InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
-        mailboxManager = inMemoryIntegrationResources.createMailboxManager(inMemoryIntegrationResources.createGroupMembershipResolver());
+        mailboxManager = new InMemoryIntegrationResources.Factory().create().getMailboxManager();
         QuotaRootResolver quotaRootResolver = mailboxManager.getQuotaComponents().getQuotaRootResolver();
         QuotaManager quotaManager = mailboxManager.getQuotaComponents().getQuotaManager();
 

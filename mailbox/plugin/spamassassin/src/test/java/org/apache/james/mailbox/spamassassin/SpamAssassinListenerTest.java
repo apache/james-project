@@ -35,7 +35,6 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.events.MessageMoveEvent;
@@ -78,7 +77,7 @@ public class SpamAssassinListenerTest {
 
     @Before
     public void setup() throws Exception {
-        StoreMailboxManager mailboxManager = spy(new InMemoryIntegrationResources().createMailboxManager(new SimpleGroupMembershipResolver()));
+        StoreMailboxManager mailboxManager = spy(new InMemoryIntegrationResources.Factory().create().getMailboxManager());
         SystemMailboxesProviderImpl systemMailboxesProvider = new SystemMailboxesProviderImpl(mailboxManager);
         when(mailboxManager.createSystemSession(USER))
             .thenReturn(MAILBOX_SESSION);

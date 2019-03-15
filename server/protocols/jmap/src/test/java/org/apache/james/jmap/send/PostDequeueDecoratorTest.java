@@ -38,7 +38,6 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxRoleNotFoundException;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -81,15 +80,14 @@ public class PostDequeueDecoratorTest {
 
     @Before
     public void init() throws Exception {
-        InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
-        GroupMembershipResolver groupMembershipResolver = inMemoryIntegrationResources.createGroupMembershipResolver();
-        mailboxManager = inMemoryIntegrationResources.createMailboxManager(groupMembershipResolver);
+        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory().create();
+        mailboxManager = resources.getMailboxManager();
 
         mockedMailQueueItem = mock(MailQueueItem.class);
         mail = FakeMail.defaultFakeMail();
         when(mockedMailQueueItem.getMail()).thenReturn(mail);
         testee = new PostDequeueDecorator(mockedMailQueueItem, mailboxManager, new InMemoryMessageId.Factory(), 
-                inMemoryIntegrationResources.createMessageIdManager(mailboxManager), new SystemMailboxesProviderImpl(mailboxManager));
+                resources.createMessageIdManager(), new SystemMailboxesProviderImpl(mailboxManager));
 
         message = Message.Builder.of()
             .setSubject("test")

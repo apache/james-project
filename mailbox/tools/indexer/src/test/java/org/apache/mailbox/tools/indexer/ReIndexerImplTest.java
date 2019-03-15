@@ -30,8 +30,6 @@ import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -58,8 +56,8 @@ public class ReIndexerImplTest {
     private ReIndexer reIndexer;
 
     @BeforeEach
-    void setUp() throws MailboxException {
-        mailboxManager = new InMemoryIntegrationResources().createMailboxManager(new SimpleGroupMembershipResolver());
+    void setUp() {
+        mailboxManager = new InMemoryIntegrationResources.Factory().create().getMailboxManager();
         MailboxSessionMapperFactory mailboxSessionMapperFactory = mailboxManager.getMapperFactory();
         messageSearchIndex = mock(ListeningMessageSearchIndex.class);
         reIndexer = new ReIndexerImpl(new ReIndexerPerformer(mailboxManager, messageSearchIndex, mailboxSessionMapperFactory),
