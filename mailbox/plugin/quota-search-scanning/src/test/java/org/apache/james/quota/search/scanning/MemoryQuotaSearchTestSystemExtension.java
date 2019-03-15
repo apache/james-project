@@ -44,7 +44,7 @@ public class MemoryQuotaSearchTestSystemExtension implements ParameterResolver {
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         try {
-            InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory().create();
+            InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory().create();
 
             MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting();
 

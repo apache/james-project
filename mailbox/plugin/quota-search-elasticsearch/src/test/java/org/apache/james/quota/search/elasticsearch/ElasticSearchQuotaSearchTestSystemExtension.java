@@ -62,7 +62,7 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
             Client client = QuotaSearchIndexCreationUtil.prepareDefaultClient(
                 new TestingClientProvider(embeddedElasticSearch.getNode()).get(), ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
 
-            InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory().create();
+            InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory().create();
 
             MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting();
 

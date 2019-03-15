@@ -51,7 +51,7 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
     @Override
     public void beforeTest() throws Exception {
         super.beforeTest();
-        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory()
+        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
             .withAuthenticator(authenticator)
             .withAuthorizator(authorizator)
             .create();

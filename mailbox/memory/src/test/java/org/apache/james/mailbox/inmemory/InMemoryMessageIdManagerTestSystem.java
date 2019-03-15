@@ -25,7 +25,7 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 public class InMemoryMessageIdManagerTestSystem {
 
     public static MessageIdManagerTestSystem create() {
-        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory().create();
+        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory().create();
 
         StoreMailboxManager mailboxManager = resources.getMailboxManager();
         return new MessageIdManagerTestSystem(

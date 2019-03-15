@@ -45,7 +45,7 @@ public class ScanningQuotaSearchExtension implements ParameterResolver, BeforeEa
     @Override
     public void beforeEach(ExtensionContext context) {
         try {
-            InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory().create();
+            InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory().create();
 
             MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting();
 

@@ -40,8 +40,8 @@ import org.apache.james.mailbox.manager.IntegrationResources;
 import org.apache.james.mailbox.manager.ManagerTestResources;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.FakeAuthenticator;
@@ -69,69 +69,6 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableSet;
 
 public class InMemoryIntegrationResources implements IntegrationResources<StoreMailboxManager> {
-
-    public static class Resources {
-        private final InMemoryMailboxManager mailboxManager;
-        private final StoreRightManager storeRightManager;
-        private final MessageId.Factory messageIdFactory;
-        private final InMemoryCurrentQuotaManager currentQuotaManager;
-        private final DefaultUserQuotaRootResolver defaultUserQuotaRootResolver;
-        private final InMemoryPerUserMaxQuotaManager maxQuotaManager;
-        private final QuotaManager quotaManager;
-        private StoreMessageIdManager storeMessageIdManager;
-
-        Resources(InMemoryMailboxManager mailboxManager, StoreRightManager storeRightManager, MessageId.Factory messageIdFactory, InMemoryCurrentQuotaManager currentQuotaManager, DefaultUserQuotaRootResolver defaultUserQuotaRootResolver, InMemoryPerUserMaxQuotaManager maxQuotaManager, QuotaManager quotaManager) {
-            this.mailboxManager = mailboxManager;
-            this.storeRightManager = storeRightManager;
-            this.messageIdFactory = messageIdFactory;
-            this.currentQuotaManager = currentQuotaManager;
-            this.defaultUserQuotaRootResolver = defaultUserQuotaRootResolver;
-            this.maxQuotaManager = maxQuotaManager;
-            this.quotaManager = quotaManager;
-
-            this.storeMessageIdManager = new StoreMessageIdManager(
-                mailboxManager,
-                mailboxManager.getMapperFactory(),
-                mailboxManager.getEventBus(),
-                messageIdFactory,
-                quotaManager,
-                defaultUserQuotaRootResolver,
-                mailboxManager.getPreDeletionHooks());
-        }
-
-        public DefaultUserQuotaRootResolver getDefaultUserQuotaRootResolver() {
-            return defaultUserQuotaRootResolver;
-        }
-
-        public InMemoryMailboxManager getMailboxManager() {
-            return mailboxManager;
-        }
-
-        public InMemoryCurrentQuotaManager getCurrentQuotaManager() {
-            return currentQuotaManager;
-        }
-
-        public StoreRightManager getStoreRightManager() {
-            return storeRightManager;
-        }
-
-        public MessageId.Factory getMessageIdFactory() {
-            return messageIdFactory;
-        }
-
-        public InMemoryPerUserMaxQuotaManager getMaxQuotaManager() {
-            return maxQuotaManager;
-        }
-
-        public QuotaManager getQuotaManager() {
-            return quotaManager;
-        }
-
-        public MessageIdManager getMessageIdManager() {
-            return storeMessageIdManager;
-        }
-    }
-
     public static class Factory {
         private Optional<Authenticator> authenticator;
         private Optional<Authorizator> authorizator;
@@ -186,7 +123,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             return (a, b) -> preDeletionHook;
         }
 
-        public Resources create() {
+        public InMemoryIntegrationResources create() {
             InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
             EventBus eventBus = this.eventBus.orElseGet(() -> new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory())));
             GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
@@ -224,7 +161,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             eventBus.register(listeningCurrentQuotaUpdater);
             eventBus.register(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider));
 
-            return new Resources(manager, storeRightManager, new InMemoryMessageId.Factory(), currentQuotaManager, quotaRootResolver, maxQuotaManager, quotaManager);
+            return new InMemoryIntegrationResources(manager, storeRightManager, new InMemoryMessageId.Factory(), currentQuotaManager, quotaRootResolver, maxQuotaManager, quotaManager);
         }
 
         FakeAuthenticator defaultAuthenticator() {
@@ -242,26 +179,68 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         }
     }
 
-    @Override
-    public InMemoryMailboxManager createMailboxManager() {
-        return new Factory()
-            .create()
-            .mailboxManager;
+    private final InMemoryMailboxManager mailboxManager;
+    private final StoreRightManager storeRightManager;
+    private final MessageId.Factory messageIdFactory;
+    private final InMemoryCurrentQuotaManager currentQuotaManager;
+    private final DefaultUserQuotaRootResolver defaultUserQuotaRootResolver;
+    private final InMemoryPerUserMaxQuotaManager maxQuotaManager;
+    private final QuotaManager quotaManager;
+    private StoreMessageIdManager storeMessageIdManager;
+
+    InMemoryIntegrationResources(InMemoryMailboxManager mailboxManager, StoreRightManager storeRightManager, MessageId.Factory messageIdFactory, InMemoryCurrentQuotaManager currentQuotaManager, DefaultUserQuotaRootResolver defaultUserQuotaRootResolver, InMemoryPerUserMaxQuotaManager maxQuotaManager, QuotaManager quotaManager) {
+        this.mailboxManager = mailboxManager;
+        this.storeRightManager = storeRightManager;
+        this.messageIdFactory = messageIdFactory;
+        this.currentQuotaManager = currentQuotaManager;
+        this.defaultUserQuotaRootResolver = defaultUserQuotaRootResolver;
+        this.maxQuotaManager = maxQuotaManager;
+        this.quotaManager = quotaManager;
+
+        this.storeMessageIdManager = new StoreMessageIdManager(
+            mailboxManager,
+            mailboxManager.getMapperFactory(),
+            mailboxManager.getEventBus(),
+            messageIdFactory,
+            quotaManager,
+            defaultUserQuotaRootResolver,
+            mailboxManager.getPreDeletionHooks());
+    }
+
+    public DefaultUserQuotaRootResolver getDefaultUserQuotaRootResolver() {
+        return defaultUserQuotaRootResolver;
+    }
+
+    public InMemoryMailboxManager getMailboxManager() {
+        return mailboxManager;
+    }
+
+    public InMemoryCurrentQuotaManager getCurrentQuotaManager() {
+        return currentQuotaManager;
+    }
+
+    public StoreRightManager getStoreRightManager() {
+        return storeRightManager;
+    }
+
+    public MessageId.Factory getMessageIdFactory() {
+        return messageIdFactory;
+    }
+
+    public InMemoryPerUserMaxQuotaManager getMaxQuotaManager() {
+        return maxQuotaManager;
+    }
+
+    public QuotaManager getQuotaManager() {
+        return quotaManager;
+    }
+
+    public MessageIdManager getMessageIdManager() {
+        return storeMessageIdManager;
     }
 
     @Override
-    public QuotaManager retrieveQuotaManager(StoreMailboxManager mailboxManager) {
-        return mailboxManager.getQuotaComponents().getQuotaManager();
+    public QuotaRootResolver getQuotaRootResolver() {
+        return defaultUserQuotaRootResolver;
     }
-
-    @Override
-    public MaxQuotaManager retrieveMaxQuotaManager(StoreMailboxManager mailboxManager) {
-        return mailboxManager.getQuotaComponents().getMaxQuotaManager();
-    }
-
-    @Override
-    public DefaultUserQuotaRootResolver retrieveQuotaRootResolver(StoreMailboxManager mailboxManager) {
-        return (DefaultUserQuotaRootResolver) mailboxManager.getQuotaComponents().getQuotaRootResolver();
-    }
-
 }

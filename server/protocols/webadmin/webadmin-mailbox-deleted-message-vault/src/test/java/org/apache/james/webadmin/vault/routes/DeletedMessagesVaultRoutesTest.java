@@ -109,7 +109,7 @@ class DeletedMessagesVaultRoutesTest {
     @BeforeEach
     void beforeEach() throws Exception {
         vault = spy(new MemoryDeletedMessagesVault());
-        InMemoryIntegrationResources.Resources inMemoryResource = new InMemoryIntegrationResources.Factory().create();
+        InMemoryIntegrationResources inMemoryResource = new InMemoryIntegrationResources.Factory().create();
         mailboxManager = spy(inMemoryResource.getMailboxManager());
 
         taskManager = new MemoryTaskManager();

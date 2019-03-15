@@ -66,11 +66,11 @@ public class ManagerTestResources<T extends MailboxManager> {
 
     public ManagerTestResources(IntegrationResources<T> integrationResources) throws Exception {
         this.integrationResources = integrationResources;
-        mailboxManager = integrationResources.createMailboxManager();
+        mailboxManager = integrationResources.getMailboxManager();
 
-        maxQuotaManager = integrationResources.retrieveMaxQuotaManager(mailboxManager);
-        quotaRootResolver = integrationResources.retrieveQuotaRootResolver(mailboxManager);
-        quotaManager = integrationResources.retrieveQuotaManager(mailboxManager);
+        maxQuotaManager = integrationResources.getMaxQuotaManager();
+        quotaRootResolver = integrationResources.getQuotaRootResolver();
+        quotaManager = integrationResources.getQuotaManager();
 
         session = mailboxManager.login(USER, USER_PASS);
         inbox = MailboxPath.inbox(session);

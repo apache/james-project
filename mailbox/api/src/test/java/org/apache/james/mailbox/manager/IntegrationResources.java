@@ -30,12 +30,12 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
  */
 public interface IntegrationResources<T extends MailboxManager> {
 
-    T createMailboxManager() throws MailboxException;
+    T getMailboxManager() throws MailboxException;
 
-    QuotaManager retrieveQuotaManager(T mailboxManager) throws Exception;
+    QuotaManager getQuotaManager();
 
-    MaxQuotaManager retrieveMaxQuotaManager(T mailboxManager) throws Exception;
+    MaxQuotaManager getMaxQuotaManager();
 
-    QuotaRootResolver retrieveQuotaRootResolver(T mailboxManager) throws Exception;
+    QuotaRootResolver getQuotaRootResolver();
 
 }

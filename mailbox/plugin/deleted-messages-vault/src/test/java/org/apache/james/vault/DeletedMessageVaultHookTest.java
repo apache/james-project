@@ -98,7 +98,7 @@ class DeletedMessageVaultHookTest {
 
         DeletedMessageConverter deletedMessageConverter = new DeletedMessageConverter();
 
-        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory()
+        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
             .withPreDeletionHook((sessionProvider, mapperFactory) -> new DeletedMessageVaultHook(sessionProvider, messageVault, deletedMessageConverter, mapperFactory, clock))
             .create();
 

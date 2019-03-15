@@ -60,8 +60,8 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
 
     private final DockerRabbitMQ dockerRabbitMQ;
     private RabbitMQEventBus eventBus;
-    private InMemoryIntegrationResources.Resources resources;
     private SimpleConnectionPool connectionPool;
+    private InMemoryIntegrationResources resources;
 
     RabbitMQEventBusHostSystem(DockerRabbitMQ dockerRabbitMQ) {
         this.dockerRabbitMQ = dockerRabbitMQ;

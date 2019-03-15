@@ -29,7 +29,7 @@ public class MessageIdManagerTestSystemProvider {
     }
 
     public static CombinationManagerTestSystem createManagersTestingData() {
-        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory().create();
+        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory().create();
 
         return new InMemoryCombinationManagerTestSystem(
             resources.getMailboxManager(),

@@ -72,7 +72,7 @@ public class PropagateLookupRightListenerTest {
 
     @Before
     public void setup() throws Exception {
-        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory().create();
+        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory().create();
         storeMailboxManager = resources.getMailboxManager();
         storeRightManager = resources.getStoreRightManager();
         mailboxMapper = storeMailboxManager.getMapperFactory();

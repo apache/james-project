@@ -50,7 +50,7 @@ public class IsOverQuotaTest {
 
     @Before
     public void setUp() throws Exception {
-        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory().create();
+        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory().create();
         mailboxManager = resources.getMailboxManager();
 
         quotaRootResolver = resources.getDefaultUserQuotaRootResolver();

@@ -80,7 +80,7 @@ public class PostDequeueDecoratorTest {
 
     @Before
     public void init() throws Exception {
-        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory().create();
+        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory().create();
         mailboxManager = resources.getMailboxManager();
 
         mockedMailQueueItem = mock(MailQueueItem.class);
