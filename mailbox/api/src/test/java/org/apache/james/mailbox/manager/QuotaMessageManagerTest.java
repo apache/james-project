@@ -41,7 +41,6 @@ import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mime4j.dom.Message;
 import org.assertj.core.api.SoftAssertions;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -77,11 +76,6 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
         subFolder = resources.getSubFolder();
         maxQuotaManager = resources.getMaxQuotaManager();
         quotaRootResolver = resources.getQuotaRootResolver();
-    }
-
-    @After
-    public void cleanUp() throws Exception {
-        resources.getIntegrationResources().clean();
     }
 
     @Test(expected = OverQuotaException.class)

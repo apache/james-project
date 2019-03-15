@@ -31,14 +31,12 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.manager.ManagerTestResources;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -52,7 +50,6 @@ public class MailboxAppenderTest {
     private MailboxAppender testee;
     private MailboxManager mailboxManager;
     private MimeMessage mimeMessage;
-    private InMemoryIntegrationResources integrationResources;
     private MailboxSession session;
 
     @BeforeEach
@@ -63,17 +60,10 @@ public class MailboxAppenderTest {
                     .data("toto"))
             .build();
 
-        integrationResources = new InMemoryIntegrationResources();
-        integrationResources.init();
-        mailboxManager = new ManagerTestResources<>(integrationResources).getMailboxManager();
+        mailboxManager = new InMemoryIntegrationResources.Factory().create().getMailboxManager();
         testee = new MailboxAppender(mailboxManager);
 
         session = mailboxManager.createSystemSession("TEST");
-    }
-
-    @AfterEach
-    void cleanUp() {
-        integrationResources.clean();
     }
 
     @Test

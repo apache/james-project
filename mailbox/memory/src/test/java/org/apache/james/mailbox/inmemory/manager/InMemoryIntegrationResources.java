@@ -246,31 +246,12 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         }
     }
 
-    private SimpleGroupMembershipResolver groupMembershipResolver;
-
     @Override
     public InMemoryMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver) {
         return new Factory()
             .withGroupmembershipResolver(groupMembershipResolver)
             .create()
             .mailboxManager;
-    }
-
-    @Override
-    public MessageIdManager createMessageIdManager(StoreMailboxManager mailboxManager) {
-        return createMessageIdManager(mailboxManager, new InMemoryMessageId.Factory());
-    }
-
-    private MessageIdManager createMessageIdManager(StoreMailboxManager mailboxManager, MessageId.Factory factory) {
-        QuotaComponents quotaComponents = mailboxManager.getQuotaComponents();
-        return new StoreMessageIdManager(
-            mailboxManager,
-            mailboxManager.getMapperFactory(),
-            mailboxManager.getEventBus(),
-            factory,
-            quotaComponents.getQuotaManager(),
-            quotaComponents.getQuotaRootResolver(),
-            mailboxManager.getPreDeletionHooks());
     }
 
     @Override
@@ -290,16 +271,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
     @Override
     public GroupMembershipResolver createGroupMembershipResolver() {
-        groupMembershipResolver = new SimpleGroupMembershipResolver();
-        return groupMembershipResolver;
-    }
-
-    @Override
-    public void init() {
-    }
-
-    @Override
-    public void clean() {
+        return new SimpleGroupMembershipResolver();
     }
 
 }

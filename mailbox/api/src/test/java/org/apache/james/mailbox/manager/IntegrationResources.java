@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.manager;
 
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
@@ -41,16 +40,5 @@ public interface IntegrationResources<T extends MailboxManager> {
     QuotaRootResolver retrieveQuotaRootResolver(T mailboxManager) throws Exception;
 
     GroupMembershipResolver createGroupMembershipResolver() throws Exception;
-
-    MessageIdManager createMessageIdManager(T mailboxManager);
-    
-    /**
-     * Init you will want to perform before tests
-     *
-     * @throws Exception
-     */
-    void init() throws Exception;
-
-    void clean() throws Exception;
 
 }
