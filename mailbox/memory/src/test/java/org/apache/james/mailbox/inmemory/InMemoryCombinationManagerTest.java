@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.inmemory;
 
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.AbstractCombinationManagerTest;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 import org.junit.Before;
@@ -32,6 +33,10 @@ public class InMemoryCombinationManagerTest extends AbstractCombinationManagerTe
     
     @Override
     public CombinationManagerTestSystem createTestingData() {
-        return MessageIdManagerTestSystemProvider.createManagersTestingData();
+        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory().create();
+
+        return new InMemoryCombinationManagerTestSystem(
+            resources.getMailboxManager(),
+            resources.getMessageIdManager());
     }
 }
