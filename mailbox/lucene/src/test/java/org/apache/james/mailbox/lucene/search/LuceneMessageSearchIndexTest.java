@@ -19,30 +19,15 @@
 
 package org.apache.james.mailbox.lucene.search;
 
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.events.InVMEventBus;
-import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.manager.ManagerTestProvisionner;
-import org.apache.james.mailbox.store.FakeAuthenticator;
-import org.apache.james.mailbox.store.FakeAuthorizator;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.apache.james.mailbox.store.PreDeletionHooks;
-import org.apache.james.mailbox.store.SessionProvider;
-import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
-import org.apache.james.mailbox.store.StoreMessageIdManager;
-import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.quota.QuotaComponents;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
-import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.lucene.store.RAMDirectory;
 import org.junit.Ignore;
+
+import com.github.fge.lambdas.Throwing;
 
 public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
 
@@ -51,47 +36,17 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
     }
 
     @Override
-    protected void initializeMailboxManager() throws Exception {
-        FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
-        fakeAuthenticator.addUser(ManagerTestProvisionner.USER, ManagerTestProvisionner.USER_PASS);
-        fakeAuthenticator.addUser(ManagerTestProvisionner.OTHER_USER, ManagerTestProvisionner.OTHER_USER_PASS);
-        InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
-        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
-        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), eventBus);
-        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
+    protected void initializeMailboxManager() {
+        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
+            .withSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
+                preInstanciationStage.getMapperFactory(), new InMemoryId.Factory(), new RAMDirectory(),
+                new InMemoryMessageId.Factory(),
+                preInstanciationStage.getSessionProvider())))
+            .create();
 
-        SessionProvider sessionProvider = new SessionProvider(fakeAuthenticator, FakeAuthorizator.defaultReject());
-        QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mailboxSessionMapperFactory);
-        InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
-        LuceneMessageSearchIndex luceneMessageSearchIndex = new LuceneMessageSearchIndex(
-            mailboxSessionMapperFactory, new InMemoryId.Factory(), new RAMDirectory(),
-            messageIdFactory,
-            new SessionProvider(new FakeAuthenticator(), FakeAuthorizator.defaultReject()));
-
-        storeMailboxManager = new InMemoryMailboxManager(
-            mailboxSessionMapperFactory,
-            sessionProvider,
-            new JVMMailboxPathLocker(),
-            new MessageParser(),
-            messageIdFactory,
-            eventBus,
-            annotationManager,
-            storeRightManager,
-            quotaComponents,
-            luceneMessageSearchIndex,
-            PreDeletionHooks.NO_PRE_DELETION_HOOK);
-
-        messageIdManager = new StoreMessageIdManager(
-            storeMailboxManager,
-            storeMailboxManager.getMapperFactory(),
-            eventBus,
-            storeMailboxManager.getMessageIdFactory(),
-            quotaComponents.getQuotaManager(),
-            quotaComponents.getQuotaRootResolver(),
-            PreDeletionHooks.NO_PRE_DELETION_HOOK);
-
-        eventBus.register(luceneMessageSearchIndex);
-        this.messageSearchIndex = luceneMessageSearchIndex;
+        storeMailboxManager = resources.getMailboxManager();
+        messageIdManager = resources.getMessageIdManager();
+        messageSearchIndex = resources.getSearchIndex();
     }
 
     @Ignore

@@ -21,8 +21,6 @@ package org.apache.james.mailbox.store.search;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.store.PreDeletionHooks;
-import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.junit.Ignore;
 
 public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
@@ -33,21 +31,16 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
 
     @Override
     protected void initializeMailboxManager() {
-        storeMailboxManager = new InMemoryIntegrationResources.Factory().create().getMailboxManager();
+        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
+            .withSearchIndex(preInstanciationStage -> new SimpleMessageSearchIndex(
+                preInstanciationStage.getMapperFactory(),
+                preInstanciationStage.getMapperFactory(),
+                new PDFTextExtractor()))
+            .create();
 
-        messageSearchIndex = new SimpleMessageSearchIndex(
-            storeMailboxManager.getMapperFactory(),
-            storeMailboxManager.getMapperFactory(),
-            new PDFTextExtractor());
-
-        messageIdManager = new StoreMessageIdManager(
-            storeMailboxManager,
-            storeMailboxManager.getMapperFactory(),
-            storeMailboxManager.getEventBus(),
-            storeMailboxManager.getMessageIdFactory(),
-            storeMailboxManager.getQuotaComponents().getQuotaManager(),
-            storeMailboxManager.getQuotaComponents().getQuotaRootResolver(),
-            PreDeletionHooks.NO_PRE_DELETION_HOOK);
+        storeMailboxManager = resources.getMailboxManager();
+        messageIdManager = resources.getMessageIdManager();
+        messageSearchIndex = resources.getSearchIndex();
     }
 
     /**

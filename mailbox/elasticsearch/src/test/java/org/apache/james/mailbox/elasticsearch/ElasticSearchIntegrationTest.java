@@ -33,33 +33,17 @@ import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
 import org.apache.james.mailbox.elasticsearch.query.CriterionConverter;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
-import org.apache.james.mailbox.events.InVMEventBus;
-import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.manager.ManagerTestProvisionner;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.mailbox.store.FakeAuthenticator;
-import org.apache.james.mailbox.store.FakeAuthorizator;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.apache.james.mailbox.store.PreDeletionHooks;
-import org.apache.james.mailbox.store.SessionProvider;
-import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
-import org.apache.james.mailbox.store.StoreMessageIdManager;
-import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.mailbox.tika.TikaContainerSingletonRule;
@@ -113,59 +97,28 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         Client client = MailboxIndexCreationUtil.prepareDefaultClient(
             new TestingClientProvider(embeddedElasticSearch.getNode()).get(),
                 ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
-
-        FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
-        fakeAuthenticator.addUser(ManagerTestProvisionner.USER, ManagerTestProvisionner.USER_PASS);
-        fakeAuthenticator.addUser(ManagerTestProvisionner.OTHER_USER, ManagerTestProvisionner.OTHER_USER_PASS);
-        InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
-        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
-        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(),
-            new SimpleGroupMembershipResolver(), eventBus);
-        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
-
-        SessionProvider sessionProvider = new SessionProvider(fakeAuthenticator, FakeAuthorizator.defaultReject());
-        QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mailboxSessionMapperFactory);
-
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
-        ElasticSearchListeningMessageSearchIndex elasticSearchListeningMessageSearchIndex = new ElasticSearchListeningMessageSearchIndex(
-            mailboxSessionMapperFactory,
-            new ElasticSearchIndexer(client,
-                Executors.newSingleThreadExecutor(threadFactory),
-                MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
-                MailboxElasticSearchConstants.MESSAGE_TYPE,
-                BATCH_SIZE),
-            new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
-                new InMemoryId.Factory(), messageIdFactory,
-                MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
-                MailboxElasticSearchConstants.MESSAGE_TYPE),
-            new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES),
-            new SessionProvider(new FakeAuthenticator(), FakeAuthorizator.defaultReject()));
 
-        storeMailboxManager = new InMemoryMailboxManager(
-            mailboxSessionMapperFactory,
-            sessionProvider,
-            new JVMMailboxPathLocker(),
-            new MessageParser(),
-            messageIdFactory,
-            eventBus,
-            annotationManager,
-            storeRightManager,
-            quotaComponents,
-            elasticSearchListeningMessageSearchIndex,
-            PreDeletionHooks.NO_PRE_DELETION_HOOK);
+        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
+            .withSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
+                preInstanciationStage.getMapperFactory(),
+                new ElasticSearchIndexer(client,
+                    Executors.newSingleThreadExecutor(threadFactory),
+                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
+                    MailboxElasticSearchConstants.MESSAGE_TYPE,
+                    BATCH_SIZE),
+                new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
+                    new InMemoryId.Factory(), messageIdFactory,
+                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
+                    MailboxElasticSearchConstants.MESSAGE_TYPE),
+                new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES),
+                preInstanciationStage.getSessionProvider()))
+            .create();
 
-        messageIdManager = new StoreMessageIdManager(
-            storeMailboxManager,
-            storeMailboxManager.getMapperFactory(),
-            eventBus,
-            storeMailboxManager.getMessageIdFactory(),
-            quotaComponents.getQuotaManager(),
-            quotaComponents.getQuotaRootResolver(),
-            PreDeletionHooks.NO_PRE_DELETION_HOOK);
-
-        eventBus.register(elasticSearchListeningMessageSearchIndex);
-        this.messageSearchIndex = elasticSearchListeningMessageSearchIndex;
+        storeMailboxManager = resources.getMailboxManager();
+        messageIdManager = resources.getMessageIdManager();
+        messageSearchIndex = resources.getSearchIndex();
     }
 
     @Test

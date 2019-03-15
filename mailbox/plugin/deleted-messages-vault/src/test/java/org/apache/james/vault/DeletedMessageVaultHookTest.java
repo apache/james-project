@@ -99,7 +99,7 @@ class DeletedMessageVaultHookTest {
         DeletedMessageConverter deletedMessageConverter = new DeletedMessageConverter();
 
         InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
-            .withPreDeletionHook((sessionProvider, mapperFactory) -> new DeletedMessageVaultHook(sessionProvider, messageVault, deletedMessageConverter, mapperFactory, clock))
+            .withPreDeletionHook(preInstanciationStage -> new DeletedMessageVaultHook(preInstanciationStage.getSessionProvider(), messageVault, deletedMessageConverter, preInstanciationStage.getMapperFactory(), clock))
             .create();
 
         mailboxManager = resources.getMailboxManager();
