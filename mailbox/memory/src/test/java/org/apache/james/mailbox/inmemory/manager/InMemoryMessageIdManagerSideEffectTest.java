@@ -28,7 +28,7 @@ import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.manager.ManagerTestResources;
+import org.apache.james.mailbox.manager.ManagerTestProvisionner;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.AbstractMessageIdManagerSideEffectTest;
 import org.apache.james.mailbox.store.FakeAuthenticator;
@@ -63,8 +63,8 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
         InMemoryMailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
 
         FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
-        fakeAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
-        fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
+        fakeAuthenticator.addUser(ManagerTestProvisionner.USER, ManagerTestProvisionner.USER_PASS);
+        fakeAuthenticator.addUser(ManagerTestProvisionner.OTHER_USER, ManagerTestProvisionner.OTHER_USER_PASS);
         FakeAuthorizator fakeAuthorizator = FakeAuthorizator.defaultReject();
 
         StoreRightManager rightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), eventBus);

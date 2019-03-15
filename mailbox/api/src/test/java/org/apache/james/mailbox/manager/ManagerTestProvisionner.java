@@ -37,65 +37,40 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMail;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.mailbox.quota.QuotaManager;
-import org.apache.james.mailbox.quota.QuotaRootResolver;
 
 /**
  * Provide an initialized Mailbox environment where we can run managers tests
  */
-public class ManagerTestResources<T extends MailboxManager> {
-
+public class ManagerTestProvisionner<T extends MailboxManager> {
     public static final String USER = "user@domain.org";
     public static final String USER_PASS = "pass";
     public static final String OTHER_USER = "otherUser@domain.org";
     public static final String OTHER_USER_PASS = "otherPass";
 
-    private T mailboxManager;
+    private IntegrationResources<T> integrationResources;
 
     private MailboxPath inbox;
     private MessageManager messageManager;
     private MailboxPath subFolder;
-
     private MailboxSession session;
 
-    private MaxQuotaManager maxQuotaManager;
-    private QuotaManager quotaManager;
-    private QuotaRootResolver quotaRootResolver;
 
-    private IntegrationResources<T> integrationResources;
-
-    public ManagerTestResources(IntegrationResources<T> integrationResources) throws Exception {
+    public ManagerTestProvisionner(IntegrationResources<T> integrationResources) throws Exception {
         this.integrationResources = integrationResources;
-        mailboxManager = integrationResources.getMailboxManager();
 
-        maxQuotaManager = integrationResources.getMaxQuotaManager();
-        quotaRootResolver = integrationResources.getQuotaRootResolver();
-        quotaManager = integrationResources.getQuotaManager();
-
-        session = mailboxManager.login(USER, USER_PASS);
+        session = integrationResources.getMailboxManager().login(USER, USER_PASS);
         inbox = MailboxPath.inbox(session);
         subFolder = new MailboxPath(inbox, "INBOX.SUB");
 
+        MaxQuotaManager maxQuotaManager = integrationResources.getMaxQuotaManager();
         maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(1000));
         maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1000000));
     }
 
     public void createMailboxes() throws MailboxException {
-        mailboxManager.createMailbox(inbox, session);
-        mailboxManager.createMailbox(subFolder, session);
-        messageManager = mailboxManager.getMailbox(inbox, session);
-    }
-
-    public QuotaManager getQuotaManager() {
-        return quotaManager;
-    }
-
-    public MaxQuotaManager getMaxQuotaManager() {
-        return maxQuotaManager;
-    }
-
-    public QuotaRootResolver getQuotaRootResolver() {
-        return quotaRootResolver;
+        integrationResources.getMailboxManager().createMailbox(inbox, session);
+        integrationResources.getMailboxManager().createMailbox(subFolder, session);
+        messageManager = integrationResources.getMailboxManager().getMailbox(inbox, session);
     }
 
     public MessageManager getMessageManager() {
@@ -110,16 +85,9 @@ public class ManagerTestResources<T extends MailboxManager> {
         return inbox;
     }
 
-    public MailboxManager getMailboxManager() {
-        return mailboxManager;
-    }
 
     public MailboxSession getSession() {
         return session;
-    }
-
-    public IntegrationResources<T> getIntegrationResources() {
-        return integrationResources;
     }
 
     public void fillMailbox() throws MailboxException, UnsupportedEncodingException {

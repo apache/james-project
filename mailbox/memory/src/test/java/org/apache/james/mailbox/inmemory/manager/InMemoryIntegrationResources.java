@@ -37,7 +37,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.manager.IntegrationResources;
-import org.apache.james.mailbox.manager.ManagerTestResources;
+import org.apache.james.mailbox.manager.ManagerTestProvisionner;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -166,8 +166,8 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
         FakeAuthenticator defaultAuthenticator() {
             FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
-            fakeAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
-            fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
+            fakeAuthenticator.addUser(ManagerTestProvisionner.USER, ManagerTestProvisionner.USER_PASS);
+            fakeAuthenticator.addUser(ManagerTestProvisionner.OTHER_USER, ManagerTestProvisionner.OTHER_USER_PASS);
             return fakeAuthenticator;
         }
 

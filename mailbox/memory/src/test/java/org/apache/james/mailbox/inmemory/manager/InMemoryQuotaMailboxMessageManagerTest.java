@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.inmemory.manager;
 
-import org.apache.james.mailbox.manager.ManagerTestResources;
+import org.apache.james.mailbox.manager.IntegrationResources;
 import org.apache.james.mailbox.manager.QuotaMessageManagerTest;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 
@@ -31,8 +31,8 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 public class InMemoryQuotaMailboxMessageManagerTest extends QuotaMessageManagerTest<StoreMailboxManager> {
 
     @Override
-    protected ManagerTestResources<StoreMailboxManager> createResources() throws Exception {
-        return new ManagerTestResources<>(new InMemoryIntegrationResources.Factory().create());
+    protected IntegrationResources<StoreMailboxManager> createResources() {
+        return new InMemoryIntegrationResources.Factory().create();
     }
 
 }

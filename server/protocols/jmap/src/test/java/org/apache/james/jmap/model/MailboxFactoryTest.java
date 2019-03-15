@@ -27,7 +27,7 @@ import org.apache.james.jmap.model.mailbox.MailboxNamespace;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.manager.ManagerTestResources;
+import org.apache.james.mailbox.manager.ManagerTestProvisionner;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
@@ -61,10 +61,10 @@ public class MailboxFactoryTest {
         QuotaRootResolver quotaRootResolver = mailboxManager.getQuotaComponents().getQuotaRootResolver();
         QuotaManager quotaManager = mailboxManager.getQuotaComponents().getQuotaManager();
 
-        user = ManagerTestResources.USER;
-        otherUser = ManagerTestResources.OTHER_USER;
-        mailboxSession = mailboxManager.login(user, ManagerTestResources.USER_PASS);
-        otherMailboxSession = mailboxManager.login(otherUser, ManagerTestResources.OTHER_USER_PASS);
+        user = ManagerTestProvisionner.USER;
+        otherUser = ManagerTestProvisionner.OTHER_USER;
+        mailboxSession = mailboxManager.login(user, ManagerTestProvisionner.USER_PASS);
+        otherMailboxSession = mailboxManager.login(otherUser, ManagerTestProvisionner.OTHER_USER_PASS);
         sut = new MailboxFactory(mailboxManager, quotaManager, quotaRootResolver);
     }
 

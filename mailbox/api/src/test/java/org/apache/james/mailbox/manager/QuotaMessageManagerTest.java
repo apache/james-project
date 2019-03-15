@@ -38,6 +38,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mime4j.dom.Message;
 import org.assertj.core.api.SoftAssertions;
@@ -52,50 +53,53 @@ import org.junit.Test;
  */
 public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
 
-    private ManagerTestResources<T> resources;
+    private ManagerTestProvisionner<T> provisionner;
 
     private MessageManager messageManager;
     private MailboxManager mailboxManager;
     private MaxQuotaManager maxQuotaManager;
+    private QuotaManager quotaManager;
     private QuotaRootResolver quotaRootResolver;
 
     private MailboxSession session;
     private MailboxPath inbox;
     private MailboxPath subFolder;
 
-    protected abstract ManagerTestResources<T> createResources() throws Exception;
+    protected abstract IntegrationResources<T> createResources() throws Exception;
 
     @Before
     public void setUp() throws Exception {
-        resources = createResources();
-        resources.createMailboxes();
-        messageManager = resources.getMessageManager();
+        IntegrationResources<T> resources = createResources();
+        this.provisionner = new ManagerTestProvisionner<>(resources);
+        this.provisionner.createMailboxes();
+        messageManager = this.provisionner.getMessageManager();
         mailboxManager = resources.getMailboxManager();
-        session = resources.getSession();
-        inbox = resources.getInbox();
-        subFolder = resources.getSubFolder();
+        session = this.provisionner.getSession();
+        inbox = this.provisionner.getInbox();
+        subFolder = this.provisionner.getSubFolder();
         maxQuotaManager = resources.getMaxQuotaManager();
         quotaRootResolver = resources.getQuotaRootResolver();
+        quotaManager = resources.getQuotaManager();
     }
 
     @Test(expected = OverQuotaException.class)
     public void testAppendOverQuotaMessages() throws Exception {
         QuotaCount maxMessageCount = QuotaCount.count(8);
         maxQuotaManager.setMaxMessage(quotaRootResolver.getQuotaRoot(inbox), maxMessageCount);
-        resources.fillMailbox();
+        provisionner.fillMailbox();
     }
 
     @Test(expected = OverQuotaException.class)
     public void testAppendOverQuotaSize() throws Exception {
         QuotaSize maxQuotaSize = QuotaSize.size(3 * MockMail.MAIL_TEXT_PLAIN.length() + 1);
         maxQuotaManager.setMaxStorage(quotaRootResolver.getQuotaRoot(inbox), maxQuotaSize);
-        resources.fillMailbox();
+        provisionner.fillMailbox();
     }
 
     @Test(expected = OverQuotaException.class)
     public void testCopyOverQuotaMessages() throws Exception {
         try {
-            resources.fillMailbox();
+            provisionner.fillMailbox();
         } catch (OverQuotaException overQuotaException) {
             // Silent these exception as we don't want it to disturb the test
         }
@@ -109,7 +113,7 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
         QuotaSize maxQuotaSize = QuotaSize.size(15L * MockMail.MAIL_TEXT_PLAIN.length());
         maxQuotaManager.setMaxStorage(quotaRootResolver.getQuotaRoot(inbox), maxQuotaSize);
         try {
-            resources.fillMailbox();
+            provisionner.fillMailbox();
         } catch (OverQuotaException overQuotaException) {
             // Silent these exception as we don't want it to disturb the test
         }
@@ -121,13 +125,13 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
         QuotaCount maxMessageCount = QuotaCount.count(15L);
         maxQuotaManager.setMaxMessage(quotaRootResolver.getQuotaRoot(inbox), maxMessageCount);
         try {
-            resources.fillMailbox();
+            provisionner.fillMailbox();
         } catch (OverQuotaException overQuotaException) {
             // We are here over quota
         }
         messageManager.expunge(MessageRange.all(), session);
         // We have suppressed at list one message. Ensure we can add an other message. If is impossible, an exception will be thrown.
-        resources.appendMessage(messageManager, session, new FlagsBuilder().add(Flags.Flag.SEEN).build());
+        provisionner.appendMessage(messageManager, session, new FlagsBuilder().add(Flags.Flag.SEEN).build());
     }
 
     @Test
@@ -135,13 +139,13 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
         QuotaSize maxQuotaSize = QuotaSize.size(15 * MockMail.MAIL_TEXT_PLAIN.getBytes(StandardCharsets.UTF_8).length + 1);
         maxQuotaManager.setMaxStorage(quotaRootResolver.getQuotaRoot(inbox), maxQuotaSize);
         try {
-            resources.fillMailbox();
+            provisionner.fillMailbox();
         } catch (OverQuotaException overQuotaException) {
             // We are here over quota
         }
         messageManager.expunge(MessageRange.all(), session);
         // We have suppressed at list one message. Ensure we can add an other message. If is impossible, an exception will be thrown.
-        resources.appendMessage(messageManager, session, new FlagsBuilder().add(Flags.Flag.SEEN).build());
+        provisionner.appendMessage(messageManager, session, new FlagsBuilder().add(Flags.Flag.SEEN).build());
     }
 
     @Test
@@ -149,7 +153,7 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
         QuotaCount maxMessageCount = QuotaCount.count(15L);
         maxQuotaManager.setMaxMessage(quotaRootResolver.getQuotaRoot(inbox), maxMessageCount);
         try {
-            resources.fillMailbox();
+            provisionner.fillMailbox();
         } catch (OverQuotaException overQuotaException) {
             // We are here over quota
         }
@@ -157,7 +161,7 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
         List<MessageUid> uids = messageManager.getMetaData(true, session, MessageManager.MetaData.FetchGroup.UNSEEN_COUNT).getRecent();
         messageManager.delete(uids, session);
         // We have suppressed at list one message. Ensure we can add an other message. If is impossible, an exception will be thrown.
-        resources.appendMessage(messageManager, session, new FlagsBuilder().add(Flags.Flag.SEEN).build());
+        provisionner.appendMessage(messageManager, session, new FlagsBuilder().add(Flags.Flag.SEEN).build());
     }
 
     @Test
@@ -165,7 +169,7 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
         QuotaSize maxQuotaSize = QuotaSize.size(15 * MockMail.MAIL_TEXT_PLAIN.getBytes(StandardCharsets.UTF_8).length + 1);
         maxQuotaManager.setMaxStorage(quotaRootResolver.getQuotaRoot(inbox), maxQuotaSize);
         try {
-            resources.fillMailbox();
+            provisionner.fillMailbox();
         } catch (OverQuotaException overQuotaException) {
             // We are here over quota
         }
@@ -173,18 +177,18 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
         List<MessageUid> uids = messageManager.getMetaData(true, session, MessageManager.MetaData.FetchGroup.UNSEEN_COUNT).getRecent();
         messageManager.delete(uids, session);
         // We have suppressed at list one message. Ensure we can add an other message. If is impossible, an exception will be thrown.
-        resources.appendMessage(messageManager, session, new FlagsBuilder().add(Flags.Flag.SEEN).build());
+        provisionner.appendMessage(messageManager, session, new FlagsBuilder().add(Flags.Flag.SEEN).build());
     }
 
     @Test
     public void deletingAMailboxShouldDecreaseCurrentQuota() throws Exception {
-        resources.fillMailbox();
+        provisionner.fillMailbox();
 
         mailboxManager.deleteMailbox(inbox, session);
 
         QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(inbox);
-        Quota<QuotaCount> messageQuota = resources.getQuotaManager().getMessageQuota(quotaRoot);
-        Quota<QuotaSize> storageQuota = resources.getQuotaManager().getStorageQuota(quotaRoot);
+        Quota<QuotaCount> messageQuota = quotaManager.getMessageQuota(quotaRoot);
+        Quota<QuotaSize> storageQuota = quotaManager.getStorageQuota(quotaRoot);
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(messageQuota.getUsed()).isEqualTo(QuotaCount.count(0));
             softly.assertThat(storageQuota.getUsed()).isEqualTo(QuotaSize.size(0));
@@ -193,7 +197,7 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
 
     @Test
     public void deletingAMailboxShouldPreserveQuotaOfOtherMailboxes() throws Exception {
-        resources.fillMailbox();
+        provisionner.fillMailbox();
 
         mailboxManager.getMailbox(subFolder, session)
             .appendMessage(MessageManager.AppendCommand.from(
@@ -205,8 +209,8 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
         mailboxManager.deleteMailbox(subFolder, session);
 
         QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(inbox);
-        Quota<QuotaCount> messageQuota = resources.getQuotaManager().getMessageQuota(quotaRoot);
-        Quota<QuotaSize> storageQuota = resources.getQuotaManager().getStorageQuota(quotaRoot);
+        Quota<QuotaCount> messageQuota = quotaManager.getMessageQuota(quotaRoot);
+        Quota<QuotaSize> storageQuota = quotaManager.getStorageQuota(quotaRoot);
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(messageQuota.getUsed()).isEqualTo(QuotaCount.count(16));
             softly.assertThat(storageQuota.getUsed()).isEqualTo(QuotaSize.size(16 * 247));
