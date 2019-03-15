@@ -24,6 +24,8 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.extension.PreDeletionHook;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.NoopMetricFactory;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -32,20 +34,25 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class PreDeletionHooks {
-    public static final PreDeletionHooks NO_PRE_DELETION_HOOK = new PreDeletionHooks(ImmutableSet.of());
+    public static final PreDeletionHooks NO_PRE_DELETION_HOOK = new PreDeletionHooks(ImmutableSet.of(), new NoopMetricFactory());
+
+    static final String PRE_DELETION_HOOK_METRIC_NAME = "preDeletionHook";
 
     private final Set<PreDeletionHook> hooks;
+    private final MetricFactory metricFactory;
 
     @Inject
-    public PreDeletionHooks(Set<PreDeletionHook> hooks) {
+    public PreDeletionHooks(Set<PreDeletionHook> hooks, MetricFactory metricFactory) {
         this.hooks = hooks;
+        this.metricFactory = metricFactory;
     }
 
     public Mono<Void> runHooks(PreDeletionHook.DeleteOperation deleteOperation) {
         return Flux.fromIterable(hooks)
             .publishOn(Schedulers.elastic())
             .limitRate(1)
-            .flatMap(hook -> hook.notifyDelete(deleteOperation))
+            .flatMap(hook -> metricFactory.runPublishingTimerMetric(PRE_DELETION_HOOK_METRIC_NAME,
+                Mono.from(hook.notifyDelete(deleteOperation))))
             .then();
     }
 }

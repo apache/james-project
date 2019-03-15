@@ -329,10 +329,11 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         }
 
         private PreDeletionHooks createHooks(MailboxManagerPreInstanciationStage preInstanciationStage) {
-            return new PreDeletionHooks(preDeletionHooksFactories.build()
+            ImmutableSet<PreDeletionHook> preDeletionHooksSet = preDeletionHooksFactories.build()
                 .stream()
                 .map(biFunction -> biFunction.apply(preInstanciationStage))
-                .collect(Guavate.toImmutableSet()));
+                .collect(Guavate.toImmutableSet());
+            return new PreDeletionHooks(preDeletionHooksSet, new NoopMetricFactory());
         }
     }
 

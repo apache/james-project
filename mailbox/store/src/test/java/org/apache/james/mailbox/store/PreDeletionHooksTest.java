@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.apache.james.mailbox.store.PreDeletionHooks.PRE_DELETION_HOOK_METRIC_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,25 +31,35 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
 import javax.mail.Flags;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.reactivestreams.Publisher;
 
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
 import reactor.core.publisher.Mono;
 
@@ -63,13 +75,63 @@ class PreDeletionHooksTest {
     private PreDeletionHook hook1;
     private PreDeletionHook hook2;
     private PreDeletionHooks testee;
+    private RecordingMetricFactory metricFactory;
+
+    public static class RecordingTimeMetric implements TimeMetric {
+        private final String name;
+        private final Stopwatch stopwatch = Stopwatch.createStarted();
+        private final Consumer<Long> publishCallback;
+
+        RecordingTimeMetric(String name, Consumer<Long> publishCallback) {
+            this.name = name;
+            this.publishCallback = publishCallback;
+        }
+
+        @Override
+        public String name() {
+            return name;
+        }
+
+        @Override
+        public long stopAndPublish() {
+            long elapsed = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+            publishCallback.accept(elapsed);
+            return elapsed;
+        }
+    }
+
+    public static class RecordingMetricFactory implements MetricFactory {
+        private final Multimap<String, Long> executionTimesInMs = Multimaps.synchronizedSetMultimap(HashMultimap.create());
+
+        @Override
+        public Metric generate(String name) {
+            throw new NotImplementedException("Not implemented");
+        }
+
+        @Override
+        public TimeMetric timer(String name) {
+            return new RecordingTimeMetric(name, executionTime -> {
+                synchronized (executionTimesInMs) {
+                    executionTimesInMs.put(name, executionTime);
+                }
+            });
+        }
+
+        Collection<Long> executionTimesFor(String name) {
+            synchronized (executionTimesInMs) {
+                return executionTimesInMs.get(name);
+            }
+        }
+    }
 
     @BeforeEach
     void setUp() {
         hook1 = mock(PreDeletionHook.class);
         hook2 = mock(PreDeletionHook.class);
 
-        testee = new PreDeletionHooks(ImmutableSet.of(hook1, hook2));
+        metricFactory = new RecordingMetricFactory();
+
+        testee = new PreDeletionHooks(ImmutableSet.of(hook1, hook2), metricFactory);
     }
 
     @Test
@@ -152,5 +214,24 @@ class PreDeletionHooksTest {
         assertThatCode(() -> testee.runHooks(DELETE_OPERATION).block())
             .describedAs("RunHook does not throw if hooks are executed in a sequential manner")
             .doesNotThrowAnyException();
+    }
+
+    @Test
+    void runHooksShouldPublishTimerMetrics() {
+        long sleepDurationInMs = Duration.ofSeconds(1).toMillis();
+
+        Mono<Void> notifyDeleteAnswer = Mono.fromCallable(() -> {
+            Thread.sleep(sleepDurationInMs);
+            return Mono.empty();
+        }).then();
+
+        when(hook1.notifyDelete(any())).thenReturn(notifyDeleteAnswer);
+        when(hook2.notifyDelete(any())).thenReturn(notifyDeleteAnswer);
+
+        testee.runHooks(DELETE_OPERATION).block();
+
+        assertThat(metricFactory.executionTimesFor(PRE_DELETION_HOOK_METRIC_NAME))
+            .hasSize(2)
+            .allSatisfy(executionInMs -> assertThat(executionInMs).isGreaterThanOrEqualTo(sleepDurationInMs));
     }
 }

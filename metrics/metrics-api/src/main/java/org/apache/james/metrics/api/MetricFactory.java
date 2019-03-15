@@ -40,7 +40,7 @@ public interface MetricFactory {
 
     default <T> Mono<T> runPublishingTimerMetric(String name, Mono<T> mono) {
         TimeMetric timer = timer(name);
-        return mono.doOnNext(ignored -> timer.stopAndPublish());
+        return mono.doOnSuccess(success -> timer.stopAndPublish());
     }
 
     default void runPublishingTimerMetric(String name, Runnable runnable) {
