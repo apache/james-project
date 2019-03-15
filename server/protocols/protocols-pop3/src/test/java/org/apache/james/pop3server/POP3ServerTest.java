@@ -35,11 +35,9 @@ import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.pop3server.netty.POP3Server;
@@ -713,16 +711,16 @@ public class POP3ServerTest {
         protocolHandlerChain = new MockProtocolHandlerLoader();
         protocolHandlerChain.put("usersrepository", UsersRepository.class, usersRepository);
 
-        mailboxManager = new InMemoryIntegrationResources()
-            .createMailboxManager(new SimpleGroupMembershipResolver(),
-                (userid, passwd) -> {
-                    try {
-                        return usersRepository.test(userid, passwd.toString());
-                    } catch (UsersRepositoryException e) {
-                        e.printStackTrace();
-                        return false;
-                    }
-                }, FakeAuthorizator.defaultReject());
+        mailboxManager = new InMemoryIntegrationResources.Factory()
+            .withAuthenticator((userid, passwd) -> {
+                try {
+                    return usersRepository.test(userid, passwd.toString());
+                } catch (UsersRepositoryException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            }).create()
+            .getMailboxManager();
 
         protocolHandlerChain.put("mailboxmanager", MailboxManager.class, mailboxManager);
     
