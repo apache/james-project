@@ -75,15 +75,18 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
         eventBus = createEventBus();
         eventBus.start();
 
-        InMemoryIntegrationResources integrationResources = new InMemoryIntegrationResources();
-        resources = integrationResources.createResources(eventBus, authenticator, authorizator);
+        resources = new InMemoryIntegrationResources.Factory()
+            .withEventBus(eventBus)
+            .withAuthenticator(authenticator)
+            .withAuthorizator(authorizator)
+            .create();
 
         ImapProcessor defaultImapProcessorFactory =
             DefaultImapProcessorFactory.createDefaultProcessor(
                 resources.getMailboxManager(),
                 eventBus,
                 new StoreSubscriptionManager(resources.getMailboxManager().getMapperFactory()),
-                integrationResources.retrieveQuotaManager(resources.getMailboxManager()),
+                resources.getQuotaManager(),
                 resources.getDefaultUserQuotaRootResolver(),
                 new DefaultMetricFactory());
 
