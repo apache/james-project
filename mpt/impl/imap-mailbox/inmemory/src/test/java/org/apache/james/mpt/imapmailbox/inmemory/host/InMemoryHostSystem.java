@@ -27,7 +27,6 @@ import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -52,7 +51,10 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
     @Override
     public void beforeTest() throws Exception {
         super.beforeTest();
-        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources().createResources(new SimpleGroupMembershipResolver(), authenticator, authorizator);
+        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory()
+            .withAuthenticator(authenticator)
+            .withAuthorizator(authorizator)
+            .create();
         this.mailboxManager = resources.getMailboxManager();
         this.perUserMaxQuotaManager = resources.getMaxQuotaManager();
 

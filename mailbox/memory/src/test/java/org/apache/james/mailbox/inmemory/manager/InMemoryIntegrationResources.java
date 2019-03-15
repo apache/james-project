@@ -246,19 +246,12 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     }
 
     public StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver, Authenticator authenticator, Authorizator authorizator) {
-        return createResources(groupMembershipResolver, authenticator, authorizator).mailboxManager;
-    }
-
-    public Resources createResources(GroupMembershipResolver groupMembershipResolver, Authenticator authenticator, Authorizator authorizator) {
-        return createResources(groupMembershipResolver, authenticator, authorizator, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
-    }
-
-    private Resources createResources(GroupMembershipResolver groupMembershipResolver,
-                                      Authenticator authenticator, Authorizator authorizator,
-                                      int limitAnnotationCount, int limitAnnotationSize) {
-
-        return createResources(new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory())),
-            groupMembershipResolver, authenticator, authorizator, limitAnnotationCount, limitAnnotationSize, PreDeletionHook.NO_PRE_DELETION_HOOK);
+        return new InMemoryIntegrationResources.Factory()
+            .withGroupmembershipResolver(groupMembershipResolver)
+            .withAuthenticator(authenticator)
+            .withAuthorizator(authorizator)
+            .create()
+            .mailboxManager;
     }
 
     public Resources createResources(EventBus eventBus, Authenticator authenticator, Authorizator authorizator) {
