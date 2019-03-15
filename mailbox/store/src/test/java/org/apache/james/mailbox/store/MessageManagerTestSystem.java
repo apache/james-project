@@ -19,15 +19,11 @@
 
 package org.apache.james.mailbox.store;
 
-import javax.mail.Flags;
-
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public abstract class MessageManagerTestSystem {
@@ -44,21 +40,5 @@ public abstract class MessageManagerTestSystem {
 
     public abstract Mailbox createMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
-    /**
-     * Should take care of find returning the MailboxMessage
-     * Should take care of findMailboxes returning the mailbox the message is in
-     * Should persist flags 
-     * Should keep track of flag state for setFlags
-     * 
-     * @param mailboxId
-     * @param flags
-     * @return the id of persisted message
-     */
-    public abstract MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags, MailboxSession session);
-
-    public abstract MessageId createNotUsedMessageId();
-
     public abstract void deleteMailbox(MailboxId mailboxId, MailboxSession session);
-
-    public abstract int getConstantMessageSize();
 }

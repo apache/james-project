@@ -22,12 +22,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import javax.mail.Flags;
-
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
@@ -39,7 +36,6 @@ import org.apache.james.mailbox.store.MessageManagerTestSystem;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mime4j.dom.Message;
-import org.apache.james.mime4j.message.DefaultMessageWriter;
 
 public class InMemoryMessageManagerTestSystem extends MessageManagerTestSystem {
 
@@ -73,26 +69,6 @@ public class InMemoryMessageManagerTestSystem extends MessageManagerTestSystem {
     }
 
     @Override
-    public MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags, MailboxSession session) {
-        try {
-            MessageManager messageManager = mailboxManager.getMailbox(mailboxId, session);
-            MessageId messageId = messageManager.appendMessage(MessageManager.AppendCommand.builder()
-                .withFlags(flags)
-                .build(message), session)
-                    .getMessageId();
-            lastMessageIdUsed = Optional.of(messageId);
-            return messageId;
-        } catch (MailboxException | IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public MessageId createNotUsedMessageId() {
-        return InMemoryMessageId.of(Long.valueOf(lastMessageIdUsed.orElse(FIRST_MESSAGE_ID).serialize()) + ONE_HUNDRED);
-    }
-
-    @Override
     public void deleteMailbox(final MailboxId mailboxId, MailboxSession session) {
         try {
             Optional<MailboxMetaData> mailbox = retrieveMailbox(mailboxId, session);
@@ -112,14 +88,5 @@ public class InMemoryMessageManagerTestSystem extends MessageManagerTestSystem {
             .stream()
             .filter(mailboxMetaData -> mailboxMetaData.getId().equals(mailboxId))
             .findFirst();
-    }
-
-    @Override
-    public int getConstantMessageSize() {
-        try {
-            return DefaultMessageWriter.asBytes(message).length;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }
