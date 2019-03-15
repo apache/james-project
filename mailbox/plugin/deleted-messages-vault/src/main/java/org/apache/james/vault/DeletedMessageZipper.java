@@ -38,11 +38,11 @@ import com.github.fge.lambdas.consumers.ThrowingConsumer;
 import com.google.common.annotations.VisibleForTesting;
 
 public class DeletedMessageZipper {
-    interface DeletedMessageContentLoader {
+    public interface DeletedMessageContentLoader {
         InputStream load(DeletedMessage deletedMessage);
     }
 
-    DeletedMessageZipper() {
+    public DeletedMessageZipper() {
         ExtraFieldUtils.register(MessageIdExtraField.class);
         ExtraFieldUtils.register(SizeExtraField.class);
     }
