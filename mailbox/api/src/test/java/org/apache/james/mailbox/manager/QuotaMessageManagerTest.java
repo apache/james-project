@@ -53,7 +53,7 @@ import org.junit.Test;
  */
 public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
 
-    private ManagerTestProvisionner<T> provisionner;
+    private ManagerTestProvisionner provisionner;
 
     private MessageManager messageManager;
     private MailboxManager mailboxManager;
@@ -70,7 +70,7 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
     @Before
     public void setUp() throws Exception {
         IntegrationResources<T> resources = createResources();
-        this.provisionner = new ManagerTestProvisionner<>(resources);
+        this.provisionner = new ManagerTestProvisionner(resources);
         this.provisionner.createMailboxes();
         messageManager = this.provisionner.getMessageManager();
         mailboxManager = resources.getMailboxManager();

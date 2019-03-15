@@ -29,7 +29,6 @@ import javax.mail.Flags;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.FlagsBuilder;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
@@ -41,13 +40,13 @@ import org.apache.james.mailbox.quota.MaxQuotaManager;
 /**
  * Provide an initialized Mailbox environment where we can run managers tests
  */
-public class ManagerTestProvisionner<T extends MailboxManager> {
+public class ManagerTestProvisionner {
     public static final String USER = "user@domain.org";
     public static final String USER_PASS = "pass";
     public static final String OTHER_USER = "otherUser@domain.org";
     public static final String OTHER_USER_PASS = "otherPass";
 
-    private IntegrationResources<T> integrationResources;
+    private IntegrationResources integrationResources;
 
     private MailboxPath inbox;
     private MessageManager messageManager;
@@ -55,7 +54,7 @@ public class ManagerTestProvisionner<T extends MailboxManager> {
     private MailboxSession session;
 
 
-    public ManagerTestProvisionner(IntegrationResources<T> integrationResources) throws Exception {
+    public ManagerTestProvisionner(IntegrationResources integrationResources) throws Exception {
         this.integrationResources = integrationResources;
 
         session = integrationResources.getMailboxManager().login(USER, USER_PASS);
