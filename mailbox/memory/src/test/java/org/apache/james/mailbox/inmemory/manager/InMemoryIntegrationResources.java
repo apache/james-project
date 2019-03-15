@@ -130,7 +130,6 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     }
 
     public static class Factory {
-        private Optional<GroupMembershipResolver> groupMembershipResolver;
         private Optional<Authenticator> authenticator;
         private Optional<Authorizator> authorizator;
         private Optional<EventBus> eventBus;
@@ -139,7 +138,6 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         private ImmutableSet.Builder<BiFunction<SessionProvider, InMemoryMailboxSessionMapperFactory, PreDeletionHook>> preDeletionHooksInstanciators;
 
         public Factory() {
-            this.groupMembershipResolver = Optional.empty();
             this.authenticator = Optional.empty();
             this.authorizator = Optional.empty();
             this.eventBus = Optional.empty();
@@ -160,11 +158,6 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
         public Factory withEventBus(EventBus eventBus) {
             this.eventBus = Optional.of(eventBus);
-            return this;
-        }
-
-        public Factory withGroupmembershipResolver(GroupMembershipResolver groupmembershipResolver) {
-            this.groupMembershipResolver = Optional.of(groupmembershipResolver);
             return this;
         }
 
@@ -193,7 +186,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         public Resources create() {
             InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
             EventBus eventBus = this.eventBus.orElseGet(() -> new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory())));
-            GroupMembershipResolver groupMembershipResolver = this.groupMembershipResolver.orElse(new SimpleGroupMembershipResolver());
+            GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
             StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), groupMembershipResolver, eventBus);
             StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory,
                 storeRightManager, limitAnnotationCount.orElse(MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX),
@@ -247,9 +240,8 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     }
 
     @Override
-    public InMemoryMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver) {
+    public InMemoryMailboxManager createMailboxManager() {
         return new Factory()
-            .withGroupmembershipResolver(groupMembershipResolver)
             .create()
             .mailboxManager;
     }
@@ -267,11 +259,6 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     @Override
     public DefaultUserQuotaRootResolver retrieveQuotaRootResolver(StoreMailboxManager mailboxManager) {
         return (DefaultUserQuotaRootResolver) mailboxManager.getQuotaComponents().getQuotaRootResolver();
-    }
-
-    @Override
-    public GroupMembershipResolver createGroupMembershipResolver() {
-        return new SimpleGroupMembershipResolver();
     }
 
 }
