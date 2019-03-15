@@ -38,7 +38,6 @@ import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.manager.IntegrationResources;
-import org.apache.james.mailbox.manager.ManagerTestResources;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
@@ -246,15 +245,6 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             .mailboxManager;
     }
 
-    public Resources createResources(GroupMembershipResolver groupMembershipResolver, int limitAnnotationCount, int limitAnnotationSize,
-                                     Set<PreDeletionHook> preDeletionHooks) {
-        FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
-        fakeAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
-        fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
-
-        return createResources(groupMembershipResolver, fakeAuthenticator, FakeAuthorizator.defaultReject(), limitAnnotationCount, limitAnnotationSize, preDeletionHooks);
-    }
-
     public StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver, Authenticator authenticator, Authorizator authorizator) {
         return createResources(groupMembershipResolver, authenticator, authorizator).mailboxManager;
     }
@@ -269,14 +259,6 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
         return createResources(new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory())),
             groupMembershipResolver, authenticator, authorizator, limitAnnotationCount, limitAnnotationSize, PreDeletionHook.NO_PRE_DELETION_HOOK);
-    }
-
-    private Resources createResources(GroupMembershipResolver groupMembershipResolver,
-                                      Authenticator authenticator, Authorizator authorizator,
-                                      int limitAnnotationCount, int limitAnnotationSize, Set<PreDeletionHook> preDeletionHooks) {
-
-        return createResources(new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory())),
-            groupMembershipResolver, authenticator, authorizator, limitAnnotationCount, limitAnnotationSize, preDeletionHooks);
     }
 
     public Resources createResources(EventBus eventBus, Authenticator authenticator, Authorizator authorizator) {

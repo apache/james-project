@@ -21,7 +21,6 @@ package org.apache.james.mailbox.inmemory;
 
 import java.util.Set;
 
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 
@@ -30,9 +29,10 @@ public class MemoryMailboxManagerProvider {
     private static final int LIMIT_ANNOTATION_SIZE = 30;
 
     public static InMemoryMailboxManager provideMailboxManager(Set<PreDeletionHook> preDeletionHooks) {
-        return new InMemoryIntegrationResources()
-            .createResources(new SimpleGroupMembershipResolver(),
-                LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE, preDeletionHooks)
+        return new InMemoryIntegrationResources.Factory()
+            .withAnnotationLimits(LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE)
+            .withPreDeletionHooks(preDeletionHooks)
+            .create()
             .getMailboxManager();
     }
 
