@@ -28,7 +28,6 @@ import java.util.Collection;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -51,7 +50,7 @@ public class IsOverQuotaTest {
 
     @Before
     public void setUp() throws Exception {
-        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources().createResources(new SimpleGroupMembershipResolver());
+        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory().create();
         mailboxManager = resources.getMailboxManager();
 
         quotaRootResolver = resources.getDefaultUserQuotaRootResolver();

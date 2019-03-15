@@ -24,8 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -74,9 +72,7 @@ public class PropagateLookupRightListenerTest {
 
     @Before
     public void setup() throws Exception {
-        GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
-        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources()
-            .createResources(groupMembershipResolver);
+        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory().create();
         storeMailboxManager = resources.getMailboxManager();
         storeRightManager = resources.getStoreRightManager();
         mailboxMapper = storeMailboxManager.getMapperFactory();

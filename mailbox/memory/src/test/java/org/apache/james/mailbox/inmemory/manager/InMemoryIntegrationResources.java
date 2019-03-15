@@ -78,14 +78,16 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         private final InMemoryCurrentQuotaManager currentQuotaManager;
         private final DefaultUserQuotaRootResolver defaultUserQuotaRootResolver;
         private final InMemoryPerUserMaxQuotaManager maxQuotaManager;
+        private final QuotaManager quotaManager;
 
-        Resources(InMemoryMailboxManager mailboxManager, StoreRightManager storeRightManager, MessageId.Factory messageIdFactory, InMemoryCurrentQuotaManager currentQuotaManager, DefaultUserQuotaRootResolver defaultUserQuotaRootResolver, InMemoryPerUserMaxQuotaManager maxQuotaManager) {
+        Resources(InMemoryMailboxManager mailboxManager, StoreRightManager storeRightManager, MessageId.Factory messageIdFactory, InMemoryCurrentQuotaManager currentQuotaManager, DefaultUserQuotaRootResolver defaultUserQuotaRootResolver, InMemoryPerUserMaxQuotaManager maxQuotaManager, QuotaManager quotaManager) {
             this.mailboxManager = mailboxManager;
             this.storeRightManager = storeRightManager;
             this.messageIdFactory = messageIdFactory;
             this.currentQuotaManager = currentQuotaManager;
             this.defaultUserQuotaRootResolver = defaultUserQuotaRootResolver;
             this.maxQuotaManager = maxQuotaManager;
+            this.quotaManager = quotaManager;
         }
 
         public DefaultUserQuotaRootResolver getDefaultUserQuotaRootResolver() {
@@ -110,6 +112,17 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
         public InMemoryPerUserMaxQuotaManager getMaxQuotaManager() {
             return maxQuotaManager;
+        }
+
+        public MessageIdManager createMessageIdManager() {
+            return new StoreMessageIdManager(
+                mailboxManager,
+                mailboxManager.getMapperFactory(),
+                mailboxManager.getEventBus(),
+                messageIdFactory,
+                quotaManager,
+                defaultUserQuotaRootResolver,
+                mailboxManager.getPreDeletionHooks());
         }
     }
 
@@ -212,7 +225,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             eventBus.register(listeningCurrentQuotaUpdater);
             eventBus.register(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider));
 
-            return new Resources(manager, storeRightManager, new InMemoryMessageId.Factory(), currentQuotaManager, quotaRootResolver, maxQuotaManager);
+            return new Resources(manager, storeRightManager, new InMemoryMessageId.Factory(), currentQuotaManager, quotaRootResolver, maxQuotaManager, quotaManager);
         }
 
         PreDeletionHooks createHooks(SessionProvider sessionProvider, InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory) {
@@ -227,17 +240,10 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
     @Override
     public InMemoryMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver) {
-        return createResources(groupMembershipResolver).mailboxManager;
-    }
-
-    public Resources createResources(GroupMembershipResolver groupMembershipResolver) {
-        return createResources(groupMembershipResolver,
-            MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
-            MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
-    }
-
-    public Resources createResources(GroupMembershipResolver groupMembershipResolver, int limitAnnotationCount, int limitAnnotationSize) {
-        return createResources(groupMembershipResolver, limitAnnotationCount, limitAnnotationSize, PreDeletionHook.NO_PRE_DELETION_HOOK);
+        return new Factory()
+            .withGroupmembershipResolver(groupMembershipResolver)
+            .create()
+            .mailboxManager;
     }
 
     public Resources createResources(GroupMembershipResolver groupMembershipResolver, int limitAnnotationCount, int limitAnnotationSize,
@@ -314,7 +320,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         eventBus.register(listeningCurrentQuotaUpdater);
         eventBus.register(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider));
 
-        return new Resources(manager, storeRightManager, new InMemoryMessageId.Factory(), currentQuotaManager, quotaRootResolver, maxQuotaManager);
+        return new Resources(manager, storeRightManager, new InMemoryMessageId.Factory(), currentQuotaManager, quotaRootResolver, maxQuotaManager, quotaManager);
     }
 
     public Resources createResourcesForHooks(SessionProvider sessionProvider, InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory, Set<PreDeletionHook> preDeletionHooks) {
@@ -349,7 +355,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         eventBus.register(listeningCurrentQuotaUpdater);
         eventBus.register(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider));
 
-        return new Resources(manager, storeRightManager, new InMemoryMessageId.Factory(), currentQuotaManager, quotaRootResolver, maxQuotaManager);
+        return new Resources(manager, storeRightManager, new InMemoryMessageId.Factory(), currentQuotaManager, quotaRootResolver, maxQuotaManager, quotaManager);
     }
 
     @Override

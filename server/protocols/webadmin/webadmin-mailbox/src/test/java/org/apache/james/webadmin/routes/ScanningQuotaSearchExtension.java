@@ -24,7 +24,6 @@ import static org.mockito.Mockito.mock;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
@@ -46,7 +45,7 @@ public class ScanningQuotaSearchExtension implements ParameterResolver, BeforeEa
     @Override
     public void beforeEach(ExtensionContext context) {
         try {
-            InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources().createResources(new SimpleGroupMembershipResolver());
+            InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory().create();
 
             MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting();
 

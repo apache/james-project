@@ -18,20 +18,18 @@
  ****************************************************************/
 package org.apache.james.mailbox.inmemory;
 
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 
 public class InMemoryMessageIdManagerTestSystem {
 
-    public static MessageIdManagerTestSystem create() throws MailboxException {
-        InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
-        InMemoryIntegrationResources.Resources resources = inMemoryIntegrationResources.createResources(new SimpleGroupMembershipResolver());
+    public static MessageIdManagerTestSystem create() {
+        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory().create();
+
         StoreMailboxManager mailboxManager = resources.getMailboxManager();
         return new MessageIdManagerTestSystem(
-            inMemoryIntegrationResources.createMessageIdManager(mailboxManager, resources.getMessageIdFactory()),
+            resources.createMessageIdManager(),
             resources.getMessageIdFactory(),
             resources.getMailboxManager().getMapperFactory(),
             mailboxManager);

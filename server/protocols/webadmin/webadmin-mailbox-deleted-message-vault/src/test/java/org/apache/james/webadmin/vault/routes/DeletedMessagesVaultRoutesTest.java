@@ -57,7 +57,6 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
@@ -110,8 +109,7 @@ class DeletedMessagesVaultRoutesTest {
     @BeforeEach
     void beforeEach() throws Exception {
         vault = spy(new MemoryDeletedMessagesVault());
-        InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
-        InMemoryIntegrationResources.Resources inMemoryResource = inMemoryIntegrationResources.createResources(new SimpleGroupMembershipResolver());
+        InMemoryIntegrationResources.Resources inMemoryResource = new InMemoryIntegrationResources.Factory().create();
         mailboxManager = spy(inMemoryResource.getMailboxManager());
 
         taskManager = new MemoryTaskManager();

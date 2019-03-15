@@ -30,7 +30,6 @@ import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
@@ -66,7 +65,7 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
                 new TestingClientProvider(embeddedElasticSearch.getNode()).get(),
                 ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
 
-            InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources().createResources(new SimpleGroupMembershipResolver());
+            InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory().create();
 
             MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting();
 
