@@ -21,7 +21,6 @@ package org.apache.james.mailbox.inmemory.manager;
 
 import java.util.Collection;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.BiFunction;
 
 import org.apache.james.mailbox.MessageIdManager;
@@ -247,41 +246,6 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             .withGroupmembershipResolver(groupMembershipResolver)
             .create()
             .mailboxManager;
-    }
-
-    public Resources createResourcesForHooks(SessionProvider sessionProvider, InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory, Set<PreDeletionHook> preDeletionHooks) {
-        EventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
-        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(),
-            groupMembershipResolver, eventBus);
-        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory,
-            storeRightManager, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
-
-        InMemoryPerUserMaxQuotaManager maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
-        DefaultUserQuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mailboxSessionMapperFactory);
-        InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(new CurrentQuotaCalculator(mailboxSessionMapperFactory, quotaRootResolver), sessionProvider);
-        StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
-        ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, eventBus, quotaManager);
-        QuotaComponents quotaComponents = new QuotaComponents(maxQuotaManager, quotaManager, quotaRootResolver, listeningCurrentQuotaUpdater);
-
-        MessageSearchIndex index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
-
-        InMemoryMailboxManager manager = new InMemoryMailboxManager(
-            mailboxSessionMapperFactory,
-            sessionProvider,
-            new JVMMailboxPathLocker(),
-            new MessageParser(),
-            new InMemoryMessageId.Factory(),
-            eventBus,
-            annotationManager,
-            storeRightManager,
-            quotaComponents,
-            index,
-            new PreDeletionHooks(preDeletionHooks));
-
-        eventBus.register(listeningCurrentQuotaUpdater);
-        eventBus.register(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider));
-
-        return new Resources(manager, storeRightManager, new InMemoryMessageId.Factory(), currentQuotaManager, quotaRootResolver, maxQuotaManager, quotaManager);
     }
 
     @Override

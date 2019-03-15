@@ -36,18 +36,13 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.mailbox.store.Authenticator;
-import org.apache.james.mailbox.store.Authorizator;
-import org.apache.james.mailbox.store.CombinationManagerTestSystem;
-import org.apache.james.mailbox.store.SessionProvider;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.vault.memory.MemoryDeletedMessagesVault;
 import org.apache.james.vault.search.Query;
@@ -55,7 +50,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 class DeletedMessageVaultHookTest {
 
@@ -73,11 +67,8 @@ class DeletedMessageVaultHookTest {
     private Message mailContent;
     private MemoryDeletedMessagesVault messageVault;
     private Clock clock;
-    private SessionProvider sessionProvider;
     private MailboxSession aliceSession;
     private MailboxSession bobSession;
-    private InMemoryMailboxSessionMapperFactory mapperFactory;
-    private CombinationManagerTestSystem testingData;
     private SearchQuery searchQuery;
 
     private DeletedMessage buildDeletedMessage(List<MailboxId> mailboxIds, MessageId messageId, User user) throws Exception {
@@ -105,21 +96,14 @@ class DeletedMessageVaultHookTest {
         clock = Clock.fixed(DELETION_DATE.toInstant(), ZoneOffset.UTC);
         messageVault = new MemoryDeletedMessagesVault();
 
-        Authenticator noAuthenticator = null;
-        Authorizator noAuthorizator = null;
-        sessionProvider = new SessionProvider(noAuthenticator, noAuthorizator);
-        aliceSession = sessionProvider.createSystemSession(ALICE_ADDRESS);
-        bobSession = sessionProvider.createSystemSession(BOB_ADDRESS);
-
-        mapperFactory = new InMemoryMailboxSessionMapperFactory();
         DeletedMessageConverter deletedMessageConverter = new DeletedMessageConverter();
-        DeletedMessageVaultHook messageVaultHook = new DeletedMessageVaultHook(sessionProvider, messageVault, deletedMessageConverter, mapperFactory, clock);
 
-        testingData = MessageIdManagerWithPreDeletionHooksTestSystemProvider
-            .createTestingData(sessionProvider, mapperFactory, ImmutableSet.of(messageVaultHook));
+        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources.Factory()
+            .withPreDeletionHook((sessionProvider, mapperFactory) -> new DeletedMessageVaultHook(sessionProvider, messageVault, deletedMessageConverter, mapperFactory, clock))
+            .create();
 
-        mailboxManager = testingData.getMailboxManager();
-        messageIdManager = testingData.getMessageIdManager();
+        mailboxManager = resources.getMailboxManager();
+        messageIdManager = resources.createMessageIdManager();
 
         mailContent = Message.Builder.of()
             .setSubject("test")
@@ -131,28 +115,28 @@ class DeletedMessageVaultHookTest {
 
         searchQuery = new SearchQuery();
         searchQuery.andCriteria(SearchQuery.internalDateOn(INTERNAL_DATE, SearchQuery.DateResolution.Second));
+
+        aliceSession = mailboxManager.createSystemSession(ALICE_ADDRESS);
+        bobSession = mailboxManager.createSystemSession(BOB_ADDRESS);
     }
 
     @Test
     void notifyDeleteShouldAppendMessageVault() throws Exception {
-        Mailbox aliceMailbox = testingData.createMailbox(MAILBOX_ALICE_ONE, aliceSession);
-        MessageManager messageManager = testingData.createMessageManager(aliceMailbox, aliceSession);
+        MailboxId aliceMailbox = mailboxManager.createMailbox(MAILBOX_ALICE_ONE, aliceSession).get();
+        MessageManager messageManager = mailboxManager.getMailbox(aliceMailbox, aliceSession);
         MessageId messageId = appendMessage(messageManager).getMessageId();
 
         messageIdManager.delete(ImmutableList.of(messageId), aliceSession);
 
-        DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(aliceMailbox.getMailboxId()), messageId, ALICE);
+        DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(aliceMailbox), messageId, ALICE);
         assertThat(messageVault.search(ALICE, Query.ALL).blockFirst())
             .isEqualTo(deletedMessage);
     }
 
     @Test
     void notifyDeleteShouldAppendMessageToVaultOfMailboxOwnerWhenOtherUserDeleteMessageInSharingMailbox() throws Exception {
-        Mailbox aliceMailbox = testingData.createMailbox(MAILBOX_ALICE_ONE, aliceSession);
-        MessageManager aliceMessageManager = testingData.createMessageManager(aliceMailbox, aliceSession);
-        MessageManager bobMessageManager = testingData.createMessageManager(aliceMailbox, bobSession);
-        ComposedMessageId composedMessageId = appendMessage(aliceMessageManager);
-        MessageId messageId = composedMessageId.getMessageId();
+        MailboxId aliceMailbox = mailboxManager.createMailbox(MAILBOX_ALICE_ONE, aliceSession).get();
+        MessageManager aliceMessageManager = mailboxManager.getMailbox(aliceMailbox, aliceSession);
 
         mailboxManager.setRights(MAILBOX_ALICE_ONE,
             MailboxACL.EMPTY.apply(MailboxACL.command()
@@ -161,7 +145,12 @@ class DeletedMessageVaultHookTest {
                 .asAddition()),
             aliceSession);
 
-        DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(aliceMailbox.getMailboxId()), messageId, ALICE);
+        MessageManager bobMessageManager = mailboxManager.getMailbox(aliceMailbox, bobSession);
+        ComposedMessageId composedMessageId = appendMessage(aliceMessageManager);
+        MessageId messageId = composedMessageId.getMessageId();
+
+
+        DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(aliceMailbox), messageId, ALICE);
         bobMessageManager.delete(ImmutableList.copyOf(bobMessageManager.search(searchQuery, bobSession)), bobSession);
 
         assertThat(messageVault.search(ALICE, Query.ALL).blockFirst())
@@ -170,10 +159,8 @@ class DeletedMessageVaultHookTest {
 
     @Test
     void notifyDeleteShouldNotAppendMessageToVaultOfOtherUserOfMailboxWhenOtherUserDeleteMessageInSharingMailbox() throws Exception {
-        Mailbox aliceMailbox = testingData.createMailbox(MAILBOX_ALICE_ONE, aliceSession);
-        MessageManager aliceMessageManager = testingData.createMessageManager(aliceMailbox, aliceSession);
-        MessageManager bobMessageManager = testingData.createMessageManager(aliceMailbox, bobSession);
-        appendMessage(aliceMessageManager);
+        MailboxId aliceMailbox = mailboxManager.createMailbox(MAILBOX_ALICE_ONE, aliceSession).get();
+        MessageManager aliceMessageManager = mailboxManager.getMailbox(aliceMailbox, aliceSession);
 
         mailboxManager.setRights(MAILBOX_ALICE_ONE,
             MailboxACL.EMPTY.apply(MailboxACL.command()
@@ -181,6 +168,9 @@ class DeletedMessageVaultHookTest {
                 .rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read, MailboxACL.Right.DeleteMessages, MailboxACL.Right.PerformExpunge)
                 .asAddition()),
             aliceSession);
+
+        MessageManager bobMessageManager = mailboxManager.getMailbox(aliceMailbox, bobSession);
+        appendMessage(aliceMessageManager);
 
         bobMessageManager.delete(ImmutableList.copyOf(bobMessageManager.search(searchQuery, bobSession)), bobSession);
 
@@ -190,10 +180,10 @@ class DeletedMessageVaultHookTest {
 
     @Test
     void notifyDeleteShouldAppendMessageToVaultOfOtherUserOfMailboxWhenOtherUserDeleteMessageAfterMoveToAnotherMailbox() throws Exception {
-        Mailbox aliceMailbox = testingData.createMailbox(MAILBOX_ALICE_ONE, aliceSession);
-        Mailbox bobMailbox = testingData.createMailbox(MAILBOX_BOB_ONE, bobSession);
-        MessageManager aliceMessageManager = testingData.createMessageManager(aliceMailbox, aliceSession);
-        MessageManager bobMessageManager = testingData.createMessageManager(bobMailbox, bobSession);
+        MailboxId aliceMailbox = mailboxManager.createMailbox(MAILBOX_ALICE_ONE, aliceSession).get();
+        MailboxId bobMailbox = mailboxManager.createMailbox(MAILBOX_BOB_ONE, bobSession).get();
+        MessageManager aliceMessageManager = mailboxManager.getMailbox(aliceMailbox, aliceSession);
+        MessageManager bobMessageManager = mailboxManager.getMailbox(bobMailbox, bobSession);
         ComposedMessageId composedMessageId = appendMessage(aliceMessageManager);
         MessageId messageId = composedMessageId.getMessageId();
 
@@ -204,9 +194,9 @@ class DeletedMessageVaultHookTest {
                 .asAddition()),
             aliceSession);
 
-        messageIdManager.setInMailboxes(messageId, ImmutableList.of(bobMailbox.getMailboxId()), bobSession);
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(bobMailbox), bobSession);
 
-        DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(bobMailbox.getMailboxId()), messageId, BOB);
+        DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(bobMailbox), messageId, BOB);
         bobMessageManager.delete(ImmutableList.copyOf(bobMessageManager.search(searchQuery, bobSession)), bobSession);
 
         assertThat(messageVault.search(BOB, Query.ALL).blockFirst())
@@ -215,10 +205,10 @@ class DeletedMessageVaultHookTest {
 
     @Test
     void notifyDeleteShouldNotAppendMessageToVaultOfMailboxOwnerWhenOtherUserDeleteMessageAfterMoveToAnotherMailbox() throws Exception {
-        Mailbox aliceMailbox = testingData.createMailbox(MAILBOX_ALICE_ONE, aliceSession);
-        Mailbox bobMailbox = testingData.createMailbox(MAILBOX_BOB_ONE, bobSession);
-        MessageManager aliceMessageManager = testingData.createMessageManager(aliceMailbox, aliceSession);
-        MessageManager bobMessageManager = testingData.createMessageManager(bobMailbox, bobSession);
+        MailboxId aliceMailbox = mailboxManager.createMailbox(MAILBOX_ALICE_ONE, aliceSession).get();
+        MailboxId bobMailbox = mailboxManager.createMailbox(MAILBOX_BOB_ONE, bobSession).get();
+        MessageManager aliceMessageManager = mailboxManager.getMailbox(aliceMailbox, aliceSession);
+        MessageManager bobMessageManager = mailboxManager.getMailbox(bobMailbox, bobSession);
         ComposedMessageId composedMessageId = appendMessage(aliceMessageManager);
         MessageId messageId = composedMessageId.getMessageId();
 
@@ -229,7 +219,7 @@ class DeletedMessageVaultHookTest {
                 .asAddition()),
             aliceSession);
 
-        messageIdManager.setInMailboxes(messageId, ImmutableList.of(bobMailbox.getMailboxId()), bobSession);
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(bobMailbox), bobSession);
 
         bobMessageManager.delete(ImmutableList.copyOf(bobMessageManager.search(searchQuery, bobSession)), bobSession);
 
@@ -239,10 +229,10 @@ class DeletedMessageVaultHookTest {
 
     @Test
     void notifyDeleteShouldAppendMessageToVaultOfOtherUserOfMailboxWhenOtherUserDeleteMessageAfterCopyToAnotherMailbox() throws Exception {
-        Mailbox aliceMailbox = testingData.createMailbox(MAILBOX_ALICE_ONE, aliceSession);
-        Mailbox bobMailbox = testingData.createMailbox(MAILBOX_BOB_ONE, bobSession);
-        MessageManager aliceMessageManager = testingData.createMessageManager(aliceMailbox, aliceSession);
-        MessageManager bobMessageManager = testingData.createMessageManager(bobMailbox, bobSession);
+        MailboxId aliceMailbox = mailboxManager.createMailbox(MAILBOX_ALICE_ONE, aliceSession).get();
+        MailboxId bobMailbox = mailboxManager.createMailbox(MAILBOX_BOB_ONE, bobSession).get();
+        MessageManager aliceMessageManager = mailboxManager.getMailbox(aliceMailbox, aliceSession);
+        MessageManager bobMessageManager = mailboxManager.getMailbox(bobMailbox, bobSession);
         ComposedMessageId composedMessageId = appendMessage(aliceMessageManager);
         MessageId messageId = composedMessageId.getMessageId();
 
@@ -253,9 +243,9 @@ class DeletedMessageVaultHookTest {
                 .asAddition()),
             aliceSession);
 
-        messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox.getMailboxId(), bobMailbox.getMailboxId()), bobSession);
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox, bobMailbox), bobSession);
 
-        DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(bobMailbox.getMailboxId()), messageId, BOB);
+        DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(bobMailbox), messageId, BOB);
         bobMessageManager.delete(ImmutableList.copyOf(bobMessageManager.search(searchQuery, bobSession)), bobSession);
 
         assertThat(messageVault.search(BOB, Query.ALL).blockFirst())
@@ -264,10 +254,10 @@ class DeletedMessageVaultHookTest {
 
     @Test
     void notifyDeleteShouldNotAppendMessageToVaultOfMailboxOwnerWhenOtherUserDeleteMessageAfterCopyToAnotherMailbox() throws Exception {
-        Mailbox aliceMailbox = testingData.createMailbox(MAILBOX_ALICE_ONE, aliceSession);
-        Mailbox bobMailbox = testingData.createMailbox(MAILBOX_BOB_ONE, bobSession);
-        MessageManager aliceMessageManager = testingData.createMessageManager(aliceMailbox, aliceSession);
-        MessageManager bobMessageManager = testingData.createMessageManager(bobMailbox, bobSession);
+        MailboxId aliceMailbox = mailboxManager.createMailbox(MAILBOX_ALICE_ONE, aliceSession).get();
+        MailboxId bobMailbox = mailboxManager.createMailbox(MAILBOX_BOB_ONE, bobSession).get();
+        MessageManager aliceMessageManager = mailboxManager.getMailbox(aliceMailbox, aliceSession);
+        MessageManager bobMessageManager = mailboxManager.getMailbox(bobMailbox, bobSession);
         ComposedMessageId composedMessageId = appendMessage(aliceMessageManager);
         MessageId messageId = composedMessageId.getMessageId();
 
@@ -278,7 +268,7 @@ class DeletedMessageVaultHookTest {
                 .asAddition()),
             aliceSession);
 
-        messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox.getMailboxId(), bobMailbox.getMailboxId()), bobSession);
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox, bobMailbox), bobSession);
 
         bobMessageManager.delete(ImmutableList.copyOf(bobMessageManager.search(searchQuery, bobSession)), bobSession);
 
