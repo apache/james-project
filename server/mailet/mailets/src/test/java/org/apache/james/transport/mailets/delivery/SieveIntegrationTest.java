@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.transport.mailets.Sieve;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
+import org.apache.james.transport.mailets.jsieve.delivery.SieveExecutor;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Attribute;
@@ -936,6 +937,15 @@ public class SieveIntegrationTest {
             .fromMailet()
             .build();
         assertThat(fakeMailContext.getSentMails()).containsExactly(expectedSentMail);
+    }
+    
+    @Test(expected = MessagingException.class)
+    public void sieveErrorNotificationEmailsShouldNotBeProcessed() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/keep.script");
+
+        FakeMail mail = createMail();
+        mail.setAttribute(new Attribute(SieveExecutor.SIEVE_NOTIFICATION, AttributeValue.of(true)));
+        testee.service(mail);
     }
 
     private void prepareTestUsingScript(final String script) throws Exception {

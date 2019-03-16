@@ -21,6 +21,7 @@
 package org.apache.james.transport.mailets.jsieve.delivery;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 
@@ -36,6 +37,9 @@ import org.apache.jsieve.SieveFactory;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.parser.generated.ParseException;
 import org.apache.jsieve.parser.generated.TokenMgrError;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
@@ -46,6 +50,7 @@ import com.google.common.collect.ImmutableList;
 
 public class SieveExecutor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SieveExecutor.class);
+    public static final AttributeName SIEVE_NOTIFICATION = AttributeName.of("SieveNotification");
 
     public static Builder builder() {
         return new Builder();
@@ -114,7 +119,14 @@ public class SieveExecutor {
     public boolean execute(MailAddress recipient, Mail mail) throws MessagingException {
         Preconditions.checkNotNull(recipient, "Recipient for mail to be spooled cannot be null.");
         Preconditions.checkNotNull(mail.getMessage(), "Mail message to be spooled cannot be null.");
-
+        Optional<Attribute> oSieveNotification = mail.getAttribute(SIEVE_NOTIFICATION);
+        if (oSieveNotification.isPresent()) {
+            AttributeValue<Boolean> attrValue = (AttributeValue<Boolean>) oSieveNotification.get().getValue();
+            if (attrValue.value()) {
+                throw new MessagingException("Do not process Sieve error notification emails");
+            }
+        }
+        
         return sieveMessage(recipient, mail);
     }
 
@@ -150,6 +162,7 @@ public class SieveExecutor {
     }
 
     protected void handleFailure(MailAddress recipient, Mail aMail, Exception ex) throws MessagingException, IOException {
+        aMail.setAttribute(new Attribute(SIEVE_NOTIFICATION, AttributeValue.of(true)));
         mailetContext.sendMail(recipient, ImmutableList.of(recipient), SieveFailureMessageComposer.composeMessage(aMail, ex, recipient.toString()));
     }
 }
