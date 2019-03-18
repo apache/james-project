@@ -2552,6 +2552,7 @@ To move deleted messages in the vault, you need to specifically configure the De
 Here are the following actions available on the 'Deleted Messages Vault'
 
  - [Restore Deleted Messages](#Restore_deleted_messages)
+ - [Export Deleted Messages](#Export_deleted_messages)
 
  Note that the 'Deleted Messages Vault' feature is only supported on top of Cassandra-Guice.
 
@@ -2669,6 +2670,7 @@ Response code:
    - can not parse the JSON body
    - Json query object contains unsupported operator, fieldName
    - Json query object values violate parsing rules 
+ - 404: User not found
 
 The scheduled task will have the following type `deletedMessages/restore` and the following `additionalInformation`:
 
@@ -2684,6 +2686,46 @@ while:
  - successfulRestoreCount: number of restored messages
  - errorRestoreCount: number of messages that failed to restore
  - user: owner of deleted messages need to restore
+
+### Export Deleted Messages
+
+Retrieve deleted messages matched with requested query from an user then share the content to a targeted mail address (exportTo)
+
+```
+curl -XPOST http://ip:port/deletedMessages/user/userExportFrom@domain.ext?action=export&exportTo=userReceiving@domain.ext
+
+BODY: is the json query has the same structure with Restore Deleted Messages section
+```
+**Note**: Json query passing into the body follows the same rules & restrictions like in [Restore Deleted Messages](#Restore_deleted_messages)
+
+Response code:
+
+ - 201: Task for exporting has been created
+ - 400: Bad request: 
+   - exportTo query param is not present
+   - exportTo query param is not a valid mail address
+   - action query param is not present
+   - action query param is not a valid action
+   - user parameter is invalid
+   - can not parse the JSON body
+   - Json query object contains unsupported operator, fieldName
+   - Json query object values violate parsing rules 
+ - 404: User not found
+
+The scheduled task will have the following type `deletedMessages/export` and the following `additionalInformation`:
+
+```
+{
+  "userExportFrom": "userToRestore@domain.ext",
+  "exportTo": "userReceiving@domain.ext",
+  "totalExportedMessages": 1432
+}
+```
+
+while:
+ - userExportFrom: export deleted messages from this user
+ - exportTo: content of deleted messages have been shared to this mail address
+ - totalExportedMessages: number of deleted messages match with json query, then being shared to sharee
 
 ## Task management
 
