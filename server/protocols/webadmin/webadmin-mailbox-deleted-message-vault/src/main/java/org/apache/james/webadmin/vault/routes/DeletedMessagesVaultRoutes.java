@@ -63,7 +63,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import spark.HaltException;
 import spark.Request;
 import spark.Response;
 import spark.Service;
@@ -103,7 +102,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
         }
     }
 
-    public static final String ROOT_PATH = "deletedMessages/user";
+    public static final String ROOT_PATH = "deletedMessages/users";
     private static final String USER_PATH_PARAM = "user";
     private static final String RESTORE_PATH = ROOT_PATH + SEPARATOR + ":" + USER_PATH_PARAM;
     private static final String ACTION_QUERY_PARAM = "action";

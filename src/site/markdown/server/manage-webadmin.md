@@ -2561,7 +2561,7 @@ Here are the following actions available on the 'Deleted Messages Vault'
 Deleted messages of a specific user can be restored by calling the following endpoint:
 
 ```
-curl -XPOST http://ip:port/deletedMessages/user/userToRestore@domain.ext?action=restore
+curl -XPOST http://ip:port/deletedMessages/users/userToRestore@domain.ext?action=restore
 
 {"
   "combinator": "and",
@@ -2692,7 +2692,7 @@ while:
 Retrieve deleted messages matched with requested query from an user then share the content to a targeted mail address (exportTo)
 
 ```
-curl -XPOST http://ip:port/deletedMessages/user/userExportFrom@domain.ext?action=export&exportTo=userReceiving@domain.ext
+curl -XPOST http://ip:port/deletedMessages/users/userExportFrom@domain.ext?action=export&exportTo=userReceiving@domain.ext
 
 BODY: is the json query has the same structure with Restore Deleted Messages section
 ```

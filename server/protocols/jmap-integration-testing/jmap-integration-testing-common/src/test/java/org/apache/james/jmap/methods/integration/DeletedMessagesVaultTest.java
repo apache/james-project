@@ -489,7 +489,7 @@ public abstract class DeletedMessagesVaultTest {
     private void restoreMessagesFor(String user, String criteria) {
         String taskId = webAdminApi.with()
             .body(criteria)
-            .post("/deletedMessages/user/" + user + "?action=restore")
+            .post("/deletedMessages/users/" + user + "?action=restore")
             .jsonPath()
             .get("taskId");
 
