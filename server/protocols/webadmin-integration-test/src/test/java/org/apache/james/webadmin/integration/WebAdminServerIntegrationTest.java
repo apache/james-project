@@ -89,8 +89,7 @@ public class WebAdminServerIntegrationTest {
 
     @Before
     public void setUp() throws Exception {
-        guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule())
-                .overrideWith(new WebAdminConfigurationModule());
+        guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule());
         guiceJamesServer.start();
         dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);
         WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);

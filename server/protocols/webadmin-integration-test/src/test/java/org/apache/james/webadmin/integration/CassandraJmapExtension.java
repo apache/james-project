@@ -33,6 +33,7 @@ import org.apache.james.modules.TestElasticSearchModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.util.Runnables;
+import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -70,7 +71,7 @@ public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallba
                 .overrideWith(new TestESMetricReporterModule())
                 .overrideWith(cassandra.getModule())
                 .overrideWith(new TestElasticSearchModule(elasticSearch))
-                .overrideWith(new WebAdminConfigurationModule())
+                .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION))
                 .overrideWith(new UnauthorizedModule())
                 .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()));
     }

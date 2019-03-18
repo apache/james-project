@@ -49,8 +49,7 @@ public class AuthorizedEndpointsTest {
 
     @Before
     public void setUp() throws Exception {
-        guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule(), new UnauthorizedModule())
-                .overrideWith(new WebAdminConfigurationModule());
+        guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule(), new UnauthorizedModule());
         guiceJamesServer.start();
         WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
 

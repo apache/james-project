@@ -140,7 +140,6 @@ public class EventDeadLettersIntegrationTest {
     public void setUp() throws Exception {
         retryEventsListener = new RetryEventsListener();
         guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule())
-            .overrideWith(new WebAdminConfigurationModule())
             .overrideWith(binder -> Multibinder.newSetBinder(binder, MailboxListener.GroupMailboxListener.class).addBinding().toInstance(retryEventsListener));
         guiceJamesServer.start();
 

@@ -76,8 +76,7 @@ public class JwtFilterIntegrationTest {
             Optional.of(ClassLoaderUtils.getSystemResourceAsString("jwt_publickey")));
 
         guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule())
-            .overrideWith(new WebAdminConfigurationModule(),
-                binder -> binder.bind(AuthenticationFilter.class).to(JwtFilter.class),
+            .overrideWith(binder -> binder.bind(AuthenticationFilter.class).to(JwtFilter.class),
                 binder -> binder.bind(JwtConfiguration.class).toInstance(jwtConfiguration));
         guiceJamesServer.start();
         dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);

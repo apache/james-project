@@ -28,6 +28,7 @@ import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.core.configuration.Configuration;
+import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -68,6 +69,7 @@ public class CassandraJmapTestRule implements TestRule {
             .overrideWith(new TestESMetricReporterModule())
             .overrideWith(guiceModuleTestRule.getModule())
             .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()))
+            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION))
             .overrideWith(additionals);
     }
 
