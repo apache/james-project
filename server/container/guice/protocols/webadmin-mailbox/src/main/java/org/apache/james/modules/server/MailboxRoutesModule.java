@@ -36,11 +36,11 @@ public class MailboxRoutesModule extends AbstractModule {
     @Override
     protected void configure() {
         Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
-        routesMultibinder.addBinding().to(UserMailboxesRoutes.class);
-        routesMultibinder.addBinding().to(GlobalQuotaRoutes.class);
         routesMultibinder.addBinding().to(DomainQuotaRoutes.class);
-        routesMultibinder.addBinding().to(UserQuotaRoutes.class);
         routesMultibinder.addBinding().to(EventDeadLettersRoutes.class);
+        routesMultibinder.addBinding().to(GlobalQuotaRoutes.class);
+        routesMultibinder.addBinding().to(UserQuotaRoutes.class);
+        routesMultibinder.addBinding().to(UserMailboxesRoutes.class);
 
         Multibinder<JsonTransformerModule> jsonTransformerModuleMultibinder = Multibinder.newSetBinder(binder(), JsonTransformerModule.class);
         jsonTransformerModuleMultibinder.addBinding().to(QuotaModule.class);
