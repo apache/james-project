@@ -939,13 +939,15 @@ public class SieveIntegrationTest {
         assertThat(fakeMailContext.getSentMails()).containsExactly(expectedSentMail);
     }
     
-    @Test(expected = MessagingException.class)
+    @Test
     public void sieveErrorNotificationEmailsShouldNotBeProcessed() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/keep.script");
 
         FakeMail mail = createMail();
         mail.setAttribute(new Attribute(SieveExecutor.SIEVE_NOTIFICATION, AttributeValue.of(true)));
         testee.service(mail);
+        // check that the Sieve mailet performs normally, and nothing gets into ATTRIBUTE_NAME
+        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).isEmpty();
     }
 
     private void prepareTestUsingScript(final String script) throws Exception {

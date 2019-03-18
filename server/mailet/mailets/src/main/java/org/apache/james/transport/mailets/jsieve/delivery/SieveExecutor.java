@@ -39,6 +39,7 @@ import org.apache.jsieve.parser.generated.ParseException;
 import org.apache.jsieve.parser.generated.TokenMgrError;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
@@ -119,14 +120,10 @@ public class SieveExecutor {
     public boolean execute(MailAddress recipient, Mail mail) throws MessagingException {
         Preconditions.checkNotNull(recipient, "Recipient for mail to be spooled cannot be null.");
         Preconditions.checkNotNull(mail.getMessage(), "Mail message to be spooled cannot be null.");
-        Optional<Attribute> oSieveNotification = mail.getAttribute(SIEVE_NOTIFICATION);
-        if (oSieveNotification.isPresent()) {
-            AttributeValue<Boolean> attrValue = (AttributeValue<Boolean>) oSieveNotification.get().getValue();
-            if (attrValue.value()) {
-                throw new MessagingException("Do not process Sieve error notification emails");
-            }
+        boolean isSieveNotification = AttributeUtils.getValueAndCastFromMail(mail, SIEVE_NOTIFICATION, Boolean.class).orElse(false);
+        if (isSieveNotification) {
+           	return false;
         }
-        
         return sieveMessage(recipient, mail);
     }
 
