@@ -21,7 +21,6 @@
 package org.apache.james.transport.mailets.jsieve.delivery;
 
 import java.io.IOException;
-import java.util.Optional;
 
 import javax.mail.MessagingException;
 
@@ -121,10 +120,7 @@ public class SieveExecutor {
         Preconditions.checkNotNull(recipient, "Recipient for mail to be spooled cannot be null.");
         Preconditions.checkNotNull(mail.getMessage(), "Mail message to be spooled cannot be null.");
         boolean isSieveNotification = AttributeUtils.getValueAndCastFromMail(mail, SIEVE_NOTIFICATION, Boolean.class).orElse(false);
-        if (isSieveNotification) {
-           	return false;
-        }
-        return sieveMessage(recipient, mail);
+        return !isSieveNotification ? sieveMessage(recipient, mail) : false;
     }
 
     protected boolean sieveMessage(MailAddress recipient, Mail aMail) throws MessagingException {
