@@ -42,9 +42,9 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
 
         InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
-            .withEventBus(eventBus)
-            .withPreDeletionHooks(preDeletionHooks)
-            .withQuotaManager(quotaManager)
+            .eventBus(eventBus)
+            .preDeletionHooks(preDeletionHooks)
+            .quotaManager(quotaManager)
             .create();
 
         return new MessageIdManagerTestSystem(resources.getMessageIdManager(),

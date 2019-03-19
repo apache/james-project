@@ -97,55 +97,55 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             this.listenersToBeRegistered = ImmutableList.builder();
         }
 
-        public Factory withMessageParser(MessageParser messageParser) {
+        public Factory messageParser(MessageParser messageParser) {
             this.messageParser = Optional.of(messageParser);
             return this;
         }
 
-        public Factory withQuotaManager(QuotaManager quotaManager) {
+        public Factory quotaManager(QuotaManager quotaManager) {
             this.quotaManager = Optional.of(quotaManager);
             return this;
         }
 
-        public Factory withAuthenticator(Authenticator authenticator) {
+        public Factory authenticator(Authenticator authenticator) {
             this.authenticator = Optional.of(authenticator);
             return this;
         }
 
-        public Factory withAuthorizator(Authorizator authorizator) {
+        public Factory authorizator(Authorizator authorizator) {
             this.authorizator = Optional.of(authorizator);
             return this;
         }
 
-        public Factory withEventBus(EventBus eventBus) {
+        public Factory eventBus(EventBus eventBus) {
             this.eventBus = Optional.of(eventBus);
             return this;
         }
 
-        public Factory withAnnotationLimits(int limitAnnotationCount, int limitAnnotationSize) {
+        public Factory annotationLimits(int limitAnnotationCount, int limitAnnotationSize) {
             this.limitAnnotationCount = Optional.of(limitAnnotationCount);
             this.limitAnnotationSize = Optional.of(limitAnnotationSize);
             return this;
         }
 
-        public Factory withPreDeletionHooks(Collection<PreDeletionHook> preDeletionHooks) {
+        public Factory preDeletionHooks(Collection<PreDeletionHook> preDeletionHooks) {
             this.preDeletionHooksInstanciators.addAll(preDeletionHooks.stream()
                 .map(this::toFactory)
                 .collect(Guavate.toImmutableList()));
             return this;
         }
 
-        public Factory withPreDeletionHook(Function<MailboxManagerPreInstanciationStage, PreDeletionHook> preDeletionHook) {
+        public Factory preDeletionHook(Function<MailboxManagerPreInstanciationStage, PreDeletionHook> preDeletionHook) {
             this.preDeletionHooksInstanciators.add(preDeletionHook);
             return this;
         }
 
-        public Factory withSearchIndex(Function<MailboxManagerPreInstanciationStage, MessageSearchIndex> searchIndex) {
+        public Factory searchIndex(Function<MailboxManagerPreInstanciationStage, MessageSearchIndex> searchIndex) {
             this.searchIndexInstanciator = Optional.of(searchIndex);
             return this;
         }
 
-        public Factory withListeningSearchIndex(Function<MailboxManagerPreInstanciationStage, ListeningMessageSearchIndex> searchIndex) {
+        public Factory listeningSearchIndex(Function<MailboxManagerPreInstanciationStage, ListeningMessageSearchIndex> searchIndex) {
             this.searchIndexInstanciator = Optional.of(stage -> {
                 ListeningMessageSearchIndex listeningMessageSearchIndex = searchIndex.apply(stage);
                 listenersToBeRegistered.add(listeningMessageSearchIndex);

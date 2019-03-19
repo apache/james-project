@@ -712,7 +712,7 @@ public class POP3ServerTest {
         protocolHandlerChain.put("usersrepository", UsersRepository.class, usersRepository);
 
         mailboxManager = new InMemoryIntegrationResources.Factory()
-            .withAuthenticator((userid, passwd) -> {
+            .authenticator((userid, passwd) -> {
                 try {
                     return usersRepository.test(userid, passwd.toString());
                 } catch (UsersRepositoryException e) {

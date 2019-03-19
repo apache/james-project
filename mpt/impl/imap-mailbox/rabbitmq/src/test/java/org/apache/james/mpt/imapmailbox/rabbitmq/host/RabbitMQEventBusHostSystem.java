@@ -76,9 +76,9 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
         eventBus.start();
 
         resources = new InMemoryIntegrationResources.Factory()
-            .withEventBus(eventBus)
-            .withAuthenticator(authenticator)
-            .withAuthorizator(authorizator)
+            .eventBus(eventBus)
+            .authenticator(authenticator)
+            .authorizator(authorizator)
             .create();
 
         ImapProcessor defaultImapProcessorFactory =

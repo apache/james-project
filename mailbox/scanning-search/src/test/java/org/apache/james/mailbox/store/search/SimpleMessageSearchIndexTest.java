@@ -32,7 +32,7 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
     @Override
     protected void initializeMailboxManager() {
         InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
-            .withSearchIndex(preInstanciationStage -> new SimpleMessageSearchIndex(
+            .searchIndex(preInstanciationStage -> new SimpleMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 preInstanciationStage.getMapperFactory(),
                 new PDFTextExtractor()))

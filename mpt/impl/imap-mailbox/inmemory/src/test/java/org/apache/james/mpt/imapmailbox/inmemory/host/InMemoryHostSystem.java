@@ -52,8 +52,8 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
     public void beforeTest() throws Exception {
         super.beforeTest();
         InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
-            .withAuthenticator(authenticator)
-            .withAuthorizator(authorizator)
+            .authenticator(authenticator)
+            .authorizator(authorizator)
             .create();
         this.mailboxManager = resources.getMailboxManager();
         this.perUserMaxQuotaManager = resources.getMaxQuotaManager();

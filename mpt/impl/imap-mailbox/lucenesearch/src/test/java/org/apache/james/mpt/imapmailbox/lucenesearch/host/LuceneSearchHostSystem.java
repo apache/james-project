@@ -90,9 +90,9 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
             FSDirectory fsDirectory = FSDirectory.open(tempFile);
 
             InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
-                .withAuthorizator(authorizator)
-                .withAuthenticator(authenticator)
-                .withListeningSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
+                .authorizator(authorizator)
+                .authenticator(authenticator)
+                .listeningSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
                     preInstanciationStage.getMapperFactory(), new InMemoryId.Factory(), fsDirectory,
                     new InMemoryMessageId.Factory(),
                     preInstanciationStage.getSessionProvider())))

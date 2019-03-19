@@ -47,7 +47,7 @@ public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManager
 
         mailboxManager = new InMemoryIntegrationResources.Factory().create().getMailboxManager();
         parseFailingMailboxManager = new InMemoryIntegrationResources.Factory()
-            .withMessageParser(failingMessageParser)
+            .messageParser(failingMessageParser)
             .create().getMailboxManager();
 
         super.setUp();

@@ -30,8 +30,8 @@ public class MemoryMailboxManagerProvider {
 
     public static InMemoryMailboxManager provideMailboxManager(Set<PreDeletionHook> preDeletionHooks) {
         return new InMemoryIntegrationResources.Factory()
-            .withAnnotationLimits(LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE)
-            .withPreDeletionHooks(preDeletionHooks)
+            .annotationLimits(LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE)
+            .preDeletionHooks(preDeletionHooks)
             .create()
             .getMailboxManager();
     }
