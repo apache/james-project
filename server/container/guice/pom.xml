@@ -34,6 +34,7 @@
 
     <modules>
         <module>blob-api-guice</module>
+        <module>blob-memory-guice</module>
         <module>blob-objectstorage-guice</module>
         <module>cassandra-guice</module>
         <module>cassandra-ldap-guice</module>

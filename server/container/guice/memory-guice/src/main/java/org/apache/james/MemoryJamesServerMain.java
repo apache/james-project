@@ -20,6 +20,7 @@
 package org.apache.james;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.james.modules.BlobMemoryModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.data.MemoryDataJmapModule;
 import org.apache.james.modules.data.MemoryDataModule;
@@ -79,12 +80,13 @@ public class MemoryJamesServerMain {
         new JMAPServerModule());
 
     public static final Module IN_MEMORY_SERVER_MODULE = Modules.combine(
+        new BlobMemoryModule(),
         new DeletedMessageVaultModule(),
+        new MailboxModule(),
         new MemoryDataModule(),
         new MemoryEventStoreModule(),
         new MemoryMailboxModule(),
-        new MemoryMailQueueModule(),
-        new MailboxModule());
+        new MemoryMailQueueModule());
 
     public static final Module SMTP_ONLY_MODULE = Modules.combine(
         MemoryJamesServerMain.IN_MEMORY_SERVER_MODULE,
