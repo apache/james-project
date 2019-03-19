@@ -45,10 +45,18 @@ public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManager
         when(failingMessageParser.retrieveAttachments(any(InputStream.class)))
             .thenThrow(new RuntimeException("Message parser set to fail"));
 
-        mailboxManager = new InMemoryIntegrationResources.Factory().create().getMailboxManager();
-        parseFailingMailboxManager = new InMemoryIntegrationResources.Factory()
+        mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
+        parseFailingMailboxManager = InMemoryIntegrationResources.factory()
+            .preProvisionnedFakeAuthenticator()
+            .fakeAuthorizator()
+            .inVmEventBus()
+            .defaultAnnotationLimits()
             .messageParser(failingMessageParser)
-            .create().getMailboxManager();
+            .scanningSearchIndex()
+            .noPreDeletionHooks()
+            .storeQuotaManager()
+            .create()
+            .getMailboxManager();
 
         super.setUp();
     }

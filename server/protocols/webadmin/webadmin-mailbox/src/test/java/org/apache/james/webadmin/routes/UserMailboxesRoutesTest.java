@@ -95,7 +95,7 @@ class UserMailboxesRoutesTest {
 
         @BeforeEach
         void setUp() throws Exception {
-            createServer(new InMemoryIntegrationResources.Factory().create().getMailboxManager());
+            createServer(InMemoryIntegrationResources.defaultResources().getMailboxManager());
         }
 
         @Test

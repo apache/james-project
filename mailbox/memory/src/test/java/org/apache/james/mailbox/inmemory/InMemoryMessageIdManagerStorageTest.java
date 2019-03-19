@@ -34,7 +34,7 @@ public class InMemoryMessageIdManagerStorageTest extends AbstractMessageIdManage
     
     @Override
     protected MessageIdManagerTestSystem createTestingData() {
-        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory().create();
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
 
         StoreMailboxManager mailboxManager = resources.getMailboxManager();
         return new MessageIdManagerTestSystem(

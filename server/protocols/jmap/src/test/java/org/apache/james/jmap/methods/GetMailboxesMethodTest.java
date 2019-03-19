@@ -70,7 +70,7 @@ public class GetMailboxesMethodTest {
     @Before
     public void setup() throws Exception {
         clientId = ClientId.of("#0");
-        mailboxManager = new InMemoryIntegrationResources.Factory().create().getMailboxManager();
+        mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         QuotaRootResolver quotaRootResolver = mailboxManager.getQuotaComponents().getQuotaRootResolver();
         QuotaManager quotaManager = mailboxManager.getQuotaComponents().getQuotaManager();
         mailboxFactory = new MailboxFactory(mailboxManager, quotaManager, quotaRootResolver);

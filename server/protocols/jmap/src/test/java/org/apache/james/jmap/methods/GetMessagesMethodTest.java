@@ -104,7 +104,7 @@ public class GetMessagesMethodTest {
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
         MessageFactory messageFactory = new MessageFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
-        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory().create();
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
         mailboxManager = resources.getMailboxManager();
 
         session = MailboxSessionUtil.create(ROBERT.asString());

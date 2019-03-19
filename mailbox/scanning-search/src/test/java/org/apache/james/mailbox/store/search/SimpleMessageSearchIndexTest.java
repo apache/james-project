@@ -31,11 +31,18 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
 
     @Override
     protected void initializeMailboxManager() {
-        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.factory()
+            .preProvisionnedFakeAuthenticator()
+            .fakeAuthorizator()
+            .inVmEventBus()
+            .defaultAnnotationLimits()
+            .defaultMessageParser()
             .searchIndex(preInstanciationStage -> new SimpleMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 preInstanciationStage.getMapperFactory(),
                 new PDFTextExtractor()))
+            .noPreDeletionHooks()
+            .storeQuotaManager()
             .create();
 
         storeMailboxManager = resources.getMailboxManager();

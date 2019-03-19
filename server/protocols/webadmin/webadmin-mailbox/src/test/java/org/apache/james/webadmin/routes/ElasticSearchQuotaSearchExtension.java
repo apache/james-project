@@ -65,7 +65,7 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
                 new TestingClientProvider(embeddedElasticSearch.getNode()).get(),
                 ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
 
-            InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory().create();
+            InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
 
             MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting();
 

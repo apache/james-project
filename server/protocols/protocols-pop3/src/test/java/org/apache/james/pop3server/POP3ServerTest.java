@@ -711,7 +711,7 @@ public class POP3ServerTest {
         protocolHandlerChain = new MockProtocolHandlerLoader();
         protocolHandlerChain.put("usersrepository", UsersRepository.class, usersRepository);
 
-        mailboxManager = new InMemoryIntegrationResources.Factory()
+        mailboxManager = InMemoryIntegrationResources.factory()
             .authenticator((userid, passwd) -> {
                 try {
                     return usersRepository.test(userid, passwd.toString());
@@ -719,7 +719,15 @@ public class POP3ServerTest {
                     e.printStackTrace();
                     return false;
                 }
-            }).create()
+            })
+            .fakeAuthorizator()
+            .inVmEventBus()
+            .defaultAnnotationLimits()
+            .defaultMessageParser()
+            .scanningSearchIndex()
+            .noPreDeletionHooks()
+            .storeQuotaManager()
+            .create()
             .getMailboxManager();
 
         protocolHandlerChain.put("mailboxmanager", MailboxManager.class, mailboxManager);

@@ -33,7 +33,7 @@ public class InMemoryCombinationManagerTest extends AbstractCombinationManagerTe
     
     @Override
     public CombinationManagerTestSystem createTestingData() {
-        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory().create();
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
 
         return new InMemoryCombinationManagerTestSystem(
             resources.getMailboxManager(),

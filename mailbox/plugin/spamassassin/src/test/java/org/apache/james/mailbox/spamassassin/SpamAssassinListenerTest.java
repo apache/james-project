@@ -77,7 +77,7 @@ public class SpamAssassinListenerTest {
 
     @Before
     public void setup() throws Exception {
-        StoreMailboxManager mailboxManager = spy(new InMemoryIntegrationResources.Factory().create().getMailboxManager());
+        StoreMailboxManager mailboxManager = spy(InMemoryIntegrationResources.defaultResources().getMailboxManager());
         SystemMailboxesProviderImpl systemMailboxesProvider = new SystemMailboxesProviderImpl(mailboxManager);
         when(mailboxManager.createSystemSession(USER))
             .thenReturn(MAILBOX_SESSION);

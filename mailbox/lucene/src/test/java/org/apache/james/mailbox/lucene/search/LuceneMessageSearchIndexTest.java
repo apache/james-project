@@ -37,11 +37,18 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
 
     @Override
     protected void initializeMailboxManager() {
-        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.factory()
+            .preProvisionnedFakeAuthenticator()
+            .fakeAuthorizator()
+            .inVmEventBus()
+            .defaultAnnotationLimits()
+            .defaultMessageParser()
             .listeningSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(), new InMemoryId.Factory(), new RAMDirectory(),
                 new InMemoryMessageId.Factory(),
                 preInstanciationStage.getSessionProvider())))
+            .noPreDeletionHooks()
+            .storeQuotaManager()
             .create();
 
         storeMailboxManager = resources.getMailboxManager();

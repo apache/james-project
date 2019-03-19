@@ -92,9 +92,12 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
 
-        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.factory()
             .authenticator(authenticator)
             .authorizator(authorizator)
+            .inVmEventBus()
+            .defaultAnnotationLimits()
+            .defaultMessageParser()
             .listeningSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 new ElasticSearchIndexer(client,
@@ -107,6 +110,8 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
                     MailboxElasticSearchConstants.MESSAGE_TYPE),
                 new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES),
                 preInstanciationStage.getSessionProvider()))
+            .noPreDeletionHooks()
+            .storeQuotaManager()
             .create();
 
         mailboxManager = resources.getMailboxManager();

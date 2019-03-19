@@ -76,7 +76,7 @@ class ReindexingRoutesTest {
 
     @BeforeEach
     void beforeEach() throws Exception {
-        mailboxManager = new InMemoryIntegrationResources.Factory().create().getMailboxManager();
+        mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         MemoryTaskManager taskManager = new MemoryTaskManager();
         InMemoryId.Factory mailboxIdFactory = new InMemoryId.Factory();
         searchIndex = mock(ListeningMessageSearchIndex.class);

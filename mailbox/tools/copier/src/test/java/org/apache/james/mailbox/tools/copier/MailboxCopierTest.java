@@ -136,7 +136,7 @@ public class MailboxCopierTest {
      * @return a new InMemoryMailboxManager
      */
     private MailboxManager newInMemoryMailboxManager() {
-        return new InMemoryIntegrationResources.Factory().create().getMailboxManager();
+        return InMemoryIntegrationResources.defaultResources().getMailboxManager();
     }
 
 }

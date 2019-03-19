@@ -49,7 +49,7 @@ public class DefaultMailboxesProvisioningFilterTest {
     public void before() throws Exception {
         session = MailboxSessionUtil.create(USERNAME);
 
-        mailboxManager = new InMemoryIntegrationResources.Factory().create().getMailboxManager();
+        mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         subscriptionManager = new StoreSubscriptionManager(mailboxManager.getMapperFactory());
         testee = new DefaultMailboxesProvisioningFilter(mailboxManager, subscriptionManager, new NoopMetricFactory());
     }

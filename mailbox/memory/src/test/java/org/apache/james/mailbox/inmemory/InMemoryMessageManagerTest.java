@@ -33,7 +33,7 @@ public class InMemoryMessageManagerTest extends AbstractMessageManagerTest {
     
     @Override
     protected MessageManagerTestSystem createTestSystem() {
-        return new InMemoryMessageManagerTestSystem(new InMemoryIntegrationResources.Factory().create().getMailboxManager());
+        return new InMemoryMessageManagerTestSystem(InMemoryIntegrationResources.defaultResources().getMailboxManager());
     }
 
 }

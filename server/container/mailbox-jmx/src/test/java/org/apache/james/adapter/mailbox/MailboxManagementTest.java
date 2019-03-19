@@ -55,7 +55,7 @@ public class MailboxManagementTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        StoreMailboxManager mailboxManager = new InMemoryIntegrationResources.Factory().create().getMailboxManager();
+        StoreMailboxManager mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         mapperFactory = mailboxManager.getMapperFactory();
 
         mailboxManagerManagement = new MailboxManagerManagement();

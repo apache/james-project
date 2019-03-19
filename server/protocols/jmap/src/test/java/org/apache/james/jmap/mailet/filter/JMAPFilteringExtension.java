@@ -131,7 +131,7 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
     public void beforeEach(ExtensionContext extensionContext) {
         FilteringManagement filteringManagement = new EventSourcingFilteringManagement(new InMemoryEventStore());
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
-        InMemoryMailboxManager mailboxManager = new InMemoryIntegrationResources.Factory().create().getMailboxManager();
+        InMemoryMailboxManager mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         ActionApplier.Factory actionApplierFactory = ActionApplier.factory(mailboxManager, new InMemoryId.Factory());
 
         JMAPFiltering jmapFiltering = new JMAPFiltering(filteringManagement, usersRepository, actionApplierFactory);

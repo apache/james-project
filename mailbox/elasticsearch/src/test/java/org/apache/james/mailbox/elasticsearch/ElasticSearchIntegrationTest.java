@@ -100,7 +100,12 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
 
-        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.factory()
+            .preProvisionnedFakeAuthenticator()
+            .fakeAuthorizator()
+            .inVmEventBus()
+            .defaultAnnotationLimits()
+            .defaultMessageParser()
             .listeningSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 new ElasticSearchIndexer(client,
@@ -114,6 +119,8 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
                     MailboxElasticSearchConstants.MESSAGE_TYPE),
                 new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES),
                 preInstanciationStage.getSessionProvider()))
+            .noPreDeletionHooks()
+            .storeQuotaManager()
             .create();
 
         storeMailboxManager = resources.getMailboxManager();

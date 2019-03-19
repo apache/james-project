@@ -60,7 +60,7 @@ public class MailboxAppenderTest {
                     .data("toto"))
             .build();
 
-        mailboxManager = new InMemoryIntegrationResources.Factory().create().getMailboxManager();
+        mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         testee = new MailboxAppender(mailboxManager);
 
         session = mailboxManager.createSystemSession("TEST");

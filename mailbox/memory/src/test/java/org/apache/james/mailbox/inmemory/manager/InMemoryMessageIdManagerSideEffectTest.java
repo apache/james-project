@@ -41,8 +41,13 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
     protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, EventBus eventBus, Set<PreDeletionHook> preDeletionHooks) {
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
 
-        InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.factory()
+            .preProvisionnedFakeAuthenticator()
+            .fakeAuthorizator()
             .eventBus(eventBus)
+            .defaultAnnotationLimits()
+            .defaultMessageParser()
+            .scanningSearchIndex()
             .preDeletionHooks(preDeletionHooks)
             .quotaManager(quotaManager)
             .create();
