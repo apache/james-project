@@ -1,0 +1,30 @@
+---
+layout: post
+title:  "Apache James Mime4J 0.8.3"
+date:   2019-03-19 08:13:22 +0700
+categories: james update
+---
+
+James Mime4J 0.8.2 has been released.
+
+This release includes the following changes:
+
+ - MIME4J-270: Using "alternative" as default subtype
+ - MIME4J-263: decoding encoded words with empty encoded-text
+ - MIME4J-279: Fixed JavaDoc errors to comply with Java8
+ - MIME4J-280: Improve exception handling
+ - MIME4J-283: DecoderUtil performance fix
+
+The library is available as a maven artifact, for instance for mime4j core:
+
+```
+<dependency>
+    <groupId>org.apache.james</groupId>
+    <artifactId>apache-mime4j-core</artifactId>
+    <version>0.8.3</version>
+</dependency>
+```
+
+You can also download the release artifacts [here].
+
+[here]: https://www.apache.org/dist/james/mime4j/0.8.3/
