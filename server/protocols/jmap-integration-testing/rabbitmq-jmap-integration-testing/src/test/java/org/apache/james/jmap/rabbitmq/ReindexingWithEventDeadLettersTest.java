@@ -47,8 +47,8 @@ import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.SwiftBlobStoreExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.objectstorage.PayloadCodecFactory;
+import org.apache.james.util.docker.DockerGenericContainer;
 import org.apache.james.util.docker.Images;
-import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.WebAdminGuiceProbe;
@@ -75,7 +75,7 @@ class ReindexingWithEventDeadLettersTest {
         .atMost(Duration.ONE_MINUTE)
         .await();
 
-    private static SwarmGenericContainer elasticSearchContainer = new SwarmGenericContainer(Images.ELASTICSEARCH_2)
+    private static DockerGenericContainer elasticSearchContainer = new DockerGenericContainer(Images.ELASTICSEARCH_2)
         .withExposedPorts(ELASTIC_SEARCH_HTTP_PORT, ELASTIC_SEARCH_PORT);
 
     private static final JamesServerBuilder.ServerProvider CONFIGURATION_BUILDER = configuration -> GuiceJamesServer

@@ -40,15 +40,15 @@ import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
-public class SwarmGenericContainer implements TestRule {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SwarmGenericContainer.class);
+public class DockerGenericContainer implements TestRule {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DockerGenericContainer.class);
     private static final String DOCKER_CONTAINER = "DOCKER_CONTAINER";
     private static final String NO_DOCKER_ENVIRONMENT = "Could not find a valid Docker environment.";
     private static final String SKIPPING_TEST_CAUTION = "Skipping all docker tests as no Docker environment was found";
 
     private GenericContainer<?> container;
 
-    public SwarmGenericContainer(String dockerImageName) {
+    public DockerGenericContainer(String dockerImageName) {
         try {
             this.container = new GenericContainer<>(dockerImageName);
         } catch (IllegalStateException e) {
@@ -56,7 +56,7 @@ public class SwarmGenericContainer implements TestRule {
         }
     }
 
-    public SwarmGenericContainer(ImageFromDockerfile imageFromDockerfile) {
+    public DockerGenericContainer(ImageFromDockerfile imageFromDockerfile) {
         try {
             this.container = new GenericContainer<>(imageFromDockerfile);
         } catch (IllegalStateException e) {
@@ -71,7 +71,7 @@ public class SwarmGenericContainer implements TestRule {
         }
     }
 
-    public SwarmGenericContainer withAffinityToContainer() {
+    public DockerGenericContainer withAffinityToContainer() {
         String containerEnv = System.getenv(DOCKER_CONTAINER);
         if (Strings.isNullOrEmpty(containerEnv)) {
             LOGGER.warn("'DOCKER_CONTAINER' environment variable not found, dockering without affinity");
@@ -83,32 +83,32 @@ public class SwarmGenericContainer implements TestRule {
         return this;
     }
 
-    public SwarmGenericContainer withEnv(String key, String value) {
+    public DockerGenericContainer withEnv(String key, String value) {
         container.addEnv(key, value);
         return this;
     }
 
-    public SwarmGenericContainer withExposedPorts(Integer... ports) {
+    public DockerGenericContainer withExposedPorts(Integer... ports) {
         container.withExposedPorts(ports);
         return this;
     }
 
-    public SwarmGenericContainer portBinding(int hostPort, int dockerPort) {
+    public DockerGenericContainer portBinding(int hostPort, int dockerPort) {
         container.setPortBindings(ImmutableList.of("0.0.0.0:" + hostPort + ":" + dockerPort));
         return this;
     }
 
-    public SwarmGenericContainer waitingFor(WaitStrategy waitStrategy) {
+    public DockerGenericContainer waitingFor(WaitStrategy waitStrategy) {
         container.waitingFor(waitStrategy);
         return this;
     }
 
-    public SwarmGenericContainer withStartupTimeout(Duration startupTimeout) {
+    public DockerGenericContainer withStartupTimeout(Duration startupTimeout) {
         container.withStartupTimeout(startupTimeout);
         return this;
     }
 
-    public SwarmGenericContainer withCommands(String... commands) {
+    public DockerGenericContainer withCommands(String... commands) {
         container.withCommand(commands);
         return this;
     }

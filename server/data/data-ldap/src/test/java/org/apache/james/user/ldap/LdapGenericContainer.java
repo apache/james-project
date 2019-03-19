@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.user.ldap;
 
+import org.apache.james.util.docker.DockerGenericContainer;
 import org.apache.james.util.docker.RateLimiters;
-import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.rules.ExternalResource;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
@@ -59,8 +59,8 @@ public class LdapGenericContainer extends ExternalResource {
             return new LdapGenericContainer(createContainer());
         }
 
-        private SwarmGenericContainer createContainer() {
-            return new SwarmGenericContainer(
+        private DockerGenericContainer createContainer() {
+            return new DockerGenericContainer(
                 new ImageFromDockerfile()
                     .withFileFromClasspath("populate.ldif", "ldif-files/populate.ldif")
                     .withFileFromClasspath("Dockerfile", "ldif-files/Dockerfile"))
@@ -73,9 +73,9 @@ public class LdapGenericContainer extends ExternalResource {
         }
     }
 
-    private final SwarmGenericContainer container;
+    private final DockerGenericContainer container;
 
-    private LdapGenericContainer(SwarmGenericContainer container) {
+    private LdapGenericContainer(DockerGenericContainer container) {
         this.container = container;
     }
 

@@ -18,9 +18,9 @@
  ****************************************************************/
 package org.apache.james.metric.es;
 
+import org.apache.james.util.docker.DockerGenericContainer;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
-import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -30,10 +30,10 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
 public class DockerElasticSearch2Extension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
-    private final SwarmGenericContainer elasticSearchContainer;
+    private final DockerGenericContainer elasticSearchContainer;
 
     private DockerElasticSearch2Extension() {
-        this.elasticSearchContainer = new SwarmGenericContainer(Images.ELASTICSEARCH_2)
+        this.elasticSearchContainer = new DockerGenericContainer(Images.ELASTICSEARCH_2)
             .withAffinityToContainer()
             .withExposedPorts(ESReporterContract.ES_HTTP_PORT)
             .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
@@ -51,7 +51,7 @@ public class DockerElasticSearch2Extension implements ParameterResolver, BeforeE
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return (parameterContext.getParameter().getType() == SwarmGenericContainer.class);
+        return (parameterContext.getParameter().getType() == DockerGenericContainer.class);
     }
 
     @Override

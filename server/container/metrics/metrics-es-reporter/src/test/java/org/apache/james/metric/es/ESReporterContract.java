@@ -32,7 +32,7 @@ import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
 import org.apache.james.metrics.es.ESMetricReporter;
 import org.apache.james.metrics.es.ESReporterConfiguration;
-import org.apache.james.util.docker.SwarmGenericContainer;
+import org.apache.james.util.docker.DockerGenericContainer;
 import org.awaitility.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,7 +54,7 @@ abstract class ESReporterContract {
     private Timer timer;
 
     @BeforeEach
-    void setUp(SwarmGenericContainer esContainer) {
+    void setUp(DockerGenericContainer esContainer) {
         RestAssured.baseURI = String.format("http://%s:%d", esContainer.getHostIp(), esContainer.getMappedPort(ES_HTTP_PORT));
         await().atMost(Duration.ONE_MINUTE)
             .untilAsserted(() -> elasticSearchStarted());
@@ -80,7 +80,7 @@ abstract class ESReporterContract {
     }
 
     @Test
-    void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainer(SwarmGenericContainer esContainer) {
+    void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainer(DockerGenericContainer esContainer) {
         Metric metric = new DropWizardMetricFactory(registry).generate("probe");
         TimerTask timerTask = new TimerTask() {
             @Override
@@ -95,7 +95,7 @@ abstract class ESReporterContract {
     }
 
     @Test
-    void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainerWhenRecordingTimeMetric(SwarmGenericContainer esContainer) {
+    void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainerWhenRecordingTimeMetric(DockerGenericContainer esContainer) {
         TimeMetric metric = new DropWizardMetricFactory(registry).timer("itstime");
         TimerTask timerTask = new TimerTask() {
             @Override

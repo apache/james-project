@@ -44,9 +44,9 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.james.util.docker.DockerGenericContainer;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
-import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
@@ -429,7 +429,7 @@ public class ICSAttachmentWorkflowTest {
             "";
 
     @ClassRule
-    public static SwarmGenericContainer rabbitMqContainer = new SwarmGenericContainer(Images.RABBITMQ)
+    public static DockerGenericContainer rabbitMqContainer = new DockerGenericContainer(Images.RABBITMQ)
         .withAffinityToContainer()
         .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     @Rule

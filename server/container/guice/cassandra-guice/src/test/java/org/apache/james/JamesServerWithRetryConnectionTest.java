@@ -39,8 +39,8 @@ import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.util.concurrent.NamedThreadFactory;
+import org.apache.james.util.docker.DockerGenericContainer;
 import org.apache.james.util.docker.Images;
-import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ class JamesServerWithRetryConnectionTest {
     private static final int LIMIT_TO_10_MESSAGES = 10;
     private static final long WAITING_TIME = TimeUnit.MILLISECONDS.convert(10, TimeUnit.SECONDS);
 
-    private static SwarmGenericContainer elasticSearchContainer = new SwarmGenericContainer(Images.ELASTICSEARCH_2)
+    private static DockerGenericContainer elasticSearchContainer = new DockerGenericContainer(Images.ELASTICSEARCH_2)
         .withExposedPorts(ELASTIC_SEARCH_HTTP_PORT, ELASTIC_SEARCH_PORT);
     private static final DockerCassandraRule cassandraRule = new DockerCassandraRule();
 

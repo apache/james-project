@@ -21,7 +21,7 @@ package org.apache.james;
 
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.util.Host;
-import org.apache.james.util.docker.SwarmGenericContainer;
+import org.apache.james.util.docker.DockerGenericContainer;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;
@@ -30,9 +30,9 @@ public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
     public static final int ELASTIC_SEARCH_PORT = 9300;
     public static final int ELASTIC_SEARCH_HTTP_PORT = 9200;
 
-    private final SwarmGenericContainer elasticSearchContainer;
+    private final DockerGenericContainer elasticSearchContainer;
 
-    public DockerElasticSearchExtension(SwarmGenericContainer elasticSearchContainer) {
+    public DockerElasticSearchExtension(DockerGenericContainer elasticSearchContainer) {
         this.elasticSearchContainer = elasticSearchContainer;
     }
 
