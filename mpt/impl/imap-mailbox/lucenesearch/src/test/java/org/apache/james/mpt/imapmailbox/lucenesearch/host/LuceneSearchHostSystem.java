@@ -92,7 +92,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
             InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
                 .withAuthorizator(authorizator)
                 .withAuthenticator(authenticator)
-                .withSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
+                .withListeningSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
                     preInstanciationStage.getMapperFactory(), new InMemoryId.Factory(), fsDirectory,
                     new InMemoryMessageId.Factory(),
                     preInstanciationStage.getSessionProvider())))

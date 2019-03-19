@@ -38,7 +38,7 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
     @Override
     protected void initializeMailboxManager() {
         InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
-            .withSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
+            .withListeningSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(), new InMemoryId.Factory(), new RAMDirectory(),
                 new InMemoryMessageId.Factory(),
                 preInstanciationStage.getSessionProvider())))

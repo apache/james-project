@@ -62,11 +62,13 @@ import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
+import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.api.NoopMetricFactory;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 public class InMemoryIntegrationResources implements IntegrationResources<StoreMailboxManager> {
@@ -80,6 +82,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         private Optional<MessageParser> messageParser;
         private Optional<Function<MailboxManagerPreInstanciationStage, MessageSearchIndex>> searchIndexInstanciator;
         private ImmutableSet.Builder<Function<MailboxManagerPreInstanciationStage, PreDeletionHook>> preDeletionHooksInstanciators;
+        private ImmutableList.Builder<MailboxListener.GroupMailboxListener> listenersToBeRegistered;
 
         public Factory() {
             this.authenticator = Optional.empty();
@@ -91,6 +94,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             this.messageParser = Optional.empty();
             this.quotaManager = Optional.empty();
             this.preDeletionHooksInstanciators = ImmutableSet.builder();
+            this.listenersToBeRegistered = ImmutableList.builder();
         }
 
         public Factory withMessageParser(MessageParser messageParser) {
@@ -126,7 +130,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
         public Factory withPreDeletionHooks(Collection<PreDeletionHook> preDeletionHooks) {
             this.preDeletionHooksInstanciators.addAll(preDeletionHooks.stream()
-                .map(this::toInstanciator)
+                .map(this::toFactory)
                 .collect(Guavate.toImmutableList()));
             return this;
         }
@@ -141,7 +145,16 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             return this;
         }
 
-        private Function<MailboxManagerPreInstanciationStage, PreDeletionHook> toInstanciator(PreDeletionHook preDeletionHook) {
+        public Factory withListeningSearchIndex(Function<MailboxManagerPreInstanciationStage, ListeningMessageSearchIndex> searchIndex) {
+            this.searchIndexInstanciator = Optional.of(stage -> {
+                ListeningMessageSearchIndex listeningMessageSearchIndex = searchIndex.apply(stage);
+                listenersToBeRegistered.add(listeningMessageSearchIndex);
+                return listeningMessageSearchIndex;
+            });
+            return this;
+        }
+
+        private Function<MailboxManagerPreInstanciationStage, PreDeletionHook> toFactory(PreDeletionHook preDeletionHook) {
             return any -> preDeletionHook;
         }
 
@@ -187,9 +200,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             eventBus.register(listeningCurrentQuotaUpdater);
             eventBus.register(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider));
 
-            if (index instanceof MailboxListener.GroupMailboxListener) {
-                eventBus.register((MailboxListener.GroupMailboxListener) index);
-            }
+            listenersToBeRegistered.build().forEach(eventBus::register);
 
             return new InMemoryIntegrationResources(manager, storeRightManager, new InMemoryMessageId.Factory(), currentQuotaManager, quotaRootResolver, maxQuotaManager, quotaManager, index);
         }

@@ -38,6 +38,7 @@ import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
 import org.apache.james.mailbox.elasticsearch.query.CriterionConverter;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -101,7 +102,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
 
         InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
-            .withSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
+            .withListeningSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 new ElasticSearchIndexer(client,
                     Executors.newSingleThreadExecutor(threadFactory),

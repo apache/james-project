@@ -95,7 +95,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
         InMemoryIntegrationResources resources = new InMemoryIntegrationResources.Factory()
             .withAuthenticator(authenticator)
             .withAuthorizator(authorizator)
-            .withSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
+            .withListeningSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 new ElasticSearchIndexer(client,
                     Executors.newSingleThreadExecutor(threadFactory),
