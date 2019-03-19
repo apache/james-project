@@ -29,7 +29,7 @@ public class MemoryMailboxManagerProvider {
     private static final int LIMIT_ANNOTATION_SIZE = 30;
 
     public static InMemoryMailboxManager provideMailboxManager(Set<PreDeletionHook> preDeletionHooks) {
-        return InMemoryIntegrationResources.factory()
+        return InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
             .fakeAuthorizator()
             .inVmEventBus()
@@ -38,7 +38,7 @@ public class MemoryMailboxManagerProvider {
             .scanningSearchIndex()
             .preDeletionHooks(preDeletionHooks)
             .storeQuotaManager()
-            .create()
+            .build()
             .getMailboxManager();
     }
 

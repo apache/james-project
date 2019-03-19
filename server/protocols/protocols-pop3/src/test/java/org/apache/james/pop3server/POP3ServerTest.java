@@ -711,7 +711,7 @@ public class POP3ServerTest {
         protocolHandlerChain = new MockProtocolHandlerLoader();
         protocolHandlerChain.put("usersrepository", UsersRepository.class, usersRepository);
 
-        mailboxManager = InMemoryIntegrationResources.factory()
+        mailboxManager = InMemoryIntegrationResources.builder()
             .authenticator((userid, passwd) -> {
                 try {
                     return usersRepository.test(userid, passwd.toString());
@@ -727,7 +727,7 @@ public class POP3ServerTest {
             .scanningSearchIndex()
             .noPreDeletionHooks()
             .storeQuotaManager()
-            .create()
+            .build()
             .getMailboxManager();
 
         protocolHandlerChain.put("mailboxmanager", MailboxManager.class, mailboxManager);

@@ -168,16 +168,16 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         }
 
         interface FinalStage {
-            InMemoryIntegrationResources create();
+            InMemoryIntegrationResources build();
         }
     }
 
-    public static Stages.RequireAuthenticator factory() {
-        return new Factory();
+    public static Stages.RequireAuthenticator builder() {
+        return new Builder();
     }
 
     public static InMemoryIntegrationResources defaultResources() {
-        return factory()
+        return builder()
             .preProvisionnedFakeAuthenticator()
             .fakeAuthorizator()
             .inVmEventBus()
@@ -186,10 +186,10 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             .scanningSearchIndex()
             .noPreDeletionHooks()
             .storeQuotaManager()
-            .create();
+            .build();
     }
 
-    public static class Factory implements Stages.RequireAuthenticator, Stages.RequireAuthorizator, Stages.RequireEventBus,
+    public static class Builder implements Stages.RequireAuthenticator, Stages.RequireAuthorizator, Stages.RequireEventBus,
         Stages.RequireAnnotationLimits, Stages.RequireMessageParser, Stages.RequireSearchIndex, Stages.RequirePreDeletionHooks,
         Stages.RequireQuotaManager, Stages.FinalStage {
 
@@ -204,7 +204,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         private ImmutableSet.Builder<Function<MailboxManagerPreInstanciationStage, PreDeletionHook>> preDeletionHooksFactories;
         private ImmutableList.Builder<MailboxListener.GroupMailboxListener> listenersToBeRegistered;
 
-        private Factory() {
+        private Builder() {
             this.authenticator = Optional.empty();
             this.authorizator = Optional.empty();
             this.eventBus = Optional.empty();
@@ -218,56 +218,56 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         }
 
         @Override
-        public Factory messageParser(MessageParser messageParser) {
+        public Builder messageParser(MessageParser messageParser) {
             this.messageParser = Optional.of(messageParser);
             return this;
         }
 
         @Override
-        public Factory quotaManager(Function<BaseQuotaComponentsStage, QuotaManager> quotaManager) {
+        public Builder quotaManager(Function<BaseQuotaComponentsStage, QuotaManager> quotaManager) {
             this.quotaManager = Optional.of(quotaManager);
             return this;
         }
 
         @Override
-        public Factory authenticator(Authenticator authenticator) {
+        public Builder authenticator(Authenticator authenticator) {
             this.authenticator = Optional.of(authenticator);
             return this;
         }
 
         @Override
-        public Factory authorizator(Authorizator authorizator) {
+        public Builder authorizator(Authorizator authorizator) {
             this.authorizator = Optional.of(authorizator);
             return this;
         }
 
         @Override
-        public Factory eventBus(EventBus eventBus) {
+        public Builder eventBus(EventBus eventBus) {
             this.eventBus = Optional.of(eventBus);
             return this;
         }
 
         @Override
-        public Factory annotationLimits(int limitAnnotationCount, int limitAnnotationSize) {
+        public Builder annotationLimits(int limitAnnotationCount, int limitAnnotationSize) {
             this.limitAnnotationCount = Optional.of(limitAnnotationCount);
             this.limitAnnotationSize = Optional.of(limitAnnotationSize);
             return this;
         }
 
         @Override
-        public Factory preDeletionHooksFactories(Collection<Function<MailboxManagerPreInstanciationStage, PreDeletionHook>> preDeletionHooks) {
+        public Builder preDeletionHooksFactories(Collection<Function<MailboxManagerPreInstanciationStage, PreDeletionHook>> preDeletionHooks) {
             this.preDeletionHooksFactories.addAll(preDeletionHooks);
             return this;
         }
 
         @Override
-        public Factory searchIndex(Function<MailboxManagerPreInstanciationStage, MessageSearchIndex> searchIndex) {
+        public Builder searchIndex(Function<MailboxManagerPreInstanciationStage, MessageSearchIndex> searchIndex) {
             this.searchIndexFactory = Optional.of(searchIndex);
             return this;
         }
 
         @Override
-        public Factory listeningSearchIndex(Function<MailboxManagerPreInstanciationStage, ListeningMessageSearchIndex> searchIndex) {
+        public Builder listeningSearchIndex(Function<MailboxManagerPreInstanciationStage, ListeningMessageSearchIndex> searchIndex) {
             this.searchIndexFactory = Optional.of(stage -> {
                 ListeningMessageSearchIndex listeningMessageSearchIndex = searchIndex.apply(stage);
                 listenersToBeRegistered.add(listeningMessageSearchIndex);
@@ -277,7 +277,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         }
 
         @Override
-        public InMemoryIntegrationResources create() {
+        public InMemoryIntegrationResources build() {
             Preconditions.checkState(authenticator.isPresent());
             Preconditions.checkState(authorizator.isPresent());
             Preconditions.checkState(eventBus.isPresent());

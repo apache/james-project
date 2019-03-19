@@ -92,7 +92,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
 
-        InMemoryIntegrationResources resources = InMemoryIntegrationResources.factory()
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .authenticator(authenticator)
             .authorizator(authorizator)
             .inVmEventBus()
@@ -112,7 +112,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
                 preInstanciationStage.getSessionProvider()))
             .noPreDeletionHooks()
             .storeQuotaManager()
-            .create();
+            .build();
 
         mailboxManager = resources.getMailboxManager();
 

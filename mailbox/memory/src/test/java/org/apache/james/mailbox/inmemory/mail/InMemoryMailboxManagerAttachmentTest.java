@@ -46,7 +46,7 @@ public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManager
             .thenThrow(new RuntimeException("Message parser set to fail"));
 
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
-        parseFailingMailboxManager = InMemoryIntegrationResources.factory()
+        parseFailingMailboxManager = InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
             .fakeAuthorizator()
             .inVmEventBus()
@@ -55,7 +55,7 @@ public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManager
             .scanningSearchIndex()
             .noPreDeletionHooks()
             .storeQuotaManager()
-            .create()
+            .build()
             .getMailboxManager();
 
         super.setUp();

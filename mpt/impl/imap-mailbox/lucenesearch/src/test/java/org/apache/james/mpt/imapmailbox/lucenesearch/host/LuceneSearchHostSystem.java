@@ -89,7 +89,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
         try {
             FSDirectory fsDirectory = FSDirectory.open(tempFile);
 
-            InMemoryIntegrationResources resources = InMemoryIntegrationResources.factory()
+            InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
                 .authenticator(authenticator)
                 .authorizator(authorizator)
                 .inVmEventBus()
@@ -101,7 +101,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
                     preInstanciationStage.getSessionProvider())))
                 .noPreDeletionHooks()
                 .storeQuotaManager()
-                .create();
+                .build();
 
             mailboxManager = resources.getMailboxManager();
 

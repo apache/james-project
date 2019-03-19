@@ -51,7 +51,7 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
     @Override
     public void beforeTest() throws Exception {
         super.beforeTest();
-        InMemoryIntegrationResources resources = InMemoryIntegrationResources.factory()
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .authenticator(authenticator)
             .authorizator(authorizator)
             .inVmEventBus()
@@ -60,7 +60,7 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
             .scanningSearchIndex()
             .noPreDeletionHooks()
             .storeQuotaManager()
-            .create();
+            .build();
         this.mailboxManager = resources.getMailboxManager();
         this.perUserMaxQuotaManager = resources.getMaxQuotaManager();
 

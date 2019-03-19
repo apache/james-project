@@ -37,7 +37,7 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
 
     @Override
     protected void initializeMailboxManager() {
-        InMemoryIntegrationResources resources = InMemoryIntegrationResources.factory()
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
             .fakeAuthorizator()
             .inVmEventBus()
@@ -49,7 +49,7 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
                 preInstanciationStage.getSessionProvider())))
             .noPreDeletionHooks()
             .storeQuotaManager()
-            .create();
+            .build();
 
         storeMailboxManager = resources.getMailboxManager();
         messageIdManager = resources.getMessageIdManager();

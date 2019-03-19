@@ -31,7 +31,7 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
 
     @Override
     protected void initializeMailboxManager() {
-        InMemoryIntegrationResources resources = InMemoryIntegrationResources.factory()
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
             .fakeAuthorizator()
             .inVmEventBus()
@@ -43,7 +43,7 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
                 new PDFTextExtractor()))
             .noPreDeletionHooks()
             .storeQuotaManager()
-            .create();
+            .build();
 
         storeMailboxManager = resources.getMailboxManager();
         messageIdManager = resources.getMessageIdManager();

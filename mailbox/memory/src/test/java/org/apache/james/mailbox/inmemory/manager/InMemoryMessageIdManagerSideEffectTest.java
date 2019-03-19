@@ -41,7 +41,7 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
     protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, EventBus eventBus, Set<PreDeletionHook> preDeletionHooks) {
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
 
-        InMemoryIntegrationResources resources = InMemoryIntegrationResources.factory()
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
             .fakeAuthorizator()
             .eventBus(eventBus)
@@ -50,7 +50,7 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
             .scanningSearchIndex()
             .preDeletionHooks(preDeletionHooks)
             .quotaManager(quotaManager)
-            .create();
+            .build();
 
         return new MessageIdManagerTestSystem(resources.getMessageIdManager(),
             messageIdFactory,

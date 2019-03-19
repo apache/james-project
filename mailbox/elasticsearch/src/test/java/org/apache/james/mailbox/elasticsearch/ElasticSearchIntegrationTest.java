@@ -100,7 +100,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
 
-        InMemoryIntegrationResources resources = InMemoryIntegrationResources.factory()
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
             .fakeAuthorizator()
             .inVmEventBus()
@@ -121,7 +121,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
                 preInstanciationStage.getSessionProvider()))
             .noPreDeletionHooks()
             .storeQuotaManager()
-            .create();
+            .build();
 
         storeMailboxManager = resources.getMailboxManager();
         messageIdManager = resources.getMessageIdManager();
