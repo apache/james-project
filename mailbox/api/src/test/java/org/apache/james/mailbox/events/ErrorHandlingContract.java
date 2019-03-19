@@ -52,6 +52,11 @@ interface ErrorHandlingContract extends EventBusContract {
         }
 
         @Override
+        public boolean isHandling(Event event) {
+            return true;
+        }
+
+        @Override
         public void event(Event event) {
             timeElapsed.add(Instant.now());
             throw new RuntimeException("throw to trigger reactor retry");

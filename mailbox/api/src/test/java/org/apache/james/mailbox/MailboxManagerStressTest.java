@@ -89,7 +89,6 @@ public abstract class MailboxManagerStressTest<T extends MailboxManager> {
                     return;
                 }
 
-
                 try {
                     MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
 

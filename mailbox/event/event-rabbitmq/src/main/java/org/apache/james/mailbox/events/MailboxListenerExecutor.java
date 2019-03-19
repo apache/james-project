@@ -35,16 +35,22 @@ public class MailboxListenerExecutor {
     }
 
     void execute(MailboxListener listener, MDCBuilder mdcBuilder, Event event) throws Exception {
-        TimeMetric timer = metricFactory.timer(timerName(listener));
-        try (Closeable mdc = mdcBuilder
-                .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
-                .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
-                .addContext(EventBus.StructuredLoggingFields.USER, event.getUser())
-                .addContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass())
-                .build()) {
-            listener.event(event);
-        } finally {
-            timer.stopAndPublish();
+        if (listener.isHandling(event)) {
+            TimeMetric timer = metricFactory.timer(timerName(listener));
+            try (Closeable mdc = buildMDC(listener, mdcBuilder, event)) {
+                listener.event(event);
+            } finally {
+                timer.stopAndPublish();
+            }
         }
+    }
+
+    private Closeable buildMDC(MailboxListener listener, MDCBuilder mdcBuilder, Event event) {
+        return mdcBuilder
+            .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
+            .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
+            .addContext(EventBus.StructuredLoggingFields.USER, event.getUser())
+            .addContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass())
+            .build();
     }
 }

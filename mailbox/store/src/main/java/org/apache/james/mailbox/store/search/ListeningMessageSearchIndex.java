@@ -43,8 +43,6 @@ import com.google.common.collect.ImmutableList;
 /**
  * {@link MessageSearchIndex} which needs to get registered as global {@link MailboxListener} and so get
  * notified about message changes. This will then allow to update the underlying index.
- * 
- *
  */
 public abstract class ListeningMessageSearchIndex implements MessageSearchIndex, MailboxListener.GroupMailboxListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListeningMessageSearchIndex.class);
@@ -59,17 +57,20 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
         this.sessionProvider = sessionProvider;
     }
 
+    @Override
+    public boolean isHandling(Event event) {
+        return INTERESTING_EVENTS.contains(event.getClass());
+    }
+
     /**
      * Process the {@link Event} and update the index if
      * something relevant is received
      */
     @Override
     public void event(Event event) throws Exception {
-        if (INTERESTING_EVENTS.contains(event.getClass())) {
-            handleMailboxEvent(event,
-                sessionProvider.createSystemSession(event.getUser().asString()),
-                (MailboxEvent) event);
-        }
+        handleMailboxEvent(event,
+            sessionProvider.createSystemSession(event.getUser().asString()),
+            (MailboxEvent) event);
     }
 
     private void handleMailboxEvent(Event event, MailboxSession session, MailboxEvent mailboxEvent) throws Exception {
@@ -98,7 +99,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     private Stream<MailboxMessage> retrieveMailboxMessages(MailboxSession session, Mailbox mailbox, MessageRange range) {
         try {
             return Iterators.toStream(factory.getMessageMapper(session)
-                    .findInMailbox(mailbox, range, FetchType.Full, UNLIMITED));
+                .findInMailbox(mailbox, range, FetchType.Full, UNLIMITED));
         } catch (Exception e) {
             LOGGER.error("Could not retrieve message {} in mailbox {}", range.toString(), mailbox.getMailboxId().serialize(), e);
             return Stream.empty();
@@ -117,8 +118,8 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     /**
      * Delete the concerned UIDs for the given {@link Mailbox} from the index
      *
-     * @param session The mailbox session performing the expunge
-     * @param mailbox mailbox on which the expunge was performed
+     * @param session      The mailbox session performing the expunge
+     * @param mailbox      mailbox on which the expunge was performed
      * @param expungedUids UIDS to be deleted
      */
     public abstract void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) throws Exception;
@@ -130,12 +131,12 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
      * @param mailbox mailbox on which the expunge was performed
      */
     public abstract void deleteAll(MailboxSession session, Mailbox mailbox) throws Exception;
-    
+
     /**
      * Update the messages concerned by the updated flags list for the given {@link Mailbox}
      *
-     * @param session session that performed the update
-     * @param mailbox mailbox containing the updated messages
+     * @param session          session that performed the update
+     * @param mailbox          mailbox containing the updated messages
      * @param updatedFlagsList list of flags that were updated
      */
     public abstract void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws Exception;

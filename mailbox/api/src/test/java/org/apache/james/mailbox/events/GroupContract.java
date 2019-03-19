@@ -72,6 +72,11 @@ public interface GroupContract {
                 }
 
                 @Override
+                public boolean isHandling(Event event) {
+                    return true;
+                }
+
+                @Override
                 public void event(Event event) throws Exception {
                     if (nbCalls.get() - finishedExecutions.get() > EventBus.EXECUTION_RATE) {
                         rateExceeded.set(true);

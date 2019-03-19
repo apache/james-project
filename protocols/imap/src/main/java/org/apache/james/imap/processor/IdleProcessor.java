@@ -170,10 +170,13 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         }
 
         @Override
+        public boolean isHandling(Event event) {
+            return event instanceof Added || event instanceof Expunged || event instanceof FlagsUpdated;
+        }
+
+        @Override
         public void event(Event event) {
-            if (event instanceof Added || event instanceof Expunged || event instanceof FlagsUpdated) {
                 unsolicitedResponses(session, responder, false);
-            }
         }
 
         @Override

@@ -44,6 +44,11 @@ public interface EventBusTestFixture {
         private final AtomicInteger calls = new AtomicInteger(0);
 
         @Override
+        public boolean isHandling(Event event) {
+            return true;
+        }
+
+        @Override
         public void event(Event event) {
             calls.incrementAndGet();
         }
@@ -58,6 +63,11 @@ public interface EventBusTestFixture {
 
         EventMatcherThrowingListener(ImmutableSet<Event> eventsCauseThrowing) {
             this.eventsCauseThrowing = eventsCauseThrowing;
+        }
+
+        @Override
+        public boolean isHandling(Event event) {
+            return true;
         }
 
         @Override

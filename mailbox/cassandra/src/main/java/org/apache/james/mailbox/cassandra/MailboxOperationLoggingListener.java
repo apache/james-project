@@ -45,6 +45,11 @@ public class MailboxOperationLoggingListener implements MailboxListener.GroupMai
     }
 
     @Override
+    public boolean isHandling(Event event) {
+        return event instanceof MailboxRenamed || event instanceof MailboxDeletion || event instanceof MailboxAdded;
+    }
+
+    @Override
     public void event(Event event) {
         if (event instanceof MailboxRenamed) {
             MailboxRenamed mailboxRenamed = (MailboxRenamed) event;

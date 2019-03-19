@@ -63,6 +63,11 @@ public interface MailboxListener {
         return ExecutionMode.SYNCHRONOUS;
     }
 
+
+    default boolean isHandling(Event event) {
+        return true;
+    }
+
     /**
      * Informs this listener about the given event.
      *
