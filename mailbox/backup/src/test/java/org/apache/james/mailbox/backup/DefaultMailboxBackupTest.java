@@ -19,12 +19,15 @@
 package org.apache.james.mailbox.backup;
 
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.james.blob.api.BlobId;
@@ -41,6 +44,7 @@ import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.inmemory.MemoryMailboxManagerProvider;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,14 +60,17 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
 
     private static final String USER = "user";
     private static final String OTHER_USER = "otherUser";
-    
+
     private static final User USER1 = User.fromUsername(USER);
+    private static final User USER2 = User.fromUsername(OTHER_USER);
+
     private static final MailboxPath MAILBOX_PATH_USER1_MAILBOX1 = MailboxPath.forUser(USER, MAILBOX_1_NAME);
     private static final MailboxPath MAILBOX_PATH_USER1_MAILBOX2 = MailboxPath.forUser(USER, MAILBOX_2_NAME);
     private static final MailboxPath MAILBOX_PATH_OTHER_USER_MAILBOX1 = MailboxPath.forUser(OTHER_USER, MAILBOX_OTHER_USER_NAME);
     private static final HashSet<PreDeletionHook> PRE_DELETION_HOOKS = new HashSet<>();
 
     private final ArchiveService archiveService = new Zipper();
+    private final MailArchiveLoader archiveLoader = new ZipArchiveLoader();
 
     private MailboxManager mailboxManager;
     private BlobStore store;
@@ -75,7 +82,7 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
         destination = File.createTempFile("backup-test", ".zip", temporaryFolder.getTempDir());
         mailboxManager = MemoryMailboxManagerProvider.provideMailboxManager(PRE_DELETION_HOOKS);
         store = new MemoryBlobStore(new HashBlobId.Factory());
-        backup = new DefaultMailboxBackup(mailboxManager, archiveService, store);
+        backup = new DefaultMailboxBackup(mailboxManager, archiveService, archiveLoader, store);
     }
 
     private void readFromStoreAndCopyInFile(BlobId blobId) throws Exception {
@@ -162,4 +169,55 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
             EntryChecks.hasName(MESSAGE_ID_1.serialize()).hasStringContent(MESSAGE_CONTENT_1)
         );
     }
+
+    @Test
+    void backupEmptAccountThenRestoringItInUser2AccountShouldCreateNoElements() throws Exception {
+        Publisher<BlobId> backupRes = backup.backupAccount(USER1);
+        Mono.from(backupRes).flatMap(Throwing.function(blobId -> Mono.from(backup.restore(USER2, blobId)))).block();
+
+        MailboxSession sessionUser2 = mailboxManager.createSystemSession(OTHER_USER);
+        List<DefaultMailboxBackup.MailAccountContent> content = backup.getAccountContentForUser(sessionUser2);
+
+
+        assertThat(content).isEmpty();
+    }
+
+    @Test
+    void backupAccountWithOneMailboxThenRestoringItInUser2AccountShouldCreateOneMailbox() throws Exception {
+        MailboxSession sessionUser1 = mailboxManager.createSystemSession(USER);
+        createMailBoxWithMessage(sessionUser1, MAILBOX_PATH_USER1_MAILBOX1);
+
+        Publisher<BlobId> backupRes = backup.backupAccount(USER1);
+        Mono.from(backupRes).flatMap(Throwing.function(blobId -> Mono.from(backup.restore(USER2, blobId)))).block();
+
+        MailboxSession sessionUser2 = mailboxManager.createSystemSession(OTHER_USER);
+        List<DefaultMailboxBackup.MailAccountContent> content = backup.getAccountContentForUser(sessionUser2);
+
+        assertThat(content).hasSize(1);
+        DefaultMailboxBackup.MailAccountContent mailAccountContent = content.get(0);
+        Mailbox mailbox = mailAccountContent.getMailboxWithAnnotations().mailbox;
+        assertThat(mailbox.getName()).isEqualTo(MAILBOX_1_NAME);
+        assertThat(mailAccountContent.getMessages().count()).isEqualTo(0);
+    }
+
+    @Test
+    void backupAccountWithOneMailboxAndTwoMessageThenRestoringItInUser2AccountShouldCreateOneMailboxWithTwoMessage() throws Exception {
+        MailboxSession sessionUser1 = mailboxManager.createSystemSession(USER);
+        createMailBoxWithMessage(sessionUser1, MAILBOX_PATH_USER1_MAILBOX1, MESSAGE_1, MESSAGE_2);
+
+        Publisher<BlobId> backupRes = backup.backupAccount(USER1);
+        Mono.from(backupRes).flatMap(Throwing.function(blobId -> Mono.from(backup.restore(USER2, blobId)))).block();
+
+        MailboxSession sessionUser2 = mailboxManager.createSystemSession(OTHER_USER);
+        List<DefaultMailboxBackup.MailAccountContent> content = backup.getAccountContentForUser(sessionUser2);
+
+        assertThat(content).hasSize(1);
+        DefaultMailboxBackup.MailAccountContent mailAccountContent = content.get(0);
+        Mailbox mailbox = mailAccountContent.getMailboxWithAnnotations().mailbox;
+        assertThat(mailbox.getName()).isEqualTo(MAILBOX_1_NAME);
+        assertThat(mailAccountContent.getMessages().count()).isEqualTo(2);
+    }
+
+    //TODO restore mailbox annotations
+
 }

@@ -33,4 +33,11 @@ public interface MailboxBackup {
      */
     Publisher<BlobId> backupAccount(User user) throws IOException, MailboxException;
 
+    /**
+     * @param user the user in which account the restored elements will be stored.
+     * @param blobId the blobId in the blob store of the zip file containing the account elements.
+     * @return a Publisher indicating when the action is completed
+     */
+    Publisher<Void> restore(User user, BlobId blobId) throws IOException, MailboxException;
+
 }

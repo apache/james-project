@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.backup;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.util.List;
@@ -26,8 +27,10 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -49,6 +52,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -74,9 +78,10 @@ public class DefaultMailboxBackup implements MailboxBackup {
         }
     }
 
-    public DefaultMailboxBackup(MailboxManager mailboxManager, ArchiveService archiveService, BlobStore store) {
+    public DefaultMailboxBackup(MailboxManager mailboxManager, ArchiveService archiveService, MailArchiveLoader archiveLoader, BlobStore store) {
         this.mailboxManager = mailboxManager;
         this.archiveService = archiveService;
+        this.archiveLoader = archiveLoader;
         this.store = store;
     }
 
@@ -92,8 +97,19 @@ public class DefaultMailboxBackup implements MailboxBackup {
         return saveToStore(mailboxes, messages);
     }
 
+    @Override
+    public Publisher<Void> restore(User user, BlobId blobId) throws IOException, MailboxException {
+        MailboxSession session = mailboxManager.createSystemSession(user.asString());
+        org.apache.james.blob.api.BlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        try (InputStream in = store.read(blobIdFactory.from(blobId.asString()));
+             MailArchiveIterator archiveIterator = archiveLoader.load(in)) {
+            throw new NotImplementedException("TODO");
+        }
+    }
+
     private final MailboxManager mailboxManager;
     private final ArchiveService archiveService;
+    private final MailArchiveLoader archiveLoader;
     private final BlobStore store;
 
     private Function<MailboxPath, Optional<MailAccountContent>> getMailboxWithAnnotationsFromPath(MailboxSession session) {
@@ -112,7 +128,8 @@ public class DefaultMailboxBackup implements MailboxBackup {
         };
     }
 
-    private List<MailAccountContent> getAccountContentForUser(MailboxSession session) throws MailboxException {
+    @VisibleForTesting
+    List<MailAccountContent> getAccountContentForUser(MailboxSession session) throws MailboxException {
         MailboxQuery queryUser = MailboxQuery.builder().username(session.getUser().asString()).build();
         Stream<MailboxPath> paths = mailboxManager.search(queryUser, session).stream()
             .map(MailboxMetaData::getPath);
