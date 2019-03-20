@@ -36,6 +36,7 @@
         <module>blob-api</module>
         <module>blob-cassandra</module>
         <module>blob-export-api</module>
+        <module>blob-export-file</module>
         <module>blob-memory</module>
         <module>blob-objectstorage</module>
         <module>blob-union</module>
