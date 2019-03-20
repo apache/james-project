@@ -178,7 +178,7 @@ interface EventDeadLettersContract {
                     Event.EventId eventId = Event.EventId.random();
                     EventDeadLetters.InsertionId insertionId = EventDeadLetters.InsertionId.random();
                     storedInsertionIds.put(threadNumber, insertionId);
-                    eventDeadLetters.store(groups.get(threadNumber), event(eventId), insertionId).subscribe();
+                    eventDeadLetters.store(groups.get(threadNumber), event(eventId), insertionId).block();
                 })
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
@@ -278,7 +278,7 @@ interface EventDeadLettersContract {
                     Event.EventId eventId = Event.EventId.random();
                     EventDeadLetters.InsertionId insertionId = EventDeadLetters.InsertionId.random();
                     storedInsertionIds.put(operationIndex, insertionId);
-                    eventDeadLetters.store(groups.get(threadNumber), event(eventId), insertionId).subscribe();
+                    eventDeadLetters.store(groups.get(threadNumber), event(eventId), insertionId).block();
                 })
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
@@ -288,7 +288,7 @@ interface EventDeadLettersContract {
                 .operation((threadNumber, step) -> {
                     int operationIndex = threadNumber * OPERATION_COUNT + step;
                     eventDeadLetters.remove(groups.get(threadNumber), storedInsertionIds.get(operationIndex))
-                        .subscribe();
+                        .block();
                 })
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
