@@ -21,11 +21,11 @@ package org.apache.james.mailbox.events;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoProcessor;
 
 public class MemoryEventDeadLetters implements EventDeadLetters {
 
@@ -42,9 +42,8 @@ public class MemoryEventDeadLetters implements EventDeadLetters {
         Preconditions.checkArgument(insertionId != null, FAIL_DELIVERED_ID_INSERTION_CANNOT_BE_NULL);
 
         synchronized (deadLetters) {
-            return Mono.fromRunnable(() -> deadLetters.put(registeredGroup, insertionId, failDeliveredEvent))
-                .subscribeWith(MonoProcessor.create())
-                .then();
+            deadLetters.put(registeredGroup, insertionId, failDeliveredEvent);
+            return Mono.empty();
         }
     }
 
@@ -54,8 +53,8 @@ public class MemoryEventDeadLetters implements EventDeadLetters {
         Preconditions.checkArgument(failDeliveredInsertionId != null, FAIL_DELIVERED_ID_INSERTION_CANNOT_BE_NULL);
 
         synchronized (deadLetters) {
-            return Mono.justOrEmpty(deadLetters.remove(registeredGroup, failDeliveredInsertionId))
-                .then();
+            deadLetters.remove(registeredGroup, failDeliveredInsertionId);
+            return Mono.empty();
         }
     }
 
@@ -74,14 +73,14 @@ public class MemoryEventDeadLetters implements EventDeadLetters {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
 
         synchronized (deadLetters) {
-            return Flux.fromIterable(deadLetters.row(registeredGroup).keySet());
+            return Flux.fromIterable(ImmutableList.copyOf(deadLetters.row(registeredGroup).keySet()));
         }
     }
 
     @Override
     public Flux<Group> groupsWithFailedEvents() {
         synchronized (deadLetters) {
-            return Flux.fromIterable(deadLetters.rowKeySet());
+            return Flux.fromIterable(ImmutableList.copyOf(deadLetters.rowKeySet()));
         }
     }
 }
