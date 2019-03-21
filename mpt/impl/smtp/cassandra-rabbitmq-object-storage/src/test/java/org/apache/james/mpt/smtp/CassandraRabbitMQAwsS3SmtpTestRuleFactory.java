@@ -28,6 +28,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.modules.TestAwsS3BlobStoreModule;
 import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.blobstore.BlobStoreChoosingModule;
+import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType;
 import org.apache.james.modules.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.CamelMailetContainerModule;
@@ -38,13 +39,13 @@ import org.apache.james.util.Host;
 import org.junit.rules.TemporaryFolder;
 
 public final class CassandraRabbitMQAwsS3SmtpTestRuleFactory {
-    public static SmtpTestRule create(SmtpServerConnectedType smtpServerConnectedType, Host cassandraHost) {
-        SmtpTestRule.ServerBuilder createJamesServer = (folder, dnsService) -> createJamesServer(cassandraHost, folder, dnsService);
+    public static SmtpTestRule create(SmtpServerConnectedType smtpServerConnectedType, Host cassandraHost, DockerAwsS3TestRule awsS3TestRule) {
+        SmtpTestRule.ServerBuilder createJamesServer = (folder, dnsService) -> createJamesServer(cassandraHost, awsS3TestRule, folder, dnsService);
 
         return new SmtpTestRule(smtpServerConnectedType, createJamesServer);
     }
 
-    private static GuiceJamesServer createJamesServer(Host cassandraHost, TemporaryFolder folder, DNSService dnsService) throws Exception {
+    private static GuiceJamesServer createJamesServer(Host cassandraHost, DockerAwsS3TestRule awsS3TestRule, TemporaryFolder folder, DNSService dnsService) throws Exception {
         Configuration configuration = Configuration.builder()
             .workingDirectory(folder.newFolder())
             .configurationFromClasspath()
@@ -61,7 +62,7 @@ public final class CassandraRabbitMQAwsS3SmtpTestRuleFactory {
                 new BlobStoreChoosingModule())
             .overrideWith(
                 new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON),
-                new TestAwsS3BlobStoreModule(),
+                new TestAwsS3BlobStoreModule(awsS3TestRule),
                 binder -> binder.bind(ClusterConfiguration.class).toInstance(
                     ClusterConfiguration.builder()
                         .host(cassandraHost)

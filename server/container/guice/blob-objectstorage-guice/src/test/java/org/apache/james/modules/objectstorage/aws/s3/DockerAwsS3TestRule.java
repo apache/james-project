@@ -26,7 +26,6 @@ import javax.inject.Inject;
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.GuiceModuleTestRule;
 import org.apache.james.blob.objectstorage.ContainerName;
-import org.apache.james.blob.objectstorage.DockerAwsS3Rule;
 import org.apache.james.blob.objectstorage.DockerAwsS3Singleton;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
 import org.apache.james.blob.objectstorage.PayloadCodec;
@@ -76,7 +75,6 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
     }
 
     private final PayloadCodecFactory payloadCodecFactory;
-    private DockerAwsS3Rule awss3Container = new DockerAwsS3Rule();
 
     public DockerAwsS3TestRule() {
         this(PayloadCodecFactory.DEFAULT);
@@ -88,7 +86,17 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
 
     @Override
     public Statement apply(Statement base, Description description) {
-        return awss3Container.apply(base, description);
+        return new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                ensureAwsS3started();
+                base.evaluate();
+            }
+        };
+    }
+
+    private void ensureAwsS3started() {
+        DockerAwsS3Singleton.singleton.dockerAwsS3();
     }
 
     @Override
@@ -124,14 +132,8 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
         };
     }
 
-
     public void start() {
-        awss3Container.start();
+        ensureAwsS3started();
     }
-
-    public void stop() {
-        awss3Container.stop();
-    }
-
 }
 

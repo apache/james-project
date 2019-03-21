@@ -20,6 +20,7 @@
 package org.apache.james.modules;
 
 import org.apache.james.GuiceModuleTestExtension;
+import org.apache.james.blob.objectstorage.DockerAwsS3Singleton;
 import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
 import org.apache.james.modules.objectstorage.PayloadCodecFactory;
 import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
@@ -30,29 +31,28 @@ import com.google.inject.util.Modules;
 
 public class AwsS3BlobStoreExtension implements GuiceModuleTestExtension {
 
-    private final DockerAwsS3TestRule swiftRule;
+    private final DockerAwsS3TestRule awsS3TestRule;
 
     public AwsS3BlobStoreExtension() {
-        this.swiftRule = new DockerAwsS3TestRule();
+        this.awsS3TestRule = new DockerAwsS3TestRule();
     }
 
     public AwsS3BlobStoreExtension(PayloadCodecFactory payloadCodecFactory) {
-        this.swiftRule = new DockerAwsS3TestRule(payloadCodecFactory);
+        this.awsS3TestRule = new DockerAwsS3TestRule(payloadCodecFactory);
     }
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) {
-        swiftRule.start();
+        ensureAwsS3started();
     }
 
-    @Override
-    public void afterAll(ExtensionContext extensionContext) {
-        swiftRule.stop();
+    private void ensureAwsS3started() {
+        DockerAwsS3Singleton.singleton.dockerAwsS3();
     }
 
     @Override
     public Module getModule() {
-        return Modules.override(swiftRule.getModule())
+        return Modules.override(awsS3TestRule.getModule())
             .with(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
                 .toInstance(BlobStoreChoosingConfiguration.objectStorage()));
     }

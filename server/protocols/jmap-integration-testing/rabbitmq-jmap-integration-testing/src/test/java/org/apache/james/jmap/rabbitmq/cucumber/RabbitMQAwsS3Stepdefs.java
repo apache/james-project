@@ -40,7 +40,6 @@ import org.apache.james.modules.TestESMetricReporterModule;
 import org.apache.james.modules.TestElasticSearchModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.TestRabbitMQModule;
-import org.apache.james.modules.TestAwsS3BlobStoreModule;
 import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.apache.james.server.CassandraTruncateTableTask;
 import org.apache.james.server.core.configuration.Configuration;
@@ -48,7 +47,6 @@ import org.junit.rules.TemporaryFolder;
 
 import com.github.fge.lambdas.runnable.ThrowingRunnable;
 import com.google.inject.multibindings.Multibinder;
-
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.runtime.java.guice.ScenarioScoped;
@@ -89,7 +87,7 @@ public class RabbitMQAwsS3Stepdefs {
                 .overrideWith(new TestJMAPServerModule(10))
                 .overrideWith(new TestESMetricReporterModule())
                 .overrideWith(new TestRabbitMQModule(rabbitMQServer.dockerRabbitMQ()))
-                .overrideWith(new TestAwsS3BlobStoreModule())
+                .overrideWith(swiftServer.getModule())
                 .overrideWith(new TestElasticSearchModule(embeddedElasticSearch))
                 .overrideWith(cassandraServer.getModule())
                 .overrideWith(binder -> binder.bind(TextExtractor.class).to(DefaultTextExtractor.class))

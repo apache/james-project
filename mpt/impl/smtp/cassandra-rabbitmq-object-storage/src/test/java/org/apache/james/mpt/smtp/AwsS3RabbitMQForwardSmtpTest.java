@@ -25,13 +25,20 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TestRule;
 
 public class AwsS3RabbitMQForwardSmtpTest extends ForwardSmtpTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
+    private DockerAwsS3TestRule dockerAwsS3TestRule = new DockerAwsS3TestRule();
+
+    private SmtpTestRule cassandraRabbitMQAwsS3SmtpTestRule =
+        CassandraRabbitMQAwsS3SmtpTestRuleFactory.create(SMTP_GLOBAL_SERVER, cassandraServer.getHost(), dockerAwsS3TestRule);
+
     @Rule
-    public SmtpTestRule cassandraRabbitMQAwsS3SmtpTestRule = CassandraRabbitMQAwsS3SmtpTestRuleFactory.create(SMTP_GLOBAL_SERVER, cassandraServer.getHost());
+    public TestRule composedRule = RuleChain.outerRule(dockerAwsS3TestRule).around(cassandraRabbitMQAwsS3SmtpTestRule);
 
     @Override
     protected SmtpHostSystem createSmtpHostSystem() {

@@ -28,6 +28,8 @@ import org.apache.james.modules.TestAwsS3BlobStoreModule;
 import org.apache.james.modules.TestESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.TestRabbitMQModule;
+import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
+import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.apache.james.server.core.configuration.Configuration;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
@@ -43,7 +45,7 @@ public class CassandraRabbitMQAwsS3JmapTestRule implements TestRule {
     private final TemporaryFolder temporaryFolder;
 
     public static CassandraRabbitMQAwsS3JmapTestRule defaultTestRule() {
-        return new CassandraRabbitMQAwsS3JmapTestRule(new EmbeddedElasticSearchRule());
+        return new CassandraRabbitMQAwsS3JmapTestRule(new EmbeddedElasticSearchRule(), new DockerAwsS3TestRule());
     }
 
     private final GuiceModuleTestRule guiceModuleTestRule;
@@ -67,7 +69,8 @@ public class CassandraRabbitMQAwsS3JmapTestRule implements TestRule {
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
-            .overrideWith(new TestAwsS3BlobStoreModule())
+            .overrideWith(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
+                .toInstance(BlobStoreChoosingConfiguration.objectStorage()))
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
             .overrideWith(new TestESMetricReporterModule())
             .overrideWith(guiceModuleTestRule.getModule())

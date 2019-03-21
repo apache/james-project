@@ -30,8 +30,8 @@ public class TestAwsS3BlobStoreModule extends AbstractModule {
 
     private final DockerAwsS3TestRule dockerAwsS3TestRule;
 
-    public TestAwsS3BlobStoreModule() {
-        this.dockerAwsS3TestRule = new DockerAwsS3TestRule();
+    public TestAwsS3BlobStoreModule(DockerAwsS3TestRule awsS3TestRule) {
+        this.dockerAwsS3TestRule = awsS3TestRule;
     }
 
     @Override
