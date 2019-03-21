@@ -32,13 +32,39 @@ class FunctionalUtilsTest {
     @Nested
     class ToFunction {
         @Test
-        void shouldCallConsumerAndReturnTheGivenParameter() {
+        void toFunctionShouldReturnTheGivenParameter() {
             Counter counter = new Counter(26);
             Consumer<Integer> consumer = counter::increment;
             Function<Integer, Integer> function = FunctionalUtils.toFunction(consumer);
 
             assertThat(function.apply(16)).isEqualTo(16);
+        }
+
+        @Test
+        void toFunctionShouldCallConsumer() {
+            Counter counter = new Counter(26);
+            Consumer<Integer> consumer = counter::increment;
+            FunctionalUtils.toFunction(consumer).apply(16);
+
             assertThat(counter.getCounter()).isEqualTo(42);
+        }
+
+        @Test
+        void identityWithSideEffectShouldReturnTheGivenParameterForRunnable() {
+            Counter counter = new Counter(26);
+            Runnable runnable = () -> counter.increment(1);
+            Function<Integer, Integer> function = FunctionalUtils.identityWithSideEffect(runnable);
+
+            assertThat(function.apply(16)).isEqualTo(16);
+        }
+
+        @Test
+        void identityWithSideEffectShouldCallRunnable() {
+            Counter counter = new Counter(26);
+            Runnable runnable = () -> counter.increment(1);
+            FunctionalUtils.identityWithSideEffect(runnable).apply(23);
+
+            assertThat(counter.getCounter()).isEqualTo(27);
         }
 
         private class Counter {

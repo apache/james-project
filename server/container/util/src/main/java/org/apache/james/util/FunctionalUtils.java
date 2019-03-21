@@ -31,6 +31,13 @@ public class FunctionalUtils {
         };
     }
 
+    public static <T> UnaryOperator<T> identityWithSideEffect(Runnable runnable) {
+        return argument -> {
+            runnable.run();
+            return argument;
+        };
+    }
+
     public static <T> Predicate<T> toPredicate(Function<T, Boolean> function) {
         return value -> function.apply(value);
     }
