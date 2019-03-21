@@ -99,7 +99,7 @@ class DeletedMessageVaultHookTest {
     @BeforeEach
     void setUp() throws Exception {
         clock = Clock.fixed(DELETION_DATE.toInstant(), ZoneOffset.UTC);
-        messageVault = new MemoryDeletedMessagesVault();
+        messageVault = new MemoryDeletedMessagesVault(RetentionConfiguration.DEFAULT, clock);
 
         DeletedMessageConverter deletedMessageConverter = new DeletedMessageConverter();
 

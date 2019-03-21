@@ -36,6 +36,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 
 public interface DeletedMessageFixture {
     InMemoryMessageId MESSAGE_ID = InMemoryMessageId.of(42);
+    InMemoryMessageId OLD_MESSAGE_ID = InMemoryMessageId.of(58);
     InMemoryMessageId MESSAGE_ID_2 = InMemoryMessageId.of(45);
     InMemoryId MAILBOX_ID_1 = InMemoryId.of(43);
     InMemoryId MAILBOX_ID_2 = InMemoryId.of(44);
@@ -44,6 +45,9 @@ public interface DeletedMessageFixture {
     User USER_2 = User.fromUsername("dimitri@apache.org");
     ZonedDateTime DELIVERY_DATE = ZonedDateTime.parse("2014-10-30T14:12:00Z");
     ZonedDateTime DELETION_DATE = ZonedDateTime.parse("2015-10-30T14:12:00Z");
+    ZonedDateTime NOW = ZonedDateTime.parse("2015-10-30T16:12:00Z");
+    ZonedDateTime OLD_DELIVERY_DATE = ZonedDateTime.parse("2010-10-30T14:12:00Z");
+    ZonedDateTime OLD_DELETION_DATE = ZonedDateTime.parse("2010-10-30T15:12:00Z");
     Date INTERNAL_DATE = Date.from(DELIVERY_DATE.toInstant());
     byte[] CONTENT = "header: value\r\n\r\ncontent".getBytes(StandardCharsets.UTF_8);
     String SUBJECT = "subject";
@@ -74,5 +78,16 @@ public interface DeletedMessageFixture {
         .subject(SUBJECT)
         .build();
     DeletedMessage DELETED_MESSAGE = FINAL_STAGE.get().build();
+    DeletedMessage OLD_DELETED_MESSAGE = DeletedMessage.builder()
+        .messageId(OLD_MESSAGE_ID)
+        .originMailboxes(MAILBOX_ID_1, MAILBOX_ID_2)
+        .user(USER)
+        .deliveryDate(OLD_DELIVERY_DATE)
+        .deletionDate(OLD_DELETION_DATE)
+        .sender(MaybeSender.of(SENDER))
+        .recipients(RECIPIENT1, RECIPIENT2)
+        .hasAttachment(false)
+        .size(CONTENT.length)
+        .build();
     DeletedMessage DELETED_MESSAGE_2 = DELETED_MESSAGE_GENERATOR.apply(MESSAGE_ID_2.getRawId());
 }

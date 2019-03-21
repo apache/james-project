@@ -20,6 +20,10 @@
 package org.apache.james.vault;
 
 import java.io.InputStream;
+import java.time.Clock;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -28,11 +32,13 @@ import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.server.core.MimeMessageInputStream;
+import org.apache.james.task.Task;
 import org.apache.james.util.streams.Iterators;
+import org.apache.james.vault.memory.DeleteByQueryExecutor;
+import org.apache.james.vault.memory.VaultGarbageCollectionTask;
 import org.apache.james.vault.search.Query;
 import org.reactivestreams.Publisher;
 
@@ -59,11 +65,17 @@ public class MailRepositoryDeletedMessageVault implements DeletedMessageVault {
     }
 
     private final MailRepositoryStore mailRepositoryStore;
+    private final RetentionConfiguration retentionConfiguration;
     private final Configuration configuration;
     private final MailConverter mailConverter;
+    private final DeleteByQueryExecutor deleteByQueryExecutor;
+    private final Clock clock;
 
     @Inject
-    MailRepositoryDeletedMessageVault(MailRepositoryStore mailRepositoryStore, Configuration configuration, MailConverter mailConverter) {
+    MailRepositoryDeletedMessageVault(MailRepositoryStore mailRepositoryStore, RetentionConfiguration retentionConfiguration, Configuration configuration, MailConverter mailConverter, Clock clock) {
+        this.retentionConfiguration = retentionConfiguration;
+        this.clock = clock;
+        this.deleteByQueryExecutor = new DeleteByQueryExecutor(this);
         this.mailRepositoryStore = mailRepositoryStore;
         this.configuration = configuration;
         this.mailConverter = mailConverter;
@@ -130,12 +142,30 @@ public class MailRepositoryDeletedMessageVault implements DeletedMessageVault {
     @Override
     public Publisher<User> usersWithVault() {
         return Flux.fromStream(mailRepositoryStore.getUrls()
-            .filter(url -> url.hasPrefix(configuration.urlPrefix))
-            .map(MailRepositoryUrl::getPath)
-            .map(MailRepositoryPath::parts)
-            .peek(parts -> Preconditions.checkState(!parts.isEmpty()))
-            .map(Iterables::getLast)
-            .map(User::fromUsername));
+            .filter(this::isVault)
+            .map(this::userForRepository));
+    }
+
+    private boolean isVault(MailRepositoryUrl url) {
+        return url.hasPrefix(configuration.urlPrefix);
+    }
+
+    private User userForRepository(MailRepositoryUrl url) {
+        Preconditions.checkArgument(isVault(url));
+
+        List<String> parts = url.getPath().parts();
+
+        return User.fromUsername(Iterables.getLast(parts));
+    }
+
+    @Override
+    public Task deleteExpiredMessagesTask() {
+        ZonedDateTime now = ZonedDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
+        ZonedDateTime beginningOfRetentionPeriod = now.minus(retentionConfiguration.getRetentionPeriod());
+
+        return new VaultGarbageCollectionTask(
+            deleteByQueryExecutor,
+            beginningOfRetentionPeriod);
     }
 
     private MailRepository repositoryForUser(User user) {

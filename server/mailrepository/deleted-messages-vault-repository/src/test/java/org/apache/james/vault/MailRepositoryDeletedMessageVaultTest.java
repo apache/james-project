@@ -55,8 +55,9 @@ public class MailRepositoryDeletedMessageVaultTest implements DeletedMessageVaul
 
         testee = new MailRepositoryDeletedMessageVault(
             mailRepositoryStore,
+            RetentionConfiguration.DEFAULT,
             new MailRepositoryDeletedMessageVault.Configuration(MailRepositoryUrl.from("memory://deletedMessages/vault/")),
-            new MailConverter(new InMemoryId.Factory(), new InMemoryMessageId.Factory()));
+            new MailConverter(new InMemoryId.Factory(), new InMemoryMessageId.Factory()), CLOCK);
     }
 
     @Override

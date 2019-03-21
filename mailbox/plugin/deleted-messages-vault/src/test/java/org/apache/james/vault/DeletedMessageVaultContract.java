@@ -24,6 +24,8 @@ import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_2;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_GENERATOR;
 import static org.apache.james.vault.DeletedMessageFixture.MESSAGE_ID;
+import static org.apache.james.vault.DeletedMessageFixture.NOW;
+import static org.apache.james.vault.DeletedMessageFixture.OLD_DELETED_MESSAGE;
 import static org.apache.james.vault.DeletedMessageFixture.USER;
 import static org.apache.james.vault.DeletedMessageFixture.USER_2;
 import static org.apache.james.vault.search.Query.ALL;
@@ -31,9 +33,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
+import java.time.Clock;
 import java.time.Duration;
 
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
+import org.apache.james.task.Task;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.Test;
 
@@ -41,6 +45,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface DeletedMessageVaultContract {
+    Clock CLOCK = Clock.fixed(NOW.toInstant(), NOW.getZone());
+
     DeletedMessageVault getVault();
 
     @Test
@@ -209,6 +215,69 @@ public interface DeletedMessageVaultContract {
             .threadCount(threadCount)
             .operationCount(operationCount)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
+
+        assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    default void deleteExpiredMessagesTaskShouldCompleteWhenNoMail() {
+        Task.Result result = getVault().deleteExpiredMessagesTask().run();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
+    }
+
+    @Test
+    default void deleteExpiredMessagesTaskShouldCompleteWhenAllMailsDeleted() {
+        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().delete(USER, DELETED_MESSAGE.getMessageId())).block();
+
+        Task.Result result = getVault().deleteExpiredMessagesTask().run();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
+    }
+
+    @Test
+    default void deleteExpiredMessagesTaskShouldCompleteWhenOnlyRecentMails() {
+        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+        Task.Result result = getVault().deleteExpiredMessagesTask().run();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
+    }
+
+    @Test
+    default void deleteExpiredMessagesTaskShouldCompleteWhenOnlyOldMails() {
+        Mono.from(getVault().append(USER, OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+        Task.Result result = getVault().deleteExpiredMessagesTask().run();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
+    }
+
+    @Test
+    default void deleteExpiredMessagesTaskShouldDoNothingWhenEmpty() {
+        getVault().deleteExpiredMessagesTask().run();
+
+        assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    default void deleteExpiredMessagesTaskShouldNotDeleteRecentMails() {
+        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+        getVault().deleteExpiredMessagesTask().run();
+
+        assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
+            .containsOnly(DELETED_MESSAGE);
+    }
+
+    @Test
+    default void deleteExpiredMessagesTaskShouldDeleteOldMails() {
+        Mono.from(getVault().append(USER, OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+        getVault().deleteExpiredMessagesTask().run();
 
         assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
             .isEmpty();

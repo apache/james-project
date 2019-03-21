@@ -22,14 +22,19 @@ package org.apache.james.vault.memory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Clock;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.task.Task;
 import org.apache.james.vault.DeletedMessage;
 import org.apache.james.vault.DeletedMessageVault;
+import org.apache.james.vault.RetentionConfiguration;
 import org.apache.james.vault.search.Query;
 import org.reactivestreams.Publisher;
 
@@ -42,10 +47,16 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MemoryDeletedMessagesVault implements DeletedMessageVault {
+    private final RetentionConfiguration retentionConfiguration;
     private final Table<User, MessageId, Pair<DeletedMessage, byte[]>> table;
+    private final Clock clock;
+    private DeleteByQueryExecutor deleteByQueryExecutor;
 
-    public MemoryDeletedMessagesVault() {
-        table = HashBasedTable.create();
+    public MemoryDeletedMessagesVault(RetentionConfiguration retentionConfiguration, Clock clock) {
+        this.deleteByQueryExecutor = new DeleteByQueryExecutor(this);
+        this.retentionConfiguration = retentionConfiguration;
+        this.clock = clock;
+        this.table = HashBasedTable.create();
     }
 
     @Override
@@ -102,6 +113,15 @@ public class MemoryDeletedMessagesVault implements DeletedMessageVault {
         synchronized (table) {
             return Flux.fromIterable(ImmutableList.copyOf(table.rowKeySet()));
         }
+    }
+
+    public Task deleteExpiredMessagesTask() {
+        ZonedDateTime now = ZonedDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
+        ZonedDateTime beginningOfRetentionPeriod = now.minus(retentionConfiguration.getRetentionPeriod());
+
+        return new VaultGarbageCollectionTask(
+            deleteByQueryExecutor,
+            beginningOfRetentionPeriod);
     }
 
     private Flux<DeletedMessage> listAll(User user) {

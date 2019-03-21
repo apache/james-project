@@ -19,6 +19,8 @@
 
 package org.apache.james.modules.vault;
 
+import java.io.FileNotFoundException;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
@@ -27,6 +29,7 @@ import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.MailRepositoryDeletedMessageVault;
+import org.apache.james.vault.RetentionConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +59,17 @@ public class DeletedMessageVaultModule extends AbstractModule {
 
             return new MailRepositoryDeletedMessageVault.Configuration(
                 MailRepositoryUrl.fromPathAndProtocol(defaultProtocol, DEFAULT_PATH));
+        }
+    }
+
+    @Provides
+    RetentionConfiguration providesRetentionConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, org.apache.commons.configuration.ConfigurationException {
+        try {
+            Configuration configuration = propertiesProvider.getConfiguration("deletedMessageVault");
+            return RetentionConfiguration.from(configuration);
+        } catch (FileNotFoundException e) {
+            LOGGER.warn("Error encountered while retrieving Deleted message vault configuration. Using default MailRepository RetentionTime (1 year) instead.");
+            return RetentionConfiguration.DEFAULT;
         }
     }
 }
