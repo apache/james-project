@@ -68,7 +68,17 @@ public class SmtpTestRule implements TestRule, SmtpHostSystem {
 
     @Override
     public Statement apply(Statement base, Description description) {
-        return base;
+        return new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                beforeTest();
+                try {
+                    base.evaluate();
+                } finally {
+                    afterTest();
+                }
+            }
+        };
     }
 
     @Override

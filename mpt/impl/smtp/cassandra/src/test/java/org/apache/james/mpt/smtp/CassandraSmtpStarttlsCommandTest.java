@@ -34,22 +34,10 @@ public class CassandraSmtpStarttlsCommandTest extends SmtpStarttlsCommandTest {
     @Rule
     public SmtpTestRule cassandraSmtpTestRule = CassandraSmtpTestRuleFactory.create(SMTP_START_TLS_SERVER, cassandraServer.getHost());
 
-    @Before
-    @Override
-    public void setUp() throws Exception {
-        cassandraSmtpTestRule.beforeTest();
-        super.setUp();
-    }
-
     @Override
     protected SmtpHostSystem createSmtpHostSystem() {
         return cassandraSmtpTestRule;
     }
 
-
-    @After
-    public void tearDown() {
-        cassandraSmtpTestRule.afterTest();
-    }
 
 }

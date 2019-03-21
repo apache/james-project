@@ -22,8 +22,6 @@ package org.apache.james.mpt.smtp;
 import static org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType.SMTP_START_TLS_SERVER;
 
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
@@ -34,22 +32,9 @@ public class SwiftRabbitMQSmtpStarttlsCommandTest extends SmtpStarttlsCommandTes
     @Rule
     public SmtpTestRule cassandraRabbitMQSwiftSmtpTestRule = CassandraRabbitMQSwiftSmtpTestRuleFactory.create(SMTP_START_TLS_SERVER, cassandraServer.getHost());
 
-    @Before
-    @Override
-    public void setUp() throws Exception {
-        cassandraRabbitMQSwiftSmtpTestRule.beforeTest();
-        super.setUp();
-    }
-
     @Override
     protected SmtpHostSystem createSmtpHostSystem() {
         return cassandraRabbitMQSwiftSmtpTestRule;
-    }
-
-
-    @After
-    public void tearDown() {
-        cassandraRabbitMQSwiftSmtpTestRule.afterTest();
     }
 
 }

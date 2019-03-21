@@ -22,8 +22,7 @@ package org.apache.james.mpt.smtp;
 import static org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType.SMTP_GLOBAL_SERVER;
 
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.junit.After;
-import org.junit.Before;
+import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
@@ -34,20 +33,9 @@ public class AwsS3RabbitMQForwardSmtpTest extends ForwardSmtpTest {
     @Rule
     public SmtpTestRule cassandraRabbitMQAwsS3SmtpTestRule = CassandraRabbitMQAwsS3SmtpTestRuleFactory.create(SMTP_GLOBAL_SERVER, cassandraServer.getHost());
 
-    @Before
-    @Override
-    public void setUp() throws Exception {
-        cassandraRabbitMQAwsS3SmtpTestRule.beforeTest();
-        super.setUp();
-    }
-
     @Override
     protected SmtpHostSystem createSmtpHostSystem() {
         return cassandraRabbitMQAwsS3SmtpTestRule;
     }
 
-    @After
-    public void tearDown() {
-        cassandraRabbitMQAwsS3SmtpTestRule.afterTest();
-    }
 }
