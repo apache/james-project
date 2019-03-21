@@ -64,6 +64,16 @@ public class MailRepositoryPath implements Comparable<MailRepositoryPath> {
         return from(value + PATH_DELIMITER + suffix);
     }
 
+    public boolean hasPrefix(MailRepositoryPath other) {
+        if (value.isEmpty()) {
+            return false;
+        }
+        if (other.value.isEmpty()) {
+            return true;
+        }
+        return value.startsWith(other.value + PATH_DELIMITER);
+    }
+
     public String asString() {
         return value;
     }

@@ -92,4 +92,70 @@ class MailRepositoryPathTest {
         assertThatThrownBy(() -> MailRepositoryPath.from("abc").subPath("/def"))
             .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void hasPrefixShouldReturnFalseWhenEquals() {
+        assertThat(MailRepositoryPath.from("abc/def").hasPrefix(MailRepositoryPath.from("abc/def")))
+            .isFalse();
+    }
+
+    @Test
+    void hasPrefixShouldReturnFalseWhenSiblings() {
+        assertThat(MailRepositoryPath.from("abc/def").hasPrefix(MailRepositoryPath.from("abc/ghi")))
+            .isFalse();
+    }
+
+    @Test
+    void hasPrefixShouldReturnFalseWhenAncestor() {
+        assertThat(MailRepositoryPath.from("abc").hasPrefix(MailRepositoryPath.from("abc/ghi")))
+            .isFalse();
+    }
+
+    @Test
+    void hasPrefixShouldReturnTrueWhenDescendant() {
+        assertThat(MailRepositoryPath.from("abc/ghi").hasPrefix(MailRepositoryPath.from("abc")))
+            .isTrue();
+    }
+
+    @Test
+    void hasPrefixShouldReturnTrueWhenDescendantStartingWithSlash() {
+        assertThat(MailRepositoryPath.from("/abc/ghi").hasPrefix(MailRepositoryPath.from("/abc")))
+            .isTrue();
+    }
+
+    @Test
+    void hasPrefixShouldReturnFalseWhenDescendantAdditionalFirstSlash() {
+        assertThat(MailRepositoryPath.from("abc/ghi").hasPrefix(MailRepositoryPath.from("/abc")))
+            .isFalse();
+    }
+
+    @Test
+    void hasPrefixShouldReturnFalseWhenDescendantMissingFirstSlash() {
+        assertThat(MailRepositoryPath.from("/abc/ghi").hasPrefix(MailRepositoryPath.from("abc")))
+            .isFalse();
+    }
+
+    @Test
+    void hasPrefixShouldReturnTrueWhenFarDescendant() {
+        assertThat(MailRepositoryPath.from("abc/ghi/klm").hasPrefix(MailRepositoryPath.from("abc")))
+            .isTrue();
+    }
+
+    @Test
+    void hasPrefixShouldReturnTrueWhenEmpty() {
+        assertThat(MailRepositoryPath.from("abc").hasPrefix(MailRepositoryPath.from("")))
+            .isTrue();
+    }
+
+    @Test
+    void hasPrefixShouldReturnFalseWhenBothEmpty() {
+        assertThat(MailRepositoryPath.from("").hasPrefix(MailRepositoryPath.from("")))
+            .isFalse();
+    }
+
+    @Test
+    void hasPrefixShouldReturnFalseWhenMissingSlah() {
+        assertThat(MailRepositoryPath.from("abcghi").hasPrefix(MailRepositoryPath.from("abc")))
+            .isFalse();
+    }
 }
