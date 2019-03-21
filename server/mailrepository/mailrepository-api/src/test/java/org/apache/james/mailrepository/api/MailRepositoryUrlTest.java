@@ -117,4 +117,76 @@ public class MailRepositoryUrlTest {
         assertThatThrownBy(() -> MailRepositoryUrl.from("proto://abc://def").subUrl("/ghi"))
             .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void hasPrefixShouldReturnFalseWhenEquals() {
+        assertThat(MailRepositoryUrl.from("proto://abc/def").hasPrefix(MailRepositoryUrl.from("proto://abc/def")))
+            .isFalse();
+    }
+
+    @Test
+    void hasPrefixShouldReturnFalseWhenSiblings() {
+        assertThat(MailRepositoryUrl.from("proto://abc/def").hasPrefix(MailRepositoryUrl.from("proto://abc/ghi")))
+            .isFalse();
+    }
+
+    @Test
+    void hasPrefixShouldReturnFalseWhenAncestor() {
+        assertThat(MailRepositoryUrl.from("proto://abc").hasPrefix(MailRepositoryUrl.from("proto://abc/ghi")))
+            .isFalse();
+    }
+
+    @Test
+    void hasPrefixShouldReturnTrueWhenDescendant() {
+        assertThat(MailRepositoryUrl.from("proto://abc/ghi").hasPrefix(MailRepositoryUrl.from("proto://abc")))
+            .isTrue();
+    }
+
+    @Test
+    void hasPrefixShouldReturnTrueWhenFarDescendant() {
+        assertThat(MailRepositoryUrl.from("proto://abc/ghi/klm").hasPrefix(MailRepositoryUrl.from("proto://abc")))
+            .isTrue();
+    }
+
+    @Test
+    void hasPrefixShouldReturnTrueWhenEmpty() {
+        assertThat(MailRepositoryUrl.from("proto://abc").hasPrefix(MailRepositoryUrl.from("proto://")))
+            .isTrue();
+    }
+
+    @Test
+    void hasPrefixShouldReturnFalseWhenBothEmpty() {
+        assertThat(MailRepositoryUrl.from("proto://").hasPrefix(MailRepositoryUrl.from("proto://")))
+            .isFalse();
+    }
+
+    @Test
+    void hasPrefixShouldReturnFalseWhenMissingSlah() {
+        assertThat(MailRepositoryUrl.from("proto://abcghi").hasPrefix(MailRepositoryUrl.from("proto://abc")))
+            .isFalse();
+    }
+
+    @Test
+    void hasPrefixShouldReturnFalseWhenDifferentProtocol() {
+        assertThat(MailRepositoryUrl.from("proto://abc/ghi").hasPrefix(MailRepositoryUrl.from("proto2://abc")))
+            .isFalse();
+    }
+
+    @Test
+    void hasPrefixShouldReturnTrueWhenDescendantStartingWithSlash() {
+        assertThat(MailRepositoryUrl.from("proto:///abc/ghi").hasPrefix(MailRepositoryUrl.from("proto:///abc")))
+            .isTrue();
+    }
+
+    @Test
+    void hasPrefixShouldReturnFalseWhenDescendantAdditionalFirstSlash() {
+        assertThat(MailRepositoryUrl.from("proto://abc/ghi").hasPrefix(MailRepositoryUrl.from("proto:///abc")))
+            .isFalse();
+    }
+
+    @Test
+    void hasPrefixShouldReturnFalseWhenDescendantMissingFirstSlash() {
+        assertThat(MailRepositoryUrl.from("proto:///abc/ghi").hasPrefix(MailRepositoryUrl.from("proto://abc")))
+            .isFalse();
+    }
 }

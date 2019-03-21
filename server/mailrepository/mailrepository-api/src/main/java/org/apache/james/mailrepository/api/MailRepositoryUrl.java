@@ -91,6 +91,11 @@ public class MailRepositoryUrl {
         return URLEncoder.encode(value, StandardCharsets.UTF_8.displayName());
     }
 
+    public boolean hasPrefix(MailRepositoryUrl other) {
+        return Objects.equals(this.protocol, other.protocol)
+            && this.path.hasPrefix(other.path);
+    }
+
     public Protocol getProtocol() {
        return protocol;
     }
