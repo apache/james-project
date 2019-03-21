@@ -164,6 +164,21 @@ public interface DeletedMessageVaultContract {
     }
 
     @Test
+    default void usersWithVaultShouldReturnEmptyWhenNoItem() {
+        assertThat(Flux.from(getVault().usersWithVault()).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    default void usersWithVaultShouldReturnAllUsers() {
+        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(USER_2, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+        assertThat(Flux.from(getVault().usersWithVault()).collectList().block())
+            .containsOnly(USER, USER_2);
+    }
+
+    @Test
     default void appendShouldRunSuccessfullyInAConcurrentContext() throws Exception {
         int operationCount = 10;
         int threadCount = 10;

@@ -31,6 +31,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.vault.DeletedMessage;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.search.Query;
+import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
@@ -94,6 +95,13 @@ public class MemoryDeletedMessagesVault implements DeletedMessageVault {
 
         return listAll(user)
             .filter(query.toPredicate());
+    }
+
+    @Override
+    public Publisher<User> usersWithVault() {
+        synchronized (table) {
+            return Flux.fromIterable(ImmutableList.copyOf(table.rowKeySet()));
+        }
     }
 
     private Flux<DeletedMessage> listAll(User user) {

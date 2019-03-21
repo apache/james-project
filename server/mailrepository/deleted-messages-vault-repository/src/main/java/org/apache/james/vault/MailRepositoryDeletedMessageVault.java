@@ -28,6 +28,7 @@ import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.server.core.MimeMessageInputStream;
@@ -37,7 +38,9 @@ import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -122,6 +125,17 @@ public class MailRepositoryDeletedMessageVault implements DeletedMessageVault {
         } catch (MessagingException e) {
             return Mono.error(e);
         }
+    }
+
+    @Override
+    public Publisher<User> usersWithVault() {
+        return Flux.fromStream(mailRepositoryStore.getUrls()
+            .filter(url -> url.hasPrefix(configuration.urlPrefix))
+            .map(MailRepositoryUrl::getPath)
+            .map(MailRepositoryPath::parts)
+            .peek(parts -> Preconditions.checkState(!parts.isEmpty()))
+            .map(Iterables::getLast)
+            .map(User::fromUsername));
     }
 
     private MailRepository repositoryForUser(User user) {

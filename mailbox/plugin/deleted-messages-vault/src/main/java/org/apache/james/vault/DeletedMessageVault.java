@@ -34,4 +34,6 @@ public interface DeletedMessageVault {
     Publisher<Void> delete(User user, MessageId messageId);
 
     Publisher<DeletedMessage> search(User user, Query query);
+
+    Publisher<User> usersWithVault();
 }
