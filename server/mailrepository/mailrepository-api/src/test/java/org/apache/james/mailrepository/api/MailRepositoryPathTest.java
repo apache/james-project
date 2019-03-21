@@ -158,4 +158,34 @@ class MailRepositoryPathTest {
         assertThat(MailRepositoryPath.from("abcghi").hasPrefix(MailRepositoryPath.from("abc")))
             .isFalse();
     }
+
+    @Test
+    void partsShouldSplitValue() {
+        assertThat(MailRepositoryPath.from("abc/ghi/klm").parts())
+            .containsExactly("abc", "ghi", "klm");
+    }
+
+    @Test
+    void partsShouldOmmitEmptyPart() {
+        assertThat(MailRepositoryPath.from("abc/ghi//klm").parts())
+            .containsExactly("abc", "ghi", "klm");
+    }
+
+    @Test
+    void partsShouldOmmitEmptyFirstPart() {
+        assertThat(MailRepositoryPath.from("/ghi/klm").parts())
+            .containsExactly("ghi", "klm");
+    }
+
+    @Test
+    void partsShouldreturnValueWhenNoSeparator() {
+        assertThat(MailRepositoryPath.from("abc").parts())
+            .containsExactly("abc");
+    }
+
+    @Test
+    void partsShouldEmptyWhenEmpty() {
+        assertThat(MailRepositoryPath.from("").parts())
+            .isEmpty();
+    }
 }

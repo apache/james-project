@@ -23,12 +23,14 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 
 public class MailRepositoryPath implements Comparable<MailRepositoryPath> {
 
@@ -72,6 +74,12 @@ public class MailRepositoryPath implements Comparable<MailRepositoryPath> {
             return true;
         }
         return value.startsWith(other.value + PATH_DELIMITER);
+    }
+
+    public List<String> parts() {
+        return Splitter.on(PATH_DELIMITER)
+            .omitEmptyStrings()
+            .splitToList(value);
     }
 
     public String asString() {
