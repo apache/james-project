@@ -63,6 +63,10 @@ public class DeleteByQueryExecutor {
         return Flux.from(deletedMessageVault.usersWithVault())
             .flatMap(user -> deleteByQueryForUser(query, user, notifiers))
             .reduce(Task::combine)
+            .onErrorResume(e -> {
+                LOGGER.error("Unexpected error encountered while deleting by query", e);
+                return Mono.just(Task.Result.PARTIAL);
+            })
             .blockOptional()
             .orElse(Task.Result.COMPLETED);
     }
