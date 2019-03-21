@@ -164,13 +164,12 @@ public class DeletedMessagesVaultRoutes implements Routes {
             name = "exportTo",
             paramType = "query",
             example = "?exportTo=user@james.org",
-            value = "Compulsory if action is export. Needs to be a valid mail address to represent for the destination " +
-                "where deleted messages content is export to")
+            value = "Compulsory if action is export. Needs to be a valid mail address. The content of the vault matching the query will be sent to that address")
     })
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - user param is invalid"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Not found - requested user is not existed in the system"),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Not found - requested user does not exist"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     private TaskIdDto userActions(Request request, Response response) throws JsonExtractException {

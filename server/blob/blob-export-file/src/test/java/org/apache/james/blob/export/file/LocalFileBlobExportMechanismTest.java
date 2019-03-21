@@ -64,9 +64,8 @@ class LocalFileBlobExportMechanismTest {
         DNSService dnsService = mock(DNSService.class);
         when(dnsService.getLocalHost()).thenReturn(localHost);
 
-        LocalFileBlobExportMechanism.Configuration blobExportConfiguration = new LocalFileBlobExportMechanism.Configuration("file://var/blobExporting");
-
-        testee = new LocalFileBlobExportMechanism(mailetContext, blobStore, fileSystem, dnsService, blobExportConfiguration);
+        testee = new LocalFileBlobExportMechanism(mailetContext, blobStore, fileSystem, dnsService,
+            LocalFileBlobExportMechanism.Configuration.DEFAULT_CONFIGURATION);
     }
 
     @Test

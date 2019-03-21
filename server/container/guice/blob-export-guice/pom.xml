@@ -28,20 +28,19 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>blob-memory-guice</artifactId>
+    <artifactId>blob-export-guice</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: Blob Memory - guice injection</name>
-    <description>Blob modules on memory storage</description>
+    <name>Apache James :: Server :: Blob Exporting Mechanisms - guice injection</name>
 
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>blob-api</artifactId>
+            <artifactId>blob-export-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>blob-memory</artifactId>
+            <artifactId>blob-export-file</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

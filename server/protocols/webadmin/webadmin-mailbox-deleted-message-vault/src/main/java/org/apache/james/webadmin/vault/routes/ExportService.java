@@ -19,11 +19,14 @@
 
 package org.apache.james.webadmin.vault.routes;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import java.nio.file.Files;
 import java.util.Collection;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -38,8 +41,6 @@ import org.apache.james.vault.DeletedMessage;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.DeletedMessageZipper;
 import org.apache.james.vault.search.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
@@ -52,7 +53,17 @@ import reactor.core.scheduler.Schedulers;
 
 class ExportService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExportService.class);
+    private class ZippedData {
+        private final long contentLength;
+        private final InputStream inputStream;
+
+        private ZippedData(long contentLength, InputStream content) {
+            this.contentLength = contentLength;
+            this.inputStream = content;
+        }
+    }
+
+    private static final String TEMPORARY_FILE_EXTENSION = ".temp";
 
     private final BlobExportMechanism blobExport;
     private final BlobStore blobStore;
@@ -75,8 +86,8 @@ class ExportService {
             .doOnNext(any -> messageToExportCallback.run())
             .collect(Guavate.toImmutableList())
             .map(Collection::stream)
-            .map(sneakyThrow(messages -> zipData(user, messages)))
-            .flatMap(sneakyThrow(zippedStream -> blobStore.save(zippedStream, zippedStream.available())))
+            .flatMap(messages -> Mono.fromCallable(() -> zipData(user, messages)))
+            .flatMap(sneakyThrow(zippedData -> blobStore.save(zippedData.inputStream, zippedData.contentLength)))
             .flatMap(blobId -> exportTo(user, exportToAddress, blobId))
             .then();
     }
@@ -86,27 +97,19 @@ class ExportService {
             .publishOn(Schedulers.elastic());
     }
 
-    private PipedInputStream zipData(User user, Stream<DeletedMessage> messages) throws IOException {
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream inputStream = new PipedInputStream();
-        inputStream.connect(outputStream);
+    private ZippedData zipData(User user, Stream<DeletedMessage> messages) throws IOException {
+        File tempFile = temporaryFile();
+        FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
 
-        asyncZipData(user, messages, outputStream).subscribe();
-
-        return inputStream;
+        zipper.zip(message -> loadMessageContent(user, message), messages, fileOutputStream);
+        return new ZippedData(tempFile.length(), new FileInputStream(tempFile));
     }
 
-    private Mono<Void> asyncZipData(User user, Stream<DeletedMessage> messages, PipedOutputStream outputStream) {
-        return Mono.fromRunnable(Throwing.runnable(() -> zipper.zip(message -> loadMessageContent(user, message), messages, outputStream)).sneakyThrow())
-            .doOnSuccessOrError(Throwing.biConsumer((result, throwable) -> {
-                if (throwable != null) {
-                    LOGGER.error("Error happens when zipping deleted messages", throwable);
-                }
-                outputStream.flush();
-                outputStream.close();
-            }))
-            .subscribeOn(Schedulers.elastic())
-            .then();
+    private File temporaryFile() throws IOException {
+        String tempFileName = UUID.randomUUID().toString();
+        File tempFile = Files.createTempFile(tempFileName, TEMPORARY_FILE_EXTENSION).toFile();
+        tempFile.deleteOnExit();
+        return tempFile;
     }
 
     private InputStream loadMessageContent(User user, DeletedMessage message) {

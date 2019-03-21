@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
+import javax.inject.Inject;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.james.blob.api.BlobId;
@@ -43,6 +45,10 @@ public class LocalFileBlobExportMechanism implements BlobExportMechanism {
     static final String CORRESPONDING_FILE_HEADER = "corresponding-file";
 
     public static class Configuration {
+
+        private static final String DEFAULT_DIRECTORY_LOCATION = "file://var/blobExporting";
+        public static final Configuration DEFAULT_CONFIGURATION = new Configuration(DEFAULT_DIRECTORY_LOCATION);
+
         private final String exportDirectory;
 
         public Configuration(String exportDirectory) {
@@ -56,6 +62,7 @@ public class LocalFileBlobExportMechanism implements BlobExportMechanism {
     private final DNSService dnsService;
     private final Configuration configuration;
 
+    @Inject
     LocalFileBlobExportMechanism(MailetContext mailetContext, BlobStore blobStore, FileSystem fileSystem, DNSService dnsService, Configuration configuration) {
         this.mailetContext = mailetContext;
         this.blobStore = blobStore;

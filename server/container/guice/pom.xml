@@ -34,6 +34,7 @@
 
     <modules>
         <module>blob-api-guice</module>
+        <module>blob-export-guice</module>
         <module>blob-memory-guice</module>
         <module>blob-objectstorage-guice</module>
         <module>cassandra-guice</module>
