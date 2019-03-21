@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailbox.inmemory;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.apache.james.mailbox.MailboxManager;
@@ -29,36 +27,21 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.mailbox.store.MessageManagerTestSystem;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
-import org.apache.james.mime4j.dom.Message;
 
 public class InMemoryMessageManagerTestSystem extends MessageManagerTestSystem {
 
-    private static final MessageId FIRST_MESSAGE_ID = InMemoryMessageId.of(1);
-    private static final long ONE_HUNDRED = 100;
     private static final int UID_VALIDITY = 1024;
 
     private final MailboxManager mailboxManager;
-    private Optional<MessageId> lastMessageIdUsed;
-    private final Message message;
 
     public InMemoryMessageManagerTestSystem(MailboxManager mailboxManager) {
         super(mailboxManager);
         this.mailboxManager = mailboxManager;
-        this.lastMessageIdUsed = Optional.empty();
-        try {
-            this.message = Message.Builder.of()
-                .setSubject("test")
-                .setBody("testmail", StandardCharsets.UTF_8)
-                .build();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override

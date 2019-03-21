@@ -110,6 +110,7 @@ class MailConverter {
     }
 
     private String castSubjectToString(Object object) {
+        @SuppressWarnings("unchecked")
         Optional<String> optional = Optional.of(object)
             .filter(obj -> obj instanceof AttributeValue)
             .map(AttributeValue.class::cast)
@@ -149,6 +150,7 @@ class MailConverter {
     }
 
     private MailboxId retrieveMailboxId(Object object) {
+        @SuppressWarnings("unchecked")
         Optional<String> serializedMailboxId = Optional.of(object)
             .filter(obj -> obj instanceof AttributeValue)
             .map(AttributeValue.class::cast)

@@ -24,7 +24,6 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mailbox.MailboxManagerStressTest;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.events.EventBus;
-import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.junit.After;
 import org.junit.AfterClass;

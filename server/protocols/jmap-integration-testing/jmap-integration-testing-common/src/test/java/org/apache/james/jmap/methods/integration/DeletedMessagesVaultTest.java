@@ -59,9 +59,9 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 import io.restassured.RestAssured;
 import io.restassured.parsing.Parser;

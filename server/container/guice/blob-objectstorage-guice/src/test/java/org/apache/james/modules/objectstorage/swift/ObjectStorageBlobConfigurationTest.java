@@ -20,15 +20,12 @@
 package org.apache.james.modules.objectstorage.swift;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.URI;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.MapConfiguration;
 import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.swift.Credentials;
 import org.apache.james.blob.objectstorage.swift.DomainName;
@@ -48,13 +45,10 @@ import org.apache.james.modules.objectstorage.ObjectStorageProvider;
 import org.apache.james.modules.objectstorage.PayloadCodecFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 class ObjectStorageBlobConfigurationTest {
 

@@ -3,25 +3,11 @@ package org.apache.james.modules.objectstorage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.net.URI;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.MapConfiguration;
-import org.apache.james.blob.objectstorage.ContainerName;
-import org.apache.james.blob.objectstorage.swift.Credentials;
-import org.apache.james.blob.objectstorage.swift.DomainName;
-import org.apache.james.blob.objectstorage.swift.IdentityV3;
-import org.apache.james.blob.objectstorage.swift.PassHeaderName;
-import org.apache.james.blob.objectstorage.swift.Project;
-import org.apache.james.blob.objectstorage.swift.ProjectName;
-import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
-import org.apache.james.blob.objectstorage.swift.SwiftKeystone3ObjectStorage;
-import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
-import org.apache.james.blob.objectstorage.swift.TenantName;
-import org.apache.james.blob.objectstorage.swift.UserHeaderName;
-import org.apache.james.blob.objectstorage.swift.UserName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;

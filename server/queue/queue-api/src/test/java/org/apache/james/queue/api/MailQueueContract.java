@@ -397,6 +397,7 @@ public interface MailQueueContract {
                 try {
                     itemQueue.put(e);
                 } catch (InterruptedException ignored) {
+                    //ignored
                 }
                 return Mono.empty();
             }).subscribe();

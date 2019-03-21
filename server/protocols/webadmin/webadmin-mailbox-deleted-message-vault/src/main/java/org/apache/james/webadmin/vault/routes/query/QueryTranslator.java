@@ -165,7 +165,7 @@ public class QueryTranslator {
         T parse(String input);
     }
 
-    private final ImmutableTable<FieldName, Operator, Function<String, Criterion>> criterionRegistry;
+    private final ImmutableTable<FieldName, Operator, Function<String, Criterion<?>>> criterionRegistry;
 
     @Inject
     @VisibleForTesting
@@ -173,7 +173,7 @@ public class QueryTranslator {
         criterionRegistry = withMailboxIdCriterionParser(mailboxIdFactory);
     }
 
-    private ImmutableTable<FieldName, Operator, Function<String, Criterion>> withMailboxIdCriterionParser(MailboxId.Factory mailboxIdFactor) {
+    private ImmutableTable<FieldName, Operator, Function<String, Criterion<?>>> withMailboxIdCriterionParser(MailboxId.Factory mailboxIdFactor) {
         FieldValueParser.MailboxIdValueParser mailboxIdParser = new FieldValueParser.MailboxIdValueParser(mailboxIdFactor);
 
         return defaultRegistryBuilder()
@@ -181,8 +181,8 @@ public class QueryTranslator {
             .build();
     }
 
-    private ImmutableTable.Builder<FieldName, Operator, Function<String, Criterion>> defaultRegistryBuilder() {
-        return ImmutableTable.<FieldName, Operator, Function<String, Criterion>>builder()
+    private ImmutableTable.Builder<FieldName, Operator, Function<String, Criterion<?>>> defaultRegistryBuilder() {
+        return ImmutableTable.<FieldName, Operator, Function<String, Criterion<?>>>builder()
             .put(DELETION_DATE, BEFORE_OR_EQUALS, testedValue -> CriterionFactory.deletionDate().beforeOrEquals(ZONED_DATE_TIME_PARSER.parse(testedValue)))
             .put(DELETION_DATE, AFTER_OR_EQUALS, testedValue -> CriterionFactory.deletionDate().afterOrEquals(ZONED_DATE_TIME_PARSER.parse(testedValue)))
             .put(DELIVERY_DATE, BEFORE_OR_EQUALS, testedValue -> CriterionFactory.deliveryDate().beforeOrEquals(ZONED_DATE_TIME_PARSER.parse(testedValue)))
@@ -196,13 +196,13 @@ public class QueryTranslator {
             .put(SUBJECT, CONTAINS_IGNORE_CASE, testedValue -> CriterionFactory.subject().containsIgnoreCase(STRING_PARSER.parse(testedValue)));
     }
 
-    private Criterion translate(CriterionDTO dto) throws QueryTranslatorException {
+    private Criterion<?> translate(CriterionDTO dto) throws QueryTranslatorException {
         return Optional.ofNullable(getCriterionParser(dto))
             .map(criterionGeneratingFunction -> criterionGeneratingFunction.apply(dto.getValue()))
             .orElseThrow(() -> new QueryTranslatorException("pair of fieldName: '" + dto.getFieldName() + "' and operator: '" + dto.getOperator() + "' is not supported"));
     }
 
-    private Function<String, Criterion> getCriterionParser(CriterionDTO dto) {
+    private Function<String, Criterion<?>> getCriterionParser(CriterionDTO dto) {
         return criterionRegistry.get(
             FieldName.getField(dto.getFieldName()),
             Operator.getOperator(dto.getOperator()));

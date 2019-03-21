@@ -611,6 +611,7 @@ public class MailImpl implements Disposable, Mail {
      * Thus, rather than Java deserializing attributes we deserialize them as Json using AttributeValue capabilities.
      */
     private void setAttributesUsingJsonable(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        @SuppressWarnings("unchecked")
         Map<String, String> attributesAsJson = (Map<String, String>) in.readObject();
 
         this.attributes = attributesAsJson.entrySet().stream()
@@ -623,6 +624,7 @@ public class MailImpl implements Disposable, Mail {
     /**
      * Fallback to Java deserialization if {@link MailImpl#setAttributesUsingJsonable(ObjectInputStream)} fails.
      */
+    @SuppressWarnings("unchecked")
     private void setAttributesUsingJavaSerializable(ObjectInputStream in) throws IOException, ClassNotFoundException {
         // the following is under try/catch to be backwards compatible
         // with messages created with James version <= 2.2.0a8

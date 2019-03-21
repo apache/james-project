@@ -28,14 +28,10 @@ import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.ALICE;
 import static org.apache.james.jmap.TestingConstants.ALICE_PASSWORD;
-import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
 import static org.apache.james.jmap.TestingConstants.DOMAIN;
-import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 
 import java.util.List;
 
@@ -43,8 +39,8 @@ import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.JamesServerExtension;
 import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
 import org.apache.james.JmapJamesServerContract;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.modules.RabbitMQExtension;

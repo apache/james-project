@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.queue.activemq;
 
-import java.util.concurrent.ExecutorService;
-
 import javax.jms.ConnectionFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;

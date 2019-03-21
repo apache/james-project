@@ -67,7 +67,7 @@ public interface DeletedMessageVaultSearchContract {
         @Test
         default void shouldReturnMessagesWithDeliveryBeforeDateWhenBeforeOrEquals() {
             DeletedMessage message1 = storeMessageWithDeliveryDate(DELIVERY_DATE);
-            DeletedMessage message2 = storeMessageWithDeliveryDate(DELIVERY_DATE.plusMinutes(60));
+            storeMessageWithDeliveryDate(DELIVERY_DATE.plusMinutes(60));
 
             assertThat(search(Query.of(CriterionFactory.deliveryDate().beforeOrEquals(DELIVERY_DATE.plusMinutes(30)))))
                 .containsOnly(message1);
@@ -76,7 +76,7 @@ public interface DeletedMessageVaultSearchContract {
         @Test
         default void shouldReturnMessagesWithDeliveryEqualDateWhenBeforeOrEquals() {
             DeletedMessage message1 = storeMessageWithDeliveryDate(DELIVERY_DATE);
-            DeletedMessage message2 = storeMessageWithDeliveryDate(DELIVERY_DATE.plusMinutes(60));
+            storeMessageWithDeliveryDate(DELIVERY_DATE.plusMinutes(60));
 
             assertThat(search(Query.of(CriterionFactory.deliveryDate().beforeOrEquals(DELIVERY_DATE))))
                 .containsOnly(message1);
@@ -84,7 +84,7 @@ public interface DeletedMessageVaultSearchContract {
 
         @Test
         default void shouldReturnMessagesWithDeliveryAfterDateWhenAfterOrEquals() {
-            DeletedMessage message1 = storeMessageWithDeliveryDate(DELIVERY_DATE);
+            storeMessageWithDeliveryDate(DELIVERY_DATE);
             DeletedMessage message2 = storeMessageWithDeliveryDate(DELIVERY_DATE.plusMinutes(60));
 
             assertThat(search(Query.of(CriterionFactory.deliveryDate().afterOrEquals(DELIVERY_DATE.plusMinutes(30)))))
@@ -93,7 +93,7 @@ public interface DeletedMessageVaultSearchContract {
 
         @Test
         default void shouldReturnMessagesWithDeliveryEqualDateWhenAfterOrEquals() {
-            DeletedMessage message1 = storeMessageWithDeliveryDate(DELIVERY_DATE);
+            storeMessageWithDeliveryDate(DELIVERY_DATE);
             DeletedMessage message2 = storeMessageWithDeliveryDate(DELIVERY_DATE.plusMinutes(60));
 
             assertThat(search(Query.of(CriterionFactory.deliveryDate().afterOrEquals(DELIVERY_DATE.plusMinutes(60)))))
@@ -106,7 +106,7 @@ public interface DeletedMessageVaultSearchContract {
         @Test
         default void shouldReturnMessagesWithDeletionBeforeDateWhenBeforeOrEquals() {
             DeletedMessage message1 = storeMessageWithDeletionDate(DELIVERY_DATE);
-            DeletedMessage message2 = storeMessageWithDeletionDate(DELIVERY_DATE.plusMinutes(60));
+            storeMessageWithDeletionDate(DELIVERY_DATE.plusMinutes(60));
 
             assertThat(search(Query.of(CriterionFactory.deletionDate().beforeOrEquals(DELIVERY_DATE.plusMinutes(30)))))
                 .containsOnly(message1);
@@ -115,7 +115,7 @@ public interface DeletedMessageVaultSearchContract {
         @Test
         default void shouldReturnMessagesWithDeletionEqualDateWhenBeforeOrEquals() {
             DeletedMessage message1 = storeMessageWithDeletionDate(DELIVERY_DATE);
-            DeletedMessage message2 = storeMessageWithDeletionDate(DELIVERY_DATE.plusMinutes(60));
+            storeMessageWithDeletionDate(DELIVERY_DATE.plusMinutes(60));
 
             assertThat(search(Query.of(CriterionFactory.deletionDate().beforeOrEquals(DELIVERY_DATE))))
                 .containsOnly(message1);
@@ -123,7 +123,7 @@ public interface DeletedMessageVaultSearchContract {
 
         @Test
         default void shouldReturnMessagesWithDeletionAfterDateWhenAfterOrEquals() {
-            DeletedMessage message1 = storeMessageWithDeletionDate(DELIVERY_DATE);
+            storeMessageWithDeletionDate(DELIVERY_DATE);
             DeletedMessage message2 = storeMessageWithDeletionDate(DELIVERY_DATE.plusMinutes(60));
 
             assertThat(search(Query.of(CriterionFactory.deletionDate().afterOrEquals(DELIVERY_DATE.plusMinutes(30)))))
@@ -132,7 +132,7 @@ public interface DeletedMessageVaultSearchContract {
 
         @Test
         default void shouldReturnMessagesWithDeletionEqualDateWhenAfterOrEquals() {
-            DeletedMessage message1 = storeMessageWithDeletionDate(DELIVERY_DATE);
+            storeMessageWithDeletionDate(DELIVERY_DATE);
             DeletedMessage message2 = storeMessageWithDeletionDate(DELIVERY_DATE.plusMinutes(60));
 
             assertThat(search(Query.of(CriterionFactory.deletionDate().afterOrEquals(DELIVERY_DATE.plusMinutes(60)))))
@@ -146,7 +146,7 @@ public interface DeletedMessageVaultSearchContract {
         default void shouldReturnMessagesWithRecipientWhenContains() {
             DeletedMessage message1 = storeMessageWithRecipients(RECIPIENT1, RECIPIENT2);
             DeletedMessage message2 = storeMessageWithRecipients(RECIPIENT1);
-            DeletedMessage message3 = storeMessageWithRecipients(RECIPIENT3);
+            storeMessageWithRecipients(RECIPIENT3);
 
             assertThat(search(Query.of(CriterionFactory.containsRecipient(RECIPIENT1))))
                 .containsOnly(message1, message2);
@@ -169,7 +169,7 @@ public interface DeletedMessageVaultSearchContract {
         @Test
         default void shouldReturnMessagesWithSenderWhenEquals() {
             DeletedMessage message1 = storeMessageWithSender(MaybeSender.of(SENDER));
-            DeletedMessage message2 = storeMessageWithSender(MaybeSender.of(SENDER2));
+            storeMessageWithSender(MaybeSender.of(SENDER2));
 
             assertThat(search(Query.of(CriterionFactory.hasSender(SENDER))))
                 .containsOnly(message1);
@@ -202,7 +202,7 @@ public interface DeletedMessageVaultSearchContract {
         @Test
         default void shouldReturnMessagesWithAttachmentWhenHasAttachment() {
             DeletedMessage message1 = storeMessageWithHasAttachment(true);
-            DeletedMessage message2 = storeMessageWithHasAttachment(false);
+            storeMessageWithHasAttachment(false);
             DeletedMessage message3 = storeMessageWithHasAttachment(true);
 
             assertThat(search(Query.of(CriterionFactory.hasAttachment())))
@@ -213,7 +213,7 @@ public interface DeletedMessageVaultSearchContract {
         default void shouldReturnMessagesWithOutAttachmentWhenHasNoAttachement() {
             DeletedMessage message1 = storeMessageWithHasAttachment(false);
             DeletedMessage message2 = storeMessageWithHasAttachment(false);
-            DeletedMessage message3 = storeMessageWithHasAttachment(true);
+            storeMessageWithHasAttachment(true);
 
             assertThat(search(Query.of(CriterionFactory.hasNoAttachment())))
                 .containsOnly(message1, message2);
@@ -226,7 +226,7 @@ public interface DeletedMessageVaultSearchContract {
         default void shouldReturnMessagesWithOriginMailboxesWhenContains() {
             DeletedMessage message1 = storeMessageWithOriginMailboxes(MAILBOX_ID_1, MAILBOX_ID_2);
             DeletedMessage message2 = storeMessageWithOriginMailboxes(MAILBOX_ID_1);
-            DeletedMessage message3 = storeMessageWithOriginMailboxes(MAILBOX_ID_3);
+            storeMessageWithOriginMailboxes(MAILBOX_ID_3);
 
             assertThat(search(Query.of(CriterionFactory.containsOriginMailbox(MAILBOX_ID_1))))
                 .containsOnly(message1, message2);
@@ -252,7 +252,7 @@ public interface DeletedMessageVaultSearchContract {
         @Test
         default void shouldReturnMessagesContainsAtTheMiddle() {
             DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
+            storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
 
             assertThat(search(Query.of(CriterionFactory.subject().contains("james"))))
                 .containsOnly(message1);
@@ -261,7 +261,7 @@ public interface DeletedMessageVaultSearchContract {
         @Test
         default void shouldReturnMessagesContainsAtTheBeginning() {
             DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
+            storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
 
             assertThat(search(Query.of(CriterionFactory.subject().contains("apache"))))
                 .containsOnly(message1);
@@ -269,7 +269,7 @@ public interface DeletedMessageVaultSearchContract {
 
         @Test
         default void shouldReturnMessagesContainsAtTheEnd() {
-            DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
+            storeMessageWithSubject(APACHE_JAMES_PROJECT);
             DeletedMessage message2 = storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
 
             assertThat(search(Query.of(CriterionFactory.subject().contains("software"))))
@@ -279,7 +279,7 @@ public interface DeletedMessageVaultSearchContract {
         @Test
         default void shouldNotReturnMissingSubjectMessagesWhenContains() {
             DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageNoSubject();
+            storeMessageNoSubject();
 
             assertThat(search(Query.of(CriterionFactory.subject().contains("james"))))
                 .containsOnly(message1);
@@ -287,8 +287,8 @@ public interface DeletedMessageVaultSearchContract {
 
         @Test
         default void shouldNotReturnMessagesContainsIgnoreCaseWhenContains() {
-            DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
+            storeMessageWithSubject(APACHE_JAMES_PROJECT);
+            storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
 
             assertThat(search(Query.of(CriterionFactory.subject().contains("SoftWare"))))
                 .isEmpty();
@@ -297,7 +297,7 @@ public interface DeletedMessageVaultSearchContract {
         @Test
         default void shouldReturnMessagesContainsIgnoreCaseAtTheMiddle() {
             DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
+            storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
 
             assertThat(search(Query.of(CriterionFactory.subject().containsIgnoreCase("JAmEs"))))
                 .containsOnly(message1);
@@ -305,7 +305,7 @@ public interface DeletedMessageVaultSearchContract {
 
         @Test
         default void shouldReturnMessagesContainsIgnoreCaseAtTheBeginning() {
-            DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
+            storeMessageWithSubject(APACHE_JAMES_PROJECT);
             DeletedMessage message2 = storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
 
             assertThat(search(Query.of(CriterionFactory.subject().containsIgnoreCase("SouRCE"))))
@@ -315,7 +315,7 @@ public interface DeletedMessageVaultSearchContract {
         @Test
         default void shouldReturnMessagesContainsIgnoreCaseAtTheEnd() {
             DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
+            storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
 
             assertThat(search(Query.of(
                     CriterionFactory.subject().containsIgnoreCase("ProJECT"))))
@@ -325,7 +325,7 @@ public interface DeletedMessageVaultSearchContract {
         @Test
         default void shouldReturnMessagesContainsWhenContainsIgnoreCase() {
             DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
+            storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
 
             assertThat(search(Query.of(
                     CriterionFactory.subject().containsIgnoreCase("project"))))
@@ -335,7 +335,7 @@ public interface DeletedMessageVaultSearchContract {
         @Test
         default void shouldNotReturnMissingSubjectMessagesWhenContainsIgnoreCase() {
             DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageNoSubject();
+            storeMessageNoSubject();
 
             assertThat(search(Query.of(CriterionFactory.subject().containsIgnoreCase("JAMes"))))
                 .containsOnly(message1);
@@ -344,7 +344,7 @@ public interface DeletedMessageVaultSearchContract {
         @Test
         default void shouldReturnMessagesStrictlyEquals() {
             DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
+            storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
 
             assertThat(search(Query.of(CriterionFactory.subject().equals(APACHE_JAMES_PROJECT))))
                 .containsOnly(message1);
@@ -352,8 +352,8 @@ public interface DeletedMessageVaultSearchContract {
 
         @Test
         default void shouldNotReturnMessagesContainsWhenEquals() {
-            DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
+            storeMessageWithSubject(APACHE_JAMES_PROJECT);
+            storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
 
             assertThat(search(Query.of(CriterionFactory.subject().equals("james"))))
                 .isEmpty();
@@ -361,8 +361,8 @@ public interface DeletedMessageVaultSearchContract {
 
         @Test
         default void shouldNotReturnMessagesContainsIgnoreCaseWhenEquals() {
-            DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
+            storeMessageWithSubject(APACHE_JAMES_PROJECT);
+            storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
 
             assertThat(search(Query.of(CriterionFactory.subject().equals("proJECT"))))
                 .isEmpty();
@@ -370,8 +370,8 @@ public interface DeletedMessageVaultSearchContract {
 
         @Test
         default void shouldNotReturnMessagesEqualsIgnoreCaseWhenEquals() {
-            DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
+            storeMessageWithSubject(APACHE_JAMES_PROJECT);
+            storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
 
             assertThat(search(Query.of(CriterionFactory.subject().equals("Apache James Project"))))
                 .isEmpty();
@@ -379,8 +379,8 @@ public interface DeletedMessageVaultSearchContract {
 
         @Test
         default void shouldReturnMessagesWhenEqualsIgnoreCase() {
-            DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
+            storeMessageWithSubject(APACHE_JAMES_PROJECT);
+            storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
 
             assertThat(search(Query.of(CriterionFactory.subject().equals("Apache James PROJECT"))))
                 .isEmpty();
@@ -389,7 +389,7 @@ public interface DeletedMessageVaultSearchContract {
         @Test
         default void shouldReturnMessagesStrictlyEqualsWhenEqualsIgnoreCase() {
             DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
+            storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
 
             assertThat(search(Query.of(CriterionFactory.subject().equalsIgnoreCase(APACHE_JAMES_PROJECT))))
                 .containsOnly(message1);
@@ -397,8 +397,8 @@ public interface DeletedMessageVaultSearchContract {
 
         @Test
         default void shouldNotReturnMessagesContainsWhenEqualsIgnoreCase() {
-            DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
+            storeMessageWithSubject(APACHE_JAMES_PROJECT);
+            storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
 
             assertThat(search(Query.of(CriterionFactory.subject().equalsIgnoreCase("james"))))
                 .isEmpty();
@@ -406,8 +406,8 @@ public interface DeletedMessageVaultSearchContract {
 
         @Test
         default void shouldNotReturnMessagesContainsIgnoreCaseWhenEqualsIgnoreCase() {
-            DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
+            storeMessageWithSubject(APACHE_JAMES_PROJECT);
+            storeMessageWithSubject(OPEN_SOURCE_SOFTWARE);
 
             assertThat(search(Query.of(CriterionFactory.subject().equalsIgnoreCase("proJECT"))))
                 .isEmpty();
@@ -416,7 +416,7 @@ public interface DeletedMessageVaultSearchContract {
         @Test
         default void shouldNotReturnMissingSubjectMessagesWhenEquals() {
             DeletedMessage message1 = storeMessageWithSubject(APACHE_JAMES_PROJECT);
-            DeletedMessage message2 = storeMessageNoSubject();
+            storeMessageNoSubject();
 
             assertThat(search(Query.of(CriterionFactory.subject().equals(APACHE_JAMES_PROJECT))))
                 .containsOnly(message1);
@@ -430,9 +430,9 @@ public interface DeletedMessageVaultSearchContract {
             DeletedMessage message1 = storeDefaultMessage();
             DeletedMessage message2 = storeDefaultMessage();
             DeletedMessage message3 = storeDefaultMessage();
-            DeletedMessage message4 = storeMessageWithOriginMailboxes(MAILBOX_ID_2);
-            DeletedMessage message5 = storeMessageWithSender(MaybeSender.of(SENDER2));
-            DeletedMessage message6 = storeMessageWithDeletionDate(DELETION_DATE.minusHours(1));
+            storeMessageWithOriginMailboxes(MAILBOX_ID_2);
+            storeMessageWithSender(MaybeSender.of(SENDER2));
+            storeMessageWithDeletionDate(DELETION_DATE.minusHours(1));
 
             assertThat(search(Query.of(
                     CriterionFactory.containsOriginMailbox(MAILBOX_ID_1),
@@ -480,7 +480,7 @@ public interface DeletedMessageVaultSearchContract {
         default void searchShouldReturnMessageWhenHavingSameCriterionTypes() {
             DeletedMessage message1 = storeMessageWithRecipients(RECIPIENT1, RECIPIENT2, RECIPIENT3);
             DeletedMessage message2 = storeMessageWithRecipients(RECIPIENT1, RECIPIENT2);
-            DeletedMessage message3 = storeMessageWithRecipients(RECIPIENT1);
+            storeMessageWithRecipients(RECIPIENT1);
 
             assertThat(search(Query.of(
                     CriterionFactory.containsRecipient(RECIPIENT1),
@@ -490,10 +490,10 @@ public interface DeletedMessageVaultSearchContract {
 
         @Test
         default void searchShouldReturnEmptyWhenHavingSameCriterionTypesButOppositeMatching() {
-            DeletedMessage message1 = storeMessageWithDeletionDate(DELETION_DATE);
-            DeletedMessage message2 = storeMessageWithDeletionDate(DELETION_DATE);
-            DeletedMessage message3 = storeMessageWithDeletionDate(DELETION_DATE.plusHours(2));
-            DeletedMessage message4 = storeMessageWithDeletionDate(DELETION_DATE.minusHours(2));
+            storeMessageWithDeletionDate(DELETION_DATE);
+            storeMessageWithDeletionDate(DELETION_DATE);
+            storeMessageWithDeletionDate(DELETION_DATE.plusHours(2));
+            storeMessageWithDeletionDate(DELETION_DATE.minusHours(2));
 
             assertThat(search(Query.of(
                     CriterionFactory.deletionDate().afterOrEquals(DELETION_DATE.plusHours(1)),
@@ -516,7 +516,7 @@ public interface DeletedMessageVaultSearchContract {
         default void searchForAnUserShouldNotReturnMessagesFromAnotherUser() {
             DeletedMessage message1 = storeMessageWithUser(USER);
             DeletedMessage message2 = storeMessageWithUser(USER);
-            DeletedMessage message3 = storeMessageWithUser(USER_2);
+            storeMessageWithUser(USER_2);
 
             assertThat(search(USER, Query.ALL))
                 .containsOnly(message1, message2);

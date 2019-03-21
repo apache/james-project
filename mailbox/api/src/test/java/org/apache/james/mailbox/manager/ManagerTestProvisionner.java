@@ -46,7 +46,7 @@ public class ManagerTestProvisionner {
     public static final String OTHER_USER = "otherUser@domain.org";
     public static final String OTHER_USER_PASS = "otherPass";
 
-    private IntegrationResources integrationResources;
+    private IntegrationResources<?> integrationResources;
 
     private MailboxPath inbox;
     private MessageManager messageManager;
@@ -54,7 +54,7 @@ public class ManagerTestProvisionner {
     private MailboxSession session;
 
 
-    public ManagerTestProvisionner(IntegrationResources integrationResources) throws Exception {
+    public ManagerTestProvisionner(IntegrationResources<?> integrationResources) throws Exception {
         this.integrationResources = integrationResources;
 
         session = integrationResources.getMailboxManager().login(USER, USER_PASS);

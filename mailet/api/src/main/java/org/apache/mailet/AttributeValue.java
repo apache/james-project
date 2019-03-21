@@ -208,11 +208,11 @@ public class AttributeValue<T> {
         return value;
     }
 
-    public <T> Optional<T> valueAs(Class<T> type) {
+    public <U> Optional<U> valueAs(Class<U> type) {
         return tryToCast(type, value);
     }
 
-    private static <T> Optional<T> tryToCast(Class<T> type, Object value) {
+    private static <U> Optional<U> tryToCast(Class<U> type, Object value) {
         if (type.isInstance(value)) {
             return Optional.of(type.cast(value));
         } else {

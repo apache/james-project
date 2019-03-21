@@ -85,7 +85,6 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
     public static class MemoryMailQueue implements ManageableMailQueue {
         private final DelayQueue<MemoryMailQueueItem> mailItems;
         private final LinkedBlockingDeque<MemoryMailQueueItem> inProcessingMailItems;
-        private final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
         private final String name;
         private final Flux<MailQueueItem> flux;
 
@@ -93,7 +92,6 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
             this.mailItems = new DelayQueue<>();
             this.inProcessingMailItems = new LinkedBlockingDeque<>();
             this.name = name;
-            this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
             this.flux = Mono.fromCallable(mailItems::take)
                 .repeat()
                 .flatMap(item -> Mono.just(inProcessingMailItems.add(item)).thenReturn(item))

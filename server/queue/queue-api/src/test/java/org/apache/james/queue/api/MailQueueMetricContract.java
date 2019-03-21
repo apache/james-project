@@ -23,7 +23,6 @@ import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.util.stream.IntStream;
 
@@ -32,7 +31,6 @@ import javax.mail.MessagingException;
 import org.apache.james.metrics.api.Gauge;
 import org.apache.mailet.base.test.FakeMail;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
