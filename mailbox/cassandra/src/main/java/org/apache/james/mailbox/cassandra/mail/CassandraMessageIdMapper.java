@@ -23,7 +23,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 import javax.mail.Flags;
 
@@ -289,7 +288,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     private Mono<Pair<Flags, ComposedMessageIdWithMetaData>> updateFlags(ComposedMessageIdWithMetaData oldComposedId, ComposedMessageIdWithMetaData newComposedId) {
         return imapUidDAO.updateMetadata(newComposedId, oldComposedId.getModSeq())
-            .filter(FunctionalUtils.toPredicate(Function.identity()))
+            .filter(FunctionalUtils.identityPredicate())
             .flatMap(any -> messageIdDAO.updateMetadata(newComposedId)
                 .thenReturn(Pair.of(oldComposedId.getFlags(), newComposedId)));
     }

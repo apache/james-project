@@ -22,7 +22,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -85,14 +84,15 @@ class FunctionalUtilsTest {
     }
 
     @Nested
-    class ToPredicate {
+    class IdentityPredicate {
         @Test
-        void shouldKeepProperty() {
-            Function<Integer, Boolean> function = value -> value % 42 == 0;
-            Predicate<Integer> predicate = FunctionalUtils.toPredicate(function);
+        void shouldKeepTrue() {
+            assertThat(FunctionalUtils.identityPredicate().test(true)).isTrue();
+        }
 
-            assertThat(predicate.test(5)).isFalse();
-            assertThat(predicate.test(42)).isTrue();
+        @Test
+        void shouldDiscardFalse() {
+            assertThat(FunctionalUtils.identityPredicate().test(false)).isFalse();
         }
     }
 }

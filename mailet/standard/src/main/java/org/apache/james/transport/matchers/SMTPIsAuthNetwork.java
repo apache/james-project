@@ -20,7 +20,6 @@
 package org.apache.james.transport.matchers;
 
 import java.util.Collection;
-import java.util.function.Function;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.util.FunctionalUtils;
@@ -53,7 +52,7 @@ public class SMTPIsAuthNetwork extends GenericMatcher {
     public Collection<MailAddress> match(Mail mail) {
         return AttributeUtils
             .getValueAndCastFromMail(mail, SMTP_AUTH_NETWORK_NAME, Boolean.class)
-            .filter(FunctionalUtils.toPredicate(Function.identity()))
+            .filter(FunctionalUtils.identityPredicate())
             .map(any -> mail.getRecipients())
             .orElse(ImmutableList.of());
     }

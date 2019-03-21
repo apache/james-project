@@ -49,6 +49,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.fasterxml.jackson.core.JsonProcessingException;
+
 import reactor.core.publisher.Mono;
 
 public class CassandraACLMapper {
@@ -162,7 +163,7 @@ public class CassandraACLMapper {
                 .setString(CassandraACLTable.ACL, convertAclToJson(aclWithVersion.mailboxACL))
                 .setLong(CassandraACLTable.VERSION, aclWithVersion.version + 1)
                 .setLong(OLD_VERSION, aclWithVersion.version))
-            .filter(FunctionalUtils.toPredicate(Function.identity()))
+            .filter(FunctionalUtils.identityPredicate())
             .map(any -> aclWithVersion.mailboxACL);
     }
 
@@ -171,7 +172,7 @@ public class CassandraACLMapper {
             conditionalInsertStatement.bind()
                     .setUUID(CassandraACLTable.ID, cassandraId.asUuid())
                     .setString(CassandraACLTable.ACL, convertAclToJson(acl))))
-            .filter(FunctionalUtils.toPredicate(Function.identity()))
+            .filter(FunctionalUtils.identityPredicate())
             .map(any -> acl);
     }
 

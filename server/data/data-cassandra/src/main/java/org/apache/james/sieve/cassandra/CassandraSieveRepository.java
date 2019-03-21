@@ -46,6 +46,7 @@ import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.util.FunctionalUtils;
 
 import com.github.steveash.guavate.Guavate;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -167,7 +168,7 @@ public class CassandraSieveRepository implements SieveRepository {
         Mono<Boolean> activateNewScript =
             unactivateOldScript(user)
                 .then(updateScriptActivation(user, name, true))
-                .filter(FunctionalUtils.toPredicate(Function.identity()))
+                .filter(FunctionalUtils.identityPredicate())
                 .flatMap(any -> cassandraActiveScriptDAO.activate(user, name).thenReturn(any));
 
         if (!activateNewScript.blockOptional().isPresent()) {
