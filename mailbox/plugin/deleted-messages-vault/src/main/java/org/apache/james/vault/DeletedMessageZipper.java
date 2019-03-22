@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.compress.archivers.zip.ExtraFieldUtils;
@@ -33,18 +32,14 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.backup.MessageIdExtraField;
 import org.apache.james.mailbox.backup.SizeExtraField;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.util.OptionalUtils;
-import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.consumers.ThrowingConsumer;
 import com.google.common.annotations.VisibleForTesting;
 
-import reactor.core.publisher.Mono;
-
 public class DeletedMessageZipper {
-
     interface DeletedMessageContentLoader {
-        Publisher<InputStream> load(DeletedMessage deletedMessage);
+        InputStream load(DeletedMessage deletedMessage);
     }
 
     DeletedMessageZipper() {
@@ -52,24 +47,14 @@ public class DeletedMessageZipper {
         ExtraFieldUtils.register(SizeExtraField.class);
     }
 
-    public void zip(DeletedMessageContentLoader contentLoader, Stream<DeletedMessage> deletedMessages,
-                    OutputStream outputStream) throws IOException {
+    public void zip(DeletedMessageContentLoader contentLoader, Stream<DeletedMessage> deletedMessages, OutputStream outputStream) throws IOException {
         try (ZipArchiveOutputStream zipOutputStream = newZipArchiveOutputStream(outputStream)) {
-            deletedMessages
-                .map(message -> messageWithContent(message, contentLoader))
-                .flatMap(OptionalUtils::toStream)
-                .forEach(Throwing.<DeletedMessageWithContent>consumer(
-                    messageWithContent -> putMessageToEntry(zipOutputStream, messageWithContent)).sneakyThrow());
+            ThrowingConsumer<DeletedMessage> putInZip = message -> putMessageToEntry(zipOutputStream, message, contentLoader);
+
+            deletedMessages.forEach(Throwing.consumer(putInZip).sneakyThrow());
 
             zipOutputStream.finish();
         }
-    }
-
-    @VisibleForTesting
-    Optional<DeletedMessageWithContent> messageWithContent(DeletedMessage message, DeletedMessageContentLoader loader) {
-        return Mono.from(loader.load(message))
-            .map(messageContent -> new DeletedMessageWithContent(message, messageContent))
-            .blockOptional();
     }
 
     @VisibleForTesting
@@ -78,25 +63,22 @@ public class DeletedMessageZipper {
     }
 
     @VisibleForTesting
-    void putMessageToEntry(ZipArchiveOutputStream zipOutputStream, DeletedMessageWithContent message) throws IOException {
-        try (DeletedMessageWithContent closableMessage = message) {
-            ZipArchiveEntry archiveEntry = createEntry(zipOutputStream, message);
-            zipOutputStream.putArchiveEntry(archiveEntry);
+    void putMessageToEntry(ZipArchiveOutputStream zipOutputStream, DeletedMessage message, DeletedMessageContentLoader contentLoader) throws IOException {
+        try (InputStream content = contentLoader.load(message)) {
+            zipOutputStream.putArchiveEntry(createEntry(zipOutputStream, message));
 
-            IOUtils.copy(message.getContent(), zipOutputStream);
+            IOUtils.copy(content, zipOutputStream);
 
             zipOutputStream.closeArchiveEntry();
         }
     }
 
     @VisibleForTesting
-    ZipArchiveEntry createEntry(ZipArchiveOutputStream zipOutputStream,
-                                        DeletedMessageWithContent fullMessage) throws IOException {
-        DeletedMessage message = fullMessage.getDeletedMessage();
+    ZipArchiveEntry createEntry(ZipArchiveOutputStream zipOutputStream, DeletedMessage message) throws IOException {
         MessageId messageId = message.getMessageId();
 
         ZipArchiveEntry archiveEntry = (ZipArchiveEntry) zipOutputStream.createArchiveEntry(new File(messageId.serialize()), messageId.serialize());
-        archiveEntry.addExtraField(new MessageIdExtraField(messageId.serialize()));
+        archiveEntry.addExtraField(new MessageIdExtraField(messageId));
         archiveEntry.addExtraField(new SizeExtraField(message.getSize()));
 
         return archiveEntry;
