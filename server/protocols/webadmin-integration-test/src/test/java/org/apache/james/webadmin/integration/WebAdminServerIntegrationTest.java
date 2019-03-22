@@ -53,6 +53,8 @@ import org.apache.james.webadmin.routes.TasksRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
@@ -260,12 +262,16 @@ public class WebAdminServerIntegrationTest {
         with()
             .get("/task/" + taskId + "/await");
 
-        when()
-            .get(VERSION)
-        .then()
-            .statusCode(HttpStatus.OK_200)
-            .contentType(JSON_CONTENT_TYPE)
-            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION.getValue() + "}"));
+        Awaitility.await()
+            .atMost(Duration.TEN_SECONDS)
+            .await()
+            .untilAsserted(() ->
+                when()
+                    .get(VERSION)
+                .then()
+                    .statusCode(HttpStatus.OK_200)
+                    .contentType(JSON_CONTENT_TYPE)
+                    .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION.getValue() + "}")));
     }
 
     @Test
