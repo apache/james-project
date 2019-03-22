@@ -53,6 +53,7 @@ import org.apache.james.mailbox.backup.MessageIdExtraField;
 import org.apache.james.mailbox.backup.SizeExtraField;
 import org.apache.james.mailbox.backup.ZipAssert;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 
@@ -68,127 +69,133 @@ class DeletedMessageZipperTest {
         zipper = spy(new DeletedMessageZipper());
     }
 
-    @Test
-    void zipShouldPutEntriesToOutputStream() throws Exception {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        zipper.zip(CONTENT_LOADER, Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2), outputStream);
-
-        try (ZipAssert zipAssert = assertThatZip(outputStream)) {
-            zipAssert.containsOnlyEntriesMatching(
-                    hasName(MESSAGE_ID.serialize()).hasStringContent(MESSAGE_CONTENT),
-                    hasName(MESSAGE_ID_2.serialize()).hasStringContent(MESSAGE_CONTENT));
-        }
-    }
-
-    @Test
-    void zipShouldPutExtraFields() throws Exception {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        zipper.zip(CONTENT_LOADER, Stream.of(DELETED_MESSAGE), outputStream);
-
-        try (ZipAssert zipAssert = assertThatZip(outputStream)) {
-            zipAssert.containsOnlyEntriesMatching(
-                    hasName(MESSAGE_ID.serialize())
-                        .containsExtraFields(new MessageIdExtraField(MESSAGE_ID))
-                        .containsExtraFields(new SizeExtraField(CONTENT.length)));
-        }
-    }
-
-    @Test
-    void constructorShouldNotFailWhenCalledMultipleTimes() {
-        assertThatCode(() -> {
+    @Nested
+    class NormalBehaviourTest {
+        @Test
+        void constructorShouldNotFailWhenCalledMultipleTimes() {
+            assertThatCode(() -> {
                 new DeletedMessageZipper();
                 new DeletedMessageZipper();
             }).doesNotThrowAnyException();
-    }
+        }
 
-    @Test
-    void zipShouldCloseAllResourcesStreamWhenFinishZipping() throws Exception {
-        Collection<InputStream> loadedContents = new ConcurrentLinkedQueue<>();
+        @Test
+        void zipShouldPutEntriesToOutputStream() throws Exception {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-        zipper.zip(spyLoadedContents(loadedContents), Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2), new ByteArrayOutputStream());
+            zipper.zip(CONTENT_LOADER, Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2), outputStream);
 
-        assertThat(loadedContents)
-            .hasSize(2)
-            .allSatisfy(Throwing.consumer(content -> verify(content, times(1)).close()));
-    }
-
-    @Test
-    void zipShouldTerminateZipArchiveStreamWhenFinishZipping() throws Exception {
-        AtomicReference<ZipArchiveOutputStream> zipOutputStreamReference = new AtomicReference<>();
-        when(zipper.newZipArchiveOutputStream(any())).thenAnswer(spyZipOutPutStream(zipOutputStreamReference));
-
-        zipper.zip(CONTENT_LOADER, Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2), new ByteArrayOutputStream());
-
-        verify(zipOutputStreamReference.get(), times(1)).finish();
-        verify(zipOutputStreamReference.get(), times(1)).close();
-    }
-
-    @Test
-    void zipShouldThrowWhenCreateEntryGetException() throws Exception {
-        doThrow(new IOException("mocked exception")).when(zipper).createEntry(any(), any());
-
-        assertThatThrownBy(() -> zipper.zip(CONTENT_LOADER, Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2), new ByteArrayOutputStream()))
-            .isInstanceOf(IOException.class);
-    }
-
-    @Test
-    void zipShouldThrowWhenPutMessageToEntryGetException() throws Exception {
-        doThrow(new IOException("mocked exception")).when(zipper).putMessageToEntry(any(), any(), any());
-
-        assertThatThrownBy(() -> zipper.zip(CONTENT_LOADER, Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2), new ByteArrayOutputStream()))
-            .isInstanceOf(IOException.class);
-    }
-
-    @Test
-    void zipShouldStopLoadingResourcesWhenGettingException() throws Exception {
-        doThrow(new IOException("mocked exception")).when(zipper).createEntry(any(), any());
-        DeletedMessageContentLoader contentLoader = spy(new DeletedMessageContentLoader() {
-            // lambdas are final and thus can't be spied
-            @Override
-            public InputStream load(DeletedMessage deletedMessage) {
-                return new ByteArrayInputStream(CONTENT);
+            try (ZipAssert zipAssert = assertThatZip(outputStream)) {
+                zipAssert.containsOnlyEntriesMatching(
+                        hasName(MESSAGE_ID.serialize()).hasStringContent(MESSAGE_CONTENT),
+                        hasName(MESSAGE_ID_2.serialize()).hasStringContent(MESSAGE_CONTENT));
             }
-        });
-
-        try {
-            zipper.zip(contentLoader, Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2), new ByteArrayOutputStream());
-        } catch (Exception e) {
-            // ignored
         }
 
-        verify(contentLoader, times(1)).load(any());
-    }
+        @Test
+        void zipShouldPutExtraFields() throws Exception {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-    @Test
-    void zipShouldCloseParameterOutputStreamWhenGettingException() throws Exception {
-        doThrow(new IOException("mocked exception")).when(zipper).putMessageToEntry(any(), any(), any());
-        ByteArrayOutputStream outputStream = spy(new ByteArrayOutputStream());
-
-        try {
             zipper.zip(CONTENT_LOADER, Stream.of(DELETED_MESSAGE), outputStream);
-        } catch (Exception e) {
-            // ignored
+
+            try (ZipAssert zipAssert = assertThatZip(outputStream)) {
+                zipAssert.containsOnlyEntriesMatching(
+                        hasName(MESSAGE_ID.serialize())
+                            .containsExtraFields(new MessageIdExtraField(MESSAGE_ID))
+                            .containsExtraFields(new SizeExtraField(CONTENT.length)));
+            }
         }
 
-        verify(outputStream, times(1)).close();
+        @Test
+        void zipShouldTerminateZipArchiveStreamWhenFinishZipping() throws Exception {
+            AtomicReference<ZipArchiveOutputStream> zipOutputStreamReference = new AtomicReference<>();
+            when(zipper.newZipArchiveOutputStream(any())).thenAnswer(spyZipOutPutStream(zipOutputStreamReference));
+
+            zipper.zip(CONTENT_LOADER, Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2), new ByteArrayOutputStream());
+
+            verify(zipOutputStreamReference.get(), times(1)).finish();
+            verify(zipOutputStreamReference.get(), times(1)).close();
+        }
+
+        @Test
+        void zipShouldCloseAllResourcesStreamWhenFinishZipping() throws Exception {
+            Collection<InputStream> loadedContents = new ConcurrentLinkedQueue<>();
+
+            zipper.zip(spyLoadedContents(loadedContents), Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2), new ByteArrayOutputStream());
+
+            assertThat(loadedContents)
+                .hasSize(2)
+                .allSatisfy(Throwing.consumer(content -> verify(content, times(1)).close()));
+        }
     }
 
-    @Test
-    void zipShouldTerminateZipArchiveStreamWhenGettingException() throws Exception {
-        doThrow(new IOException("mocked exception")).when(zipper).putMessageToEntry(any(), any(), any());
-        AtomicReference<ZipArchiveOutputStream> zipOutputStreamReference = new AtomicReference<>();
-        when(zipper.newZipArchiveOutputStream(any())).thenAnswer(spyZipOutPutStream(zipOutputStreamReference));
+    @Nested
+    class FailingBehaviourTest {
+        @Test
+        void zipShouldThrowWhenCreateEntryGetException() throws Exception {
+            doThrow(new IOException("mocked exception")).when(zipper).createEntry(any(), any());
 
-        try {
-            zipper.zip(CONTENT_LOADER, Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2), new ByteArrayOutputStream());
-        } catch (Exception e) {
-            // ignored
+            assertThatThrownBy(() -> zipper.zip(CONTENT_LOADER, Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2), new ByteArrayOutputStream()))
+                .isInstanceOf(IOException.class);
         }
 
-        verify(zipOutputStreamReference.get(), times(1)).finish();
-        verify(zipOutputStreamReference.get(), times(1)).close();
+        @Test
+        void zipShouldThrowWhenPutMessageToEntryGetException() throws Exception {
+            doThrow(new IOException("mocked exception")).when(zipper).putMessageToEntry(any(), any(), any());
+
+            assertThatThrownBy(() -> zipper.zip(CONTENT_LOADER, Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2), new ByteArrayOutputStream()))
+                .isInstanceOf(IOException.class);
+        }
+
+        @Test
+        void zipShouldTerminateZipArchiveStreamWhenGettingException() throws Exception {
+            doThrow(new IOException("mocked exception")).when(zipper).putMessageToEntry(any(), any(), any());
+            AtomicReference<ZipArchiveOutputStream> zipOutputStreamReference = new AtomicReference<>();
+            when(zipper.newZipArchiveOutputStream(any())).thenAnswer(spyZipOutPutStream(zipOutputStreamReference));
+
+            try {
+                zipper.zip(CONTENT_LOADER, Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2), new ByteArrayOutputStream());
+            } catch (Exception e) {
+                // ignored
+            }
+
+            verify(zipOutputStreamReference.get(), times(1)).finish();
+            verify(zipOutputStreamReference.get(), times(1)).close();
+        }
+
+        @Test
+        void zipShouldCloseParameterOutputStreamWhenGettingException() throws Exception {
+            doThrow(new IOException("mocked exception")).when(zipper).putMessageToEntry(any(), any(), any());
+            ByteArrayOutputStream outputStream = spy(new ByteArrayOutputStream());
+
+            try {
+                zipper.zip(CONTENT_LOADER, Stream.of(DELETED_MESSAGE), outputStream);
+            } catch (Exception e) {
+                // ignored
+            }
+
+            verify(outputStream, times(1)).close();
+        }
+
+        @Test
+        void zipShouldStopLoadingResourcesWhenGettingException() throws Exception {
+            doThrow(new IOException("mocked exception")).when(zipper).createEntry(any(), any());
+            DeletedMessageContentLoader contentLoader = spy(new DeletedMessageContentLoader() {
+                // lambdas are final and thus can't be spied
+                @Override
+                public InputStream load(DeletedMessage deletedMessage) {
+                    return new ByteArrayInputStream(CONTENT);
+                }
+            });
+
+            try {
+                zipper.zip(contentLoader, Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2), new ByteArrayOutputStream());
+            } catch (Exception e) {
+                // ignored
+            }
+
+            verify(contentLoader, times(1)).load(any());
+        }
     }
 
     private DeletedMessageZipper.DeletedMessageContentLoader spyLoadedContents(Collection<InputStream> loadedContents) {
