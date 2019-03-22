@@ -21,6 +21,8 @@ package org.apache.james.mailbox.backup;
 
 import static org.apache.james.mailbox.backup.ZipArchiveEntryAssert.assertThatZipEntry;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -29,12 +31,13 @@ import java.util.List;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipExtraField;
 import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.error.BasicErrorMessageFactory;
 
 import com.github.steveash.guavate.Guavate;
 
-public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> {
+public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> implements AutoCloseable {
     interface EntryCheck {
         default EntryCheck compose(EntryCheck other) {
             return assertion -> other.test(this.test(assertion));
@@ -74,8 +77,12 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> {
         }
     }
 
-    public static ZipAssert assertThatZip(ZipFile zipFile) {
+    static ZipAssert assertThatZip(ZipFile zipFile) {
         return new ZipAssert(zipFile);
+    }
+
+    public static ZipAssert assertThatZip(ByteArrayOutputStream outputStream) throws IOException {
+        return assertThatZip(new ZipFile(new SeekableInMemoryByteChannel(outputStream.toByteArray())));
     }
 
     private static BasicErrorMessageFactory shouldHaveSize(ZipFile zipFile, int expected, int actual) {
@@ -119,4 +126,8 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> {
         return myself;
     }
 
+    @Override
+    public void close() throws Exception {
+        zipFile.close();
+    }
 }

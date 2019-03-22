@@ -49,10 +49,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
 import org.apache.james.mailbox.backup.MessageIdExtraField;
 import org.apache.james.mailbox.backup.SizeExtraField;
+import org.apache.james.mailbox.backup.ZipAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
@@ -75,9 +74,8 @@ class DeletedMessageZipperTest {
 
         zipper.zip(CONTENT_LOADER, Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2), outputStream);
 
-        try (ZipFile zipFile = zipFile(outputStream)) {
-            assertThatZip(zipFile)
-                .containsOnlyEntriesMatching(
+        try (ZipAssert zipAssert = assertThatZip(outputStream)) {
+            zipAssert.containsOnlyEntriesMatching(
                     hasName(MESSAGE_ID.serialize()).hasStringContent(MESSAGE_CONTENT),
                     hasName(MESSAGE_ID_2.serialize()).hasStringContent(MESSAGE_CONTENT));
         }
@@ -89,9 +87,8 @@ class DeletedMessageZipperTest {
 
         zipper.zip(CONTENT_LOADER, Stream.of(DELETED_MESSAGE), outputStream);
 
-        try (ZipFile zipFile = zipFile(outputStream)) {
-            assertThatZip(zipFile)
-                .containsOnlyEntriesMatching(
+        try (ZipAssert zipAssert = assertThatZip(outputStream)) {
+            zipAssert.containsOnlyEntriesMatching(
                     hasName(MESSAGE_ID.serialize())
                         .containsExtraFields(new MessageIdExtraField(MESSAGE_ID))
                         .containsExtraFields(new SizeExtraField(CONTENT.length)));
@@ -192,10 +189,6 @@ class DeletedMessageZipperTest {
 
         verify(zipOutputStreamReference.get(), times(1)).finish();
         verify(zipOutputStreamReference.get(), times(1)).close();
-    }
-
-    private ZipFile zipFile(ByteArrayOutputStream output) throws IOException {
-        return new ZipFile(new SeekableInMemoryByteChannel(output.toByteArray()));
     }
 
     private DeletedMessageZipper.DeletedMessageContentLoader spyLoadedContents(Collection<InputStream> loadedContents) {
