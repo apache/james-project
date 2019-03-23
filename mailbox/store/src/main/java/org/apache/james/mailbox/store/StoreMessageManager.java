@@ -129,15 +129,15 @@ public class StoreMessageManager implements MessageManager {
      * <strong>Be sure this static instance will never get modifed
      * later!</strong>
      */
-    protected static final Flags MINIMAL_PERMANET_FLAGS;
+    protected static final Flags MINIMAL_PERMANENT_FLAGS;
 
     static {
-        MINIMAL_PERMANET_FLAGS = new Flags();
-        MINIMAL_PERMANET_FLAGS.add(Flags.Flag.ANSWERED);
-        MINIMAL_PERMANET_FLAGS.add(Flags.Flag.DELETED);
-        MINIMAL_PERMANET_FLAGS.add(Flags.Flag.DRAFT);
-        MINIMAL_PERMANET_FLAGS.add(Flags.Flag.FLAGGED);
-        MINIMAL_PERMANET_FLAGS.add(Flags.Flag.SEEN);
+        MINIMAL_PERMANENT_FLAGS = new Flags();
+        MINIMAL_PERMANENT_FLAGS.add(Flags.Flag.ANSWERED);
+        MINIMAL_PERMANENT_FLAGS.add(Flags.Flag.DELETED);
+        MINIMAL_PERMANENT_FLAGS.add(Flags.Flag.DRAFT);
+        MINIMAL_PERMANENT_FLAGS.add(Flags.Flag.FLAGGED);
+        MINIMAL_PERMANENT_FLAGS.add(Flags.Flag.SEEN);
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(StoreMessageManager.class);
@@ -222,7 +222,7 @@ public class StoreMessageManager implements MessageManager {
         // instance will not get modified later.
         //
         // See MAILBOX-109
-        return new Flags(MINIMAL_PERMANET_FLAGS);
+        return new Flags(MINIMAL_PERMANENT_FLAGS);
     }
 
 

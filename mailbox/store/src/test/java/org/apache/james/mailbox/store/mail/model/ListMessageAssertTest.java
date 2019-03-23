@@ -99,6 +99,11 @@ public class ListMessageAssertTest {
             }
 
             @Override
+            public void setMailboxId(MailboxId mailboxId) {
+
+            }
+
+            @Override
             public MessageUid getUid() {
                 return uid;
             }

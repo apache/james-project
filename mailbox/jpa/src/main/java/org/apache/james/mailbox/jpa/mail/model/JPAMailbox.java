@@ -180,11 +180,7 @@ public class JPAMailbox implements Mailbox {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final JPAMailbox other = (JPAMailbox) obj;
-        if (mailboxId != other.mailboxId) {
-            return false;
-        }
-        return true;
+        return mailboxId == ((JPAMailbox) obj).mailboxId;
     }
 
     @Override

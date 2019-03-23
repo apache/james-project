@@ -42,7 +42,7 @@ public abstract class JPATransactionalMapper extends TransactionalMapper {
     /**
      * Return the currently used {@link EntityManager} or a new one if none exists.
      * 
-     * @return entitymanger
+     * @return entityManager
      */
     public EntityManager getEntityManager() {
         if (entityManager != null) {
@@ -69,7 +69,7 @@ public abstract class JPATransactionalMapper extends TransactionalMapper {
         try {
             getEntityManager().getTransaction().commit();
         } catch (PersistenceException e) {
-            throw new MailboxException("Commit of transaction failed",e);
+            throw new MailboxException("Commit of transaction failed", e);
         }
     }
 

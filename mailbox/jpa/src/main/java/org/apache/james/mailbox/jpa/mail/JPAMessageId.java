@@ -16,61 +16,64 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.jpa;
+
+package org.apache.james.mailbox.jpa.mail;
+
+import org.apache.james.mailbox.model.MessageId;
 
 import java.io.Serializable;
+import java.util.Objects;
+import java.util.Random;
 
-import org.apache.james.mailbox.model.MailboxId;
+public class JPAMessageId implements MessageId {
 
-public class JPAId implements MailboxId, Serializable {
-
-    public static class Factory implements MailboxId.Factory {
+    public static class Factory implements MessageId.Factory {
         @Override
-        public JPAId fromString(String serialized) {
+        public MessageId fromString(String serialized) {
             return of(Long.valueOf(serialized));
         }
-    }
 
-    public static JPAId of(long value) {
-        return new JPAId(value);
+        @Override
+        public MessageId generate() {
+            return of(new Random().nextLong());
+        }
     }
 
     private final long value;
 
-    public JPAId(long value) {
+    public JPAMessageId(long value) {
         this.value = value;
     }
+
+    public static JPAMessageId of(long value) {return new JPAMessageId(value); }
 
     @Override
     public String serialize() {
         return String.valueOf(value);
     }
 
+    @Override
+    public boolean isSerializable() {
+        return Serializable.class.isInstance(value);
+    }
 
     @Override
     public String toString() {
-        return "JPAId{" +
+        return "JPAMessageId{" +
                 "value=" + value +
                 '}';
-    }
-
-    public long getRawId() {
-        return value;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (int) (value ^ (value >>> 32));
-        return result;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) {return true;}
         if (o == null || getClass() != o.getClass()) {return false;}
-        JPAId jpaId = (JPAId) o;
-        return value == jpaId.value;
+        JPAMessageId that = (JPAMessageId) o;
+        return value == that.value;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
     }
 }

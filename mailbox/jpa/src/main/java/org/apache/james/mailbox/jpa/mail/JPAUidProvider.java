@@ -19,9 +19,11 @@
 package org.apache.james.mailbox.jpa.mail;
 
 import java.util.Optional;
+import java.util.logging.Logger;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 
 import org.apache.james.mailbox.MailboxPathLocker;
@@ -36,6 +38,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 public class JPAUidProvider extends AbstractLockingUidProvider {
 
     private final EntityManagerFactory factory;
+    private JPAMailbox jpaMailbox;
 
     @Inject
     public JPAUidProvider(MailboxPathLocker locker, EntityManagerFactory factory) {
@@ -63,7 +66,7 @@ public class JPAUidProvider extends AbstractLockingUidProvider {
             }
             throw new MailboxException("Unable to get last uid for mailbox " + mailbox, e);
         } finally {
-            if (manager != null) {
+            if (manager != null && !manager.getTransaction().isActive()) {
                 manager.close();
             }
         }
@@ -76,18 +79,21 @@ public class JPAUidProvider extends AbstractLockingUidProvider {
             manager = factory.createEntityManager();
             manager.getTransaction().begin();
             JPAId mailboxId = (JPAId) mailbox.getMailboxId();
-            JPAMailbox m = manager.find(JPAMailbox.class, mailboxId.getRawId());
-            long uid = m.consumeUid();
-            manager.persist(m);
+            JPAMailbox m = Optional.ofNullable(manager.find(JPAMailbox.class, mailboxId.getRawId()))
+                    .orElse(JPAMailbox.from(mailbox));
+            JPAMailbox mAftererge = manager.merge(m);
+            long uid = mAftererge.consumeUid();
+            mailbox.setMailboxId(mAftererge.getMailboxId());
             manager.getTransaction().commit();
             return MessageUid.of(uid);
         } catch (PersistenceException e) {
             if (manager != null && manager.getTransaction().isActive()) {
                 manager.getTransaction().rollback();
             }
-            throw new MailboxException("Unable to save next uid for mailbox " + mailbox, e);
-        } finally {
-            if (manager != null) {
+                throw new MailboxException("Unable to save next uid for mailbox " + mailbox, e);
+        }
+        finally {
+            if (manager != null && !manager.getTransaction().isActive()) {
                 manager.close();
             }
         }

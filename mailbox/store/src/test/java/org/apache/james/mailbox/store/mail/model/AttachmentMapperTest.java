@@ -31,6 +31,7 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -51,6 +52,7 @@ public abstract class AttachmentMapperTest {
 
     protected abstract MessageId generateMessageId();
 
+    @Before
     public void setUp() throws MailboxException {
         this.attachmentMapper = createAttachmentMapper();
     }

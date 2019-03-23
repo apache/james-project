@@ -24,6 +24,7 @@
     version="2.0">
 
     <persistence-unit name="James" transaction-type="RESOURCE_LOCAL">
+        <class>org.apache.james.mailbox.jpa.mail.model.JPAAttachment</class>
         <class>org.apache.james.mailbox.jpa.mail.model.JPAMailbox</class>
         <class>org.apache.james.mailbox.jpa.mail.model.JPAUserFlag</class>
         <class>org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage</class>

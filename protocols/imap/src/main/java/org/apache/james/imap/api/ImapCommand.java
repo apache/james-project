@@ -21,7 +21,7 @@ package org.apache.james.imap.api;
 
 /**
  * Represents a processor for a particular Imap command. Implementations of this
- * interface should encpasulate all command specific processing.
+ * interface should encapsulate all command specific processing.
  */
 public class ImapCommand {
     public static ImapCommand nonAuthenticatedStateCommand(String name) {

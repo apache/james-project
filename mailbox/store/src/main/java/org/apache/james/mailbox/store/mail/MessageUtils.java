@@ -68,6 +68,8 @@ public class MessageUtils {
     public void enrichMessage(Mailbox mailbox, MailboxMessage message) throws MailboxException { 
         message.setUid(nextUid(mailbox));
         message.setModSeq(nextModSeq(mailbox));
+        message.setMailboxId(mailbox.getMailboxId());
+        // TODO: Need to set mailbox message's attachment id list here
     }
 
     public MessageChangedFlags updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, 

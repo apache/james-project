@@ -22,14 +22,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.RequestAware;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.SubscriptionException;
-import org.apache.james.mailbox.store.mail.AnnotationMapper;
-import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
-import org.apache.james.mailbox.store.mail.MessageIdMapper;
-import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.MessageMapperFactory;
-import org.apache.james.mailbox.store.mail.ModSeqProvider;
-import org.apache.james.mailbox.store.mail.UidProvider;
+import org.apache.james.mailbox.store.mail.*;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
@@ -38,13 +31,14 @@ import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
  * Maintain mapper instances by {@link MailboxSession}. So only one mapper instance is used
  * in a {@link MailboxSession}
  */
-public abstract class MailboxSessionMapperFactory implements RequestAware, MailboxMapperFactory, MessageMapperFactory, SubscriptionMapperFactory {
+public abstract class MailboxSessionMapperFactory implements RequestAware, MailboxMapperFactory, MessageMapperFactory, SubscriptionMapperFactory, AttachmentMapperFactory {
 
     protected static final String MESSAGEMAPPER = "MESSAGEMAPPER";
     protected static final String MESSAGEIDMAPPER = "MESSAGEIDMAPPER";
     protected static final String MAILBOXMAPPER = "MAILBOXMAPPER";
     protected static final String SUBSCRIPTIONMAPPER = "SUBSCRIPTIONMAPPER";
     protected static final String ANNOTATIONMAPPER = "ANNOTATIONMAPPER";
+    protected static final String ATTACHMENTMAPPER = "ATTACHMENTMAPPER";
     
     
     @Override
@@ -135,6 +129,29 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
     public abstract UidProvider getUidProvider();
 
     public abstract ModSeqProvider getModSeqProvider();
+
+    /**
+     * Create a {@link AttachmentMapper} instance which will get reused during the whole {@link MailboxSession}
+     * @param session
+     * @return AttachmentMapper
+     */
+    @Override
+    public abstract AttachmentMapper createAttachmentMapper(MailboxSession session);
+
+    /**
+     * Create a {@link AttachmentMapper} instance or return the one which exists for the {@link MailboxSession} already
+     * @param session
+     * @return mapper
+     */
+    @Override
+    public AttachmentMapper getAttachmentMapper(MailboxSession session) {
+        AttachmentMapper mapper = (AttachmentMapper) session.getAttributes().get(ATTACHMENTMAPPER);
+        if(mapper == null){
+            mapper = createAttachmentMapper(session);
+            session.getAttributes().put(ATTACHMENTMAPPER, mapper);
+        }
+        return mapper;
+    }
 
     /**
      * Call endRequest on {@link Mapper} instances

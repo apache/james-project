@@ -23,6 +23,9 @@ import static org.apache.james.mailbox.store.mail.model.MessageAssert.assertThat
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.SQLNonTransientConnectionException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -30,6 +33,7 @@ import java.util.List;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
@@ -59,7 +63,6 @@ public abstract class MessageWithAttachmentMapperTest {
 
     private MapperProvider mapperProvider;
     private MessageMapper messageMapper;
-    private AttachmentMapper attachmentMapper;
 
     private SimpleMailbox attachmentsMailbox;
     
@@ -73,13 +76,14 @@ public abstract class MessageWithAttachmentMapperTest {
     protected abstract MapperProvider createMapperProvider();
 
     public void setUp() throws Exception {
+
         this.mapperProvider = createMapperProvider();
 
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.MESSAGE));
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.ATTACHMENT));
 
         this.messageMapper = mapperProvider.createMessageMapper();
-        this.attachmentMapper = mapperProvider.createAttachmentMapper();
+        AttachmentMapper attachmentMapper = mapperProvider.createAttachmentMapper();
 
         attachmentsMailbox = createMailbox(MailboxPath.forUser("benwa", "Attachments"));
 
@@ -93,6 +97,11 @@ public abstract class MessageWithAttachmentMapperTest {
                 .bytes("attachment2".getBytes())
                 .type("content")
                 .build();
+        Attachment attachment3 = Attachment.builder()
+                .attachmentId(AttachmentId.from("789"))
+                .bytes("attachment3".getBytes())
+                .type("content")
+                .build();
         messageWith1Attachment = createMessage(attachmentsMailbox, mapperProvider.generateMessageId(), "Subject: Test7 \n\nBody7\n.\n", BODY_START, new PropertyBuilder(), 
                 ImmutableList.of(MessageAttachment.builder()
                         .attachment(attachment)
@@ -102,16 +111,17 @@ public abstract class MessageWithAttachmentMapperTest {
         messageWith2Attachments = createMessage(attachmentsMailbox, mapperProvider.generateMessageId(), "Subject: Test8 \n\nBody8\n.\n", BODY_START, new PropertyBuilder(),
                 ImmutableList.of(
                         MessageAttachment.builder()
-                            .attachment(attachment)
+                            .attachment(attachment2)
                             .cid(Cid.from("cid"))
                             .isInline(true)
                             .build(),
                         MessageAttachment.builder()
-                            .attachment(attachment2)
+                            .attachment(attachment3)
                             .cid(Cid.from("cid2"))
                             .isInline(false)
                             .build()));
         messageWithoutAttachment = createMessage(attachmentsMailbox, mapperProvider.generateMessageId(), "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
+
 
         attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment), messageWith1Attachment.getMessageId());
         attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment), messageWith2Attachments.getMessageId());
