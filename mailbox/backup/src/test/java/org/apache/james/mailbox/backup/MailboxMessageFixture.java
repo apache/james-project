@@ -28,6 +28,7 @@ import java.util.List;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
@@ -45,6 +46,11 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import com.google.common.collect.ImmutableList;
 
 public interface MailboxMessageFixture {
+
+    String USER = "user";
+    String OTHER_USER = "otherUser";
+
+    User USER1 = User.fromUsername(USER);
 
     String DATE_STRING_1 = "2018-02-15T15:54:02Z";
     String DATE_STRING_2 = "2018-03-15T15:54:02Z";
@@ -75,15 +81,21 @@ public interface MailboxMessageFixture {
     MailboxId MAILBOX_ID_11 = TestId.of(11L);
     Flags flags1 = new Flags("myFlags");
 
-    MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create("user");
+    MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(USER);
 
     String MAILBOX_1_NAME = "mailbox1";
     String MAILBOX_2_NAME = "mailbox2";
     String MAILBOX_OTHER_USER_NAME = "mailbox_other";
-    Mailbox MAILBOX_1 = new Mailbox(MailboxPath.forUser("user", MAILBOX_1_NAME), 42, MAILBOX_ID_1);
-    Mailbox MAILBOX_1_OTHER_USER = new Mailbox(MailboxPath.forUser("otherUser", MAILBOX_OTHER_USER_NAME), 42, MAILBOX_ID_11);
-    Mailbox MAILBOX_1_SUB_1 = new Mailbox(MailboxPath.forUser("user", MAILBOX_1_NAME + MAILBOX_SESSION.getPathDelimiter() + "sub1"), 420, TestId.of(11L));
-    Mailbox MAILBOX_2 = new Mailbox(MailboxPath.forUser("user", MAILBOX_2_NAME), 43, MAILBOX_ID_2);
+
+    MailboxPath MAILBOX_PATH_USER1_MAILBOX1 = MailboxPath.forUser(USER, MAILBOX_1_NAME);
+    MailboxPath MAILBOX_PATH_USER1_MAILBOX1_SUB_1 = MailboxPath.forUser(USER, MAILBOX_1_NAME + MAILBOX_SESSION.getPathDelimiter() + "sub1");
+    MailboxPath MAILBOX_PATH_USER1_MAILBOX2 = MailboxPath.forUser(USER, MAILBOX_2_NAME);
+    MailboxPath MAILBOX_PATH_OTHER_USER_MAILBOX1 = MailboxPath.forUser(OTHER_USER, MAILBOX_OTHER_USER_NAME);
+
+    Mailbox MAILBOX_1 = new Mailbox(MAILBOX_PATH_USER1_MAILBOX1, 42, MAILBOX_ID_1);
+    Mailbox MAILBOX_1_OTHER_USER = new Mailbox(MAILBOX_PATH_OTHER_USER_MAILBOX1, 42, MAILBOX_ID_11);
+    Mailbox MAILBOX_1_SUB_1 = new Mailbox(MAILBOX_PATH_USER1_MAILBOX1_SUB_1, 420, TestId.of(11L));
+    Mailbox MAILBOX_2 = new Mailbox(MAILBOX_PATH_USER1_MAILBOX2, 43, MAILBOX_ID_2);
 
     List<MailboxAnnotation> NO_ANNOTATION = ImmutableList.of();
 

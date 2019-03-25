@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 
-import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -41,13 +40,6 @@ import com.github.fge.lambdas.Throwing;
 
 class DefaultMailboxBackupTest implements MailboxMessageFixture {
 
-    private static final String USER = "user";
-    private static final String OTHER_USER = "otherUser";
-
-    private static final User USER1 = User.fromUsername(USER);
-    private static final MailboxPath MAILBOX_PATH_USER1_MAILBOX1 = MailboxPath.forUser(USER, MAILBOX_1_NAME);
-    private static final MailboxPath MAILBOX_PATH_USER1_MAILBOX2 = MailboxPath.forUser(USER, MAILBOX_2_NAME);
-    private static final MailboxPath MAILBOX_PATH_OTHER_USER_MAILBOX1 = MailboxPath.forUser(OTHER_USER, MAILBOX_OTHER_USER_NAME);
     private static final HashSet<PreDeletionHook> PRE_DELETION_HOOKS = new HashSet<>();
 
     private static final int BUFFER_SIZE = 4096;
