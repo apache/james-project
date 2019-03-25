@@ -66,6 +66,7 @@
                     <li>Tika HTTP client statistics</li>
                     <li>SpamAssassin TCP client statistics</li>
                     <li>Mailbox listeners statistics time percentiles</li>
+                    <li>Mailbox listeners statistics requests rate</li>
                     <li>Pre-deletion hooks execution statistics time percentiles</li>
                 </ul>
 
