@@ -56,7 +56,6 @@ import org.apache.james.core.MailAddress;
  * its configuration information and a {@link MailetContext} through which
  * it can interact with the mailet container, and the {@link #getMatcherInfo}
  * method, which provides basic information about the Matcher.
- *
  */
 public interface Matcher {
 

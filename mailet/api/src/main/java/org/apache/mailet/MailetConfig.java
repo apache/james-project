@@ -29,7 +29,6 @@ import java.util.Iterator;
  * The configuration information consists of mailet-specific initialization
  * parameters in a set of name/value pairs, and a MailetContext object
  * which allows the mailet to interact with the mailet container.
- *
  */
 public interface MailetConfig {
 

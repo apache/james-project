@@ -38,6 +38,8 @@ public class LookupException extends IOException {
 
     /**
      * Constructs a new lookup exception with the specified message.
+     *
+     * @param message the exception message
      */
     public LookupException(String message) {
         super(message);
