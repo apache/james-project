@@ -20,13 +20,17 @@
 package org.apache.james.mailbox.backup;
 
 import static org.apache.james.mailbox.backup.ZipArchiveEntryAssert.assertThatZipEntry;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipExtraField;
@@ -34,8 +38,10 @@ import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.error.BasicErrorMessageFactory;
+import org.assertj.core.error.ErrorMessageFactory;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> implements AutoCloseable {
     interface EntryCheck {
@@ -77,7 +83,7 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> implements Aut
         }
     }
 
-    static ZipAssert assertThatZip(ZipFile zipFile) {
+    public static ZipAssert assertThatZip(ZipFile zipFile) {
         return new ZipAssert(zipFile);
     }
 
@@ -91,6 +97,29 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> implements Aut
 
     private static BasicErrorMessageFactory shouldBeEmpty(ZipFile zipFile) {
         return new BasicErrorMessageFactory("%nExpecting %s to be empty", zipFile);
+    }
+
+    private static BasicErrorMessageFactory shouldBeNonNull() {
+        return new BasicErrorMessageFactory("%nExpecting zipFile to be non-null");
+    }
+
+    private static BasicErrorMessageFactory shouldHaveSameEntriesSize(List<ZipArchiveEntry> entries, List<ZipArchiveEntry> expectedEntries) {
+        return new BasicErrorMessageFactory("%nExpecting zipFile entries has size (%s) but actually (%s)", expectedEntries.size(), entries.size());
+    }
+
+    private static ErrorMessageFactory entriesShouldHaveSameContentAt(int entryIndex, String entryContentAssertionError) {
+        return new BasicErrorMessageFactory("%nExpecting zipFile entry at index %s have same content. Details: \n%s",
+            entryIndex, entryContentAssertionError);
+    }
+
+    private static ErrorMessageFactory entriesShouldHaveSameName(ZipArchiveEntry entry, ZipArchiveEntry expectedEntry, int entryIndex) {
+        return new BasicErrorMessageFactory("%nExpecting zipFile entry name (%s) at index %s but actually (%s)",
+            expectedEntry.getName(), entryIndex, entry.getName());
+    }
+
+    private static ErrorMessageFactory entriesShouldHaveSameExtraFields(ZipArchiveEntry entry, ZipArchiveEntry expectedEntry, int entryIndex) {
+        return new BasicErrorMessageFactory("%nExpecting zipFile entry at index %s has extra fields (%s) but actually (%s)", entryIndex,
+            expectedEntry.getExtraFields(), entry.getExtraFields());
     }
 
     private final ZipFile zipFile;
@@ -129,5 +158,70 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> implements Aut
     @Override
     public void close() throws Exception {
         zipFile.close();
+    }
+
+    public ZipAssert hasSameContentWith(ZipFile anotherZipFile) throws IOException {
+        validateNonNull(zipFile);
+        validateNonNull(anotherZipFile);
+
+        ArrayList<ZipArchiveEntry> entries = Collections.list(zipFile.getEntries());
+        ArrayList<ZipArchiveEntry> entriesOfAnother = Collections.list(anotherZipFile.getEntries());
+
+        if (entries.size() != entriesOfAnother.size()) {
+            throwAssertionError(shouldHaveSameEntriesSize(entries, entriesOfAnother));
+        }
+
+        for (int entryIndex = 0; entryIndex < entries.size(); entryIndex++) {
+            ZipArchiveEntry entry = entries.get(entryIndex);
+            ZipArchiveEntry entryOfAnother = entriesOfAnother.get(entryIndex);
+            haveSameName(entry, entryOfAnother, entryIndex);
+            haveSameExtraFields(entry, entryOfAnother, entryIndex);
+            haveSameContentAt(zipFile.getInputStream(entry), anotherZipFile.getInputStream(entryOfAnother), entryIndex);
+        }
+
+        return myself;
+    }
+
+    private void haveSameName(ZipArchiveEntry entry, ZipArchiveEntry expectedEntry, int entryIndex) {
+        try {
+            assertThat(entry.getName()).isEqualTo(expectedEntry.getName());
+        } catch (AssertionError assertionError) {
+            throwAssertionError(entriesShouldHaveSameName(entry, expectedEntry, entryIndex));
+        }
+    }
+
+    private void haveSameExtraFields(ZipArchiveEntry entry, ZipArchiveEntry expectedEntry, int entryIndex) {
+        try {
+            assertThat(extractJamesExtraFields(entry))
+                .containsExactlyElementsOf(extractJamesExtraFields(expectedEntry));
+        } catch (AssertionError assertionError) {
+            throwAssertionError(entriesShouldHaveSameExtraFields(entry, expectedEntry, entryIndex));
+        }
+    }
+
+    private void haveSameContentAt(InputStream entryContent, InputStream expectingEntryContent, int entryIndex) {
+        try {
+            assertThat(entryContent)
+                .hasSameContentAs(expectingEntryContent);
+        } catch (AssertionError assertionError) {
+            throwAssertionError(entriesShouldHaveSameContentAt(entryIndex, assertionError.getMessage()));
+        }
+    }
+
+    private void validateNonNull(ZipFile zipFile) {
+        if (zipFile == null) {
+            throwAssertionError(shouldBeNonNull());
+        }
+    }
+
+    /**
+     * Because there are always some extra fields not belong to James, and their equals() method doesn't work
+     * @param entry
+     * @return
+     */
+    private ImmutableList<ZipExtraField> extractJamesExtraFields(ZipArchiveEntry entry) {
+        return Stream.of(entry.getExtraFields())
+            .filter(field -> field instanceof WithZipHeader)
+            .collect(Guavate.toImmutableList());
     }
 }
