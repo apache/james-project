@@ -17,6 +17,7 @@ Change list:
  - [Changes to the MailboxListener API](#changes-to-the-mailboxlistener-api)
  - [Changes in WebAdmin reIndexing API](#changes-in-webadmin-reindexing-api)
  - [Rename KEY column in JAMES_MAILBOX_ANNOTATION table](#james-mailbox-annotation)
+ - [Mailet API changes](#mailet-api-changes)
 
 ### Changes to the MailboxListener API
 
@@ -84,6 +85,23 @@ ALTER TABLE JAMES_MAILBOX_ANNOTATION CHANGE COLUMN KEY ANNOTATION_KEY varchar(20
 ```
 
 _or the syntax corresponding to your database._
+
+### Mailet API changes
+In order to allow safe serialization and strong typing `org.apache.mailet.Mail` have changed.
+
+These methods have been deprecated and replaced:
+
+ * `getSender()` in favor of `getMaybeSender()`
+ * `getAttribute(String)` in favor of `getAttribute(AttributeName)`
+ * `setAttribute(String, Serializable)` in favor of `setAttribute(Attribute)`
+ * `removeAttribute(String)` in favor of `removeAttribute(AttributeName)`
+ * `getAttributeNames()` in favor of `attributeNames()` and `attributesMap()`
+
+Some plain-string `AttributeName` have also been replaced:
+
+  * `SMTP_AUTH_USER_ATTRIBUTE_NAME` in favor of `SMTP_AUTH_USER`
+  * `MAILET_ERROR_ATTRIBUTE_NAME` in favor of `MAILET_ERROR`
+  * `SENT_BY_MAILET` in favor of `SENT_BY_MAILET_ATTRIBUTE`'s name, it is recommended to directly set the `Attribute`.
 
 ## 3.2.0 version
 

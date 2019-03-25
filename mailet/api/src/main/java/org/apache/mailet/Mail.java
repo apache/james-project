@@ -87,9 +87,17 @@ public interface Mail extends Serializable, Cloneable {
     AttributeName SMTP_AUTH_USER = AttributeName.of("org.apache.james.SMTPAuthUser");
     AttributeName MAILET_ERROR = AttributeName.of("org.apache.james.MailetError");
 
+    /**
+     * Attribute name used for keeping the AUTH_USER of SMTP
+     * @deprecated @see {@link #SMTP_AUTH_USER}
+     */
     @Deprecated
     String SMTP_AUTH_USER_ATTRIBUTE_NAME = SMTP_AUTH_USER.asString();
 
+    /**
+     * Attribute name used for mailet-associated errors
+     * @deprecated @see {@link #MAILET_ERROR}
+     */
     @Deprecated
     String MAILET_ERROR_ATTRIBUTE_NAME = MAILET_ERROR.asString();
 
