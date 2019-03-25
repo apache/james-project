@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.methods.integration.DeletedMessagesVaultTest;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.mailbox.PreDeletionHookConfiguration;
@@ -43,13 +44,14 @@ public class FileMailRepositoryDeletedMessagesVaultTest extends DeletedMessagesV
     }
 
     @Override
-    protected GuiceJamesServer createJmapServer() throws IOException {
+    protected GuiceJamesServer createJmapServer(FileSystem fileSystem) throws IOException {
         return memoryJmap.jmapServer(
             binder -> binder.bind(PreDeletionHooksConfiguration.class)
                 .toInstance(PreDeletionHooksConfiguration.forHooks(
                     PreDeletionHookConfiguration.forClass(DeletedMessageVaultHook.class))),
             binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION),
             binder -> binder.bind(MailRepositoryDeletedMessageVault.Configuration.class)
-                .toInstance(new MailRepositoryDeletedMessageVault.Configuration(MailRepositoryUrl.from("file://var/deletedMessages/user"))));
+                .toInstance(new MailRepositoryDeletedMessageVault.Configuration(MailRepositoryUrl.from("file://var/deletedMessages/user"))),
+            binder -> binder.bind(FileSystem.class).toInstance(fileSystem));
     }
 }
