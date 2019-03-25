@@ -48,9 +48,7 @@ public class CacheInvalidatingMailboxListener implements MailboxListener.GroupMa
 
     @Override
     public void event(Event event) {
-        if (isHandling(event)) {
             mailboxEvent((MailboxEvent) event);
-        }
     }
 
     private void mailboxEvent(MailboxEvent event) {

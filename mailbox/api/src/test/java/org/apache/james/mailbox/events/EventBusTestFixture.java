@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.events;
 
 import static com.jayway.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -93,6 +94,7 @@ public interface EventBusTestFixture {
     Event.EventId EVENT_ID_2 = Event.EventId.of("5a7a9f3f-5f03-44be-b457-a51e93760645");
     MailboxListener.MailboxEvent EVENT = new MailboxListener.MailboxAdded(SESSION_ID, USER, MAILBOX_PATH, TEST_ID, EVENT_ID);
     MailboxListener.MailboxEvent EVENT_2 = new MailboxListener.MailboxAdded(SESSION_ID, USER, MAILBOX_PATH, TEST_ID, EVENT_ID_2);
+    MailboxListener.MailboxRenamed EVENT_UNSUPPORTED_BY_LISTENER = new MailboxListener.MailboxRenamed(SESSION_ID, USER, MAILBOX_PATH, TEST_ID, MAILBOX_PATH, EVENT_ID_2);
 
     java.time.Duration ONE_SECOND = java.time.Duration.ofSeconds(1);
     java.time.Duration THIRTY_SECONDS = java.time.Duration.ofSeconds(30);
@@ -114,6 +116,7 @@ public interface EventBusTestFixture {
     static MailboxListener newListener() {
         MailboxListener listener = mock(MailboxListener.class);
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
+        when(listener.isHandling(any(MailboxListener.MailboxAdded.class))).thenReturn(true);
         return listener;
     }
 }

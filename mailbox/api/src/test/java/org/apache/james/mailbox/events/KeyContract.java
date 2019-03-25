@@ -21,6 +21,7 @@ package org.apache.james.mailbox.events;
 
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT;
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT_2;
+import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT_UNSUPPORTED_BY_LISTENER;
 import static org.apache.james.mailbox.events.EventBusTestFixture.FIVE_HUNDRED_MS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_1;
 import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_2;
@@ -91,6 +92,18 @@ public interface KeyContract extends EventBusContract {
 
             MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), User.fromUsername("bob"), MailboxPath.forUser("bob", "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
             eventBus().dispatch(noopEvent, KEY_1).block();
+
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
+                .event(any());
+        }
+
+       @Test
+        default void registeredListenersShouldReceiveOnlyHandledEvents() throws Exception {
+            MailboxListener listener = newListener();
+
+            eventBus().register(listener, KEY_1);
+
+            eventBus().dispatch(EVENT_UNSUPPORTED_BY_LISTENER, KEY_1).block();
 
             verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
