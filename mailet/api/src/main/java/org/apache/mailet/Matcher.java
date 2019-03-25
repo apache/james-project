@@ -85,6 +85,7 @@ public interface Matcher {
      *
      * @param mail the Mail to match
      * @return the recipients that meet the match criteria as a Collection of String objects
+     *         (may be null if there are no matched recipients)
      * @throws MessagingException if any error occurs which prevents the Mail
      *         matching from completing successfully
      */

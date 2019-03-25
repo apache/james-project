@@ -138,18 +138,6 @@ public interface MailetContext {
     Object getAttribute(String name);
 
     /**
-     * Binds an object to a given attribute name in this mailet context.  If the name
-     * specified is already used for an attribute, this method will remove the old
-     * attribute and bind the name to the new attribute.
-     * <p>
-     * Attribute names should follow the same convention as package names. The Java
-     * Mailet API specification reserves names matching java.*, javax.*, and sun.*.
-     *
-     * @param name - a String specifying the name of the attribute
-     * @param object - an Object representing the attribute to be bound
-     */
-
-    /**
      * Associates an attribute with the given name and value with this mailet context.
      * <p/>
      * If an attribute with the given name already exists, it is replaced, and the
@@ -369,7 +357,7 @@ public interface MailetContext {
      * to a specific processor inside the MailetContainer. This is for instance useful for bouncing mail
      * being remote delivered (asynchronously to original mail treatment)
      *
-     * @param message The message to send
+     * @param mail    The message to send
      * @param state   The state of the message, indicating the name of the processor for
      *                which the message will be queued
      * @throws MessagingException if an error occurs accessing or sending the message
@@ -387,7 +375,7 @@ public interface MailetContext {
      * The given delay and unit are used to calculate the time when
      * the Mail will be available for deQueue
      *
-     * @param message The message to send
+     * @param mail    The message to send
      * @param state   The state of the message, indicating the name of the processor for
      *                which the message will be queued
      * @param delay   The delay value for deQueue

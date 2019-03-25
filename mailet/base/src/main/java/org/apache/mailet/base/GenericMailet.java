@@ -73,6 +73,7 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
      * <p>Gets a boolean valued init parameter.</p>
      * <p>A convenience method. The result is parsed
      * from the value of the named parameter in the {@link MailetConfig}.</p>
+     *
      * @param name name of the init parameter to be queried
      * @param defaultValue this value will be substituted when the named value
      * cannot be parse or when the init parameter is absent
@@ -122,7 +123,7 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
      * named parameter from the mailet's MailetConfig object.
      *
      * @param name - a String specifying the name of the initialization parameter
-     * @return a String containing the value of the initalization parameter
+     * @return a String containing the value of the initialization parameter
      */
     @Override
     public String getInitParameter(String name) {
@@ -139,7 +140,7 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
      * @param name - a String specifying the name of the initialization parameter
      * @param defValue - a String specifying the default value when the parameter
      *                    is not present
-     * @return a String containing the value of the initalization parameter
+     * @return a String containing the value of the initialization parameter
      */
     public String getInitParameter(String name, String defValue) {
         String res = config.getInitParameter(name);
@@ -219,7 +220,7 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
      * method, call super.init(config).</p>
      *
      * @param newConfig - the MailetConfig object that contains
-     *          configutation information for this mailet
+     *          configuration information for this mailet
      * @throws MessagingException
      *          if an exception occurs that interrupts the mailet's normal operation
      */
@@ -241,7 +242,7 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
      *          if an exception occurs that interrupts the mailet's normal operation
      */
     public void init() throws MessagingException {
-        //Do nothing... can be overriden
+        //Do nothing... can be overridden
     }
 
     /**
@@ -284,8 +285,9 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
     
     
     /**
-     * Utility method: Checks if there are unallowed init parameters specified in the 
+     * Utility method: Checks if there are disallowed init parameters specified in the
      * configuration file against the String[] allowedInitParameters.
+     *
      * @param allowedArray array of strings containing the allowed parameter names
      * @throws MessagingException if an unknown parameter name is found
      */
@@ -299,7 +301,7 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
         Collection<String> bad = new ArrayList<>();
 
         Collections.addAll(allowed, allowedArray);
-        
+
         Iterator<String> iterator = getInitParameterNames();
         while (iterator.hasNext()) {
             String parameter = iterator.next();
@@ -315,5 +317,3 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
     }
 
 }
-
-

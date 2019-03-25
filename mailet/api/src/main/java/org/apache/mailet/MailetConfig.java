@@ -36,6 +36,7 @@ public interface MailetConfig {
     /**
      * Returns the value of the named initialization parameter,
      * or null if the parameter does not exist.
+     * Multi-valued parameters are returned as a comma-delineated string.
      *
      * @param name the name of the initialization parameter
      * @return the value of the initialization parameter, or null
