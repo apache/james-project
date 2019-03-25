@@ -17,40 +17,35 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.backup;
+package org.apache.james.mailbox.backup.zip;
 
-import java.util.Date;
 import java.util.Optional;
 
 import org.apache.commons.compress.archivers.zip.ZipShort;
+import org.apache.james.mailbox.model.MessageId;
 
-public class InternalDateExtraField extends LongExtraField implements WithZipHeader {
+public class MessageIdExtraField extends StringExtraField implements WithZipHeader {
 
-    public static final ZipShort ID_AO = new ZipShort(WithZipHeader.toLittleEndian('a', 'o'));
+    public static final ZipShort ID_AL = new ZipShort(WithZipHeader.toLittleEndian('a', 'l'));
 
-    public InternalDateExtraField() {
+    public MessageIdExtraField() {
         super();
     }
 
-    public InternalDateExtraField(Optional<Date> date) {
-        super(date
-            .map(Date::getTime));
+    public MessageIdExtraField(String value) {
+        super(Optional.of(value));
     }
 
-    public InternalDateExtraField(Date date) {
-        this(Optional.of(date));
+    public MessageIdExtraField(Optional<String> value) {
+        super(value);
     }
 
-    public InternalDateExtraField(long timestamp) {
-        this(Optional.of(new Date(timestamp)));
+    public MessageIdExtraField(MessageId messageId) {
+        super(Optional.of(messageId.serialize()));
     }
 
     @Override
     public ZipShort getHeaderId() {
-        return ID_AO;
-    }
-
-    public Optional<Date> getDateValue() {
-        return getValue().map(Date::new);
+        return ID_AL;
     }
 }

@@ -16,24 +16,30 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.backup;
+package org.apache.james.mailbox.backup.zip;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Optional;
 
-import org.apache.james.mailbox.backup.zip.WithZipHeader;
-import org.junit.jupiter.api.Test;
+import org.apache.commons.compress.archivers.zip.ZipShort;
 
-class WithZipHeaderTest {
-    private static final short al = 0x6C61;
-    private static final short aq = 0x7161;
+public class SizeExtraField extends LongExtraField implements WithZipHeader {
 
-    @Test
-    void toLittleEndianShouldReturnLittleEndianRepresentationOfStringAl() {
-        assertThat(WithZipHeader.toLittleEndian('a', 'l')).isEqualTo(al);
+    public static final ZipShort ID_AJ = new ZipShort(WithZipHeader.toLittleEndian('a', 'j'));
+
+    public SizeExtraField() {
+        super();
     }
 
-    @Test
-    void toLittleEndianShouldReturnLittleEndianRepresentationOfStringAq() {
-        assertThat(WithZipHeader.toLittleEndian('a', 'q')).isEqualTo(aq);
+    public SizeExtraField(long value) {
+        super(value);
+    }
+
+    public SizeExtraField(Optional<Long> value) {
+        super(value);
+    }
+
+    @Override
+    public ZipShort getHeaderId() {
+        return ID_AJ;
     }
 }

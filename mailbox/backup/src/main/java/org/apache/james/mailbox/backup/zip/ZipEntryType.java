@@ -16,36 +16,36 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.mailbox.backup.zip;
 
-package org.apache.james.mailbox.backup;
-
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
-import org.apache.commons.compress.archivers.zip.ZipShort;
-import org.apache.james.mailbox.model.MessageId;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
-public class MessageIdExtraField extends StringExtraField implements WithZipHeader {
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.Streams;
 
-    public static final ZipShort ID_AL = new ZipShort(WithZipHeader.toLittleEndian('a', 'l'));
+public enum ZipEntryType {
+    MAILBOX,
+    MAILBOX_ANNOTATION_DIR,
+    MAILBOX_ANNOTATION,
+    MESSAGE;
 
-    public MessageIdExtraField() {
-        super();
+    private static final Map<Integer, ZipEntryType> entryByOrdinal;
+
+    static {
+        Stream<ZipEntryType> valuesAsStream = Arrays.stream(values());
+        Stream<Integer> indices = IntStream.range(0, values().length).boxed();
+
+        entryByOrdinal = Streams.zip(indices, valuesAsStream, ImmutablePair::of)
+            .collect(Guavate.entriesToImmutableMap());
     }
 
-    public MessageIdExtraField(String value) {
-        super(Optional.of(value));
-    }
-
-    public MessageIdExtraField(Optional<String> value) {
-        super(value);
-    }
-
-    public MessageIdExtraField(MessageId messageId) {
-        super(Optional.of(messageId.serialize()));
-    }
-
-    @Override
-    public ZipShort getHeaderId() {
-        return ID_AL;
+    public static Optional<ZipEntryType> zipEntryType(int ordinal) {
+        return Optional.ofNullable(entryByOrdinal.get(ordinal));
     }
 }

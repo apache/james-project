@@ -16,30 +16,39 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.backup;
+package org.apache.james.mailbox.backup.zip;
 
 import java.util.Optional;
 
 import org.apache.commons.compress.archivers.zip.ZipShort;
 
-public class UidValidityExtraField extends LongExtraField implements WithZipHeader {
+public class EntryTypeExtraField extends LongExtraField implements WithZipHeader {
 
-    public static final ZipShort ID_AN = new ZipShort(WithZipHeader.toLittleEndian('a', 'n'));
+    public static final ZipShort ID_AQ = new ZipShort(WithZipHeader.toLittleEndian('a', 'q'));
+    public static final EntryTypeExtraField TYPE_MAILBOX = new EntryTypeExtraField(ZipEntryType.MAILBOX);
+    public static final EntryTypeExtraField TYPE_MAILBOX_ANNOTATION_DIR = new EntryTypeExtraField(ZipEntryType.MAILBOX_ANNOTATION_DIR);
+    public static final EntryTypeExtraField TYPE_MAILBOX_ANNOTATION = new EntryTypeExtraField(ZipEntryType.MAILBOX_ANNOTATION);
+    public static final EntryTypeExtraField TYPE_MESSAGE = new EntryTypeExtraField(ZipEntryType.MESSAGE);
 
-    public UidValidityExtraField() {
+    /**
+     * Only for ExtraFieldUtils.register
+     */
+    public EntryTypeExtraField() {
         super();
     }
 
-    public UidValidityExtraField(long value) {
-        super(value);
+    public EntryTypeExtraField(ZipEntryType entryType) {
+        super(entryType.ordinal());
     }
 
-    public UidValidityExtraField(Optional<Long> value) {
-        super(value);
+    public Optional<ZipEntryType> getEnumValue() {
+        return getValue()
+            .map(Long::intValue)
+            .flatMap(ZipEntryType::zipEntryType);
     }
 
     @Override
     public ZipShort getHeaderId() {
-        return ID_AN;
+        return ID_AQ;
     }
 }

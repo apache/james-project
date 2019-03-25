@@ -27,6 +27,7 @@ import java.nio.ByteOrder;
 import java.util.Date;
 import java.util.zip.ZipException;
 
+import org.apache.james.mailbox.backup.zip.InternalDateExtraField;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 

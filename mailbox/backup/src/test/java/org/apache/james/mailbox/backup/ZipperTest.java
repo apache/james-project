@@ -46,6 +46,14 @@ import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.apache.james.mailbox.backup.zip.FlagsExtraField;
+import org.apache.james.mailbox.backup.zip.InternalDateExtraField;
+import org.apache.james.mailbox.backup.zip.MailboxIdExtraField;
+import org.apache.james.mailbox.backup.zip.MessageIdExtraField;
+import org.apache.james.mailbox.backup.zip.SizeExtraField;
+import org.apache.james.mailbox.backup.zip.UidExtraField;
+import org.apache.james.mailbox.backup.zip.UidValidityExtraField;
+import org.apache.james.mailbox.backup.zip.Zipper;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.store.MessageResultImpl;
 import org.junit.jupiter.api.BeforeAll;

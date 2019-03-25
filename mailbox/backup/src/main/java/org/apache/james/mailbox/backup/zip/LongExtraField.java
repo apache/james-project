@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.backup;
+package org.apache.james.mailbox.backup.zip;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -32,15 +32,15 @@ public abstract class LongExtraField implements ZipExtraField {
 
     private Optional<Long> value;
 
-    public LongExtraField() {
+    LongExtraField() {
         this(Optional.empty());
     }
 
-    public LongExtraField(long value) {
+    LongExtraField(long value) {
         this(Optional.of(value));
     }
 
-    public LongExtraField(Optional<Long> value) {
+    LongExtraField(Optional<Long> value) {
         this.value = value;
     }
 
@@ -74,9 +74,9 @@ public abstract class LongExtraField implements ZipExtraField {
             throw new ZipException("Unexpected data length for ExtraField. Expected " + Long.BYTES + " but got " + length + ".");
         }
         value = Optional.of(ByteBuffer
-                .wrap(buffer, offset, Long.BYTES)
-                .order(ByteOrder.LITTLE_ENDIAN)
-                .getLong());
+            .wrap(buffer, offset, Long.BYTES)
+            .order(ByteOrder.LITTLE_ENDIAN)
+            .getLong());
     }
 
     @Override

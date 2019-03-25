@@ -51,8 +51,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.apache.james.mailbox.backup.MessageIdExtraField;
-import org.apache.james.mailbox.backup.SizeExtraField;
+import org.apache.james.mailbox.backup.zip.MessageIdExtraField;
+import org.apache.james.mailbox.backup.zip.SizeExtraField;
 import org.apache.james.mailbox.backup.ZipAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;

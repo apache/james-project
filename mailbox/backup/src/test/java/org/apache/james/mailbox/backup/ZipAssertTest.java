@@ -39,6 +39,8 @@ import org.apache.commons.compress.archivers.zip.ZipExtraField;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.junit.TemporaryFolderExtension;
+import org.apache.james.mailbox.backup.zip.SizeExtraField;
+import org.apache.james.mailbox.backup.zip.UidExtraField;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

@@ -30,8 +30,8 @@ import org.apache.commons.compress.archivers.zip.ExtraFieldUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
-import org.apache.james.mailbox.backup.MessageIdExtraField;
-import org.apache.james.mailbox.backup.SizeExtraField;
+import org.apache.james.mailbox.backup.zip.MessageIdExtraField;
+import org.apache.james.mailbox.backup.zip.SizeExtraField;
 import org.apache.james.mailbox.model.MessageId;
 
 import com.github.fge.lambdas.Throwing;

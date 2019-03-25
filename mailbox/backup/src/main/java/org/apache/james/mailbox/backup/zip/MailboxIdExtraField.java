@@ -17,30 +17,35 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.backup;
+package org.apache.james.mailbox.backup.zip;
 
 import java.util.Optional;
 
 import org.apache.commons.compress.archivers.zip.ZipShort;
+import org.apache.james.mailbox.model.MailboxId;
 
-public class UidExtraField extends LongExtraField implements WithZipHeader {
+public class MailboxIdExtraField extends StringExtraField implements WithZipHeader {
 
-    public static final ZipShort ID_AK = new ZipShort(WithZipHeader.toLittleEndian('a', 'k'));
+    public static final ZipShort ID_AM = new ZipShort(WithZipHeader.toLittleEndian('a', 'm'));
 
-    public UidExtraField() {
+    public MailboxIdExtraField() {
         super();
     }
 
-    public UidExtraField(long value) {
+    public MailboxIdExtraField(String value) {
+        super(Optional.of(value));
+    }
+
+    public MailboxIdExtraField(Optional<String> value) {
         super(value);
     }
 
-    public UidExtraField(Optional<Long> value) {
-        super(value);
+    public MailboxIdExtraField(MailboxId mailboxId) {
+        super(Optional.of(mailboxId.serialize()));
     }
 
     @Override
     public ZipShort getHeaderId() {
-        return ID_AK;
+        return ID_AM;
     }
 }

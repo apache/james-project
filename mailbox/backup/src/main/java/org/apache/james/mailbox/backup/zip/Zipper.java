@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.backup;
+package org.apache.james.mailbox.backup.zip;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +31,9 @@ import org.apache.commons.compress.archivers.zip.ExtraFieldUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
+import org.apache.james.mailbox.backup.ArchiveService;
+import org.apache.james.mailbox.backup.Directory;
+import org.apache.james.mailbox.backup.MailboxWithAnnotations;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Mailbox;
@@ -56,6 +59,7 @@ public class Zipper implements ArchiveService {
         ExtraFieldUtils.register(InternalDateExtraField.class);
         ExtraFieldUtils.register(UidValidityExtraField.class);
         ExtraFieldUtils.register(FlagsExtraField.class);
+        ExtraFieldUtils.register(EntryTypeExtraField.class);
     }
 
     @Override
@@ -75,7 +79,7 @@ public class Zipper implements ArchiveService {
 
     private void storeMessages(Stream<MessageResult> messages, ZipArchiveOutputStream archiveOutputStream) throws IOException {
         messages.forEach(Throwing.<MessageResult>consumer(message ->
-                storeInArchive(message, archiveOutputStream)
+            storeInArchive(message, archiveOutputStream)
         ).sneakyThrow());
     }
 
@@ -86,6 +90,7 @@ public class Zipper implements ArchiveService {
         String name = mailbox.getName();
         ZipArchiveEntry archiveEntry = (ZipArchiveEntry) archiveOutputStream.createArchiveEntry(new Directory(name), name);
 
+        archiveEntry.addExtraField(EntryTypeExtraField.TYPE_MAILBOX);
         archiveEntry.addExtraField(new MailboxIdExtraField(mailbox.getMailboxId().serialize()));
         archiveEntry.addExtraField(new UidValidityExtraField(mailbox.getUidValidity()));
 
@@ -100,6 +105,7 @@ public class Zipper implements ArchiveService {
             String annotationsDirectoryPath = name + "/" + ANNOTATION_DIRECTORY;
             ZipArchiveEntry annotationDirectory = (ZipArchiveEntry) archiveOutputStream.createArchiveEntry(
                 new Directory(annotationsDirectoryPath), annotationsDirectoryPath);
+            annotationDirectory.addExtraField(EntryTypeExtraField.TYPE_MAILBOX_ANNOTATION_DIR);
             archiveOutputStream.putArchiveEntry(annotationDirectory);
             archiveOutputStream.closeArchiveEntry();
             annotations.forEach(Throwing.consumer(annotation ->
@@ -110,6 +116,7 @@ public class Zipper implements ArchiveService {
     private void storeInArchive(MailboxAnnotation annotation, String directory, ZipArchiveOutputStream archiveOutputStream) throws IOException {
         String entryId = directory + "/" + annotation.getKey().asString();
         ZipArchiveEntry archiveEntry = (ZipArchiveEntry) archiveOutputStream.createArchiveEntry(new File(entryId), entryId);
+        archiveEntry.addExtraField(EntryTypeExtraField.TYPE_MAILBOX_ANNOTATION);
         archiveOutputStream.putArchiveEntry(archiveEntry);
 
         annotation.getValue().ifPresent(value -> {
@@ -127,12 +134,12 @@ public class Zipper implements ArchiveService {
 
         archiveOutputStream.putArchiveEntry(archiveEntry);
         try {
-            Content  content = message.getFullContent();
+            Content content = message.getFullContent();
             try (InputStream stream = content.getInputStream()) {
                 IOUtils.copy(stream, archiveOutputStream);
             }
         } catch (MailboxException e) {
-           LOGGER.error("Error while storing message in archive", e);
+            LOGGER.error("Error while storing message in archive", e);
         }
 
         archiveOutputStream.closeArchiveEntry();
@@ -141,6 +148,7 @@ public class Zipper implements ArchiveService {
     private ZipArchiveEntry createMessageZipArchiveEntry(MessageResult message, ZipArchiveOutputStream archiveOutputStream, String entryId) throws IOException {
         ZipArchiveEntry archiveEntry = (ZipArchiveEntry) archiveOutputStream.createArchiveEntry(new File(entryId), entryId);
 
+        archiveEntry.addExtraField(EntryTypeExtraField.TYPE_MESSAGE);
         archiveEntry.addExtraField(new SizeExtraField(message.getSize()));
         archiveEntry.addExtraField(new UidExtraField(message.getUid().asLong()));
         archiveEntry.addExtraField(new MessageIdExtraField(message.getMessageId().serialize()));

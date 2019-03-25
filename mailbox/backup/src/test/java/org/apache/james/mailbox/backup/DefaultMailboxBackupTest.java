@@ -29,6 +29,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.backup.ZipAssert.EntryChecks;
+import org.apache.james.mailbox.backup.zip.Zipper;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.inmemory.MemoryMailboxManagerProvider;
 import org.apache.james.mailbox.model.MailboxId;

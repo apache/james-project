@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.zip.ZipException;
 
+import org.apache.james.mailbox.backup.zip.UidValidityExtraField;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 

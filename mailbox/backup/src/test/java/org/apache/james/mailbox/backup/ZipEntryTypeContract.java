@@ -16,36 +16,36 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.mailbox.backup;
 
-import java.util.Optional;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.commons.compress.archivers.zip.ZipShort;
-import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.backup.zip.ZipEntryType;
+import org.junit.jupiter.api.Test;
 
-public class MailboxIdExtraField extends StringExtraField implements WithZipHeader {
+class ZipEntryTypeContract {
 
-    public static final ZipShort ID_AM = new ZipShort(WithZipHeader.toLittleEndian('a', 'm'));
-
-    public MailboxIdExtraField() {
-        super();
+    private void assertZipEntryTypeDeserializedFromValue(int value, ZipEntryType expectedType) {
+        assertThat(ZipEntryType.zipEntryType( value)).contains(expectedType);
     }
 
-    public MailboxIdExtraField(String value) {
-        super(Optional.of(value));
+    @Test
+    void mailboxShouldBeDeserializedFromOne() {
+        assertZipEntryTypeDeserializedFromValue(0, ZipEntryType.MAILBOX);
     }
 
-    public MailboxIdExtraField(Optional<String> value) {
-        super(value);
+    @Test
+    void mailboxAnnotationDirShouldBeDeserializedFromTwo() {
+        assertZipEntryTypeDeserializedFromValue(1, ZipEntryType.MAILBOX_ANNOTATION_DIR);
     }
 
-    public MailboxIdExtraField(MailboxId mailboxId) {
-        super(Optional.of(mailboxId.serialize()));
+    @Test
+    void mailboxAnnotationShouldBeDeserializedFromThree() {
+        assertZipEntryTypeDeserializedFromValue(2, ZipEntryType.MAILBOX_ANNOTATION);
     }
 
-    @Override
-    public ZipShort getHeaderId() {
-        return ID_AM;
+    @Test
+    void messageShouldBeDeserializedFromFour() {
+        assertZipEntryTypeDeserializedFromValue(3, ZipEntryType.MESSAGE);
     }
 }
