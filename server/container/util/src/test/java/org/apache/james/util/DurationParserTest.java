@@ -94,6 +94,27 @@ class DurationParserTest {
             .isEqualTo(Duration.ofDays(2));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"2 w", "2 week", "2 Week", "2 weeks"})
+    void parseShouldHandleWeeks(String input) {
+        assertThat(DurationParser.parse(input))
+            .isEqualTo(ChronoUnit.WEEKS.getDuration().multipliedBy(2));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"2 months", "2 month", "2 Month"})
+    void parseShouldHandleMonths(String input) {
+        assertThat(DurationParser.parse(input))
+            .isEqualTo(ChronoUnit.MONTHS.getDuration().multipliedBy(2));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"2 y", "2 year", "2 Year", "2 years"})
+    void parseShouldHandleYears(String input) {
+        assertThat(DurationParser.parse(input))
+            .isEqualTo(ChronoUnit.YEARS.getDuration().multipliedBy(2));
+    }
+
     @Test
     void parseShouldThrowWhenIllegalUnitInRawString() {
         assertThatThrownBy(() -> DurationParser.parse("2 unknown"))

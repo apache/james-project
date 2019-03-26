@@ -43,7 +43,10 @@ public class DurationParser {
         SECONDS(ImmutableList.of("s", "sec", "secs", "second", "seconds"), ChronoUnit.SECONDS),
         MINUTES(ImmutableList.of("m", "min", "mins", "minute", "minutes"), ChronoUnit.MINUTES),
         HOURS(ImmutableList.of("h", "hour", "hours"), ChronoUnit.HOURS),
-        DAYS(ImmutableList.of("d", "day", "days"), ChronoUnit.DAYS);
+        DAYS(ImmutableList.of("d", "day", "days"), ChronoUnit.DAYS),
+        WEEKS(ImmutableList.of("w", "week", "weeks"), ChronoUnit.WEEKS),
+        MONTH(ImmutableList.of("month", "months"), ChronoUnit.MONTHS),
+        YEARS(ImmutableList.of("y", "year", "years"), ChronoUnit.YEARS);
 
         public static ChronoUnit parse(String string) {
             return Arrays.stream(values())
