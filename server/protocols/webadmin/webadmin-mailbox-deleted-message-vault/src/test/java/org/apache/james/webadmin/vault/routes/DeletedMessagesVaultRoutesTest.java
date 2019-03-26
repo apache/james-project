@@ -58,6 +58,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
@@ -1839,7 +1840,7 @@ class DeletedMessagesVaultRoutesTest {
 
         private byte[] zippedMessagesData() throws IOException {
             ByteArrayOutputStream expectedZippedData = new ByteArrayOutputStream();
-            zipper.zip(message -> new ByteArrayInputStream(CONTENT),
+            zipper.zip(message -> Optional.of(new ByteArrayInputStream(CONTENT)),
                 Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2),
                 expectedZippedData);
             return expectedZippedData.toByteArray();

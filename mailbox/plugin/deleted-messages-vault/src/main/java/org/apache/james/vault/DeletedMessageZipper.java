@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.compress.archivers.zip.ExtraFieldUtils;
@@ -39,7 +40,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class DeletedMessageZipper {
     public interface DeletedMessageContentLoader {
-        InputStream load(DeletedMessage deletedMessage);
+        Optional<InputStream> load(DeletedMessage deletedMessage);
     }
 
     public DeletedMessageZipper() {
@@ -49,7 +50,8 @@ public class DeletedMessageZipper {
 
     public void zip(DeletedMessageContentLoader contentLoader, Stream<DeletedMessage> deletedMessages, OutputStream outputStream) throws IOException {
         try (ZipArchiveOutputStream zipOutputStream = newZipArchiveOutputStream(outputStream)) {
-            ThrowingConsumer<DeletedMessage> putInZip = message -> putMessageToEntry(zipOutputStream, message, contentLoader);
+            ThrowingConsumer<DeletedMessage> putInZip =
+                message -> putMessageToEntry(zipOutputStream, message, contentLoader.load(message));
 
             deletedMessages.forEach(Throwing.consumer(putInZip).sneakyThrow());
 
@@ -63,13 +65,13 @@ public class DeletedMessageZipper {
     }
 
     @VisibleForTesting
-    void putMessageToEntry(ZipArchiveOutputStream zipOutputStream, DeletedMessage message, DeletedMessageContentLoader contentLoader) throws IOException {
-        try (InputStream content = contentLoader.load(message)) {
-            zipOutputStream.putArchiveEntry(createEntry(zipOutputStream, message));
-
-            IOUtils.copy(content, zipOutputStream);
-
-            zipOutputStream.closeArchiveEntry();
+    void putMessageToEntry(ZipArchiveOutputStream zipOutputStream, DeletedMessage message, Optional<InputStream> maybeContent) throws IOException {
+        if (maybeContent.isPresent()) {
+            try (InputStream closableMessageContent = maybeContent.get()) {
+                zipOutputStream.putArchiveEntry(createEntry(zipOutputStream, message));
+                IOUtils.copy(closableMessageContent, zipOutputStream);
+                zipOutputStream.closeArchiveEntry();
+            }
         }
     }
 

@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -60,7 +61,7 @@ import org.mockito.stubbing.Answer;
 import com.github.fge.lambdas.Throwing;
 
 class DeletedMessageZipperTest {
-    private static final DeletedMessageContentLoader CONTENT_LOADER = message -> new ByteArrayInputStream(CONTENT);
+    private static final DeletedMessageContentLoader CONTENT_LOADER = message -> Optional.of(new ByteArrayInputStream(CONTENT));
     private static final String MESSAGE_CONTENT = new String(CONTENT, StandardCharsets.UTF_8);
     private DeletedMessageZipper zipper;
 
@@ -183,8 +184,8 @@ class DeletedMessageZipperTest {
             DeletedMessageContentLoader contentLoader = spy(new DeletedMessageContentLoader() {
                 // lambdas are final and thus can't be spied
                 @Override
-                public InputStream load(DeletedMessage deletedMessage) {
-                    return new ByteArrayInputStream(CONTENT);
+                public Optional<InputStream> load(DeletedMessage deletedMessage) {
+                    return Optional.of(new ByteArrayInputStream(CONTENT));
                 }
             });
 
@@ -196,13 +197,24 @@ class DeletedMessageZipperTest {
 
             verify(contentLoader, times(1)).load(any());
         }
+
+        @Test
+        void zipShouldNotPutEntryIfContentLoaderReturnsEmptyResult() throws Exception {
+            DeletedMessageContentLoader contentLoader = message -> Optional.empty();
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            zipper.zip(contentLoader, Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2), outputStream);
+
+            try (ZipAssert zipAssert = assertThatZip(outputStream)) {
+                zipAssert.hasNoEntry();
+            }
+        }
     }
 
     private DeletedMessageZipper.DeletedMessageContentLoader spyLoadedContents(Collection<InputStream> loadedContents) {
-        Answer<InputStream> spyedContent = invocationOnMock -> {
-            InputStream result = spy(new ByteArrayInputStream(CONTENT));
-            loadedContents.add(result);
-            return result;
+        Answer<Optional<InputStream>> spyedContent = invocationOnMock -> {
+            InputStream spied = spy(new ByteArrayInputStream(CONTENT));
+            loadedContents.add(spied);
+            return Optional.of(spied);
         };
         DeletedMessageContentLoader contentLoader = mock(DeletedMessageContentLoader.class);
         when(contentLoader.load(any())).thenAnswer(spyedContent);

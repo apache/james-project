@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin.vault.routes;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -79,10 +80,9 @@ class DeletedMessagesVaultExportTask implements Task {
     public Result run() {
         try {
             Runnable messageToShareCallback = totalExportedMessages::incrementAndGet;
-            exportService.export(userExportFrom, exportQuery, exportTo, messageToShareCallback)
-                .block();
+            exportService.export(userExportFrom, exportQuery, exportTo, messageToShareCallback);
             return Result.COMPLETED;
-        } catch (Exception e) {
+        } catch (IOException e) {
             LOGGER.error("Error happens when exporting deleted messages from {} to {}", userExportFrom.asString(), exportTo.asString());
             return Result.PARTIAL;
         }
