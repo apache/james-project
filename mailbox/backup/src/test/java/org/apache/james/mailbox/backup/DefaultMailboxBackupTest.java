@@ -85,6 +85,22 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
     }
 
     @Test
+    void doBackupMailboxWithAnnotationShouldStoreAnArchiveWithMailboxAndAnnotation() throws Exception {
+        ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
+        MailboxSession session = mailboxManager.createSystemSession(USER);
+        createMailBoxWithMessage(session, MAILBOX_PATH_USER1_MAILBOX1);
+        mailboxManager.updateAnnotations(MAILBOX_PATH_USER1_MAILBOX1, session, WITH_ANNOTATION_1);
+
+        backup.backupAccount(USER1, destination);
+        try (ZipAssert zipAssert = ZipAssert.assertThatZip(destination)) {
+            zipAssert.containsOnlyEntriesMatching(EntryChecks.hasName(MAILBOX_1_NAME + "/").isDirectory(),
+                EntryChecks.hasName(MAILBOX_1_NAME + "/" + "annotations" + "/").isDirectory(),
+                EntryChecks.hasName(MAILBOX_1_NAME + "/" + "annotations" + "/" + ANNOTATION_1_KEY.asString()).hasStringContent(ANNOTATION_1_CONTENT)
+            );
+        }
+    }
+
+    @Test
     void doBackupWithOneMessageShouldStoreAnArchiveWithTwoEntries() throws Exception {
         ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
         MailboxSession session = mailboxManager.createSystemSession(USER);
