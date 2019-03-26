@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.time.Duration;
 import java.util.Properties;
 
 import org.apache.james.core.Domain;
@@ -853,7 +854,7 @@ public class RemoteDeliveryConfigurationTest {
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getDelayTimes())
-            .containsOnly(5000L, 100000L, 500000L);
+            .containsOnly(Duration.ofSeconds(5), Duration.ofSeconds(100), Duration.ofSeconds(500));
     }
 
     @Test

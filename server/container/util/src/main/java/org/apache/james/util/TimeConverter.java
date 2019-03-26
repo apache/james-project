@@ -18,9 +18,12 @@
  ****************************************************************/
 package org.apache.james.util;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,29 +33,32 @@ import com.google.common.collect.ImmutableList;
 public class TimeConverter {
 
     private static final String PATTERN_STRING = "\\s*([0-9]+)\\s*([a-z,A-Z]*)\\s*";
+    private static final int AMOUNT = 1;
+    private static final int UNIT = 2;
 
     private static Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 
-    public enum Unit {
-        MILLI_SECONDS(ImmutableList.of("ms", "msec", "msecs"), 1),
-        SECONDS(ImmutableList.of("s", "sec", "secs"), 1000),
-        MINUTES(ImmutableList.of("m", "min", "mins", "minute", "minutes"), 1000 * 60),
-        HOURS(ImmutableList.of("h", "hour", "hours"), 1000 * 60 * 60),
-        DAYS(ImmutableList.of("d", "day", "days"), 1000 * 60 * 60 * 24);
+    private enum Unit {
+        MILLI_SECONDS(ImmutableList.of("ms", "msec", "msecs"), ChronoUnit.MILLIS),
+        SECONDS(ImmutableList.of("s", "sec", "secs"), ChronoUnit.SECONDS),
+        MINUTES(ImmutableList.of("m", "min", "mins", "minute", "minutes"), ChronoUnit.MINUTES),
+        HOURS(ImmutableList.of("h", "hour", "hours"), ChronoUnit.HOURS),
+        DAYS(ImmutableList.of("d", "day", "days"), ChronoUnit.DAYS);
 
-        public static Unit parse(String string) {
+        public static ChronoUnit parse(String string) {
             return Arrays.stream(values())
                 .filter(value -> value.validPatterns.contains(string.toLowerCase(Locale.US)))
                 .findFirst()
+                .map(entry -> entry.unit)
                 .orElseThrow(() -> new NumberFormatException("Unknown unit: " + string));
         }
 
         private final List<String> validPatterns;
-        private final int multiplier;
+        private final ChronoUnit unit;
 
-        Unit(List<String> validPatterns, int multiplier) {
+        Unit(List<String> validPatterns, ChronoUnit unit) {
             this.validPatterns = validPatterns;
-            this.multiplier = multiplier;
+            this.unit = unit;
         }
 
     }
@@ -62,50 +68,28 @@ public class TimeConverter {
     }
 
     /**
-     * Helper method to get the milliseconds for the given amount and unit
-     * 
-     * @param amount
-     *            The amount for use with the unit
-     * @param unit
-     *            The unit
-     * @return The time in milliseconds
-     * @throws NumberFormatException
-     *             Get thrown if an illegal unit was used
-     */
-    public static long getMilliSeconds(long amount, String unit) throws NumberFormatException {
-        return getMilliSeconds(amount, Unit.parse(unit));
-    }
-
-    public static long getMilliSeconds(long amount, Unit unit) throws NumberFormatException {
-        int multiplier = unit.multiplier;
-        return (amount * multiplier);
-    }
-
-    /**
      * Helper method to get the milliseconds for the given rawstring. Allowed
      * rawstrings must match pattern: "\\s*([0-9]+)\\s*([a-z,A-Z]+)\\s*"
      * 
      * @param rawString
      *            The rawstring which we use to extract the amount and unit
-     * @return The time in milliseconds
+     * @return The duration
      * @throws NumberFormatException
      *             Get thrown if an illegal rawString was used
      */
-    public static long getMilliSeconds(String rawString) throws NumberFormatException {
-        return getMilliSeconds(rawString, Unit.MILLI_SECONDS);
+    public static Duration parseDuration(String rawString) throws NumberFormatException {
+        return parseDuration(rawString, ChronoUnit.MILLIS);
     }
 
-    public static long getMilliSeconds(String rawString, Unit defaultUnit) throws NumberFormatException {
+    public static Duration parseDuration(String rawString, ChronoUnit defaultUnit) throws NumberFormatException {
         Matcher res = PATTERN.matcher(rawString);
         if (res.matches()) {
 
-            if (res.group(1) != null && res.group(2) != null) {
-                long time = Integer.parseInt(res.group(1).trim());
-                String unit = res.group(2);
-                if (Strings.isNullOrEmpty(unit)) {
-                    return getMilliSeconds(time, defaultUnit);
-                }
-                return getMilliSeconds(time, Unit.parse(unit));
+            if (res.group(AMOUNT) != null && res.group(UNIT) != null) {
+                long time = Integer.parseInt(res.group(AMOUNT).trim());
+                return parseUnitAsDuration(res.group(UNIT))
+                    .orElse(defaultUnit.getDuration())
+                    .multipliedBy(time);
             } else {
                 // This should never Happen anyway throw an exception
                 throw new NumberFormatException("The supplied String is not a supported format " + rawString);
@@ -116,4 +100,10 @@ public class TimeConverter {
         }
     }
 
+    private static Optional<Duration> parseUnitAsDuration(String unit) {
+        if (Strings.isNullOrEmpty(unit)) {
+            return Optional.empty();
+        }
+        return Optional.of(Unit.parse(unit).getDuration());
+    }
 }

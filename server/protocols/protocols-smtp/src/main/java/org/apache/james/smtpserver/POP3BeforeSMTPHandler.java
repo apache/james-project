@@ -19,6 +19,8 @@
 
 package org.apache.james.smtpserver;
 
+import java.time.Duration;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -35,7 +37,7 @@ import org.apache.james.util.TimeConverter;
 public class POP3BeforeSMTPHandler implements ConnectHandler<SMTPSession>, Configurable {
 
     /** The time after which ipAddresses should be handled as expired */
-    private long expireTime = POP3BeforeSMTPHelper.EXPIRE_TIME;
+    private Duration expireTime = POP3BeforeSMTPHelper.EXPIRE_TIME;
 
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
@@ -54,7 +56,7 @@ public class POP3BeforeSMTPHandler implements ConnectHandler<SMTPSession>, Confi
      */
     public void setExpireTime(String rawExpireTime) {
         if (rawExpireTime != null) {
-            this.expireTime = TimeConverter.getMilliSeconds(rawExpireTime);
+            this.expireTime = TimeConverter.parseDuration(rawExpireTime);
         }
     }
 

@@ -19,7 +19,7 @@
 
 package org.apache.james.queue.rabbitmq;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
@@ -62,9 +62,9 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
     }
 
     @Override
-    public void enQueue(Mail mail, long delay, TimeUnit unit) {
-        if (delay > 0) {
-            LOGGER.info("Ignored delay upon enqueue of {} : {} {}.", mail.getName(), delay, unit);
+    public void enQueue(Mail mail, Duration delay) {
+        if (!delay.isNegative()) {
+            LOGGER.info("Ignored delay upon enqueue of {} : {}.", mail.getName(), delay);
         }
         enQueue(mail);
     }

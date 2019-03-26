@@ -19,6 +19,8 @@
 
 package org.apache.james.protocols.lib;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -36,12 +38,12 @@ public class POP3BeforeSMTPHelper {
     /**
      * The map in which the ipAddresses and timestamp stored
      */
-    public static final Map<String, Long> ipMap = Collections.synchronizedMap(new HashMap<String, Long>());
+    public static final Map<String, Instant> ipMap = Collections.synchronizedMap(new HashMap<>());
 
     /**
-     * Default expire time in ms (1 hour)
+     * Default expire time in ms (60 hour)
      */
-    public static final long EXPIRE_TIME = 216000000;
+    public static final Duration EXPIRE_TIME = Duration.ofHours(60);
 
     /**
      * Return true if the ip is authorized to relay
@@ -61,11 +63,11 @@ public class POP3BeforeSMTPHelper {
      *            The ipAddress
      */
     public static void addIPAddress(String ipAddress) {
-        ipMap.put(ipAddress, System.currentTimeMillis());
+        ipMap.put(ipAddress, Instant.now());
     }
 
     /**
-     * @see #removeExpiredIP(long)
+     * @see #removeExpiredIP(Duration)
      */
     public static void removeExpiredIP() {
         removeExpiredIP(EXPIRE_TIME);
@@ -79,17 +81,16 @@ public class POP3BeforeSMTPHelper {
      *            The time in milliseconds after which an ipAddress should be
      *            handled as expired
      */
-    public static void removeExpiredIP(long clearTime) {
+    public static void removeExpiredIP(Duration clearTime) {
         synchronized (ipMap) {
             Iterator<String> storedIP = ipMap.keySet().iterator();
-            long currTime = System.currentTimeMillis();
 
             while (storedIP.hasNext()) {
                 String key = storedIP.next();
-                long storedTime = ipMap.get(key);
+                Instant storedTime = ipMap.get(key);
 
                 // remove the ip from the map when it is expired
-                if ((currTime - clearTime) > storedTime) {
+                if (Instant.now().minus(clearTime).isAfter(storedTime)) {
                     // remove the entry from the iterator first to get sure that
                     // we not get
                     // a ConcurrentModificationException

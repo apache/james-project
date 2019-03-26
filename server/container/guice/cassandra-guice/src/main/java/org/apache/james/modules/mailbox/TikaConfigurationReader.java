@@ -20,6 +20,7 @@
 package org.apache.james.modules.mailbox;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.Set;
 
@@ -63,8 +64,7 @@ public class TikaConfigurationReader {
         Optional<Duration> cacheEvictionPeriod = Optional.ofNullable(
             configuration.getString(TIKA_CACHE_EVICTION_PERIOD,
                 null))
-            .map(rawString -> TimeConverter.getMilliSeconds(rawString, TimeConverter.Unit.SECONDS))
-            .map(Duration::ofMillis);
+            .map(rawString -> TimeConverter.parseDuration(rawString, ChronoUnit.SECONDS));
 
         Optional<Long> cacheWeight = Optional.ofNullable(
             configuration.getString(TIKA_CACHE_WEIGHT_MAX, null))

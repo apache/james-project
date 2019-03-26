@@ -21,6 +21,8 @@ package org.apache.james.queue.jms;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.time.DateTimeException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -75,7 +77,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.threeten.extra.Temporals;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -253,10 +254,10 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     }
 
     @Override
-    public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
+    public void enQueue(Mail mail, Duration delay) throws MailQueueException {
         TimeMetric timeMetric = metricFactory.timer(ENQUEUED_TIMER_METRIC_NAME_PREFIX + queueName);
 
-        long nextDeliveryTimestamp = computeNextDeliveryTimestamp(delay, unit);
+        long nextDeliveryTimestamp = computeNextDeliveryTimestamp(delay);
 
         try {
 
@@ -274,16 +275,16 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         }
     }
 
-    public long computeNextDeliveryTimestamp(long delay, TimeUnit unit) {
-        if (delay > 0) {
+    public long computeNextDeliveryTimestamp(Duration delay) {
+        if (!delay.isNegative()) {
             try {
                 return ZonedDateTime.now()
-                    .plus(delay, Temporals.chronoUnit(unit))
+                    .plus(delay)
                     .toInstant()
                     .toEpochMilli();
-            } catch (ArithmeticException e) {
-                LOGGER.warn("The {} was caused by conversation {}({}) followed by addition to current timestamp. Falling back to Long.MAX_VALUE.",
-                        e.getMessage(), delay, unit.name());
+            } catch (DateTimeException | ArithmeticException e) {
+                LOGGER.warn("The {} was caused by conversation {} followed by addition to current timestamp. Falling back to Long.MAX_VALUE.",
+                        e.getMessage(), delay);
 
                 return Long.MAX_VALUE;
             }

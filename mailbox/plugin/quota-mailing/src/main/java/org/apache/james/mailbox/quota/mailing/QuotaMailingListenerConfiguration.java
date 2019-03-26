@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.quota.mailing;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
@@ -75,8 +76,7 @@ public class QuotaMailingListenerConfiguration {
 
     private static Optional<Duration> readGracePeriod(HierarchicalConfiguration config) {
         return Optional.ofNullable(config.getString(XmlKeys.GRACE_PERIOD, null))
-            .map(string -> TimeConverter.getMilliSeconds(string, TimeConverter.Unit.DAYS))
-            .map(Duration::ofMillis);
+            .map(string -> TimeConverter.parseDuration(string, ChronoUnit.DAYS));
     }
 
     private static ImmutableMap<QuotaThreshold, RenderingInformation> readThresholds(HierarchicalConfiguration config) {

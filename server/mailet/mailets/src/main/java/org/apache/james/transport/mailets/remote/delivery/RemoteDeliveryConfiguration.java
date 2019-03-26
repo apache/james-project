@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets.remote.delivery;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -79,7 +80,7 @@ public class RemoteDeliveryConfiguration {
     private final int dnsProblemRetry;
     private final int connectionTimeout;
     private final int workersThreadCount;
-    private final List<Long> delayTimes;
+    private final List<Duration> delayTimes;
     private final HeloNameProvider heloNameProvider;
     private final String outGoingQueueName;
     private final String bindAddress;
@@ -242,7 +243,7 @@ public class RemoteDeliveryConfiguration {
         return isDebug;
     }
 
-    public List<Long> getDelayTimes() {
+    public List<Duration> getDelayTimes() {
         return delayTimes;
     }
 

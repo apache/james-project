@@ -19,8 +19,8 @@
 
 package org.apache.james.transport.mailets.remote.delivery;
 
+import java.time.Duration;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
@@ -155,16 +155,16 @@ public class DeliveryRunnable implements Disposable {
         DeliveryRetriesHelper.incrementRetries(mail);
         mail.setLastUpdated(dateSupplier.get());
         // Something happened that will delay delivery. Store it back in the retry repository.
-        long delay = getNextDelay(DeliveryRetriesHelper.retrieveRetries(mail));
+        Duration delay = getNextDelay(DeliveryRetriesHelper.retrieveRetries(mail));
 
         if (configuration.isUsePriority()) {
             // Use lowest priority for retries. See JAMES-1311
             mail.setAttribute(MailPrioritySupport.LOW_PRIORITY_ATTRIBUTE);
         }
-        queue.enQueue(mail, delay, TimeUnit.MILLISECONDS);
+        queue.enQueue(mail, delay);
     }
 
-    private long getNextDelay(int retry_count) {
+    private Duration getNextDelay(int retry_count) {
         if (retry_count > configuration.getDelayTimes().size()) {
             return Delay.DEFAULT_DELAY_TIME;
         }

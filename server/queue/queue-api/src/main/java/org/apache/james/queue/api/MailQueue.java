@@ -19,12 +19,14 @@
 
 package org.apache.james.queue.api;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.reactivestreams.Publisher;
+import org.threeten.extra.Temporals;
 
 /**
  * <p>
@@ -73,13 +75,26 @@ public interface MailQueue {
     /**
      * Enqueue the Mail to the queue. The given delay and unit are used to
      * calculate the time when the Mail will be available for deQueue
+     *
+     * @param mail
+     * @param delay
+     * @throws MailQueueException
+     */
+    void enQueue(Mail mail, Duration delay) throws MailQueueException;
+
+
+    /**
+     * Enqueue the Mail to the queue. The given delay and unit are used to
+     * calculate the time when the Mail will be available for deQueue
      * 
      * @param mail
      * @param delay
      * @param unit
      * @throws MailQueueException
      */
-    void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException;
+    default void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
+        enQueue(mail, Temporals.chronoUnit(unit).getDuration().multipliedBy(delay));
+    }
 
     /**
      * Enqueue the Mail to the queue

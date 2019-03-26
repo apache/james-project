@@ -27,6 +27,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -147,8 +148,7 @@ public class DeliveryRunnableTest {
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
                 .build(),
-            1000,
-            TimeUnit.MILLISECONDS);
+            Duration.ofSeconds(1));
         verifyNoMoreInteractions(mailQueue);
     }
 
@@ -170,8 +170,7 @@ public class DeliveryRunnableTest {
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
                 .build(),
-            3000,
-            TimeUnit.MILLISECONDS);
+            Duration.ofSeconds(3));
         verifyNoMoreInteractions(mailQueue);
     }
 
@@ -193,8 +192,7 @@ public class DeliveryRunnableTest {
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
                 .build(),
-            5000,
-            TimeUnit.MILLISECONDS);
+            Duration.ofSeconds(5));
         verifyNoMoreInteractions(mailQueue);
     }
 
@@ -247,8 +245,7 @@ public class DeliveryRunnableTest {
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
                 .build(),
-            1000,
-            TimeUnit.MILLISECONDS);
+            Duration.ofSeconds(1));
         verifyNoMoreInteractions(mailQueue);
     }
 }

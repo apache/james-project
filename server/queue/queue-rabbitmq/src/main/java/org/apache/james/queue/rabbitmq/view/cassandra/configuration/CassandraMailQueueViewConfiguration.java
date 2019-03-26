@@ -95,8 +95,7 @@ public class CassandraMailQueueViewConfiguration {
             .bucketCount(bucketCount)
             .updateBrowseStartPace(updateBrowseStartPace)
             .sliceWindow(sliceWindowAsString
-                .map(TimeConverter::getMilliSeconds)
-                .map(Duration::ofMillis)
+                .map(TimeConverter::parseDuration)
                 .orElse(DEFAULT_SLICE_WINDOW))
             .build();
     }

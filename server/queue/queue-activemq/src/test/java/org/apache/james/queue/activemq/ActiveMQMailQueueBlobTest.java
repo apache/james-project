@@ -24,7 +24,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -49,6 +50,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.threeten.extra.Years;
 
 @ExtendWith(BrokerExtension.class)
 @Tag(BrokerExtension.STATISTICS)
@@ -132,7 +134,7 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
 
     @Test
     void computeNextDeliveryTimestampShouldReturnLongMaxWhenOverflow() {
-        long deliveryTimestamp = mailQueue.computeNextDeliveryTimestamp(Long.MAX_VALUE, TimeUnit.DAYS);
+        long deliveryTimestamp = mailQueue.computeNextDeliveryTimestamp(ChronoUnit.FOREVER.getDuration());
 
         assertThat(deliveryTimestamp).isEqualTo(Long.MAX_VALUE);
     }

@@ -19,6 +19,8 @@
 
 package org.apache.james.queue.memory;
 
+import java.time.DateTimeException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -104,8 +106,8 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
         }
 
         @Override
-        public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
-            ZonedDateTime nextDelivery = calculateNextDelivery(delay, unit);
+        public void enQueue(Mail mail, Duration delay) throws MailQueueException {
+            ZonedDateTime nextDelivery = calculateNextDelivery(delay);
             try {
                 mailItems.put(new MemoryMailQueueItem(cloneMail(mail), this, nextDelivery));
             } catch (MessagingException e) {
@@ -113,11 +115,11 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
             }
         }
 
-        private ZonedDateTime calculateNextDelivery(long delay, TimeUnit unit) {
-            if (delay > 0) {
+        private ZonedDateTime calculateNextDelivery(Duration delay) {
+            if (!delay.isNegative()) {
                 try {
-                    return ZonedDateTime.now().plus(delay, Temporals.chronoUnit(unit));
-                } catch (ArithmeticException e) {
+                    return ZonedDateTime.now().plus(delay);
+                } catch (DateTimeException | ArithmeticException e) {
                     return Instant.ofEpochMilli(Long.MAX_VALUE).atZone(ZoneId.of("UTC"));
                 }
             }

@@ -21,9 +21,10 @@ package org.apache.james.transport.mailets.remote.delivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
+
 import javax.mail.MessagingException;
 
-import org.apache.james.transport.mailets.remote.delivery.Delay;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -41,33 +42,33 @@ public class DelayTest {
 
     @Test
     public void stringConstructorShouldWorkForNumbers() throws Exception {
-        assertThat(Delay.from("36")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, 36));
+        assertThat(Delay.from("36")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, Duration.ofMillis(36)));
     }
 
     @Test
     public void stringConstructorShouldWorkForZero() throws Exception {
-        assertThat(Delay.from("0")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, 0));
+        assertThat(Delay.from("0")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, Duration.ofMillis(0)));
     }
 
     @Test
     public void stringConstructorShouldThrowOnNegativeNumbers() throws Exception {
         expectedException.expect(NumberFormatException.class);
-        assertThat(Delay.from("-1s")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, 0));
+        assertThat(Delay.from("-1s")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, Duration.ofMillis(0)));
     }
 
     @Test
     public void stringConstructorShouldWorkForNumberAndSecond() throws Exception {
-        assertThat(Delay.from("1s")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, 1000));
+        assertThat(Delay.from("1s")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, Duration.ofSeconds(1)));
     }
 
     @Test
     public void stringConstructorShouldWorkForNumberAndAttempts() throws Exception {
-        assertThat(Delay.from("2*36")).isEqualTo(new Delay(2, 36));
+        assertThat(Delay.from("2*36")).isEqualTo(new Delay(2, Duration.ofMillis(36)));
     }
 
     @Test
     public void stringConstructorShouldWorkForNumberAndZeroAttempts() throws Exception {
-        assertThat(Delay.from("0*36")).isEqualTo(new Delay(0, 36));
+        assertThat(Delay.from("0*36")).isEqualTo(new Delay(0, Duration.ofMillis(36)));
     }
 
     @Test
@@ -93,12 +94,12 @@ public class DelayTest {
 
     @Test
     public void stringConstructorShouldWorkForNumberAttemptsAndUnit() throws Exception {
-        assertThat(Delay.from("2*36s")).isEqualTo(new Delay(2, 36000));
+        assertThat(Delay.from("2*36s")).isEqualTo(new Delay(2, Duration.ofSeconds(36)));
     }
     
     @Test
     public void stringConstructorShouldWorkForNumberAttemptsAndUnitWithSpaces() throws Exception {
-        assertThat(Delay.from("2 * 36 s")).isEqualTo(new Delay(2, 36000));
+        assertThat(Delay.from("2 * 36 s")).isEqualTo(new Delay(2, Duration.ofSeconds(36)));
     }
 
     @Test

@@ -19,8 +19,8 @@
 
 package org.apache.james.transport.mailets.remote.delivery;
 
+import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import javax.mail.MessagingException;
 
@@ -46,51 +46,51 @@ public class Delay {
         List<String> parts = Splitter.on('*').trimResults().splitToList(initString);
 
         if (parts.size() == 1) {
-            return new Delay(DEFAULT_ATTEMPTS, TimeConverter.getMilliSeconds(parts.get(0)));
+            return new Delay(DEFAULT_ATTEMPTS, TimeConverter.parseDuration(parts.get(0)));
         }
         if (parts.size() == 2) {
             int attempts = Integer.parseInt(parts.get(0));
             if (attempts < 0) {
                 throw new MessagingException("Number of attempts negative in " + initString);
             }
-            return new Delay(attempts, TimeConverter.getMilliSeconds(parts.get(1)));
+            return new Delay(attempts, TimeConverter.parseDuration(parts.get(1)));
         }
         throw new MessagingException(initString + " contains too much parts");
     }
 
-    public static final long DEFAULT_DELAY_TIME = TimeUnit.HOURS.toMillis(6);
+    public static final Duration DEFAULT_DELAY_TIME = Duration.ofHours(6);
     public static final int DEFAULT_ATTEMPTS = 1;
 
     private final int attempts;
-    private final long delayTimeInMs;
+    private final Duration delayTime;
 
     public Delay() {
         this(DEFAULT_ATTEMPTS, DEFAULT_DELAY_TIME);
     }
 
     @VisibleForTesting
-    Delay(int attempts, long delayTime) {
+    Delay(int attempts, Duration delayTime) {
         this.attempts = attempts;
-        this.delayTimeInMs = delayTime;
+        this.delayTime = delayTime;
     }
 
-    public long getDelayTimeInMs() {
-        return delayTimeInMs;
+    public Duration getDelayTime() {
+        return delayTime;
     }
 
     public int getAttempts() {
         return attempts;
     }
 
-    public List<Long> getExpendendDelays() {
-        return Repeat.repeat(delayTimeInMs, attempts);
+    public List<Duration> getExpendendDelays() {
+        return Repeat.repeat(delayTime, attempts);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
             .add("attempts", attempts)
-            .add("delayTime", delayTimeInMs)
+            .add("delayTime", delayTime)
             .toString();
     }
 
@@ -100,13 +100,13 @@ public class Delay {
             Delay that = (Delay) o;
 
             return Objects.equal(this.attempts, that.attempts)
-                && Objects.equal(this.delayTimeInMs, that.delayTimeInMs);
+                && Objects.equal(this.delayTime, that.delayTime);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(attempts, delayTimeInMs);
+        return Objects.hashCode(attempts, delayTime);
     }
 }

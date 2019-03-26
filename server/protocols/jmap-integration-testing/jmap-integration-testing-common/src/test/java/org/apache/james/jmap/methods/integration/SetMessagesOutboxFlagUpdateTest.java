@@ -33,6 +33,7 @@ import static org.apache.james.jmap.TestingConstants.DOMAIN;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -84,7 +85,7 @@ public abstract class SetMessagesOutboxFlagUpdateTest {
                 }
 
                 @Override
-                public void enQueue(Mail mail, long delay, TimeUnit unit) {
+                public void enQueue(Mail mail, Duration delay) {
                 }
 
                 @Override

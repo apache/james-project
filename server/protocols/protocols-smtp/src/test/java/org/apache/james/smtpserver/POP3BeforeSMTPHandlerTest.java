@@ -21,6 +21,7 @@ package org.apache.james.smtpserver;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.InetSocketAddress;
+import java.time.Duration;
 
 import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -81,7 +82,7 @@ public class POP3BeforeSMTPHandlerTest {
 
         try {
             Thread.sleep(sleepTime);
-            POP3BeforeSMTPHelper.removeExpiredIP(10);
+            POP3BeforeSMTPHelper.removeExpiredIP(Duration.ofMillis(10));
             handler.onConnect(mockedSession);
             assertThat(mockedSession.isRelayingAllowed()).isFalse();
 

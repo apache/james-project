@@ -25,12 +25,12 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Stopwatch;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -82,8 +82,7 @@ public interface DelayedMailQueueContract {
         getMailQueue().enQueue(defaultMail()
             .name("name")
             .build(),
-            Long.MAX_VALUE,
-            TimeUnit.DAYS);
+            ChronoUnit.FOREVER.getDuration());
 
         Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).next();
         assertThatThrownBy(() -> next.block(Duration.ofSeconds(1)))

@@ -21,456 +21,160 @@ package org.apache.james.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 import org.junit.jupiter.api.Test;
 
-public class TimeConverterTest {
+class TimeConverterTest {
 
     @Test
     void getMilliSecondsShouldConvertValueWhenNoUnitAmountAsString() {
-        //Given
-        long expected = 2;
-        //When
-        long actual = TimeConverter.getMilliSeconds("2");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2");
+        assertThat(actual).isEqualTo(Duration.ofMillis(2));
     }
 
     @Test
     void getMilliSecondsShouldUseProvidedUnitWhenNoUnitAmountAsString() {
-        //Given
-        long expected = 2000;
-        //When
-        long actual = TimeConverter.getMilliSeconds("2", TimeConverter.Unit.SECONDS);
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2", ChronoUnit.SECONDS);
+        assertThat(actual).isEqualTo(Duration.ofSeconds(2));
     }
 
     @Test
     void getMilliSecondsShouldNotUseProvidedUnitWhenNoUnitAmountAsString() {
-        //Given
-        long expected = 120000;
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 minutes", TimeConverter.Unit.SECONDS);
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenMsecUnit() {
-        //Given
-        long expected = 2;
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "msec");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 minutes", ChronoUnit.SECONDS);
+        assertThat(actual).isEqualTo(Duration.ofMinutes(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenMsecAmountAsString() {
-        //Given
-        long expected = 2;
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 msec");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenMsUnit() {
-        //Given
-        long expected = 2;
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "ms");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 msec");
+        assertThat(actual).isEqualTo(Duration.ofMillis(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenMsAmountAsString() {
-        //Given
-        long expected = 2;
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 ms");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenMsUnitCapital() {
-        //Given
-        long expected = 2;
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "Ms");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 ms");
+        assertThat(actual).isEqualTo(Duration.ofMillis(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenMsCapitalAmountAsString() {
-        //Given
-        long expected = 2;
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 Ms");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenMsecsUnit() {
-        //Given
-        long expected = 2;
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "msecs");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 Ms");
+        assertThat(actual).isEqualTo(Duration.ofMillis(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenMsecsAmountAsString() {
-        //Given
-        long expected = 2;
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 msecs");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenSUnit() {
-        //Given
-        long expected = TimeUnit.SECONDS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "s");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 msecs");
+        assertThat(actual).isEqualTo(Duration.ofMillis(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenSAmountAsString() {
-        //Given
-        long expected = TimeUnit.SECONDS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 s");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenSecUnit() {
-        //Given
-        long expected = TimeUnit.SECONDS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "sec");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 s");
+        assertThat(actual).isEqualTo(Duration.ofSeconds(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenSecAmountAsString() {
-        //Given
-        long expected = TimeUnit.SECONDS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 sec");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenSecCapitalUnit() {
-        //Given
-        long expected = TimeUnit.SECONDS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "Sec");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 sec");
+        assertThat(actual).isEqualTo(Duration.ofSeconds(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenSecCapitalAmountAsString() {
-        //Given
-        long expected = TimeUnit.SECONDS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 Sec");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenSecsUnit() {
-        long expected = TimeUnit.SECONDS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "secs");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 Sec");
+        assertThat(actual).isEqualTo(Duration.ofSeconds(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenSecsAmountAsString() {
-        //Given
-        long expected = TimeUnit.SECONDS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 secs");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenMUnit() {
-        //Given
-        long expected = TimeUnit.MINUTES.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "m");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 secs");
+        assertThat(actual).isEqualTo(Duration.ofSeconds(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenMAmountAsString() {
-        //Given
-        long expected = TimeUnit.MINUTES.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 m");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenMinuteUnit() {
-        //Given
-        long expected = TimeUnit.MINUTES.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "minute");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 m");
+        assertThat(actual).isEqualTo(Duration.ofMinutes(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenMinuteAmountAsString() {
-        //Given
-        long expected = TimeUnit.MINUTES.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 minute");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenMinuteCapitalUnit() {
-        //Given
-        long expected = TimeUnit.MINUTES.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "Minute");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 minute");
+        assertThat(actual).isEqualTo(Duration.ofMinutes(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenMinuteCapitalAmountAsString() {
-        //Given
-        long expected = TimeUnit.MINUTES.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 Minute");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenMinutesUnit() {
-        //Given
-        long expected = TimeUnit.MINUTES.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "minutes");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 Minute");
+        assertThat(actual).isEqualTo(Duration.ofMinutes(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenMinutesAmountAsString() {
-        //Given
-        long expected = TimeUnit.MINUTES.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 minutes");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenHUnit() {
-        //Given
-        long expected = TimeUnit.HOURS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "h");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 minutes");
+        assertThat(actual).isEqualTo(Duration.ofMinutes(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenHAmountAsString() {
-        //Given
-        long expected = TimeUnit.HOURS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 h");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenHourUnit() {
-        //Given
-        long expected = TimeUnit.HOURS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "hour");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 h");
+        assertThat(actual).isEqualTo(Duration.ofHours(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenHourAmountAsString() {
-        //Given
-        long expected = TimeUnit.HOURS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 hour");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenHourCapitalUnit() {
-        //Given
-        long expected = TimeUnit.HOURS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "Hour");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 hour");
+        assertThat(actual).isEqualTo(Duration.ofHours(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenHourCapitalAmountAsString() {
-        //Given
-        long expected = TimeUnit.HOURS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 Hour");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenHoursUnit() {
-        //Given
-        long expected = TimeUnit.HOURS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "hours");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 Hour");
+        assertThat(actual).isEqualTo(Duration.ofHours(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenHoursAmountAsString() {
-        //Given
-        long expected = TimeUnit.HOURS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 hours");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenDUnit() {
-        //Given
-        long expected = TimeUnit.DAYS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "d");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 hours");
+        assertThat(actual).isEqualTo(Duration.ofHours(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenDAmountAsString() {
-        //Given
-        long expected = TimeUnit.DAYS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 d");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenDayUnit() {
-        //Given
-        long expected = TimeUnit.DAYS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "day");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 d");
+        assertThat(actual).isEqualTo(Duration.ofDays(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenDayAmountAsString() {
-        //Given
-        long expected = TimeUnit.DAYS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 day");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenDayCapitalUnit() {
-        //Given
-        long expected = TimeUnit.DAYS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "Day");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 day");
+        assertThat(actual).isEqualTo(Duration.ofDays(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenDayCapitalAmountAsString() {
-        //Given
-        long expected = TimeUnit.DAYS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 Day");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenDaysUnit() {
-        //Given
-        long expected = TimeUnit.DAYS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds(2, "days");
-        //Then
-        assertThat(actual).isEqualTo(expected);
+        Duration actual = TimeConverter.parseDuration("2 Day");
+        assertThat(actual).isEqualTo(Duration.ofDays(2));
     }
 
     @Test
     void getMilliSecondsShouldConvertValueWhenDaysAmountAsString() {
-        //Given
-        long expected = TimeUnit.DAYS.toMillis(2);
-        //When
-        long actual = TimeConverter.getMilliSeconds("2 days");
-        //Then
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void getMilliSecondsShouldThrowWhenIllegalUnitInUnit() {
-        assertThatThrownBy(() -> TimeConverter.getMilliSeconds(2, "week"))
-            .isInstanceOf(NumberFormatException.class);
+        Duration actual = TimeConverter.parseDuration("2 days");
+        assertThat(actual).isEqualTo(Duration.ofDays(2));
     }
 
     @Test
     void getMilliSecondsShouldThrowWhenIllegalUnitInRawString() {
-        assertThatThrownBy(() -> TimeConverter.getMilliSeconds("2 week"))
+        assertThatThrownBy(() -> TimeConverter.parseDuration("2 week"))
             .isInstanceOf(NumberFormatException.class);
     }
 
     @Test
     void getMilliSecondsShouldThrowWhenIllegalPattern() {
-        assertThatThrownBy(() -> TimeConverter.getMilliSeconds("illegal pattern"))
+        assertThatThrownBy(() -> TimeConverter.parseDuration("illegal pattern"))
             .isInstanceOf(NumberFormatException.class);
     }
 }
