@@ -25,155 +25,113 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class DurationParserTest {
-
     @Test
-    void getMilliSecondsShouldConvertValueWhenNoUnitAmountAsString() {
-        Duration actual = DurationParser.parse("2");
-        assertThat(actual).isEqualTo(Duration.ofMillis(2));
+    void parseShouldUseMsAsDefaultUnit() {
+        assertThat(DurationParser.parse("2"))
+            .isEqualTo(Duration.ofMillis(2));
     }
 
     @Test
-    void getMilliSecondsShouldUseProvidedUnitWhenNoUnitAmountAsString() {
-        Duration actual = DurationParser.parse("2", ChronoUnit.SECONDS);
-        assertThat(actual).isEqualTo(Duration.ofSeconds(2));
+    void parseShouldUseSpecifiedDefaultUnit() {
+        assertThat(DurationParser.parse("2", ChronoUnit.SECONDS))
+            .isEqualTo(Duration.ofSeconds(2));
     }
 
     @Test
-    void getMilliSecondsShouldNotUseProvidedUnitWhenNoUnitAmountAsString() {
-        Duration actual = DurationParser.parse("2 minutes", ChronoUnit.SECONDS);
-        assertThat(actual).isEqualTo(Duration.ofMinutes(2));
+    void parseShouldUseSpecifiedUnit() {
+        assertThat(DurationParser.parse("2 minutes", ChronoUnit.SECONDS))
+            .isEqualTo(Duration.ofMinutes(2));
     }
 
     @Test
-    void getMilliSecondsShouldConvertValueWhenMsecAmountAsString() {
-        Duration actual = DurationParser.parse("2 msec");
-        assertThat(actual).isEqualTo(Duration.ofMillis(2));
+    void parseShouldSupportStartingSpaces() {
+        assertThat(DurationParser.parse("  2 minutes"))
+            .isEqualTo(Duration.ofMinutes(2));
     }
 
     @Test
-    void getMilliSecondsShouldConvertValueWhenMsAmountAsString() {
-        Duration actual = DurationParser.parse("2 ms");
-        assertThat(actual).isEqualTo(Duration.ofMillis(2));
+    void parseShouldSupportEndingSpaces() {
+        assertThat(DurationParser.parse("2 minutes  "))
+            .isEqualTo(Duration.ofMinutes(2));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"2", "2 ms", "2 msec", "2 msecs", "2 Ms"})
+    void parseShouldHandleMilliseconds(String input) {
+        assertThat(DurationParser.parse(input))
+            .isEqualTo(Duration.ofMillis(2));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"2 s", "2 sec", "2 Sec", "2 second", "2 seconds"})
+    void parseShouldHandleSeconds(String input) {
+        assertThat(DurationParser.parse(input))
+            .isEqualTo(Duration.ofSeconds(2));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"2 m", "2 min", "2 mins", "2 minute", "2 Minute", "2 minutes"})
+    void parseShouldHandleMinutes(String input) {
+        assertThat(DurationParser.parse(input))
+            .isEqualTo(Duration.ofMinutes(2));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"2 h", "2 hour", "2 Hour", "2 hours"})
+    void parseShouldHandleHours(String input) {
+        assertThat(DurationParser.parse(input))
+            .isEqualTo(Duration.ofHours(2));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"2 d", "2 day", "2 Day", "2 days"})
+    void parseShouldHandleDays(String input) {
+        assertThat(DurationParser.parse(input))
+            .isEqualTo(Duration.ofDays(2));
     }
 
     @Test
-    void getMilliSecondsShouldConvertValueWhenMsCapitalAmountAsString() {
-        Duration actual = DurationParser.parse("2 Ms");
-        assertThat(actual).isEqualTo(Duration.ofMillis(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenMsecsAmountAsString() {
-        Duration actual = DurationParser.parse("2 msecs");
-        assertThat(actual).isEqualTo(Duration.ofMillis(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenSAmountAsString() {
-        Duration actual = DurationParser.parse("2 s");
-        assertThat(actual).isEqualTo(Duration.ofSeconds(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenSecAmountAsString() {
-        Duration actual = DurationParser.parse("2 sec");
-        assertThat(actual).isEqualTo(Duration.ofSeconds(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenSecCapitalAmountAsString() {
-        Duration actual = DurationParser.parse("2 Sec");
-        assertThat(actual).isEqualTo(Duration.ofSeconds(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenSecsAmountAsString() {
-        Duration actual = DurationParser.parse("2 secs");
-        assertThat(actual).isEqualTo(Duration.ofSeconds(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenMAmountAsString() {
-        Duration actual = DurationParser.parse("2 m");
-        assertThat(actual).isEqualTo(Duration.ofMinutes(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenMinuteAmountAsString() {
-        Duration actual = DurationParser.parse("2 minute");
-        assertThat(actual).isEqualTo(Duration.ofMinutes(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenMinuteCapitalAmountAsString() {
-        Duration actual = DurationParser.parse("2 Minute");
-        assertThat(actual).isEqualTo(Duration.ofMinutes(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenMinutesAmountAsString() {
-        Duration actual = DurationParser.parse("2 minutes");
-        assertThat(actual).isEqualTo(Duration.ofMinutes(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenHAmountAsString() {
-        Duration actual = DurationParser.parse("2 h");
-        assertThat(actual).isEqualTo(Duration.ofHours(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenHourAmountAsString() {
-        Duration actual = DurationParser.parse("2 hour");
-        assertThat(actual).isEqualTo(Duration.ofHours(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenHourCapitalAmountAsString() {
-        Duration actual = DurationParser.parse("2 Hour");
-        assertThat(actual).isEqualTo(Duration.ofHours(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenHoursAmountAsString() {
-        Duration actual = DurationParser.parse("2 hours");
-        assertThat(actual).isEqualTo(Duration.ofHours(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenDAmountAsString() {
-        Duration actual = DurationParser.parse("2 d");
-        assertThat(actual).isEqualTo(Duration.ofDays(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenDayAmountAsString() {
-        Duration actual = DurationParser.parse("2 day");
-        assertThat(actual).isEqualTo(Duration.ofDays(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenDayCapitalAmountAsString() {
-        Duration actual = DurationParser.parse("2 Day");
-        assertThat(actual).isEqualTo(Duration.ofDays(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldConvertValueWhenDaysAmountAsString() {
-        Duration actual = DurationParser.parse("2 days");
-        assertThat(actual).isEqualTo(Duration.ofDays(2));
-    }
-
-    @Test
-    void getMilliSecondsShouldThrowWhenIllegalUnitInRawString() {
-        assertThatThrownBy(() -> DurationParser.parse("2 week"))
+    void parseShouldThrowWhenIllegalUnitInRawString() {
+        assertThatThrownBy(() -> DurationParser.parse("2 unknown"))
             .isInstanceOf(NumberFormatException.class);
     }
 
     @Test
-    void getMilliSecondsShouldThrowWhenIllegalPattern() {
+    void parseShouldThrowWhenMissingAmount() {
+        assertThatThrownBy(() -> DurationParser.parse("seconds"))
+            .isInstanceOf(NumberFormatException.class);
+    }
+
+    @Test
+    void parseShouldThrowWhenMissingAmountWithExtraWhiteSpace() {
+        assertThatThrownBy(() -> DurationParser.parse(" seconds"))
+            .isInstanceOf(NumberFormatException.class);
+    }
+
+    @Test
+    void parseShouldThrowWhenEmpty() {
+        assertThatThrownBy(() -> DurationParser.parse(""))
+            .isInstanceOf(NumberFormatException.class);
+    }
+
+    @Test
+    void parseShouldThrowWhenNegativeAmount() {
+        assertThatThrownBy(() -> DurationParser.parse("-1 s"))
+            .isInstanceOf(NumberFormatException.class);
+    }
+
+    @Test
+    void parseShouldThrowWhenZero() {
+        assertThat(DurationParser.parse("0 s"))
+            .isEqualTo(Duration.ofSeconds(0));
+    }
+
+    @Test
+    void parseShouldThrowWhenIllegalPattern() {
         assertThatThrownBy(() -> DurationParser.parse("illegal pattern"))
             .isInstanceOf(NumberFormatException.class);
     }

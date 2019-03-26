@@ -40,7 +40,7 @@ public class DurationParser {
 
     private enum Unit {
         MILLI_SECONDS(ImmutableList.of("ms", "msec", "msecs"), ChronoUnit.MILLIS),
-        SECONDS(ImmutableList.of("s", "sec", "secs"), ChronoUnit.SECONDS),
+        SECONDS(ImmutableList.of("s", "sec", "secs", "second", "seconds"), ChronoUnit.SECONDS),
         MINUTES(ImmutableList.of("m", "min", "mins", "minute", "minutes"), ChronoUnit.MINUTES),
         HOURS(ImmutableList.of("h", "hour", "hours"), ChronoUnit.HOURS),
         DAYS(ImmutableList.of("d", "day", "days"), ChronoUnit.DAYS);
