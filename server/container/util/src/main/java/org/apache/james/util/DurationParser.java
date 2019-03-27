@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
-public class TimeConverter {
+public class DurationParser {
 
     private static final String PATTERN_STRING = "\\s*([0-9]+)\\s*([a-z,A-Z]*)\\s*";
     private static final int AMOUNT = 1;
@@ -64,7 +64,7 @@ public class TimeConverter {
     }
 
     // Get sure it can not be instantiated
-    private TimeConverter() {
+    private DurationParser() {
     }
 
     /**
@@ -77,11 +77,11 @@ public class TimeConverter {
      * @throws NumberFormatException
      *             Get thrown if an illegal rawString was used
      */
-    public static Duration parseDuration(String rawString) throws NumberFormatException {
-        return parseDuration(rawString, ChronoUnit.MILLIS);
+    public static Duration parse(String rawString) throws NumberFormatException {
+        return parse(rawString, ChronoUnit.MILLIS);
     }
 
-    public static Duration parseDuration(String rawString, ChronoUnit defaultUnit) throws NumberFormatException {
+    public static Duration parse(String rawString, ChronoUnit defaultUnit) throws NumberFormatException {
         Matcher res = PATTERN.matcher(rawString);
         if (res.matches()) {
 

@@ -47,7 +47,7 @@ import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.fastfail.AbstractGreylistHandler;
 import org.apache.james.protocols.smtp.hook.HookResult;
-import org.apache.james.util.TimeConverter;
+import org.apache.james.util.DurationParser;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
 import org.slf4j.Logger;
@@ -136,7 +136,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
      *            The temporary blocking time
      */
     public void setTempBlockTime(String tempBlockTime) {
-        setTempBlockTime(TimeConverter.parseDuration(tempBlockTime));
+        setTempBlockTime(DurationParser.parse(tempBlockTime));
     }
 
     /**
@@ -147,7 +147,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
      *            The lifeTime
      */
     public void setAutoWhiteListLifeTime(String autoWhiteListLifeTime) {
-        setAutoWhiteListLifeTime(TimeConverter.parseDuration(autoWhiteListLifeTime));
+        setAutoWhiteListLifeTime(DurationParser.parse(autoWhiteListLifeTime));
     }
 
     /**
@@ -158,7 +158,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
      *            The lifetime
      */
     public void setUnseenLifeTime(String unseenLifeTime) {
-        setUnseenLifeTime(TimeConverter.parseDuration(unseenLifeTime));
+        setUnseenLifeTime(DurationParser.parse(unseenLifeTime));
     }
 
     @Inject

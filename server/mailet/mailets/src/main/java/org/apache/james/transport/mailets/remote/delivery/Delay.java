@@ -24,7 +24,7 @@ import java.util.List;
 
 import javax.mail.MessagingException;
 
-import org.apache.james.util.TimeConverter;
+import org.apache.james.util.DurationParser;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -35,7 +35,7 @@ import com.google.common.base.Strings;
 public class Delay {
     /**
      * <p> The optional attempt is the number of tries this delay should be used (default = 1).
-     * The delayTime is parsed by {@link TimeConverter}</p>
+     * The delayTime is parsed by {@link DurationParser}</p>
      *
      * @param initString the string to initialize this Delay object from. It has the form "[attempt\*]delaytime[unit]"
      */
@@ -46,14 +46,14 @@ public class Delay {
         List<String> parts = Splitter.on('*').trimResults().splitToList(initString);
 
         if (parts.size() == 1) {
-            return new Delay(DEFAULT_ATTEMPTS, TimeConverter.parseDuration(parts.get(0)));
+            return new Delay(DEFAULT_ATTEMPTS, DurationParser.parse(parts.get(0)));
         }
         if (parts.size() == 2) {
             int attempts = Integer.parseInt(parts.get(0));
             if (attempts < 0) {
                 throw new MessagingException("Number of attempts negative in " + initString);
             }
-            return new Delay(attempts, TimeConverter.parseDuration(parts.get(1)));
+            return new Delay(attempts, DurationParser.parse(parts.get(1)));
         }
         throw new MessagingException(initString + " contains too much parts");
     }

@@ -29,7 +29,7 @@ import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.ConnectHandler;
 import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
 import org.apache.james.protocols.smtp.SMTPSession;
-import org.apache.james.util.TimeConverter;
+import org.apache.james.util.DurationParser;
 
 /**
  * This ConnectHandler can be used to activate pop-before-smtp
@@ -56,7 +56,7 @@ public class POP3BeforeSMTPHandler implements ConnectHandler<SMTPSession>, Confi
      */
     public void setExpireTime(String rawExpireTime) {
         if (rawExpireTime != null) {
-            this.expireTime = TimeConverter.parseDuration(rawExpireTime);
+            this.expireTime = DurationParser.parse(rawExpireTime);
         }
     }
 

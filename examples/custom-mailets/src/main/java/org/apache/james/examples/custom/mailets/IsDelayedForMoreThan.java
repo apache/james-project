@@ -28,7 +28,7 @@ import java.util.Date;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.util.TimeConverter;
+import org.apache.james.util.DurationParser;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
@@ -61,7 +61,7 @@ public class IsDelayedForMoreThan extends GenericMatcher {
     @Override
     public void init() {
         String condition = getCondition();
-        maxDelay = TimeConverter.parseDuration(condition, DEFAULT_UNIT);
+        maxDelay = DurationParser.parse(condition, DEFAULT_UNIT);
     }
 
     @Override

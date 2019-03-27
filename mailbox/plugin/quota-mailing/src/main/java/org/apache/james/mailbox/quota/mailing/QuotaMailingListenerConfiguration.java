@@ -31,8 +31,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.quota.model.QuotaThreshold;
 import org.apache.james.mailbox.quota.model.QuotaThresholds;
+import org.apache.james.util.DurationParser;
 import org.apache.james.util.OptionalUtils;
-import org.apache.james.util.TimeConverter;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
@@ -76,7 +76,7 @@ public class QuotaMailingListenerConfiguration {
 
     private static Optional<Duration> readGracePeriod(HierarchicalConfiguration config) {
         return Optional.ofNullable(config.getString(XmlKeys.GRACE_PERIOD, null))
-            .map(string -> TimeConverter.parseDuration(string, ChronoUnit.DAYS));
+            .map(string -> DurationParser.parse(string, ChronoUnit.DAYS));
     }
 
     private static ImmutableMap<QuotaThreshold, RenderingInformation> readThresholds(HierarchicalConfiguration config) {

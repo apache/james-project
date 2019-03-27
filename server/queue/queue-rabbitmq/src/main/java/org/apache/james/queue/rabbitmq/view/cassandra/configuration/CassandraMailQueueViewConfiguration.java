@@ -24,7 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.james.util.TimeConverter;
+import org.apache.james.util.DurationParser;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -95,7 +95,7 @@ public class CassandraMailQueueViewConfiguration {
             .bucketCount(bucketCount)
             .updateBrowseStartPace(updateBrowseStartPace)
             .sliceWindow(sliceWindowAsString
-                .map(TimeConverter::parseDuration)
+                .map(DurationParser::parse)
                 .orElse(DEFAULT_SLICE_WINDOW))
             .build();
     }
