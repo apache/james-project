@@ -24,12 +24,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.james.FakePropertiesProvider;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
 import org.apache.james.blob.union.UnionBlobStore;
 import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration.BlobStoreImplName;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
-import org.apache.james.modules.objectstorage.FakePropertiesProvider;
 import org.junit.jupiter.api.Test;
 
 import com.google.inject.Provider;
