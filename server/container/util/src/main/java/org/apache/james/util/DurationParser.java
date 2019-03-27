@@ -84,20 +84,14 @@ public class DurationParser {
     public static Duration parse(String rawString, ChronoUnit defaultUnit) throws NumberFormatException {
         Matcher res = PATTERN.matcher(rawString);
         if (res.matches()) {
-
             if (res.group(AMOUNT) != null && res.group(UNIT) != null) {
                 long time = Integer.parseInt(res.group(AMOUNT).trim());
                 return parseUnitAsDuration(res.group(UNIT))
                     .orElse(defaultUnit.getDuration())
                     .multipliedBy(time);
-            } else {
-                // This should never Happen anyway throw an exception
-                throw new NumberFormatException("The supplied String is not a supported format " + rawString);
             }
-        } else {
-            // The rawString not match our pattern. So its not supported
-            throw new NumberFormatException("The supplied String is not a supported format " + rawString);
         }
+        throw new NumberFormatException("The supplied String is not a supported format " + rawString);
     }
 
     private static Optional<Duration> parseUnitAsDuration(String unit) {
