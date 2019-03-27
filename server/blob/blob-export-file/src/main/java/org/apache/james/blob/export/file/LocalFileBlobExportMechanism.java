@@ -22,6 +22,7 @@ package org.apache.james.blob.export.file;
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Objects;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -39,6 +40,9 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.MailetContext;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+
 public class LocalFileBlobExportMechanism implements BlobExportMechanism {
     private static final int STRING_LENGTH = 32;
     private static final boolean WITH_LETTERS = true;
@@ -48,13 +52,45 @@ public class LocalFileBlobExportMechanism implements BlobExportMechanism {
 
     public static class Configuration {
 
+        public static Configuration from(org.apache.commons.configuration.Configuration propertiesConfiguration) {
+            String exportDirectory = propertiesConfiguration.getString(DIRECTORY_LOCATION_PROPERTY);
+            return of(exportDirectory);
+        }
+
+        @VisibleForTesting
+        static Configuration of(String exportDirectory) {
+            return new Configuration(exportDirectory);
+        }
+
+        private static final String DIRECTORY_LOCATION_PROPERTY = "blob.export.localFile.storingDirectory";
         private static final String DEFAULT_DIRECTORY_LOCATION = "file://var/blobExporting";
         public static final Configuration DEFAULT_CONFIGURATION = new Configuration(DEFAULT_DIRECTORY_LOCATION);
 
         private final String exportDirectory;
 
         public Configuration(String exportDirectory) {
+            Preconditions.checkNotNull(exportDirectory);
+
             this.exportDirectory = exportDirectory;
+        }
+
+        public String getExportDirectory() {
+            return exportDirectory;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof Configuration) {
+                Configuration that = (Configuration) o;
+
+                return Objects.equals(this.exportDirectory, that.exportDirectory);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(exportDirectory);
         }
     }
 

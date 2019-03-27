@@ -43,7 +43,9 @@ public class FileSystemExtension implements ParameterResolver, BeforeAllCallback
 
     @Override
     public void afterAll(ExtensionContext context) throws Exception {
-        FileUtils.forceDelete(fileSystem.getBasedir());
+        if (fileSystem.getBasedir().exists()) {
+            FileUtils.forceDelete(fileSystem.getBasedir());
+        }
     }
 
     @Override

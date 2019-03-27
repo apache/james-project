@@ -32,12 +32,14 @@ import java.nio.charset.StandardCharsets;
 import javax.mail.Message;
 import javax.mail.internet.InternetAddress;
 
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.export.api.FileExtension;
+import org.apache.james.blob.export.file.LocalFileBlobExportMechanism.Configuration;
 import org.apache.james.blob.memory.MemoryBlobStore;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.filesystem.api.FileSystem;
@@ -45,8 +47,11 @@ import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
 
 @ExtendWith(FileSystemExtension.class)
 class LocalFileBlobExportMechanismTest {
@@ -184,5 +189,33 @@ class LocalFileBlobExportMechanismTest {
                     throw new RuntimeException(e);
                 }
             });
+    }
+
+        @Nested
+    class ConfigurationTest {
+
+        @Test
+        void shouldMatchBeanContract() {
+            EqualsVerifier.forClass(Configuration.class)
+                .verify();
+        }
+        @Test
+        void fromShouldThrowWhenDirectoryIsMissing() {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+            configuration.addProperty("blob.export.localFile.storingDirectory", null);
+
+            assertThatThrownBy(() -> Configuration.from(configuration))
+                .isInstanceOf(NullPointerException.class);
+        }
+
+        @Test
+        void fromShouldReturnConfigurationWhenDirectoryIsSpecified() {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+            String exportDirectory = "file://var/localFileBlobExport";
+            configuration.addProperty("blob.export.localFile.storingDirectory", exportDirectory);
+
+            assertThat(Configuration.from(configuration))
+                .isEqualTo(Configuration.of(exportDirectory));
+        }
     }
 }
