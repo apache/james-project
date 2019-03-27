@@ -12,7 +12,11 @@ software documentation. Do not follow this guide blindly!
 
 Note: this section is in progress. It will be updated during all the development process until the release.
 
-Changes to apply between 3.2.x and 3.3.x will be reported here.
+Changes to apply between 3.3.x and 3.4.x will be reported here.
+
+## 3.3.0 version
+
+Changes to apply between 3.2.0 and 3.3.0 had been reported here.
 
 Change list:
 
