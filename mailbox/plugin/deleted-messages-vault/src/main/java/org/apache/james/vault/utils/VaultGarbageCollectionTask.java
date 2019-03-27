@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault.memory;
+package org.apache.james.vault.utils;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;

@@ -36,6 +36,8 @@ import org.apache.james.vault.DeletedMessage;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.RetentionConfiguration;
 import org.apache.james.vault.search.Query;
+import org.apache.james.vault.utils.DeleteByQueryExecutor;
+import org.apache.james.vault.utils.VaultGarbageCollectionTask;
 import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;

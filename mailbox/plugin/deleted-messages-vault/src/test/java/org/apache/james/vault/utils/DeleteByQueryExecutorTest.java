@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault.memory;
+package org.apache.james.vault.utils;
 
 import static org.apache.james.vault.DeletedMessageFixture.CONTENT;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE;
@@ -27,7 +27,6 @@ import static org.apache.james.vault.DeletedMessageFixture.USER_2;
 import static org.apache.james.vault.DeletedMessageVaultContract.CLOCK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -39,9 +38,11 @@ import java.io.ByteArrayInputStream;
 import org.apache.james.task.Task;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.RetentionConfiguration;
+import org.apache.james.vault.memory.MemoryDeletedMessagesVault;
 import org.apache.james.vault.search.Query;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -57,7 +58,7 @@ class DeleteByQueryExecutorTest {
 
     @BeforeEach
     void setUp() {
-        vault = spy(new MemoryDeletedMessagesVault(RetentionConfiguration.DEFAULT, CLOCK));
+        vault = Mockito.spy(new MemoryDeletedMessagesVault(RetentionConfiguration.DEFAULT, CLOCK));
         testee = new DeleteByQueryExecutor(vault);
 
         userHandledNotifier = mock(DeleteByQueryExecutor.Notifier.class);

@@ -37,9 +37,9 @@ import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.task.Task;
 import org.apache.james.util.streams.Iterators;
-import org.apache.james.vault.memory.DeleteByQueryExecutor;
-import org.apache.james.vault.memory.VaultGarbageCollectionTask;
 import org.apache.james.vault.search.Query;
+import org.apache.james.vault.utils.DeleteByQueryExecutor;
+import org.apache.james.vault.utils.VaultGarbageCollectionTask;
 import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault.memory;
+package org.apache.james.vault.utils;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
