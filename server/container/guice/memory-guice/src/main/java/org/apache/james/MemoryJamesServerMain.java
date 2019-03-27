@@ -20,8 +20,8 @@
 package org.apache.james;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.BlobMemoryModule;
-import org.apache.james.modules.LocalFileBlobExportMechanismModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.data.MemoryDataJmapModule;
 import org.apache.james.modules.data.MemoryDataModule;
@@ -83,7 +83,7 @@ public class MemoryJamesServerMain {
     public static final Module IN_MEMORY_SERVER_MODULE = Modules.combine(
         new BlobMemoryModule(),
         new DeletedMessageVaultModule(),
-        new LocalFileBlobExportMechanismModule(),
+        new BlobExportMechanismModule(),
         new MailboxModule(),
         new MemoryDataModule(),
         new MemoryEventStoreModule(),

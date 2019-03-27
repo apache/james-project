@@ -32,6 +32,8 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class FileSystemExtension implements ParameterResolver, BeforeAllCallback, AfterAllCallback {
 
     private FileSystemImpl fileSystem;
@@ -58,4 +60,8 @@ public class FileSystemExtension implements ParameterResolver, BeforeAllCallback
         return fileSystem;
     }
 
+    @VisibleForTesting
+    FileSystemImpl getFileSystem() {
+        return fileSystem;
+    }
 }

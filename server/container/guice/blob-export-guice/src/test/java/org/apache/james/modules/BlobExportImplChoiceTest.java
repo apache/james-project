@@ -22,6 +22,7 @@ package org.apache.james.modules;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.modules.BlobExportImplChoice.BlobExportImplName;
 import org.junit.jupiter.api.Test;
@@ -41,7 +42,7 @@ class BlobExportImplChoiceTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
 
         assertThatThrownBy(() -> BlobExportImplChoice.from(configuration))
-            .isInstanceOf(NullPointerException.class);
+            .isInstanceOf(ConfigurationException.class);
     }
 
     @Test
@@ -50,31 +51,31 @@ class BlobExportImplChoiceTest {
         configuration.addProperty("blob.export.implementation", "unknown");
 
         assertThatThrownBy(() -> BlobExportImplChoice.from(configuration))
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(ConfigurationException.class);
     }
 
     @Test
-    void fromShouldReturnLocalFileImplWhenPassingLocalFileImplConfiguration() {
+    void fromShouldReturnLocalFileImplWhenPassingLocalFileImplConfiguration() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("blob.export.implementation", "localfile");
+        configuration.addProperty("blob.export.implementation", "localFile");
 
         assertThat(BlobExportImplChoice.from(configuration).getImpl())
             .isEqualTo(BlobExportImplName.LOCAL_FILE);
     }
 
     @Test
-    void fromShouldBeCaseInSensitive() {
+    void fromShouldThrowWhenCaseInSensitive() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("blob.export.implementation", "localFILE");
 
-        assertThat(BlobExportImplChoice.from(configuration).getImpl())
-            .isEqualTo(BlobExportImplName.LOCAL_FILE);
+        assertThatThrownBy(() -> BlobExportImplChoice.from(configuration))
+            .isInstanceOf(ConfigurationException.class);
     }
 
     @Test
-    void fromShouldIgnoreBlankSpacesBeforeAndAfter() {
+    void fromShouldIgnoreBlankSpacesBeforeAndAfter() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("blob.export.implementation", "  localfile   ");
+        configuration.addProperty("blob.export.implementation", "  localFile   ");
 
         assertThat(BlobExportImplChoice.from(configuration).getImpl())
             .isEqualTo(BlobExportImplName.LOCAL_FILE);

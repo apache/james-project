@@ -21,35 +21,53 @@ package org.apache.james.modules;
 
 import java.io.FileNotFoundException;
 
+import javax.inject.Singleton;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.blob.export.api.BlobExportMechanism;
 import org.apache.james.blob.export.file.LocalFileBlobExportMechanism;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provider;
 import com.google.inject.Provides;
-import com.google.inject.Singleton;
 
-public class LocalFileBlobExportMechanismModule extends AbstractModule {
+public class BlobExportMechanismModule extends AbstractModule {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LocalFileBlobExportMechanismModule.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BlobExportMechanismModule.class);
 
     @Override
     protected void configure() {
+        install(new LocalFileBlobExportMechanismModule());
     }
 
-    @Singleton
+    @VisibleForTesting
     @Provides
-    LocalFileBlobExportMechanism.Configuration localFileExportConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+    @Singleton
+    BlobExportImplChoice provideChoice(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
             Configuration configuration = propertiesProvider.getConfiguration(ConfigurationComponent.NAME);
-            return LocalFileBlobExportMechanism.Configuration.from(configuration);
+            return BlobExportImplChoice.from(configuration);
         } catch (FileNotFoundException e) {
-            LOGGER.warn("Could not find " + ConfigurationComponent.NAME + " configuration file, using default localFile blob exporting configuration");
-            return LocalFileBlobExportMechanism.Configuration.DEFAULT_CONFIGURATION;
+            LOGGER.warn("Could not find " + ConfigurationComponent.NAME + " configuration file, using localFile blob exporting as the default");
+            return BlobExportImplChoice.localFile();
+        }
+    }
+
+    @VisibleForTesting
+    @Provides
+    @Singleton
+    BlobExportMechanism provideMechanism(BlobExportImplChoice implChoice, Provider<LocalFileBlobExportMechanism> localFileMechanismProvider) {
+        switch (implChoice.getImpl()) {
+            case LOCAL_FILE:
+                return localFileMechanismProvider.get();
+            default:
+                throw new RuntimeException("blobExportMechanism '" + implChoice.getImpl().getImplName() + "' is not supported yet");
         }
     }
 }

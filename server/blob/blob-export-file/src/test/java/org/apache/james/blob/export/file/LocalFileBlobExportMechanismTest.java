@@ -202,7 +202,7 @@ class LocalFileBlobExportMechanismTest {
         @Test
         void fromShouldThrowWhenDirectoryIsMissing() {
             PropertiesConfiguration configuration = new PropertiesConfiguration();
-            configuration.addProperty("blob.export.localFile.storingDirectory", null);
+            configuration.addProperty("blob.export.localFile.directory", null);
 
             assertThatThrownBy(() -> Configuration.from(configuration))
                 .isInstanceOf(NullPointerException.class);
@@ -212,10 +212,10 @@ class LocalFileBlobExportMechanismTest {
         void fromShouldReturnConfigurationWhenDirectoryIsSpecified() {
             PropertiesConfiguration configuration = new PropertiesConfiguration();
             String exportDirectory = "file://var/localFileBlobExport";
-            configuration.addProperty("blob.export.localFile.storingDirectory", exportDirectory);
+            configuration.addProperty("blob.export.localFile.directory", exportDirectory);
 
             assertThat(Configuration.from(configuration))
-                .isEqualTo(Configuration.of(exportDirectory));
+                .isEqualTo(new Configuration(exportDirectory));
         }
     }
 }

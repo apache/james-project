@@ -19,7 +19,7 @@
 
 package org.apache.james;
 
-import org.apache.james.modules.LocalFileBlobExportMechanismModule;
+import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.activemq.ActiveMQQueueModule;
 import org.apache.james.modules.data.CassandraDLPConfigurationStoreModule;
@@ -98,6 +98,10 @@ public class CassandraJamesServerMain {
     public static final Module PLUGINS = Modules.combine(
         new CassandraQuotaMailingModule());
 
+    private static final Module BLOB_MODULE = Modules.combine(
+        new BlobStoreAPIModule(),
+        new BlobExportMechanismModule());
+
     public static final Module CASSANDRA_SERVER_CORE_MODULE = Modules.combine(
         new ActiveMQQueueModule(),
         new CassandraDomainListModule(),
@@ -105,12 +109,12 @@ public class CassandraJamesServerMain {
         new CassandraEventStoreModule(),
         new CassandraMailRepositoryModule(),
         new CassandraMetricsModule(),
-        new BlobStoreAPIModule(),
         new CassandraObjectStoreModule(),
         new CassandraRecipientRewriteTableModule(),
         new CassandraSessionModule(),
         new CassandraSieveRepositoryModule(),
-        new CassandraUsersRepositoryModule());
+        new CassandraUsersRepositoryModule(),
+        BLOB_MODULE);
 
     public static final Module CASSANDRA_MAILBOX_MODULE = Modules.combine(
         new CassandraMailboxModule(),
@@ -125,8 +129,7 @@ public class CassandraJamesServerMain {
         CASSANDRA_SERVER_CORE_MODULE,
         CASSANDRA_MAILBOX_MODULE,
         PROTOCOLS,
-        PLUGINS,
-        new LocalFileBlobExportMechanismModule());
+        PLUGINS);
 
     public static void main(String[] args) throws Exception {
         Configuration configuration = Configuration.builder()
