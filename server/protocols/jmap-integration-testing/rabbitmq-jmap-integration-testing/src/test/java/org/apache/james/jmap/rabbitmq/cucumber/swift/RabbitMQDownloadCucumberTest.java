@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.rabbitmq.cucumber;
+package org.apache.james.jmap.rabbitmq.cucumber.swift;
 
 import org.apache.james.jmap.categories.EnableCucumber;
 import org.junit.experimental.categories.Category;
@@ -28,7 +28,7 @@ import cucumber.api.junit.Cucumber;
 
 @RunWith(Cucumber.class)
 @CucumberOptions(features = {"classpath:cucumber/DownloadEndpoint.feature", "classpath:cucumber/DownloadGet.feature", "classpath:cucumber/DownloadPost.feature"},
-                glue = {"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.rabbitmq.cucumber"},
+                glue = {"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.rabbitmq.cucumber.swift"},
                 tags = {"not @Ignore", "@BasicFeature"},
                 strict = true)
 @Category(EnableCucumber.class)

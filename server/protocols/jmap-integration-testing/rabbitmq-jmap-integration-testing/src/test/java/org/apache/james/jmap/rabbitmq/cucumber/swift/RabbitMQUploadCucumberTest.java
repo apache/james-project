@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.rabbitmq.cucumber;
+package org.apache.james.jmap.rabbitmq.cucumber.swift;
 
 import org.apache.james.jmap.categories.EnableCucumber;
 import org.junit.experimental.categories.Category;
@@ -27,10 +27,10 @@ import cucumber.api.CucumberOptions;
 import cucumber.api.junit.Cucumber;
 
 @RunWith(Cucumber.class)
-@CucumberOptions(features = { "classpath:cucumber/MailboxModification.feature", "classpath:cucumber/SetMailboxes.feature" },
-                glue = { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.rabbitmq.cucumber" },
+@CucumberOptions(features = {"classpath:cucumber/UploadEndpoint.feature"},
+                glue = {"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.rabbitmq.cucumber.swift"},
                 tags = {"not @Ignore", "@BasicFeature"},
                 strict = true)
 @Category(EnableCucumber.class)
-public class RabbitMQSetMailboxesMethodCucumberTest {
+public class RabbitMQUploadCucumberTest {
 }

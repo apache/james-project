@@ -16,14 +16,29 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.rabbitmq.cucumber;
 
-import org.apache.james.modules.objectstorage.PayloadCodecFactory;
-import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
+package org.apache.james.jmap.rabbitmq.cucumber.swift;
 
-public class CucumberAwsS3Singleton {
+import org.apache.james.jmap.categories.EnableCucumber;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
-    public static DockerAwsS3TestRule swiftServer = new DockerAwsS3TestRule();
-    public static DockerAwsS3TestRule encryptedAwsS3Server = new DockerAwsS3TestRule(PayloadCodecFactory.AES256);
+import cucumber.api.CucumberOptions;
+import cucumber.api.junit.Cucumber;
+
+@RunWith(Cucumber.class)
+@CucumberOptions(features = {
+    "classpath:cucumber/sharing/GetMessageAndSharing.feature",
+    "classpath:cucumber/sharing/SetMessagesOnSharedMailbox.feature",
+    "classpath:cucumber/sharing/DownloadAndSharing.feature",
+    "classpath:cucumber/sharing/KeywordsConsistencyOnDelegationMailbox.feature",
+    "classpath:cucumber/sharing/GetMessageListAndSharing.feature",
+    "classpath:cucumber/sharing/MoveMessageAndSharing.feature",
+    "classpath:cucumber/sharing/SetFlagAndSharing.feature",
+    "classpath:cucumber/sharing/CopyAndSharing.feature" },
+    glue = { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.rabbitmq.cucumber.swift" },
+    tags = {"not @Ignore", "@BasicFeature"},
+    strict = true)
+@Category(EnableCucumber.class)
+public class RabbitMQMessageSharingTest {
 }
-

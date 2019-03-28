@@ -16,13 +16,11 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.rabbitmq.cucumber;
+package org.apache.james.jmap.rabbitmq.cucumber.swift;
 
-import org.apache.james.modules.objectstorage.PayloadCodecFactory;
-import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
+import org.apache.james.modules.DockerRabbitMQRule;
 
-public class CucumberSwiftSingleton {
+class CucumberRabbitMQSingleton {
 
-    public static DockerSwiftTestRule swiftServer = new DockerSwiftTestRule();
-    public static DockerSwiftTestRule encryptedSwiftServer = new DockerSwiftTestRule(PayloadCodecFactory.AES256);
+    static DockerRabbitMQRule rabbitMQServer = new DockerRabbitMQRule();
 }

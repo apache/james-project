@@ -16,29 +16,12 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.jmap.rabbitmq.cucumber.swift;
 
-package org.apache.james.jmap.rabbitmq.cucumber;
+import org.apache.james.DockerCassandraRule;
 
-import org.apache.james.jmap.categories.EnableCucumber;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
+class CucumberCassandraSingleton {
 
-import cucumber.api.CucumberOptions;
-import cucumber.api.junit.Cucumber;
+    static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
-@RunWith(Cucumber.class)
-@CucumberOptions(features = {
-    "classpath:cucumber/sharing/GetMessageAndSharing.feature",
-    "classpath:cucumber/sharing/SetMessagesOnSharedMailbox.feature",
-    "classpath:cucumber/sharing/DownloadAndSharing.feature",
-    "classpath:cucumber/sharing/KeywordsConsistencyOnDelegationMailbox.feature",
-    "classpath:cucumber/sharing/GetMessageListAndSharing.feature",
-    "classpath:cucumber/sharing/MoveMessageAndSharing.feature",
-    "classpath:cucumber/sharing/SetFlagAndSharing.feature",
-    "classpath:cucumber/sharing/CopyAndSharing.feature" },
-    glue = { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.rabbitmq.cucumber" },
-    tags = {"not @Ignore", "@BasicFeature"},
-    strict = true)
-@Category(EnableCucumber.class)
-public class RabbitMQMessageSharingTest {
 }

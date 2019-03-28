@@ -16,11 +16,21 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.rabbitmq.cucumber;
 
-import org.apache.james.modules.DockerRabbitMQRule;
+package org.apache.james.jmap.rabbitmq.cucumber.swift;
 
-class CucumberRabbitMQSingleton {
+import org.apache.james.jmap.categories.EnableCucumber;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
-    static DockerRabbitMQRule rabbitMQServer = new DockerRabbitMQRule();
+import cucumber.api.CucumberOptions;
+import cucumber.api.junit.Cucumber;
+
+@RunWith(Cucumber.class)
+@CucumberOptions(features = { "classpath:cucumber/MailboxModification.feature", "classpath:cucumber/SetMailboxes.feature" },
+                glue = { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.rabbitmq.cucumber.swift" },
+                tags = {"not @Ignore", "@BasicFeature"},
+                strict = true)
+@Category(EnableCucumber.class)
+public class RabbitMQSetMailboxesMethodCucumberTest {
 }

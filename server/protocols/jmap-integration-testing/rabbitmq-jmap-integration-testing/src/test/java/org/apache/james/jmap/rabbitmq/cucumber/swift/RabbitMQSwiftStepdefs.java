@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.rabbitmq.cucumber;
+package org.apache.james.jmap.rabbitmq.cucumber.swift;
 
 import java.util.Arrays;
 
@@ -40,19 +40,21 @@ import org.apache.james.modules.TestESMetricReporterModule;
 import org.apache.james.modules.TestElasticSearchModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.TestRabbitMQModule;
-import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
+import org.apache.james.modules.TestSwiftBlobStoreModule;
+import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
 import org.apache.james.server.CassandraTruncateTableTask;
 import org.apache.james.server.core.configuration.Configuration;
 import org.junit.rules.TemporaryFolder;
 
 import com.github.fge.lambdas.runnable.ThrowingRunnable;
 import com.google.inject.multibindings.Multibinder;
+
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
-public class RabbitMQAwsS3Stepdefs {
+public class RabbitMQSwiftStepdefs {
 
     private final MainStepdefs mainStepdefs;
     private final ImapStepdefs imapStepdefs;
@@ -60,10 +62,10 @@ public class RabbitMQAwsS3Stepdefs {
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
     private DockerCassandraRule cassandraServer = CucumberCassandraSingleton.cassandraServer;
     private DockerRabbitMQRule rabbitMQServer = CucumberRabbitMQSingleton.rabbitMQServer;
-    private DockerAwsS3TestRule swiftServer = CucumberAwsS3Singleton.swiftServer;
+    private DockerSwiftTestRule swiftServer = CucumberSwiftSingleton.swiftServer;
 
     @Inject
-    private RabbitMQAwsS3Stepdefs(MainStepdefs mainStepdefs, ImapStepdefs imapStepdefs) {
+    private RabbitMQSwiftStepdefs(MainStepdefs mainStepdefs, ImapStepdefs imapStepdefs) {
         this.mainStepdefs = mainStepdefs;
         this.imapStepdefs = imapStepdefs;
     }
@@ -78,22 +80,22 @@ public class RabbitMQAwsS3Stepdefs {
         embeddedElasticSearch.before();
         mainStepdefs.messageIdFactory = new CassandraMessageId.Factory();
         Configuration configuration = Configuration.builder()
-                .workingDirectory(temporaryFolder.newFolder())
-                .configurationFromClasspath()
-                .build();
+            .workingDirectory(temporaryFolder.newFolder())
+            .configurationFromClasspath()
+            .build();
 
         mainStepdefs.jmapServer = GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-                .overrideWith(new TestJMAPServerModule(10))
-                .overrideWith(new TestESMetricReporterModule())
-                .overrideWith(new TestRabbitMQModule(rabbitMQServer.dockerRabbitMQ()))
-                .overrideWith(swiftServer.getModule())
-                .overrideWith(new TestElasticSearchModule(embeddedElasticSearch))
-                .overrideWith(cassandraServer.getModule())
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(DefaultTextExtractor.class))
-                .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
-                .overrideWith(binder -> Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class).addBinding().to(CassandraTruncateTableTask.class))
-                .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()));
+            .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+            .overrideWith(new TestJMAPServerModule(10))
+            .overrideWith(new TestESMetricReporterModule())
+            .overrideWith(new TestRabbitMQModule(rabbitMQServer.dockerRabbitMQ()))
+            .overrideWith(new TestSwiftBlobStoreModule())
+            .overrideWith(new TestElasticSearchModule(embeddedElasticSearch))
+            .overrideWith(cassandraServer.getModule())
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(DefaultTextExtractor.class))
+            .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
+            .overrideWith(binder -> Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class).addBinding().to(CassandraTruncateTableTask.class))
+            .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()));
         mainStepdefs.awaitMethod = () -> embeddedElasticSearch.awaitForElasticSearch();
         mainStepdefs.init();
     }
@@ -108,9 +110,9 @@ public class RabbitMQAwsS3Stepdefs {
 
     private void ignoreFailures(ThrowingRunnable... cleaners) {
         Arrays.stream(cleaners)
-                .forEach(this::runSwallowingException);
+            .forEach(this::runSwallowingException);
     }
-
+    
     private void runSwallowingException(Runnable run) {
         try {
             run.run();
@@ -119,4 +121,3 @@ public class RabbitMQAwsS3Stepdefs {
         }
     }
 }
-

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.rabbitmq.cucumber;
+package org.apache.james.jmap.rabbitmq.cucumber.swift;
 
 import org.apache.james.jmap.categories.EnableCucumber;
 import org.junit.experimental.categories.Category;
@@ -27,17 +27,10 @@ import cucumber.api.CucumberOptions;
 import cucumber.api.junit.Cucumber;
 
 @RunWith(Cucumber.class)
-@CucumberOptions(features = {
-    "classpath:cucumber/sharing/SharingParentMailboxWithAndWithoutChildren.feature",
-    "classpath:cucumber/sharing/SharingChildrenWithoutSharingParent.feature",
-    "classpath:cucumber/sharing/SharingMailboxWithOtherDomain.feature",
-    "classpath:cucumber/sharing/MailboxCreationAndSharing.feature",
-    "classpath:cucumber/sharing/MailboxDeletionAndSharing.feature",
-    "classpath:cucumber/sharing/MoveMailboxAndSharing.feature",
-    "classpath:cucumber/sharing/RenamingMailboxAndSharing.feature" },
-    glue = { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.rabbitmq.cucumber" },
+@CucumberOptions(features = "classpath:cucumber/ImapSetMessagesMailboxesUpdatesCompatibility.feature",
+    glue = {"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.rabbitmq.cucumber.swift"},
     tags = {"not @Ignore", "@BasicFeature"},
     strict = true)
 @Category(EnableCucumber.class)
-public class RabbitMQMailboxSharingTest {
+public class RabbitMQIMAPSetMessagesCompatibilityTest {
 }

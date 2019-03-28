@@ -16,21 +16,13 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.jmap.rabbitmq.cucumber.swift;
 
-package org.apache.james.jmap.rabbitmq.cucumber;
+import org.apache.james.modules.objectstorage.PayloadCodecFactory;
+import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
 
-import org.apache.james.jmap.categories.EnableCucumber;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
+public class CucumberSwiftSingleton {
 
-import cucumber.api.CucumberOptions;
-import cucumber.api.junit.Cucumber;
-
-@RunWith(Cucumber.class)
-@CucumberOptions(features = "classpath:cucumber/SetMessages.feature",
-                glue = {"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.rabbitmq.cucumber"},
-                tags = {"not @Ignore", "@BasicFeature"},
-                strict = true)
-@Category(EnableCucumber.class)
-public class RabbitMQSetMessagesMethodCucumberTest {
+    public static DockerSwiftTestRule swiftServer = new DockerSwiftTestRule();
+    public static DockerSwiftTestRule encryptedSwiftServer = new DockerSwiftTestRule(PayloadCodecFactory.AES256);
 }
