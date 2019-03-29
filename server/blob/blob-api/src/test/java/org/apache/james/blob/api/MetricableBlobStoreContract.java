@@ -23,53 +23,31 @@ import static org.apache.james.blob.api.MetricableBlobStore.READ_BYTES_TIMER_NAM
 import static org.apache.james.blob.api.MetricableBlobStore.READ_TIMER_NAME;
 import static org.apache.james.blob.api.MetricableBlobStore.SAVE_BYTES_TIMER_NAME;
 import static org.apache.james.blob.api.MetricableBlobStore.SAVE_INPUT_STREAM_TIMER_NAME;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
-import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+
 public interface MetricableBlobStoreContract extends BlobStoreContract {
 
     class MetricableBlobStoreExtension implements BeforeEachCallback {
-        private MetricFactory metricFactory;
-        private TimeMetric saveBytesTimeMetric;
-        private TimeMetric saveInputStreamTimeMetric;
-        private TimeMetric readBytesTimeMetric;
-        private TimeMetric readTimeMetric;
+        private RecordingMetricFactory metricFactory;
 
         @Override
         public void beforeEach(ExtensionContext extensionContext) {
-            this.metricFactory = spy(MetricFactory.class);
-            this.saveBytesTimeMetric = spy(TimeMetric.class);
-            this.saveInputStreamTimeMetric = spy(TimeMetric.class);
-            this.readBytesTimeMetric = spy(TimeMetric.class);
-            this.readTimeMetric = spy(TimeMetric.class);
-            setupExpectations();
+            this.metricFactory = new RecordingMetricFactory();
         }
 
-        public MetricFactory getMetricFactory() {
+        public RecordingMetricFactory getMetricFactory() {
             return metricFactory;
-        }
-
-        private void setupExpectations() {
-            when(metricFactory.timer(SAVE_BYTES_TIMER_NAME))
-                .thenReturn(saveBytesTimeMetric);
-            when(metricFactory.timer(SAVE_INPUT_STREAM_TIMER_NAME))
-                .thenReturn(saveInputStreamTimeMetric);
-            when(metricFactory.timer(READ_BYTES_TIMER_NAME))
-                .thenReturn(readBytesTimeMetric);
-            when(metricFactory.timer(READ_TIMER_NAME))
-                .thenReturn(readTimeMetric);
         }
     }
 
@@ -81,15 +59,18 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
     default void saveBytesShouldPublishSaveBytesTimerMetrics() {
         testee().save(BYTES_CONTENT).block();
         testee().save(BYTES_CONTENT).block();
-        verify(metricsTestExtension.saveBytesTimeMetric, times(2)).stopAndPublish();
+
+        assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_BYTES_TIMER_NAME))
+            .hasSize(2);
     }
 
     @Test
     default void saveInputStreamShouldPublishSaveInputStreamTimerMetrics() {
         testee().save(new ByteArrayInputStream(BYTES_CONTENT), BYTES_CONTENT.length).block();
         testee().save(new ByteArrayInputStream(BYTES_CONTENT), BYTES_CONTENT.length).block();
-        testee().save(new ByteArrayInputStream(BYTES_CONTENT), BYTES_CONTENT.length).block();
-        verify(metricsTestExtension.saveInputStreamTimeMetric, times(3)).stopAndPublish();
+
+        assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_INPUT_STREAM_TIMER_NAME))
+            .hasSize(2);
     }
 
     @Test
@@ -97,7 +78,9 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
         BlobId blobId = testee().save(BYTES_CONTENT).block();
         testee().readBytes(blobId).block();
         testee().readBytes(blobId).block();
-        verify(metricsTestExtension.readBytesTimeMetric, times(2)).stopAndPublish();
+
+        assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(READ_BYTES_TIMER_NAME))
+            .hasSize(2);
     }
 
     @Test
@@ -105,6 +88,8 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
         BlobId blobId = testee().save(BYTES_CONTENT).block();
         testee().read(blobId);
         testee().read(blobId);
-        verify(metricsTestExtension.readTimeMetric, times(2)).stopAndPublish();
+
+        assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(READ_TIMER_NAME))
+            .hasSize(2);
     }
 }
