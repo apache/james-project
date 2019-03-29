@@ -22,6 +22,9 @@ package org.apache.james.utils;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.apache.commons.net.imap.IMAPClient;
 import org.awaitility.core.ConditionFactory;
@@ -34,6 +37,8 @@ import com.google.common.base.Splitter;
 
 public class IMAPMessageReader extends ExternalResource implements Closeable, AfterEachCallback {
 
+    private static final Pattern EXAMINE_EXISTS = Pattern.compile("^\\* (\\d+) EXISTS$");
+    private static final int MESSAGE_NUMBER_MATCHING_GROUP = 1;
     public static final String INBOX = "INBOX";
 
     private final IMAPClient imapClient;
@@ -221,5 +226,15 @@ public class IMAPMessageReader extends ExternalResource implements Closeable, Af
     public String getQuotaRoot(String mailbox) throws IOException {
         imapClient.sendCommand("GETQUOTAROOT " + mailbox);
         return imapClient.getReplyString();
+    }
+
+    public long getMessageCount(String mailboxName) throws IOException {
+        imapClient.examine(mailboxName);
+        return Stream.of(imapClient.getReplyStrings())
+            .map(EXAMINE_EXISTS::matcher)
+            .filter(Matcher::matches)
+            .map(m -> m.group(MESSAGE_NUMBER_MATCHING_GROUP))
+            .mapToLong(Long::valueOf)
+            .sum();
     }
 }
