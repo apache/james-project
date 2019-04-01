@@ -30,8 +30,8 @@ import org.apache.james.mailbox.maildir.MaildirId;
 import org.apache.james.mailbox.maildir.MaildirMessageName;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public class MaildirMailboxMessage extends DelegatingMailboxMessage {
 

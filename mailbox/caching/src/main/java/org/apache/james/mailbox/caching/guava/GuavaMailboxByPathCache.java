@@ -3,9 +3,9 @@ package org.apache.james.mailbox.caching.guava;
 import org.apache.james.mailbox.caching.MailboxByPathCache;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import com.google.common.cache.Cache;
 

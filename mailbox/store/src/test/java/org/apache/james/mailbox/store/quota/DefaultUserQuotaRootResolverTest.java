@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -35,7 +36,6 @@ import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
 

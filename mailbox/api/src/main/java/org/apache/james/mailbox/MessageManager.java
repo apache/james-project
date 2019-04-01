@@ -37,6 +37,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedCriteriaException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
@@ -281,6 +282,14 @@ public interface MessageManager {
      * @throws MailboxException
      */
     MessageResultIterator getMessages(MessageRange set, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException;
+
+    /**
+     * Return the underlying {@link Mailbox}
+     *
+     * @return mailbox
+     * @throws MailboxException
+     */
+    Mailbox getMailboxEntity() throws MailboxException;
 
     EnumSet<MessageCapabilities> getSupportedMessageCapabilities();
 

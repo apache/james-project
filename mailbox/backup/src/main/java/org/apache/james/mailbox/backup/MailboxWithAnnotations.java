@@ -21,8 +21,8 @@ package org.apache.james.mailbox.backup;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxAnnotation;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public class MailboxWithAnnotations {
     public final Mailbox mailbox;

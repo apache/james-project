@@ -4,8 +4,8 @@ import java.util.Optional;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 /**
  * Caches the simple yet possibly expensive to compute metadata info 

@@ -41,12 +41,12 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mime4j.dom.Message;
 import org.junit.Test;
 

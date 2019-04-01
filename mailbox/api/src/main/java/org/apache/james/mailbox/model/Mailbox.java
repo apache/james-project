@@ -16,12 +16,9 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.store.mail.model;
+package org.apache.james.mailbox.model;
 
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MailboxPath;
 
 /**
  * Models long term mailbox data.
@@ -79,7 +76,7 @@ public interface Mailbox {
      */
     long getUidValidity();
     
-    
+
     /**
      * Gets the current ACL for this mailbox.
      *

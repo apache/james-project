@@ -26,16 +26,16 @@ import java.util.stream.Stream;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.search.MailboxQuery;
-import org.apache.james.mailbox.store.StoreMessageManager;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.util.streams.Iterators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,7 +86,7 @@ public class DefaultMailboxBackup implements MailboxBackup {
 
     private Stream<MailAccountContent> getMailboxWithAnnotationsFromPath(MailboxSession session, MailboxPath path) {
         try {
-            StoreMessageManager messageManager = (StoreMessageManager) mailboxManager.getMailbox(path, session);
+            MessageManager messageManager =  mailboxManager.getMailbox(path, session);
             Mailbox mailbox = messageManager.getMailboxEntity();
             List<MailboxAnnotation> annotations = mailboxManager.getAllAnnotations(path, session);
             MailboxWithAnnotations mailboxWithAnnotations = new MailboxWithAnnotations(mailbox, annotations);

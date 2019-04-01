@@ -20,8 +20,8 @@ package org.apache.james.mailbox.store.mail;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 /**
  * Take care of provide mod-seqences for a given {@link Mailbox}. Be aware that implementations

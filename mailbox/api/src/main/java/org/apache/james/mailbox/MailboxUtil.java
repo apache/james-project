@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.store.mail.model;
+package org.apache.james.mailbox;
 
-import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.model.Mailbox;
 
 public class MailboxUtil {
 

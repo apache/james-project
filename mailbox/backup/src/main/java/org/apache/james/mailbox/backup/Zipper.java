@@ -33,9 +33,9 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

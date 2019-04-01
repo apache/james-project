@@ -29,9 +29,9 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AbstractLockingModSeqProvider;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public class JPAModSeqProvider extends AbstractLockingModSeqProvider {
 

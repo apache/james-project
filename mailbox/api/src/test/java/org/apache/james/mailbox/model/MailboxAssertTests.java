@@ -17,11 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail.model;
+package org.apache.james.mailbox.model;
 
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.TestId;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
+import org.apache.james.mailbox.SimpleMailbox;
 import org.junit.Test;
 
 public class MailboxAssertTests {
