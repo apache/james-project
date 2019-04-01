@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 
@@ -116,9 +117,9 @@ class LocalFileBlobExportMechanismTest {
             .element(0)
             .satisfies(sentMail -> {
                 try {
-                    String fileUrl = sentMail.getMsg().getHeader(LocalFileBlobExportMechanism.CORRESPONDING_FILE_HEADER)[0];
+                    String absoluteUrl = sentMail.getMsg().getHeader(LocalFileBlobExportMechanism.CORRESPONDING_FILE_HEADER)[0];
 
-                    assertThat(fileSystem.getResource(fileUrl)).hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
+                    assertThat(new FileInputStream(absoluteUrl)).hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

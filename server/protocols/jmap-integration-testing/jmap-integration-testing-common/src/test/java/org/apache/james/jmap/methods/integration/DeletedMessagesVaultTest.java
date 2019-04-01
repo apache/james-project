@@ -37,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -466,7 +467,7 @@ public abstract class DeletedMessagesVaultTest {
 
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
 
-        try (ZipAssert zipAssert = assertThatZip(fileSystem.getResource(fileLocation))) {
+        try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
                 .allSatisfies(entry -> entry.hasName(messageIdOfHomer + ".eml"));
         }
@@ -489,7 +490,7 @@ public abstract class DeletedMessagesVaultTest {
 
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
 
-        try (ZipAssert zipAssert = assertThatZip(fileSystem.getResource(fileLocation))) {
+        try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
                 .allSatisfies(entry -> entry.hasName(messageIdOfHomer + ".eml"));
         }
@@ -514,7 +515,7 @@ public abstract class DeletedMessagesVaultTest {
 
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
 
-        try (ZipAssert zipAssert = assertThatZip(fileSystem.getResource(fileLocation))) {
+        try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
                 .allSatisfies(entry -> entry.hasName(messageIdOfHomer + ".eml"));
         }
@@ -543,7 +544,7 @@ public abstract class DeletedMessagesVaultTest {
                 "}");
         String fileLocation = exportAndGetFileLocationFromLastMail(exportRequest, bartAccessToken);
 
-        try (ZipAssert zipAssert = assertThatZip(fileSystem.getResource(fileLocation))) {
+        try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.containsOnlyEntriesMatching(hasName(firstMessageIdOfHomer + ".eml"));
         }
     }
@@ -567,7 +568,7 @@ public abstract class DeletedMessagesVaultTest {
                 "}");
         String fileLocation = exportAndGetFileLocationFromLastMail(exportRequest, bartAccessToken);
 
-        try (ZipAssert zipAssert = assertThatZip(fileSystem.getResource(fileLocation))) {
+        try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasNoEntry();
         }
     }
@@ -576,7 +577,7 @@ public abstract class DeletedMessagesVaultTest {
     public void vaultExportShouldExportEmptyZipWhenVaultIsEmpty() throws Exception {
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
 
-        try (ZipAssert zipAssert = assertThatZip(fileSystem.getResource(fileLocation))) {
+        try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasNoEntry();
         }
     }
@@ -592,8 +593,8 @@ public abstract class DeletedMessagesVaultTest {
         String fileLocationFirstExport = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
         String fileLocationSecondExport = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
 
-        try (ZipAssert zipAssert = assertThatZip(fileSystem.getResource(fileLocationFirstExport))) {
-            zipAssert.hasSameContentWith(fileSystem.getResource(fileLocationSecondExport));
+        try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocationFirstExport))) {
+            zipAssert.hasSameContentWith(new FileInputStream(fileLocationSecondExport));
         }
     }
 
@@ -603,8 +604,8 @@ public abstract class DeletedMessagesVaultTest {
 
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(shareeAccessToken).size() == currentNumberOfMessages + 1);
         String exportingMessageId = getLastMessageId(shareeAccessToken);
-        return exportedFileLocationFromMailHeader(exportingMessageId, shareeAccessToken);
 
+        return exportedFileLocationFromMailHeader(exportingMessageId, shareeAccessToken);
     }
 
     private String exportedFileLocationFromMailHeader(String messageId, AccessToken accessToken) {

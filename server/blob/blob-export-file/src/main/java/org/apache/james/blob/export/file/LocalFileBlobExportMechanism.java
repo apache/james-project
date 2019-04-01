@@ -90,7 +90,7 @@ public class LocalFileBlobExportMechanism implements BlobExportMechanism {
             File file = fileSystem.getFile(fileURL);
             FileUtils.copyToFile(blobStore.read(blobId), file);
 
-            return fileURL;
+            return file.getAbsolutePath();
         } catch (IOException e) {
             throw new BlobExportException("Error while copying blob to file", e);
         }
