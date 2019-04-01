@@ -22,6 +22,7 @@ package org.apache.james.blob.export.file;
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -30,6 +31,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.export.api.BlobExportMechanism;
+import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dnsservice.api.DNSService;
@@ -73,20 +75,18 @@ public class LocalFileBlobExportMechanism implements BlobExportMechanism {
 
     @Override
     public ShareeStage blobId(BlobId blobId) {
-        return mailAddress -> explanation -> () ->  {
-            String fileUrl = copyBlobToFile(blobId);
+        return mailAddress -> explanation -> fileExtension -> () ->  {
+            String fileUrl = copyBlobToFile(blobId, fileExtension);
             sendMail(mailAddress, fileUrl, explanation);
         };
     }
 
-    private String copyBlobToFile(BlobId blobId) {
+    private String copyBlobToFile(BlobId blobId, Optional<FileExtension> fileExtension) {
         try {
             File exportingDirectory = fileSystem.getFile(configuration.exportDirectory);
             FileUtils.forceMkdir(exportingDirectory);
 
-
-            String fileName = RandomStringUtils.random(STRING_LENGTH, WITH_LETTERS, !WITH_NUMBERS);
-            String fileURL = configuration.exportDirectory + "/" + fileName;
+            String fileURL = generateFileUrl(fileExtension);
             File file = fileSystem.getFile(fileURL);
             FileUtils.copyToFile(blobStore.read(blobId), file);
 
@@ -94,6 +94,15 @@ public class LocalFileBlobExportMechanism implements BlobExportMechanism {
         } catch (IOException e) {
             throw new BlobExportException("Error while copying blob to file", e);
         }
+    }
+
+    private String generateFileUrl(Optional<FileExtension> fileExtension) {
+        String fileName = RandomStringUtils.random(STRING_LENGTH, WITH_LETTERS, !WITH_NUMBERS);
+        String filePathWithoutExtension = configuration.exportDirectory + "/" + fileName;
+
+        return fileExtension
+            .map(extension -> extension.appendExtension(filePathWithoutExtension))
+            .orElse(filePathWithoutExtension);
     }
 
     private void sendMail(MailAddress mailAddress, String fileUrl, String explanation) {

@@ -122,7 +122,7 @@ class DeletedMessagesVaultRoutesTest {
     private class NoopBlobExporting implements BlobExportMechanism {
         @Override
         public ShareeStage blobId(BlobId blobId) {
-            return exportTo -> explanation -> () -> export(exportTo, explanation);
+            return exportTo -> explanation -> fileExtension -> () -> export(exportTo, explanation);
         }
 
         void export(MailAddress exportTo, String explanation) {

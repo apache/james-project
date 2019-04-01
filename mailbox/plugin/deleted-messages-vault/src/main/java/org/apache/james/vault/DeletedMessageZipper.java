@@ -43,7 +43,8 @@ public class DeletedMessageZipper {
         Optional<InputStream> load(DeletedMessage deletedMessage);
     }
 
-    static final String ZIPPED_FILE_EXTENSION = ".eml";
+    @VisibleForTesting
+    static final String EML_FILE_EXTENSION = ".eml";
 
     public DeletedMessageZipper() {
         ExtraFieldUtils.register(MessageIdExtraField.class);
@@ -83,7 +84,7 @@ public class DeletedMessageZipper {
 
         ZipArchiveEntry archiveEntry = (ZipArchiveEntry) zipOutputStream.createArchiveEntry(
             new File(messageId.serialize()),
-            messageId.serialize() + ZIPPED_FILE_EXTENSION);
+            messageId.serialize() + EML_FILE_EXTENSION);
 
         archiveEntry.addExtraField(new MessageIdExtraField(messageId));
         archiveEntry.addExtraField(new SizeExtraField(message.getSize()));

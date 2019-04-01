@@ -19,46 +19,51 @@
 
 package org.apache.james.blob.export.api;
 
-import java.util.Optional;
+import java.util.Objects;
 
-import org.apache.james.blob.api.BlobId;
-import org.apache.james.core.MailAddress;
+import org.apache.commons.lang3.StringUtils;
 
-public interface BlobExportMechanism {
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 
-    class BlobExportException extends RuntimeException {
-        public BlobExportException(String message, Throwable cause) {
-            super(message, cause);
+public class FileExtension {
+    static final String ZIP_EXTENSION_STRING = "zip";
+    public static final FileExtension ZIP = new FileExtension(ZIP_EXTENSION_STRING);
+    private static final String EXTENSION_SEPARATOR = ".";
+
+    public static FileExtension of(String extension) {
+        return new FileExtension(extension);
+    }
+
+    private final String extension;
+
+    @VisibleForTesting
+    FileExtension(String extension) {
+        this.extension = extension;
+    }
+
+    public String appendExtension(String filePath) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(filePath), "filePath cannot be null or blank");
+
+        return filePath + EXTENSION_SEPARATOR + extension;
+    }
+
+    public String getExtension() {
+        return extension;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof FileExtension) {
+            FileExtension that = (FileExtension) o;
+
+            return Objects.equals(this.extension, that.extension);
         }
+        return false;
     }
 
-    @FunctionalInterface
-    interface ShareeStage {
-        ExplanationStage with(MailAddress sharee);
+    @Override
+    public final int hashCode() {
+        return Objects.hash(extension);
     }
-
-    @FunctionalInterface
-    interface ExplanationStage {
-        FileExtensionStage explanation(String explanation);
-    }
-
-    @FunctionalInterface
-    interface FileExtensionStage {
-        FinalStage fileExtension(Optional<FileExtension> extension);
-
-        default FinalStage noFileExtension() {
-            return fileExtension(Optional.empty());
-        }
-
-        default FinalStage fileExtension(FileExtension extension) {
-            return fileExtension(Optional.of(extension));
-        }
-    }
-
-    @FunctionalInterface
-    interface FinalStage {
-        void export() throws BlobExportException;
-    }
-
-    ShareeStage blobId(BlobId blobId);
 }

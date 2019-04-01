@@ -124,7 +124,6 @@ public abstract class DeletedMessagesVaultTest {
         .userExportFrom(HOMER)
         .exportTo(BART)
         .query(MATCH_ALL_QUERY);
-    private static final String EML_EXTENSION = ".eml";
 
     private MailboxId otherMailboxId;
 
@@ -468,7 +467,7 @@ public abstract class DeletedMessagesVaultTest {
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
 
         try (ZipAssert zipAssert = assertThatZip(fileSystem.getResource(fileLocation))) {
-            zipAssert.containsOnlyEntriesMatching(hasName(messageIdOfHomer + EML_EXTENSION));
+            zipAssert.containsOnlyEntriesMatching(hasName(messageIdOfHomer + ".eml"));
         }
     }
 
@@ -490,7 +489,7 @@ public abstract class DeletedMessagesVaultTest {
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
 
         try (ZipAssert zipAssert = assertThatZip(fileSystem.getResource(fileLocation))) {
-            zipAssert.containsOnlyEntriesMatching(hasName(messageIdOfHomer + EML_EXTENSION));
+            zipAssert.containsOnlyEntriesMatching(hasName(messageIdOfHomer + ".eml"));
         }
     }
 
@@ -514,7 +513,7 @@ public abstract class DeletedMessagesVaultTest {
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
 
         try (ZipAssert zipAssert = assertThatZip(fileSystem.getResource(fileLocation))) {
-            zipAssert.containsOnlyEntriesMatching(hasName(messageIdOfHomer + EML_EXTENSION));
+            zipAssert.containsOnlyEntriesMatching(hasName(messageIdOfHomer + ".eml"));
         }
     }
 
@@ -542,7 +541,7 @@ public abstract class DeletedMessagesVaultTest {
         String fileLocation = exportAndGetFileLocationFromLastMail(exportRequest, bartAccessToken);
 
         try (ZipAssert zipAssert = assertThatZip(fileSystem.getResource(fileLocation))) {
-            zipAssert.containsOnlyEntriesMatching(hasName(firstMessageIdOfHomer + EML_EXTENSION));
+            zipAssert.containsOnlyEntriesMatching(hasName(firstMessageIdOfHomer + ".eml"));
         }
     }
 

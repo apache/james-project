@@ -27,6 +27,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.export.api.BlobExportMechanism;
+import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.User;
 import org.apache.james.vault.DeletedMessage;
@@ -65,6 +66,7 @@ class ExportService {
         blobExport.blobId(blobId)
             .with(exportToAddress)
             .explanation(exportMessage(user))
+            .fileExtension(FileExtension.ZIP)
             .export();
     }
 

@@ -31,10 +31,12 @@ import java.nio.charset.StandardCharsets;
 import javax.mail.Message;
 import javax.mail.internet.InternetAddress;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectStoreException;
+import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.blob.memory.MemoryBlobStore;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.filesystem.api.FileSystem;
@@ -76,6 +78,7 @@ class LocalFileBlobExportMechanismTest {
         testee.blobId(blobId)
             .with(MailAddressFixture.RECIPIENT1)
             .explanation(explanation)
+            .noFileExtension()
             .export();
 
         assertThat(mailetContext.getSentMails()).hasSize(1)
@@ -106,6 +109,7 @@ class LocalFileBlobExportMechanismTest {
         testee.blobId(blobId)
             .with(MailAddressFixture.RECIPIENT1)
             .explanation("The content of a deleted message vault had been shared with you.")
+            .noFileExtension()
             .export();
 
         assertThat(mailetContext.getSentMails())
@@ -129,7 +133,55 @@ class LocalFileBlobExportMechanismTest {
             testee.blobId(blobId)
                 .with(MailAddressFixture.RECIPIENT1)
                 .explanation("The content of a deleted message vault had been shared with you.")
+                .noFileExtension()
                 .export())
             .isInstanceOf(ObjectStoreException.class);
+    }
+
+    @Test
+    void exportingBlobShouldCreateAFileWithoutExtensionWhenNotDeclaringExtension() {
+        BlobId blobId = blobStore.save(BLOB_CONTENT).block();
+
+        testee.blobId(blobId)
+            .with(MailAddressFixture.RECIPIENT1)
+            .explanation("The content of a deleted message vault had been shared with you.")
+            .noFileExtension()
+            .export();
+
+        assertThat(mailetContext.getSentMails())
+            .element(0)
+            .satisfies(sentMail -> {
+                try {
+                    String fileUrl = sentMail.getMsg().getHeader(LocalFileBlobExportMechanism.CORRESPONDING_FILE_HEADER)[0];
+                    assertThat(FilenameUtils.getExtension(fileUrl))
+                        .isEmpty();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+    }
+
+    @Test
+    void exportingBlobShouldCreateAFileWithExtensionWhenDeclaringExtension() {
+        BlobId blobId = blobStore.save(BLOB_CONTENT).block();
+
+        testee.blobId(blobId)
+            .with(MailAddressFixture.RECIPIENT1)
+            .explanation("The content of a deleted message vault had been shared with you.")
+            .fileExtension(FileExtension.ZIP)
+            .export();
+
+        assertThat(mailetContext.getSentMails())
+            .element(0)
+            .satisfies(sentMail -> {
+                try {
+                    String fileUrl = sentMail.getMsg().getHeader(LocalFileBlobExportMechanism.CORRESPONDING_FILE_HEADER)[0];
+                    String fileExtensionInString = FilenameUtils.getExtension(fileUrl);
+                    assertThat(FileExtension.of(fileExtensionInString))
+                        .isEqualTo(FileExtension.ZIP);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
     }
 }
