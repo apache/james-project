@@ -27,6 +27,7 @@ import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_2;
 import static org.apache.james.vault.DeletedMessageFixture.MESSAGE_ID;
 import static org.apache.james.vault.DeletedMessageFixture.MESSAGE_ID_2;
 import static org.apache.james.vault.DeletedMessageZipper.DeletedMessageContentLoader;
+import static org.apache.james.vault.DeletedMessageZipper.ZIPPED_FILE_EXTENSION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -88,8 +89,8 @@ class DeletedMessageZipperTest {
 
             try (ZipAssert zipAssert = assertThatZip(outputStream)) {
                 zipAssert.containsOnlyEntriesMatching(
-                        hasName(MESSAGE_ID.serialize()).hasStringContent(MESSAGE_CONTENT),
-                        hasName(MESSAGE_ID_2.serialize()).hasStringContent(MESSAGE_CONTENT));
+                        hasName(MESSAGE_ID.serialize() + ZIPPED_FILE_EXTENSION).hasStringContent(MESSAGE_CONTENT),
+                        hasName(MESSAGE_ID_2.serialize() + ZIPPED_FILE_EXTENSION).hasStringContent(MESSAGE_CONTENT));
             }
         }
 
@@ -101,7 +102,7 @@ class DeletedMessageZipperTest {
 
             try (ZipAssert zipAssert = assertThatZip(outputStream)) {
                 zipAssert.containsOnlyEntriesMatching(
-                        hasName(MESSAGE_ID.serialize())
+                        hasName(MESSAGE_ID.serialize() + ZIPPED_FILE_EXTENSION)
                             .containsExtraFields(new MessageIdExtraField(MESSAGE_ID))
                             .containsExtraFields(new SizeExtraField(CONTENT.length)));
             }
