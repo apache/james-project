@@ -19,14 +19,9 @@
 
 package org.apache.james.transport.mailets;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.metrics.api.Metric;
-import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
@@ -37,19 +32,16 @@ import org.junit.rules.ExpectedException;
 public class MetricsMailetTest {
 
     public static final String MAILET_NAME = "Metric test";
+    public static final String METRIC_NAME = "metricName";
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
-    private MetricFactory metricFactory;
-    private Metric metric;
+    private RecordingMetricFactory metricFactory;
     private MetricsMailet mailet;
 
     @Before
     public void setUp() throws Exception {
-        metricFactory = mock(MetricFactory.class);
-        metric = mock(Metric.class);
-        when(metricFactory.generate(anyString())).thenReturn(metric);
-
+        metricFactory = new RecordingMetricFactory();
         mailet = new MetricsMailet(metricFactory);
     }
 
@@ -64,13 +56,13 @@ public class MetricsMailetTest {
     public void serviceShouldIncrementMetricCounter() throws Exception {
         mailet.init(FakeMailetConfig.builder()
             .mailetName(MAILET_NAME)
-            .setProperty(MetricsMailet.METRIC_NAME, "metricName")
+            .setProperty(MetricsMailet.METRIC_NAME, METRIC_NAME)
             .build());
 
         mailet.service(FakeMail.builder().name("name").build());
 
-        verify(metric).increment();
-        verifyNoMoreInteractions(metric);
+        assertThat(metricFactory.countFor(METRIC_NAME))
+            .isEqualTo(1);
     }
 
 }
