@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -47,7 +48,7 @@ public class DeliveryRunnable implements Disposable {
 
     public static final Supplier<Date> CURRENT_DATE_SUPPLIER = Date::new;
     public static final AtomicBoolean DEFAULT_NOT_STARTED = new AtomicBoolean(false);
-    private static final String OUTGOING_MAILS = "outgoingMails";
+    public static final String OUTGOING_MAILS = "outgoingMails";
     public static final String REMOTE_DELIVERY_TRIAL = "RemoteDeliveryTrial";
 
     private final MailQueue queue;
