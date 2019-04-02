@@ -44,8 +44,8 @@ public class RecordingTimeMetric implements TimeMetric {
 
     @Override
     public long stopAndPublish() {
-        long elapsed = stopwatch.elapsed(TimeUnit.MILLISECONDS);
-        publishCallback.accept(Duration.ofMillis(elapsed));
+        long elapsed = stopwatch.elapsed(TimeUnit.NANOSECONDS);
+        publishCallback.accept(Duration.ofNanos(elapsed));
         return elapsed;
     }
 }

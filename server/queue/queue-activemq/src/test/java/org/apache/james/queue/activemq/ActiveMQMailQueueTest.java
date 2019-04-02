@@ -50,17 +50,17 @@ public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract
     ActiveMQMailQueue mailQueue;
 
     @BeforeEach
-    public void setUp(BrokerService broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
+    public void setUp(BrokerService broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
-        MetricFactory metricFactory = metricTestSystem.getSpyMetricFactory();
+        MetricFactory metricFactory = metricTestSystem.getMetricFactory();
         GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
         String queueName = BrokerExtension.generateRandomQueueName(broker);
         mailQueue = new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, !USE_BLOB, metricFactory, gaugeRegistry);
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    public void tearDown() {
         mailQueue.dispose();
     }
 

@@ -62,6 +62,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.fge.lambdas.Throwing;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -115,7 +116,7 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
 
         RabbitClient rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
         RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
-            metricTestSystem.getSpyMetricFactory(),
+            metricTestSystem.getMetricFactory(),
             metricTestSystem.getSpyGaugeRegistry(),
             rabbitClient,
             mimeMessageStoreFactory,

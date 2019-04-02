@@ -19,15 +19,16 @@
 
 package org.apache.james.metrics.tests;
 
-import static com.jayway.awaitility.Awaitility.await;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
 
 class RecordingMetricFactoryTest {
 
@@ -35,7 +36,6 @@ class RecordingMetricFactoryTest {
     private static final String METRIC_NAME = "metric";
     private static final java.time.Duration ONE_SECOND = java.time.Duration.ofSeconds(1);
     private static final java.time.Duration FIVE_SECONDS = java.time.Duration.ofSeconds(5);
-    private static final ConditionFactory WAIT_CONDITION = await().timeout(Duration.ONE_MINUTE);
 
     private RecordingMetricFactory testee;
 
@@ -45,17 +45,39 @@ class RecordingMetricFactoryTest {
     }
 
     @Test
-    void executionTimesForATimeMetricShouldBeStoreMultipleTime() {
-        runTimeMetric(ONE_SECOND);
-        runTimeMetric(FIVE_SECONDS);
+    void executionTimesForATimeMetricShouldBeStoreMultipleTime() throws InterruptedException {
+        TimeMetric timeMetric1 = testee.timer(TIME_METRIC_NAME);
+        Thread.sleep(ONE_SECOND.toMillis());
+        timeMetric1.stopAndPublish();
 
-        WAIT_CONDITION
-            .until(() -> {
-                assertThat(testee.executionTimesFor(TIME_METRIC_NAME))
-                    .hasSize(2);
-                assertThat(testee.executionTimesFor(TIME_METRIC_NAME))
-                    .contains(ONE_SECOND, FIVE_SECONDS);
-            });
+        TimeMetric timeMetric2 = testee.timer(TIME_METRIC_NAME);
+        Thread.sleep(FIVE_SECONDS.toMillis());
+        timeMetric2.stopAndPublish();
+
+        assertThat(testee.executionTimesFor(TIME_METRIC_NAME))
+            .hasSize(2);
+
+        assertThat(testee.executionTimesFor(TIME_METRIC_NAME))
+            .element(0)
+            .satisfies(duration -> assertThat(duration).isGreaterThanOrEqualTo(ONE_SECOND));
+
+        assertThat(testee.executionTimesFor(TIME_METRIC_NAME))
+            .element(1)
+            .satisfies(duration -> assertThat(duration).isGreaterThanOrEqualTo(FIVE_SECONDS));
+    }
+
+    @Test
+    void executionTimesForATimeMetricShouldBeStoreMultipleTimeInConcurrent() throws Exception {
+        AtomicInteger count = new AtomicInteger();
+
+        ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> testee.runPublishingTimerMetric(TIME_METRIC_NAME, count::incrementAndGet))
+            .threadCount(10)
+            .operationCount(200)
+            .runSuccessfullyWithin(Duration.ofSeconds(10));
+
+        assertThat(testee.executionTimesFor(TIME_METRIC_NAME))
+            .hasSize(2000);
     }
 
     @Test
@@ -88,15 +110,5 @@ class RecordingMetricFactoryTest {
 
         assertThat(testee.countFor(METRIC_NAME))
             .isEqualTo(5);
-    }
-
-    private void runTimeMetric(java.time.Duration duration) {
-        testee.runPublishingTimerMetric(TIME_METRIC_NAME, () -> {
-            try {
-                Thread.sleep(duration.toMillis());
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        });
     }
 }

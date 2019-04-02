@@ -26,7 +26,7 @@ import org.apache.james.metrics.api.Metric;
 
 public class RecordingMetric implements Metric {
     private final String name;
-    private AtomicInteger value;
+    private final AtomicInteger value;
     private final Consumer<Integer> publishCallback;
 
     public RecordingMetric(String name, Consumer<Integer> publishCallback) {

@@ -21,41 +21,55 @@ package org.apache.james.metrics.tests;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 
-import com.google.common.collect.HashMultimap;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
 public class RecordingMetricFactory implements MetricFactory {
-    private final Multimap<String, Duration> executionTimesInMs = Multimaps.synchronizedSetMultimap(HashMultimap.create());
-    private final ConcurrentHashMap<String, Integer> executionValues = new ConcurrentHashMap<>();
+    private final Multimap<String, Duration> executionTimes = Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
+    private final ConcurrentHashMap<String, Integer> counters = new ConcurrentHashMap<>();
 
     @Override
     public Metric generate(String name) {
-        return new RecordingMetric(name, executionValue -> executionValues.put(name, executionValue));
+        return new RecordingMetric(name, executionValue -> counters.put(name, executionValue));
     }
 
     @Override
     public TimeMetric timer(String name) {
         return new RecordingTimeMetric(name, executionTime -> {
-            synchronized (executionTimesInMs) {
-                executionTimesInMs.put(name, executionTime);
+            synchronized (executionTimes) {
+                executionTimes.put(name, executionTime);
             }
         });
     }
 
     public Collection<Duration> executionTimesFor(String name) {
-        synchronized (executionTimesInMs) {
-            return executionTimesInMs.get(name);
+        synchronized (executionTimes) {
+            return executionTimes.get(name);
+        }
+    }
+
+    public Multimap<String, Duration> executionTimesForPrefixName(String prefixName) {
+        synchronized (executionTimes) {
+            return Multimaps.filterKeys(executionTimes, key -> key.startsWith(prefixName));
         }
     }
 
     public int countFor(String name) {
-        return executionValues.getOrDefault(name, 0);
+        return counters.getOrDefault(name, 0);
+    }
+
+    public Map<String, Integer> countForPrefixName(String prefixName) {
+        return counters.entrySet().stream()
+            .filter(entry -> entry.getKey().startsWith(prefixName))
+            .collect(Guavate.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }
