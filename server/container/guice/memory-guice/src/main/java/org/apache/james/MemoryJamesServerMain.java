@@ -115,6 +115,7 @@ public class MemoryJamesServerMain {
             .build();
 
         GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(new FakeSearchMailboxModule())
             .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE, new JMXServerModule())
             .start();
     }
