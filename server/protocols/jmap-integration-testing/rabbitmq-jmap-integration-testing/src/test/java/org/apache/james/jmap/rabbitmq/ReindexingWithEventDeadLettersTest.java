@@ -43,8 +43,8 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.JmapJamesServerContract;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
-import org.apache.james.modules.SwiftBlobStoreExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.objectstorage.PayloadCodecFactory;
 import org.apache.james.util.docker.DockerGenericContainer;
@@ -91,7 +91,7 @@ class ReindexingWithEventDeadLettersTest {
         .extension(new DockerElasticSearchExtension(elasticSearchContainer))
         .extension(new CassandraExtension())
         .extension(new RabbitMQExtension())
-        .extension(new SwiftBlobStoreExtension(PayloadCodecFactory.AES256))
+        .extension(new AwsS3BlobStoreExtension(PayloadCodecFactory.AES256))
         .server(CONFIGURATION_BUILDER)
         .build();
 

@@ -103,7 +103,7 @@ class BlobStoreChoosingConfigurationTest {
     }
 
     @Test
-    void fromShouldReturnConfigurationWhenBlobStoreImplIsSwift() {
+    void fromShouldReturnConfigurationWhenBlobStoreImplIsObjectStorage() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("implementation", OBJECT_STORAGE);
 

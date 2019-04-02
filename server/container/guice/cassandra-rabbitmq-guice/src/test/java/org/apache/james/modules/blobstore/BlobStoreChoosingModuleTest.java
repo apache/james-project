@@ -38,8 +38,8 @@ class BlobStoreChoosingModuleTest {
 
     private static CassandraBlobsDAO CASSANDRA_BLOBSTORE = mock(CassandraBlobsDAO.class);
     private static Provider<CassandraBlobsDAO> CASSANDRA_BLOBSTORE_PROVIDER = () -> CASSANDRA_BLOBSTORE;
-    private static ObjectStorageBlobsDAO SWIFT_BLOBSTORE = mock(ObjectStorageBlobsDAO.class);
-    private static Provider<ObjectStorageBlobsDAO> SWIFT_BLOBSTORE_PROVIDER = () -> SWIFT_BLOBSTORE;
+    private static ObjectStorageBlobsDAO OBJECT_STORAGE_BLOBSTORE = mock(ObjectStorageBlobsDAO.class);
+    private static Provider<ObjectStorageBlobsDAO> OBJECT_STORAGE_BLOBSTORE_PROVIDER = () -> OBJECT_STORAGE_BLOBSTORE;
 
     @Test
     void provideChoosingConfigurationShouldThrowWhenMissingPropertyField() {
@@ -92,7 +92,7 @@ class BlobStoreChoosingModuleTest {
     }
 
     @Test
-    void provideChoosingConfigurationShouldReturnSwiftFactoryWhenConfigurationImplIsSwift() throws Exception {
+    void provideChoosingConfigurationShouldReturnObjectStorageFactoryWhenConfigurationImplIsObjectStorage() throws Exception {
         BlobStoreChoosingModule module = new BlobStoreChoosingModule();
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("implementation", BlobStoreImplName.OBJECTSTORAGE.getName());
@@ -135,16 +135,16 @@ class BlobStoreChoosingModuleTest {
         BlobStoreChoosingModule module = new BlobStoreChoosingModule();
 
         assertThat(module.provideBlobStore(BlobStoreChoosingConfiguration.cassandra(),
-            CASSANDRA_BLOBSTORE_PROVIDER, SWIFT_BLOBSTORE_PROVIDER))
+            CASSANDRA_BLOBSTORE_PROVIDER, OBJECT_STORAGE_BLOBSTORE_PROVIDER))
             .isEqualTo(CASSANDRA_BLOBSTORE);
     }
 
     @Test
-    void provideBlobStoreShouldReturnSwiftBlobStoreWhenSwiftConfigured() {
+    void provideBlobStoreShouldReturnObjectStoreBlobStoreWhenObjectStoreConfigured() {
         BlobStoreChoosingModule module = new BlobStoreChoosingModule();
 
         assertThat(module.provideBlobStore(BlobStoreChoosingConfiguration.cassandra(),
-            CASSANDRA_BLOBSTORE_PROVIDER, SWIFT_BLOBSTORE_PROVIDER))
+            CASSANDRA_BLOBSTORE_PROVIDER, OBJECT_STORAGE_BLOBSTORE_PROVIDER))
             .isEqualTo(CASSANDRA_BLOBSTORE);
     }
 
@@ -153,7 +153,7 @@ class BlobStoreChoosingModuleTest {
         BlobStoreChoosingModule module = new BlobStoreChoosingModule();
 
         assertThat(module.provideBlobStore(BlobStoreChoosingConfiguration.union(),
-            CASSANDRA_BLOBSTORE_PROVIDER, SWIFT_BLOBSTORE_PROVIDER))
+            CASSANDRA_BLOBSTORE_PROVIDER, OBJECT_STORAGE_BLOBSTORE_PROVIDER))
             .isInstanceOf(UnionBlobStore.class);
     }
 }

@@ -21,7 +21,7 @@ package org.apache.james.jmap.rabbitmq;
 
 import java.io.IOException;
 
-import org.apache.james.CassandraRabbitMQSwiftJmapTestRule;
+import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.filesystem.api.FileSystem;
@@ -40,7 +40,7 @@ public class RabbitMQDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
     public static DockerCassandraRule cassandra = new DockerCassandraRule();
 
     @Rule
-    public CassandraRabbitMQSwiftJmapTestRule rule = CassandraRabbitMQSwiftJmapTestRule.defaultTestRule();
+    public CassandraRabbitMQAwsS3JmapTestRule rule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();
 
     @Override
     protected GuiceJamesServer createJmapServer(FileSystem fileSystem) throws IOException {

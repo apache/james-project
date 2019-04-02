@@ -118,7 +118,7 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
             .container(containerName)
             .authConfiguration(authConfiguration)
             .aesSalt("c603a7327ee3dcbc031d8d34b1096c605feca5e1")
-            .aesPassword("dockerAwsS3SwiftEncryption".toCharArray())
+            .aesPassword("dockerAwsS3Encryption".toCharArray())
             .build();
 
         return binder -> {
