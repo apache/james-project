@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.backup;
 
 import static org.apache.james.mailbox.backup.ZipArchiveEntryAssert.assertThatZipEntry;
+import static org.apache.james.mailbox.backup.ZipAssert.EntryCheck.defaultNoCheck;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
@@ -30,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -46,6 +48,11 @@ import com.google.common.collect.ImmutableList;
 
 public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> implements AutoCloseable {
     interface EntryCheck {
+
+        static EntryCheck defaultNoCheck() {
+            return assertion -> assertion;
+        }
+
         default EntryCheck compose(EntryCheck other) {
             return assertion -> other.test(this.test(assertion));
         }
@@ -117,6 +124,11 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> implements Aut
             expectedEntries.size(), expectedEntries, entries);
     }
 
+    private static BasicErrorMessageFactory shouldHaveEntriesSize(int entriesSize, int expectedEntriesSize) {
+        return new BasicErrorMessageFactory("%nExpecting zipFile to contains %s entries but actually contains (%s) entries",
+            expectedEntriesSize, entriesSize);
+    }
+
     private static ErrorMessageFactory entriesShouldHaveSameContentAt(int entryIndex) {
         return new BasicErrorMessageFactory("%nExpecting zipFile entry at index %s has same content", entryIndex);
     }
@@ -161,6 +173,32 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> implements Aut
         if (zipFile.getEntries().hasMoreElements()) {
             throwAssertionError(shouldBeEmpty(zipFile));
         }
+        return myself;
+    }
+
+    public ZipAssert hasEntriesSize(int expectedSize) {
+        isNotNull();
+        assertThat(expectedSize).describedAs("expectedSize cannot be a negative number")
+            .isGreaterThanOrEqualTo(0);
+
+        ArrayList<ZipArchiveEntry> zipEntries = Collections.list(zipFile.getEntries());
+        if (zipEntries.size() != expectedSize) {
+            throwAssertionError(shouldHaveEntriesSize(zipEntries.size(), expectedSize));
+        }
+        return myself;
+    }
+
+    public ZipAssert allSatisfies(UnaryOperator<EntryChecks> entryChecksOperator) throws Exception {
+        isNotNull();
+        List<ZipArchiveEntry> entries = Collections.list(zipFile.getEntries());
+        for (int entryIndex = 0; entryIndex < entries.size(); entryIndex++) {
+            ZipArchiveEntry entry = entries.get(entryIndex);
+            EntryChecks composedEntryChecks = entryChecksOperator.apply(new EntryChecks(entry.getName(), defaultNoCheck()));
+            ZipArchiveEntryAssert zipAssertionOfEntry = assertThatZipEntry(zipFile, entry);
+
+            composedEntryChecks.check.test(zipAssertionOfEntry);
+        }
+
         return myself;
     }
 
