@@ -42,7 +42,7 @@ public class DockerCassandra {
     public DockerCassandra() {
         client = DockerClientFactory.instance().client();
         cassandraContainer = new GenericContainer<>("cassandra:3.11.3")
-            .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig().withTmpFs(ImmutableMap.of("/var/lib/cassandra", "rw,noexec,nosuid,size=200m")))
+            .withTmpFs(ImmutableMap.of("/var/lib/cassandra", "rw,noexec,nosuid,size=200m"))
             .withExposedPorts(CASSANDRA_PORT)
             .withLogConsumer(DockerCassandra::displayDockerLog);
         cassandraContainer
