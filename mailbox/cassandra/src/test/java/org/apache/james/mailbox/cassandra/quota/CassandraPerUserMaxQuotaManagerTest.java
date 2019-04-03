@@ -20,6 +20,8 @@
 package org.apache.james.mailbox.cassandra.quota;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraIncrementTestsPlayedRule;
+import org.apache.james.backends.cassandra.DockerCassandraRestartRule;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
@@ -29,10 +31,16 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 
 public class CassandraPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+
+    @ClassRule public static DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();
+
+    @Rule
+    public DockerCassandraIncrementTestsPlayedRule cassandraIncrementRule = new DockerCassandraIncrementTestsPlayedRule();
 
     private static CassandraCluster cassandra;
 

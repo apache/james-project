@@ -26,6 +26,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraIncrementTestsPlayedRule;
+import org.apache.james.backends.cassandra.DockerCassandraRestartRule;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
@@ -45,6 +47,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class CassandraMailboxMapperTest {
@@ -62,6 +65,11 @@ public class CassandraMailboxMapperTest {
     private static final String WILDCARD = "%";
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+
+    @ClassRule public static DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();
+
+    @Rule
+    public DockerCassandraIncrementTestsPlayedRule cassandraIncrementRule = new DockerCassandraIncrementTestsPlayedRule();
     
     private static CassandraCluster cassandra;
 
