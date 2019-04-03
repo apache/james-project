@@ -19,33 +19,19 @@
 
 package org.apache.james.backends.cassandra;
 
-public class DockerCassandraSingleton {
-    private static final int MAX_TEST_PLAYED = 200;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-    private static int testsPlayedCount = 0;
+public class CassandraRestartExtension implements BeforeAllCallback, BeforeEachCallback {
 
-    public static final DockerCassandra singleton = new DockerCassandra();
-
-    static {
-        singleton.start();
+    @Override
+    public void beforeAll(ExtensionContext extensionContext) {
+        DockerCassandraSingleton.restartAfterMaxTestsPlayed();
     }
 
-    public static void incrementTestsPlayed() {
-        testsPlayedCount += 1;
+    @Override
+    public void beforeEach(ExtensionContext extensionContext) {
+        DockerCassandraSingleton.incrementTestsPlayed();
     }
-
-    // Call this method to ensure that cassandra is restarted every MAX_TEST_PLAYED tests
-    public static void restartAfterMaxTestsPlayed() {
-        if (testsPlayedCount > MAX_TEST_PLAYED) {
-            testsPlayedCount = 0;
-            restart();
-        }
-    }
-
-    private static void restart() {
-        singleton.stop();
-        singleton.start();
-    }
-
-    // Cleanup will be performed by test container resource reaper
 }
