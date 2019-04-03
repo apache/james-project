@@ -239,8 +239,8 @@ public class ZipAssertTest {
         try (ZipFile zipFile = buildZipFile(ENTRY, ENTRY_2)) {
             assertThatCode(() -> assertThatZip(zipFile)
                     .containsOnlyEntriesMatching(
-                        hasName(ENTRY_NAME),
-                        hasName(ENTRY_NAME_2)))
+                        hasName(ENTRY_NAME_2),
+                        hasName(ENTRY_NAME)))
                 .doesNotThrowAnyException();
         }
     }
