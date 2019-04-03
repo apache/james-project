@@ -27,6 +27,7 @@ import javax.mail.Flags;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
@@ -46,9 +47,11 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraIndexTableHandlerTest {
+@ExtendWith(CassandraRestartExtension.class)
+class CassandraIndexTableHandlerTest {
 
     public static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     public static final MessageUid MESSAGE_UID = MessageUid.of(18L);
