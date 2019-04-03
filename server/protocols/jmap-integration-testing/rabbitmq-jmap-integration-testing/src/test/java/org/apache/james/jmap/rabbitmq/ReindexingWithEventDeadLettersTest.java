@@ -153,7 +153,7 @@ class ReindexingWithEventDeadLettersTest {
 
     private void unpauseElasticSearch() throws Exception {
         elasticSearchContainer.unpause();
-        Thread.sleep(Duration.ONE_SECOND.getValueInMS()); // Docker unpause is asynchronous and we found no way to poll for it
+        Thread.sleep(Duration.FIVE_SECONDS.getValueInMS()); // Docker unpause is asynchronous and we found no way to poll for it
     }
 
     private void aliceSavesADraft() {
