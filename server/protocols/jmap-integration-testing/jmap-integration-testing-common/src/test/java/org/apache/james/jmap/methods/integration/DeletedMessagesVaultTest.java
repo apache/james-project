@@ -467,7 +467,8 @@ public abstract class DeletedMessagesVaultTest {
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
 
         try (ZipAssert zipAssert = assertThatZip(fileSystem.getResource(fileLocation))) {
-            zipAssert.containsOnlyEntriesMatching(hasName(messageIdOfHomer + ".eml"));
+            zipAssert.hasEntriesSize(1)
+                .allSatisfies(entry -> entry.hasName(messageIdOfHomer + ".eml"));
         }
     }
 
@@ -489,7 +490,8 @@ public abstract class DeletedMessagesVaultTest {
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
 
         try (ZipAssert zipAssert = assertThatZip(fileSystem.getResource(fileLocation))) {
-            zipAssert.containsOnlyEntriesMatching(hasName(messageIdOfHomer + ".eml"));
+            zipAssert.hasEntriesSize(1)
+                .allSatisfies(entry -> entry.hasName(messageIdOfHomer + ".eml"));
         }
     }
 
@@ -513,7 +515,8 @@ public abstract class DeletedMessagesVaultTest {
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
 
         try (ZipAssert zipAssert = assertThatZip(fileSystem.getResource(fileLocation))) {
-            zipAssert.containsOnlyEntriesMatching(hasName(messageIdOfHomer + ".eml"));
+            zipAssert.hasEntriesSize(1)
+                .allSatisfies(entry -> entry.hasName(messageIdOfHomer + ".eml"));
         }
     }
 
