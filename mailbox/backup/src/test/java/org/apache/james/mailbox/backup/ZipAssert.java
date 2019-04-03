@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
@@ -151,15 +152,18 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> implements Aut
         this.zipFile = zipFile;
     }
 
-    public ZipAssert containsOnlyEntriesMatching(EntryChecks... entryChecks) throws Exception {
+    private ZipAssert containsEntriesMatchingWithComparator(Optional<Comparator<ZipArchiveEntry>> sortEntriesBy,
+                                                            Optional<Comparator<EntryChecks>> sortEntryChecksBy,
+                                                            EntryChecks... entryChecks) throws Exception {
         isNotNull();
-        List<EntryChecks> sortedEntryChecks = Arrays.stream(entryChecks)
-            .sorted(Comparator.comparing(checks -> checks.name))
-            .collect(Guavate.toImmutableList());
-        List<ZipArchiveEntry> entries = Collections.list(zipFile.getEntries())
-            .stream()
-            .sorted(Comparator.comparing(ZipArchiveEntry::getName))
-            .collect(Guavate.toImmutableList());
+
+        Stream<EntryChecks> entryChecksStream = Arrays.stream(entryChecks);
+        List<EntryChecks> sortedEntryChecks = sortAndCollect(sortEntryChecksBy, entryChecksStream);
+
+        Stream<ZipArchiveEntry> entryStream = Collections.list(zipFile.getEntries())
+            .stream();
+        List<ZipArchiveEntry> entries = sortAndCollect(sortEntriesBy, entryStream);
+
         if (entries.size() != entryChecks.length) {
             throwAssertionError(shouldHaveSize(zipFile, entryChecks.length, entries.size()));
         }
@@ -167,6 +171,33 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> implements Aut
             sortedEntryChecks.get(i).check.test(assertThatZipEntry(zipFile, entries.get(i)));
         }
         return myself;
+    }
+
+    private <T> List<T> sortAndCollect(Optional<Comparator<T>> sortBy, Stream<T> stream) {
+        Stream<T> sortedStream = sortBy.map(comparator -> stream.sorted(comparator))
+            .orElse(stream);
+        return sortedStream.collect(Guavate.toImmutableList());
+    }
+
+    /**
+     * Check that the zip entries in the zip file contains only the entries matching
+     * the entryChecks, with the same number of checks as entries.
+     * The order of the entries in the zip file is independent from the one of the entryChecks.
+     */
+    public ZipAssert containsOnlyEntriesMatching(EntryChecks... entryChecks) throws Exception {
+        Comparator<ZipArchiveEntry> entryComparator = Comparator.comparing(ZipArchiveEntry::getName);
+        Comparator<EntryChecks> entryCheckComparator = Comparator.comparing(check -> check.name);
+
+        return containsEntriesMatchingWithComparator(Optional.of(entryComparator), Optional.of(entryCheckComparator), entryChecks);
+    }
+
+    /**
+     * Check that the zip entries in the zip file contains only the entries matching
+     * the entryChecks, with the same number of checks as entries.
+     * The order of the entries in the zip file must match the one of the entryChecks.
+     */
+    public ZipAssert containsExactlyEntriesMatching(EntryChecks... entryChecks) throws Exception {
+        return containsEntriesMatchingWithComparator(Optional.empty(), Optional.empty(), entryChecks);
     }
 
     public ZipAssert hasNoEntry() {
@@ -268,6 +299,7 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> implements Aut
 
     /**
      * Because there are always some extra fields not belong to James, and their equals() method doesn't work
+     *
      * @param entry
      * @return
      */

@@ -254,4 +254,32 @@ class ZipperTest {
                 );
         }
     }
+
+    @Test
+    void entriesInArchiveShouldBeOrderedLikeMailboxWithItsAnnotationsThenMessages() throws Exception {
+        MailboxWithAnnotations mailbox1 = new MailboxWithAnnotations(MAILBOX_1, ImmutableList.of(ANNOTATION_1));
+        MailboxWithAnnotations mailbox2 = new MailboxWithAnnotations(MAILBOX_2, ImmutableList.of(ANNOTATION_2));
+
+        testee.archive(ImmutableList.of(mailbox1, mailbox2), Stream.of(MESSAGE_RESULT_1, MESSAGE_RESULT_2), output);
+
+        try (ZipAssert zipAssert = assertThatZip(output)) {
+            zipAssert.containsExactlyEntriesMatching(
+                //MAILBOX 1 with its annotations
+                hasName(MAILBOX_1.getName() + "/"),
+                hasName(MAILBOX_1.getName() + "/annotations/").isDirectory(),
+                hasName(MAILBOX_1.getName() + "/annotations/" + ANNOTATION_1.getKey().asString())
+                    .hasStringContent(ANNOTATION_1_CONTENT),
+                //MAILBOX 2 with its annotations
+                hasName(MAILBOX_2.getName() + "/"),
+                hasName(MAILBOX_2.getName() + "/annotations/").isDirectory(),
+                hasName(MAILBOX_2.getName() + "/annotations/" + ANNOTATION_2.getKey().asString())
+                    .hasStringContent(ANNOTATION_2_CONTENT),
+                //the messages
+                hasName(MESSAGE_ID_1.serialize())
+                    .hasStringContent(MESSAGE_CONTENT_1),
+                hasName(MESSAGE_ID_2.serialize())
+                    .hasStringContent(MESSAGE_CONTENT_2));
+
+        }
+    }
 }

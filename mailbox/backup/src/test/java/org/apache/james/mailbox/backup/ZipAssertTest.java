@@ -175,7 +175,7 @@ public class ZipAssertTest {
     }
 
     @Test
-    public void containsExactlyEntriesMatchingShouldNotThrowWhenBothEmpty() throws Exception {
+    public void containsOnlyEntriesMatchingShouldNotThrowWhenBothEmpty() throws Exception {
         try (ZipFile zipFile = buildZipFile()) {
             assertThatCode(() -> assertThatZip(zipFile)
                     .containsOnlyEntriesMatching())
@@ -184,7 +184,7 @@ public class ZipAssertTest {
     }
 
     @Test
-    public void containsExactlyEntriesMatchingShouldNotThrowWhenRightOrder() throws Exception {
+    public void containsOnlyEntriesMatchingShouldNotThrowWhenRightOrder() throws Exception {
         try (ZipFile zipFile = buildZipFile(ENTRY, ENTRY_2)) {
             assertThatCode(() -> assertThatZip(zipFile)
                     .containsOnlyEntriesMatching(
@@ -235,7 +235,7 @@ public class ZipAssertTest {
     }
 
     @Test
-    public void containsExactlyEntriesMatchingShouldNotThrowWhenWrongOrder() throws Exception {
+    public void containsOnlyEntriesMatchingShouldNotThrowWhenWrongOrder() throws Exception {
         try (ZipFile zipFile = buildZipFile(ENTRY, ENTRY_2)) {
             assertThatCode(() -> assertThatZip(zipFile)
                     .containsOnlyEntriesMatching(
@@ -246,7 +246,7 @@ public class ZipAssertTest {
     }
 
     @Test
-    public void containsExactlyEntriesMatchingShouldThrowWhenExpectingMoreEntries() throws Exception {
+    public void containsOnlyEntriesMatchingShouldThrowWhenExpectingMoreEntries() throws Exception {
         try (ZipFile zipFile = buildZipFile(ENTRY, ENTRY_2)) {
             assertThatThrownBy(() -> assertThatZip(zipFile)
                     .containsOnlyEntriesMatching(
@@ -258,11 +258,63 @@ public class ZipAssertTest {
     }
 
     @Test
-    public void containsExactlyEntriesMatchingShouldThrowWhenExpectingLessEntries() throws Exception {
+    public void containsOnlyEntriesMatchingShouldThrowWhenExpectingLessEntries() throws Exception {
         try (ZipFile zipFile = buildZipFile(ENTRY, ENTRY_2)) {
             assertThatThrownBy(() -> assertThatZip(zipFile)
                     .containsOnlyEntriesMatching(
                         hasName(ENTRY_NAME)))
+                .isInstanceOf(AssertionError.class);
+        }
+    }
+
+    @Test
+    public void containsExactlyEntriesMatchingShouldNotThrowWhenBothEmpty() throws Exception {
+        try (ZipFile zipFile = buildZipFile()) {
+            assertThatCode(() -> assertThatZip(zipFile)
+                .containsExactlyEntriesMatching())
+                .doesNotThrowAnyException();
+        }
+    }
+
+    @Test
+    public void containsExactlyEntriesMatchingShouldThrowWhenWrongOrder() throws Exception {
+        try (ZipFile zipFile = buildZipFile(ENTRY, ENTRY_2)) {
+            assertThatThrownBy(() -> assertThatZip(zipFile)
+                .containsExactlyEntriesMatching(
+                    hasName(ENTRY_NAME_2),
+                    hasName(ENTRY_NAME)))
+                .isInstanceOf(AssertionError.class);
+        }
+    }
+    @Test
+    public void containsExactlyEntriesMatchingShouldNotThrowWhenRightOrder() throws Exception {
+        try (ZipFile zipFile = buildZipFile(ENTRY, ENTRY_2)) {
+            assertThatCode(() -> assertThatZip(zipFile)
+                .containsExactlyEntriesMatching(
+                    hasName(ENTRY_NAME),
+                    hasName(ENTRY_NAME_2)))
+                .doesNotThrowAnyException();
+        }
+    }
+
+    @Test
+    public void containsExactlyEntriesMatchingShouldThrowWhenExpectingMoreEntries() throws Exception {
+        try (ZipFile zipFile = buildZipFile(ENTRY, ENTRY_2)) {
+            assertThatThrownBy(() -> assertThatZip(zipFile)
+                .containsExactlyEntriesMatching(
+                    hasName(ENTRY_NAME),
+                    hasName(ENTRY_NAME_2),
+                    hasName("extraEntry")))
+                .isInstanceOf(AssertionError.class);
+        }
+    }
+
+    @Test
+    public void containsExactlyEntriesMatchingShouldThrowWhenExpectingLessEntries() throws Exception {
+        try (ZipFile zipFile = buildZipFile(ENTRY, ENTRY_2)) {
+            assertThatThrownBy(() -> assertThatZip(zipFile)
+                .containsExactlyEntriesMatching(
+                    hasName(ENTRY_NAME)))
                 .isInstanceOf(AssertionError.class);
         }
     }
@@ -290,7 +342,7 @@ public class ZipAssertTest {
     }
 
     @Test
-    public void containsExactlyExtraFieldsShouldNotThrowWhenBothEmpty() throws Exception {
+    public void containsOnlyExtraFieldsShouldNotThrowWhenBothEmpty() throws Exception {
         try (ZipFile zipFile = buildZipFile(ENTRY)) {
             assertThatCode(() -> assertThatZip(zipFile)
                 .containsOnlyEntriesMatching(
@@ -301,7 +353,7 @@ public class ZipAssertTest {
     }
 
     @Test
-    public void containsExactlyExtraFieldsShouldThrowWhenMissingExpectedField() throws Exception {
+    public void containsOnlyExtraFieldsShouldThrowWhenMissingExpectedField() throws Exception {
         try (ZipFile zipFile = buildZipFile(ENTRY)) {
             assertThatThrownBy(() -> assertThatZip(zipFile)
                 .containsOnlyEntriesMatching(
@@ -312,7 +364,7 @@ public class ZipAssertTest {
     }
 
     @Test
-    public void containsExactlyExtraFieldsShouldNotThrowWhenUnexpectedField() throws Exception {
+    public void containsOnlyExtraFieldsShouldNotThrowWhenUnexpectedField() throws Exception {
         try (ZipArchiveOutputStream archiveOutputStream = new ZipArchiveOutputStream(destination)) {
 
             ZipArchiveEntry archiveEntry = (ZipArchiveEntry) archiveOutputStream.createArchiveEntry(new File("any"), ENTRY_NAME);
@@ -334,7 +386,7 @@ public class ZipAssertTest {
     }
 
     @Test
-    public void containsExactlyExtraFieldsShouldNotThrowWhenContainingExpectedExtraFields() throws Exception {
+    public void containsOnlyExtraFieldsShouldNotThrowWhenContainingExpectedExtraFields() throws Exception {
         try (ZipArchiveOutputStream archiveOutputStream = new ZipArchiveOutputStream(destination)) {
 
             ZipArchiveEntry archiveEntry = (ZipArchiveEntry) archiveOutputStream.createArchiveEntry(new File("any"), ENTRY_NAME);
