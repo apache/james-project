@@ -40,8 +40,13 @@ import org.slf4j.LoggerFactory;
  *
  * @version CVS $Revision$ $Date$
  * @since 2.2.0
+ *
+ * @deprecated JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release
+ *
+ * Please use IsOverQuota which relies on mailbox quota apis and avoids scanning
  */
 @Experimental
+@Deprecated
 public abstract class AbstractQuotaMatcher extends GenericMatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractQuotaMatcher.class);
 

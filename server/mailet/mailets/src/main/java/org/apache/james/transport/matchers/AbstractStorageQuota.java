@@ -62,8 +62,13 @@ import org.apache.mailet.MailetContext;
  * </p>
  * 
  * @since 2.2.0
+ *
+ * @deprecated JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release
+ *
+ * Please use IsOverQuota which relies on mailbox quota apis and avoids scanning
  */
 @Experimental
+@Deprecated
 public abstract class AbstractStorageQuota extends AbstractQuotaMatcher {
 
     private MailboxManager manager;
