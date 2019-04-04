@@ -57,6 +57,8 @@ import org.slf4j.LoggerFactory;
  * virtual recipients to real recipients.
  * 
  * @deprecated use the definitions in virtualusertable-store.xml instead
+ *
+ * JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release
  */
 @Deprecated
 @Experimental
