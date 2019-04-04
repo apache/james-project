@@ -24,6 +24,7 @@ import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class DomainUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailboxManager> {
@@ -32,6 +33,14 @@ public class DomainUserMaildirMailboxManagerTest extends MailboxManagerTest<Stor
         " element of the Vault")
     @Nested
     class HookTests {
+    }
+
+    @Nested
+    class BasicFeaturesTests extends MailboxManagerTest.BasicFeaturesTests {
+        @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
+        @Test
+        void renameMailboxShouldChangeTheMailboxPathOfAMailbox() {
+        }
     }
 
     @RegisterExtension

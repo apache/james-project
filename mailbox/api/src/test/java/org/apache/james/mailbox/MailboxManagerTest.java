@@ -1172,7 +1172,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
     }
 
     @Nested
-    class BasicFeaturesTests {
+    public class BasicFeaturesTests {
         @Test
         void user1ShouldNotHaveAnInbox() throws Exception {
             session = mailboxManager.createSystemSession(USER_1);
