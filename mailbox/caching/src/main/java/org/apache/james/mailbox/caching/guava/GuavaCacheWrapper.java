@@ -4,6 +4,12 @@ import org.apache.james.mailbox.caching.CacheLoaderFromUnderlying;
 
 import com.google.common.cache.Cache;
 
+/**
+ * @deprecated JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release, unless it finds a maintainer
+ *
+ * This module lacks tests and is not used in James products hence the choice to deprecate it.
+ */
+@Deprecated
 public abstract class GuavaCacheWrapper<KeyT, ValueT, UnderlyingT, KeyRepresentationT, ExceptT extends Throwable>
     implements CacheLoaderFromUnderlying<KeyT, ValueT, UnderlyingT, ExceptT> {
 

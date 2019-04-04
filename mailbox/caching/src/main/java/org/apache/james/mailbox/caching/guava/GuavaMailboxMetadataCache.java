@@ -10,12 +10,16 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 
 import com.google.common.cache.Cache;
+
 /**
  * Guava-based implementation of MailboxMetadataCache.
  * Note: for efficiency/simplicity reasons the cache key is Mailbox.getMailboxId()
  *
+ * @deprecated JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release, unless it finds a maintainer
+ *
+ * This module lacks tests and is not used in James products hence the choice to deprecate it.
  */
-
+@Deprecated
 public class GuavaMailboxMetadataCache extends AbstractGuavaCache implements MailboxMetadataCache {
 
     // TODO these can probably be instantiated more elegant way

@@ -24,6 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.mailbox.events.Group;
 import org.junit.jupiter.api.Test;
 
+/**
+ * @deprecated JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release, unless it finds a maintainer
+ */
+@Deprecated
 class CacheInvalidatingMailboxListenerTest {
     @Test
     void deserializeCacheInvalidatingMailboxListenerGroup() throws Exception {

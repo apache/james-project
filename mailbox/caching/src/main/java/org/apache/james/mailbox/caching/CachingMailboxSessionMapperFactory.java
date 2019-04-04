@@ -17,8 +17,12 @@ import org.apache.james.mailbox.store.user.SubscriptionMapper;
  * A MailboxSessionMapperFactory that uses the underlying MailboxSessionMapperFactory to provide
  * caching variants of MessageMapper and MailboxMapper built around the MessageMapper and MailboxMapper
  * provided by it
- * 
+ *
+ * @deprecated JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release, unless it finds a maintainer
+ *
+ * This module lacks tests and is not used in James products hence the choice to deprecate it.
  */
+@Deprecated
 public class CachingMailboxSessionMapperFactory extends
         MailboxSessionMapperFactory {
 

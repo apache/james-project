@@ -34,9 +34,12 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 /**
  * A MailboxMapper implementation that uses a MailboxByPathCache to cache the information
  * from the underlying MailboxMapper
- * 
+ *
+ * @deprecated JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release, unless it finds a maintainer
+ *
+ * This module lacks tests and is not used in James products hence the choice to deprecate it.
  */
-
+@Deprecated
 public class CachingMailboxMapper implements MailboxMapper {
 
     private final MailboxMapper underlying;
