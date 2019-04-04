@@ -34,7 +34,10 @@ import static org.apache.james.vault.DeletedMessageFixture.SUBJECT;
 import static org.apache.james.vault.DeletedMessageFixture.USER;
 import static org.apache.james.vault.DeletedMessageFixture.USER_2;
 import static org.apache.james.vault.DeletedMessageVaultSearchContract.MESSAGE_ID_GENERATOR;
+import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
+import static org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes.USERS;
+import static org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes.USER_PATH;
 import static org.apache.james.webadmin.vault.routes.RestoreService.RESTORE_MAILBOX_NAME;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT2;
@@ -135,6 +138,7 @@ class DeletedMessagesVaultRoutesTest {
         "\"criteria\": []" +
         "}";
     private static final Domain DOMAIN = Domain.of("apache.org");
+    private static final String BOB_PATH = USERS + SEPARATOR + USER.asString();
 
     private WebAdminServer webAdminServer;
     private MemoryDeletedMessagesVault vault;
@@ -206,7 +210,7 @@ class DeletedMessagesVaultRoutesTest {
         @Test
         void userVaultAPIShouldReturnInvalidWhenActionIsMissing() {
             when()
-                .post(USER.asString())
+                .post(BOB_PATH)
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .body("statusCode", is(400))
@@ -220,7 +224,7 @@ class DeletedMessagesVaultRoutesTest {
             given()
                 .queryParam("action", "")
             .when()
-                .post(USER.asString())
+                .post(BOB_PATH)
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .body("statusCode", is(400))
@@ -234,7 +238,7 @@ class DeletedMessagesVaultRoutesTest {
             given()
                 .queryParam("action", "invalid action")
             .when()
-                .post(USER.asString())
+                .post(BOB_PATH)
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .body("statusCode", is(400))
@@ -248,7 +252,7 @@ class DeletedMessagesVaultRoutesTest {
             given()
                 .queryParam("action", "RESTORE")
             .when()
-                .post(USER.asString())
+                .post(BOB_PATH)
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .body("statusCode", is(400))
@@ -263,7 +267,7 @@ class DeletedMessagesVaultRoutesTest {
             given()
                 .queryParam("action", action)
             .when()
-                .post("not@valid@user.com")
+                .post(USERS + SEPARATOR + "not@valid@user.com")
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .body("statusCode", is(400))
@@ -278,7 +282,7 @@ class DeletedMessagesVaultRoutesTest {
             given()
                 .queryParam("action", action)
             .when()
-                .post(USER_2.asString())
+                .post(USERS + SEPARATOR + USER_2.asString())
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .body("statusCode", is(404))
@@ -292,7 +296,7 @@ class DeletedMessagesVaultRoutesTest {
             given()
                 .queryParam("action", action)
             .when()
-                .post()
+                .post(USER_PATH)
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .body("statusCode", is(404))
@@ -320,7 +324,7 @@ class DeletedMessagesVaultRoutesTest {
                 .queryParam("action", action)
                 .body(query)
             .when()
-                .post(USER.asString())
+                .post(BOB_PATH)
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .body("statusCode", is(400))
@@ -349,7 +353,7 @@ class DeletedMessagesVaultRoutesTest {
                 .queryParam("action", action)
                 .body(query)
             .when()
-                .post(USER.asString())
+                .post(BOB_PATH)
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .body("statusCode", is(400))
@@ -378,7 +382,7 @@ class DeletedMessagesVaultRoutesTest {
                 .queryParam("action", action)
                 .body(query)
             .when()
-                .post(USER.asString())
+                .post(BOB_PATH)
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .body("statusCode", is(400))
@@ -407,7 +411,7 @@ class DeletedMessagesVaultRoutesTest {
                 .queryParam("action", action)
                 .body(query)
             .when()
-                .post(USER.asString())
+                .post(BOB_PATH)
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .body("statusCode", is(400))
@@ -437,7 +441,7 @@ class DeletedMessagesVaultRoutesTest {
                 .queryParam("action", action)
                 .body(query)
             .when()
-                .post(USER.asString())
+                .post(BOB_PATH)
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .body("statusCode", is(400))
@@ -470,7 +474,7 @@ class DeletedMessagesVaultRoutesTest {
                 .queryParam("action", action)
                 .body(query)
             .when()
-                .post(USER.asString())
+                .post(BOB_PATH)
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .body("statusCode", is(400))
@@ -507,7 +511,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -541,7 +545,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -573,7 +577,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -607,7 +611,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -639,7 +643,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -673,7 +677,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -705,7 +709,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -739,7 +743,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -773,7 +777,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -805,7 +809,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -835,7 +839,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -867,7 +871,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -901,7 +905,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -933,7 +937,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -963,7 +967,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -995,7 +999,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -1029,7 +1033,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -1061,7 +1065,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -1094,7 +1098,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -1126,7 +1130,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -1164,7 +1168,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -1200,7 +1204,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -1236,7 +1240,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -1270,7 +1274,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -1302,7 +1306,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -1357,7 +1361,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -1410,7 +1414,7 @@ class DeletedMessagesVaultRoutesTest {
                             .queryParam("action", "restore")
                             .body(query)
                         .when()
-                            .post(USER.asString())
+                            .post(BOB_PATH)
                             .jsonPath()
                             .get("taskId");
 
@@ -1443,7 +1447,7 @@ class DeletedMessagesVaultRoutesTest {
                         .queryParam("action", "restore")
                         .body(MATCH_ALL_QUERY)
                     .when()
-                        .post(USER.asString())
+                        .post(BOB_PATH)
                         .jsonPath()
                         .get("taskId");
 
@@ -1482,7 +1486,7 @@ class DeletedMessagesVaultRoutesTest {
                         .queryParam("action", "restore")
                         .body(MATCH_ALL_QUERY)
                     .when()
-                        .post(USER.asString())
+                        .post(BOB_PATH)
                         .jsonPath()
                         .get("taskId");
 
@@ -1515,7 +1519,7 @@ class DeletedMessagesVaultRoutesTest {
                         .queryParam("action", "restore")
                         .body(MATCH_ALL_QUERY)
                     .when()
-                        .post(USER.asString())
+                        .post(BOB_PATH)
                         .jsonPath()
                         .get("taskId");
 
@@ -1541,7 +1545,7 @@ class DeletedMessagesVaultRoutesTest {
                 .queryParam("action", "restore")
                 .body(MATCH_ALL_QUERY)
             .when()
-                .post(USER.asString())
+                .post(BOB_PATH)
             .then()
                 .statusCode(HttpStatus.CREATED_201)
                 .body("taskId", notNullValue());
@@ -1557,7 +1561,7 @@ class DeletedMessagesVaultRoutesTest {
                     .queryParam("action", "restore")
                     .body(MATCH_ALL_QUERY)
                 .when()
-                    .post(USER.asString())
+                    .post(BOB_PATH)
                     .jsonPath()
                     .get("taskId");
 
@@ -1587,7 +1591,7 @@ class DeletedMessagesVaultRoutesTest {
                     .queryParam("action", "restore")
                     .body(MATCH_ALL_QUERY)
                 .when()
-                    .post(USER.asString())
+                    .post(BOB_PATH)
                     .jsonPath()
                     .get("taskId");
 
@@ -1620,7 +1624,7 @@ class DeletedMessagesVaultRoutesTest {
                     .queryParam("action", "restore")
                     .body(MATCH_ALL_QUERY)
                 .when()
-                    .post(USER.asString())
+                    .post(BOB_PATH)
                     .jsonPath()
                     .get("taskId");
 
@@ -1645,7 +1649,7 @@ class DeletedMessagesVaultRoutesTest {
                     .queryParam("action", "restore")
                     .body(MATCH_ALL_QUERY)
                 .when()
-                    .post(USER.asString())
+                    .post(BOB_PATH)
                     .jsonPath()
                     .get("taskId");
 
@@ -1672,7 +1676,7 @@ class DeletedMessagesVaultRoutesTest {
                     .queryParam("action", "restore")
                     .body(MATCH_ALL_QUERY)
                 .when()
-                    .post(USER.asString())
+                    .post(BOB_PATH)
                     .jsonPath()
                     .get("taskId");
 
@@ -1701,7 +1705,7 @@ class DeletedMessagesVaultRoutesTest {
                     .queryParam("action", "export")
                     .body(MATCH_ALL_QUERY)
                 .when()
-                    .post(USER.asString())
+                    .post(BOB_PATH)
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -1716,7 +1720,7 @@ class DeletedMessagesVaultRoutesTest {
                     .queryParam("exportTo", "export@to#me@")
                     .body(MATCH_ALL_QUERY)
                 .when()
-                    .post(USER.asString())
+                    .post(BOB_PATH)
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -1736,7 +1740,7 @@ class DeletedMessagesVaultRoutesTest {
                     .queryParam("exportTo", "exportTo@james.org")
                     .body(MATCH_ALL_QUERY)
                 .when()
-                    .post(USER.asString())
+                    .post(BOB_PATH)
                 .then()
                     .statusCode(HttpStatus.CREATED_201)
                     .body("taskId", notNullValue());
@@ -1752,7 +1756,7 @@ class DeletedMessagesVaultRoutesTest {
                         .queryParam("action", "export")
                         .queryParam("exportTo", USER_2.asString())
                         .body(MATCH_ALL_QUERY)
-                        .post(USER.asString())
+                        .post(BOB_PATH)
                     .jsonPath()
                         .get("taskId");
 
@@ -1783,7 +1787,7 @@ class DeletedMessagesVaultRoutesTest {
                     .queryParam("action", "export")
                     .queryParam("exportTo", USER_2.asString())
                     .body(MATCH_ALL_QUERY)
-                    .post(USER.asString())
+                    .post(BOB_PATH)
                 .jsonPath()
                     .get("taskId");
 
@@ -1804,7 +1808,7 @@ class DeletedMessagesVaultRoutesTest {
                 with()
                     .queryParam("action", "restore")
                     .body(MATCH_ALL_QUERY)
-                    .post(USER.asString())
+                    .post(BOB_PATH)
                 .jsonPath()
                     .get("taskId");
 
@@ -1826,7 +1830,7 @@ class DeletedMessagesVaultRoutesTest {
                     .queryParam("action", "export")
                     .queryParam("exportTo", USER_2.asString())
                     .body(MATCH_ALL_QUERY)
-                    .post(USER.asString())
+                    .post(BOB_PATH)
                 .jsonPath()
                     .get("taskId");
 

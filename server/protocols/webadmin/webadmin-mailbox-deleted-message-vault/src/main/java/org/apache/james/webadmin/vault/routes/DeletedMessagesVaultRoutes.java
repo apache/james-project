@@ -102,9 +102,11 @@ public class DeletedMessagesVaultRoutes implements Routes {
         }
     }
 
-    public static final String ROOT_PATH = "deletedMessages/users";
+    public static final String ROOT_PATH = "deletedMessages";
+    public static final String USERS = "users";
+    public static final String USER_PATH = ROOT_PATH + SEPARATOR + USERS;
     private static final String USER_PATH_PARAM = "user";
-    private static final String RESTORE_PATH = ROOT_PATH + SEPARATOR + ":" + USER_PATH_PARAM;
+    private static final String RESTORE_PATH = USER_PATH + SEPARATOR + ":" + USER_PATH_PARAM;
     private static final String ACTION_QUERY_PARAM = "action";
     private static final String EXPORT_TO_QUERY_PARAM = "exportTo";
 
@@ -140,7 +142,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
     }
 
     @POST
-    @Path(ROOT_PATH)
+    @Path(USER_PATH)
     @ApiOperation(value = "Restore deleted emails from a specified user to his new restore mailbox")
     @ApiImplicitParams({
         @ApiImplicitParam(
