@@ -264,16 +264,7 @@ public class StoreMailboxManager implements MailboxManager {
             getStoreRightManager(), preDeletionHooks);
     }
 
-    /**
-     * Create a Mailbox for the given mailbox path. This will by default return a {@link Mailbox}.
-     * <p/>
-     * If you need to return something more special just override this method
-     *
-     * @param mailboxPath
-     * @param session
-     * @throws MailboxException
-     */
-    protected Mailbox doCreateMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+    private Mailbox doCreateMailbox(MailboxPath mailboxPath) {
         return new Mailbox(mailboxPath, randomUidValidity());
     }
 
@@ -348,7 +339,7 @@ public class StoreMailboxManager implements MailboxManager {
             for (MailboxPath mailbox : sanitizedMailboxPath.getHierarchyLevels(getDelimiter())) {
                 locker.executeWithLock(mailboxSession, mailbox, (LockAwareExecution<Void>) () -> {
                     if (!mailboxExists(mailbox, mailboxSession)) {
-                        Mailbox m = doCreateMailbox(mailbox, mailboxSession);
+                        Mailbox m = doCreateMailbox(mailbox);
                         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
                         try {
                             mapper.execute(Mapper.toTransaction(() -> mailboxIds.add(mapper.save(m))));
