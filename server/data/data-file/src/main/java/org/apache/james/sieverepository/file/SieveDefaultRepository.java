@@ -50,6 +50,12 @@ import org.apache.james.sieverepository.api.exception.StorageException;
  * <p>The sieve root directory is a sub-directory of the application base directory named "sieve".
  * Scripts are stored in sub-directories of the sieve root directory, each with the name of the
  * associated user.
+ *
+ * @deprecated This does not support sieve script management and requires dropping manually the filesystem
+ *
+ * Migration strategy: use SieveFileRepository & CLI to upload scripts
+ *
+ * JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release, unless it finds a maintainer
  */
 @Deprecated
 public class SieveDefaultRepository implements SieveRepository {
