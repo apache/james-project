@@ -88,14 +88,29 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
             }
 
             this.lastMailboxName = mailbox.getName();
-            JPAMailbox persistedMailbox = JPAMailbox.from(mailbox);
+            JPAMailbox persistedMailbox = jpaMailbox(mailbox);
 
             getEntityManager().persist(persistedMailbox);
             mailbox.setMailboxId(persistedMailbox.getMailboxId());
-            return mailbox.getMailboxId();
+            return persistedMailbox.getMailboxId();
         } catch (PersistenceException e) {
             throw new MailboxException("Save of mailbox " + mailbox.getName() + " failed", e);
         } 
+    }
+
+    private JPAMailbox jpaMailbox(Mailbox mailbox) {
+        if (mailbox.getMailboxId() == null) {
+            return JPAMailbox.from(mailbox);
+        }
+        try {
+            JPAMailbox result = loadJpaMailbox(mailbox.getMailboxId());
+            result.setNamespace(mailbox.getNamespace());
+            result.setUser(mailbox.getUser());
+            result.setName(mailbox.getName());
+            return result;
+        } catch (MailboxNotFoundException e) {
+            return JPAMailbox.from(mailbox);
+        }
     }
 
     private boolean isPathAlreadyUsedByAnotherMailbox(Mailbox mailbox) throws MailboxException {
@@ -133,17 +148,32 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
 
     @Override
     public Mailbox findMailboxById(MailboxId id) throws MailboxException, MailboxNotFoundException {
+
+        try {
+            return loadJpaMailbox(id).toMailbox();
+        } catch (PersistenceException e) {
+            throw new MailboxException("Search of mailbox " + id.serialize() + " failed", e);
+        } 
+    }
+
+    private JPAMailbox loadJpaMailbox(MailboxId id) throws MailboxNotFoundException {
         JPAId mailboxId = (JPAId)id;
         try {
             return getEntityManager().createNamedQuery("findMailboxById", JPAMailbox.class)
                 .setParameter("idParam", mailboxId.getRawId())
-                .getSingleResult()
-                .toMailbox();
+                .getSingleResult();
         } catch (NoResultException e) {
             throw new MailboxNotFoundException(mailboxId);
-        } catch (PersistenceException e) {
-            throw new MailboxException("Search of mailbox " + mailboxId.serialize() + " failed", e);
-        } 
+        }
+    }
+
+    public boolean exists(MailboxId id) throws MailboxException, MailboxNotFoundException {
+        try {
+            loadJpaMailbox(id);
+            return true;
+        } catch (MailboxNotFoundException e) {
+            return false;
+        }
     }
 
     @Override
