@@ -201,7 +201,7 @@ class DeletedMessagesVaultRoutesTest {
     }
 
     @Nested
-    class UserVaultActionsValidationTest {
+    class VaultActionsValidationTest {
 
         @Test
         void userVaultAPIShouldReturnInvalidWhenActionIsMissing() {

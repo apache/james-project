@@ -72,11 +72,11 @@ import spark.Service;
 @Produces(Constants.JSON_CONTENT_TYPE)
 public class DeletedMessagesVaultRoutes implements Routes {
 
-    enum UserVaultAction {
+    enum VaultAction {
         RESTORE("restore"),
         EXPORT("export");
 
-        static Optional<UserVaultAction> getAction(String value) {
+        static Optional<VaultAction> getAction(String value) {
             Preconditions.checkNotNull(value, "action cannot be null");
             Preconditions.checkArgument(StringUtils.isNotBlank(value), "action cannot be empty or blank");
 
@@ -87,13 +87,13 @@ public class DeletedMessagesVaultRoutes implements Routes {
 
         private static List<String> plainValues() {
             return Stream.of(values())
-                .map(UserVaultAction::getValue)
+                .map(VaultAction::getValue)
                 .collect(Guavate.toImmutableList());
         }
 
         private final String value;
 
-        UserVaultAction(String value) {
+        VaultAction(String value) {
             this.value = value;
         }
 
@@ -173,14 +173,14 @@ public class DeletedMessagesVaultRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     private TaskIdDto userActions(Request request, Response response) throws JsonExtractException {
-        UserVaultAction requestedAction = extractUserVaultAction(request);
+        VaultAction requestedAction = extractVaultAction(request);
 
         Task requestedTask = generateTask(requestedAction, request);
         TaskId taskId = taskManager.submit(requestedTask);
         return TaskIdDto.respond(response, taskId);
     }
 
-    private Task generateTask(UserVaultAction requestedAction, Request request) throws JsonExtractException {
+    private Task generateTask(VaultAction requestedAction, Request request) throws JsonExtractException {
         User user = extractUser(request);
         validateUserExist(user);
         Query query = translate(jsonExtractor.parse(request.body()));
@@ -264,17 +264,17 @@ public class DeletedMessagesVaultRoutes implements Routes {
         }
     }
 
-    private UserVaultAction extractUserVaultAction(Request request) {
+    private VaultAction extractVaultAction(Request request) {
         String actionParam = request.queryParams(ACTION_QUERY_PARAM);
         return Optional.ofNullable(actionParam)
-            .map(this::getUserVaultAction)
+            .map(this::getVaultAction)
             .orElseThrow(() -> new IllegalArgumentException("action parameter is missing"));
     }
 
-    private UserVaultAction getUserVaultAction(String actionString) {
-        return UserVaultAction.getAction(actionString)
+    private VaultAction getVaultAction(String actionString) {
+        return VaultAction.getAction(actionString)
             .orElseThrow(() -> new IllegalArgumentException(String.format("'%s' is not a valid action. Supported values are: (%s)",
                 actionString,
-                Joiner.on(",").join(UserVaultAction.plainValues()))));
+                Joiner.on(",").join(VaultAction.plainValues()))));
     }
 }
