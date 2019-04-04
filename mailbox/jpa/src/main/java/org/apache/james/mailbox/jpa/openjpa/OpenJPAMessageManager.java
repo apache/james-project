@@ -74,9 +74,9 @@ public class OpenJPAMessageManager extends JPAMessageManager {
     protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) throws MailboxException {
         switch (feature) {
         case Streaming:
-            return new JPAStreamingMailboxMessage((JPAMailbox) getMailboxEntity(), internalDate, size, flags, content, bodyStartOctet, propertyBuilder);
+            return new JPAStreamingMailboxMessage(JPAMailbox.from(getMailboxEntity()), internalDate, size, flags, content, bodyStartOctet, propertyBuilder);
         case Encryption:
-            return new JPAEncryptedMailboxMessage((JPAMailbox) getMailboxEntity(), internalDate, size, flags, content, bodyStartOctet, propertyBuilder);
+            return new JPAEncryptedMailboxMessage(JPAMailbox.from(getMailboxEntity()), internalDate, size, flags, content, bodyStartOctet, propertyBuilder);
         default:
             return super.createMessage(internalDate, size, bodyStartOctet, content, flags,  propertyBuilder, attachments);
         }

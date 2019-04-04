@@ -27,8 +27,8 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -44,10 +44,10 @@ import com.google.common.collect.Lists;
 public class DefaultUserQuotaRootResolverTest {
 
     private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("benwa", "INBOX");
-    public static final SimpleMailbox MAILBOX = new SimpleMailbox(MAILBOX_PATH, 10);
+    public static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, 10);
     private static final MailboxPath PATH_LIKE = MailboxPath.forUser("benwa", "%");
     private static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser("benwa", "test");
-    private static final SimpleMailbox MAILBOX_2 = new SimpleMailbox(MAILBOX_PATH_2, 10);
+    private static final Mailbox MAILBOX_2 = new Mailbox(MAILBOX_PATH_2, 10);
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&benwa", Optional.empty());
     private static final MailboxId MAILBOX_ID = TestId.of(42);
     public static final MailboxSession MAILBOX_SESSION = null;

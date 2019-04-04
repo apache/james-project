@@ -27,7 +27,6 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraIdAndPath;
@@ -38,6 +37,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV2DAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -49,7 +49,7 @@ class MailboxPathV2MigrationTest {
 
     private static final MailboxPath MAILBOX_PATH_1 = MailboxPath.forUser("bob", "Important");
     private static final int UID_VALIDITY_1 = 452;
-    private static final SimpleMailbox MAILBOX_1 = new SimpleMailbox(MAILBOX_PATH_1, UID_VALIDITY_1);
+    private static final Mailbox MAILBOX_1 = new Mailbox(MAILBOX_PATH_1, UID_VALIDITY_1);
     private static final CassandraId MAILBOX_ID_1 = CassandraId.timeBased();
 
     public static final CassandraModule MODULES = CassandraModule.aggregateModules(

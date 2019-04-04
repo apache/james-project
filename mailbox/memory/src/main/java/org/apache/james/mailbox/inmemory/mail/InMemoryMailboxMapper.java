@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
@@ -66,7 +65,7 @@ public class InMemoryMailboxMapper implements MailboxMapper {
         if (result == null) {
             throw new MailboxNotFoundException(path);
         } else {
-            return new SimpleMailbox(result);
+            return new Mailbox(result);
         }
     }
 
@@ -75,7 +74,7 @@ public class InMemoryMailboxMapper implements MailboxMapper {
         InMemoryId mailboxId = (InMemoryId)id;
         for (Mailbox mailbox: mailboxesByPath.values()) {
             if (mailbox.getMailboxId().equals(mailboxId)) {
-                return new SimpleMailbox(mailbox);
+                return new Mailbox(mailbox);
             }
         }
         throw new MailboxNotFoundException(mailboxId);
@@ -87,7 +86,7 @@ public class InMemoryMailboxMapper implements MailboxMapper {
         return mailboxesByPath.values()
             .stream()
             .filter(mailbox -> mailboxMatchesRegex(mailbox, path, regex))
-            .map(SimpleMailbox::new)
+            .map(Mailbox::new)
             .collect(Guavate.toImmutableList());
     }
 

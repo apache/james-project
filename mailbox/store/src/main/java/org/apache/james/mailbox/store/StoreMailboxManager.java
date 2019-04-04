@@ -40,7 +40,6 @@ import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MetadataWithMailboxId;
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
@@ -266,7 +265,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     /**
-     * Create a Mailbox for the given mailbox path. This will by default return a {@link SimpleMailbox}.
+     * Create a Mailbox for the given mailbox path. This will by default return a {@link Mailbox}.
      * <p/>
      * If you need to return something more special just override this method
      *
@@ -275,7 +274,7 @@ public class StoreMailboxManager implements MailboxManager {
      * @throws MailboxException
      */
     protected Mailbox doCreateMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-        return new SimpleMailbox(mailboxPath, randomUidValidity());
+        return new Mailbox(mailboxPath, randomUidValidity());
     }
 
     @Override
@@ -410,7 +409,7 @@ public class StoreMailboxManager implements MailboxManager {
 
             // We need to create a copy of the mailbox as maybe we can not refer to the real
             // mailbox once we remove it
-            SimpleMailbox m = new SimpleMailbox(mailbox);
+            Mailbox m = new Mailbox(mailbox);
             mailboxMapper.delete(mailbox);
             eventBus.dispatch(EventFactory.mailboxDeleted()
                 .randomEventId()

@@ -31,7 +31,6 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -81,10 +80,10 @@ public interface MailboxMessageFixture {
     String MAILBOX_1_NAME = "mailbox1";
     String MAILBOX_2_NAME = "mailbox2";
     String MAILBOX_OTHER_USER_NAME = "mailbox_other";
-    Mailbox MAILBOX_1 = new SimpleMailbox(MailboxPath.forUser("user", MAILBOX_1_NAME), 42, MAILBOX_ID_1);
-    Mailbox MAILBOX_1_OTHER_USER = new SimpleMailbox(MailboxPath.forUser("otherUser", MAILBOX_OTHER_USER_NAME), 42, MAILBOX_ID_11);
-    Mailbox MAILBOX_1_SUB_1 = new SimpleMailbox(MailboxPath.forUser("user", MAILBOX_1_NAME + MAILBOX_SESSION.getPathDelimiter() + "sub1"), 420, TestId.of(11L));
-    Mailbox MAILBOX_2 = new SimpleMailbox(MailboxPath.forUser("user", MAILBOX_2_NAME), 43, MAILBOX_ID_2);
+    Mailbox MAILBOX_1 = new Mailbox(MailboxPath.forUser("user", MAILBOX_1_NAME), 42, MAILBOX_ID_1);
+    Mailbox MAILBOX_1_OTHER_USER = new Mailbox(MailboxPath.forUser("otherUser", MAILBOX_OTHER_USER_NAME), 42, MAILBOX_ID_11);
+    Mailbox MAILBOX_1_SUB_1 = new Mailbox(MailboxPath.forUser("user", MAILBOX_1_NAME + MAILBOX_SESSION.getPathDelimiter() + "sub1"), 420, TestId.of(11L));
+    Mailbox MAILBOX_2 = new Mailbox(MailboxPath.forUser("user", MAILBOX_2_NAME), 43, MAILBOX_ID_2);
 
     List<MailboxAnnotation> NO_ANNOTATION = ImmutableList.of();
 

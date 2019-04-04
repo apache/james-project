@@ -31,7 +31,6 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -54,12 +53,12 @@ public class CassandraMailboxMapperTest {
     private static final String USER = "user";
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser(USER, "name");
-    private static final Mailbox MAILBOX = new SimpleMailbox(MAILBOX_PATH, UID_VALIDITY, MAILBOX_ID);
+    private static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, UID_VALIDITY, MAILBOX_ID);
 
     private static final CassandraId MAILBOX_ID_2 = CassandraId.timeBased();
 
 
-    private static final Mailbox MAILBOX_BIS = new SimpleMailbox(MAILBOX_PATH, UID_VALIDITY, MAILBOX_ID_2);
+    private static final Mailbox MAILBOX_BIS = new Mailbox(MAILBOX_PATH, UID_VALIDITY, MAILBOX_ID_2);
     private static final String WILDCARD = "%";
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
@@ -109,10 +108,10 @@ public class CassandraMailboxMapperTest {
     @Ignore("JAMES-2514 Cassandra 3 supports long mailbox names. Hence we can not rely on this for failing")
     @Test
     public void saveShouldNotRemoveOldMailboxPathWhenCreatingTheNewMailboxPathFails() throws Exception {
-        testee.save(new SimpleMailbox(MAILBOX_PATH, UID_VALIDITY));
+        testee.save(new Mailbox(MAILBOX_PATH, UID_VALIDITY));
         Mailbox mailbox = testee.findMailboxByPath(MAILBOX_PATH);
 
-        SimpleMailbox newMailbox = new SimpleMailbox(tooLongMailboxPath(mailbox.generateAssociatedPath()), UID_VALIDITY, mailbox.getMailboxId());
+        Mailbox newMailbox = new Mailbox(tooLongMailboxPath(mailbox.generateAssociatedPath()), UID_VALIDITY, mailbox.getMailboxId());
         assertThatThrownBy(() ->
             testee.save(newMailbox))
             .isInstanceOf(TooLongMailboxNameException.class);
@@ -285,7 +284,7 @@ public class CassandraMailboxMapperTest {
             .block();
         CassandraId childMailboxId = CassandraId.timeBased();
         MailboxPath childMailboxPath = MailboxPath.forUser(USER, "name.child");
-        Mailbox childMailbox = new SimpleMailbox(childMailboxPath, UID_VALIDITY, childMailboxId);
+        Mailbox childMailbox = new Mailbox(childMailboxPath, UID_VALIDITY, childMailboxId);
         mailboxDAO.save(childMailbox)
             .block();
         mailboxPathDAO.save(childMailboxPath, childMailboxId)
@@ -306,7 +305,7 @@ public class CassandraMailboxMapperTest {
             .block();
         CassandraId childMailboxId = CassandraId.timeBased();
         MailboxPath childMailboxPath = MailboxPath.forUser(USER, "name.child");
-        Mailbox childMailbox = new SimpleMailbox(childMailboxPath, UID_VALIDITY, childMailboxId);
+        Mailbox childMailbox = new Mailbox(childMailboxPath, UID_VALIDITY, childMailboxId);
         mailboxDAO.save(childMailbox)
             .block();
         mailboxPathDAO.save(childMailboxPath, childMailboxId)
@@ -325,7 +324,7 @@ public class CassandraMailboxMapperTest {
             .block();
         CassandraId childMailboxId = CassandraId.timeBased();
         MailboxPath childMailboxPath = MailboxPath.forUser(USER, "name.child");
-        Mailbox childMailbox = new SimpleMailbox(childMailboxPath, UID_VALIDITY, childMailboxId);
+        Mailbox childMailbox = new Mailbox(childMailboxPath, UID_VALIDITY, childMailboxId);
         mailboxDAO.save(childMailbox)
             .block();
         mailboxPathV2DAO.save(childMailboxPath, childMailboxId)

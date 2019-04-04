@@ -22,7 +22,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -47,7 +46,7 @@ public class InMemoryCombinationManagerTestSystem extends CombinationManagerTest
     public Mailbox createMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         inMemoryMailboxManager.createMailbox(mailboxPath, session);
         MessageManager messageManager = inMemoryMailboxManager.getMailbox(mailboxPath, session);
-        return new SimpleMailbox(mailboxPath, UID_VALIDITY, messageManager.getId());
+        return new Mailbox(mailboxPath, UID_VALIDITY, messageManager.getId());
     }
 
 }

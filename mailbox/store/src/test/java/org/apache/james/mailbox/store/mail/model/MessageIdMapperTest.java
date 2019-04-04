@@ -33,7 +33,6 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -71,8 +70,8 @@ public abstract class MessageIdMapperTest {
     private MailboxMapper mailboxMapper;
     private MessageIdMapper sut;
 
-    protected SimpleMailbox benwaInboxMailbox;
-    protected SimpleMailbox benwaWorkMailbox;
+    protected Mailbox benwaInboxMailbox;
+    protected Mailbox benwaWorkMailbox;
     
     protected SimpleMailboxMessage message1;
     protected SimpleMailboxMessage message2;
@@ -164,7 +163,7 @@ public abstract class MessageIdMapperTest {
 
     @Test
     public void saveShouldThrowWhenMailboxDoesntExist() throws Exception {
-        SimpleMailbox notPersistedMailbox = new SimpleMailbox(MailboxPath.forUser("benwa", "mybox"), UID_VALIDITY);
+        Mailbox notPersistedMailbox = new Mailbox(MailboxPath.forUser("benwa", "mybox"), UID_VALIDITY);
         notPersistedMailbox.setMailboxId(mapperProvider.generateId());
         SimpleMailboxMessage message = createMessage(notPersistedMailbox, "Subject: Test \n\nBody\n.\n", BODY_START, new PropertyBuilder());
         message.setUid(mapperProvider.generateMessageUid());
@@ -209,7 +208,7 @@ public abstract class MessageIdMapperTest {
         message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
         sut.save(message1);
 
-        SimpleMailbox notPersistedMailbox = new SimpleMailbox(MailboxPath.forUser("benwa", "mybox"), UID_VALIDITY);
+        Mailbox notPersistedMailbox = new Mailbox(MailboxPath.forUser("benwa", "mybox"), UID_VALIDITY);
         notPersistedMailbox.setMailboxId(mapperProvider.generateId());
 
         SimpleMailboxMessage message1InOtherMailbox = SimpleMailboxMessage.copy(notPersistedMailbox.getMailboxId(), message1);
@@ -959,8 +958,8 @@ public abstract class MessageIdMapperTest {
                 .build());
     }
 
-    private SimpleMailbox createMailbox(MailboxPath mailboxPath) throws MailboxException {
-        SimpleMailbox mailbox = new SimpleMailbox(mailboxPath, UID_VALIDITY);
+    private Mailbox createMailbox(MailboxPath mailboxPath) throws MailboxException {
+        Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
         mailbox.setMailboxId(mapperProvider.generateId());
         mailboxMapper.save(mailbox);
         return mailbox;

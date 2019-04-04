@@ -30,7 +30,7 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryOneTime;
 import org.apache.curator.test.TestingServer;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.SimpleMailbox;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.After;
@@ -143,8 +143,8 @@ public class ZooUidProviderTest {
     private CuratorFramework client;
     private ZooUidProvider uuidProvider;
     private ZooUidProvider longProvider;
-    private SimpleMailbox mailboxUUID;
-    private SimpleMailbox mailboxLong;
+    private Mailbox mailboxUUID;
+    private Mailbox mailboxLong;
     private UUID randomUUID = UUID.randomUUID();
 
     @Before
@@ -158,9 +158,9 @@ public class ZooUidProviderTest {
         longProvider = new ZooUidProvider(client, retryPolicy);
         MailboxPath path1 = new MailboxPath("namespacetest", "namespaceuser", "UUID");
         MailboxPath path2 = new MailboxPath("namespacetest", "namespaceuser", "Long");
-        mailboxUUID = new SimpleMailbox(path1, 1L);
+        mailboxUUID = new Mailbox(path1, 1L);
         mailboxUUID.setMailboxId(UUIDId.of(randomUUID));
-        mailboxLong = new SimpleMailbox(path2, 2L);
+        mailboxLong = new Mailbox(path2, 2L);
         mailboxLong.setMailboxId(new LongId(123L));
     }
 

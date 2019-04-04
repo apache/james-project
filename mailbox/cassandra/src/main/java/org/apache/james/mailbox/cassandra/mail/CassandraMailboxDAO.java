@@ -37,7 +37,6 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.MailboxBaseTupleUtil;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
@@ -49,6 +48,7 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.annotations.VisibleForTesting;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -131,20 +131,20 @@ public class CassandraMailboxDAO {
             .setUUID(ID, mailboxId.asUuid()));
     }
 
-    public Mono<SimpleMailbox> retrieveMailbox(CassandraId mailboxId) {
+    public Mono<Mailbox> retrieveMailbox(CassandraId mailboxId) {
         return executor.executeSingleRow(readStatement.bind()
             .setUUID(ID, mailboxId.asUuid()))
             .map(this::mailboxFromRow)
             .map(mailbox -> addMailboxId(mailboxId, mailbox));
     }
 
-    private SimpleMailbox addMailboxId(CassandraId cassandraId, SimpleMailbox mailbox) {
+    private Mailbox addMailboxId(CassandraId cassandraId, Mailbox mailbox) {
         mailbox.setMailboxId(cassandraId);
         return mailbox;
     }
 
-    private SimpleMailbox mailboxFromRow(Row row) {
-        return new SimpleMailbox(
+    private Mailbox mailboxFromRow(Row row) {
+        return new Mailbox(
             new MailboxPath(
                 row.getUDTValue(MAILBOX_BASE).getString(CassandraMailboxTable.MailboxBase.NAMESPACE),
                 row.getUDTValue(MAILBOX_BASE).getString(CassandraMailboxTable.MailboxBase.USER),
@@ -152,14 +152,14 @@ public class CassandraMailboxDAO {
             row.getLong(UIDVALIDITY));
     }
 
-    public Flux<SimpleMailbox> retrieveAllMailboxes() {
+    public Flux<Mailbox> retrieveAllMailboxes() {
         return executor.execute(listStatement.bind())
             .flatMapMany(cassandraUtils::convertToFlux)
             .map(this::toMailboxWithId);
     }
 
-    private SimpleMailbox toMailboxWithId(Row row) {
-        SimpleMailbox mailbox = mailboxFromRow(row);
+    private Mailbox toMailboxWithId(Row row) {
+        Mailbox mailbox = mailboxFromRow(row);
         mailbox.setMailboxId(CassandraId.of(row.getUUID(ID)));
         return mailbox;
     }

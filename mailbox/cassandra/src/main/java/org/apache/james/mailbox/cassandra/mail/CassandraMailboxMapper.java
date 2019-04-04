@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -46,8 +45,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -91,21 +90,21 @@ public class CassandraMailboxMapper implements MailboxMapper {
             .orElseThrow(() -> new MailboxNotFoundException(path));
     }
 
-    private Mono<SimpleMailbox> fromPreviousTable(MailboxPath path) {
+    private Mono<Mailbox> fromPreviousTable(MailboxPath path) {
         return mailboxPathDAO.retrieveId(path)
             .map(CassandraIdAndPath::getCassandraId)
             .flatMap(this::retrieveMailbox)
             .flatMap(this::migrate);
     }
 
-    private Mono<SimpleMailbox> migrate(SimpleMailbox mailbox) {
+    private Mono<Mailbox> migrate(Mailbox mailbox) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return mailboxPathV2DAO.save(mailbox.generateAssociatedPath(), mailboxId)
             .flatMap(success -> deleteIfSuccess(mailbox, success))
             .thenReturn(mailbox);
     }
 
-    private Mono<Void> deleteIfSuccess(SimpleMailbox mailbox, boolean success) {
+    private Mono<Void> deleteIfSuccess(Mailbox mailbox, boolean success) {
         if (success) {
             return mailboxPathDAO.delete(mailbox.generateAssociatedPath());
         }
@@ -122,22 +121,22 @@ public class CassandraMailboxMapper implements MailboxMapper {
             .orElseThrow(() -> new MailboxNotFoundException(id));
     }
 
-    private Mono<SimpleMailbox> retrieveMailbox(CassandraId mailboxId) {
+    private Mono<Mailbox> retrieveMailbox(CassandraId mailboxId) {
         Mono<MailboxACL> acl = cassandraACLMapper.getACL(mailboxId);
-        Mono<SimpleMailbox> simpleMailbox = mailboxDAO.retrieveMailbox(mailboxId);
+        Mono<Mailbox> simpleMailbox = mailboxDAO.retrieveMailbox(mailboxId);
 
         return acl.zipWith(simpleMailbox, this::addAcl);
     }
 
-    private SimpleMailbox addAcl(MailboxACL acl, SimpleMailbox mailbox) {
+    private Mailbox addAcl(MailboxACL acl, Mailbox mailbox) {
         mailbox.setACL(acl);
         return mailbox;
     }
 
     @Override
     public List<Mailbox> findMailboxWithPathLike(MailboxPath path) {
-        List<SimpleMailbox> mailboxesV2 = toMailboxes(path, mailboxPathV2DAO.listUserMailboxes(path.getNamespace(), path.getUser()));
-        List<SimpleMailbox> mailboxesV1 = toMailboxes(path, mailboxPathDAO.listUserMailboxes(path.getNamespace(), path.getUser()));
+        List<Mailbox> mailboxesV2 = toMailboxes(path, mailboxPathV2DAO.listUserMailboxes(path.getNamespace(), path.getUser()));
+        List<Mailbox> mailboxesV1 = toMailboxes(path, mailboxPathDAO.listUserMailboxes(path.getNamespace(), path.getUser()));
 
         List<Mailbox> mailboxesV1NotInV2 = mailboxesV1.stream()
             .filter(mailboxV1 -> mailboxesV2.stream()
@@ -151,7 +150,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
             .build();
     }
 
-    private List<SimpleMailbox> toMailboxes(MailboxPath path, Flux<CassandraIdAndPath> listUserMailboxes) {
+    private List<Mailbox> toMailboxes(MailboxPath path, Flux<CassandraIdAndPath> listUserMailboxes) {
         Pattern regex = Pattern.compile(constructEscapedRegexForMailboxNameMatching(path));
 
         return listUserMailboxes
@@ -161,7 +160,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
                 .block();
     }
 
-    private Mono<SimpleMailbox> retrieveMailbox(CassandraIdAndPath idAndPath) {
+    private Mono<Mailbox> retrieveMailbox(CassandraIdAndPath idAndPath) {
         return retrieveMailbox(idAndPath.getCassandraId())
             .switchIfEmpty(ReactorUtils.executeAndEmpty(
                 () -> LOGGER.warn("Could not retrieve mailbox {} with path {} in mailbox table.", idAndPath.getCassandraId(), idAndPath.getMailboxPath())));
@@ -169,28 +168,25 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     @Override
     public MailboxId save(Mailbox mailbox) throws MailboxException {
-        Preconditions.checkArgument(mailbox instanceof SimpleMailbox);
-        SimpleMailbox cassandraMailbox = (SimpleMailbox) mailbox;
-
-        CassandraId cassandraId = retrieveId(cassandraMailbox);
-        cassandraMailbox.setMailboxId(cassandraId);
-        if (!trySave(cassandraMailbox, cassandraId)) {
+        CassandraId cassandraId = retrieveId(mailbox);
+        mailbox.setMailboxId(cassandraId);
+        if (!trySave(mailbox, cassandraId)) {
             throw new MailboxExistsException(mailbox.generateAssociatedPath().asString());
         }
         return cassandraId;
     }
 
-    private boolean trySave(SimpleMailbox cassandraMailbox, CassandraId cassandraId) {
+    private boolean trySave(Mailbox cassandraMailbox, CassandraId cassandraId) {
         boolean isCreated = mailboxPathV2DAO.save(cassandraMailbox.generateAssociatedPath(), cassandraId).block();
         if (isCreated) {
-            Optional<SimpleMailbox> simpleMailbox = retrieveMailbox(cassandraId).blockOptional();
+            Optional<Mailbox> simpleMailbox = retrieveMailbox(cassandraId).blockOptional();
             simpleMailbox.ifPresent(mbx -> mailboxPathV2DAO.delete(mbx.generateAssociatedPath()).block());
             mailboxDAO.save(cassandraMailbox).block();
         }
         return isCreated;
     }
 
-    private CassandraId retrieveId(SimpleMailbox cassandraMailbox) {
+    private CassandraId retrieveId(Mailbox cassandraMailbox) {
         if (cassandraMailbox.getMailboxId() == null) {
             return CassandraId.timeBased();
         } else {
@@ -255,7 +251,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
         }
     }
 
-    private Mono<SimpleMailbox> toMailboxWithAcl(SimpleMailbox mailbox) {
+    private Mono<Mailbox> toMailboxWithAcl(Mailbox mailbox) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
         return cassandraACLMapper.getACL(cassandraId)
             .map(acl -> {

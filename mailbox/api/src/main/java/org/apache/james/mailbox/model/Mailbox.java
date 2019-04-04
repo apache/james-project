@@ -19,78 +19,158 @@
 package org.apache.james.mailbox.model;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxUtil;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
 /**
  * Models long term mailbox data.
  */
-public interface Mailbox {
-    void setMailboxId(MailboxId id);
-    
+public class Mailbox {
+    private MailboxId id = null;
+    private String namespace;
+    private String user;
+    private String name;
+    private final long uidValidity;
+    private MailboxACL acl = MailboxACL.EMPTY;
+
+    public Mailbox(MailboxPath path, long uidValidity, MailboxId mailboxId) {
+        this.id = mailboxId;
+        this.namespace = path.getNamespace();
+        this.user = path.getUser();
+        this.name = path.getName();
+        this.uidValidity = uidValidity;
+    }
+
+    public Mailbox(MailboxPath path, long uidValidity) {
+        this(path, uidValidity, null);
+    }
+
+    public Mailbox(Mailbox mailbox) {
+        this.id = mailbox.getMailboxId();
+        this.namespace = mailbox.getNamespace();
+        this.user = mailbox.getUser();
+        this.name = mailbox.getName();
+        this.uidValidity = mailbox.getUidValidity();
+        this.acl = new MailboxACL(mailbox.getACL().getEntries());
+    }
+
     /**
      * Gets the unique mailbox ID.
      * @return mailbox id
      */
-    MailboxId getMailboxId();
-
-    MailboxPath generateAssociatedPath();
+    public MailboxId getMailboxId() {
+        return id;
+    }
 
     /**
      * Gets the current namespace for this mailbox.
      * @return not null
      */
-    String getNamespace();
-    
+    public String getNamespace() {
+        return namespace;
+    }
+
     /**
      * Sets the current namespace for this mailbox.
      * @param namespace not null
      */
-    void setNamespace(String namespace);
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
 
     /**
      * Gets the current user for this mailbox.
      * @return not null
      */
-    String getUser();
-    
+    public String getUser() {
+        return user;
+    }
+
     /**
      * Sets the current user for this mailbox.
      * @param user not null
      */
-    void setUser(String user);
+    public void setUser(String user) {
+        this.user = user;
+    }
 
     /**
      * Gets the current name for this mailbox.
      * @return not null
      */
-    String getName();
-    
+    public String getName() {
+        return name;
+    }
+
     /**
      * Sets the current name for this mailbox.
      * @param name not null
      */
-    void setName(String name);
+    public void setName(String name) {
+        this.name = name;
+    }
 
     /**
      * Gets the current UID VALIDITY for this mailbox.
      * @return uid validity
      */
-    long getUidValidity();
-    
+    public long getUidValidity() {
+        return uidValidity;
+    }
+
+    public MailboxPath generateAssociatedPath() {
+        return new MailboxPath(getNamespace(), getUser(), getName());
+    }
+
+
+    public void setMailboxId(MailboxId id) {
+        this.id = id;
+    }
 
     /**
      * Gets the current ACL for this mailbox.
      *
      * @return ACL
      */
-    MailboxACL getACL();
-    
+    public MailboxACL getACL() {
+        return acl;
+    }
+
     /**
      * Sets the current ACL for this mailbox.
      *
      * @param acl
      */
-    void setACL(MailboxACL acl);
+    public void setACL(MailboxACL acl) {
+        this.acl = acl;
+    }
 
-    boolean isChildOf(Mailbox potentialParent, MailboxSession mailboxSession);
-    
+    public boolean isChildOf(Mailbox potentialParent, MailboxSession mailboxSession) {
+        return MailboxUtil.isMailboxChildOf(this, potentialParent, mailboxSession);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Mailbox) {
+            Mailbox o = (Mailbox)obj;
+            return Objects.equal(id, o.getMailboxId());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(namespace, user, name);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("namespace", namespace)
+            .add("user", user)
+            .add("name", name)
+            .toString();
+    }
 }

@@ -26,7 +26,6 @@ import java.util.Date;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
@@ -137,7 +136,7 @@ public abstract class MessageMoveTest {
     }
 
     private Mailbox createMailbox(MailboxPath mailboxPath) throws MailboxException {
-        SimpleMailbox mailbox = new SimpleMailbox(mailboxPath, UID_VALIDITY);
+        Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
         MailboxId id = mapperProvider.generateId();
         mailbox.setMailboxId(id);
         mailboxMapper.save(mailbox);

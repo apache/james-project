@@ -21,7 +21,6 @@ package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -235,8 +234,8 @@ public abstract class MailboxMapperACLTest {
             .containsEntry(key, rights);
     }
 
-    private SimpleMailbox createMailbox(MailboxPath mailboxPath) {
-        SimpleMailbox mailbox = new SimpleMailbox(mailboxPath, UID_VALIDITY);
+    private Mailbox createMailbox(MailboxPath mailboxPath) {
+        Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
         mailbox.setMailboxId(generateId());
         return mailbox;
     }

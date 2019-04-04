@@ -35,7 +35,6 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.events.MessageMoveEvent;
@@ -65,15 +64,15 @@ public class SpamAssassinListenerTest {
 
     private SpamAssassin spamAssassin;
     private SpamAssassinListener listener;
-    private SimpleMailbox inbox;
-    private SimpleMailbox mailbox1;
+    private Mailbox inbox;
+    private Mailbox mailbox1;
     private MailboxId mailboxId1;
     private MailboxId mailboxId2;
     private MailboxId spamMailboxId;
     private MailboxId spamCapitalMailboxId;
     private MailboxId trashMailboxId;
     private MailboxSessionMapperFactory mapperFactory;
-    private SimpleMailbox mailbox2;
+    private Mailbox mailbox2;
 
     @Before
     public void setup() throws Exception {
@@ -85,15 +84,15 @@ public class SpamAssassinListenerTest {
         spamAssassin = mock(SpamAssassin.class);
         mapperFactory = mailboxManager.getMapperFactory();
         MailboxMapper mailboxMapper = mapperFactory.createMailboxMapper(MAILBOX_SESSION);
-        inbox = new SimpleMailbox(MailboxPath.forUser(USER, DefaultMailboxes.INBOX), UID_VALIDITY);
-        mailbox1 = new SimpleMailbox(MailboxPath.forUser(USER, "mailbox1"), UID_VALIDITY);
-        mailbox2 = new SimpleMailbox(MailboxPath.forUser(USER, "mailbox2"), UID_VALIDITY);
+        inbox = new Mailbox(MailboxPath.forUser(USER, DefaultMailboxes.INBOX), UID_VALIDITY);
+        mailbox1 = new Mailbox(MailboxPath.forUser(USER, "mailbox1"), UID_VALIDITY);
+        mailbox2 = new Mailbox(MailboxPath.forUser(USER, "mailbox2"), UID_VALIDITY);
         mailboxMapper.save(inbox);
         mailboxId1 = mailboxMapper.save(mailbox1);
         mailboxId2 = mailboxMapper.save(mailbox2);
-        spamMailboxId = mailboxMapper.save(new SimpleMailbox(MailboxPath.forUser(USER, "Spam"), UID_VALIDITY));
-        spamCapitalMailboxId = mailboxMapper.save(new SimpleMailbox(MailboxPath.forUser(USER, "SPAM"), UID_VALIDITY));
-        trashMailboxId = mailboxMapper.save(new SimpleMailbox(MailboxPath.forUser(USER, "Trash"), UID_VALIDITY));
+        spamMailboxId = mailboxMapper.save(new Mailbox(MailboxPath.forUser(USER, "Spam"), UID_VALIDITY));
+        spamCapitalMailboxId = mailboxMapper.save(new Mailbox(MailboxPath.forUser(USER, "SPAM"), UID_VALIDITY));
+        trashMailboxId = mailboxMapper.save(new Mailbox(MailboxPath.forUser(USER, "Trash"), UID_VALIDITY));
 
         listener = new SpamAssassinListener(spamAssassin, systemMailboxesProvider, mailboxManager, mapperFactory, MailboxListener.ExecutionMode.SYNCHRONOUS);
     }

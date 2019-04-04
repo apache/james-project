@@ -30,9 +30,9 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,13 +48,13 @@ class CassandraUidProviderTest {
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraUidModule.MODULE);
 
     private CassandraUidProvider uidProvider;
-    private SimpleMailbox mailbox;
+    private Mailbox mailbox;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
         uidProvider = new CassandraUidProvider(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
         MailboxPath path = new MailboxPath("gsoc", "ieugen", "Trash");
-        mailbox = new SimpleMailbox(path, 1234);
+        mailbox = new Mailbox(path, 1234);
         mailbox.setMailboxId(CASSANDRA_ID);
     }
 

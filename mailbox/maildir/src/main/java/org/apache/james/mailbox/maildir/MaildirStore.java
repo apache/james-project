@@ -27,7 +27,6 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -131,7 +130,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
         MaildirFolder folder = new MaildirFolder(mailboxFile.getAbsolutePath(), mailboxPath, locker);
         folder.setMessageNameStrictParse(isMessageNameStrictParse());
         try {
-            Mailbox loadedMailbox = new SimpleMailbox(mailboxPath, folder.getUidValidity());
+            Mailbox loadedMailbox = new Mailbox(mailboxPath, folder.getUidValidity());
             loadedMailbox.setMailboxId(folder.readMailboxId());
             loadedMailbox.setACL(folder.getACL(session));
             return loadedMailbox;

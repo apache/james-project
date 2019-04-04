@@ -26,7 +26,6 @@ import javax.inject.Inject;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -95,7 +94,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
     
     @Override
     protected Mailbox doCreateMailbox(MailboxPath mailboxPath, MailboxSession session) {
-        SimpleMailbox cassandraMailbox = new SimpleMailbox(mailboxPath, randomUidValidity());
+        Mailbox cassandraMailbox = new Mailbox(mailboxPath, randomUidValidity());
         cassandraMailbox.setACL(MailboxACL.EMPTY);
         return cassandraMailbox;
     }

@@ -35,7 +35,7 @@ import javax.mail.Flags.Flag;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.SimpleMailbox;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -59,9 +59,9 @@ public class LuceneMailboxMessageSearchIndexTest {
     public static final long LIMIT = 100L;
     private LuceneMessageSearchIndex index;
     
-    private SimpleMailbox mailbox = new SimpleMailbox(MailboxPath.forUser("bob", "box"), 18, TestId.of(0));
-    private SimpleMailbox mailbox2 = new SimpleMailbox(MailboxPath.forUser("bob", "box"), 19, TestId.of(1));
-    private SimpleMailbox mailbox3 = new SimpleMailbox(MailboxPath.forUser("bob", "box"), 12, TestId.of(2));
+    private Mailbox mailbox = new Mailbox(MailboxPath.forUser("bob", "box"), 18, TestId.of(0));
+    private Mailbox mailbox2 = new Mailbox(MailboxPath.forUser("bob", "box"), 19, TestId.of(1));
+    private Mailbox mailbox3 = new Mailbox(MailboxPath.forUser("bob", "box"), 12, TestId.of(2));
     private MailboxSession session;
 
     private static final String FROM_ADDRESS = "Harry <harry@example.org>";

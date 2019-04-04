@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 
-import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -104,7 +103,7 @@ public abstract class MailboxMapperTest {
     public void saveShouldThrowWhenMailboxAlreadyExist() throws MailboxException {
         mailboxMapper.save(benwaInboxMailbox);
 
-        SimpleMailbox mailbox = new SimpleMailbox(benwaInboxMailbox);
+        Mailbox mailbox = new Mailbox(benwaInboxMailbox);
         mailbox.setMailboxId(null);
 
         assertThatThrownBy(() -> mailboxMapper.save(mailbox))
@@ -297,8 +296,8 @@ public abstract class MailboxMapperTest {
         mailboxMapper.save(bobInboxMailbox);
     }
 
-    private SimpleMailbox createMailbox(MailboxPath mailboxPath) {
-        SimpleMailbox mailbox = new SimpleMailbox(mailboxPath, UID_VALIDITY);
+    private Mailbox createMailbox(MailboxPath mailboxPath) {
+        Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
         mailbox.setMailboxId(generateId());
         return mailbox;
     }
