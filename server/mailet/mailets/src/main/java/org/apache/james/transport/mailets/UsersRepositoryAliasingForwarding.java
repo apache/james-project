@@ -45,6 +45,8 @@ import com.google.common.base.Preconditions;
  * 
  * 
  * @deprecated use org.apache.james.transport.mailets.RecipientRewriteTable
+ *
+ * JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release
  */
 @Experimental
 @Deprecated
