@@ -55,6 +55,8 @@ import com.google.common.collect.ImmutableMap;
  * access.
  * 
  * @deprecated use JPARecipientRewriteTable
+ *
+ * JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release, unless it finds a maintainer
  */
 @Deprecated
 public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
