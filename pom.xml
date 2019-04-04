@@ -629,6 +629,8 @@
         <karaf.tooling.exam.container.version>2.3.0</karaf.tooling.exam.container.version>
         <pax-logging-api.version>1.6.4</pax-logging-api.version>
         <jackson.version>2.9.6</jackson.version>
+        <feign.version>10.2.0</feign.version>
+        <feign-form.version>3.8.0</feign-form.version>
         <jetty.version>9.4.7.v20170914</jetty.version>
         <metrics.version>3.2.6</metrics.version>
         <testcontainers.version>1.11.1</testcontainers.version>
@@ -2092,6 +2094,26 @@
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt</artifactId>
                 <version>0.9.1</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.openfeign</groupId>
+                <artifactId>feign-core</artifactId>
+                <version>${feign.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.openfeign</groupId>
+                <artifactId>feign-jackson</artifactId>
+                <version>${feign.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.openfeign</groupId>
+                <artifactId>feign-slf4j</artifactId>
+                <version>${feign.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.openfeign.form</groupId>
+                <artifactId>feign-form</artifactId>
+                <version>${feign-form.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
