@@ -27,11 +27,9 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxUtil;
+import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.model.Mailbox;
-import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 
@@ -61,9 +59,13 @@ import org.apache.james.mailbox.model.MailboxPath;
     @NamedQuery(name = "findLastUid",
         query = "SELECT mailbox.lastUid FROM Mailbox mailbox WHERE mailbox.mailboxId = :idParam")
 })
-public class JPAMailbox implements Mailbox {
+public class JPAMailbox {
     
     private static final String TAB = " ";
+
+    public static JPAMailbox from(Mailbox mailbox) {
+        return new JPAMailbox(mailbox);
+    }
 
     /** The value for the mailboxId field */
     @Id
@@ -96,13 +98,6 @@ public class JPAMailbox implements Mailbox {
     @Basic(optional = false)
     @Column(name = "MAILBOX_HIGHEST_MODSEQ", nullable = true)
     private long highestModSeq;
-    
-    public static JPAMailbox from(Mailbox mailbox) {
-        if (mailbox instanceof JPAMailbox) {
-            return (JPAMailbox) mailbox;
-        }
-        return new JPAMailbox(mailbox);
-    }
 
     /**
      * JPA only
@@ -122,34 +117,80 @@ public class JPAMailbox implements Mailbox {
         this(mailbox.generateAssociatedPath(), mailbox.getUidValidity());
     }
 
-    @Override
     public JPAId getMailboxId() {
         return JPAId.of(mailboxId);
     }
 
-    @Override
     public void setMailboxId(MailboxId mailboxId) {
         this.mailboxId = ((JPAId)mailboxId).getRawId();
     }
 
-    @Override
+    public long consumeUid() {
+        return ++lastUid;
+    }
+
+    public long consumeModSeq() {
+        return ++highestModSeq;
+    }
+
+    public Mailbox toMailbox() {
+        return new SimpleMailbox(generateAssociatedPath(), uidValidity, new JPAId(mailboxId));
+    }
+
+    public MailboxPath generateAssociatedPath() {
+        return new MailboxPath(namespace, user, name);
+    }
+
+    public void setMailboxId(long mailboxId) {
+        this.mailboxId = mailboxId;
+    }
+
     public String getName() {
         return name;
     }
 
-    @Override
-    public long getUidValidity() {
-        return uidValidity;
-    }
-    
-    @Override
     public void setName(String name) {
         this.name = name;
     }
 
-    @Override
-    public MailboxPath generateAssociatedPath() {
-        return new MailboxPath(getNamespace(), getUser(), getName());
+    public long getUidValidity() {
+        return uidValidity;
+    }
+
+    public void setUidValidity(long uidValidity) {
+        this.uidValidity = uidValidity;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
+    public long getLastUid() {
+        return lastUid;
+    }
+
+    public void setLastUid(long lastUid) {
+        this.lastUid = lastUid;
+    }
+
+    public long getHighestModSeq() {
+        return highestModSeq;
+    }
+
+    public void setHighestModSeq(long highestModSeq) {
+        this.highestModSeq = highestModSeq;
     }
 
     @Override
@@ -185,56 +226,5 @@ public class JPAMailbox implements Mailbox {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public String getNamespace() {
-        return namespace;
-    }
-
-    @Override
-    public String getUser() {
-        return user;
-    }
-
-    @Override
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
-    }
-
-    @Override
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    
-    public long getLastUid() {
-        return lastUid;
-    }
-
-    public long getHighestModSeq() {
-        return highestModSeq;
-    }
-    
-    public long consumeUid() {
-        return ++lastUid;
-    }
-    
-    public long consumeModSeq() {
-        return ++highestModSeq;
-    }
-    
-    @Override
-    public MailboxACL getACL() {
-        return MailboxACL.EMPTY;
-    }
-
-    @Override
-    public void setACL(MailboxACL acl) {
-    }
-
-    @Override
-    public boolean isChildOf(Mailbox potentialParent, MailboxSession mailboxSession) {
-        return MailboxUtil.isMailboxChildOf(this, potentialParent, mailboxSession);
     }
 }

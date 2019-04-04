@@ -22,10 +22,10 @@ import java.util.EnumSet;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.SimpleMailbox;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.JPAMailboxMapper;
-import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -68,7 +68,7 @@ public abstract class JPAMailboxManager extends StoreMailboxManager {
     
     @Override
     protected Mailbox doCreateMailbox(MailboxPath path, MailboxSession session) {
-        return  new JPAMailbox(path, randomUidValidity());
+        return new SimpleMailbox(path, randomUidValidity());
     }
 
     @Override

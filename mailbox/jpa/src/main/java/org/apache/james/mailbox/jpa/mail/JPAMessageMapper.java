@@ -269,7 +269,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
         JPAMailbox originalMailbox = getEntityManager().find(JPAMailbox.class, originalMailboxId.getRawId());
         
         MessageMetaData messageMetaData = copy(mailbox, original);
-        delete(originalMailbox, original);
+        delete(originalMailbox.toMailbox(), original);
         
         return messageMetaData;
     }
@@ -333,8 +333,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     }
 
     /**
-     * @see org.apache.james.mailbox.store.mail.AbstractMessageMapper#save(Mailbox,
-     *      MailboxMessage)
+     * @see org.apache.james.mailbox.store.mail.AbstractMessageMapper#save(Mailbox, MailboxMessage)
      */
     protected MessageMetaData save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         try {
