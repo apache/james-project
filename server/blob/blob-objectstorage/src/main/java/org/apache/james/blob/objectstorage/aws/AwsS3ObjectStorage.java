@@ -19,15 +19,32 @@
 
 package org.apache.james.blob.objectstorage.aws;
 
+import java.io.IOException;
+import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
+import org.apache.james.util.Size;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
+import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 
@@ -35,9 +52,52 @@ public class AwsS3ObjectStorage {
 
     private static final Iterable<Module> JCLOUDS_MODULES =
         ImmutableSet.of(new SLF4JLoggingModule());
+    public static final int MAX_UPLOAD_THREADS = 5;
+    public static Size MULTIPART_UPLOAD_THRESHOLD;
+
+    static {
+        try {
+            MULTIPART_UPLOAD_THRESHOLD = Size.parse("5M");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static ObjectStorageBlobsDAOBuilder.RequireContainerName daoBuilder(AwsS3AuthConfiguration configuration) {
         return ObjectStorageBlobsDAOBuilder.forBlobStore(new BlobStoreBuilder(configuration));
+    }
+
+    public static Optional<Function<Blob, String>> putBlob(ContainerName containerName, AwsS3AuthConfiguration configuration) {
+        return Optional.of((blob) -> {
+            try {
+                PutObjectRequest request = new PutObjectRequest(containerName.value(),
+                    blob.getMetadata().getName(),
+                    blob.getPayload().openStream(),
+                    new ObjectMetadata());
+
+                return getTransferManager(configuration)
+                    .upload(request)
+                    .waitForUploadResult()
+                    .getETag();
+            } catch (AmazonClientException | InterruptedException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    private static TransferManager getTransferManager(AwsS3AuthConfiguration configuration) {
+        AmazonS3 amazonS3 = AmazonS3ClientBuilder
+            .standard()
+            .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(configuration.getAccessKeyId(), configuration.getSecretKey())))
+            .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(configuration.getEndpoint(), null))
+            .build();
+
+        return TransferManagerBuilder
+            .standard()
+            .withS3Client(amazonS3)
+            .withMultipartUploadThreshold(MULTIPART_UPLOAD_THRESHOLD.getValue())
+            .withExecutorFactory(() -> Executors.newFixedThreadPool(MAX_UPLOAD_THREADS))
+            .build();
     }
 
     private static class BlobStoreBuilder implements Supplier<BlobStore> {

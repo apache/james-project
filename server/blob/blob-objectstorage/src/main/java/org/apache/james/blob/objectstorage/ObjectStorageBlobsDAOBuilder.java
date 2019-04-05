@@ -20,10 +20,12 @@
 package org.apache.james.blob.objectstorage;
 
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.apache.james.blob.api.BlobId;
 import org.jclouds.blobstore.BlobStore;
+import org.jclouds.blobstore.domain.Blob;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -50,12 +52,14 @@ public class ObjectStorageBlobsDAOBuilder {
         private final ContainerName containerName;
         private final BlobId.Factory blobIdFactory;
         private Optional<PayloadCodec> payloadCodec;
+        private Optional<Function<Blob, String>> putBlob;
 
         public ReadyToBuild(Supplier<BlobStore> supplier, BlobId.Factory blobIdFactory, ContainerName containerName) {
             this.blobIdFactory = blobIdFactory;
             this.containerName = containerName;
             this.payloadCodec = Optional.empty();
             this.supplier = supplier;
+            this.putBlob = Optional.empty();
         }
 
         public ReadyToBuild payloadCodec(PayloadCodec payloadCodec) {
@@ -68,11 +72,22 @@ public class ObjectStorageBlobsDAOBuilder {
             return this;
         }
 
+        public ReadyToBuild putBlob(Optional<Function<Blob, String>> putBlob) {
+            this.putBlob = putBlob;
+            return this;
+        }
+
         public ObjectStorageBlobsDAO build() {
             Preconditions.checkState(containerName != null);
             Preconditions.checkState(blobIdFactory != null);
 
-            return new ObjectStorageBlobsDAO(containerName, blobIdFactory, supplier.get(), payloadCodec.orElse(PayloadCodec.DEFAULT_CODEC));
+            BlobStore blobStore = supplier.get();
+
+            return new ObjectStorageBlobsDAO(containerName,
+                blobIdFactory,
+                blobStore,
+                putBlob.orElse((blob) -> blobStore.putBlob(containerName.value(), blob)),
+                payloadCodec.orElse(PayloadCodec.DEFAULT_CODEC));
         }
 
         @VisibleForTesting

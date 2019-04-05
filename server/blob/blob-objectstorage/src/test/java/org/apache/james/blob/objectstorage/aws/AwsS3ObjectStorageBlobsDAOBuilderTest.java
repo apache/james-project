@@ -78,7 +78,8 @@ class AwsS3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOCont
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(configuration)
             .container(containerName)
-            .blobIdFactory(new HashBlobId.Factory());
+            .blobIdFactory(new HashBlobId.Factory())
+            .putBlob(AwsS3ObjectStorage.putBlob(containerName, configuration));
 
         assertBlobsDAOCanStoreAndRetrieve(builder);
     }

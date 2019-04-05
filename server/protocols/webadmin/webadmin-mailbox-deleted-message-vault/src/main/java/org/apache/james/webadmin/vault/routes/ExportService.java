@@ -74,7 +74,7 @@ class ExportService {
         try (FileBackedOutputStream fileOutputStream = new FileBackedOutputStream(FileUtils.ONE_MB_BI.intValue())) {
             zipper.zip(contentLoader(user), messages.toStream(), fileOutputStream);
             ByteSource byteSource = fileOutputStream.asByteSource();
-            return blobStore.save(byteSource.openStream(), byteSource.size()).block();
+            return blobStore.save(byteSource.openStream()).block();
         }
     }
 

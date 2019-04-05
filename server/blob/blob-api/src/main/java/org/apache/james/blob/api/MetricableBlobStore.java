@@ -54,9 +54,9 @@ public class MetricableBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(InputStream data, long contentLength) {
+    public Mono<BlobId> save(InputStream data) {
         return metricFactory
-            .runPublishingTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(data, contentLength));
+            .runPublishingTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(data));
     }
 
     @Override

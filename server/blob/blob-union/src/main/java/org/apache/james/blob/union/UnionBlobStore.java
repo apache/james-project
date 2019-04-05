@@ -92,14 +92,14 @@ public class UnionBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(InputStream data, long contentLength) {
+    public Mono<BlobId> save(InputStream data) {
         try {
             return saveToCurrentFallbackIfFails(
-                Mono.defer(() -> currentBlobStore.save(data, contentLength)),
-                () -> Mono.defer(() -> legacyBlobStore.save(data, contentLength)));
+                Mono.defer(() -> currentBlobStore.save(data)),
+                () -> Mono.defer(() -> legacyBlobStore.save(data)));
         } catch (Exception e) {
             LOGGER.error("exception directly happens while saving InputStream data, fall back to legacy blob store", e);
-            return legacyBlobStore.save(data, contentLength);
+            return legacyBlobStore.save(data);
         }
     }
 

@@ -184,7 +184,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     @Test
     void saveInputStreamShouldNotCompleteWhenDoesNotAwait() {
         Mono<BlobId> blobIdFuture = testee
-            .save(new ByteArrayInputStream(BIG_STRING.getBytes(StandardCharsets.UTF_8)), BIG_STRING.length())
+            .save(new ByteArrayInputStream(BIG_STRING.getBytes(StandardCharsets.UTF_8)))
             .subscribeOn(Schedulers.elastic());
         assertThat(blobIdFuture.toFuture()).isNotCompleted();
     }
