@@ -40,16 +40,16 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 @ExtendWith(CassandraRestartExtension.class)
 public abstract class CassandraMailboxPathDAOTest {
-    protected static final String USER = "user";
-    protected static final String OTHER_USER = "other";
-    protected static final CassandraId INBOX_ID = CassandraId.timeBased();
-    protected static final CassandraId OUTBOX_ID = CassandraId.timeBased();
-    protected static final CassandraId otherMailboxId = CassandraId.timeBased();
+    private static final String USER = "user";
+    private static final String OTHER_USER = "other";
 
-    public static final MailboxPath USER_INBOX_MAILBOXPATH = MailboxPath.forUser(USER, "INBOX");
-    public static final CassandraIdAndPath INBOX_ID_AND_PATH = new CassandraIdAndPath(INBOX_ID, USER_INBOX_MAILBOXPATH);
-    public static final MailboxPath USER_OUTBOX_MAILBOXPATH = MailboxPath.forUser(USER, "OUTBOX");
-    public static final MailboxPath OTHER_USER_MAILBOXPATH = MailboxPath.forUser(OTHER_USER, "INBOX");
+    static final CassandraId INBOX_ID = CassandraId.timeBased();
+    static final CassandraId OUTBOX_ID = CassandraId.timeBased();
+    static final CassandraId otherMailboxId = CassandraId.timeBased();
+    static final MailboxPath USER_INBOX_MAILBOXPATH = MailboxPath.forUser(USER, "INBOX");
+    static final MailboxPath USER_OUTBOX_MAILBOXPATH = MailboxPath.forUser(USER, "OUTBOX");
+    static final MailboxPath OTHER_USER_MAILBOXPATH = MailboxPath.forUser(OTHER_USER, "INBOX");
+    static final CassandraIdAndPath INBOX_ID_AND_PATH = new CassandraIdAndPath(INBOX_ID, USER_INBOX_MAILBOXPATH);
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(

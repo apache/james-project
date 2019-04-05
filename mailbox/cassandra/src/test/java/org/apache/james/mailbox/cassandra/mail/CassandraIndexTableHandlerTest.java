@@ -53,11 +53,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 @ExtendWith(CassandraRestartExtension.class)
 class CassandraIndexTableHandlerTest {
 
-    public static final CassandraId MAILBOX_ID = CassandraId.timeBased();
-    public static final MessageUid MESSAGE_UID = MessageUid.of(18L);
-    public static final CassandraMessageId CASSANDRA_MESSAGE_ID = new CassandraMessageId.Factory().generate();
-    public static final int UID_VALIDITY = 15;
-    public static final long MODSEQ = 17;
+    private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
+    private static final MessageUid MESSAGE_UID = MessageUid.of(18L);
+    private static final CassandraMessageId CASSANDRA_MESSAGE_ID = new CassandraMessageId.Factory().generate();
+    private static final int UID_VALIDITY = 15;
+    private static final long MODSEQ = 17;
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(

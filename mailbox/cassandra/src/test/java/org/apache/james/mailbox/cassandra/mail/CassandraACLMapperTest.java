@@ -52,7 +52,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 @ExtendWith(CassandraRestartExtension.class)
 class CassandraACLMapperTest {
 
-    static final CassandraId MAILBOX_ID = CassandraId.of(UUID.fromString("464765a0-e4e7-11e4-aba4-710c1de3782b"));
+    private static final CassandraId MAILBOX_ID = CassandraId.of(UUID.fromString("464765a0-e4e7-11e4-aba4-710c1de3782b"));
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraAclModule.MODULE);
