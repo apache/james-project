@@ -27,7 +27,7 @@ public interface BlobStore {
 
     Mono<BlobId> save(byte[] data);
 
-    Mono<BlobId> save(InputStream data, long contentLength);
+    Mono<BlobId> save(InputStream data);
 
     Mono<byte[]> readBytes(BlobId blobId);
 

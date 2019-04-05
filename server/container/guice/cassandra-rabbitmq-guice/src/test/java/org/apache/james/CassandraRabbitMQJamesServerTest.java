@@ -94,7 +94,7 @@ class CassandraRabbitMQJamesServerTest {
             .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE);
 
     @Nested
-    @TestInstance(Lifecycle.PER_METHOD)
+    @TestInstance(Lifecycle.PER_CLASS)
     class WithEncryptedSwift implements ContractSuite {
         @RegisterExtension
         JamesServerExtension testExtension = baseExtensionBuilder()
@@ -113,7 +113,7 @@ class CassandraRabbitMQJamesServerTest {
     }
 
     @Nested
-    @TestInstance(Lifecycle.PER_METHOD)
+    @TestInstance(Lifecycle.PER_CLASS)
     class WithDefaultSwift implements ContractSuite {
         @RegisterExtension
         JamesServerExtension testExtension = baseExtensionBuilder()
@@ -131,14 +131,14 @@ class CassandraRabbitMQJamesServerTest {
     }
 
     @Nested
-    @TestInstance(Lifecycle.PER_METHOD)
+    @TestInstance(Lifecycle.PER_CLASS)
     class WithoutSwiftOrAwsS3 implements ContractSuite {
         @RegisterExtension
         JamesServerExtension testExtension = baseExtensionBuilder().build();
     }
 
     @Nested
-    @TestInstance(Lifecycle.PER_METHOD)
+    @TestInstance(Lifecycle.PER_CLASS)
     class WithEncryptedAwsS3 implements ContractSuite {
         @RegisterExtension
         JamesServerExtension testExtension = baseExtensionBuilder()
@@ -157,7 +157,7 @@ class CassandraRabbitMQJamesServerTest {
     }
 
     @Nested
-    @TestInstance(Lifecycle.PER_METHOD)
+    @TestInstance(Lifecycle.PER_CLASS)
     class WithDefaultAwsS3 implements ContractSuite {
         @RegisterExtension
         JamesServerExtension testExtension = baseExtensionBuilder()

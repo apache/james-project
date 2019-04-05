@@ -21,6 +21,7 @@ package org.apache.james.modules.objectstorage;
 
 import java.io.FileNotFoundException;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -32,6 +33,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
+import org.apache.james.blob.objectstorage.PutBlobFunction;
 import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 import org.apache.james.blob.objectstorage.aws.AwsS3ObjectStorage;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
@@ -67,6 +69,7 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
             .container(configuration.getNamespace())
             .blobIdFactory(blobIdFactory)
             .payloadCodec(configuration.getPayloadCodec())
+            .putBlob(putBlob(blobIdFactory, configuration))
             .build();
         dao.createContainer(configuration.getNamespace()).block(Duration.ofMinutes(1));
         return dao;
@@ -80,6 +83,17 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
                 return AwsS3ObjectStorage.daoBuilder((AwsS3AuthConfiguration) configuration.getSpecificAuthConfiguration());
         }
         throw new IllegalArgumentException("unknown provider " + configuration.getProvider());
+    }
+
+    private Optional<PutBlobFunction> putBlob(BlobId.Factory blobIdFactory, ObjectStorageBlobConfiguration configuration) {
+        switch (configuration.getProvider()) {
+            case SWIFT:
+                return Optional.empty();
+            case AWSS3:
+                return AwsS3ObjectStorage.putBlob(blobIdFactory, configuration.getNamespace(), (AwsS3AuthConfiguration) configuration.getSpecificAuthConfiguration());
+        }
+        throw new IllegalArgumentException("unknown provider " + configuration.getProvider());
+
     }
 
 }

@@ -50,12 +50,14 @@ public class ObjectStorageBlobsDAOBuilder {
         private final ContainerName containerName;
         private final BlobId.Factory blobIdFactory;
         private Optional<PayloadCodec> payloadCodec;
+        private Optional<PutBlobFunction> putBlob;
 
         public ReadyToBuild(Supplier<BlobStore> supplier, BlobId.Factory blobIdFactory, ContainerName containerName) {
             this.blobIdFactory = blobIdFactory;
             this.containerName = containerName;
             this.payloadCodec = Optional.empty();
             this.supplier = supplier;
+            this.putBlob = Optional.empty();
         }
 
         public ReadyToBuild payloadCodec(PayloadCodec payloadCodec) {
@@ -68,11 +70,26 @@ public class ObjectStorageBlobsDAOBuilder {
             return this;
         }
 
+        public ReadyToBuild putBlob(Optional<PutBlobFunction> putBlob) {
+            this.putBlob = putBlob;
+            return this;
+        }
+
         public ObjectStorageBlobsDAO build() {
             Preconditions.checkState(containerName != null);
             Preconditions.checkState(blobIdFactory != null);
 
-            return new ObjectStorageBlobsDAO(containerName, blobIdFactory, supplier.get(), payloadCodec.orElse(PayloadCodec.DEFAULT_CODEC));
+            BlobStore blobStore = supplier.get();
+
+            return new ObjectStorageBlobsDAO(containerName,
+                blobIdFactory,
+                blobStore,
+                putBlob.orElse(defaultPutBlob(blobStore)),
+                payloadCodec.orElse(PayloadCodec.DEFAULT_CODEC));
+        }
+
+        private PutBlobFunction defaultPutBlob(BlobStore blobStore) {
+            return (blob) -> blobStore.putBlob(containerName.value(), blob);
         }
 
         @VisibleForTesting
