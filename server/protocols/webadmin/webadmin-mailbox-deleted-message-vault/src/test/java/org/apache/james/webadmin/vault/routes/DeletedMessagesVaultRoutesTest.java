@@ -29,6 +29,7 @@ import static org.apache.james.vault.DeletedMessageFixture.DELETION_DATE;
 import static org.apache.james.vault.DeletedMessageFixture.DELIVERY_DATE;
 import static org.apache.james.vault.DeletedMessageFixture.FINAL_STAGE;
 import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_1;
+import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_2;
 import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_3;
 import static org.apache.james.vault.DeletedMessageFixture.SUBJECT;
 import static org.apache.james.vault.DeletedMessageFixture.USER;
@@ -47,6 +48,8 @@ import static org.apache.mailet.base.MailAddressFixture.SENDER2;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.startsWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -61,6 +64,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Clock;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -99,6 +104,8 @@ import org.apache.james.vault.DeletedMessageZipper;
 import org.apache.james.vault.RetentionConfiguration;
 import org.apache.james.vault.memory.MemoryDeletedMessagesVault;
 import org.apache.james.vault.search.Query;
+import org.apache.james.vault.utils.DeleteByQueryExecutor;
+import org.apache.james.vault.utils.VaultGarbageCollectionTask;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.TasksRoutes;
@@ -113,6 +120,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 import io.restassured.RestAssured;
@@ -150,10 +158,12 @@ class DeletedMessagesVaultRoutesTest {
     private MemoryUsersRepository usersRepository;
     private ExportService exportService;
     private HashBlobId.Factory blobIdFactory;
+    private Clock clock;
 
     @BeforeEach
     void beforeEach() throws Exception {
-        vault = spy(new MemoryDeletedMessagesVault(RetentionConfiguration.DEFAULT, Clock.systemUTC()));
+        clock = Clock.systemUTC();
+        vault = spy(new MemoryDeletedMessagesVault(RetentionConfiguration.DEFAULT, clock));
         InMemoryIntegrationResources inMemoryResource = InMemoryIntegrationResources.defaultResources();
         mailboxManager = spy(inMemoryResource.getMailboxManager());
 
@@ -171,7 +181,7 @@ class DeletedMessagesVaultRoutesTest {
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
             new TasksRoutes(taskManager, jsonTransformer),
-            new DeletedMessagesVaultRoutes(vaultRestore, exportService, jsonTransformer, taskManager, queryTranslator, usersRepository));
+            new DeletedMessagesVaultRoutes(vault, vaultRestore, exportService, jsonTransformer, taskManager, queryTranslator, usersRepository));
 
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
@@ -259,6 +269,60 @@ class DeletedMessagesVaultRoutesTest {
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is(notNullValue()))
                 .body("details", is(notNullValue()));
+        }
+
+        @Test
+        void purgeAPIShouldReturnInvalidWhenScopeIsMissing() {
+            when()
+                .delete()
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid arguments supplied in the user request"))
+                .body("details", is("parameter is missing"));
+        }
+
+        @Test
+        void purgeAPIShouldReturnInvalidWhenPassingEmptyScope() {
+            given()
+                .queryParam("scope", "")
+            .when()
+                .delete()
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid arguments supplied in the user request"))
+                .body("details", is("scope cannot be empty or blank"));
+        }
+
+        @Test
+        void purgeAPIShouldReturnInvalidWhenScopeIsInValid() {
+            given()
+                .queryParam("scope", "invalid action")
+            .when()
+                .delete()
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid arguments supplied in the user request"))
+                .body("details", startsWith("'invalid action' is not a valid scope."));
+        }
+
+        @Test
+        void purgeAPIShouldReturnInvalidWhenPassingCaseInsensitiveScope() {
+            given()
+                .queryParam("scope", "EXPIRED")
+            .when()
+                .delete()
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid arguments supplied in the user request"))
+                .body("details", startsWith("'EXPIRED' is not a valid scope."));
         }
 
         @ParameterizedTest
@@ -1850,6 +1914,178 @@ class DeletedMessagesVaultRoutesTest {
                 Stream.of(DELETED_MESSAGE, DELETED_MESSAGE_2),
                 expectedZippedData);
             return expectedZippedData.toByteArray();
+        }
+    }
+
+    @Nested
+    class PurgeTest {
+
+        @Test
+        void purgeShouldReturnATaskCreated() {
+            given()
+                .queryParam("scope", "expired")
+            .when()
+                .delete()
+            .then()
+                .statusCode(HttpStatus.CREATED_201)
+                .body("taskId", notNullValue());
+        }
+
+        @Test
+        void purgeShouldProduceASuccessfulTaskWithAdditionalInformation() {
+            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+            vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+
+            String taskId =
+                with()
+                    .queryParam("scope", "expired")
+                    .delete()
+                .jsonPath()
+                    .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("status", is("completed"))
+                .body("taskId", is(taskId))
+                .body("type", is(VaultGarbageCollectionTask.TYPE))
+                .body("additionalInformation.beginningOfRetentionPeriod", is(notNullValue()))
+                .body("additionalInformation.handledUserCount", is(1))
+                .body("additionalInformation.permanantlyDeletedMessages", is(2))
+                .body("additionalInformation.vaultSearchErrorCount", is(0))
+                .body("additionalInformation.deletionErrorCount", is(0))
+                .body("startedDate", is(notNullValue()))
+                .body("submitDate", is(notNullValue()))
+                .body("completedDate", is(notNullValue()));
+        }
+
+        @Test
+        void purgeShouldNotDeleteNotExpiredMessagesInTheVault() {
+            DeletedMessage notExpiredMessage = DeletedMessage.builder()
+                .messageId(InMemoryMessageId.of(46))
+                .originMailboxes(MAILBOX_ID_1, MAILBOX_ID_2)
+                .user(USER)
+                .deliveryDate(DELIVERY_DATE)
+                .deletionDate(ZonedDateTime.ofInstant(clock.instant(), ZoneOffset.UTC))
+                .sender(MaybeSender.of(SENDER))
+                .recipients(RECIPIENT1, RECIPIENT3)
+                .hasAttachment(false)
+                .size(CONTENT.length)
+                .build();
+
+            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+            vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+            vault.append(USER, notExpiredMessage, new ByteArrayInputStream(CONTENT)).block();
+
+            String taskId =
+                with()
+                    .queryParam("scope", "expired")
+                    .delete()
+                .jsonPath()
+                    .get("taskId");
+
+            with()
+                .basePath(TasksRoutes.BASE)
+                .get(taskId + "/await");
+
+            assertThat(Flux.from(vault.search(USER, Query.ALL)).toStream())
+                .containsOnly(notExpiredMessage);
+        }
+
+        @Test
+        void purgeShouldNotAppendMessagesToUserMailbox() throws Exception {
+            vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+            vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+
+            String taskId =
+                with()
+                    .queryParam("scope", "expired")
+                    .delete()
+                .jsonPath()
+                    .get("taskId");
+
+            with()
+                .basePath(TasksRoutes.BASE)
+                .get(taskId + "/await");
+
+            assertThat(hasAnyMail(USER))
+                .isFalse();
+        }
+
+        @Nested
+        class FailingPurgeTest {
+
+            @Test
+            void purgeShouldProduceAFailedTaskWithVaultSearchError() {
+                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+
+                doReturn(new DeleteByQueryExecutor(vault)).when(vault).getDeleteByQueryExecutor();
+                doReturn(Flux.error(new RuntimeException("mock exception")))
+                    .when(vault)
+                    .search(any(), any());
+
+                String taskId =
+                    with()
+                        .queryParam("scope", "expired")
+                        .delete()
+                    .jsonPath()
+                        .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", is("failed"))
+                    .body("taskId", is(taskId))
+                    .body("type", is(VaultGarbageCollectionTask.TYPE))
+                    .body("additionalInformation.beginningOfRetentionPeriod", is(notNullValue()))
+                    .body("additionalInformation.handledUserCount", is(1))
+                    .body("additionalInformation.permanantlyDeletedMessages", is(0))
+                    .body("additionalInformation.vaultSearchErrorCount", is(1))
+                    .body("additionalInformation.deletionErrorCount", is(0))
+                    .body("startedDate", is(notNullValue()))
+                    .body("submitDate", is(notNullValue()))
+                    .body("completedDate", is(nullValue()));
+            }
+
+            @Test
+            void purgeShouldProduceAFailedTaskWithVaultDeleteError() {
+                vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+
+                doReturn(new DeleteByQueryExecutor(vault)).when(vault).getDeleteByQueryExecutor();
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .when(vault)
+                    .delete(any(), any());
+
+                String taskId =
+                    with()
+                        .queryParam("scope", "expired")
+                        .delete()
+                    .jsonPath()
+                        .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", is("failed"))
+                    .body("taskId", is(taskId))
+                    .body("type", is(VaultGarbageCollectionTask.TYPE))
+                    .body("additionalInformation.beginningOfRetentionPeriod", is(notNullValue()))
+                    .body("additionalInformation.handledUserCount", is(1))
+                    .body("additionalInformation.permanantlyDeletedMessages", is(0))
+                    .body("additionalInformation.vaultSearchErrorCount", is(0))
+                    .body("additionalInformation.deletionErrorCount", is(2))
+                    .body("startedDate", is(notNullValue()))
+                    .body("submitDate", is(notNullValue()))
+                    .body("completedDate", is(nullValue()));
+            }
         }
     }
 

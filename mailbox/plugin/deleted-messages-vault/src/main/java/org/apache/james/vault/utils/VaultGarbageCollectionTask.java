@@ -65,7 +65,7 @@ public class VaultGarbageCollectionTask implements Task {
         }
     }
 
-    private static final String TYPE = "deletedMessages/garbageCollection";
+    public static final String TYPE = "deletedMessages/garbageCollection";
 
     private final DeleteByQueryExecutor deleteByQueryExecutor;
     private final DeleteByQueryExecutor.Notifiers notifiers;

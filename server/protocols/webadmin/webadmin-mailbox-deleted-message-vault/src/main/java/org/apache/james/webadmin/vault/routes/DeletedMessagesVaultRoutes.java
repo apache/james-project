@@ -23,10 +23,12 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.internet.AddressException;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -40,6 +42,7 @@ import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.search.Query;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
@@ -63,6 +66,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import spark.HaltException;
 import spark.Request;
 import spark.Response;
 import spark.Service;
@@ -85,7 +89,8 @@ public class DeletedMessagesVaultRoutes implements Routes {
                 .findFirst();
         }
 
-        private static List<String> plainValues() {
+        @VisibleForTesting
+        static List<String> plainValues() {
             return Stream.of(values())
                 .map(VaultAction::getValue)
                 .collect(Guavate.toImmutableList());
@@ -102,16 +107,51 @@ public class DeletedMessagesVaultRoutes implements Routes {
         }
     }
 
+    enum VaultScope {
+        EXPIRED("expired");
+
+        static Optional<VaultScope> getScope(String value) {
+            Preconditions.checkNotNull(value, "scope cannot be null");
+            Preconditions.checkArgument(StringUtils.isNotBlank(value), "scope cannot be empty or blank");
+
+            return Stream.of(values())
+                .filter(action -> action.value.equals(value))
+                .findFirst();
+        }
+
+        @VisibleForTesting
+        static List<String> plainValues() {
+            return Stream.of(values())
+                .map(VaultScope::getValue)
+                .collect(Guavate.toImmutableList());
+        }
+
+        private final String value;
+
+        VaultScope(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
+
     public static final String ROOT_PATH = "deletedMessages";
     public static final String USERS = "users";
     public static final String USER_PATH = ROOT_PATH + SEPARATOR + USERS;
-    private static final String USER_PATH_PARAM = "user";
-    private static final String RESTORE_PATH = USER_PATH + SEPARATOR + ":" + USER_PATH_PARAM;
+    private static final String USER_PATH_PARAM = ":user";
+    static final String MESSAGE_PATH_PARAM = "messages";
+    private static final String MESSAGE_ID_PARAM = ":messageId";
+    private static final String RESTORE_PATH = USER_PATH + SEPARATOR + USER_PATH_PARAM;
+    private static final String DELETE_PATH = USER_PATH + SEPARATOR + USER_PATH_PARAM + SEPARATOR + MESSAGE_PATH_PARAM + SEPARATOR + MESSAGE_ID_PARAM;
+    private static final String SCOPE_QUERY_PARAM = "scope";
     private static final String ACTION_QUERY_PARAM = "action";
     private static final String EXPORT_TO_QUERY_PARAM = "exportTo";
 
     private final RestoreService vaultRestore;
     private final ExportService vaultExport;
+    private final DeletedMessageVault deletedMessageVault;
     private final JsonTransformer jsonTransformer;
     private final TaskManager taskManager;
     private final JsonExtractor<QueryElement> jsonExtractor;
@@ -120,8 +160,9 @@ public class DeletedMessagesVaultRoutes implements Routes {
 
     @Inject
     @VisibleForTesting
-    DeletedMessagesVaultRoutes(RestoreService vaultRestore, ExportService vaultExport, JsonTransformer jsonTransformer,
+    DeletedMessagesVaultRoutes(DeletedMessageVault deletedMessageVault, RestoreService vaultRestore, ExportService vaultExport, JsonTransformer jsonTransformer,
                                TaskManager taskManager, QueryTranslator queryTranslator, UsersRepository usersRepository) {
+        this.deletedMessageVault = deletedMessageVault;
         this.vaultRestore = vaultRestore;
         this.vaultExport = vaultExport;
         this.jsonTransformer = jsonTransformer;
@@ -139,6 +180,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
     @Override
     public void define(Service service) {
         service.post(RESTORE_PATH, this::userActions, jsonTransformer);
+        service.delete(ROOT_PATH, this::deleteWithScope, jsonTransformer);
     }
 
     @POST
@@ -175,14 +217,52 @@ public class DeletedMessagesVaultRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     private TaskIdDto userActions(Request request, Response response) throws JsonExtractException {
-        VaultAction requestedAction = extractVaultAction(request);
+        VaultAction requestedAction = extractParam(request, ACTION_QUERY_PARAM, this::getVaultAction);
+        validateAction(requestedAction, VaultAction.RESTORE, VaultAction.EXPORT);
 
-        Task requestedTask = generateTask(requestedAction, request);
+        Task requestedTask = generateUserTask(requestedAction, request);
         TaskId taskId = taskManager.submit(requestedTask);
         return TaskIdDto.respond(response, taskId);
     }
 
-    private Task generateTask(VaultAction requestedAction, Request request) throws JsonExtractException {
+    @DELETE
+    @Path(ROOT_PATH)
+    @ApiOperation(value = "Purge all expired messages based on retentionPeriod of deletedMessageVault configuration")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            required = true,
+            name = "action",
+            dataType = "String",
+            paramType = "query",
+            example = "?scope=expired",
+            value = "Compulsory. Needs to be a purge action")
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - action is invalid"),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
+    })
+    private TaskIdDto deleteWithScope(Request request, Response response) {
+        Task vaultTask = generateVaultScopeTask(request);
+        TaskId taskId = taskManager.submit(vaultTask);
+        return TaskIdDto.respond(response, taskId);
+    }
+
+    private Task generateVaultScopeTask(Request request) {
+        VaultScope scope = extractParam(request, SCOPE_QUERY_PARAM, this::getVaultScope);
+        if (!scope.equals(VaultScope.EXPIRED)) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message(String.format("'%s' is not a valid scope. Supported values are: %s",
+                    scope.value,
+                    VaultScope.plainValues()))
+                .haltError();
+        }
+        return deletedMessageVault.deleteExpiredMessagesTask();
+    }
+
+    private Task generateUserTask(VaultAction requestedAction, Request request) throws JsonExtractException {
         User user = extractUser(request);
         validateUserExist(user);
         Query query = translate(jsonExtractor.parse(request.body()));
@@ -266,11 +346,11 @@ public class DeletedMessagesVaultRoutes implements Routes {
         }
     }
 
-    private VaultAction extractVaultAction(Request request) {
-        String actionParam = request.queryParams(ACTION_QUERY_PARAM);
-        return Optional.ofNullable(actionParam)
-            .map(this::getVaultAction)
-            .orElseThrow(() -> new IllegalArgumentException("action parameter is missing"));
+    private <T> T extractParam(Request request, String queryParam, Function<String, T> mapper) {
+        String param = request.queryParams(queryParam);
+        return Optional.ofNullable(param)
+            .map(mapper)
+            .orElseThrow(() -> new IllegalArgumentException("parameter is missing"));
     }
 
     private VaultAction getVaultAction(String actionString) {
@@ -278,5 +358,31 @@ public class DeletedMessagesVaultRoutes implements Routes {
             .orElseThrow(() -> new IllegalArgumentException(String.format("'%s' is not a valid action. Supported values are: (%s)",
                 actionString,
                 Joiner.on(",").join(VaultAction.plainValues()))));
+    }
+
+    private VaultScope getVaultScope(String scopeString) {
+        return VaultScope.getScope(scopeString)
+            .orElseThrow(() -> new IllegalArgumentException(String.format("'%s' is not a valid scope. Supported values are: (%s)",
+                scopeString,
+                Joiner.on(",").join(VaultScope.plainValues()))));
+    }
+
+    private void validateAction(VaultAction requestedAction, VaultAction... validActions) {
+        Stream.of(validActions)
+            .filter(action -> action.equals(requestedAction))
+            .findFirst()
+            .orElseThrow(() -> throwNotSupportedAction(requestedAction, validActions));
+    }
+
+    private HaltException throwNotSupportedAction(VaultAction requestAction, VaultAction... validActions) {
+        return ErrorResponder.builder()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+            .message(String.format("'%s' is not a valid action. Supported values are: %s",
+                requestAction.getValue(),
+                Joiner.on(", ").join(Stream.of(validActions)
+                    .map(action -> String.format("'%s'", action.getValue()))
+                    .collect(Guavate.toImmutableList()))))
+            .haltError();
     }
 }
