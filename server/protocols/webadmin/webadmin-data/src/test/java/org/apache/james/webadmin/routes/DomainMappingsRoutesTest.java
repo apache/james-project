@@ -25,6 +25,7 @@ import static io.restassured.RestAssured.put;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
+import static org.apache.james.webadmin.routes.DomainMappingsRoutes.DOMAIN_MAPPINGS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.hamcrest.CoreMatchers.is;
@@ -72,15 +73,15 @@ class DomainMappingsRoutesTest {
 
     private void createServer(DomainMappingsRoutes domainMappingsRoutes) throws Exception {
         webAdminServer = WebAdminUtils.createWebAdminServer(
-                new DefaultMetricFactory(),
-                domainMappingsRoutes);
+            new DefaultMetricFactory(),
+            domainMappingsRoutes);
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
-                .setBasePath("/domainMappings")
-                .log(LogDetail.METHOD)
-                .build();
+            .setBasePath(DOMAIN_MAPPINGS)
+            .log(LogDetail.METHOD)
+            .build();
     }
 
     @BeforeEach
@@ -93,10 +94,6 @@ class DomainMappingsRoutesTest {
     @AfterEach
     void tearDown() {
         webAdminServer.destroy();
-    }
-
-    @Nested
-    class Authentication {
     }
 
     @Nested
@@ -142,18 +139,18 @@ class DomainMappingsRoutesTest {
             recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(alias3));
 
             Map<String, List<String>> map =
-                    when()
-                        .get()
-                    .then()
-                        .contentType(ContentType.JSON)
-                        .statusCode(HttpStatus.OK_200)
-                    .extract()
-                        .body()
-                        .jsonPath()
-                        .getMap(".");
+                when()
+                    .get()
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                .extract()
+                    .body()
+                    .jsonPath()
+                    .getMap(".");
 
             assertThat(map)
-                    .containsOnly(entry(expectedDomain.name(), ImmutableList.of(alias1, alias2, alias3)));
+                .containsOnly(entry(expectedDomain.name(), ImmutableList.of(alias1, alias2, alias3)));
         }
 
         @Test
@@ -162,26 +159,26 @@ class DomainMappingsRoutesTest {
             MappingSource emptyMapping = MappingSource.fromDomain(Domain.of("def.com"));
 
             Map<MappingSource, Mappings> mappings = ImmutableMap.of(
-                    nonEmptyMapping, MappingsImpl.fromRawString("domain:a.com"),
-                    emptyMapping, MappingsImpl.empty()
+                nonEmptyMapping, MappingsImpl.fromRawString("domain:a.com"),
+                emptyMapping, MappingsImpl.empty()
             );
 
             when(recipientRewriteTable.getAllMappings()).thenReturn(mappings);
 
             Map<String, List<String>> map =
-                    when()
-                        .get()
-                    .then()
-                        .contentType(ContentType.JSON)
-                        .statusCode(HttpStatus.OK_200)
-                    .extract()
-                        .body()
-                        .jsonPath()
-                        .getMap(".");
+                when()
+                    .get()
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                .extract()
+                    .body()
+                    .jsonPath()
+                    .getMap(".");
 
             assertThat(map)
-                    .containsKey(nonEmptyMapping.asString())
-                    .doesNotContainKey(emptyMapping.asString());
+                .containsKey(nonEmptyMapping.asString())
+                .doesNotContainKey(emptyMapping.asString());
         }
 
         @Test
@@ -288,14 +285,14 @@ class DomainMappingsRoutesTest {
             recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(aliasDomain));
 
             List<String> body =
-                    when()
-                        .get(domain)
-                    .then()
-                        .contentType(ContentType.JSON)
-                        .statusCode(HttpStatus.OK_200)
-                    .extract()
-                        .jsonPath()
-                        .getList(".");
+                when()
+                    .get(domain)
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                .extract()
+                    .jsonPath()
+                    .getList(".");
 
             assertThat(body).containsOnly(aliasDomain);
         }
@@ -385,25 +382,25 @@ class DomainMappingsRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                    .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
-                    .containsEntry("type", "InvalidArgument")
-                    .hasEntrySatisfying("message", o -> assertThat((String) o).matches("^The domain .* is invalid\\.$"));
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+                .containsEntry("type", "InvalidArgument")
+                .hasEntrySatisfying("message", o -> assertThat((String) o).matches("^The domain .* is invalid\\.$"));
         }
 
-        private void assertBadRequest(String toDomain, Function<RequestSpecification, Response> op) {
-            Map<String, Object> errors = op.apply(given().body(toDomain).when())
-                    .then()
-                        .statusCode(HttpStatus.BAD_REQUEST_400)
-                        .contentType(ContentType.JSON)
-                    .extract()
-                        .body()
-                        .jsonPath()
-                        .getMap(".");
+        private void assertBadRequest(String toDomain, Function<RequestSpecification, Response> requestingFunction) {
+            Map<String, Object> errors = requestingFunction.apply(given().body(toDomain).when())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .contentType(ContentType.JSON)
+                .extract()
+                    .body()
+                    .jsonPath()
+                    .getMap(".");
 
             assertThat(errors)
-                    .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
-                    .containsEntry("type", "InvalidArgument")
-                    .hasEntrySatisfying("message", o -> assertThat((String) o).matches("^The domain .* is invalid\\.$"));
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+                .containsEntry("type", "InvalidArgument")
+                .hasEntrySatisfying("message", o -> assertThat((String) o).matches("^The domain .* is invalid\\.$"));
         }
     }
 }
