@@ -38,6 +38,7 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
  - [Creating address group](#Creating_address_group)
  - [Creating address forwards](#Creating_address_forwards)
  - [Creating address aliases](#Creating_address_aliases)
+ - [Creating address domain](#Creating_address_domain)
  - [Administrating mail repositories](#Administrating_mail_repositories)
  - [Administrating mail queues](#Administrating_mail_queues)
  - [Administrating DLP Configuration](#Administrating_dlp_configuration)
@@ -1385,6 +1386,95 @@ Response codes:
 
  - 204: OK
  - 400: Alias structure or member is not valid
+
+## Creating address domain
+
+You can use **webadmin** to define domain mappings.
+
+Given a configured source (from) domain and a destination (to) domain, when an email is sent to an address belonging to the source domain, then the domain part of this address is overwritten, the destination domain is then used.
+A source (from) domain can have many destination (to) domains. 
+
+For example: with a source domain `james.apache.org` maps to two destination domains `james.org` and `apache-james.org`, when a mail is sent to `admin@james.apache.org`, then it will be routed to `admin@james.org` and `admin@apache-james.org`
+
+This feature uses [Recipients rewrite table](/server/config-recipientrewritetable.html) and requires
+the [RecipientRewriteTable mailet](https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java)
+to be configured.
+
+Note that email addresses are restricted to ASCII character set. Mail addresses not matching this criteria will be rejected.
+
+ - [Listing all domain mappings](#Listing_all_domain_mappings)
+ - [Listing all destination domains for a source domain](#Listing_all_destination_domains_for_a_source_domain)
+ - [Adding a domain mapping](#Adding_a_domain_mapping)
+ - [Removing a domain mapping](#Removing_a_domain_mapping)
+
+### Listing all domain mappings
+```
+curl -XGET http://ip:port/domainMappings
+```
+
+Will return all configured domain mappings
+```
+{
+  "firstSource.org" : ["firstDestination.com", "secondDestination.net"],
+  "secondSource.com" : ["thirdDestination.com", "fourthDestination.net"],
+}
+```
+
+Response codes:
+
+ - 200: OK
+
+### Listing all destination domains for a source domain
+```
+curl -XGET http://ip:port/domainMappings/sourceDomain.tld
+```
+
+With `sourceDomain.tld` as the value passed to `fromDomain` resource name, the API will return all destination domains configured to that domain
+
+```
+["firstDestination.com", "secondDestination.com"]
+```
+
+Response codes:
+
+ - 200: OK
+ - 400: The `fromDomain` resource name is invalid
+ 
+### Adding a domain mapping
+```
+curl -XPUT http://ip:port/domainMappings/sourceDomain.tld
+```
+
+Body:
+```
+destination.tld
+```
+
+With `sourceDomain.tld` as the value passed to `fromDomain` resource name, the API will add a destination domain specified in the body to that domain
+
+Response codes:
+
+ - 204: OK
+ - 400: The `fromDomain` resource name is invalid
+ - 400: The destination domain specified in the body is invalid
+
+### Removing a domain mapping
+```
+curl -XDELETE http://ip:port/domainMappings/sourceDomain.tld
+```
+
+Body:
+```
+destination.tld
+```
+
+With `sourceDomain.tld` as the value passed to `fromDomain` resource name, the API will remove a destination domain specified in the body mapped to that domain
+
+Response codes:
+
+ - 204: OK
+ - 400: The `fromDomain` resource name is invalid
+ - 400: The destination domain specified in the body is invalid
 
 ## Administrating mail repositories
 
