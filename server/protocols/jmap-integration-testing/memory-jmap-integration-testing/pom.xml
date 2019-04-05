@@ -185,7 +185,6 @@
                 <configuration>
                     <reuseForks>false</reuseForks>
                     <forkCount>1C</forkCount>
-                    <excludedGroups combine.self="override">org.apache.james.jmap.categories.CassandraAndElasticSearchOnly</excludedGroups>
                 </configuration>
             </plugin>
         </plugins>
