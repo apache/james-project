@@ -40,6 +40,7 @@ import org.apache.james.vault.utils.DeleteByQueryExecutor;
 import org.apache.james.vault.utils.VaultGarbageCollectionTask;
 import org.reactivestreams.Publisher;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
@@ -122,8 +123,13 @@ public class MemoryDeletedMessagesVault implements DeletedMessageVault {
         ZonedDateTime beginningOfRetentionPeriod = now.minus(retentionConfiguration.getRetentionPeriod());
 
         return new VaultGarbageCollectionTask(
-            deleteByQueryExecutor,
+            getDeleteByQueryExecutor(),
             beginningOfRetentionPeriod);
+    }
+
+    @VisibleForTesting
+    public DeleteByQueryExecutor getDeleteByQueryExecutor() {
+        return deleteByQueryExecutor;
     }
 
     private Flux<DeletedMessage> listAll(User user) {
