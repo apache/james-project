@@ -21,6 +21,8 @@ package org.apache.james.utils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Arrays;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -28,7 +30,9 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.util.OptionalUtils;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
@@ -43,12 +47,31 @@ public class PropertiesProvider {
         this.configurationPrefix = configuration.configurationPath();
     }
 
+    public Configuration getConfigurations(String... filenames) throws FileNotFoundException, ConfigurationException {
+        File file = Arrays.stream(filenames)
+            .map(this::getConfigurationFile)
+            .flatMap(OptionalUtils::toStream)
+            .findFirst()
+            .orElseThrow(() -> new FileNotFoundException(Joiner.on(",").join(filenames) + " not found"));
+
+        return new PropertiesConfiguration(file);
+    }
+
     public Configuration getConfiguration(String fileName) throws FileNotFoundException, ConfigurationException {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(fileName));
-        File file = fileSystem.getFile(configurationPrefix + fileName + ".properties");
-        if (!file.exists()) {
-            throw new FileNotFoundException();
-        }
+
+        File file = getConfigurationFile(fileName)
+            .orElseThrow(() -> new FileNotFoundException(fileName));
+
         return new PropertiesConfiguration(file);
+    }
+
+    private Optional<File> getConfigurationFile(String fileName) {
+        try {
+            return Optional.of(fileSystem.getFile(configurationPrefix + fileName + ".properties"))
+                .filter(File::exists);
+        } catch (FileNotFoundException e) {
+            return Optional.empty();
+        }
     }
 }

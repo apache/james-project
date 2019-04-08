@@ -20,11 +20,13 @@
 package org.apache.james;
 
 import java.io.FileNotFoundException;
+import java.util.Arrays;
+import java.util.Optional;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.util.OptionalUtils;
 import org.apache.james.utils.PropertiesProvider;
 
 import com.google.common.collect.ImmutableMap;
@@ -44,7 +46,7 @@ public class FakePropertiesProvider extends PropertiesProvider {
 
 
     @Override
-    public Configuration getConfiguration(String fileName) throws FileNotFoundException, ConfigurationException {
+    public Configuration getConfiguration(String fileName) throws FileNotFoundException {
         if (configurations.containsKey(fileName)) {
             return configurations.get(fileName);
         } else {
@@ -55,6 +57,20 @@ public class FakePropertiesProvider extends PropertiesProvider {
                     StringUtils.join(configurations.keySet(), ",") +
                     ")");
         }
+    }
+
+    @Override
+    public Configuration getConfigurations(String... filenames) throws FileNotFoundException {
+        return Arrays.stream(filenames)
+            .map(filename -> Optional.ofNullable(configurations.get(filename)))
+            .flatMap(OptionalUtils::toStream)
+            .findFirst()
+            .orElseThrow(() -> new FileNotFoundException(
+                "no configuration defined for " +
+                    StringUtils.join(filenames, ",") +
+                    " know configurations are (" +
+                    StringUtils.join(configurations.keySet(), ",") +
+                    ")"));
     }
 
     public static FakePropertiesProviderBuilder builder() {
