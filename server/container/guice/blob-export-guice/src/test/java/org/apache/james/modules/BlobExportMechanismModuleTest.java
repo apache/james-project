@@ -49,7 +49,7 @@ class BlobExportMechanismModuleTest {
         FakePropertiesProvider noConfigurationFile = FakePropertiesProvider.builder().build();
 
         assertThat(module.provideChoice(noConfigurationFile))
-            .isEqualTo(BlobExportImplChoice.localFile());
+            .isEqualTo(BlobExportImplChoice.LOCAL_FILE);
     }
 
     @Test
@@ -62,7 +62,7 @@ class BlobExportMechanismModuleTest {
             .build();
 
         assertThat(module.provideChoice(noConfigurationFile))
-            .isEqualTo(BlobExportImplChoice.localFile());
+            .isEqualTo(BlobExportImplChoice.LOCAL_FILE);
     }
 
     @Test
@@ -79,19 +79,19 @@ class BlobExportMechanismModuleTest {
     }
 
     @Test
-    void provideChoiceShouldThrowWhenConfigurationIsMissing() throws Exception {
+    void provideChoiceShouldReturnDefaultWhenConfigurationIsMissing() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         FakePropertiesProvider noConfigurationFile = FakePropertiesProvider.builder()
             .register(NAME, configuration)
             .build();
 
         assertThat(module.provideChoice(noConfigurationFile))
-            .isEqualTo(BlobExportImplChoice.localFile());
+            .isEqualTo(BlobExportImplChoice.LOCAL_FILE);
     }
 
     @Test
     void provideMechanismShouldProvideFileExportWhenPassingLocalFileChoice() {
-        assertThat(module.provideMechanism(BlobExportImplChoice.localFile(), LOCAL_FILE_EXPORT_PROVIDER))
+        assertThat(module.provideMechanism(BlobExportImplChoice.LOCAL_FILE, LOCAL_FILE_EXPORT_PROVIDER))
             .isEqualTo(LOCAL_FILE_EXPORT);
     }
 }

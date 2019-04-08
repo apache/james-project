@@ -19,7 +19,6 @@
 
 package org.apache.james.modules;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -30,38 +29,21 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-class BlobExportImplChoice {
+enum  BlobExportImplChoice {
+    LOCAL_FILE("localFile");
 
-    enum BlobExportImplName {
-        LOCAL_FILE("localFile");
+    private static Optional<BlobExportImplChoice> from(String implNameString) {
+        Preconditions.checkNotNull(implNameString);
 
-        private static Optional<BlobExportImplName> from(String implNameString) {
-            Preconditions.checkNotNull(implNameString);
-
-            return Stream.of(values())
-                .filter(impl -> impl.name.equals(implNameString))
-                .findFirst();
-        }
-
-        private static ImmutableList<String> plainImplNames() {
-            return Stream.of(values())
-                .map(impl -> impl.name)
-                .collect(Guavate.toImmutableList());
-        }
-
-        private final String name;
-
-        BlobExportImplName(String name) {
-            this.name = name;
-        }
-
-        String getImplName() {
-            return name;
-        }
+        return Stream.of(values())
+            .filter(impl -> impl.name.equals(implNameString))
+            .findFirst();
     }
 
-    static BlobExportImplChoice localFile() {
-        return new BlobExportImplChoice(BlobExportImplName.LOCAL_FILE);
+    private static ImmutableList<String> plainImplNames() {
+        return Stream.of(values())
+            .map(impl -> impl.name)
+            .collect(Guavate.toImmutableList());
     }
 
     static Optional<BlobExportImplChoice> from(Configuration configuration) {
@@ -70,41 +52,25 @@ class BlobExportImplChoice {
         Optional<String> sanitizedImplName = Optional.ofNullable(blobExportImpl)
             .map(String::trim);
 
-        return sanitizedImplName.map(name -> BlobExportImplName.from(name)
-                .map(BlobExportImplChoice::new)
-                .orElseThrow(() -> new IllegalArgumentException(unknownBlobExportErrorMessage(name))));
+        return sanitizedImplName.map(name -> BlobExportImplChoice.from(name)
+            .orElseThrow(() -> new IllegalArgumentException(unknownBlobExportErrorMessage(name))));
     }
 
     private static String unknownBlobExportErrorMessage(String blobExportImpl) {
         return String.format("unknown blob export mechanism '%s', please choose one in supported implementations(%s)",
             blobExportImpl,
-            Joiner.on(",").join(BlobExportImplName.plainImplNames()));
+            Joiner.on(",").join(BlobExportImplChoice.plainImplNames()));
     }
 
     private static final String BLOB_EXPORT_MECHANISM_IMPL = "blob.export.implementation";
 
-    private final BlobExportImplName impl;
+    private final String name;
 
-    private BlobExportImplChoice(BlobExportImplName implName) {
-        this.impl = implName;
+    BlobExportImplChoice(String name) {
+        this.name = name;
     }
 
-    public BlobExportImplName getImpl() {
-        return impl;
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof BlobExportImplChoice) {
-            BlobExportImplChoice that = (BlobExportImplChoice) o;
-
-            return Objects.equals(this.impl, that.impl);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(impl);
+    String getImplName() {
+        return name;
     }
 }

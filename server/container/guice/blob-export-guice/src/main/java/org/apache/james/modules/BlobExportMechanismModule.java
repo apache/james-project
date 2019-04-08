@@ -54,12 +54,12 @@ public class BlobExportMechanismModule extends AbstractModule {
             Configuration configuration = propertiesProvider.getConfiguration(ConfigurationComponent.NAME);
             return BlobExportImplChoice.from(configuration)
                 .orElseGet(() -> {
-                    LOGGER.warn("No blob export mechanism defined. Defaulting to " + BlobExportImplChoice.BlobExportImplName.LOCAL_FILE.getImplName());
-                    return BlobExportImplChoice.localFile();
+                    LOGGER.warn("No blob export mechanism defined. Defaulting to " + BlobExportImplChoice.LOCAL_FILE.getImplName());
+                    return BlobExportImplChoice.LOCAL_FILE;
                 });
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find " + ConfigurationComponent.NAME + " configuration file, using localFile blob exporting as the default");
-            return BlobExportImplChoice.localFile();
+            return BlobExportImplChoice.LOCAL_FILE;
         }
     }
 
@@ -67,11 +67,11 @@ public class BlobExportMechanismModule extends AbstractModule {
     @Provides
     @Singleton
     BlobExportMechanism provideMechanism(BlobExportImplChoice implChoice, Provider<LocalFileBlobExportMechanism> localFileMechanismProvider) {
-        switch (implChoice.getImpl()) {
+        switch (implChoice) {
             case LOCAL_FILE:
                 return localFileMechanismProvider.get();
             default:
-                throw new RuntimeException("blobExportMechanism '" + implChoice.getImpl().getImplName() + "' is not supported yet");
+                throw new RuntimeException("blobExportMechanism '" + implChoice.getImplName() + "' is not supported yet");
         }
     }
 }

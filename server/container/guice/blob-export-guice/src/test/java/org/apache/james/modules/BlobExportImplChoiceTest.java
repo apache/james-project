@@ -58,11 +58,11 @@ class BlobExportImplChoiceTest {
         configuration.addProperty("blob.export.implementation", "localFile");
 
         assertThat(BlobExportImplChoice.from(configuration))
-            .contains(BlobExportImplChoice.localFile());
+            .contains(BlobExportImplChoice.LOCAL_FILE);
     }
 
     @Test
-    void fromShouldThrowWhenCaseInSensitive() {
+    void fromShouldThrowWhenCaseInsensitive() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("blob.export.implementation", "localFILE");
 
@@ -76,6 +76,6 @@ class BlobExportImplChoiceTest {
         configuration.addProperty("blob.export.implementation", "  localFile   ");
 
         assertThat(BlobExportImplChoice.from(configuration))
-            .contains(BlobExportImplChoice.localFile());
+            .contains(BlobExportImplChoice.LOCAL_FILE);
     }
 }
