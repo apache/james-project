@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.FakePropertiesProvider;
 import org.apache.james.blob.export.file.LocalFileBlobExportMechanism;
@@ -67,7 +66,7 @@ class BlobExportMechanismModuleTest {
     }
 
     @Test
-    void provideChoiceShouldThrowWhenConfigurationIsUnknown() throws Exception {
+    void provideChoiceShouldThrowWhenConfigurationIsUnknown() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("blob.export.implementation", "unknown");
 
@@ -76,7 +75,7 @@ class BlobExportMechanismModuleTest {
             .build();
 
         assertThatThrownBy(() -> module.provideChoice(noConfigurationFile))
-            .isInstanceOf(ConfigurationException.class);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -86,8 +85,8 @@ class BlobExportMechanismModuleTest {
             .register(NAME, configuration)
             .build();
 
-        assertThatThrownBy(() -> module.provideChoice(noConfigurationFile))
-            .isInstanceOf(ConfigurationException.class);
+        assertThat(module.provideChoice(noConfigurationFile))
+            .isEqualTo(BlobExportImplChoice.localFile());
     }
 
     @Test

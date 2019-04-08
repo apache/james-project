@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;
@@ -65,16 +64,15 @@ class BlobExportImplChoice {
         return new BlobExportImplChoice(BlobExportImplName.LOCAL_FILE);
     }
 
-    static BlobExportImplChoice from(Configuration configuration) throws ConfigurationException {
+    static Optional<BlobExportImplChoice> from(Configuration configuration) {
         String blobExportImpl = configuration.getString(BLOB_EXPORT_MECHANISM_IMPL);
 
-        String sanitizedImplName = Optional.ofNullable(blobExportImpl)
-            .map(String::trim)
-            .orElseThrow(() -> new ConfigurationException(BLOB_EXPORT_MECHANISM_IMPL + " property is mandatory"));
+        Optional<String> sanitizedImplName = Optional.ofNullable(blobExportImpl)
+            .map(String::trim);
 
-        return BlobExportImplName.from(sanitizedImplName)
-            .map(BlobExportImplChoice::new)
-            .orElseThrow(() -> new ConfigurationException(unknownBlobExportErrorMessage(blobExportImpl)));
+        return sanitizedImplName.map(name -> BlobExportImplName.from(name)
+                .map(BlobExportImplChoice::new)
+                .orElseThrow(() -> new IllegalArgumentException(unknownBlobExportErrorMessage(name))));
     }
 
     private static String unknownBlobExportErrorMessage(String blobExportImpl) {

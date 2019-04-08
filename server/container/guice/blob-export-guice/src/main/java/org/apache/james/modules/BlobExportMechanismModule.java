@@ -52,7 +52,11 @@ public class BlobExportMechanismModule extends AbstractModule {
     BlobExportImplChoice provideChoice(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
             Configuration configuration = propertiesProvider.getConfiguration(ConfigurationComponent.NAME);
-            return BlobExportImplChoice.from(configuration);
+            return BlobExportImplChoice.from(configuration)
+                .orElseGet(() -> {
+                    LOGGER.warn("No blob export mechanism defined. Defaulting to " + BlobExportImplChoice.BlobExportImplName.LOCAL_FILE.getImplName());
+                    return BlobExportImplChoice.localFile();
+                });
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find " + ConfigurationComponent.NAME + " configuration file, using localFile blob exporting as the default");
             return BlobExportImplChoice.localFile();
