@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
@@ -31,7 +32,7 @@ public class AuthorizationToken {
     private final String value;
 
     @VisibleForTesting
-    public AuthorizationToken(String value) {
+    public AuthorizationToken(@JsonProperty("token") String value) {
         Preconditions.checkArgument(StringUtils.isNotBlank(value), "token value cannot be null or blank");
         this.value = value;
     }

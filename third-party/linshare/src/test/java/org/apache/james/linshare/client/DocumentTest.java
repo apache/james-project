@@ -17,36 +17,40 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.linshare;
+package org.apache.james.linshare.client;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.net.URL;
+import java.util.UUID;
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class LinshareConfigurationTest {
+class DocumentTest {
 
     @Test
     void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(LinshareConfiguration.class)
+        EqualsVerifier.forClass(Document.class)
             .verify();
     }
 
-    @Test
-    void constructorShouldThrowWhenPassingNullCredential() {
-        AuthorizationToken nullToken = null;
-        assertThatThrownBy(() -> new LinshareConfiguration(new URL("https://linshare.linagora.com"), nullToken))
-            .isInstanceOf(NullPointerException.class);
-    }
+    @Nested
+    class DocumentIdTest {
 
-    @Test
-    void constructorShouldThrowWhenPassingNullUrl() {
-        AuthorizationToken token = new AuthorizationToken("jwt-token-at-here");
-        URL nullUrl = null;
-        assertThatThrownBy(() -> new LinshareConfiguration(nullUrl, token))
-            .isInstanceOf(NullPointerException.class);
+        @Test
+        void shouldMatchBeanContract() {
+            EqualsVerifier.forClass(Document.DocumentId.class)
+                .verify();
+        }
+
+        @Test
+        void constructorShouldThrowWhenPassingNullUUID() {
+            UUID nullUUId = null;
+
+            assertThatThrownBy(() -> new Document.DocumentId(nullUUId))
+                .isInstanceOf(NullPointerException.class);
+        }
     }
 }

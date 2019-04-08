@@ -20,7 +20,7 @@ package org.apache.james.linshare;
 
 import static org.apache.james.linshare.LinshareFixture.USER_1;
 import static org.apache.james.linshare.LinshareFixture.USER_CREDENTIAL_MAP;
-import static org.apache.james.linshare.client.LinshareAPI.Header.ACCEPT_APPLICATION_JSON;
+import static org.apache.james.linshare.client.LinshareAPI.Headers.ACCEPT_APPLICATION_JSON;
 
 import java.util.List;
 import java.util.Optional;

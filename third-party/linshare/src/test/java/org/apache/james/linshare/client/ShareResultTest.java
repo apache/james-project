@@ -17,36 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.linshare;
-
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import java.net.URL;
+package org.apache.james.linshare.client;
 
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class LinshareConfigurationTest {
+class ShareResultTest {
 
     @Test
     void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(LinshareConfiguration.class)
+        EqualsVerifier.forClass(ShareResult.class)
             .verify();
-    }
-
-    @Test
-    void constructorShouldThrowWhenPassingNullCredential() {
-        AuthorizationToken nullToken = null;
-        assertThatThrownBy(() -> new LinshareConfiguration(new URL("https://linshare.linagora.com"), nullToken))
-            .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void constructorShouldThrowWhenPassingNullUrl() {
-        AuthorizationToken token = new AuthorizationToken("jwt-token-at-here");
-        URL nullUrl = null;
-        assertThatThrownBy(() -> new LinshareConfiguration(nullUrl, token))
-            .isInstanceOf(NullPointerException.class);
     }
 }

@@ -19,6 +19,7 @@
 
 package org.apache.james.linshare;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
@@ -45,5 +46,13 @@ class AuthorizationTokenTest {
         String blankToken = "    ";
         assertThatThrownBy(() -> new AuthorizationToken(blankToken))
             .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void asBearerHeaderShouldReturnBearerWithASpaceAtBeginning() {
+        AuthorizationToken token = new AuthorizationToken("token-suffix");
+
+        assertThat(token.asBearerHeader())
+            .isEqualTo("Bearer token-suffix");
     }
 }
