@@ -75,6 +75,10 @@ public class Linshare {
         return linshareBackend.getContainerIpAddress();
     }
 
+    public String getUrl() {
+        return "http://" + getIp() + ":" + getPort();
+    }
+
     private GenericContainer createDockerDatabase() {
         return new GenericContainer<>("linagora/linshare-database:2.2")
             .withNetworkAliases("database", "linshare_database")
