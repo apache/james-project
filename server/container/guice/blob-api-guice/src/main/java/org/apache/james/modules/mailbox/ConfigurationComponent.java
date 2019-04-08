@@ -20,5 +20,8 @@
 package org.apache.james.modules.mailbox;
 
 public interface ConfigurationComponent {
-    String NAME = "blobstore";
+    String NAME = "blob";
+    String LEGACY = "blobstore";
+
+    String[] NAMES = new String[] {NAME, LEGACY};
 }

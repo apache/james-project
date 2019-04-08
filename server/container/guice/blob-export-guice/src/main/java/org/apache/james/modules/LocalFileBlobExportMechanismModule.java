@@ -45,7 +45,7 @@ public class LocalFileBlobExportMechanismModule extends AbstractModule {
     @Provides
     LocalFileBlobExportMechanism.Configuration localFileExportConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            Configuration configuration = propertiesProvider.getConfiguration(ConfigurationComponent.NAME);
+            Configuration configuration = propertiesProvider.getConfigurations(ConfigurationComponent.NAMES);
             return LocalFileBlobExportMechanism.Configuration.from(configuration)
                 .orElseGet(() -> {
                     LOGGER.warn("Missing LocalFileBlobExportMechanism configuration, using default localFile blob exporting configuration");

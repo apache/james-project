@@ -53,7 +53,7 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
     @Singleton
     private ObjectStorageBlobConfiguration getObjectStorageConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            Configuration configuration = propertiesProvider.getConfiguration(ConfigurationComponent.NAME);
+            Configuration configuration = propertiesProvider.getConfigurations(ConfigurationComponent.NAMES);
             return ObjectStorageBlobConfiguration.from(configuration);
         } catch (FileNotFoundException e) {
             throw new ConfigurationException(ConfigurationComponent.NAME + " configuration was not found");

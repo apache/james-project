@@ -61,7 +61,7 @@ public class BlobStoreChoosingModule extends AbstractModule {
     @Singleton
     BlobStoreChoosingConfiguration provideChoosingConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            Configuration configuration = propertiesProvider.getConfiguration(ConfigurationComponent.NAME);
+            Configuration configuration = propertiesProvider.getConfigurations(ConfigurationComponent.NAMES);
             return BlobStoreChoosingConfiguration.from(configuration);
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find " + ConfigurationComponent.NAME + " configuration file, using cassandra blobstore as the default");

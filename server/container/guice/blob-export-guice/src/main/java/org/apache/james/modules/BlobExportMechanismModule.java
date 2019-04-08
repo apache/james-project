@@ -51,7 +51,7 @@ public class BlobExportMechanismModule extends AbstractModule {
     @Singleton
     BlobExportImplChoice provideChoice(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            Configuration configuration = propertiesProvider.getConfiguration(ConfigurationComponent.NAME);
+            Configuration configuration = propertiesProvider.getConfigurations(ConfigurationComponent.NAMES);
             return BlobExportImplChoice.from(configuration)
                 .orElseGet(() -> {
                     LOGGER.warn("No blob export mechanism defined. Defaulting to " + BlobExportImplChoice.LOCAL_FILE.getImplName());
