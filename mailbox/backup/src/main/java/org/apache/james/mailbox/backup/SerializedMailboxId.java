@@ -29,8 +29,8 @@ public class SerializedMailboxId {
         this.value = value;
     }
 
-    public SerializedMailboxId(MailboxId mailboxId) {
-        this.value = mailboxId.serialize();
+    public static SerializedMailboxId from(MailboxId mailboxId) {
+        return new SerializedMailboxId(mailboxId.serialize());
     }
 
     public String getValue() {

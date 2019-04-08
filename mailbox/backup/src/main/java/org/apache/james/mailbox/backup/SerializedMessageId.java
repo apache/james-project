@@ -29,8 +29,8 @@ public class SerializedMessageId {
         this.value = value;
     }
 
-    public SerializedMessageId(MessageId messageId) {
-        this.value = messageId.serialize();
+    public static SerializedMessageId from(MessageId messageId) {
+        return new SerializedMessageId(messageId.serialize());
     }
 
     public String getValue() {

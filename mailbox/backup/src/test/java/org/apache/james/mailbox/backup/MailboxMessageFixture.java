@@ -84,8 +84,8 @@ public interface MailboxMessageFixture {
     MailboxId MAILBOX_ID_2 = TestId.of(2L);
     MailboxId MAILBOX_ID_11 = TestId.of(11L);
 
-    SerializedMailboxId SERIALIZED_MAILBOX_ID_1 = new SerializedMailboxId(MAILBOX_ID_1);
-    SerializedMailboxId SERIALIZED_MAILBOX_ID_2 = new SerializedMailboxId(MAILBOX_ID_2);
+    SerializedMailboxId SERIALIZED_MAILBOX_ID_1 = SerializedMailboxId.from(MAILBOX_ID_1);
+    SerializedMailboxId SERIALIZED_MAILBOX_ID_2 = SerializedMailboxId.from(MAILBOX_ID_2);
 
     Flags flags1 = new Flags("myFlags");
 

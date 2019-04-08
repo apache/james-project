@@ -96,7 +96,6 @@ public class ZippedMailAccountIterator implements MailArchiveIterator {
 
     private MailArchiveEntry fromMailboxEntry(ZipEntry current) throws ZipException {
         return new MailboxWithAnnotationsArchiveEntry(getMailboxName(current), getMailBoxId(current).get(), NO_ANNOTATION);
-
     }
 
     private MailArchiveEntry from(ZipEntry current, ZipEntryType currentEntryType) throws ZipException {

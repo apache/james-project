@@ -35,7 +35,8 @@ public class ExtraFieldExtractor {
         ZipExtraField[] extraFields = ExtraFieldUtils.parse(entry.getExtra());
         return Arrays.stream(extraFields)
             .filter(field -> field.getHeaderId().equals(id))
-            .map(extraField -> ((StringExtraField) extraField).getValue())
+            .map(StringExtraField.class::cast)
+            .map(StringExtraField::getValue)
             .findFirst()
             .flatMap(Function.identity());
     }

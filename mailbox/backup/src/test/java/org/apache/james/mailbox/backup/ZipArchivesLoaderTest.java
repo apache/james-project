@@ -23,15 +23,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
 
-import javax.mail.Flags;
-
-import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -52,16 +47,19 @@ public class ZipArchivesLoaderTest implements MailboxMessageFixture {
     private final ArchiveService archiveService = new Zipper();
     private final MailArchivesLoader archiveLoader = new ZipArchivesLoader();
 
+    private MailArchiveRestorer archiveRestorer;
     private MailboxManager mailboxManager;
     private DefaultMailboxBackup backup;
 
     @BeforeEach
     void beforeEach() {
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
-        backup = new DefaultMailboxBackup(mailboxManager, archiveService);
+        archiveRestorer = new ZipMailArchiveRestorer(mailboxManager, archiveLoader);
+        backup = new DefaultMailboxBackup(mailboxManager, archiveService, archiveRestorer);
     }
 
-    private void createMailBoxWithMessage(MailboxSession session, MailboxPath mailboxPath, MailboxMessage... messages) throws Exception {
+    private void createMailBoxWithMessage(MailboxPath mailboxPath, MailboxMessage... messages) throws Exception {
+        MailboxSession session = mailboxManager.createSystemSession(mailboxPath.getUser());
         MailboxId mailboxId = mailboxManager.createMailbox(mailboxPath, session).get();
         Arrays.stream(messages).forEach(Throwing.consumer(message ->
             {
@@ -102,8 +100,7 @@ public class ZipArchivesLoaderTest implements MailboxMessageFixture {
 
     @Test
     void mailAccountIteratorFromArchiveWithOneMailboxShouldContainOneMailbox() throws Exception {
-        MailboxSession session = mailboxManager.createSystemSession(USER);
-        createMailBoxWithMessage(session, MAILBOX_PATH_USER1_MAILBOX1);
+        createMailBoxWithMessage(MAILBOX_PATH_USER1_MAILBOX1);
 
         ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
         backup.backupAccount(USER1, destination);
@@ -119,9 +116,8 @@ public class ZipArchivesLoaderTest implements MailboxMessageFixture {
 
     @Test
     void mailAccountIteratorFromArchiveWithTwoMailboxesShouldContainTwoMailboxes() throws Exception {
-        MailboxSession session = mailboxManager.createSystemSession(USER);
-        createMailBoxWithMessage(session, MAILBOX_PATH_USER1_MAILBOX1);
-        createMailBoxWithMessage(session, MAILBOX_PATH_USER1_MAILBOX2);
+        createMailBoxWithMessage(MAILBOX_PATH_USER1_MAILBOX1);
+        createMailBoxWithMessage(MAILBOX_PATH_USER1_MAILBOX2);
 
         ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
         backup.backupAccount(USER1, destination);

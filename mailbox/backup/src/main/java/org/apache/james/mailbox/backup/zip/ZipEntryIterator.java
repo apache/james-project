@@ -39,7 +39,7 @@ public class ZipEntryIterator implements Iterator<ZipEntry>, Closeable {
         try {
             next = Optional.ofNullable(zipInputStream.getNextEntry());
         } catch (IOException e) {
-            //EMPTY STREAM
+            LOGGER.error("Empty stream or error during reading first entry", e);
             next = Optional.empty();
         }
     }
