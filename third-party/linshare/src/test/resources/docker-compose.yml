@@ -16,9 +16,11 @@ services:
         links:
             - database:linshare_database
             - mongodb:linshare_mongodb
+            - smtp:linshare_smtp
         depends_on:
             - database
             - mongodb
+            - smtp
         volumes:
             - ./conf/catalina.properties:/usr/local/tomcat/conf/catalina.properties
             - ./conf/log4j.properties:/etc/linshare/log4j.properties
