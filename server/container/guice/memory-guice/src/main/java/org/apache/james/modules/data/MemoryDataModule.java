@@ -32,8 +32,8 @@ import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailrepository.api.MailRepositoryProvider;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.apache.james.mailrepository.api.Protocol;
-import org.apache.james.mailrepository.file.FileMailRepository;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
+import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryProvider;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
 import org.apache.james.modules.server.MailStoreRepositoryModule;
@@ -53,9 +53,9 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class MemoryDataModule extends AbstractModule {
-    private static final MailRepositoryStoreConfiguration.Item FILE_MAILREPOSITORY_DEFAULT_DECLARATION = new MailRepositoryStoreConfiguration.Item(
-        ImmutableList.of(new Protocol("file")),
-        FileMailRepository.class.getName(),
+    private static final MailRepositoryStoreConfiguration.Item MEMORY_MAILREPOSITORY_DEFAULT_DECLARATION = new MailRepositoryStoreConfiguration.Item(
+        ImmutableList.of(new Protocol("memory")),
+        MemoryMailRepository.class.getName(),
         new HierarchicalConfiguration());
 
     @Override
@@ -82,7 +82,7 @@ public class MemoryDataModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MemoryDataConfigurationPerformer.class);
 
-        bind(MailStoreRepositoryModule.DefaultItemSupplier.class).toInstance(() -> FILE_MAILREPOSITORY_DEFAULT_DECLARATION);
+        bind(MailStoreRepositoryModule.DefaultItemSupplier.class).toInstance(() -> MEMORY_MAILREPOSITORY_DEFAULT_DECLARATION);
 
         Multibinder<MailRepositoryProvider> multibinder = Multibinder.newSetBinder(binder(), MailRepositoryProvider.class);
         multibinder.addBinding().to(MemoryMailRepositoryProvider.class);
