@@ -37,6 +37,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.User;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
@@ -157,11 +158,13 @@ public class DeletedMessagesVaultRoutes implements Routes {
     private final JsonExtractor<QueryElement> jsonExtractor;
     private final QueryTranslator queryTranslator;
     private final UsersRepository usersRepository;
+    private final MessageId.Factory messageIdFactory;
 
     @Inject
     @VisibleForTesting
-    DeletedMessagesVaultRoutes(DeletedMessageVault deletedMessageVault, RestoreService vaultRestore, ExportService vaultExport, JsonTransformer jsonTransformer,
-                               TaskManager taskManager, QueryTranslator queryTranslator, UsersRepository usersRepository) {
+    DeletedMessagesVaultRoutes(DeletedMessageVault deletedMessageVault, RestoreService vaultRestore, ExportService vaultExport,
+                               JsonTransformer jsonTransformer, TaskManager taskManager, QueryTranslator queryTranslator,
+                               UsersRepository usersRepository, MessageId.Factory messageIdFactory) {
         this.deletedMessageVault = deletedMessageVault;
         this.vaultRestore = vaultRestore;
         this.vaultExport = vaultExport;
@@ -170,6 +173,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
         this.queryTranslator = queryTranslator;
         this.usersRepository = usersRepository;
         this.jsonExtractor = new JsonExtractor<>(QueryElement.class);
+        this.messageIdFactory = messageIdFactory;
     }
 
     @Override
@@ -181,6 +185,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
     public void define(Service service) {
         service.post(RESTORE_PATH, this::userActions, jsonTransformer);
         service.delete(ROOT_PATH, this::deleteWithScope, jsonTransformer);
+        service.delete(DELETE_PATH, this::deleteMessage, jsonTransformer);
     }
 
     @POST
@@ -245,6 +250,41 @@ public class DeletedMessagesVaultRoutes implements Routes {
     private TaskIdDto deleteWithScope(Request request, Response response) {
         Task vaultTask = generateVaultScopeTask(request);
         TaskId taskId = taskManager.submit(vaultTask);
+        return TaskIdDto.respond(response, taskId);
+    }
+
+    @DELETE
+    @Path(DELETE_PATH)
+    @ApiOperation(value = "Delete message with messageId")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            required = true,
+            name = "user",
+            paramType = "path parameter",
+            dataType = "String",
+            defaultValue = "none",
+            example = "user0@james.org",
+            value = "Compulsory. Needs to be a valid username represent for an user had requested to restore deleted emails"),
+        @ApiImplicitParam(
+            required = true,
+            name = "messageId",
+            paramType = "path parameter",
+            dataType = "String",
+            defaultValue = "none",
+            value = "Compulsory, Need to be a valid messageId")
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - user param is invalid"),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - messageId param is invalid"),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
+    })
+    private TaskIdDto deleteMessage(Request request, Response response) {
+        User user = extractUser(request);
+        validateUserExist(user);
+        MessageId messageId = parseMessageId(request);
+
+        TaskId taskId = taskManager.submit(new DeletedMessagesVaultDeleteTask(deletedMessageVault, user, messageId));
         return TaskIdDto.respond(response, taskId);
     }
 
@@ -384,5 +424,19 @@ public class DeletedMessagesVaultRoutes implements Routes {
                     .map(action -> String.format("'%s'", action.getValue()))
                     .collect(Guavate.toImmutableList()))))
             .haltError();
+    }
+
+    private MessageId parseMessageId(Request request) {
+        String messageIdAsString = request.params(MESSAGE_ID_PARAM);
+        try {
+            return messageIdFactory.fromString(messageIdAsString);
+        } catch (Exception e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .message("Can not deserialize the supplied messageId: " + messageIdAsString)
+                .cause(e)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .haltError();
+        }
     }
 }
