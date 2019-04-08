@@ -49,8 +49,14 @@ class PropertiesProviderTest {
     }
 
     @Test
-    void getConfigurationsShouldThrowWhenOnlyNotExistingFiles() throws Exception {
+    void getConfigurationsShouldThrowWhenOnlyNotExistingFiles() {
         assertThatThrownBy(() -> testee.getConfigurations("c", "d"))
+            .isInstanceOf(FileNotFoundException.class);
+    }
+
+    @Test
+    void getConfigurationShouldThrowWhenNotExistingFile() {
+        assertThatThrownBy(() -> testee.getConfiguration("d"))
             .isInstanceOf(FileNotFoundException.class);
     }
 
@@ -64,5 +70,11 @@ class PropertiesProviderTest {
     void getConfigurationShouldReturnFirstExistingFileWhenAfterNonExistingFiles() throws Exception {
         assertThat(testee.getConfigurations("c", "b").getString("prop"))
             .isEqualTo("value2");
+    }
+
+    @Test
+    void getConfigurationShouldLoadProperties() throws Exception {
+        assertThat(testee.getConfiguration("a").getString("prop"))
+            .isEqualTo("value1");
     }
 }
