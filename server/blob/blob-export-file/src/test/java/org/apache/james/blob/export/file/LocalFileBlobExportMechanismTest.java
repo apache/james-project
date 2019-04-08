@@ -191,21 +191,27 @@ class LocalFileBlobExportMechanismTest {
             });
     }
 
-        @Nested
+    @Nested
     class ConfigurationTest {
-
         @Test
         void shouldMatchBeanContract() {
             EqualsVerifier.forClass(Configuration.class)
                 .verify();
         }
+
         @Test
-        void fromShouldThrowWhenDirectoryIsMissing() {
+        void fromShouldReturnEmptyWhenDirectoryIsMissing() {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+
+            assertThat(Configuration.from(configuration)).isEmpty();
+        }
+
+        @Test
+        void fromShouldReturnEmptyWhenDirectoryIsNull() {
             PropertiesConfiguration configuration = new PropertiesConfiguration();
             configuration.addProperty("blob.export.localFile.directory", null);
 
-            assertThatThrownBy(() -> Configuration.from(configuration))
-                .isInstanceOf(NullPointerException.class);
+            assertThat(Configuration.from(configuration)).isEmpty();
         }
 
         @Test
@@ -215,7 +221,7 @@ class LocalFileBlobExportMechanismTest {
             configuration.addProperty("blob.export.localFile.directory", exportDirectory);
 
             assertThat(Configuration.from(configuration))
-                .isEqualTo(new Configuration(exportDirectory));
+                .contains(new Configuration(exportDirectory));
         }
     }
 }

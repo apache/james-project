@@ -52,9 +52,9 @@ public class LocalFileBlobExportMechanism implements BlobExportMechanism {
 
     public static class Configuration {
 
-        public static Configuration from(org.apache.commons.configuration.Configuration propertiesConfiguration) {
-            String exportDirectory = propertiesConfiguration.getString(DIRECTORY_LOCATION_PROPERTY);
-            return new Configuration(exportDirectory);
+        public static Optional<Configuration> from(org.apache.commons.configuration.Configuration propertiesConfiguration) {
+            String exportDirectory = propertiesConfiguration.getString(DIRECTORY_LOCATION_PROPERTY, null);
+            return Optional.ofNullable(exportDirectory).map(Configuration::new);
         }
 
         private static final String DIRECTORY_LOCATION_PROPERTY = "blob.export.localFile.directory";
