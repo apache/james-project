@@ -76,6 +76,11 @@ public final class MailboxQuery {
             return this;
         }
 
+        public Builder user(User user) {
+            this.username(user.asString());
+            return this;
+        }
+
         public Builder namespace(String namespace) {
             Preconditions.checkState(!this.namespace.isPresent());
 
@@ -89,7 +94,7 @@ public final class MailboxQuery {
             this.namespace = Optional.of(MailboxConstants.USER_NAMESPACE);
             return this;
         }
-        
+
         public Builder expression(MailboxNameExpression expression) {
             this.mailboxNameExpression = Optional.of(expression);
             return this;

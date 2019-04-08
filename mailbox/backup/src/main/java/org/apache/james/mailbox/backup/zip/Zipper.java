@@ -47,7 +47,7 @@ import com.google.common.base.Charsets;
 
 public class Zipper implements ArchiveService {
 
-    private static final String ANNOTATION_DIRECTORY = "annotations";
+    public static final String ANNOTATION_DIRECTORY = "annotations";
     private static final boolean AUTO_FLUSH = true;
     private static final Logger LOGGER = LoggerFactory.getLogger(Zipper.class);
 

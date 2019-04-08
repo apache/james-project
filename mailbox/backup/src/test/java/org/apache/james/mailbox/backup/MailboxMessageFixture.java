@@ -51,6 +51,7 @@ public interface MailboxMessageFixture {
     String OTHER_USER = "otherUser";
 
     User USER1 = User.fromUsername(USER);
+    User USER2 = User.fromUsername(OTHER_USER);
 
     String DATE_STRING_1 = "2018-02-15T15:54:02Z";
     String DATE_STRING_2 = "2018-03-15T15:54:02Z";
@@ -60,16 +61,19 @@ public interface MailboxMessageFixture {
     MessageId.Factory MESSAGE_ID_FACTORY = new TestMessageId.Factory();
     Charset MESSAGE_CHARSET = StandardCharsets.UTF_8;
     String MESSAGE_CONTENT_1 = "Simple message content";
-    SharedByteArrayInputStream CONTENT_STREAM_1 = new SharedByteArrayInputStream(MESSAGE_CONTENT_1.getBytes(MESSAGE_CHARSET));
+    byte[] MESSAGE_CONTENT_BYTES_1 = MESSAGE_CONTENT_1.getBytes(MESSAGE_CHARSET);
+    SharedByteArrayInputStream CONTENT_STREAM_1 = new SharedByteArrayInputStream(MESSAGE_CONTENT_BYTES_1);
     String MESSAGE_CONTENT_2 = "Other message content";
-    SharedByteArrayInputStream CONTENT_STREAM_2 = new SharedByteArrayInputStream(MESSAGE_CONTENT_2.getBytes(MESSAGE_CHARSET));
+
+    byte[] MESSAGE_CONTENT_BYTES_2 = MESSAGE_CONTENT_2.getBytes(MESSAGE_CHARSET);
+    SharedByteArrayInputStream CONTENT_STREAM_2 = new SharedByteArrayInputStream(MESSAGE_CONTENT_BYTES_2);
     MessageId MESSAGE_ID_1 = MESSAGE_ID_FACTORY.generate();
     MessageId MESSAGE_ID_2 = MESSAGE_ID_FACTORY.generate();
 
     MessageId MESSAGE_ID_OTHER_USER_1 = MESSAGE_ID_FACTORY.generate();
 
-    long SIZE_1 = 1000;
-    long SIZE_2 = 2000;
+    long SIZE_1 = MESSAGE_CONTENT_BYTES_1.length;
+    long SIZE_2 = MESSAGE_CONTENT_BYTES_2.length;
     long MESSAGE_UID_1_VALUE = 1111L;
     long MESSAGE_UID_2_VALUE = 2222L;
     long MESSAGE_UID_OTHER_USER_1_VALUE = 1111L;
@@ -79,6 +83,10 @@ public interface MailboxMessageFixture {
     MailboxId MAILBOX_ID_1 = TestId.of(1L);
     MailboxId MAILBOX_ID_2 = TestId.of(2L);
     MailboxId MAILBOX_ID_11 = TestId.of(11L);
+
+    SerializedMailboxId SERIALIZED_MAILBOX_ID_1 = new SerializedMailboxId(MAILBOX_ID_1);
+    SerializedMailboxId SERIALIZED_MAILBOX_ID_2 = new SerializedMailboxId(MAILBOX_ID_2);
+
     Flags flags1 = new Flags("myFlags");
 
     MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(USER);
