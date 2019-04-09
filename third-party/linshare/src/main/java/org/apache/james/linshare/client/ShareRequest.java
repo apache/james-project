@@ -31,7 +31,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-class ShareRequest {
+public class ShareRequest {
 
     static class Recipient {
         private final MailAddress mail;
@@ -64,7 +64,7 @@ class ShareRequest {
         }
     }
 
-    static class Builder {
+    public static class Builder {
         private final ImmutableList.Builder<Recipient> recipientsBuilder;
         private final ImmutableList.Builder<DocumentId> documentIdsBuilder;
 
@@ -73,22 +73,22 @@ class ShareRequest {
             this.documentIdsBuilder = new ImmutableList.Builder<>();
         }
 
-        Builder addRecipient(MailAddress recipient) {
+        public Builder addRecipient(MailAddress recipient) {
             recipientsBuilder.add(new Recipient(recipient));
             return this;
         }
 
-        Builder addDocumentId(DocumentId documentId) {
+        public Builder addDocumentId(DocumentId documentId) {
             documentIdsBuilder.add(documentId);
             return this;
         }
 
-        ShareRequest build() {
+        public ShareRequest build() {
             return new ShareRequest(recipientsBuilder.build(), documentIdsBuilder.build());
         }
     }
 
-    static Builder builder() {
+    public static Builder builder() {
         return new Builder();
     }
 

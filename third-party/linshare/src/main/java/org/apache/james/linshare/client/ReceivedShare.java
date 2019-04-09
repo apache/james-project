@@ -24,7 +24,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 
-class ReceivedShare {
+public class ReceivedShare {
 
     private final User sender;
     private final Document document;
