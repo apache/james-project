@@ -42,7 +42,7 @@ class DTOTest {
     private static final Duration SLICE_WINDOW = Duration.ofHours(1);
     private static final String CONFIGURATION_AGGREGATE_KEY = "aggKey";
 
-    private final ConfigurationChangedDTO CONFIGURATION_CHANGED_DTO = new ConfigurationChangedDTO(
+    private static final ConfigurationChangedDTO CONFIGURATION_CHANGED_DTO = new ConfigurationChangedDTO(
         EVENT_ID, CONFIGURATION_AGGREGATE_KEY, TYPE_NAME, BUCKET_COUNT, UPDATE_PACE, SLICE_WINDOW);
 
     private static final String CONFIGURATION_CHANGED_DTO_JSON = getSystemResourceAsString(

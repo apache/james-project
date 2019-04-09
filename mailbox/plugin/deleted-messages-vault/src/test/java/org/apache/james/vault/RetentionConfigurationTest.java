@@ -31,7 +31,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 class RetentionConfigurationTest {
     @Test
-    void ShouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(RetentionConfiguration.class)
             .verify();
     }

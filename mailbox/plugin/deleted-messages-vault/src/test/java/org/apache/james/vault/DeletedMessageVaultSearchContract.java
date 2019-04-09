@@ -529,11 +529,11 @@ public interface DeletedMessageVaultSearchContract {
             "equalsIgnoreCase with a special locale")
         @Test
         default void shouldReturnsMessageWhenPassingAStringInDifferentLocaleToContainsIgnoreCase() {
-            Locale TURKISH_LOCALE = Locale.forLanguageTag("tr");
+            Locale turkishLocale = Locale.forLanguageTag("tr");
             String subjectInTurkishLanguage = "TITLE";
             DeletedMessage message1 = storeMessageWithSubject(subjectInTurkishLanguage);
 
-            String subjectLowercase = subjectInTurkishLanguage.toLowerCase(TURKISH_LOCALE);
+            String subjectLowercase = subjectInTurkishLanguage.toLowerCase(turkishLocale);
             assertThat(search(Query.of(CriterionFactory.subject().containsIgnoreCase(subjectLowercase))))
                 .contains(message1);
         }

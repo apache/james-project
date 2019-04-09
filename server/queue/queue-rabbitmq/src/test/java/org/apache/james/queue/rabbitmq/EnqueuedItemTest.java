@@ -21,6 +21,9 @@ package org.apache.james.queue.rabbitmq;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.Instant;
+import javax.mail.MessagingException;
+
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.mailet.Mail;
@@ -28,9 +31,6 @@ import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
-
-import javax.mail.MessagingException;
-import java.time.Instant;
 
 class EnqueuedItemTest {
 
