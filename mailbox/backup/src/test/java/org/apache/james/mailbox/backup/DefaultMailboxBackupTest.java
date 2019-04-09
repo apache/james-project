@@ -66,7 +66,7 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
         sessionOtherUser = mailboxManager.createSystemSession(OTHER_USER);
     }
 
-    private void createMailBoxWithMessages(MailboxSession session, MailboxPath mailboxPath, MessageManager.AppendCommand... messages) throws Exception {
+    private void createMailboxWithMessages(MailboxSession session, MailboxPath mailboxPath, MessageManager.AppendCommand... messages) throws Exception {
         MailboxId mailboxId = mailboxManager.createMailbox(mailboxPath, session).get();
         Arrays.stream(messages).forEach(Throwing.consumer(message ->
                 mailboxManager.getMailbox(mailboxId, session).appendMessage(message, session)
@@ -75,7 +75,7 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
     }
 
     private void createMailbox(MailboxSession session, MailboxPath mailboxPath) throws Exception {
-        createMailBoxWithMessages(session, mailboxPath);
+        createMailboxWithMessages(session, mailboxPath);
     }
 
     @Test
@@ -116,7 +116,7 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
     @Test
     void doBackupWithOneMessageShouldStoreAnArchiveWithTwoEntries() throws Exception {
         ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
-        createMailBoxWithMessages(sessionUser, MAILBOX_PATH_USER1_MAILBOX1, getMessage1AppendCommand());
+        createMailboxWithMessages(sessionUser, MAILBOX_PATH_USER1_MAILBOX1, getMessage1AppendCommand());
 
         backup.backupAccount(USER1, destination);
 
@@ -131,7 +131,7 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
     @Test
     void doBackupWithTwoMailboxesAndOneMessageShouldStoreAnArchiveWithThreeEntries() throws Exception {
         ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
-        createMailBoxWithMessages(sessionUser, MAILBOX_PATH_USER1_MAILBOX1, getMessage1AppendCommand());
+        createMailboxWithMessages(sessionUser, MAILBOX_PATH_USER1_MAILBOX1, getMessage1AppendCommand());
         createMailbox(sessionUser, MAILBOX_PATH_USER1_MAILBOX2);
 
         backup.backupAccount(USER1, destination);
@@ -149,8 +149,8 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
     void doBackupShouldOnlyArchiveTheMailboxOfTheUser() throws Exception {
         ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
 
-        createMailBoxWithMessages(sessionUser, MAILBOX_PATH_USER1_MAILBOX1, getMessage1AppendCommand());
-        createMailBoxWithMessages(sessionOtherUser, MAILBOX_PATH_OTHER_USER_MAILBOX1, getMessage1OtherUserAppendCommand());
+        createMailboxWithMessages(sessionUser, MAILBOX_PATH_USER1_MAILBOX1, getMessage1AppendCommand());
+        createMailboxWithMessages(sessionOtherUser, MAILBOX_PATH_OTHER_USER_MAILBOX1, getMessage1OtherUserAppendCommand());
 
         backup.backupAccount(USER1, destination);
         try (ZipAssert zipAssert = ZipAssert.assertThatZip(destination)) {
@@ -167,8 +167,8 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
         backup.backupAccount(USER1, destination);
 
         InputStream source = new ByteArrayInputStream(destination.toByteArray());
-        Mono.from(backup.restore(USER2, source)).block();
-
+        MailboxBackup.BackupStatus backupStatus = Mono.from(backup.restore(USER2, source)).block();
+        assertThat(backupStatus).isEqualTo(MailboxBackup.BackupStatus.DONE);
         List<DefaultMailboxBackup.MailAccountContent> content = backup.getAccountContentForUser(sessionOtherUser);
 
         assertThat(content).isEmpty();
@@ -182,7 +182,8 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
         backup.backupAccount(USER1, destination);
 
         InputStream source = new ByteArrayInputStream(destination.toByteArray());
-        Mono.from(backup.restore(USER2, source)).block();
+        MailboxBackup.BackupStatus backupStatus = Mono.from(backup.restore(USER2, source)).block();
+        assertThat(backupStatus).isEqualTo(MailboxBackup.BackupStatus.DONE);
 
         List<DefaultMailboxBackup.MailAccountContent> content = backup.getAccountContentForUser(sessionOtherUser);
 
@@ -194,6 +195,20 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
     }
 
     @Test
+    void restoringAccountInNonEmptyAccountShouldNotBeDone() throws Exception {
+        createMailbox(sessionUser, MAILBOX_PATH_USER1_MAILBOX1);
+        createMailbox(sessionUser, MAILBOX_PATH_OTHER_USER_MAILBOX1);
+
+        ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
+        backup.backupAccount(USER1, destination);
+
+        InputStream source = new ByteArrayInputStream(destination.toByteArray());
+        MailboxBackup.BackupStatus backupStatus = Mono.from(backup.restore(USER2, source)).block();
+
+        assertThat(backupStatus).isEqualTo(MailboxBackup.BackupStatus.NON_EMPTY_RECEIVER_ACCOUNT);
+    }
+
+    @Test
     void backupAccountWithTwoMailboxesThenRestoringItInUser2AccountShouldCreateTwoMailboxes() throws Exception {
         createMailbox(sessionUser, MAILBOX_PATH_USER1_MAILBOX1);
         createMailbox(sessionUser, MAILBOX_PATH_USER1_MAILBOX2);
@@ -202,7 +217,9 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
         backup.backupAccount(USER1, destination);
 
         InputStream source = new ByteArrayInputStream(destination.toByteArray());
-        Mono.from(backup.restore(USER2, source)).block();
+        MailboxBackup.BackupStatus backupStatus = Mono.from(backup.restore(USER2, source)).block();
+
+        assertThat(backupStatus).isEqualTo(MailboxBackup.BackupStatus.DONE);
 
         List<DefaultMailboxBackup.MailAccountContent> content = backup.getAccountContentForUser(sessionOtherUser);
 
@@ -216,7 +233,6 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
         Mailbox mailbox2 = contentMailbox2.getMailboxWithAnnotations().mailbox;
         assertThat(mailbox2.getName()).isEqualTo(MAILBOX_2_NAME);
         assertThat(contentMailbox2.getMessages().count()).isEqualTo(0);
-
     }
 
     private MessageManager.AppendCommand getMessage1AppendCommand() throws IOException {

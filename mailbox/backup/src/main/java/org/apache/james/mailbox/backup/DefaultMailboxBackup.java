@@ -28,6 +28,7 @@ import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.Mailbox;
@@ -93,13 +94,31 @@ public class DefaultMailboxBackup implements MailboxBackup {
         archive(mailboxes, messages, destination);
     }
 
+    private boolean isAccountNonEmpty(User user) throws BadCredentialsException, MailboxException, IOException {
+        MailboxSession session = mailboxManager.createSystemSession(user.asString());
+        return getAccountContentForUser(session)
+            .stream()
+            .findFirst()
+            .isPresent();
+    }
+
     @Override
-    public Publisher<Void> restore(User user, InputStream source) {
-        return Mono.fromRunnable(Throwing.runnable(() -> archiveRestorer.restore(user, source)))
+    public Publisher<BackupStatus> restore(User user, InputStream source) {
+        try {
+            if (isAccountNonEmpty(user)) {
+                return Mono.just(BackupStatus.NON_EMPTY_RECEIVER_ACCOUNT);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error during account restoration for user : " + user, e);
+            return Mono.just(BackupStatus.FAILED);
+        }
+
+        return Mono.fromRunnable(Throwing.runnable(() -> archiveRestorer.restore(user, source)).sneakyThrow())
             .subscribeOn(Schedulers.elastic())
             .doOnError(e -> LOGGER.error("Error during account restoration for user : " + user, e))
-            .doOnTerminate(Throwing.runnable(source::close))
-            .then();
+            .doOnTerminate(Throwing.runnable(source::close).sneakyThrow())
+            .thenReturn(BackupStatus.DONE)
+            .onErrorReturn(BackupStatus.FAILED);
     }
 
     private Stream<MailAccountContent> getMailboxWithAnnotationsFromPath(MailboxSession session, MailboxPath path) {

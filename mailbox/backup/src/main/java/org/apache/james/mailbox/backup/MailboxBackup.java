@@ -28,16 +28,22 @@ import org.reactivestreams.Publisher;
 
 public interface MailboxBackup {
 
+    enum BackupStatus {
+        NON_EMPTY_RECEIVER_ACCOUNT,
+        FAILED,
+        DONE
+    }
+
     /**
      * @param user the user account to export
      */
     void backupAccount(User user, OutputStream destination) throws IOException, MailboxException;
 
     /**
-     * @param user the user in which account the restored elements will be stored.
+     * @param user   the user in which account the restored elements will be stored.
      * @param source the input stream to the archive containing the account elements.
      * @return a Publisher indicating when the action is completed
      */
-    Publisher<Void> restore(User user, InputStream source) throws IOException, MailboxException;
+    Publisher<BackupStatus> restore(User user, InputStream source) throws IOException, MailboxException;
 
 }
