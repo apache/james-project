@@ -183,7 +183,9 @@ public class MailboxPath {
      * 
      * @param delimiter
      * @return fullName
+     * @deprecated Use {@link MailboxPath#asString()} instead.
      */
+    @Deprecated
     public String getFullName(char delimiter) {
         return namespace + delimiter + name;
     }

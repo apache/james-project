@@ -132,7 +132,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
         // 
         // See IMAP-345
         int retryCount = 0;
-        while (unseen(responder, firstUnseen, selected, ImapSessionUtils.getMailboxSession(session)) == false) {
+        while (unseen(responder, firstUnseen, selected) == false) {
             // if we not was able to get find the unseen within 5 retries we should just not send it
             if (retryCount == 5) {
                 LOGGER.info("Unable to uid for unseen message {} in mailbox {}", firstUnseen, selected.getPath());
@@ -355,13 +355,13 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
         responder.respond(taggedOk);
     }
 
-    private boolean unseen(Responder responder, MessageUid firstUnseen, SelectedMailbox selected, MailboxSession session) throws MailboxException {
+    private boolean unseen(Responder responder, MessageUid firstUnseen, SelectedMailbox selected) throws MailboxException {
         if (firstUnseen != null) {
             final MessageUid unseenUid = firstUnseen;
             int msn = selected.msn(unseenUid);
 
             if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
-                LOGGER.debug("No message found with uid {} in mailbox {}", unseenUid, selected.getPath().getFullName(session.getPathDelimiter()));
+                LOGGER.debug("No message found with uid {} in mailbox {}", unseenUid, selected.getPath().asString());
                 return false;
             } 
 

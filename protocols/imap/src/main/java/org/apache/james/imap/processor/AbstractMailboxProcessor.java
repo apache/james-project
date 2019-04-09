@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -245,7 +246,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             final MessageUid uid = mr.getUid();
             int msn = selected.msn(uid);
             if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
-                LOGGER.debug("No message found with uid {} in the uid<->msn mapping for mailbox {}. This may be because it was deleted by a concurrent session. So skip it..", uid, selected.getPath().getFullName(mailboxSession.getPathDelimiter()));
+                LOGGER.debug("No message found with uid {} in the uid<->msn mapping for mailbox {}. This may be because it was deleted by a concurrent session. So skip it..", uid, selected.getPath().asString());
                     
 
                 // skip this as it was not found in the mapping
