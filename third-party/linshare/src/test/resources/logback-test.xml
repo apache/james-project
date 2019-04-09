@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements. See the NOTICE file
@@ -17,24 +16,16 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<configuration>
 
-    <parent>
-        <groupId>org.apache.james</groupId>
-        <artifactId>james-project</artifactId>
-        <version>3.4.0-SNAPSHOT</version>
-    </parent>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date %-5level [%thread] - [%logger]- %msg%n</pattern>
+        </encoder>
+    </appender>
 
-    <artifactId>third-party</artifactId>
-    <packaging>pom</packaging>
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
 
-    <name>Apache JAMES third party</name>
-    <description>Common utilities for integrating with third party software</description>
-    <inceptionYear>2018</inceptionYear>
-
-    <modules>
-        <module>linshare</module>
-        <module>spamassassin</module>
-    </modules>
-</project>
+</configuration>

@@ -1,0 +1,77 @@
+# Docker compose file for a full-featured Linshare architecture
+version: '3.7'
+
+services:
+    database:
+        restart: on-failure
+        image: linagora/linshare-database:2.2
+        environment:
+            - PGDATA=/var/lib/postgresql/data/pgdata
+            - POSTGRES_USER=linshare
+            - POSTGRES_PASSWORD=linshare
+
+    backend:
+        restart: on-failure
+        image: linagora/linshare-backend:2.2
+        links:
+            - database:linshare_database
+            - mongodb:linshare_mongodb
+        depends_on:
+            - database
+            - mongodb
+        volumes:
+            - ./conf/catalina.properties:/usr/local/tomcat/conf/catalina.properties
+            - ./conf/log4j.properties:/etc/linshare/log4j.properties
+            - ./ssl/id_rsa:/etc/linshare/id_rsa
+            - ./ssl/id_rsa.pub:/etc/linshare/id_rsa.pub
+        healthcheck:
+            test: ["CMD", "curl", "-s", "-f", "http://localhost:8080/linshare/"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 40s
+        environment:
+            - SMTP_HOST=linshare_smtp
+            - SMTP_PORT=25
+            - POSTGRES_HOST=linshare_database
+            - POSTGRES_PORT=5432
+            - POSTGRES_USER=linshare
+            - POSTGRES_PASSWORD=linshare
+            - MONGODB_HOST=linshare_mongodb
+            - MONGODB_PORT=27017
+            - THUMBNAIL_ENABLE=false
+
+    mongodb:
+        restart: on-failure
+        image: mongo:3.2
+        command: mongod --smallfiles
+
+    smtp:
+        restart: on-failure
+        image: linagora/opensmtpd
+        volumes:
+            - ./conf/smtpd.conf:/etc/smtpd/smtpd.conf
+
+    ldap:
+        image: linagora/linshare-ldap-for-tests:1.0
+        tty: true
+        stdin_open: true
+
+    database-init:
+        image: chibenwa/linshare-database-init:2.2
+        links:
+            - backend:backend
+        depends_on:
+            - backend
+        environment:
+            - TOMCAT_HOST=backend
+            - TOMCAT_PORT=8080
+            - TOMCAT_LDAP_NAME=ldap-local
+            - TOMCAT_LDAP_URL=ldap://ldap:389
+            - TOMCAT_LDAP_BASE_DN=ou=People,dc=linshare,dc=org
+            - TOMCAT_LDAP_DN=cn=linshare,dc=linshare,dc=org
+            - TOMCAT_LDAP_PW=linshare
+            - TOMCAT_DOMAIN_PATTERN_NAME=openldap-local
+            - TOMCAT_DOMAIN_PATTERN_MODEL=868400c0-c12e-456a-8c3c-19e985290586
+            - NO_REPLY_ADDRESS=linshare-noreply@linshare.org
+            - DEBUG=1
