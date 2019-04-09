@@ -27,9 +27,7 @@ import java.util.Optional;
 
 import org.apache.james.linshare.client.LinshareAPI;
 import org.apache.james.linshare.client.User;
-import org.junit.jupiter.api.extension.AfterAllCallback;
-import org.junit.jupiter.api.extension.AfterEachCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.github.fge.lambdas.Throwing;
@@ -44,7 +42,7 @@ import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
 
-public class LinshareExtension implements BeforeAllCallback, AfterEachCallback, AfterAllCallback {
+public class LinshareExtension implements BeforeEachCallback {
 
     private interface LinshareAPIForTesting {
 
@@ -68,22 +66,11 @@ public class LinshareExtension implements BeforeAllCallback, AfterEachCallback, 
         List<User> allUsers();
     }
 
-    private Linshare linshare;
+    private final Linshare linshare = LinshareSingleton.singleton;
 
     @Override
-    public void beforeAll(ExtensionContext context) {
-        linshare = new Linshare();
-        linshare.start();
-    }
-
-    @Override
-    public void afterEach(ExtensionContext context) throws Exception {
+    public void beforeEach(ExtensionContext context) throws Exception {
         deleteAllUsersDocuments();
-    }
-
-    @Override
-    public void afterAll(ExtensionContext extensionContext) {
-        linshare.stop();
     }
 
     public Linshare getLinshare() {
