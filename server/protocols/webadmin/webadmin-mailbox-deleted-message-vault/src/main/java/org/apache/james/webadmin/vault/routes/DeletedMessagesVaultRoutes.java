@@ -140,12 +140,11 @@ public class DeletedMessagesVaultRoutes implements Routes {
 
     public static final String ROOT_PATH = "deletedMessages";
     public static final String USERS = "users";
-    public static final String USER_PATH = ROOT_PATH + SEPARATOR + USERS;
     private static final String USER_PATH_PARAM = ":user";
     static final String MESSAGE_PATH_PARAM = "messages";
     private static final String MESSAGE_ID_PARAM = ":messageId";
-    private static final String RESTORE_PATH = USER_PATH + SEPARATOR + USER_PATH_PARAM;
-    private static final String DELETE_PATH = USER_PATH + SEPARATOR + USER_PATH_PARAM + SEPARATOR + MESSAGE_PATH_PARAM + SEPARATOR + MESSAGE_ID_PARAM;
+    static final String USER_PATH = ROOT_PATH + SEPARATOR + USERS + SEPARATOR + USER_PATH_PARAM;
+    private static final String DELETE_PATH = ROOT_PATH + SEPARATOR + USERS + SEPARATOR + USER_PATH_PARAM + SEPARATOR + MESSAGE_PATH_PARAM + SEPARATOR + MESSAGE_ID_PARAM;
     private static final String SCOPE_QUERY_PARAM = "scope";
     private static final String ACTION_QUERY_PARAM = "action";
     private static final String EXPORT_TO_QUERY_PARAM = "exportTo";
@@ -183,14 +182,15 @@ public class DeletedMessagesVaultRoutes implements Routes {
 
     @Override
     public void define(Service service) {
-        service.post(RESTORE_PATH, this::userActions, jsonTransformer);
+        service.post(USER_PATH, this::userActions, jsonTransformer);
         service.delete(ROOT_PATH, this::deleteWithScope, jsonTransformer);
         service.delete(DELETE_PATH, this::deleteMessage, jsonTransformer);
     }
 
     @POST
-    @Path(USER_PATH)
-    @ApiOperation(value = "Restore deleted emails from a specified user to his new restore mailbox")
+    @Path("users/{user}")
+    @ApiOperation(value = "Restore deleted emails from a specified user to his new restore mailbox" +
+        " or export their content to a destination mail address")
     @ApiImplicitParams({
         @ApiImplicitParam(
             required = true,
@@ -231,7 +231,6 @@ public class DeletedMessagesVaultRoutes implements Routes {
     }
 
     @DELETE
-    @Path(ROOT_PATH)
     @ApiOperation(value = "Purge all expired messages based on retentionPeriod of deletedMessageVault configuration")
     @ApiImplicitParams({
         @ApiImplicitParam(
@@ -254,7 +253,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
     }
 
     @DELETE
-    @Path(DELETE_PATH)
+    @Path("users/{user}/messages/{messageId}")
     @ApiOperation(value = "Delete message with messageId")
     @ApiImplicitParams({
         @ApiImplicitParam(

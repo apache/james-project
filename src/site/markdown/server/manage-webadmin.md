@@ -2644,6 +2644,7 @@ Here are the following actions available on the 'Deleted Messages Vault'
  - [Restore Deleted Messages](#Restore_deleted_messages)
  - [Export Deleted Messages](#Export_deleted_messages)
  - [Purge Deleted Messages](#Purge_deleted_messages)
+ - [Permanently remove Deleted Message](#Permanently_remove_deleted_message) 
 
  Note that the 'Deleted Messages Vault' feature is only supported on top of Cassandra-Guice.
 
@@ -2820,9 +2821,9 @@ while:
  
 ### Purge Deleted Messages
  
-You can overwrite 'retentionPeriod' configuration in deletedMessageVault or use default value is 1 year.
+You can overwrite 'retentionPeriod' configuration in 'deletedMessageVault' configuration file or use default value is 1 year.
 
-Delete all expired deleted messages with 'retentionPeriod' configured.
+Purge all deleted messages older than configured 'retentionPeriod'
 
 ```
 curl -XDEL http://ip:port/deletedMessages?scope=expired
@@ -2835,11 +2836,36 @@ Response code:
    - action query param is not present
    - action query param is not a valid action
 
-You may want to call this endpoint on a regular basis. Example:
+You may want to call this endpoint on a regular basis.
+
+### Permanently remove Deleted Message
+
+Delete a Deleted Message with MessageId
 
 ```
-0 0 * * * /usr/bin/curl --request POST http://ip:port/deletedMessages?action=purge >/dev/null 2>&1
+curl -XDEL http://ip:port/deletedMessages/users/user@domain.ext/messages/3294a976-ce63-491e-bd52-1b6f465ed7a2
 ```
+
+Response code:
+
+ - 201: Task for deleting message has been created
+ - 400: Bad request: 
+   - user parameter is invalid
+   - messageId parameter is invalid
+ - 404: User not found
+ 
+ The scheduled task will have the following type `deletedMessages/delete` and the following `additionalInformation`:
+ 
+ ```
+ {
+   "user": "user@domain.ext",
+   "deleteMessageId": "3294a976-ce63-491e-bd52-1b6f465ed7a2"
+ }
+ ```
+ 
+while:
+ - user: delete deleted messages from this user
+ - deleteMessageId: messageId of deleted messages will be delete
 
 ## Task management
 
