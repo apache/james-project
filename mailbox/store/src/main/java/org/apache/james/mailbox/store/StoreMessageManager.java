@@ -265,7 +265,7 @@ public class StoreMessageManager implements MessageManager {
     @Override
     public Iterator<MessageUid> expunge(MessageRange set, MailboxSession mailboxSession) throws MailboxException {
         if (!isWriteable(mailboxSession)) {
-            throw new ReadOnlyException(getMailboxPath(), mailboxSession.getPathDelimiter());
+            throw new ReadOnlyException(getMailboxPath());
         }
 
         List<MessageUid> uids = retrieveMessagesMarkedForDeletion(set, mailboxSession);
@@ -329,7 +329,7 @@ public class StoreMessageManager implements MessageManager {
         File file = null;
 
         if (!isWriteable(mailboxSession)) {
-            throw new ReadOnlyException(getMailboxPath(), mailboxSession.getPathDelimiter());
+            throw new ReadOnlyException(getMailboxPath());
         }
 
         try {
@@ -610,7 +610,7 @@ public class StoreMessageManager implements MessageManager {
     public Map<MessageUid, Flags> setFlags(final Flags flags, final FlagsUpdateMode flagsUpdateMode, final MessageRange set, MailboxSession mailboxSession) throws MailboxException {
 
         if (!isWriteable(mailboxSession)) {
-            throw new ReadOnlyException(getMailboxPath(), mailboxSession.getPathDelimiter());
+            throw new ReadOnlyException(getMailboxPath());
         }
 
         trimFlags(flags, mailboxSession);
@@ -644,7 +644,7 @@ public class StoreMessageManager implements MessageManager {
      */
     public List<MessageRange> copyTo(final MessageRange set, final StoreMessageManager toMailbox, final MailboxSession session) throws MailboxException {
         if (!toMailbox.isWriteable(session)) {
-            throw new ReadOnlyException(toMailbox.getMailboxPath(), session.getPathDelimiter());
+            throw new ReadOnlyException(toMailbox.getMailboxPath());
         }
 
         return locker.executeWithLock(session, toMailbox.getMailboxPath(), () -> {
@@ -663,10 +663,10 @@ public class StoreMessageManager implements MessageManager {
      */
     public List<MessageRange> moveTo(final MessageRange set, final StoreMessageManager toMailbox, final MailboxSession session) throws MailboxException {
         if (!isWriteable(session)) {
-            throw new ReadOnlyException(getMailboxPath(), session.getPathDelimiter());
+            throw new ReadOnlyException(getMailboxPath());
         }
         if (!toMailbox.isWriteable(session)) {
-            throw new ReadOnlyException(toMailbox.getMailboxPath(), session.getPathDelimiter());
+            throw new ReadOnlyException(toMailbox.getMailboxPath());
         }
 
         //TODO lock the from mailbox too, in a non-deadlocking manner - how?
@@ -707,7 +707,7 @@ public class StoreMessageManager implements MessageManager {
     protected List<MessageUid> recent(final boolean reset, MailboxSession mailboxSession) throws MailboxException {
         if (reset) {
             if (!isWriteable(mailboxSession)) {
-                throw new ReadOnlyException(getMailboxPath(), mailboxSession.getPathDelimiter());
+                throw new ReadOnlyException(getMailboxPath());
             }
         }
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
