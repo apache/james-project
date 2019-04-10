@@ -27,7 +27,7 @@
 
   <section name="WebAdmin Configuration">
 
-    <p>Consult <a href="https://github.com/apache/james-project/server/container/guice/memory-guice/sample-configuration/webadmin.properties">webadmin.properties</a> in GIT to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/webadmin.properties">webadmin.properties</a> in GIT to get some examples and hints.</p>
 
     <p>Use this configuration to define the WebAdmin's responding host and port.</p>
 
