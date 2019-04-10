@@ -25,7 +25,7 @@
 
     <body>
 
-        <section name="Mailbox listeners Configuration">
+        <section name="Mailbox listeners configuration in general">
 
             <p>
               Note: This feature requires Guice wiring. This is not implemented using Spring wiring.<br/>
@@ -40,7 +40,12 @@
 
             <p>To do so, just register the class that needs to be instantiated and added to global listeners. These JAR can be
                part of James source code, or provided as an extension and thus should be located in the<code>extensions-jars</code> folder.</p>
+        </section>
 
+        <section name="MailboxListener configuration">
+            <p>
+                Mailbox listener configuration is under the XML element &lt;listener&gt;
+            </p>
             <p>
                 Some MailboxListener allows you to specify if you want to run them synchronously or asynchronously. To do so,
                 for MailboxListener that supports this, you can use the <b>async</b> attribute (optional, per mailet default) to govern the execution mode.
@@ -61,7 +66,23 @@
                      For Cassandra guice wiring. Sends emails to users exceeding 80% and 99% of their quota to warn them</li>
             </ul>
         </section>
-
+        <section name="PreDeletionHook configuration">
+            <p>
+                Before deleting a message in James, this message and some related information about the deletion will be passed to a set of PreDeletionHook instances,
+                This process is called notifying, and it acts sequentially. If the notifying process for all PreDeletionHooks finish successfully, then the message will be processed to be deleted.
+                Otherwise, that message won't be deleted.
+            </p>
+            <p>
+                Pre Deletion Hook configuration is under the XML element &lt;preDeletionHook&gt;
+            </p>
+            <ul>
+                Already provided additional pre deletion hooks includes:
+                <li>
+                    <code>org.apache.james.vault.DeletedMessageVaultHook</code>:
+                    Storing messages about being deleted into <code>org.apache.james.vault.DeletedMessageVault</code>
+                </li>
+            </ul>
+        </section>
     </body>
 
 </document>
