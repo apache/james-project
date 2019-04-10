@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraIncrementTestsPlayedRule;
 import org.apache.james.backends.cassandra.DockerCassandraRestartRule;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -33,44 +32,33 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.model.AttachmentMapperTest;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraAttachmentMapperTest extends AttachmentMapperTest {
-    
+
+    private static final CassandraModule MODULES = CassandraModule.aggregateModules(
+        CassandraAttachmentModule.MODULE,
+        CassandraBlobModule.MODULE);
+
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
-    @ClassRule public static DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();
-
     @Rule
-    public DockerCassandraIncrementTestsPlayedRule cassandraIncrementRule = new DockerCassandraIncrementTestsPlayedRule();
-    
-    private static CassandraCluster cassandra;
+    public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();
 
-    @BeforeClass
-    public static void setUpClass() {
-        CassandraModule modules = CassandraModule.aggregateModules(
-            CassandraAttachmentModule.MODULE,
-            CassandraBlobModule.MODULE);
-        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
-    }
+    private CassandraCluster cassandra;
 
     @Override
     @Before
     public void setUp() throws MailboxException {
+        cassandra = CassandraCluster.create(MODULES, cassandraServer.getHost());
         super.setUp();
     }
     
     @After
     public void tearDown() {
         cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
         cassandra.closeCluster();
     }
 

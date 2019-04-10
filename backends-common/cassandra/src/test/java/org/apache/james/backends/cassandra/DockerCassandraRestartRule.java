@@ -24,6 +24,7 @@ import org.junit.rules.ExternalResource;
 public class DockerCassandraRestartRule extends ExternalResource {
     @Override
     protected void before() {
+        DockerCassandraSingleton.incrementTestsPlayed();
         DockerCassandraSingleton.restartAfterMaxTestsPlayed();
     }
 }

@@ -23,7 +23,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraIncrementTestsPlayedRule;
 import org.apache.james.backends.cassandra.DockerCassandraRestartRule;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mailbox.MailboxManager;
@@ -53,9 +52,7 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
@@ -63,24 +60,18 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
-    @ClassRule public static DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();
-
     @Rule
-    public DockerCassandraIncrementTestsPlayedRule cassandraIncrementRule = new DockerCassandraIncrementTestsPlayedRule();
+    public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();
 
-    private static CassandraCluster cassandra;
+    private CassandraCluster cassandra;
 
     private CassandraMailboxSessionMapperFactory mailboxSessionMapperFactory;
     private CassandraMailboxManager mailboxManager;
     private CassandraMailboxManager parseFailingMailboxManager;
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE, cassandraServer.getHost());
-    }
-
     @Before
     public void init() throws Exception {
+        cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE, cassandraServer.getHost());
         initSystemUnderTest();
         super.setUp();
     }
@@ -88,10 +79,6 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
     @After
     public void tearDown() {
         cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
         cassandra.closeCluster();
     }
 

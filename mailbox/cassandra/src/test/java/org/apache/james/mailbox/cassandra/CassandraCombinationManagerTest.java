@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraIncrementTestsPlayedRule;
 import org.apache.james.backends.cassandra.DockerCassandraRestartRule;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
@@ -31,9 +30,7 @@ import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
@@ -41,31 +38,21 @@ public class CassandraCombinationManagerTest extends AbstractCombinationManagerT
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
-    @ClassRule public static DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();
-
     @Rule
-    public DockerCassandraIncrementTestsPlayedRule cassandraIncrementRule = new DockerCassandraIncrementTestsPlayedRule();
+    public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();
 
-    private static CassandraCluster cassandra;
-
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE, cassandraServer.getHost());
-    }
+    private CassandraCluster cassandra;
 
     @Override
     @Before
     public void setUp() throws Exception {
+        cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE, cassandraServer.getHost());
         super.setUp();
     }
 
     @After
     public void tearDown() {
         cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
         cassandra.closeCluster();
     }
     

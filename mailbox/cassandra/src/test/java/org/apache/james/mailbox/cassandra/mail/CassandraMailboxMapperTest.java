@@ -26,7 +26,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraIncrementTestsPlayedRule;
 import org.apache.james.backends.cassandra.DockerCassandraRestartRule;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -42,9 +41,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -64,31 +61,26 @@ public class CassandraMailboxMapperTest {
     private static final Mailbox MAILBOX_BIS = new Mailbox(MAILBOX_PATH, UID_VALIDITY, MAILBOX_ID_2);
     private static final String WILDCARD = "%";
 
+    private static final CassandraModule MODULES = CassandraModule.aggregateModules(
+        CassandraMailboxModule.MODULE,
+        CassandraSchemaVersionModule.MODULE,
+        CassandraAclModule.MODULE);
+
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
-    @ClassRule public static DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();
-
     @Rule
-    public DockerCassandraIncrementTestsPlayedRule cassandraIncrementRule = new DockerCassandraIncrementTestsPlayedRule();
-    
-    private static CassandraCluster cassandra;
+    public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();
+
+    private CassandraCluster cassandra;
 
     private CassandraMailboxDAO mailboxDAO;
     private CassandraMailboxPathDAOImpl mailboxPathDAO;
     private CassandraMailboxPathV2DAO mailboxPathV2DAO;
     private CassandraMailboxMapper testee;
 
-    @BeforeClass
-    public static void setUpClass() {
-        CassandraModule modules = CassandraModule.aggregateModules(
-            CassandraMailboxModule.MODULE,
-            CassandraSchemaVersionModule.MODULE,
-            CassandraAclModule.MODULE);
-        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
-    }
-
     @Before
     public void setUp() {
+        cassandra = CassandraCluster.create(MODULES, cassandraServer.getHost());
         mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
         mailboxPathDAO = new CassandraMailboxPathDAOImpl(cassandra.getConf(), cassandra.getTypesProvider());
         mailboxPathV2DAO = new CassandraMailboxPathV2DAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
@@ -106,10 +98,6 @@ public class CassandraMailboxMapperTest {
     @After
     public void tearDown() {
         cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
         cassandra.closeCluster();
     }
 

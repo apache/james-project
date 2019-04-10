@@ -20,7 +20,7 @@
 package org.apache.james.backends.cassandra;
 
 public class DockerCassandraSingleton {
-    private static final int MAX_TEST_PLAYED = 200;
+    private static final int MAX_TEST_PLAYED = 100;
 
     private static int testsPlayedCount = 0;
 

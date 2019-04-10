@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra.quota;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraIncrementTestsPlayedRule;
 import org.apache.james.backends.cassandra.DockerCassandraRestartRule;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
@@ -29,7 +28,7 @@ import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.store.quota.GenericMaxQuotaManagerTest;
 import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
@@ -37,16 +36,16 @@ public class CassandraPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerT
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
-    @ClassRule public static DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();
-
     @Rule
-    public DockerCassandraIncrementTestsPlayedRule cassandraIncrementRule = new DockerCassandraIncrementTestsPlayedRule();
+    public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();
 
-    private static CassandraCluster cassandra;
+    private CassandraCluster cassandra;
 
-    @BeforeClass
-    public static void setUpClass() {
+    @Override
+    @Before
+    public void setUp() {
         cassandra = CassandraCluster.create(CassandraQuotaModule.MODULE, cassandraServer.getHost());
+        super.setUp();
     }
 
     @Override
@@ -58,11 +57,12 @@ public class CassandraPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerT
     @After
     public void cleanUp() {
         cassandra.clearTables();
+        cassandra.closeCluster();
     }
 
     @AfterClass
     public static void tearDownClass() {
-        cassandra.closeCluster();
+
     }
 
 }
