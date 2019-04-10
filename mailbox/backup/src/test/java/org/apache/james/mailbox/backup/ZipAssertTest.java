@@ -43,7 +43,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
+import com.google.common.collect.ImmutableList;
 
 @ExtendWith(TemporaryFolderExtension.class)
 public class ZipAssertTest {
@@ -97,6 +98,7 @@ public class ZipAssertTest {
             this.extraFields = extraFields;
         }
     }
+
     private static final String ENTRY_NAME = "entryName";
     private static final String ENTRY_NAME_2 = "entryName2";
     private static final String DIRECTORY_NAME = "folder/";

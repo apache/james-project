@@ -36,7 +36,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.GuiceJamesServer;

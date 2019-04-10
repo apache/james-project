@@ -19,9 +19,10 @@
 
 package org.apache.james.modules;
 
-import com.google.inject.Module;
 import org.apache.james.GuiceModuleTestExtension;
 import org.junit.jupiter.api.extension.ExtensionContext;
+
+import com.google.inject.Module;
 
 public class RabbitMQExtension implements GuiceModuleTestExtension {
 

@@ -52,7 +52,7 @@ class LocalListenerRegistryTest {
 
     @Test
     void getLocalMailboxListenersShouldReturnPreviouslyAddedListener() {
-        MailboxListener listener = event -> {};
+        MailboxListener listener = event -> { };
         testee.addListener(KEY_1, listener);
 
         assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
@@ -61,8 +61,8 @@ class LocalListenerRegistryTest {
 
     @Test
     void getLocalMailboxListenersShouldReturnPreviouslyAddedListeners() {
-        MailboxListener listener1 = event -> {};
-        MailboxListener listener2 = event -> {};
+        MailboxListener listener1 = event -> { };
+        MailboxListener listener2 = event -> { };
         testee.addListener(KEY_1, listener1);
         testee.addListener(KEY_1, listener2);
 
@@ -72,8 +72,8 @@ class LocalListenerRegistryTest {
 
     @Test
     void getLocalMailboxListenersShouldNotReturnRemovedListeners() {
-        MailboxListener listener1 = event -> {};
-        MailboxListener listener2 = event -> {};
+        MailboxListener listener1 = event -> { };
+        MailboxListener listener2 = event -> { };
         testee.addListener(KEY_1, listener1);
         LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener2);
 
@@ -85,15 +85,15 @@ class LocalListenerRegistryTest {
 
     @Test
     void addListenerShouldReturnFirstListenerWhenNoPreviouslyRegisteredListeners() {
-        MailboxListener listener = event -> {};
+        MailboxListener listener = event -> { };
 
         assertThat(testee.addListener(KEY_1, listener).isFirstListener()).isTrue();
     }
 
     @Test
     void addListenerShouldNotReturnFirstListenerWhenPreviouslyRegisteredListeners() {
-        MailboxListener listener = event -> {};
-        MailboxListener listener2 = event -> {};
+        MailboxListener listener = event -> { };
+        MailboxListener listener2 = event -> { };
 
         testee.addListener(KEY_1, listener);
 
@@ -102,8 +102,8 @@ class LocalListenerRegistryTest {
 
     @Test
     void removeListenerShouldNotReturnLastListenerRemovedWhenSeveralListener() {
-        MailboxListener listener = event -> {};
-        MailboxListener listener2 = event -> {};
+        MailboxListener listener = event -> { };
+        MailboxListener listener2 = event -> { };
 
         LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener);
         testee.addListener(KEY_1, listener2);
@@ -113,7 +113,7 @@ class LocalListenerRegistryTest {
 
     @Test
     void removeListenerShouldReturnLastListenerRemovedWhenOneListener() {
-        MailboxListener listener = event -> {};
+        MailboxListener listener = event -> { };
 
 
         LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener);
@@ -127,7 +127,7 @@ class LocalListenerRegistryTest {
 
         @Test
         void getLocalMailboxListenersShouldReturnPreviousAddedListener() throws Exception {
-            MailboxListener listener = event -> {};
+            MailboxListener listener = event -> { };
 
             ConcurrentTestRunner.builder()
                 .operation((threadNumber, operationNumber) -> testee.addListener(KEY_1, listener))
@@ -141,9 +141,9 @@ class LocalListenerRegistryTest {
 
         @Test
         void getLocalMailboxListenersShouldReturnAllPreviousAddedListeners() throws Exception {
-            MailboxListener listener1 = event -> {};
-            MailboxListener listener2 = event -> {};
-            MailboxListener listener3 = event -> {};
+            MailboxListener listener1 = event -> { };
+            MailboxListener listener2 = event -> { };
+            MailboxListener listener3 = event -> { };
 
             ConcurrentTestRunner.builder()
                 .operation((threadNumber, operationNumber) -> {
@@ -165,7 +165,7 @@ class LocalListenerRegistryTest {
 
         @Test
         void getLocalMailboxListenersShouldReturnEmptyWhenRemoveAddedListener() throws Exception {
-            MailboxListener listener1 = event -> {};
+            MailboxListener listener1 = event -> { };
 
             LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener1);
 
@@ -181,9 +181,9 @@ class LocalListenerRegistryTest {
 
         @Test
         void addListenerOnlyReturnIsFirstListenerForEmptyRegistry() throws Exception {
-            MailboxListener listener1 = event -> {};
-            MailboxListener listener2 = event -> {};
-            MailboxListener listener3 = event -> {};
+            MailboxListener listener1 = event -> { };
+            MailboxListener listener2 = event -> { };
+            MailboxListener listener3 = event -> { };
 
             AtomicInteger firstListenerCount = new AtomicInteger(0);
 
@@ -215,7 +215,7 @@ class LocalListenerRegistryTest {
 
         @Test
         void removeListenerOnlyReturnLastListenerRemovedForEmptyRegistry() throws Exception {
-            MailboxListener listener1 = event -> {};
+            MailboxListener listener1 = event -> { };
             AtomicInteger lastListenerRemoved = new AtomicInteger(0);
 
             LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener1);
@@ -234,11 +234,11 @@ class LocalListenerRegistryTest {
 
         @Test
         void iterationShouldPerformOnASnapshotOfListenersSet() {
-            MailboxListener listener1 = event -> {};
-            MailboxListener listener2 = event -> {};
-            MailboxListener listener3 = event -> {};
-            MailboxListener listener4 = event -> {};
-            MailboxListener listener5 = event -> {};
+            MailboxListener listener1 = event -> { };
+            MailboxListener listener2 = event -> { };
+            MailboxListener listener3 = event -> { };
+            MailboxListener listener4 = event -> { };
+            MailboxListener listener5 = event -> { };
 
             testee.addListener(KEY_1, listener1);
             testee.addListener(KEY_1, listener2);

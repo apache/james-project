@@ -24,7 +24,7 @@ import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 
 public class InVMEventBusTest implements KeyContract.SingleEventBusKeyContract, GroupContract.SingleEventBusGroupContract,
-    ErrorHandlingContract{
+    ErrorHandlingContract {
 
     private InVMEventBus eventBus;
     private MemoryEventDeadLetters deadLetters;

@@ -26,7 +26,8 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.mailet.Attribute;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
+
+import com.google.common.collect.ImmutableMap;
 
 class EnqueuedMailsDaoUtilTest {
 
