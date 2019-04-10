@@ -25,7 +25,7 @@
 
     <body>
 
-        <section name="Mailbox listeners configuration in general">
+        <section name="Mailbox listeners configuration overview">
 
             <p>
               Note: This feature requires Guice wiring. This is not implemented using Spring wiring.<br/>

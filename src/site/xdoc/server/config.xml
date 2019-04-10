@@ -133,7 +133,11 @@
         <td><a href="config-webadmin.html">WebAdmin Configuration</a></td>
         <td></td>
       </tr>
-
+      <tr>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/deletedMessageVault.properties">deletedMessageVault.properties</a></td>
+        <td><a href="config-vault.html">Deleted Messages Vault Configuration</a></td>
+        <td></td>
+      </tr>
     </table>
     
     <p>For most advanced system configuration, you can configure James for the following:</p>
