@@ -21,10 +21,10 @@ package org.apache.james.linshare;
 
 import java.time.Duration;
 
-import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.images.builder.ImageFromDockerfile;
 
 public class Linshare {
     private static final String WAIT_FOR_BACKEND_INIT_LOG = ".*Server startup.*";
@@ -98,16 +98,20 @@ public class Linshare {
     }
 
     private GenericContainer createDockerSmtp() {
-        return new GenericContainer<>("linagora/opensmtpd")
+        return new GenericContainer<>(
+            new ImageFromDockerfile()
+                .withFileFromClasspath("conf/smtpd.conf", "smtp/conf/smtpd.conf")
+                .withFileFromClasspath("Dockerfile", "smtp/Dockerfile"))
             .withNetworkAliases("smtp", "linshare_smtp")
-            .withClasspathResourceMapping("./conf/smtpd.conf",
-                "/etc/smtpd/smtpd.conf",
-                BindMode.READ_ONLY)
             .withNetwork(network);
     }
 
     private GenericContainer createDockerBackend() {
-        return new GenericContainer<>("linagora/linshare-backend:2.2")
+        return new GenericContainer<>(
+            new ImageFromDockerfile()
+                .withFileFromClasspath("conf/log4j.properties", "backend/conf/log4j.properties")
+                .withFileFromClasspath("conf/catalina.properties", "backend/conf/catalina.properties")
+                .withFileFromClasspath("Dockerfile", "backend/Dockerfile"))
             .withNetworkAliases("backend")
             .withEnv("SMTP_HOST", "linshare_smtp")
             .withEnv("SMTP_PORT", "25")
@@ -118,12 +122,6 @@ public class Linshare {
             .withEnv("MONGODB_HOST", "linshare_mongodb")
             .withEnv("MONGODB_PORT", "27017")
             .withEnv("THUMBNAIL_ENABLE", "false")
-            .withClasspathResourceMapping("./conf/catalina.properties",
-                "/usr/local/tomcat/conf/catalina.properties",
-                BindMode.READ_ONLY)
-            .withClasspathResourceMapping("./conf/log4j.properties",
-                "/etc/linshare/log4j.properties",
-                BindMode.READ_ONLY)
             .withExposedPorts(LINSHARE_BACKEND_PORT)
             .waitingFor(Wait.forLogMessage(WAIT_FOR_BACKEND_INIT_LOG, 1)
                 .withStartupTimeout(Duration.ofMinutes(10)))
