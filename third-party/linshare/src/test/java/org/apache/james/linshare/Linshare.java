@@ -19,6 +19,8 @@
 
 package org.apache.james.linshare;
 
+import java.time.Duration;
+
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
@@ -31,7 +33,6 @@ public class Linshare {
 
     private final GenericContainer<?> linshareBackend;
     private final GenericContainer<?> linshareDatabase;
-    private final GenericContainer<?> linshareDatabaseInit;
     private final GenericContainer<?> linshareSmtp;
     private final GenericContainer<?> linshareLdap;
     private final GenericContainer<?> linshareMongodb;
@@ -46,7 +47,6 @@ public class Linshare {
         linshareLdap = createDockerLdap();
         linshareSmtp = createDockerSmtp();
         linshareBackend = createDockerBackend();
-        linshareDatabaseInit = createDockerDatabaseInit();
     }
 
     public void start() {
@@ -55,7 +55,8 @@ public class Linshare {
         linshareLdap.start();
         linshareSmtp.start();
         linshareBackend.start();
-        linshareDatabaseInit.start();
+
+        LDAPConfigurationPerformer.configureLdap(this);
     }
 
     public void stop() {
@@ -64,7 +65,6 @@ public class Linshare {
         linshareLdap.stop();
         linshareSmtp.stop();
         linshareBackend.stop();
-        linshareDatabaseInit.stop();
     }
 
     public int getPort() {
@@ -106,23 +106,6 @@ public class Linshare {
             .withNetwork(network);
     }
 
-    private GenericContainer createDockerDatabaseInit() {
-        return new GenericContainer<>("chibenwa/linshare-database-init:2.2")
-            .withEnv("TOMCAT_HOST", "backend")
-            .withEnv("TOMCAT_PORT", "8080")
-            .withEnv("TOMCAT_LDAP_NAME", "ldap-local")
-            .withEnv("TOMCAT_LDAP_URL", "ldap://ldap:389")
-            .withEnv("TOMCAT_LDAP_BASE_DN", "ou=People,dc=linshare,dc=org")
-            .withEnv("TOMCAT_LDAP_DN", "cn=linshare,dc=linshare,dc=org")
-            .withEnv("TOMCAT_LDAP_PW", "linshare")
-            .withEnv("TOMCAT_DOMAIN_PATTERN_NAME", "openldap-local")
-            .withEnv("TOMCAT_DOMAIN_PATTERN_MODEL", "868400c0-c12e-456a-8c3c-19e985290586")
-            .withEnv("NO_REPLY_ADDRESS", "linshare-noreply@linshare.org")
-            .withEnv("DEBUG", "1")
-            .withNetwork(network)
-            .waitingFor(Wait.forLogMessage(WAIT_FOR_DB_INIT_LOG, 1));
-    }
-
     private GenericContainer createDockerBackend() {
         return new GenericContainer<>("linagora/linshare-backend:2.2")
             .withNetworkAliases("backend")
@@ -141,14 +124,9 @@ public class Linshare {
             .withClasspathResourceMapping("./conf/log4j.properties",
                 "/etc/linshare/log4j.properties",
                 BindMode.READ_ONLY)
-            .withClasspathResourceMapping("./ssl/id_rsa",
-                "/etc/linshare/id_rsa",
-                BindMode.READ_ONLY)
-            .withClasspathResourceMapping("./ssl/id_rsa.pub",
-                "/etc/linshare/id_rsa.pub",
-                BindMode.READ_ONLY)
             .withExposedPorts(LINSHARE_BACKEND_PORT)
-            .waitingFor(Wait.forLogMessage(WAIT_FOR_BACKEND_INIT_LOG, 1))
+            .waitingFor(Wait.forLogMessage(WAIT_FOR_BACKEND_INIT_LOG, 1)
+                .withStartupTimeout(Duration.ofMinutes(10)))
             .withNetwork(network);
     }
 }

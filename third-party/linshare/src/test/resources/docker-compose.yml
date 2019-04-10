@@ -56,22 +56,3 @@ services:
         image: linagora/linshare-ldap-for-tests:1.0
         tty: true
         stdin_open: true
-
-    database-init:
-        image: chibenwa/linshare-database-init:2.2
-        links:
-            - backend:backend
-        depends_on:
-            - backend
-        environment:
-            - TOMCAT_HOST=backend
-            - TOMCAT_PORT=8080
-            - TOMCAT_LDAP_NAME=ldap-local
-            - TOMCAT_LDAP_URL=ldap://ldap:389
-            - TOMCAT_LDAP_BASE_DN=ou=People,dc=linshare,dc=org
-            - TOMCAT_LDAP_DN=cn=linshare,dc=linshare,dc=org
-            - TOMCAT_LDAP_PW=linshare
-            - TOMCAT_DOMAIN_PATTERN_NAME=openldap-local
-            - TOMCAT_DOMAIN_PATTERN_MODEL=868400c0-c12e-456a-8c3c-19e985290586
-            - NO_REPLY_ADDRESS=linshare-noreply@linshare.org
-            - DEBUG=1
