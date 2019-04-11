@@ -23,13 +23,17 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Objects;
 
+import org.apache.commons.configuration.Configuration;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class LinshareConfiguration {
 
-    public static class Builder {
+    public static final String URL = "blob.export.linshare.url";
+    public static final String TOKEN = "blob.export.linshare.token";
 
+    public static class Builder {
         @FunctionalInterface
         public interface RequireUrl {
             RequireAuthorizationToken url(URL url);
@@ -62,13 +66,20 @@ public class LinshareConfiguration {
         return url -> credential -> new Builder.ReadyToBuild(url, credential);
     }
 
+    public static LinshareConfiguration from(Configuration configuration) throws MalformedURLException {
+        return builder()
+            .urlAsString(configuration.getString(URL, null))
+            .authorizationToken(new AuthorizationToken(configuration.getString(TOKEN, null)))
+            .build();
+    }
+
     private final URL url;
     private final AuthorizationToken token;
 
     @VisibleForTesting
     LinshareConfiguration(URL url, AuthorizationToken token) {
-        Preconditions.checkNotNull(url);
-        Preconditions.checkNotNull(token);
+        Preconditions.checkNotNull(url, "'" + URL + "' can not be null");
+        Preconditions.checkNotNull(token, "'" + TOKEN + "' can not be null");
 
         this.url = url;
         this.token = token;
