@@ -28,6 +28,9 @@
 
     <artifactId>apache-james-linshare</artifactId>
 
+    <name>Apache James :: Third Party :: LinShare</name>
+    <description>LinShare Java client, blob export mechanism and test utilities</description>
+
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
