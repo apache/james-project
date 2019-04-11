@@ -115,7 +115,7 @@ public class Linshare {
             new ImageFromDockerfile()
                 .withFileFromClasspath("conf/log4j.properties", "backend/conf/log4j.properties")
                 .withFileFromClasspath("conf/catalina.properties", "backend/conf/catalina.properties")
-                .withFileFromClasspath("conf/id_rsa", "backend/conf/id_rsa")
+                .withFileFromClasspath("conf/id_rsa", "backend/conf/id_rsa.pri")
                 .withFileFromClasspath("conf/id_rsa.pub", "backend/conf/id_rsa.pub")
                 .withFileFromClasspath("Dockerfile", "backend/Dockerfile"))
             .withNetworkAliases("backend")
