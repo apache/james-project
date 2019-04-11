@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import org.apache.james.linshare.client.LinshareAPI;
 import org.apache.james.linshare.client.User;
+import org.apache.james.utils.FakeSmtp;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -69,8 +70,9 @@ public class LinshareExtension implements BeforeEachCallback {
     private final Linshare linshare = LinshareSingleton.singleton;
 
     @Override
-    public void beforeEach(ExtensionContext context) throws Exception {
+    public void beforeEach(ExtensionContext context) {
         deleteAllUsersDocuments();
+        FakeSmtp.clean(linshare.fakeSmtpRequestSpecification());
     }
 
     public Linshare getLinshare() {

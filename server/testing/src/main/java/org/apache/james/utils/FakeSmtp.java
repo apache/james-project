@@ -43,6 +43,17 @@ import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 
 public class FakeSmtp implements TestRule {
+    public static void clean(RequestSpecification requestSpecification) {
+        given(requestSpecification, RESPONSE_SPECIFICATION)
+            .get("/api/email")
+            .jsonPath()
+            .getList("id", String.class)
+            .stream()
+            .mapToInt(Integer::valueOf)
+            .max()
+            .ifPresent(id -> given(requestSpecification, RESPONSE_SPECIFICATION)
+                .get("/api/email/purge/" + id));
+    }
 
     public static FakeSmtp withSmtpPort(Integer smtpPort) {
         DockerGenericContainer container = fakeSmtpContainer()
@@ -59,7 +70,7 @@ public class FakeSmtp implements TestRule {
     }
 
     private static final int SMTP_PORT = 25;
-    private static final ResponseSpecification RESPONSE_SPECIFICATION = new ResponseSpecBuilder().build();
+    public static final ResponseSpecification RESPONSE_SPECIFICATION = new ResponseSpecBuilder().build();
     private final DockerGenericContainer container;
     private final Integer smtpPort;
 
@@ -104,14 +115,6 @@ public class FakeSmtp implements TestRule {
     }
 
     public void clean() {
-        given(requestSpecification(), RESPONSE_SPECIFICATION)
-            .get("/api/email")
-            .jsonPath()
-            .getList("id", String.class)
-            .stream()
-            .mapToInt(Integer::valueOf)
-            .max()
-            .ifPresent(id -> given(requestSpecification(), RESPONSE_SPECIFICATION)
-                .get("/api/email/purge/" + id));
+        clean(requestSpecification());
     }
 }
