@@ -39,13 +39,20 @@ public class FileExtension {
 
     @VisibleForTesting
     FileExtension(String extension) {
+        Preconditions.checkNotNull(extension, "'extension' can not be null");
+        Preconditions.checkArgument(StringUtils.isNotBlank(extension), "'extension' can not be blank");
+
         this.extension = extension;
     }
 
     public String appendExtension(String filePath) {
         Preconditions.checkArgument(StringUtils.isNotBlank(filePath), "filePath cannot be null or blank");
 
-        return filePath + EXTENSION_SEPARATOR + extension;
+        return filePath + asFileSuffix();
+    }
+
+    public String asFileSuffix() {
+        return EXTENSION_SEPARATOR + extension;
     }
 
     public String getExtension() {

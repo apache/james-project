@@ -23,20 +23,11 @@ import static org.apache.james.blob.export.api.FileExtension.ZIP_EXTENSION_STRIN
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class FileExtensionTest {
-
-    private FileExtension fileExtension;
-
-    @BeforeEach
-    void beforeEach() {
-        fileExtension = new FileExtension(ZIP_EXTENSION_STRING);
-    }
-
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(FileExtension.class)
@@ -44,21 +35,52 @@ class FileExtensionTest {
     }
 
     @Test
+    void constructorShouldThrowOnNull() {
+        assertThatThrownBy(() -> new FileExtension(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void constructorShouldThrowOnEmpty() {
+        assertThatThrownBy(() -> new FileExtension(""))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void constructorShouldThrowOnBlank() {
+        assertThatThrownBy(() -> new FileExtension("  "))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void appendExtensionShouldThrowWhenPassingNullValue() {
+        FileExtension fileExtension = new FileExtension(ZIP_EXTENSION_STRING);
+
         assertThatThrownBy(() -> fileExtension.appendExtension(null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void appendExtensionShouldThrowWhenPassingEmptyStringValue() {
+        FileExtension fileExtension = new FileExtension(ZIP_EXTENSION_STRING);
+
         assertThatThrownBy(() -> fileExtension.appendExtension(""))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void appendExtensionShouldReturnValueEndsWithExtension() {
-        fileExtension = new FileExtension("tar.gz");
+        FileExtension fileExtension = new FileExtension("tar.gz");
+
         assertThat(fileExtension.appendExtension("/local/james"))
             .endsWith(".tar.gz");
+    }
+
+    @Test
+    void asFileSuffixShouldReturnDotAndExtension() {
+        FileExtension fileExtension = new FileExtension("tar.gz");
+
+        assertThat(fileExtension.asFileSuffix())
+            .isEqualTo(".tar.gz");
     }
 }
