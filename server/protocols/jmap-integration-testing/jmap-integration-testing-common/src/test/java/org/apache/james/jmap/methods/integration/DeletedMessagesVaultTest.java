@@ -40,6 +40,9 @@ import static org.hamcrest.Matchers.is;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -59,6 +62,7 @@ import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.JmapGuiceProbe;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.awaitility.Duration;
@@ -110,6 +114,8 @@ public abstract class DeletedMessagesVaultTest {
         }
     }
 
+    private static final Instant NOW = Instant.now();
+    private static final Instant ONE_DAY_AFTER_ONE_YEAR_EXPIRATION = NOW.plus(366, ChronoUnit.DAYS);
     private static final String FIRST_SUBJECT = "first subject";
     private static final String SECOND_SUBJECT = "second subject";
     private static final String HOMER = "homer@" + DOMAIN;
@@ -130,7 +136,7 @@ public abstract class DeletedMessagesVaultTest {
 
     private MailboxId otherMailboxId;
 
-    protected abstract GuiceJamesServer createJmapServer(FileSystem fileSystem) throws IOException;
+    protected abstract GuiceJamesServer createJmapServer(FileSystem fileSystem, Clock clock) throws IOException;
 
     protected abstract void awaitSearchUpToDate();
 
@@ -143,12 +149,14 @@ public abstract class DeletedMessagesVaultTest {
     private AccessToken bartAccessToken;
     private GuiceJamesServer jmapServer;
     private RequestSpecification webAdminApi;
+    private UpdatableTickingClock clock;
     private FileSystem fileSystem;
 
     @Before
     public void setup() throws Throwable {
+        clock = new UpdatableTickingClock(NOW);
         fileSystem = new FileSystemImpl(new JamesServerResourceLoader(tempFolder.getRoot().getPath()));
-        jmapServer = createJmapServer(fileSystem);
+        jmapServer = createJmapServer(fileSystem, clock);
         jmapServer.start();
         MailboxProbe mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
@@ -602,6 +610,84 @@ public abstract class DeletedMessagesVaultTest {
         }
     }
 
+    @Test
+    public void vaultPurgeShouldMakeExportProduceEmptyZipWhenAllMessagesAreExpired() throws Exception {
+        bartSendMessageToHomer();
+        bartSendMessageToHomer();
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 3);
+
+        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        clock.setInstant(ONE_DAY_AFTER_ONE_YEAR_EXPIRATION);
+        purgeVault();
+
+        String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
+        try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
+            zipAssert.hasNoEntry();
+        }
+    }
+
+    @Test
+    public void vaultPurgeShouldMakeExportProduceAZipWhenOneMessageIsNotExpired() throws Exception {
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        String messageIdOfNotExpiredMessage = listMessageIdsForAccount(homerAccessToken).get(0);
+
+        clock.setInstant(ONE_DAY_AFTER_ONE_YEAR_EXPIRATION);
+        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        purgeVault();
+
+        String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
+        try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
+            zipAssert.hasEntriesSize(1)
+                .allSatisfies(entry -> entry.hasName(messageIdOfNotExpiredMessage + ".eml"));
+        }
+    }
+
+    @Test
+    public void vaultPurgeShouldMakeExportProduceZipWhenAllMessagesAreNotExpired() throws Exception {
+        bartSendMessageToHomer();
+        bartSendMessageToHomer();
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 3);
+
+        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        purgeVault();
+
+        String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
+        try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
+            zipAssert.hasEntriesSize(3);
+        }
+    }
+
+    @Test
+    public void vaultPurgeShouldNotAppendMessageToTheUserMailbox() {
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        clock.setInstant(ONE_DAY_AFTER_ONE_YEAR_EXPIRATION);
+        purgeVault();
+
+        assertThat(listMessageIdsForAccount(homerAccessToken))
+            .hasSize(0);
+    }
+
     private String exportAndGetFileLocationFromLastMail(ExportRequest exportRequest, AccessToken shareeAccessToken) {
         int currentNumberOfMessages = listMessageIdsForAccount(shareeAccessToken).size();
         exportVaultContent(exportRequest);
@@ -739,14 +825,30 @@ public abstract class DeletedMessagesVaultTest {
     private void exportVaultContent(ExportRequest exportRequest) {
         String taskId =
             webAdminApi.with()
+                .queryParam("action", "export")
+                .queryParam("exportTo", exportRequest.sharee)
                 .body(exportRequest.matchingQuery)
-                .post("/deletedMessages/users/" + exportRequest.userExportFrom + "?action=export&exportTo=" + exportRequest.sharee)
+                .post("/deletedMessages/users/" + exportRequest.userExportFrom)
             .jsonPath()
                 .get("taskId");
 
-        webAdminApi.given()
+        webAdminApi.with()
                 .get("/tasks/" + taskId + "/await")
             .then()
                 .body("status", is("completed"));
+    }
+
+    private void purgeVault() {
+        String taskId =
+            webAdminApi.with()
+                .queryParam("scope", "expired")
+                .delete("/deletedMessages")
+            .jsonPath()
+                .get("taskId");
+
+        webAdminApi.with()
+            .get("/tasks/" + taskId + "/await")
+        .then()
+            .body("status", is("completed"));
     }
 }

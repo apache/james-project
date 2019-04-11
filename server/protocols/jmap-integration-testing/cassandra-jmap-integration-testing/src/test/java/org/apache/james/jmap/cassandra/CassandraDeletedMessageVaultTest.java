@@ -20,6 +20,7 @@
 package org.apache.james.jmap.cassandra;
 
 import java.io.IOException;
+import java.time.Clock;
 
 import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.DockerCassandraRule;
@@ -43,7 +44,7 @@ public class CassandraDeletedMessageVaultTest extends DeletedMessagesVaultTest {
     public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
     
     @Override
-    protected GuiceJamesServer createJmapServer(FileSystem fileSystem) throws IOException {
+    protected GuiceJamesServer createJmapServer(FileSystem fileSystem, Clock clock) throws IOException {
         return rule.jmapServer(cassandra.getModule(),
             binder -> binder.bind(PreDeletionHooksConfiguration.class)
                 .toInstance(PreDeletionHooksConfiguration.forHooks(
@@ -51,7 +52,8 @@ public class CassandraDeletedMessageVaultTest extends DeletedMessagesVaultTest {
             binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION),
             binder -> binder.bind(MailRepositoryDeletedMessageVault.Configuration.class)
                 .toInstance(new MailRepositoryDeletedMessageVault.Configuration(MailRepositoryUrl.from("cassandra://var/deletedMessages/user"))),
-            binder -> binder.bind(FileSystem.class).toInstance(fileSystem));
+            binder -> binder.bind(FileSystem.class).toInstance(fileSystem),
+            binder -> binder.bind(Clock.class).toInstance(clock));
     }
 
     @Override

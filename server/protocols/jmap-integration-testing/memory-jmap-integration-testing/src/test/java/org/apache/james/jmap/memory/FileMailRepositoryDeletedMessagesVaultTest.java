@@ -20,6 +20,7 @@
 package org.apache.james.jmap.memory;
 
 import java.io.IOException;
+import java.time.Clock;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
@@ -44,7 +45,7 @@ public class FileMailRepositoryDeletedMessagesVaultTest extends DeletedMessagesV
     }
 
     @Override
-    protected GuiceJamesServer createJmapServer(FileSystem fileSystem) throws IOException {
+    protected GuiceJamesServer createJmapServer(FileSystem fileSystem, Clock clock) throws IOException {
         return memoryJmap.jmapServer(
             binder -> binder.bind(PreDeletionHooksConfiguration.class)
                 .toInstance(PreDeletionHooksConfiguration.forHooks(
@@ -52,6 +53,7 @@ public class FileMailRepositoryDeletedMessagesVaultTest extends DeletedMessagesV
             binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION),
             binder -> binder.bind(MailRepositoryDeletedMessageVault.Configuration.class)
                 .toInstance(new MailRepositoryDeletedMessageVault.Configuration(MailRepositoryUrl.from("file://var/deletedMessages/user"))),
-            binder -> binder.bind(FileSystem.class).toInstance(fileSystem));
+            binder -> binder.bind(FileSystem.class).toInstance(fileSystem),
+            binder -> binder.bind(Clock.class).toInstance(clock));
     }
 }
