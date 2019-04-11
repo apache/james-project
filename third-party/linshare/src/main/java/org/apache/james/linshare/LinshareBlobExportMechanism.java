@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
@@ -37,7 +39,8 @@ public class LinshareBlobExportMechanism implements BlobExportMechanism {
     private final LinshareAPI linshareAPI;
     private final BlobStore blobStore;
 
-    public LinshareBlobExportMechanism(LinshareAPI linshareAPI, BlobStore blobStore) {
+    @Inject
+    LinshareBlobExportMechanism(LinshareAPI linshareAPI, BlobStore blobStore) {
         this.linshareAPI = linshareAPI;
         this.blobStore = blobStore;
     }
