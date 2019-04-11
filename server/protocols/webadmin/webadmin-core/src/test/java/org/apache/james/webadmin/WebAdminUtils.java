@@ -34,6 +34,7 @@ import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 import com.github.steveash.guavate.Guavate;
 
 import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.config.RestAssuredConfig;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 
@@ -68,8 +69,12 @@ public class WebAdminUtils {
         return new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
+            .setConfig(defaultConfig())
             .setPort(port.getValue());
+    }
+
+    public static RestAssuredConfig defaultConfig() {
+        return newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8));
     }
 
     public static RequestSpecification spec(Port port) {

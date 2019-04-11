@@ -21,6 +21,7 @@ package org.apache.james.jmap.methods.integration;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
+import static io.restassured.config.ParamConfig.UpdateStrategy.REPLACE;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapCommonRequests.getLastMessageId;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
@@ -73,6 +74,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 import io.restassured.RestAssured;
+import io.restassured.config.ParamConfig;
 import io.restassured.parsing.Parser;
 import io.restassured.specification.RequestSpecification;
 
@@ -164,7 +166,9 @@ public abstract class DeletedMessagesVaultTest {
         homerAccessToken = authenticateJamesUser(baseUri(jmapServer), HOMER, PASSWORD);
         bartAccessToken = authenticateJamesUser(baseUri(jmapServer), BART, BOB_PASSWORD);
 
-        webAdminApi = WebAdminUtils.spec(jmapServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
+        webAdminApi = WebAdminUtils.spec(jmapServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort())
+            .config(WebAdminUtils.defaultConfig()
+                .paramConfig(new ParamConfig(REPLACE, REPLACE, REPLACE)));
     }
 
     @After
