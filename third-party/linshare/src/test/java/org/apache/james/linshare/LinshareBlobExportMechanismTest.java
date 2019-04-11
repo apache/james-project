@@ -19,10 +19,14 @@
 
 package org.apache.james.linshare;
 
+import static io.restassured.RestAssured.given;
 import static org.apache.james.linshare.LinshareFixture.USER_1;
 import static org.apache.james.linshare.LinshareFixture.USER_2;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 
 import java.nio.charset.StandardCharsets;
 
@@ -33,9 +37,13 @@ import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.blob.memory.MemoryBlobStore;
 import org.apache.james.core.MailAddress;
 import org.apache.james.linshare.client.LinshareAPI;
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import io.restassured.specification.RequestSpecification;
 
 class LinshareBlobExportMechanismTest {
     private static final String EXPLANATION = "Explanation about the file being shared";
@@ -74,6 +82,34 @@ class LinshareBlobExportMechanismTest {
             .allSatisfy(receivedShare -> assertThat(receivedShare.getDocument().getName()).endsWith(".txt"))
             .allSatisfy(receivedShare -> assertThat(receivedShare.getDocument().getName()).startsWith(blobId.asString()))
             .allSatisfy(receivedShare -> assertThat(receivedShare.getSender().getMail()).isEqualTo(USER_1.getUsername()));
+    }
+
+    @Test
+    void exportShouldSendAnEmailToSharee() throws Exception {
+        BlobId blobId = blobStore.save("content".getBytes(StandardCharsets.UTF_8)).block();
+
+        testee.blobId(blobId)
+            .with(new MailAddress(USER_2.getUsername()))
+            .explanation(EXPLANATION)
+            .fileExtension(FileExtension.of("txt"))
+            .export();
+
+        RequestSpecification request = given(linshareExtension.getLinshare().fakeSmtpRequestSpecification());
+
+        Awaitility.waitAtMost(Duration.TEN_SECONDS)
+            .pollInterval(Duration.ONE_SECOND)
+            .untilAsserted(
+                () -> request
+                    .get("/api/email")
+                .then()
+                    .body("", hasSize(2)));
+
+        request
+            .get("/api/email")
+        .then()
+            .body("[1].subject", containsString("John Doe has shared a file with you"))
+            .body("[1].to", hasItem(USER_2.getUsername()))
+            .body("[1].html", containsString(EXPLANATION));
     }
 
     @Test

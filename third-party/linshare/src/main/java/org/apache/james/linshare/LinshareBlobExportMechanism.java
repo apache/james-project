@@ -49,26 +49,27 @@ public class LinshareBlobExportMechanism implements BlobExportMechanism {
     public ShareeStage blobId(BlobId blobId) {
         return mailAddress -> explanation -> fileExtension -> () ->  {
             try {
-                exportBlob(blobId, mailAddress, fileExtension);
+                exportBlob(blobId, mailAddress, fileExtension, explanation);
             } catch (Exception e) {
                 throw new BlobExportException("Error while exporting blob " + blobId.asString() + " to " + mailAddress.asString(), e);
             }
         };
     }
 
-    private void exportBlob(BlobId blobId, MailAddress mailAddress, Optional<FileExtension> fileExtension) throws IOException {
+    private void exportBlob(BlobId blobId, MailAddress mailAddress, Optional<FileExtension> fileExtension, String explanation) throws IOException {
         File tempFile = createTempFile(blobId, fileExtension);
         try {
             FileUtils.copyInputStreamToFile(blobStore.read(blobId), tempFile);
-            uploadAndShare(mailAddress, tempFile);
+            uploadAndShare(mailAddress, tempFile, explanation);
         } finally {
             FileUtils.forceDelete(tempFile);
         }
     }
 
-    private void uploadAndShare(MailAddress mailAddress, File tempFile) {
+    private void uploadAndShare(MailAddress mailAddress, File tempFile, String explanation) {
         Document document = linshareAPI.uploadDocument(tempFile);
         linshareAPI.share(ShareRequest.builder()
+            .message(explanation)
             .addDocumentId(document.getId())
             .addRecipient(mailAddress)
             .build());
