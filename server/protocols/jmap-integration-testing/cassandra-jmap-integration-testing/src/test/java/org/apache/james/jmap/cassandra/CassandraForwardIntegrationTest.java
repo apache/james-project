@@ -26,13 +26,12 @@ import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.methods.integration.ForwardIntegrationTest;
 import org.apache.james.webadmin.WebAdminConfiguration;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraForwardIntegrationTest extends ForwardIntegrationTest {
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    @Rule
+    public DockerCassandraRule cassandra = new DockerCassandraRule();
 
     @Rule
     public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();

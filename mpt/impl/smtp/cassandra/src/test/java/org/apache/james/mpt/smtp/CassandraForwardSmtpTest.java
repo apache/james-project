@@ -22,14 +22,11 @@ package org.apache.james.mpt.smtp;
 import static org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType.SMTP_GLOBAL_SERVER;
 
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraForwardSmtpTest extends ForwardSmtpTest {
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     @Rule
     public SmtpTestRule cassandraSmtpTestRule = CassandraSmtpTestRuleFactory.create(SMTP_GLOBAL_SERVER, cassandraServer.getHost());

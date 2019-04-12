@@ -23,14 +23,13 @@ import static org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnec
 
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 
 public class AwsS3RabbitMQSmtpStarttlsCommandTest extends SmtpStarttlsCommandTest {
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
 
     private DockerAwsS3TestRule dockerAwsS3TestRule = new DockerAwsS3TestRule();

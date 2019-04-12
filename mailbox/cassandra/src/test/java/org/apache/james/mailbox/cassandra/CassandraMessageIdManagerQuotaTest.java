@@ -31,12 +31,11 @@ import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraMessageIdManagerQuotaTest extends AbstractMessageIdManagerQuotaTest {
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     @Rule
     public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();

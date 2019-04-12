@@ -33,7 +33,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.Rule;
 
 public class CassandraRecipientRewriteTableV6Test extends AbstractRecipientRewriteTableTest {
     private static final SchemaVersion SCHEMA_VERSION_V6 = new SchemaVersion(6);
@@ -42,7 +42,7 @@ public class CassandraRecipientRewriteTableV6Test extends AbstractRecipientRewri
         CassandraRRTModule.MODULE,
         CassandraSchemaVersionModule.MODULE);
 
-    @ClassRule
+    @Rule
     public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     protected static CassandraCluster cassandra;

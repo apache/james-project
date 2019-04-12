@@ -26,13 +26,12 @@ import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.methods.integration.GetVacationResponseTest;
 import org.apache.james.util.date.ZonedDateTimeProvider;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class RabbitMQAwsS3GetVacationResponseTest extends GetVacationResponseTest {
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    @Rule
+    public DockerCassandraRule cassandra = new DockerCassandraRule();
 
     @Rule
     public CassandraRabbitMQAwsS3JmapTestRule rule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();

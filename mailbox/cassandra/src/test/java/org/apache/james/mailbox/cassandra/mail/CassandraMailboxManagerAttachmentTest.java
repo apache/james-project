@@ -53,12 +53,11 @@ import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     @Rule
     public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();

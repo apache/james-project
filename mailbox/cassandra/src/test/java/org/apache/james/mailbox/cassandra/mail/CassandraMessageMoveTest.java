@@ -26,12 +26,11 @@ import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageMoveTest;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraMessageMoveTest extends MessageMoveTest {
     
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     @Rule
     public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();

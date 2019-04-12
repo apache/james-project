@@ -27,13 +27,12 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.methods.integration.FilterTest;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.MailboxId;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class RabbitMQSwiftFilterTest extends FilterTest {
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    @Rule
+    public DockerCassandraRule cassandra = new DockerCassandraRule();
 
     @Rule
     public CassandraRabbitMQSwiftJmapTestRule rule = CassandraRabbitMQSwiftJmapTestRule.defaultTestRule();

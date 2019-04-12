@@ -27,12 +27,11 @@ import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManagerTest;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraCurrentQuotaManagerTest extends StoreCurrentQuotaManagerTest {
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     @Rule
     public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();

@@ -29,12 +29,11 @@ import org.apache.james.mailbox.store.quota.GenericMaxQuotaManagerTest;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerTest {
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     @Rule
     public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();

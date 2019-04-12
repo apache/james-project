@@ -23,11 +23,10 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystemRule;
 import org.apache.james.mpt.imapmailbox.suite.Condstore;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraCondstoreTest extends Condstore {
-    @ClassRule
+    @Rule
     public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     @Rule
     public CassandraHostSystemRule cassandraHostSystemRule = new CassandraHostSystemRule(cassandraServer);

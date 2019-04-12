@@ -33,7 +33,6 @@ import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.model.AttachmentMapperTest;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraAttachmentMapperTest extends AttachmentMapperTest {
@@ -42,7 +41,7 @@ public class CassandraAttachmentMapperTest extends AttachmentMapperTest {
         CassandraAttachmentModule.MODULE,
         CassandraBlobModule.MODULE);
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     @Rule
     public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();

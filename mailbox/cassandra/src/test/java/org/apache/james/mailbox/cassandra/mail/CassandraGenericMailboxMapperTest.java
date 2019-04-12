@@ -35,7 +35,6 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperTest;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraGenericMailboxMapperTest extends MailboxMapperTest {
@@ -47,7 +46,7 @@ public class CassandraGenericMailboxMapperTest extends MailboxMapperTest {
         CassandraModSeqModule.MODULE,
         CassandraUidModule.MODULE);
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     @Rule
     public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();

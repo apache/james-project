@@ -51,7 +51,6 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -61,8 +60,8 @@ import io.restassured.parsing.Parser;
 public class CassandraBulkOperationTest {
     private static final Integer NUMBER_OF_MAIL_TO_CREATE = 250;
 
-    @ClassRule
-    public static DockerCassandraRule cassandra =  new DockerCassandraRule();
+    @Rule
+    public DockerCassandraRule cassandra =  new DockerCassandraRule();
 
     @Rule
     public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();

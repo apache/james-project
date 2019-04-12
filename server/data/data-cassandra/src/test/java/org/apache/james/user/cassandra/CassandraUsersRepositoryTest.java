@@ -24,25 +24,20 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.AbstractUsersRepositoryTest;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.Rule;
 
 public class CassandraUsersRepositoryTest extends AbstractUsersRepositoryTest {
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @Rule
+    public DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
-    private static CassandraCluster cassandra;
-
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraUsersRepositoryModule.MODULE, cassandraServer.getHost());
-    }
+    private CassandraCluster cassandra;
 
     @Override
     @Before
     public void setUp() throws Exception {
+        cassandra = CassandraCluster.create(CassandraUsersRepositoryModule.MODULE, cassandraServer.getHost());
         super.setUp();
     }
     
@@ -51,10 +46,6 @@ public class CassandraUsersRepositoryTest extends AbstractUsersRepositoryTest {
     public void tearDown() throws Exception {
         super.tearDown();
         cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
         cassandra.closeCluster();
     }
 

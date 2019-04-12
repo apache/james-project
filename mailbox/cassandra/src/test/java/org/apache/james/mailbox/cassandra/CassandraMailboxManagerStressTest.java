@@ -28,12 +28,11 @@ import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraMailboxManagerStressTest extends MailboxManagerStressTest<CassandraMailboxManager> {
     
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     @Rule
     public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();

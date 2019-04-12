@@ -23,11 +23,10 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystemRule;
 import org.apache.james.mpt.imapmailbox.suite.Events;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraEventsTest extends Events {
-    @ClassRule
+    @Rule
     public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     @Rule
     public CassandraHostSystemRule cassandraHostSystemRule = new CassandraHostSystemRule(cassandraServer);

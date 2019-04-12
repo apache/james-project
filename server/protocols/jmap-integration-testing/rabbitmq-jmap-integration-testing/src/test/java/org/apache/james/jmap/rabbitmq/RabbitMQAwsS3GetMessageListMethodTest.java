@@ -26,13 +26,12 @@ import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.methods.integration.GetMessageListMethodTest;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class RabbitMQAwsS3GetMessageListMethodTest extends GetMessageListMethodTest {
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    @Rule
+    public DockerCassandraRule cassandra = new DockerCassandraRule();
 
     @Rule
     public CassandraRabbitMQAwsS3JmapTestRule rule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();

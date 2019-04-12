@@ -33,12 +33,11 @@ import org.apache.james.modules.mailbox.PreDeletionHooksConfiguration;
 import org.apache.james.vault.DeletedMessageVaultHook;
 import org.apache.james.vault.MailRepositoryDeletedMessageVault;
 import org.apache.james.webadmin.WebAdminConfiguration;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class RabbitMQDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    @Rule
+    public DockerCassandraRule cassandra = new DockerCassandraRule();
 
     @Rule
     public CassandraRabbitMQAwsS3JmapTestRule rule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();

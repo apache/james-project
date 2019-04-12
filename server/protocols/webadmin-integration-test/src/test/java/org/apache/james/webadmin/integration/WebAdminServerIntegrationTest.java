@@ -58,7 +58,6 @@ import org.awaitility.Duration;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -80,8 +79,8 @@ public class WebAdminServerIntegrationTest {
     private static final String UPGRADE_VERSION = VERSION + "/upgrade";
     private static final String UPGRADE_TO_LATEST_VERSION = UPGRADE_VERSION + "/latest";
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    @Rule
+    public DockerCassandraRule cassandra = new DockerCassandraRule();
 
     @Rule
     public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
