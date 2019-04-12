@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - Blob Configuration</title>
+ </properties>
+
+<body>
+
+  <section name="Blob Export Configuration">
+      <p>Consult <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties">blob.properties</a> in GIT to get some examples and hints.</p>
+
+      <p>
+          Configuration for exporting blob content
+      </p>
+      <dl>
+          <dt><strong>blob.export.implementation</strong></dt>
+          <dd>localFile: Local File Exporting Mechanism (explained below). Default: localFile</dd>
+      </dl>
+
+      <subsection name="Local File Blob Export Configuration">
+          <p>
+              For each request, this mechanism retrieves the content of a blob and save it to a distinct local file, then send an email containing the absolute path of that file to the target mail address.
+              Note: that absolute file path is the file location on James server. Therefore, if there are two or more James servers connected, it should not be considered an option.
+          </p>
+          <dl>
+              <dt><strong>blob.export.localFile.directory</strong></dt>
+              <dd>
+                  The directory URL to store exported blob data in files, and the URL following
+                  <a href="http://james.apache.org/server/3/apidocs/org/apache/james/filesystem/api/FileSystem.html">James File System scheme</a>.
+                  Default: file://var/blobExporting
+              </dd>
+          </dl>
+      </subsection>
+  </section>
+
+</body>
+
+</document>
+
