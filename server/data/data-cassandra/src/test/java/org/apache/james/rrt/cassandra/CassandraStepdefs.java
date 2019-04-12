@@ -20,17 +20,22 @@ package org.apache.james.rrt.cassandra;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
+import org.junit.Rule;
 
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
 
 public class CassandraStepdefs {
+
+    @Rule
+    public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
 
     private CassandraCluster cassandra;
 
@@ -44,7 +49,7 @@ public class CassandraStepdefs {
     public void setup() throws Throwable {
         cassandra = CassandraCluster.create(
             CassandraModule.aggregateModules(CassandraRRTModule.MODULE, CassandraSchemaVersionModule.MODULE),
-            RewriteTablesTest.cassandraServer.getHost());
+            cassandraServer.getHost());
         mainStepdefs.rewriteTable = getRecipientRewriteTable();
     }
 

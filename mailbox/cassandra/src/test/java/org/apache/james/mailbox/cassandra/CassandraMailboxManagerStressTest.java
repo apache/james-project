@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRestartRule;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mailbox.MailboxManagerStressTest;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
@@ -32,10 +31,7 @@ import org.junit.Rule;
 
 public class CassandraMailboxManagerStressTest extends MailboxManagerStressTest<CassandraMailboxManager> {
     
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule();
-
-    @Rule
-    public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
 
     private CassandraCluster cassandra;
     

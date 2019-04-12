@@ -19,7 +19,6 @@
 package org.apache.james.mailbox.cassandra.user;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRestartRule;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
@@ -31,10 +30,7 @@ import org.junit.Rule;
 
 public class CassandraSubscriptionMapperTest extends SubscriptionMapperTest {
 
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule();
-
-    @Rule
-    public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
 
     private CassandraCluster cassandra;
 

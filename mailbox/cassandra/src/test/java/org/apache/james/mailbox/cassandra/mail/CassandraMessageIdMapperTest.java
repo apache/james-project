@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRestartRule;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.mailbox.MailboxSession;
@@ -47,10 +46,7 @@ public class CassandraMessageIdMapperTest extends MessageIdMapperTest {
 
     private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create("benwa");
 
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule();
-
-    @Rule
-    public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
 
     private CassandraCluster cassandra;
 

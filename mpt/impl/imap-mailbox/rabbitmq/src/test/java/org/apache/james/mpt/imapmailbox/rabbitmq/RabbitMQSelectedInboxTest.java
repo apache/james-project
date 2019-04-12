@@ -27,7 +27,7 @@ import org.junit.Rule;
 
 public class RabbitMQSelectedInboxTest extends SelectedInbox {
     @Rule
-    public static DockerRabbitMQTestRule rabbitMQRule = new DockerRabbitMQTestRule();
+    public DockerRabbitMQTestRule rabbitMQRule = new DockerRabbitMQTestRule();
 
     @Rule
     public RabbitMQEventBusHostSystemRule hostSystemRule = new RabbitMQEventBusHostSystemRule(rabbitMQRule);

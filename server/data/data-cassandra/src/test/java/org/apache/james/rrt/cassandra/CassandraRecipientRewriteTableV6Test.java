@@ -30,9 +30,7 @@ import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 
 public class CassandraRecipientRewriteTableV6Test extends AbstractRecipientRewriteTableTest {
@@ -43,18 +41,14 @@ public class CassandraRecipientRewriteTableV6Test extends AbstractRecipientRewri
         CassandraSchemaVersionModule.MODULE);
 
     @Rule
-    public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
 
-    protected static CassandraCluster cassandra;
-
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(MODULE, cassandraServer.getHost());
-    }
+    protected CassandraCluster cassandra;
 
     @Override
     @Before
     public void setUp() throws Exception {
+        cassandra = CassandraCluster.create(MODULE, cassandraServer.getHost());
         super.setUp();
     }
 
@@ -63,10 +57,6 @@ public class CassandraRecipientRewriteTableV6Test extends AbstractRecipientRewri
     public void tearDown() throws Exception {
         super.tearDown();
         cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
         cassandra.closeCluster();
     }
 

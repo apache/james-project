@@ -22,7 +22,6 @@ package org.apache.james.mailbox.cassandra;
 import java.util.Set;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRestartRule;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.events.EventBus;
@@ -36,10 +35,7 @@ import org.junit.Rule;
 
 public class CassandraMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
 
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule();
-
-    @Rule
-    public DockerCassandraRestartRule cassandraRestartRule = new DockerCassandraRestartRule();
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
 
     private CassandraCluster cassandra;
 

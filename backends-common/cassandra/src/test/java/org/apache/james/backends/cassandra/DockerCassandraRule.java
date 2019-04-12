@@ -28,6 +28,13 @@ import org.testcontainers.containers.GenericContainer;
 
 public class DockerCassandraRule implements TestRule {
 
+    private boolean allowRestart = false;
+
+    public DockerCassandraRule allowRestart() {
+        allowRestart = true;
+        return this;
+    }
+
     @Override
     public Statement apply(Statement base, Description description) {
         return base;
@@ -35,6 +42,10 @@ public class DockerCassandraRule implements TestRule {
 
     public void start() {
         DockerCassandraSingleton.singleton.start();
+        DockerCassandraSingleton.incrementTestsPlayed();
+        if (allowRestart) {
+            DockerCassandraSingleton.restartAfterMaxTestsPlayed();
+        }
     }
 
     public void stop() {

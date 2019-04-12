@@ -27,7 +27,7 @@ import org.junit.Rule;
 
 public class CassandraAuthenticatePlainTest extends AuthenticatePlain {
     @Rule
-    public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
     @Rule
     public CassandraHostSystemRule cassandraHostSystemRule = new CassandraHostSystemRule(cassandraServer);
 

@@ -41,7 +41,7 @@ public class CassandraRecipientRewriteTableV7Test extends AbstractRecipientRewri
         CassandraSchemaVersionModule.MODULE);
 
     @Rule
-    public DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
 
     protected CassandraCluster cassandra;
 
