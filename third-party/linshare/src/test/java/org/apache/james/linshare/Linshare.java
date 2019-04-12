@@ -37,7 +37,6 @@ import io.restassured.specification.RequestSpecification;
 
 public class Linshare {
     private static final String WAIT_FOR_BACKEND_INIT_LOG = ".*Server startup.*";
-    private static final String WAIT_FOR_DB_INIT_LOG = ".*/linshare/webservice/rest/admin/authentication/change_password.*";
     private static final int LINSHARE_BACKEND_PORT = 8080;
 
     private final GenericContainer<?> linshareBackend;
