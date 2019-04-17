@@ -688,6 +688,75 @@ public abstract class DeletedMessagesVaultTest {
             .hasSize(0);
     }
 
+    @Test
+    public void vaultDeleteShouldDeleteMessageThenExportWithNoEntry() throws Exception {
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        String messageIdOfHomer = listMessageIdsForAccount(homerAccessToken).get(0);
+
+        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        deleteVault(HOMER, messageIdOfHomer);
+
+        String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
+        try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
+            zipAssert.hasNoEntry();
+        }
+    }
+
+    @Test
+    public void vaultDeleteShouldNotDeleteEmptyVaultThenExportNoEntry() throws Exception {
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        String messageIdOfHomer = listMessageIdsForAccount(homerAccessToken).get(0);
+
+        deleteVault(HOMER, messageIdOfHomer);
+
+        String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
+        try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
+            zipAssert.hasNoEntry();
+        }
+    }
+
+    @Test
+    public void vaultDeleteShouldNotDeleteNotMatchedMessageInVaultThenExportAnEntry() throws Exception {
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        String messageIdOfBart = listMessageIdsForAccount(bartAccessToken).get(0);
+        String messageIdOfHomer = listMessageIdsForAccount(homerAccessToken).get(0);
+
+        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        deleteVault(HOMER, messageIdOfBart);
+
+        String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
+        try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
+            zipAssert.hasEntriesSize(1)
+                .allSatisfies(entry -> entry.hasName(messageIdOfHomer + ".eml"));
+        }
+    }
+
+    @Test
+    public void vaultDeleteShouldNotAppendMessageToTheUserMailbox() {
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        String messageIdOfHomer = listMessageIdsForAccount(homerAccessToken).get(0);
+
+        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        deleteVault(HOMER, messageIdOfHomer);
+
+        assertThat(listMessageIdsForAccount(homerAccessToken))
+            .hasSize(0);
+    }
+
     private String exportAndGetFileLocationFromLastMail(ExportRequest exportRequest, AccessToken shareeAccessToken) {
         int currentNumberOfMessages = listMessageIdsForAccount(shareeAccessToken).size();
         exportVaultContent(exportRequest);
@@ -843,6 +912,19 @@ public abstract class DeletedMessagesVaultTest {
             webAdminApi.with()
                 .queryParam("scope", "expired")
                 .delete("/deletedMessages")
+            .jsonPath()
+                .get("taskId");
+
+        webAdminApi.with()
+            .get("/tasks/" + taskId + "/await")
+        .then()
+            .body("status", is("completed"));
+    }
+
+    private void deleteVault(String user, String messageId) {
+        String taskId =
+            webAdminApi.with()
+                .delete("/deletedMessages/users/" + user + "/messages/" + messageId)
             .jsonPath()
                 .get("taskId");
 
