@@ -54,6 +54,7 @@ import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModu
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewTestFactory;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
 import org.apache.james.util.streams.Iterators;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

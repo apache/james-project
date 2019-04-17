@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.queue.rabbitmq;
+package org.apache.james.utils;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -25,14 +25,14 @@ import java.time.ZoneId;
 
 import org.apache.commons.lang3.NotImplementedException;
 
-class UpdatableTickingClock extends Clock {
+public class UpdatableTickingClock extends Clock {
     private Instant currentInstant;
 
-    UpdatableTickingClock(Instant currentInstant) {
+    public UpdatableTickingClock(Instant currentInstant) {
         this.currentInstant = currentInstant;
     }
 
-    void setInstant(Instant instant) {
+    public void setInstant(Instant instant) {
         currentInstant = instant;
     }
 
@@ -51,7 +51,7 @@ class UpdatableTickingClock extends Clock {
         return currentInstant;
     }
 
-    synchronized void tick() {
+    public synchronized void tick() {
         currentInstant = currentInstant.plusMillis(1);
     }
 
