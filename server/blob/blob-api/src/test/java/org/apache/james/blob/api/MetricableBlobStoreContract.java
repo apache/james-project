@@ -27,7 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.Test;
@@ -53,12 +52,22 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
 
     @RegisterExtension
     MetricableBlobStoreExtension metricsTestExtension = new MetricableBlobStoreExtension();
-    byte[] BYTES_CONTENT = "bytes content".getBytes(StandardCharsets.UTF_8);
+    String STRING_CONTENT = "blob content";
+    byte[] BYTES_CONTENT = STRING_CONTENT.getBytes(StandardCharsets.UTF_8);
 
     @Test
     default void saveBytesShouldPublishSaveBytesTimerMetrics() {
         testee().save(BYTES_CONTENT).block();
         testee().save(BYTES_CONTENT).block();
+
+        assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_BYTES_TIMER_NAME))
+            .hasSize(2);
+    }
+
+    @Test
+    default void saveStringShouldPublishSaveBytesTimerMetrics() {
+        testee().save(STRING_CONTENT).block();
+        testee().save(STRING_CONTENT).block();
 
         assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_BYTES_TIMER_NAME))
             .hasSize(2);

@@ -32,8 +32,9 @@ import com.google.common.base.Strings;
 
 public interface BlobStoreContract {
 
+    String SHORT_STRING = "toto";
     byte[] EMPTY_BYTEARRAY = {};
-    byte[] SHORT_BYTEARRAY = "toto".getBytes(StandardCharsets.UTF_8);
+    byte[] SHORT_BYTEARRAY = SHORT_STRING.getBytes(StandardCharsets.UTF_8);
     byte[] ELEVEN_KILOBYTES = Strings.repeat("0123456789\n", 1000).getBytes(StandardCharsets.UTF_8);
     byte[] TWELVE_MEGABYTES = Strings.repeat("0123456789\r\n", 1024 * 1024).getBytes(StandardCharsets.UTF_8);
 
@@ -44,6 +45,12 @@ public interface BlobStoreContract {
     @Test
     default void saveShouldThrowWhenNullData() {
         assertThatThrownBy(() -> testee().save((byte[]) null).block())
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    default void saveShouldThrowWhenNullString() {
+        assertThatThrownBy(() -> testee().save((String) null).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -63,6 +70,15 @@ public interface BlobStoreContract {
     }
 
     @Test
+    default void saveShouldSaveEmptyString() {
+        BlobId blobId = testee().save(new String()).block();
+
+        byte[] bytes = testee().readBytes(blobId).block();
+
+        assertThat(new String(bytes, StandardCharsets.UTF_8)).isEmpty();
+    }
+
+    @Test
     default void saveShouldSaveEmptyInputStream() {
         BlobId blobId = testee().save(new ByteArrayInputStream(EMPTY_BYTEARRAY), EMPTY_BYTEARRAY.length).block();
 
@@ -74,6 +90,13 @@ public interface BlobStoreContract {
     @Test
     default void saveShouldReturnBlobId() {
         BlobId blobId = testee().save(SHORT_BYTEARRAY).block();
+
+        assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
+    }
+
+    @Test
+    default void saveShouldReturnBlobIdOfString() {
+        BlobId blobId = testee().save(SHORT_STRING).block();
 
         assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
     }
