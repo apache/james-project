@@ -61,6 +61,11 @@ class UnionBlobStoreTest implements BlobStoreContract {
         }
 
         @Override
+        public Mono<BlobId> save(String data) {
+            return Mono.error(new RuntimeException("broken everywhere"));
+        }
+
+        @Override
         public Mono<BlobId> save(InputStream data, long contentLength) {
             return Mono.error(new RuntimeException("broken everywhere"));
         }
@@ -86,6 +91,11 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
         @Override
         public Mono<BlobId> save(byte[] data) {
+            throw new RuntimeException("broken everywhere");
+        }
+
+        @Override
+        public Mono<BlobId> save(String data) {
             throw new RuntimeException("broken everywhere");
         }
 

@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+
 import reactor.core.publisher.Mono;
 
 public class UnionBlobStore implements BlobStore {
@@ -87,6 +88,18 @@ public class UnionBlobStore implements BlobStore {
                 () -> Mono.defer(() -> legacyBlobStore.save(data)));
         } catch (Exception e) {
             LOGGER.error("exception directly happens while saving bytes data, fall back to legacy blob store", e);
+            return legacyBlobStore.save(data);
+        }
+    }
+
+    @Override
+    public Mono<BlobId> save(String data) {
+        try {
+            return saveToCurrentFallbackIfFails(
+                Mono.defer(() -> currentBlobStore.save(data)),
+                () -> Mono.defer(() -> legacyBlobStore.save(data)));
+        } catch (Exception e) {
+            LOGGER.error("exception directly happens while saving String data, fall back to legacy blob store", e);
             return legacyBlobStore.save(data);
         }
     }
