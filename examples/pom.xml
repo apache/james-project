@@ -33,6 +33,7 @@
 
     <modules>
         <module>custom-mailets</module>
+        <module>custom-listeners</module>
     </modules>
 
 </project>
