@@ -31,7 +31,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-class ShareRequest {
+public class ShareRequest {
 
     static class Recipient {
         private final MailAddress mail;
@@ -63,46 +63,60 @@ class ShareRequest {
             return Objects.hash(mail);
         }
     }
+    
+    @FunctionalInterface
+    public interface RequireMessage {
+        Builder message(String message);
+    }
 
-    static class Builder {
+    public static class Builder {
         private final ImmutableList.Builder<Recipient> recipientsBuilder;
         private final ImmutableList.Builder<DocumentId> documentIdsBuilder;
+        private final String message;
 
-        Builder() {
+        Builder(String message) {
+            this.message = message;
             this.recipientsBuilder = new ImmutableList.Builder<>();
             this.documentIdsBuilder = new ImmutableList.Builder<>();
         }
 
-        Builder addRecipient(MailAddress recipient) {
+        public Builder addRecipient(MailAddress recipient) {
             recipientsBuilder.add(new Recipient(recipient));
             return this;
         }
 
-        Builder addDocumentId(DocumentId documentId) {
+        public Builder addDocumentId(DocumentId documentId) {
             documentIdsBuilder.add(documentId);
             return this;
         }
 
-        ShareRequest build() {
-            return new ShareRequest(recipientsBuilder.build(), documentIdsBuilder.build());
+        public ShareRequest build() {
+            return new ShareRequest(recipientsBuilder.build(), documentIdsBuilder.build(), message);
         }
     }
 
-    static Builder builder() {
-        return new Builder();
+    public static RequireMessage builder() {
+        return Builder::new;
     }
 
     private final List<Recipient> recipients;
     private final List<DocumentId> documentIds;
+    private final String message;
 
-    private ShareRequest(List<Recipient> recipients, List<DocumentId> documentIds) {
+    private ShareRequest(List<Recipient> recipients, List<DocumentId> documentIds, String message) {
+        Preconditions.checkNotNull(message);
         Preconditions.checkNotNull(recipients);
         Preconditions.checkNotNull(documentIds);
         Preconditions.checkArgument(!recipients.isEmpty(), "recipients cannot be empty");
         Preconditions.checkArgument(!documentIds.isEmpty(), "documents cannot be empty");
 
+        this.message = message;
         this.recipients = recipients;
         this.documentIds = documentIds;
+    }
+
+    public String getMessage() {
+        return message;
     }
 
     public List<Recipient> getRecipients() {
@@ -123,13 +137,14 @@ class ShareRequest {
             ShareRequest that = (ShareRequest) o;
 
             return Objects.equals(this.recipients, that.recipients)
-                && Objects.equals(this.documentIds, that.documentIds);
+                && Objects.equals(this.documentIds, that.documentIds)
+                && Objects.equals(this.message, that.message);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(recipients, documentIds);
+        return Objects.hash(recipients, documentIds, message);
     }
 }

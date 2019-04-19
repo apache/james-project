@@ -27,6 +27,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.blob.export.api.BlobExportMechanism;
 import org.apache.james.blob.export.file.LocalFileBlobExportMechanism;
+import org.apache.james.linshare.LinshareBlobExportMechanism;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
@@ -44,6 +45,7 @@ public class BlobExportMechanismModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new LocalFileBlobExportMechanismModule());
+        install(new LinshareBlobExportMechanismModule());
     }
 
     @VisibleForTesting
@@ -66,10 +68,14 @@ public class BlobExportMechanismModule extends AbstractModule {
     @VisibleForTesting
     @Provides
     @Singleton
-    BlobExportMechanism provideMechanism(BlobExportImplChoice implChoice, Provider<LocalFileBlobExportMechanism> localFileMechanismProvider) {
+    BlobExportMechanism provideMechanism(BlobExportImplChoice implChoice,
+                                         Provider<LocalFileBlobExportMechanism> localFileMechanismProvider,
+                                         Provider<LinshareBlobExportMechanism> linshareMechanismProvider) {
         switch (implChoice) {
             case LOCAL_FILE:
                 return localFileMechanismProvider.get();
+            case LINSHARE:
+                return linshareMechanismProvider.get();
             default:
                 throw new RuntimeException("blobExportMechanism '" + implChoice.getImplName() + "' is not supported yet");
         }

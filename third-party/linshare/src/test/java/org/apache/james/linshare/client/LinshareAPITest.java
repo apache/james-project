@@ -19,12 +19,15 @@
 
 package org.apache.james.linshare.client;
 
+import static io.restassured.RestAssured.given;
 import static org.apache.james.linshare.LinshareFixture.USER_1;
 import static org.apache.james.linshare.LinshareFixture.USER_2;
 import static org.apache.james.linshare.LinshareFixture.USER_3;
 import static org.apache.james.linshare.LinshareFixture.USER_4;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -34,6 +37,8 @@ import java.util.List;
 import org.apache.james.core.MailAddress;
 import org.apache.james.linshare.LinshareExtension;
 import org.assertj.core.api.SoftAssertions;
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -42,8 +47,10 @@ import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 import com.github.steveash.guavate.Guavate;
 
 import feign.FeignException;
+import io.restassured.specification.RequestSpecification;
 
 class LinshareAPITest {
+    private static final String MESSAGE = "message";
 
     @RegisterExtension
     static LinshareExtension linshareExtension = new LinshareExtension();
@@ -101,7 +108,7 @@ class LinshareAPITest {
         Document firstDocument = user1LinshareAPI.uploadDocument(templateFile());
         Document secondDocument = user1LinshareAPI.uploadDocument(templateFile());
 
-        Document user2Document = user2LinshareAPI.uploadDocument(templateFile());
+        user2LinshareAPI.uploadDocument(templateFile());
 
         assertThat(user1LinshareAPI.listAllDocuments())
             .containsExactly(firstDocument, secondDocument);
@@ -136,8 +143,8 @@ class LinshareAPITest {
 
     @Test
     void deleteAllShouldClearAllDocumentsOfAnUser() throws Exception {
-        Document user1Document1 = user1LinshareAPI.uploadDocument(templateFile());
-        Document user1Document2 = user1LinshareAPI.uploadDocument(templateFile());
+        user1LinshareAPI.uploadDocument(templateFile());
+        user1LinshareAPI.uploadDocument(templateFile());
 
         user1LinshareAPI.deleteAllDocuments();
 
@@ -146,10 +153,42 @@ class LinshareAPITest {
     }
 
     @Test
+    void shareShouldTriggerAnEmail() throws Exception {
+        Document user1Document = user1LinshareAPI.uploadDocument(templateFile());
+
+        String message = "Very specific message";
+        ShareRequest shareRequest = ShareRequest.builder()
+            .message(message)
+            .addDocumentId(user1Document.getId())
+            .addRecipient(new MailAddress(USER_2.getUsername()))
+            .build();
+
+        user1LinshareAPI.share(shareRequest);
+
+        RequestSpecification request = given(linshareExtension.getLinshare().fakeSmtpRequestSpecification());
+
+        Awaitility.waitAtMost(Duration.TEN_SECONDS)
+            .pollInterval(Duration.ONE_SECOND)
+            .untilAsserted(
+                () -> request
+                    .get("/api/email")
+                .then()
+                    .body("", hasSize(2)));
+
+        request
+            .get("/api/email")
+        .then()
+            .body("[1].subject", containsString("John Doe has shared a file with you"))
+            .body("[1].html", containsString(message));
+    }
+
+
+    @Test
     void shareShouldShareToTargetedRecipient() throws Exception {
         Document user1Document = user1LinshareAPI.uploadDocument(templateFile());
 
         ShareRequest shareRequest = ShareRequest.builder()
+            .message(MESSAGE)
             .addDocumentId(user1Document.getId())
             .addRecipient(new MailAddress(USER_2.getUsername()))
             .build();
@@ -169,6 +208,7 @@ class LinshareAPITest {
         Document user1Document = user1LinshareAPI.uploadDocument(templateFile());
 
         ShareRequest shareRequest = ShareRequest.builder()
+            .message(MESSAGE)
             .addDocumentId(user1Document.getId())
             .addRecipient(new MailAddress(USER_2.getUsername()))
             .addRecipient(new MailAddress(USER_3.getUsername()))

@@ -19,16 +19,18 @@
 
 package org.apache.james.linshare;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class LinshareConfigurationTest {
-
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(LinshareConfiguration.class)
@@ -36,17 +38,53 @@ class LinshareConfigurationTest {
     }
 
     @Test
-    void constructorShouldThrowWhenPassingNullCredential() {
-        AuthorizationToken nullToken = null;
-        assertThatThrownBy(() -> new LinshareConfiguration(new URL("https://linshare.linagora.com"), nullToken))
-            .isInstanceOf(NullPointerException.class);
+    void fromShouldThrowWhenUrlIsNull() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("blob.export.linshare.token", "token");
+        configuration.addProperty("blob.export.linshare.url", null);
+
+        assertThatThrownBy(() -> LinshareConfiguration.from(configuration)).isInstanceOf(MalformedURLException.class);
     }
 
     @Test
-    void constructorShouldThrowWhenPassingNullUrl() {
-        AuthorizationToken token = new AuthorizationToken("jwt-token-at-here");
-        URL nullUrl = null;
-        assertThatThrownBy(() -> new LinshareConfiguration(nullUrl, token))
-            .isInstanceOf(NullPointerException.class);
+    void fromShouldThrowWhenTokenIsNull() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("blob.export.linshare.token", null);
+        configuration.addProperty("blob.export.linshare.url", "http://127.0.0.1:8080");
+
+        assertThatThrownBy(() -> LinshareConfiguration.from(configuration)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void fromShouldThrowWhenURLIsInvalid() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("blob.export.linshare.token", "token");
+        configuration.addProperty("blob.export.linshare.url", "invalid");
+
+        assertThatThrownBy(() -> LinshareConfiguration.from(configuration)).isInstanceOf(MalformedURLException.class);
+    }
+
+    @Test
+    void fromShouldThrowWhenTokenIsEmpty() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("blob.export.linshare.token", "");
+        configuration.addProperty("blob.export.linshare.url", "http://127.0.0.1:8080");
+
+        assertThatThrownBy(() -> LinshareConfiguration.from(configuration)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void fromShouldReturnProvidedConfiguration() throws Exception {
+        String token = "token";
+        String url = "http://127.0.0.1:8080";
+
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("blob.export.linshare.token", token);
+        configuration.addProperty("blob.export.linshare.url", url);
+
+        assertThat(LinshareConfiguration.from(configuration)).isEqualTo(LinshareConfiguration.builder()
+            .url(new URL(url))
+            .authorizationToken(new AuthorizationToken(token))
+            .build());
     }
 }

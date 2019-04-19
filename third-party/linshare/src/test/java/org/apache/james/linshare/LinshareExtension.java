@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import org.apache.james.linshare.client.LinshareAPI;
 import org.apache.james.linshare.client.User;
+import org.apache.james.utils.FakeSmtp;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -69,8 +70,9 @@ public class LinshareExtension implements BeforeEachCallback {
     private final Linshare linshare = LinshareSingleton.singleton;
 
     @Override
-    public void beforeEach(ExtensionContext context) throws Exception {
+    public void beforeEach(ExtensionContext context) {
         deleteAllUsersDocuments();
+        FakeSmtp.clean(linshare.fakeSmtpRequestSpecification());
     }
 
     public Linshare getLinshare() {
@@ -79,6 +81,15 @@ public class LinshareExtension implements BeforeEachCallback {
 
     public LinshareAPI getAPIFor(LinshareFixture.Credential credential) throws Exception {
         return LinshareAPI.from(configurationWithJwtFor(credential));
+    }
+
+    public LinshareConfiguration configurationWithJwtFor(LinshareFixture.Credential credential) throws Exception {
+        AuthorizationToken token = LinshareAPIForTesting.from(credential, linshare).jwt();
+
+        return LinshareConfiguration.builder()
+            .urlAsString(linshare.getUrl())
+            .authorizationToken(token)
+            .build();
     }
 
     private void deleteAllUsersDocuments() {
@@ -94,14 +105,5 @@ public class LinshareExtension implements BeforeEachCallback {
     private LinshareFixture.Credential getUsernamePassword(User user) {
         return Optional.ofNullable(USER_CREDENTIAL_MAP.get(user.getMail()))
             .orElseThrow(() -> new RuntimeException("cannot get token of user " + user.getMail()));
-    }
-
-    private LinshareConfiguration configurationWithJwtFor(LinshareFixture.Credential credential) throws Exception {
-        AuthorizationToken token = LinshareAPIForTesting.from(credential, linshare).jwt();
-
-        return LinshareConfiguration.builder()
-            .urlAsString(linshare.getUrl())
-            .authorizationToken(token)
-            .build();
     }
 }

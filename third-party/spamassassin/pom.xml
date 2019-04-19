@@ -28,6 +28,9 @@
 
     <artifactId>apache-james-spamassassin</artifactId>
 
+    <name>Apache James :: Third Party :: SpamAssassin</name>
+    <description>SpamAssassin Java client and testing utilities</description>
+
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>

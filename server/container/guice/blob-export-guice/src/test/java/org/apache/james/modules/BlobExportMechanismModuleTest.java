@@ -27,6 +27,7 @@ import static org.mockito.Mockito.mock;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.FakePropertiesProvider;
 import org.apache.james.blob.export.file.LocalFileBlobExportMechanism;
+import org.apache.james.linshare.LinshareBlobExportMechanism;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -35,7 +36,9 @@ import com.google.inject.Provider;
 class BlobExportMechanismModuleTest {
 
     private static LocalFileBlobExportMechanism LOCAL_FILE_EXPORT = mock(LocalFileBlobExportMechanism.class);
+    private static LinshareBlobExportMechanism LINSHARE_EXPORT = mock(LinshareBlobExportMechanism.class);
     private static Provider<LocalFileBlobExportMechanism> LOCAL_FILE_EXPORT_PROVIDER = () -> LOCAL_FILE_EXPORT;
+    private static Provider<LinshareBlobExportMechanism> LINSHARE_FILE_EXPORT_PROVIDER = () -> LINSHARE_EXPORT;
 
     private BlobExportMechanismModule module;
 
@@ -91,7 +94,13 @@ class BlobExportMechanismModuleTest {
 
     @Test
     void provideMechanismShouldProvideFileExportWhenPassingLocalFileChoice() {
-        assertThat(module.provideMechanism(BlobExportImplChoice.LOCAL_FILE, LOCAL_FILE_EXPORT_PROVIDER))
+        assertThat(module.provideMechanism(BlobExportImplChoice.LOCAL_FILE, LOCAL_FILE_EXPORT_PROVIDER, LINSHARE_FILE_EXPORT_PROVIDER))
             .isEqualTo(LOCAL_FILE_EXPORT);
+    }
+
+    @Test
+    void provideMechanismShouldProvideLinshareExportWhenPassingLinshareChoice() {
+        assertThat(module.provideMechanism(BlobExportImplChoice.LINSHARE, LOCAL_FILE_EXPORT_PROVIDER, LINSHARE_FILE_EXPORT_PROVIDER))
+            .isEqualTo(LINSHARE_EXPORT);
     }
 }

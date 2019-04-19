@@ -19,16 +19,24 @@
 
 package org.apache.james.linshare;
 
+import static io.restassured.config.EncoderConfig.encoderConfig;
+import static io.restassured.config.RestAssuredConfig.newConfig;
+
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
+import org.apache.james.util.docker.Images;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.http.ContentType;
+import io.restassured.specification.RequestSpecification;
+
 public class Linshare {
     private static final String WAIT_FOR_BACKEND_INIT_LOG = ".*Server startup.*";
-    private static final String WAIT_FOR_DB_INIT_LOG = ".*/linshare/webservice/rest/admin/authentication/change_password.*";
     private static final int LINSHARE_BACKEND_PORT = 8080;
 
     private final GenericContainer<?> linshareBackend;
@@ -102,10 +110,7 @@ public class Linshare {
     }
 
     private GenericContainer createDockerSmtp() {
-        return new GenericContainer<>(
-            new ImageFromDockerfile()
-                .withFileFromClasspath("conf/smtpd.conf", "smtp/conf/smtpd.conf")
-                .withFileFromClasspath("Dockerfile", "smtp/Dockerfile"))
+        return new GenericContainer<>(Images.FAKE_SMTP)
             .withNetworkAliases("smtp", "linshare_smtp")
             .withNetwork(network);
     }
@@ -115,7 +120,7 @@ public class Linshare {
             new ImageFromDockerfile()
                 .withFileFromClasspath("conf/log4j.properties", "backend/conf/log4j.properties")
                 .withFileFromClasspath("conf/catalina.properties", "backend/conf/catalina.properties")
-                .withFileFromClasspath("conf/id_rsa", "backend/conf/id_rsa")
+                .withFileFromClasspath("conf/id_rsa", "backend/conf/id_rsa.pri")
                 .withFileFromClasspath("conf/id_rsa.pub", "backend/conf/id_rsa.pub")
                 .withFileFromClasspath("Dockerfile", "backend/Dockerfile"))
             .withNetworkAliases("backend")
@@ -132,5 +137,15 @@ public class Linshare {
             .waitingFor(Wait.forLogMessage(WAIT_FOR_BACKEND_INIT_LOG, 1)
                 .withStartupTimeout(Duration.ofMinutes(10)))
             .withNetwork(network);
+    }
+
+    public RequestSpecification fakeSmtpRequestSpecification() {
+        return new RequestSpecBuilder()
+            .setContentType(ContentType.JSON)
+            .setAccept(ContentType.JSON)
+            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
+            .setPort(linshareSmtp.getMappedPort(80))
+            .setBaseUri("http://" + linshareSmtp.getContainerIpAddress())
+            .build();
     }
 }
