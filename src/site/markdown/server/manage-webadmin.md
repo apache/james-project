@@ -33,7 +33,7 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
  - [Administrating quotas by users](#Administrating_quotas_by_users)
  - [Administrating quotas by domains](#Administrating_quotas_by_domains)
  - [Administrating global quotas](#Administrating_global_quotas)
- - [Cassandra Schema upgrades](#Cassandra_schema_upgrades)
+ - [Cassandra Schema upgrades](#Cassandra_Schema_upgrades)
  - [Correcting ghost mailbox](#Correcting_ghost_mailbox)
  - [Creating address group](#Creating_address_group)
  - [Creating address forwards](#Creating_address_forwards)
