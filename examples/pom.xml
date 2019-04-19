@@ -32,8 +32,8 @@
     <name>Apache James :: Examples</name>
 
     <modules>
-        <module>custom-mailets</module>
         <module>custom-listeners</module>
+        <module>custom-mailets</module>
     </modules>
 
 </project>

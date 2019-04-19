@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: howTo
 ---
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
@@ -19,232 +19,164 @@ layout: default
     specific language governing permissions and limitations
     under the License.
 -->
-<link href="assets/css/lightbox.css" rel="stylesheet">
-<link href="assets/css/lity.min.css" rel="stylesheet" />
-<div id="wrapper">
-    <div class="apache_ref">
-        <a href="https://www.apache.org" alt="apache foundation link"><img src="https://www.apache.org/foundation/press/kit/asf_logo.svg" title="apache foundation logo"/></a>
-    </div>
-    <div class="apache_ref_mobile">
-        <a href="https://www.apache.org" alt="apache foundation link">The Apache Software Foundation</a>
-    </div>
-    <div class="apache_ref_left">
-        <a href="https://www.apache.org/events/current-event.html" alt="apache foundation event"><img src="https://www.apache.org/events/current-event-234x60.png" title="apache foundation event logo"/></a>
-    </div>
-    <div class="apache_ref_left_mobile">
-        <a href="https://www.apache.org/events/current-event.html" alt="apache foundation event"><img src="https://www.apache.org/events/current-event-234x60.png" title="apache foundation event logo"/></a>
-    </div>
 
-    <!-- Header -->
-    <header id="header" class="alt">
-        <div class="logo"><a href="/index.html" alt="Apache James"><img src="/images/james.svg" alt="james logo"/></a></div>
-        <h1 class="hidden">James Enterprise Mail Server</h1>
-        <h2>Emails at the heart of your business logic</h2>
-    </header>
+<!-- Main -->
+<div id="main">
 
-    <!-- Main -->
-    <div id="main">
+    <!-- Introduction -->
+    <section id="intro" class="main special">
+        <div class="">
+            <div class="content align-left">
+                <header class="major">
+                    <h1><b>Setting up an IMAP server</b></h1>
+                </header>
 
-        <!-- Introduction -->
-        <section id="intro" class="main special">
-            <div class="">
-                <div class="content align-left">
-                    <header class="major">
-                        <h1><b>Setting up an IMAP server</b></h1>
-                    </header>
+                <p>
+                    This document will present how to set up a James server in order to serve as a personal IMAP + SMTP
+                    server. We will cover:
+                </p>
 
-                    <p>
-                        This document will present how to set up a James server in order to serve as a personal IMAP + SMTP
-                        server. We will cover:
-                    </p>
+                <ul>
+                    <li>DNS creation and MX record</li>
+                    <li>Server components description</li>
+                    <li>Generation of a custom keystore</li>
+                    <li>Starting James</li>
+                    <li>Basic James administration</li>
+                    <li>Additional features one might want to enable...</li>
+                </ul>
 
-                    <ul>
-                        <li>DNS creation and MX record</li>
-                        <li>Server components description</li>
-                        <li>Generation of a custom keystore</li>
-                        <li>Starting James</li>
-                        <li>Basic James administration</li>
-                        <li>Additional features one might want to enable...</li>
-                    </ul>
+                <p>
+                    This guide rely on the JPA Guice Docker image. To run it, one need to have docker installed.
+                </p>
 
-                    <p>
-                        This guide rely on the JPA Guice Docker image. To run it, one need to have docker installed.
-                    </p>
+                <header class="major">
+                    <h2><b>DNS resolution</b></h2>
+                </header>
 
-                    <header class="major">
-                        <h2><b>DNS resolution</b></h2>
-                    </header>
+                <p>
+                    Someone willing to send you an email will first have to discover which IP your mail server has.
+                    The way this is achieved is through MX (means Mail eXchange) DNS record.
+                </p>
 
-                    <p>
-                        Someone willing to send you an email will first have to discover which IP your mail server has.
-                        The way this is achieved is through MX (means Mail eXchange) DNS record.
-                    </p>
+                <p>
+                    Imagine bob@domain.org sends a mail to alice@company.com. Bob will:
+                </p>
 
-                    <p>
-                        Imagine bob@domain.org sends a mail to alice@company.com. Bob will:
-                    </p>
+                <ol>
+                    <li>Ask <code>company.com</code> DNS server its MX entries</li>
+                    <li><code>company.com</code> respond that it is <code>mx.company.com</code></li>
+                    <li>Bob resolves <code>mx.company.com</code> ip address...</li>
+                    <li>...and can establish a connection to <code>mx.company.com</code> to send an email to Alice</li>
+                </ol>
 
-                    <ol>
-                        <li>Ask <code>company.com</code> DNS server its MX entries</li>
-                        <li><code>company.com</code> respond that it is <code>mx.company.com</code></li>
-                        <li>Bob resolves <code>mx.company.com</code> ip address...</li>
-                        <li>...and can establish a connection to <code>mx.company.com</code> to send an email to Alice</li>
-                    </ol>
+                <p>All is needed is a MX entry in domain name resolution pointing to the future IP of your James server.</p>
 
-                    <p>All is needed is a MX entry in domain name resolution pointing to the future IP of your James server.</p>
+                <header class="major">
+                    <h2><b>JAMES architecture</b></h2>
+                </header>
 
-                    <header class="major">
-                        <h2><b>JAMES architecture</b></h2>
-                    </header>
+                <p>JPA guice docker image relies on an embedded Derby database for storing data. Note that Apache Lucene library
+                    is used for email search. A mail queue is implemented on top of an embedded Apache ActiveMQ. Hence James do not need
+                    any external service for being running.
+                </p>
 
-                    <p>JPA guice docker image relies on an embedded Derby database for storing data. Note that Apache Lucene library
-                        is used for email search. A mail queue is implemented on top of an embedded Apache ActiveMQ. Hence James do not need
-                        any external service for being running.
-                    </p>
+                <img src="/images/guice-jpa-architecture-overview.png">
 
-                    <img src="/images/guice-jpa-architecture-overview.png">
+                <p>
+                    JPA guice offers the following protocols:
+                </p>
 
-                    <p>
-                        JPA guice offers the following protocols:
-                    </p>
+                <ul class="no-padding">
+                    <li><b>SMTP</b> For receiving emails</li>
+                    <li><b>IMAP</b> For reading emails</li>
+                    <li><b><a href="http://james.apache.org/server/manage-webadmin.html">WebAdmin</a></b> is a REST API allowing you to manage Apache JAMES</li>
+                </ul>
 
-                    <ul class="no-padding">
-                        <li><b>SMTP</b> For receiving emails</li>
-                        <li><b>IMAP</b> For reading emails</li>
-                        <li><b><a href="http://james.apache.org/server/manage-webadmin.html">WebAdmin</a></b> is a REST API allowing you to manage Apache JAMES</li>
-                    </ul>
+                <p>The following protocols are also available:</p>
 
-                    <p>The following protocols are also available:</p>
+                <ul class="no-padding">
+                    <li><b>LMTP</b> local version of SMTP</li>
+                    <li><b>POP3</b> For reading emails. Lacks tests</li>
+                    <li><b>JMX</b> is used by a <a href="http://james.apache.org/server/manage-cli.html">command line</a> for administrating Apache James</li>
+                    <li>And <a href="http://james.apache.org/server/feature-protocols.html">more</a>...</li>
+                </ul>
 
-                    <ul class="no-padding">
-                        <li><b>LMTP</b> local version of SMTP</li>
-                        <li><b>POP3</b> For reading emails. Lacks tests</li>
-                        <li><b>JMX</b> is used by a <a href="http://james.apache.org/server/manage-cli.html">command line</a> for administrating Apache James</li>
-                        <li>And <a href="http://james.apache.org/server/feature-protocols.html">more</a>...</li>
-                    </ul>
+                <header class="major">
+                    <h2><b>Generation of a custom keystore</b></h2>
+                </header>
 
-                    <header class="major">
-                        <h2><b>Generation of a custom keystore</b></h2>
-                    </header>
+                <p>In order to maintain a good level of privacy and security, James is relying on TLS cryptography
+                for securing exchanges. We thus need to generate our own personal keystore. Note that this guide do not
+                cover generating a keystore from SSL certificates. A security exception might be configured on the Mail
+                User Agent.</p>
 
-                    <p>In order to maintain a good level of privacy and security, James is relying on TLS cryptography
-                    for securing exchanges. We thus need to generate our own personal keystore. Note that this guide do not
-                    cover generating a keystore from SSL certificates. A security exception might be configured on the Mail
-                    User Agent.</p>
+                <p>In order to create a keystore, please run: <code>keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore</code>.
+                James is configured with a default password <code>james72laBalle</code> (used to read the keystore). However, we will be overriding the
+                configuration of the docker image, so you can be defining your own.</p>
 
-                    <p>In order to create a keystore, please run: <code>keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore</code>.
-                    James is configured with a default password <code>james72laBalle</code> (used to read the keystore). However, we will be overriding the
-                    configuration of the docker image, so you can be defining your own.</p>
+                <header class="major">
+                    <h2><b>Starting james</b></h2>
+                </header>
 
-                    <header class="major">
-                        <h2><b>Starting james</b></h2>
-                    </header>
+                <p>We want to override the configuration of the docker image with a volume.</p>
 
-                    <p>We want to override the configuration of the docker image with a volume.</p>
+                <p>First let's retrieve a valid configuration:</p>
 
-                    <p>First let's retrieve a valid configuration:</p>
-
-                    <pre><code>$ git clone https://github.com/apache/james-project
+                <pre><code>$ git clone https://github.com/apache/james-project
 $ cp -rf james-project/dockerfiles/run/guice/jpa/destination/conf conf
 $ mv keystore conf/keystore</code></pre>
 
-                    <p>Modify all protocol configuration files to match your keystore password (imapserver.xml, lmtpserver.xml, managesieveserver.xml, pop3server.xml, smtpserver.xml).</p>
+                <p>Modify all protocol configuration files to match your keystore password (imapserver.xml, lmtpserver.xml, managesieveserver.xml, pop3server.xml, smtpserver.xml).</p>
 
-                    <p>We will create a local folder for holding data out of the container:</p>
+                <p>We will create a local folder for holding data out of the container:</p>
 
-                    <pre><code>mkdir var</code></pre>
+                <pre><code>mkdir var</code></pre>
 
 
-                    <p>Then, let's start James:</p>
+                <p>Then, let's start James:</p>
 
-                    <pre><code>docker run \
-    --name james_run \
-    --port "25:25" --port "465:465" --port "587:587" \
-    --port "143:143"  --port "993:993" \
-    --volume "$PWD/conf:/root/conf/" \
-    --volume "$PWD/var:/root/var/" \
+                <pre><code>docker run \
+--name james_run \
+--port "25:25" --port "465:465" --port "587:587" \
+--port "143:143"  --port "993:993" \
+--volume "$PWD/conf:/root/conf/" \
+--volume "$PWD/var:/root/var/" \
 linagora/james-jpa-guice:latest</code></pre>
 
 
-                    <header class="major">
-                        <h2><b>Administrating James</b></h2>
-                    </header>
+                <header class="major">
+                    <h2><b>Administrating James</b></h2>
+                </header>
 
-                    <p>We now have a running James server. We just need to tell him which users and domains it should be handling mails for.
-                    We will, in order to do this, use the command line:</p>
+                <p>We now have a running James server. We just need to tell him which users and domains it should be handling mails for.
+                We will, in order to do this, use the command line:</p>
 
-                    <pre><code>docker exec james_run java -jar /root/james-cli.jar AddDomain domain.tld
+                <pre><code>docker exec james_run java -jar /root/james-cli.jar AddDomain domain.tld
 docker exec james_run java -jar /root/james-cli.jar AddUser user@domain.tld secretPassword</code></pre>
 
-                    <p>The command line client can be used for several other purposes like managing quota, setting addresses redirections, etc.</p>
+                <p>The command line client can be used for several other purposes like managing quota, setting addresses redirections, etc.</p>
 
-                    <header class="major">
-                        <h2><b>Additional features</b></h2>
-                    </header>
+                <header class="major">
+                    <h2><b>Additional features</b></h2>
+                </header>
 
-                    <p>James is a large project with many features. You can go further and complete your installation with
-                    an <a href="http://james.apache.org/server/config-antispam.html">AntiSpam system</a>, or set up
-                        <a href="http://james.apache.org/server/metrics.html">metric display</a>, collect logs in ElasticSearch for a display in Kibana,
-                    and much more!</p>
+                <p>James is a large project with many features. You can go further and complete your installation with
+                an <a href="http://james.apache.org/server/config-antispam.html">AntiSpam system</a>, or set up
+                    <a href="http://james.apache.org/server/metrics.html">metric display</a>, collect logs in ElasticSearch for a display in Kibana,
+                and much more!</p>
 
-                    <p>Also, James offers support for <a href="https://medium.com/linagora-engineering/installing-james-3-0-with-spf-verification-421b26b92f11">SPF</a>
-                        and DKIM standard, which increase the trust external people can get in your mail system.</p>
+                <p>Also, James offers support for <a href="https://medium.com/linagora-engineering/installing-james-3-0-with-spf-verification-421b26b92f11">SPF</a>
+                    and DKIM standard, which increase the trust external people can get in your mail system.</p>
 
-                </div>
-                <footer class="major">
-                    <ul class="actions align-center">
-                        <li><a href="index.html" class="button">go back to other how-tos</a></li>
-                    </ul>
-                </footer>
             </div>
-        </section>
+            <footer class="major">
+                <ul class="actions align-center">
+                    <li><a href="index.html" class="button">go back to other how-tos</a></li>
+                </ul>
+            </footer>
+        </div>
+    </section>
 
-    </div>
-    <footer id="footer" class="major">
-        <section>
-            <h2>James</h2>
-            <ul class="no-padding">
-                <li class="no-padding"><a href="https://james.apache.org/#intro" class="active">About</a></li>
-                <li class="no-padding"><a href="https://james.apache.org/#first">Get Started</a></li>
-                <li class="no-padding"><a href="https://james.apache.org/#posts">Last Posts</a></li>
-                <li class="no-padding"><a href="https://james.apache.org/#second">Community</a></li>
-                <li class="no-padding"><a href="https://james.apache.org/#third">Contribute</a></li>
-                <li class="no-padding"><a href="https://james.apache.org/"><span class="fa fa-external-link"></span> Documentation</a></li>
-            </ul>
-        </section>
-        <section>
-            <h2>Connect</h2>
-            <ul class="icons">
-                <li><a href="https://james.apache.org/mail.html" class="icon fa-envelope-o alt"><span class="label">Mailing-list</span></a></li>
-                <li><a href="https://gitter.im/apache/james-project" class="icon fa-wechat alt"><span class="label">Gitter</span></a></li>
-                <li><a href="https://github.com/apache/james-project" class="icon fa-github alt"><span class="label">GitHub</span></a></li>
-                <li><a href="https://twitter.com/ApacheJames" class="icon fa-twitter alt"><span class="label">Twitter</span></a></li>
-                <li><a href="https://james.apache.org/support.html" class="icon fa-briefcase alt"><span class="label">Support</span></a></li>
-                <li><a href="http://www.apache.org/events/current-event" class="icon fa-calendar alt"><span class="label">Apache Foundation events</span></a></li>
-            </ul>
-        </section>
-        <section class="legal-section">
-            <h2>Copyright</h2>
-            Apache James and related projects are trademarks of the Apache Software Foundation.<br/>
-            <a href="https://www.apache.org/">Copyright 2006-2018 The Apache Software Foundation. All Rights Reserved.</a><br/>
-            <a href="https://www.apache.org/licenses/">License</a><br/>
-            <a href="https://www.apache.org/foundation/sponsorship.html">Donate</a> to support the Apache Foundation<br/>
-            <a href="https://www.apache.org/foundation/thanks.html">Thanks</a><br/>
-            Design: <a href="https://html5up.net">HTML5 UP</a><br/>
-            Thanks to <a href="http://www.neoma-interactive.com/">Neoma by Linagora</a> for the website design
-        </section>
-    </footer>
 </div>
 
-<!-- Scripts -->
-<script src="assets/js/jquery.min.js"></script>
-<script src="assets/js/jquery.scrollex.min.js"></script>
-<script src="assets/js/jquery.scrolly.min.js"></script>
-<script src="assets/js/skel.min.js"></script>
-<script src="assets/js/util.js"></script>
-<script src="assets/js/lightbox.js"></script>
-<script src="assets/js/github-fetch.js"></script>
-<script src="assets/js/lity.min.js"></script>
-<!--[if lte IE 8]><script src="assets/js/ie/respond.min.js"></script><![endif]-->
-<script src="assets/js/main.js"></script>
 

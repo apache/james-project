@@ -1,0 +1,247 @@
+---
+layout: howTo
+---
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+
+<!-- Main -->
+<div id="main">
+
+    <!-- Introduction -->
+    <section id="intro" class="main special">
+        <div class="">
+            <div class="content align-left">
+                <header class="major">
+                    <h1><b>Configure Custom Listeners</b></h1>
+                </header>
+
+                <p>
+                    This document will help you understand what is Mailbox Listener.
+                    Then you will have a chance to implement your own Mailbox Listener and configure it to use it in James server.
+                </p>
+
+                <ul>
+                    <li>What is Mailbox Listener</li>
+                    <li>How to use a custom Mailbox Listener in James</li>
+                </ul>
+
+                <header class="major">
+                    <h2><b>What is Mailbox Listener</b></h2>
+                </header>
+
+                <p>
+                    Mailbox Listener is a component in James Mailbox System.
+                    Each time an action is applied on a mailbox(adding, deleting), or on an email(adding, deleting, updating flags...),
+                    then an event representing that action is generated and delivered to all the Listeners that had been registered before.
+                    After receiving events, listeners retrieve information from the events then execute their business
+                    (Indexing emails in ElasticSearch, updating quota of users, detecting spam emails...)
+                </p>
+
+                <p>
+                    There are two kinds of Listener registration:
+                </p>
+                <ul>
+                    <li>
+                        <b>Group Registration</b>: a Group Registration will listen for all events fired and will deliver each event only once per group within a distributed topology.
+                        That means if there are three listeners registered to the same group, each time an event is fired, only one of these three listeners can receive that event.
+                        You can write your own custom Listener and configure James to register it as a Group Registration.
+                    </li>
+                    <li>
+                        <b>Key Registration</b>: a Key Registration will listen only for events it is interested in, and with each event fired to a Key Registration, it will be
+                        delivered to all registered listeners. That means if there are three listeners registered to the same key, each time an event is fired, all of three listeners will receive that event.
+                        At the moment, James doesn't support to configure custom Listener for Key Registration.
+                        This feature is used internally to implement things like IMAP IDLE aka notifications.
+                        Therefore, it's not exposed through configurations as it makes little sense
+                    </li>
+                </ul>
+
+                <header class="major">
+                    <h2><b>How to use a custom Mailbox Listener in James</b></h2>
+                </header>
+
+                <p>
+                    <b>prerequisite</b>: custom Mailbox Listeners can only work with James Guice products.
+                </p>
+
+                <header class="major">
+                    <h3><b>Use the custom BigMessageListener in James</b></h3>
+                </header>
+
+                <p>
+                    Once you have a custom Listener, it's very simple to setup James with that Listener.
+                    In this example, we will use the
+                    <a href="https://github.com/apache/james-project/blob/master/examples/custom-mailets/src/main/java/org/apache/james/examples/custom/listeners/BigMessageListener.java">BigMessageListener</a>
+                    which will listen events fired after emails are appended to users mailboxes,
+                    then for each email added event, determine the size of added email by getting size information from the event.
+                    If the size of the email is greater than or equals 1 MB, then BigMessageListener will add a "BIG_MESSAGE" flag to that email
+                </p>
+
+                <header class="major">
+                    <h3><b>Starting James with BigMessageListener</b></h3>
+                </header>
+
+                <p>We will take the simplest James product(JPA Guice) for the example</p>
+
+                <p>First, get template JPA product configuration:</p>
+                <pre><code>
+$ git clone https://github.com/apache/james-project
+$ cp -rf james-project/dockerfiles/run/guice/jpa/destination/conf conf
+                </code></pre>
+
+                <p>Then create the keystore file in the conf/ directory with the default password <code>james72laBalle</code>
+                <pre><code>
+$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
+                </code></pre>
+
+                <p>
+                    Second, modify listener.xml configuration file in conf/ directory to use only BigMessageListener
+                    by specifying its full class name. We only need to use this Listener in our example.
+                </p>
+                <pre><code>
+&lt;listeners&gt;
+    &lt;listener&gt;
+        &lt;class&gt;org.apache.james.examples.custom.listeners.SetCustomFlagOnBigMessages&lt;/class&gt;
+    &lt;/listener&gt;
+&lt;/listeners&gt;
+                </code></pre>
+
+                <p>Finally, starting a James Server by docker compose</p>
+                <p>Getting James docker-compose.yml</p>
+                <pre><code>
+$ wget https://raw.githubusercontent.com/apache/james-project/master/dockerfiles/run/docker-compose.yml
+                </code></pre>
+                <p>Using James Guice JPA instead of the default product</p>
+                <pre><code>
+services:
+  james:
+    ...
+    image: linagora/james-jpa-guice:latest
+                </code></pre>
+                <p>Add the following volumes for james service:</p>
+                <pre><code>
+volumes:
+  - $PWD/conf:/root/conf/
+                </code></pre>
+
+                <p>
+                    When you are using your listeners, place the jar containing your listeners into "extensions-jars" directory
+                    and add a volume for it.
+                </p>
+                <pre><code>
+volumes:
+  - $PWD/extensions-jars:/root/extensions-jars/
+                </code></pre>
+                <p>
+                    Putting compiled jars into extensions-jars directory
+                </p>
+                <p>
+                    When you write a custom Listener, you have to compile it and place the compiled jar package inside "extensions-jars" directory
+                    to make James load your Listener when it starts up.
+                    In this case, you should compile the James's module <b>examples/custom-listeners</b> and put it to "extensions-jars".
+                    The jar name can be sightly different by the time because its name carries James version, but you can recognize it easily.
+                </p>
+                <pre><code>
+$ mkdir extensions-jars
+$ cd james-project
+$ mvn clean install -DskipTests -f examples/custom-listeners/pom.xml
+$ cd ../
+$ cp james-project/examples/custom-listeners/target/custom-listeners-****.jar extensions-jars/custom-listeners.jar
+                </code></pre>
+                <p>
+                    Check out the docker-compose.yml to get the host name of james service, currently it's <b>james.local</b>.
+                    So you, have to modify James domain list to use this <b>james.local</b> as James default domain:
+                </p>
+                <pre><code>
+&lt;domainlist&gt;
+    &lt;autodetect&gt;true&lt;/autodetect&gt;
+    &lt;autodetectIP&gt;true&lt;/autodetectIP&gt;
+    &lt;defaultDomain&gt;james.local&lt;/defaultDomain&gt;
+&lt;/domainlist&gt;
+                </code></pre>
+                <p>
+                    Now, you are able to start james by docker compose, then wait for all docker containers to be up.
+                </p>
+                <pre><code>
+$ docker-compose up -d
+                </code></pre>
+
+                <header class="major">
+                    <h3><b>Verifying the result of the setup</b></h3>
+                </header>
+                <p>
+                    Now that we have a proper James server on our local machine with custom listeners loaded, we are able to use them.
+                    To verify our work, here is this simple scenario:
+                </p>
+                <ul>
+                    <li>Use James CLI to create user1@james.local/password1</li>
+                    <li>Use James CLI to create user2@james.local/password2</li>
+                    <li>Use a mail client to connect to user1, send a big email to use2</li>
+                    <li>Use IMAP command to see the flags of the email user2 had received</li>
+                </ul>
+
+                <p>Use James CLI to provision users</p>
+                <pre><code>
+$ docker exec -it james /bin/bash
+$ java -jar james-cli.jar AddUser user1@james.local password1
+$ java -jar james-cli.jar AddUser user2@james.local password2
+$ exit
+                </code></pre>
+
+                <p>
+                    Use thunderbird or any mail client on your local machine to connect with user1 and user2.
+                    The configuration should point to smpt server at <code>localhost:25</code>, and imap server at <code>localhost:143</code>.
+                    Use these credentials: user1@james.local/password1 and user2@james.local/password2
+                </p>
+                <p>
+                    After that, use user1@james.local account to sent a big email to user2@james.local, the size of the emails should be greater than 1 MB.
+                    One of the simplest ways is to attach a picture bigger than 1MB to the mail.
+                </p>
+                <p>
+                    If the mail client had sent a mail to user2@james.local, then you can see that this email appeared in user2 INBOX.
+                    We can see its flags by using the following IMAP command on your local host.
+                </p>
+                <pre><code>
+$ telnet localhost 143
+
+# Login by user2
+A1 LOGIN user2@james.local password2
+
+# Select user2's INBOX
+A1 SELECT INBOX
+
+# Search for all emails in user2's INBOX. The result should be: * SEARCH 1. Where 1 is the UID of the email which had been sent before
+A1 UID SEARCH ALL
+
+# Display all flags of that email. The result should be: * 1 FETCH (FLAGS (\Recent \Seen BIG_MESSAGE)). You can see that BIG_MESSAGE has appeared
+A1 FETCH 1 (FLAGS)
+                </code></pre>
+                <p>
+                    That's it, we are now sure that our BigMessageListener worked !
+                    Now that you have learned how to set up a custom Listener, you can follow this setup to add your own !
+                </p>
+            </div>
+            <footer class="major">
+                <ul class="actions align-center">
+                    <li><a href="index.html" class="button">go back to other how-tos</a></li>
+                </ul>
+            </footer>
+        </div>
+    </section>
+
+</div>

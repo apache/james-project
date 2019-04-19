@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: howTo
 ---
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
@@ -19,303 +19,237 @@ layout: default
     specific language governing permissions and limitations
     under the License.
 -->
-<link href="assets/css/lightbox.css" rel="stylesheet">
-<link href="assets/css/lity.min.css" rel="stylesheet" />
-<div id="wrapper">
-    <div class="apache_ref">
-        <a href="https://www.apache.org" alt="apache foundation link"><img src="https://www.apache.org/foundation/press/kit/asf_logo.svg" title="apache foundation logo"/></a>
-    </div>
-    <div class="apache_ref_mobile">
-        <a href="https://www.apache.org" alt="apache foundation link">The Apache Software Foundation</a>
-    </div>
-    <div class="apache_ref_left">
-        <a href="https://www.apache.org/events/current-event.html" alt="apache foundation event"><img src="https://www.apache.org/events/current-event-234x60.png" title="apache foundation event logo"/></a>
-    </div>
-    <div class="apache_ref_left_mobile">
-        <a href="https://www.apache.org/events/current-event.html" alt="apache foundation event"><img src="https://www.apache.org/events/current-event-234x60.png" title="apache foundation event logo"/></a>
-    </div>
 
-    <!-- Header -->
-    <header id="header" class="alt">
-        <div class="logo"><a href="/index.html" alt="Apache James"><img src="/images/james.svg" alt="james logo"/></a></div>
-        <h1 class="hidden">James Enterprise Mail Server</h1>
-        <h2>Emails at the heart of your business logic</h2>
-    </header>
+<!-- Main -->
+<div id="main">
 
-    <!-- Main -->
-    <div id="main">
+    <!-- Introduction -->
+    <section id="intro" class="main special">
+        <div class="">
+            <div class="content align-left">
+                <header class="major">
+                    <h1><b>Deleted Messages Vault</b></h1>
+                </header>
 
-        <!-- Introduction -->
-        <section id="intro" class="main special">
-            <div class="">
-                <div class="content align-left">
-                    <header class="major">
-                        <h1><b>Deleted Messages Vault</b></h1>
-                    </header>
+                <p>
+                    This document will help you understand what is Deleted Messages Vault. And finally,
+                    present to you, how to setup James Server with this feature.
+                </p>
 
-                    <p>
-                        This document will help you understand what is Deleted Messages Vault. And finally,
-                        present to you, how to setup James Server with this feature.
-                    </p>
+                <ul>
+                    <li>What is Deleted Messages Vault</li>
+                    <li>How to setup James with Deleted Messages Vault</li>
+                    <li>How to administrate Deleted Messages Vault</li>
+                </ul>
 
-                    <ul>
-                        <li>What is Deleted Messages Vault</li>
-                        <li>How to setup James with Deleted Messages Vault</li>
-                        <li>How to administrate Deleted Messages Vault</li>
-                    </ul>
+                <header class="major">
+                    <h2><b>What is Deleted Messages Vault</b></h2>
+                </header>
 
-                    <header class="major">
-                        <h2><b>What is Deleted Messages Vault</b></h2>
-                    </header>
+                <p>Deleted Messages Vault is a feature in James, it allows you to:</p>
+                <ul>
+                    <li>retain user deleted messages for some time</li>
+                    <li>restore & export deleted messages by various criteria</li>
+                    <li>permanently delete some retained messages</li>
+                </ul>
 
-                    <p>Deleted Messages Vault is a feature in James, it allows you to:</p>
-                    <ul>
-                        <li>retain user deleted messages for some time</li>
-                        <li>restore & export deleted messages by various criteria</li>
-                        <li>permanently delete some retained messages</li>
-                    </ul>
+                <p>
+                    If Deleted Messages Vault is enabled, when users delete their mails, James will retain these mails into Deleted Messages Vault.
+                    And only administrators can interact with this component via WebAdmin REST APIs.
+                </p>
+                <p>
+                    One useful use of that feature is to allow an administrator to restore some mails an user may have deleted by accident.
+                    However, mails are not retained forever as you have to configure a retention period before using it (we'll see later how to trigger the collection of mails).
+                    It's also possible to permanently delete a mail if needed.
+                </p>
+                <p>
+                    Deleted mails for exporting & restoring can be filtered via several criteria based on mail properties.
+                    At the moment, these are supported mail properties for filtering:
+                </p>
+                <ul>
+                    <li>deletion date(ISO-8601 Date String)
+                        <ul>
+                            <li>supports before or equals operator</li>
+                            <li>supports after or equals operator</li>
+                        </ul>
+                    </li>
+                    <li>delivery date(ISO-8601 Date String)
+                        <ul>
+                            <li>supports before or equals operator</li>
+                            <li>supports after or equals operator</li>
+                        </ul>
+                    </li>
+                    <li>recipients(List of string)
+                        <ul>
+                            <li>supports contains operator</li>
+                        </ul>
+                    </li>
+                    <li>sender(String)
+                        <ul>
+                            <li>supports equal matching operator</li>
+                        </ul>
+                    </li>
+                    <li>has attachment(Boolean)
+                        <ul>
+                            <li>supports equal matching operator</li>
+                        </ul>
+                    </li>
+                    <li>subject(String)
+                        <ul>
+                            <li>supports equal matching operator</li>
+                            <li>supports equal ignore case matching operator</li>
+                            <li>supports contains matching operator</li>
+                            <li>supports contains ignore case matching operator (with US locale)</li>
+                        </ul>
+                    </li>
+                </ul>
 
-                    <p>
-                        If Deleted Messages Vault is enabled, when users delete their mails, James will retain these mails into Deleted Messages Vault.
-                        And only administrators can interact with this component via WebAdmin REST APIs.
-                    </p>
-                    <p>
-                        One useful use of that feature is to allow an administrator to restore some mails an user may have deleted by accident.
-                        However, mails are not retained forever as you have to configure a retention period before using it (we'll see later how to trigger the collection of mails).
-                        It's also possible to permanently delete a mail if needed.
-                    </p>
-                    <p>
-                        Deleted mails for exporting & restoring can be filtered via several criteria based on mail properties.
-                        At the moment, these are supported mail properties for filtering:
-                    </p>
-                    <ul>
-                        <li>deletion date(ISO-8601 Date String)
-                            <ul>
-                                <li>supports before or equals operator</li>
-                                <li>supports after or equals operator</li>
-                            </ul>
-                        </li>
-                        <li>delivery date(ISO-8601 Date String)
-                            <ul>
-                                <li>supports before or equals operator</li>
-                                <li>supports after or equals operator</li>
-                            </ul>
-                        </li>
-                        <li>recipients(List of string)
-                            <ul>
-                                <li>supports contains operator</li>
-                            </ul>
-                        </li>
-                        <li>sender(String)
-                            <ul>
-                                <li>supports equal matching operator</li>
-                            </ul>
-                        </li>
-                        <li>has attachment(Boolean)
-                            <ul>
-                                <li>supports equal matching operator</li>
-                            </ul>
-                        </li>
-                        <li>subject(String)
-                            <ul>
-                                <li>supports equal matching operator</li>
-                                <li>supports equal ignore case matching operator</li>
-                                <li>supports contains matching operator</li>
-                                <li>supports contains ignore case matching operator (with US locale)</li>
-                            </ul>
-                        </li>
-                    </ul>
+                <header class="major">
+                    <h2><b>How to setup James with Deleted Messages Vault</b></h2>
+                </header>
 
-                    <header class="major">
-                        <h2><b>How to setup James with Deleted Messages Vault</b></h2>
-                    </header>
+                <p>
+                    In this section, we will guide you to setup James with Deleted Message Vault by following below steps:
+                </p>
+                <ul>
+                    <li>Enable Deleted Messages Vault</li>
+                    <li>Make James uses Deleted Messages Vault by configuring Pre Deletion Hooks</li>
+                    <li>Starting James with enabled Deleted Message Vault by docker compose</li>
+                </ul>
 
-                    <p>
-                        In this section, we will guide you to setup James with Deleted Message Vault by following below steps:
-                    </p>
-                    <ul>
-                        <li>Enable Deleted Messages Vault</li>
-                        <li>Make James uses Deleted Messages Vault by configuring Pre Deletion Hooks</li>
-                        <li>Starting James with enabled Deleted Message Vault by docker compose</li>
-                    </ul>
+                <header class="major">
+                    <h3><b>Enable Deleted Messages Vault</b></h3>
+                </header>
 
-                    <header class="major">
-                        <h3><b>Enable Deleted Messages Vault</b></h3>
-                    </header>
+                <p>
+                    To do this, you have to create a configuration file <b>deletedMessageVault.properties</b>, then put it into <b>conf</b> directory of James.
+                    There are two available properties you may want to configure:
+                </p>
+                <ul>
+                    <li>
+                        <b>urlPrefix</b>: represent for the prefix of namespace Deleted Messages Vault will use to store deleted messages.
+                    </li>
+                    <li>
+                        <b>retentionPeriod</b>: represent for the period deleted messages allowed to be stored in Deleted Messages Vault.
+                    </li>
+                </ul>
 
-                    <p>
-                        To do this, you have to create a configuration file <b>deletedMessageVault.properties</b>, then put it into <b>conf</b> directory of James.
-                        There are two available properties you may want to configure:
-                    </p>
-                    <ul>
-                        <li>
-                            <b>urlPrefix</b>: represent for the prefix of namespace Deleted Messages Vault will use to store deleted messages.
-                        </li>
-                        <li>
-                            <b>retentionPeriod</b>: represent for the period deleted messages allowed to be stored in Deleted Messages Vault.
-                        </li>
-                    </ul>
+                <p>
+                    Example:
+                </p>
+                <pre><code>
+urlPrefix=cassandra://var/deletedMessages/vault
+retentionPeriod=1 year
+                </code></pre>
+                <p>
+                    More details about configuration & example is at <a href="/server/config-vault.html">Deleted Messages Vault Configuration</a>
+                </p>
 
-                    <p>
-                        Example:
-                    </p>
-                    <pre><code>
-    urlPrefix=cassandra://var/deletedMessages/vault
-    retentionPeriod=1 year
-                    </code></pre>
-                    <p>
-                        More details about configuration & example is at <a href="/server/config-vault.html">Deleted Messages Vault Configuration</a>
-                    </p>
+                <header class="major">
+                    <h3><b>Make James uses Deleted Messages Vault by configuring Pre Deletion Hooks</b></h3>
+                </header>
 
-                    <header class="major">
-                        <h3><b>Make James uses Deleted Messages Vault by configuring Pre Deletion Hooks</b></h3>
-                    </header>
+                <p>
+                    By default, although Deleted Messages Vault has been configured, but, to make it really work, you still need to configure Pre Deletion Hooks to lets James use it.
+                    Before deleting a mail in James, PreDeletionHooks will be triggered to execute all hooks. If all hook executions success, then James will process to delete that mail.
+                    There is already a DeletedMessageVaultHook in James, its job to store deleted mails into Deleted Messages Vault. Thus, you need to configure this hook in listeners.xml configuration file.
+                </p>
 
-                    <p>
-                        By default, although Deleted Messages Vault has been configured, but, to make it really work, you still need to configure Pre Deletion Hooks to lets James use it.
-                        Before deleting a mail in James, PreDeletionHooks will be triggered to execute all hooks. If all hook executions success, then James will process to delete that mail.
-                        There is already a DeletedMessageVaultHook in James, its job to store deleted mails into Deleted Messages Vault. Thus, you need to configure this hook in listeners.xml configuration file.
-                    </p>
+                <p>
+                    Sample DeletedMessageVaultHook configuration:
+                </p>
+                <pre><code>
+&lt;listeners&gt;
+    &lt;listener&gt;
+    ...
+    &lt;/listener&gt;
+    ...
+    &lt;preDeletionHook&gt;
+        &lt;class&gt;org.apache.james.vault.DeletedMessageVaultHook&lt;/class&gt;
+    &lt;/preDeletionHook&gt;
+&lt;/listeners&gt;
+                </code></pre>
+                <p>
+                    More details about configuration & example is at <a href="/server/config-listener.html">Pre Deletion Hook Configuration</a>
+                </p>
 
-                    <p>
-                        Sample DeletedMessageVaultHook configuration:
-                    </p>
-                    <pre><code>
-    &lt;listeners&gt;
-        &lt;listener&gt;
-        ...
-        &lt;/listener&gt;
-        ...
-        &lt;preDeletionHook&gt;
-            &lt;class&gt;org.apache.james.vault.DeletedMessageVaultHook&lt;/class&gt;
-        &lt;/preDeletionHook&gt;
-    &lt;/listeners&gt;
-                    </code></pre>
-                    <p>
-                        More details about configuration & example is at <a href="/server/config-listener.html">Pre Deletion Hook Configuration</a>
-                    </p>
+                <header class="major">
+                    <h3><b>Starting James with enabled Deleted Message Vault by docker compose</b></h3>
+                </header>
 
-                    <header class="major">
-                        <h3><b>Starting James with enabled Deleted Message Vault by docker compose</b></h3>
-                    </header>
+                <p>We will take James cassandra product for the example</p>
 
-                    <p>We will take James cassandra product for the example</p>
+                <p>First, get template cassandra product configuration:</p>
+                <pre><code>
+$ git clone https://github.com/apache/james-project
+$ cp -rf james-project/dockerfiles/run/guice/cassandra/destination/conf conf
+                </code></pre>
 
-                    <p>First, get template cassandra product configuration:</p>
-                    <pre><code>
-    $ git clone https://github.com/apache/james-project
-    $ cp -rf james-project/dockerfiles/run/guice/cassandra/destination/conf conf
-    $ mv keystore conf/keystore
-                    </code></pre>
+                <p>Then create the keystore file in the conf/ directory with the default password <code>james72laBalle</code>
+                <pre><code>
+$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
+                </code></pre>
 
-                    <p>Second, modify deletedMessageVault.properties configuration file like an example at previous paragraph</p>
+                <p>Second, modify deletedMessageVault.properties configuration file like an example at previous paragraph</p>
 
-                    <p>Third, modify listeners.xml to configure DeletedMessageVaultHook by adding preDeletionHook section at previous paragraph</p>
+                <p>Third, modify listeners.xml to configure DeletedMessageVaultHook by adding preDeletionHook section at previous paragraph</p>
 
-                    <p>Fourth, We will create a local folder for holding data out of the container:</p>
-                    <pre><code>
-    mkdir var
-                    </code></pre>
+                <p>Fourth, We will create a local folder for holding data out of the container:</p>
+                <pre><code>
+mkdir var
+                </code></pre>
 
-                    <p>Finally, starting a James Server by docker compose</p>
-                    <p>Getting James docker-compose.yml</p>
-                    <pre><code>
-    $ wget https://raw.githubusercontent.com/apache/james-project/master/dockerfiles/run/docker-compose.yml
-                    </code></pre>
+                <p>Finally, starting a James Server by docker compose</p>
+                <p>Getting James docker-compose.yml</p>
+                <pre><code>
+$ wget https://raw.githubusercontent.com/apache/james-project/master/dockerfiles/run/docker-compose.yml
+                </code></pre>
 
-                    <p>Add the following volumes for james service:</p>
-                    <pre><code>
-    volumes:
-      - $PWD/conf:/root/conf/
-      - $PWD/var:/root/var/
-                    </code></pre>
+                <p>Add the following volumes for james service:</p>
+                <pre><code>
+volumes:
+  - $PWD/conf:/root/conf/
+  - $PWD/var:/root/var/
+                </code></pre>
 
-                    <header class="major">
-                        <h2><b>How to administrate Deleted Messages Vault</b></h2>
-                    </header>
+                <header class="major">
+                    <h2><b>How to administrate Deleted Messages Vault</b></h2>
+                </header>
 
-                    <p>
-                        These are supported WebAdmin features on top of Deleted Messages Vault.
-                        You can have a look at WebAdmin Deleted Messages Vault document at <a href="https://james.apache.org/server/manage-webadmin.html#Deleted_Messages_Vault">here</a>
-                    </p>
+                <p>
+                    These are supported WebAdmin features on top of Deleted Messages Vault.
+                    You can have a look at WebAdmin Deleted Messages Vault document at <a href="https://james.apache.org/server/manage-webadmin.html#Deleted_Messages_Vault">here</a>
+                </p>
 
-                    <header class="major">
-                        <h3><b>WebAdmin Deleted Messages Vault exporting</b></h3>
-                    </header>
+                <header class="major">
+                    <h3><b>WebAdmin Deleted Messages Vault exporting</b></h3>
+                </header>
 
-                    <p>
-                        This part is a bit special to you, you are able to choose which exporting mechanism to be used. At the moment there are one available exporting mechanism
-                    </p>
-                    <ul>
-                        <li><b>localFile</b>: This is a simple exporting mechanism while with an export request, it retrieves deleted mails from Deleted Messages Vault,
-                        then store them as a zip file in local file system in James Server. Then sending a mail with the absolute path of exported file to the targeted mail address.</li>
-                    </ul>
-                    <p>
-                        You can configure which kind of export mechanism to use in James by specifying <b>blob.export.implementation</b> in blobStore.properties configuration file.
-                        E.g:
-                    </p>
-                    <pre><code>
-    blob.export.implementation=localFile
-                    </code></pre>
+                <p>
+                    This part is a bit special to you, you are able to choose which exporting mechanism to be used. At the moment there are one available exporting mechanism
+                </p>
+                <ul>
+                    <li><b>localFile</b>: This is a simple exporting mechanism while with an export request, it retrieves deleted mails from Deleted Messages Vault,
+                    then store them as a zip file in local file system in James Server. Then sending a mail with the absolute path of exported file to the targeted mail address.</li>
+                </ul>
+                <p>
+                    You can configure which kind of export mechanism to use in James by specifying <b>blob.export.implementation</b> in blobStore.properties configuration file.
+                    E.g:
+                </p>
+                <pre><code>
+blob.export.implementation=localFile
+                </code></pre>
 
-                    <p>
-                        More details about configuration & example at <a href="/server/config-blob-expor.html">Blob Export Configuration</a>
-                    </p>
-                </div>
-                <footer class="major">
-                    <ul class="actions align-center">
-                        <li><a href="index.html" class="button">go back to other how-tos</a></li>
-                    </ul>
-                </footer>
+                <p>
+                    More details about configuration & example at <a href="/server/config-blob-expor.html">Blob Export Configuration</a>
+                </p>
             </div>
-        </section>
+            <footer class="major">
+                <ul class="actions align-center">
+                    <li><a href="index.html" class="button">go back to other how-tos</a></li>
+                </ul>
+            </footer>
+        </div>
+    </section>
 
-    </div>
-    <footer id="footer" class="major">
-        <section>
-            <h2>James</h2>
-            <ul class="no-padding">
-                <li class="no-padding"><a href="https://james.apache.org/#intro" class="active">About</a></li>
-                <li class="no-padding"><a href="https://james.apache.org/#first">Get Started</a></li>
-                <li class="no-padding"><a href="https://james.apache.org/#posts">Last Posts</a></li>
-                <li class="no-padding"><a href="https://james.apache.org/#second">Community</a></li>
-                <li class="no-padding"><a href="https://james.apache.org/#third">Contribute</a></li>
-                <li class="no-padding"><a href="https://james.apache.org/"><span class="fa fa-external-link"></span> Documentation</a></li>
-            </ul>
-        </section>
-        <section>
-            <h2>Connect</h2>
-            <ul class="icons">
-                <li><a href="https://james.apache.org/mail.html" class="icon fa-envelope-o alt"><span class="label">Mailing-list</span></a></li>
-                <li><a href="https://gitter.im/apache/james-project" class="icon fa-wechat alt"><span class="label">Gitter</span></a></li>
-                <li><a href="https://github.com/apache/james-project" class="icon fa-github alt"><span class="label">GitHub</span></a></li>
-                <li><a href="https://twitter.com/ApacheJames" class="icon fa-twitter alt"><span class="label">Twitter</span></a></li>
-                <li><a href="https://james.apache.org/support.html" class="icon fa-briefcase alt"><span class="label">Support</span></a></li>
-                <li><a href="http://www.apache.org/events/current-event" class="icon fa-calendar alt"><span class="label">Apache Foundation events</span></a></li>
-            </ul>
-        </section>
-        <section class="legal-section">
-            <h2>Copyright</h2>
-            Apache James and related projects are trademarks of the Apache Software Foundation.<br/>
-            <a href="https://www.apache.org/">Copyright 2006-2018 The Apache Software Foundation. All Rights Reserved.</a><br/>
-            <a href="https://www.apache.org/licenses/">License</a><br/>
-            <a href="https://www.apache.org/foundation/sponsorship.html">Donate</a> to support the Apache Foundation<br/>
-            <a href="https://www.apache.org/foundation/thanks.html">Thanks</a><br/>
-            Design: <a href="https://html5up.net">HTML5 UP</a><br/>
-            Thanks to <a href="http://www.neoma-interactive.com/">Neoma by Linagora</a> for the website design
-        </section>
-    </footer>
 </div>
-
-<!-- Scripts -->
-<script src="assets/js/jquery.min.js"></script>
-<script src="assets/js/jquery.scrollex.min.js"></script>
-<script src="assets/js/jquery.scrolly.min.js"></script>
-<script src="assets/js/skel.min.js"></script>
-<script src="assets/js/util.js"></script>
-<script src="assets/js/lightbox.js"></script>
-<script src="assets/js/github-fetch.js"></script>
-<script src="assets/js/lity.min.js"></script>
-<!--[if lte IE 8]><script src="assets/js/ie/respond.min.js"></script><![endif]-->
-<script src="assets/js/main.js"></script>
-

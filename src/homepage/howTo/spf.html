@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: howTo
 ---
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
@@ -19,215 +19,146 @@ layout: default
     specific language governing permissions and limitations
     under the License.
 -->
-<link href="assets/css/lightbox.css" rel="stylesheet">
-<link href="assets/css/lity.min.css" rel="stylesheet" />
-<div id="wrapper">
-    <div class="apache_ref">
-        <a href="https://www.apache.org" alt="apache foundation link"><img src="https://www.apache.org/foundation/press/kit/asf_logo.svg" title="apache foundation logo"/></a>
-    </div>
-    <div class="apache_ref_mobile">
-        <a href="https://www.apache.org" alt="apache foundation link">The Apache Software Foundation</a>
-    </div>
-    <div class="apache_ref_left">
-        <a href="https://www.apache.org/events/current-event.html" alt="apache foundation event"><img src="https://www.apache.org/events/current-event-234x60.png" title="apache foundation event logo"/></a>
-    </div>
-    <div class="apache_ref_left_mobile">
-        <a href="https://www.apache.org/events/current-event.html" alt="apache foundation event"><img src="https://www.apache.org/events/current-event-234x60.png" title="apache foundation event logo"/></a>
-    </div>
 
-    <!-- Header -->
-    <header id="header" class="alt">
-        <div class="logo"><a href="/index.html" alt="Apache James"><img src="/images/james.svg" alt="james logo"/></a></div>
-        <h1 class="hidden">James Enterprise Mail Server</h1>
-        <h2>Emails at the heart of your business logic</h2>
-    </header>
+<!-- Main -->
+<div id="main">
 
-    <!-- Main -->
-    <div id="main">
+    <!-- Introduction -->
+    <section id="intro" class="main special">
+        <div class="">
+            <div class="content align-left">
+                <header class="major">
+                    <h1><b>Setting up SPF</b></h1>
+                </header>
 
-        <!-- Introduction -->
-        <section id="intro" class="main special">
-            <div class="">
-                <div class="content align-left">
-                    <header class="major">
-                        <h1><b>Setting up SPF</b></h1>
-                    </header>
+                <p>
+                    You just finished installing a <a href="imap-server.html">James IMAP server</a> and wonder how to
+                    gain trust for it?
+                </p>
 
-                    <p>
-                        You just finished installing a <a href="imap-server.html">James IMAP server</a> and wonder how to
-                        gain trust for it?
-                    </p>
+                <p>
+                    The Sender Policy Framework (SPF) is an open standard specifying a technical method to prevent
+                    sender address forgery. It might help you to do this.
+                </p>
 
-                    <p>
-                        The Sender Policy Framework (SPF) is an open standard specifying a technical method to prevent
-                        sender address forgery. It might help you to do this.
-                    </p>
+                <p>
+                    More precisely, SPF protects the envelope sender address, which is used for the delivery of messages.
+                    It allows the owner of a domain to specify their mail sending policy, e.g. which mail servers they
+                    use to send emails from their domain.
+                </p>
 
-                    <p>
-                        More precisely, SPF protects the envelope sender address, which is used for the delivery of messages.
-                        It allows the owner of a domain to specify their mail sending policy, e.g. which mail servers they
-                        use to send emails from their domain.
-                    </p>
+                <p>
+                    To correctly configure SPF for your domain, you need to answer the following questions:
+                </p>
 
-                    <p>
-                        To correctly configure SPF for your domain, you need to answer the following questions:
-                    </p>
+                <ul>
+                    <li><b>From what server or servers will email from my domain originate?</b> In our case, we only
+                        want our James Server to be able to send emails from our domain.</li>
+                    <li><b>How do you want illegitimate email to be handled?</b> <code>-all</code> is an SPF fail and
+                        usually means dropping such emails, whereas <code>~all</code> is an SPF softfail and traditionally
+                        means accepting but marking them.</li>
+                </ul>
 
-                    <ul>
-                        <li><b>From what server or servers will email from my domain originate?</b> In our case, we only
-                            want our James Server to be able to send emails from our domain.</li>
-                        <li><b>How do you want illegitimate email to be handled?</b> <code>-all</code> is an SPF fail and
-                            usually means dropping such emails, whereas <code>~all</code> is an SPF softfail and traditionally
-                            means accepting but marking them.</li>
-                    </ul>
+                <p>
+                    Therefore, we add the following DNS records to our DNS zone file:
+                </p>
 
-                    <p>
-                        Therefore, we add the following DNS records to our DNS zone file:
-                    </p>
-
-                    <pre><code>@ IN TXT “v=spf1 +a:james.test-domain.com -all”
+                <pre><code>@ IN TXT “v=spf1 +a:james.test-domain.com -all”
 @ IN SPF “v=spf1 +a:james.test-domain.com -all”</code></pre>
 
-                    <p>That way other mail servers know only <i>james.test-domain.com</i> can send mails for <i>test-domain.com</i>.</p>
+                <p>That way other mail servers know only <i>james.test-domain.com</i> can send mails for <i>test-domain.com</i>.</p>
 
 
-                    <header class="major">
-                        <h1><b>Verifying SPF for incoming emails</b></h1>
-                    </header>
+                <header class="major">
+                    <h1><b>Verifying SPF for incoming emails</b></h1>
+                </header>
 
-                    <p>
-                        Now we will see how to verify SPF records of incoming emails. For this we can customize mail processing,
-                        and specify actions upon SPF record validity. For introducing these components, James relies on the
-                        <a href="https://james.apache.org/jspf/">JSPF</a> library.
-                    </p>
+                <p>
+                    Now we will see how to verify SPF records of incoming emails. For this we can customize mail processing,
+                    and specify actions upon SPF record validity. For introducing these components, James relies on the
+                    <a href="https://james.apache.org/jspf/">JSPF</a> library.
+                </p>
 
-                    <p>We just need to edit the <code>mailetcontainer.xml</code> configuration file as follow:</p>
+                <p>We just need to edit the <code>mailetcontainer.xml</code> configuration file as follow:</p>
 
-                    <p>We are going to create a new processor called <b>SPFProcessor</b>. It will handle emails after
-                        the <b>root</b> processor but before the <b>transport</b> processor. Moreover, we do not need to
-                        perform a SPF check or take a decision if the sender is authenticated or is a local user, because
-                        we already trust him.
+                <p>We are going to create a new processor called <b>SPFProcessor</b>. It will handle emails after
+                    the <b>root</b> processor but before the <b>transport</b> processor. Moreover, we do not need to
+                    perform a SPF check or take a decision if the sender is authenticated or is a local user, because
+                    we already trust him.
 
-                        In all other cases, we add a SPF header using the <b>SPF</b> mailet. Then we need to take a decision
-                        about incoming emails. We use the <b>HasMailAttributeWithValue</b> matcher which has seven possible
-                        values to handle in the case of SPF: <b>permerror</b>, <b>temperror</b>, <b>none</b>, <b>pass</b>,
-                        <b>neutral</b>, <b>fail</b> and <b>softfail</b>. What action you choose for each of these values
-                        depends on what you want to do. In our case, we redirect SPF errors and fails to the <b>error</b>
-                        processor, whereas all other cases lead directly to the <b>transport</b> processor for further
-                        normal processing. We are rather tolerant since we authorize <b>softfails</b>.</p>
+                    In all other cases, we add a SPF header using the <b>SPF</b> mailet. Then we need to take a decision
+                    about incoming emails. We use the <b>HasMailAttributeWithValue</b> matcher which has seven possible
+                    values to handle in the case of SPF: <b>permerror</b>, <b>temperror</b>, <b>none</b>, <b>pass</b>,
+                    <b>neutral</b>, <b>fail</b> and <b>softfail</b>. What action you choose for each of these values
+                    depends on what you want to do. In our case, we redirect SPF errors and fails to the <b>error</b>
+                    processor, whereas all other cases lead directly to the <b>transport</b> processor for further
+                    normal processing. We are rather tolerant since we authorize <b>softfails</b>.</p>
 
-                    <p>For example:</p>
+                <p>For example:</p>
 
-                    <pre><code>[...]
+                <pre><code>[...]
 
 &lt;processors>
-  &lt;processor state="root" enableJmx="true">
-    &lt;mailet match="All" class="PostmasterAlias"/>
-    &lt;mailet match="RelayLimit=30" class="Null"/>
-    &lt;mailet match="All" class="ToProcessor"&gt;
-      &lt;processor&gt;SPFProcessor&lt;/processor>
-    &lt;/mailet&gt;
-  &lt;/processor>
+&lt;processor state="root" enableJmx="true">
+&lt;mailet match="All" class="PostmasterAlias"/>
+&lt;mailet match="RelayLimit=30" class="Null"/>
+&lt;mailet match="All" class="ToProcessor"&gt;
+  &lt;processor&gt;SPFProcessor&lt;/processor>
+&lt;/mailet&gt;
+&lt;/processor>
 
-  &lt;processor state="error" enableJmx="true">
-    [...]
-  &lt;/processor>
+&lt;processor state="error" enableJmx="true">
+[...]
+&lt;/processor>
 
-  &lt;processor state="SPFProcessor">
-    &lt;mailet match="SenderIsLocal" class="ToProcessor"&gt;
-      &lt;processor&gt;transport&lt;/processor&gt;
-    &lt;/mailet&gt;
-    &lt;mailet match="SMTPAuthSuccessful" class="ToProcessor"&gt;
-      &lt;processor&gt;transport&lt;/processor&gt;
-    &lt;/mailet&gt;
-    &lt;mailet match="All" class="SPF"&gt;
-      &lt;addHeader&gt;true&lt;/addHeader&gt;
-    &lt;/mailet&gt;
-    &lt;mailet match="HasMailAttributeWithValue=org.apache.james.transport.mailets.spf.result, permerror" class="ToProcessor"&gt;
-      &lt;processor&gt;error&lt;/processor&gt;
-    &lt;/mailet&gt;
-    &lt;mailet match="HasMailAttributeWithValue=org.apache.james.transport.mailets.spf.result, temperror" class="ToProcessor"&gt;
-      &lt;processor&gt;error&lt;/processor&gt;
-    &lt;/mailet&gt;
-    &lt;mailet match="HasMailAttributeWithValue=org.apache.james.transport.mailets.spf.result, none" class="ToProcessor"&gt;
-      &lt;processor&gt;transport&lt;/processor&gt;
-    &lt;/mailet&gt;
-    &lt;mailet match="HasMailAttributeWithValue=org.apache.james.transport.mailets.spf.result, pass" class="ToProcessor"&gt;
-      &lt;processor&gt;transport&lt;/processor&gt;
-    &lt;/mailet&gt;
-    &lt;mailet match="HasMailAttributeWithValue=org.apache.james.transport.mailets.spf.result, neutral" class="ToProcessor"&gt;
-      &lt;processor&gt;transport&lt;/processor&gt;
-    &lt;/mailet&gt;
-    &lt;mailet match="HasMailAttributeWithValue=org.apache.james.transport.mailets.spf.result, fail" class="ToProcessor"&gt;
-      &lt;processor&gt;error&lt;/processor&gt;
-    &lt;/mailet&gt;
-    &lt;mailet match="HasMailAttributeWithValue=org.apache.james.transport.mailets.spf.result, softfail" class="ToProcessor"&gt;
-      &lt;processor&gt;transport&lt;/processor&gt;
-    &lt;/mailet&gt;
-    &lt;mailet match="All" class="LogMessage"&gt;
-      &lt;headers&gt;true&lt;/headers&gt;
-      &lt;body&gt;false&lt;/body&gt;
-      &lt;comment&gt;Unknown SPF result&lt;/comment&gt;
-    &lt;/mailet&gt;
-  &lt;/processor&gt;
+&lt;processor state="SPFProcessor">
+&lt;mailet match="SenderIsLocal" class="ToProcessor"&gt;
+  &lt;processor&gt;transport&lt;/processor&gt;
+&lt;/mailet&gt;
+&lt;mailet match="SMTPAuthSuccessful" class="ToProcessor"&gt;
+  &lt;processor&gt;transport&lt;/processor&gt;
+&lt;/mailet&gt;
+&lt;mailet match="All" class="SPF"&gt;
+  &lt;addHeader&gt;true&lt;/addHeader&gt;
+&lt;/mailet&gt;
+&lt;mailet match="HasMailAttributeWithValue=org.apache.james.transport.mailets.spf.result, permerror" class="ToProcessor"&gt;
+  &lt;processor&gt;error&lt;/processor&gt;
+&lt;/mailet&gt;
+&lt;mailet match="HasMailAttributeWithValue=org.apache.james.transport.mailets.spf.result, temperror" class="ToProcessor"&gt;
+  &lt;processor&gt;error&lt;/processor&gt;
+&lt;/mailet&gt;
+&lt;mailet match="HasMailAttributeWithValue=org.apache.james.transport.mailets.spf.result, none" class="ToProcessor"&gt;
+  &lt;processor&gt;transport&lt;/processor&gt;
+&lt;/mailet&gt;
+&lt;mailet match="HasMailAttributeWithValue=org.apache.james.transport.mailets.spf.result, pass" class="ToProcessor"&gt;
+  &lt;processor&gt;transport&lt;/processor&gt;
+&lt;/mailet&gt;
+&lt;mailet match="HasMailAttributeWithValue=org.apache.james.transport.mailets.spf.result, neutral" class="ToProcessor"&gt;
+  &lt;processor&gt;transport&lt;/processor&gt;
+&lt;/mailet&gt;
+&lt;mailet match="HasMailAttributeWithValue=org.apache.james.transport.mailets.spf.result, fail" class="ToProcessor"&gt;
+  &lt;processor&gt;error&lt;/processor&gt;
+&lt;/mailet&gt;
+&lt;mailet match="HasMailAttributeWithValue=org.apache.james.transport.mailets.spf.result, softfail" class="ToProcessor"&gt;
+  &lt;processor&gt;transport&lt;/processor&gt;
+&lt;/mailet&gt;
+&lt;mailet match="All" class="LogMessage"&gt;
+  &lt;headers&gt;true&lt;/headers&gt;
+  &lt;body&gt;false&lt;/body&gt;
+  &lt;comment&gt;Unknown SPF result&lt;/comment&gt;
+&lt;/mailet&gt;
+&lt;/processor&gt;
 
 [...]</code></pre>
 
-                </div>
-                <footer class="major">
-                    <ul class="actions align-center">
-                        <li><a href="index.html" class="button">go back to other how-tos</a></li>
-                    </ul>
-                </footer>
             </div>
-        </section>
+            <footer class="major">
+                <ul class="actions align-center">
+                    <li><a href="index.html" class="button">go back to other how-tos</a></li>
+                </ul>
+            </footer>
+        </div>
+    </section>
 
-    </div>
-    <footer id="footer" class="major">
-        <section>
-            <h2>James</h2>
-            <ul class="no-padding">
-                <li class="no-padding"><a href="https://james.apache.org/#intro" class="active">About</a></li>
-                <li class="no-padding"><a href="https://james.apache.org/#first">Get Started</a></li>
-                <li class="no-padding"><a href="https://james.apache.org/#posts">Last Posts</a></li>
-                <li class="no-padding"><a href="https://james.apache.org/#second">Community</a></li>
-                <li class="no-padding"><a href="https://james.apache.org/#third">Contribute</a></li>
-                <li class="no-padding"><a href="https://james.apache.org/"><span class="fa fa-external-link"></span> Documentation</a></li>
-            </ul>
-        </section>
-        <section>
-            <h2>Connect</h2>
-            <ul class="icons">
-                <li><a href="https://james.apache.org/mail.html" class="icon fa-envelope-o alt"><span class="label">Mailing-list</span></a></li>
-                <li><a href="https://gitter.im/apache/james-project" class="icon fa-wechat alt"><span class="label">Gitter</span></a></li>
-                <li><a href="https://github.com/apache/james-project" class="icon fa-github alt"><span class="label">GitHub</span></a></li>
-                <li><a href="https://twitter.com/ApacheJames" class="icon fa-twitter alt"><span class="label">Twitter</span></a></li>
-                <li><a href="https://james.apache.org/support.html" class="icon fa-briefcase alt"><span class="label">Support</span></a></li>
-                <li><a href="http://www.apache.org/events/current-event" class="icon fa-calendar alt"><span class="label">Apache Foundation events</span></a></li>
-            </ul>
-        </section>
-        <section class="legal-section">
-            <h2>Copyright</h2>
-            Apache James and related projects are trademarks of the Apache Software Foundation.<br/>
-            <a href="https://www.apache.org/">Copyright 2006-2018 The Apache Software Foundation. All Rights Reserved.</a><br/>
-            <a href="https://www.apache.org/licenses/">License</a><br/>
-            <a href="https://www.apache.org/foundation/sponsorship.html">Donate</a> to support the Apache Foundation<br/>
-            <a href="https://www.apache.org/foundation/thanks.html">Thanks</a><br/>
-            Design: <a href="https://html5up.net">HTML5 UP</a><br/>
-            Thanks to <a href="http://www.neoma-interactive.com/">Neoma by Linagora</a> for the website design
-        </section>
-    </footer>
 </div>
-
-<!-- Scripts -->
-<script src="assets/js/jquery.min.js"></script>
-<script src="assets/js/jquery.scrollex.min.js"></script>
-<script src="assets/js/jquery.scrolly.min.js"></script>
-<script src="assets/js/skel.min.js"></script>
-<script src="assets/js/util.js"></script>
-<script src="assets/js/lightbox.js"></script>
-<script src="assets/js/github-fetch.js"></script>
-<script src="assets/js/lity.min.js"></script>
-<!--[if lte IE 8]><script src="assets/js/ie/respond.min.js"></script><![endif]-->
-<script src="assets/js/main.js"></script>
 

@@ -24,20 +24,16 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.FetchGroupImpl;
-import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.model.MessageRange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * A Listener to determine the size of added messages.
@@ -46,25 +42,23 @@ import com.google.common.collect.ImmutableList;
  * Then it will be considered as a big message and added BIG_MESSAGE {@value BIG_MESSAGE} flag
  *
  */
-class BigMessageListener implements MailboxListener.GroupMailboxListener {
+class SetCustomFlagOnBigMessages implements MailboxListener.GroupMailboxListener {
 
-    public static class BigMessageListenerGroup extends Group {
+    public static class PositionCustomFlagOnBigMessagesGroup extends Group {
     }
 
-    private static final BigMessageListenerGroup GROUP = new BigMessageListenerGroup();
-    private static final Logger LOGGER = LoggerFactory.getLogger(BigMessageListener.class);
+    private static final PositionCustomFlagOnBigMessagesGroup GROUP = new PositionCustomFlagOnBigMessagesGroup();
+    private static final Logger LOGGER = LoggerFactory.getLogger(SetCustomFlagOnBigMessages.class);
 
     static final long ONE_MB = 1000L * 1000L;
 
     static String BIG_MESSAGE = "BIG_MESSAGE";
 
     private final MailboxManager mailboxManager;
-    private final MessageIdManager messageIdManager;
 
     @Inject
-    BigMessageListener(MailboxManager mailboxManager, MessageIdManager messageIdManager) {
+    SetCustomFlagOnBigMessages(MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;
-        this.messageIdManager = messageIdManager;
     }
 
     @Override
@@ -84,24 +78,16 @@ class BigMessageListener implements MailboxListener.GroupMailboxListener {
     private void setBigMessageFlag(Added addedEvent, MessageUid messageUid) {
         try {
             MailboxSession session = mailboxManager.createSystemSession(addedEvent.getUser().asString());
-            MessageId messageId = addedEvent.getMetaData(messageUid).getMessageId();
+            MessageManager messageManager = mailboxManager.getMailbox(addedEvent.getMailboxId(), session);
 
-            messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session)
-                .forEach(messageResult -> setBigMessageFlag(messageResult, session));
-        } catch (MailboxException e) {
-            LOGGER.error("error happens when adding '{}' flag to big messages from user {}",
-                BIG_MESSAGE, addedEvent.getUser().asString(), e);
-        }
-    }
-
-    private void setBigMessageFlag(MessageResult messageResult, MailboxSession session) {
-        try {
-            messageIdManager.setFlags(
+            messageManager.setFlags(
                 new Flags(BIG_MESSAGE),
-                FlagsUpdateMode.ADD, messageResult.getMessageId(), ImmutableList.of(messageResult.getMailboxId()), session);
+                FlagsUpdateMode.ADD,
+                MessageRange.one(messageUid),
+                session);
         } catch (MailboxException e) {
-            LOGGER.error("error happens when adding '{}' flag to message {}",
-                BIG_MESSAGE, messageResult.getMessageId().serialize(), e);
+            LOGGER.error("error happens when adding '{}' flag to the message with uid {} in mailbox {} of user {}",
+                BIG_MESSAGE, messageUid.asLong(), addedEvent.getMailboxId(), addedEvent.getUser().asString(), e);
         }
     }
 
