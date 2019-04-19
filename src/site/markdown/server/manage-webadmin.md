@@ -2505,7 +2505,7 @@ The scheduled task will have the following type `MessageIdReIndexingTask` and th
 
 Warning: During the re-indexing, the result of search operations might be altered.
 
-## Event Dead letter
+## Event Dead Letter
 
 The EventBus allows to register 'group listeners' that are called in a (potentially) distributed fashion. These group
 listeners enable the implementation of some advanced mailbox manager feature like indexing, spam reporting, quota management
