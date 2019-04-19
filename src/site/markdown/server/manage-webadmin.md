@@ -41,7 +41,7 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
  - [Creating address domain](#Creating_address_domain)
  - [Administrating mail repositories](#Administrating_mail_repositories)
  - [Administrating mail queues](#Administrating_mail_queues)
- - [Administrating DLP Configuration](#Administrating_dlp_configuration)
+ - [Administrating DLP Configuration](#Administrating_DLP_Configuration)
  - [Administrating Sieve quotas](#Administrating_Sieve_quotas)
  - [ReIndexing](#ReIndexing)
  - [Event Dead Letter](#Event_Dead_Letter)
