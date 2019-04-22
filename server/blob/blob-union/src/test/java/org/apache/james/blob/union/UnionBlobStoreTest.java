@@ -122,7 +122,8 @@ class UnionBlobStoreTest implements BlobStoreContract {
     }
 
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
-    private static final byte [] BLOB_CONTENT = "blob content".getBytes();
+    private static final String STRING_CONTENT = "blob content";
+    private static final byte [] BLOB_CONTENT = STRING_CONTENT.getBytes();
 
     private MemoryBlobStore currentBlobStore;
     private MemoryBlobStore legacyBlobStore;
@@ -295,6 +296,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
         Stream<Function<UnionBlobStore, Mono<?>>> blobStoreOperationsReturnFutures() {
             return Stream.of(
                 blobStore -> blobStore.save(BLOB_CONTENT),
+                blobStore -> blobStore.save(STRING_CONTENT),
                 blobStore -> blobStore.save(new ByteArrayInputStream(BLOB_CONTENT), BLOB_CONTENT.length),
                 blobStore -> blobStore.readBytes(BLOB_ID_FACTORY.randomId()));
         }
@@ -398,6 +400,22 @@ class UnionBlobStoreTest implements BlobStoreContract {
     @Test
     void saveShouldNotWriteToLegacy() {
         BlobId blobId = unionBlobStore.save(BLOB_CONTENT).block();
+
+        assertThatThrownBy(() -> legacyBlobStore.readBytes(blobId).block())
+            .isInstanceOf(ObjectStoreException.class);
+    }
+
+    @Test
+    void saveStringShouldWriteToCurrent() {
+        BlobId blobId = unionBlobStore.save(STRING_CONTENT).block();
+
+        assertThat(currentBlobStore.readBytes(blobId).block())
+            .isEqualTo(BLOB_CONTENT);
+    }
+
+    @Test
+    void saveStringShouldNotWriteToLegacy() {
+        BlobId blobId = unionBlobStore.save(STRING_CONTENT).block();
 
         assertThatThrownBy(() -> legacyBlobStore.readBytes(blobId).block())
             .isInstanceOf(ObjectStoreException.class);

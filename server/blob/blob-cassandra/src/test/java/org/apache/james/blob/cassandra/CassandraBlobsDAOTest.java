@@ -72,7 +72,7 @@ public class CassandraBlobsDAOTest implements MetricableBlobStoreContract {
     @Test
     void readBytesShouldReturnSplitSavedDataByChunk() {
         String longString = Strings.repeat("0123456789\n", MULTIPLE_CHUNK_SIZE);
-        BlobId blobId = testee.save(longString.getBytes(StandardCharsets.UTF_8)).block();
+        BlobId blobId = testee.save(longString).block();
 
         byte[] bytes = testee.readBytes(blobId).block();
 

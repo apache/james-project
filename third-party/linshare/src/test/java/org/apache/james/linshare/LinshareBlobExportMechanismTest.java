@@ -28,8 +28,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 
-import java.nio.charset.StandardCharsets;
-
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.export.api.BlobExportMechanism;
@@ -67,7 +65,7 @@ class LinshareBlobExportMechanismTest {
 
     @Test
     void exportShouldShareTheDocumentViaLinShare() throws Exception {
-        BlobId blobId = blobStore.save("content".getBytes(StandardCharsets.UTF_8)).block();
+        BlobId blobId = blobStore.save("content").block();
 
         testee.blobId(blobId)
             .with(new MailAddress(USER_2.getUsername()))
@@ -86,7 +84,7 @@ class LinshareBlobExportMechanismTest {
 
     @Test
     void exportShouldSendAnEmailToSharee() throws Exception {
-        BlobId blobId = blobStore.save("content".getBytes(StandardCharsets.UTF_8)).block();
+        BlobId blobId = blobStore.save("content").block();
 
         testee.blobId(blobId)
             .with(new MailAddress(USER_2.getUsername()))
