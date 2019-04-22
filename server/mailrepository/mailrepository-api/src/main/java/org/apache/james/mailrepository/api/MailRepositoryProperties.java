@@ -25,21 +25,37 @@ import com.google.common.base.MoreObjects;
 
 public class MailRepositoryProperties {
 
-    public static class Builder {
-        private boolean browsable;
+    static class Builder {
 
-        public Builder browsable(boolean browsable) {
-            this.browsable = browsable;
-            return this;
+        @FunctionalInterface
+        interface RequireBrowsable {
+            ReadyToBuild browsable(boolean browsable);
+
+            default ReadyToBuild canBrowse() {
+                return browsable(true);
+            }
+
+            default ReadyToBuild canNotBrowse() {
+                return browsable(false);
+            }
         }
 
-        MailRepositoryProperties build() {
-            return new MailRepositoryProperties(browsable);
+        static class ReadyToBuild {
+
+            private final boolean browsable;
+
+            ReadyToBuild(boolean browsable) {
+                this.browsable = browsable;
+            }
+
+            MailRepositoryProperties build() {
+                return new MailRepositoryProperties(browsable);
+            }
         }
     }
 
-    public static Builder builder() {
-        return new Builder();
+    static Builder.RequireBrowsable builder() {
+        return Builder.ReadyToBuild::new;
     }
 
     private final boolean browsable;
