@@ -73,6 +73,12 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     }
 
     @Test
+    @Ignore("addMapping doesn't handle checking for domain existence in this test implementation")
+    @Override
+    public void addAddressMappingShouldThrowWhenSourceDomainIsNotInDomainList() {
+    }
+
+    @Test
     @Ignore("addMapping doesn't handle checking for duplicate in this test implementation")
     @Override
     public void addMappingShouldThrowWhenMappingAlreadyExists() {

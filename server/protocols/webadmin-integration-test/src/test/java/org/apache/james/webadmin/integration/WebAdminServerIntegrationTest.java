@@ -69,6 +69,8 @@ public class WebAdminServerIntegrationTest {
     private static final String DOMAIN = "domain";
     private static final String USERNAME = "username@" + DOMAIN;
     private static final String USERNAME_2 = "username2@" + DOMAIN;
+    private static final String ALIAS_1 = "alias1@" + DOMAIN;
+    private static final String ALIAS_2 = "alias2@" + DOMAIN;
     private static final String GROUP = "group@" + DOMAIN;
     private static final String SPECIFIC_DOMAIN = DomainsRoutes.DOMAINS + SEPARATOR + DOMAIN;
     private static final String SPECIFIC_USER = UserRoutes.USERS + SEPARATOR + USERNAME;
@@ -93,6 +95,7 @@ public class WebAdminServerIntegrationTest {
         guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule());
         guiceJamesServer.start();
         dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DOMAIN);
         WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort())
@@ -151,8 +154,6 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void deleteShouldRemoveTheGivenDomain() throws Exception {
-        dataProbe.addDomain(DOMAIN);
-
         when()
             .delete(SPECIFIC_DOMAIN)
         .then()
@@ -163,8 +164,6 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void postShouldAddTheUser() throws Exception {
-        dataProbe.addDomain(DOMAIN);
-
         given()
             .body("{\"password\":\"password\"}")
         .when()
@@ -177,7 +176,6 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void deleteShouldRemoveTheUser() throws Exception {
-        dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(USERNAME, "anyPassword");
 
         given()
@@ -192,7 +190,6 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void getUsersShouldDisplayUsers() throws Exception {
-        dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(USERNAME, "anyPassword");
 
         when()
@@ -205,7 +202,6 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void putMailboxShouldAddAMailbox() throws Exception {
-        dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(USERNAME, "anyPassword");
 
         when()
@@ -218,7 +214,6 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void deleteMailboxShouldRemoveAMailbox() throws Exception {
-        dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(USERNAME, "anyPassword");
         guiceJamesServer.getProbe(MailboxProbeImpl.class).createMailbox("#private", USERNAME, MAILBOX);
 
@@ -292,8 +287,6 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void addressGroupsEndpointShouldHandleRequests() throws Exception {
-        dataProbe.addDomain(DOMAIN);
-
         with()
             .put(GroupsRoutes.ROOT_PATH + SEPARATOR + GROUP + SEPARATOR + USERNAME);
         with()
@@ -312,7 +305,6 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void addressForwardsEndpointShouldListForwardAddresses() throws Exception {
-        dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(USERNAME, "anyPassword");
         dataProbe.addUser(USERNAME_2, "anyPassword");
 
@@ -335,9 +327,9 @@ public class WebAdminServerIntegrationTest {
     @Test
     public void addressAliasesEndpointShouldListAliasesAddresses() {
         with()
-            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/alias1@domain.com");
+            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/" + ALIAS_1);
         with()
-            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME_2 + "/sources/alias2@domain.com");
+            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME_2 + "/sources/" + ALIAS_2);
 
         List<String> members = when()
             .get(AliasRoutes.ROOT_PATH)
@@ -384,13 +376,10 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void cassandraMappingsEndpointShouldKeepDataConsistencyWhenDataValid() {
-        String alias1 = "alias1@domain.com";
-        String alias2 = "alias2@domain.com";
-
         with()
-            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/" + alias1);
+            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/" + ALIAS_1);
         with()
-            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/" + alias2);
+            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/" + ALIAS_2);
 
         String taskId = with()
             .queryParam("action", "SolveInconsistencies")
@@ -410,6 +399,6 @@ public class WebAdminServerIntegrationTest {
         .then()
             .contentType(ContentType.JSON)
         .statusCode(HttpStatus.OK_200)
-            .body("source", hasItems(alias1, alias2));
+            .body("source", hasItems(ALIAS_1, ALIAS_2));
     }
 }

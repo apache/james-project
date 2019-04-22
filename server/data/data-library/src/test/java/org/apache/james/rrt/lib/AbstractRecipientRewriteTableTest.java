@@ -25,9 +25,11 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Domain;
+import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -44,7 +46,10 @@ public abstract class AbstractRecipientRewriteTableTest {
     private static final String USER = "test";
     private static final String ADDRESS = "test@localhost2";
     private static final String ADDRESS_2 = "test@james";
-    private static final MappingSource SOURCE = MappingSource.fromUser(USER, Domain.LOCALHOST);
+    private static final Domain SUPPORTED_DOMAIN = Domain.LOCALHOST;
+    private static final MappingSource SOURCE = MappingSource.fromUser(USER, SUPPORTED_DOMAIN);
+    private static final Domain NOT_SUPPORTED_DOMAIN = Domain.of("notAManagedDomain");
+    private static final MappingSource SOURCE_WITH_DOMAIN_NOT_IN_DOMAIN_LIST = MappingSource.fromUser(USER, NOT_SUPPORTED_DOMAIN);
 
     protected abstract AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception;
 
@@ -54,6 +59,10 @@ public abstract class AbstractRecipientRewriteTableTest {
 
     public void setUp() throws Exception {
         virtualUserTable = getRecipientRewriteTable();
+
+        SimpleDomainList domainList = new SimpleDomainList();
+        domainList.addDomain(SUPPORTED_DOMAIN);
+        virtualUserTable.setDomainList(domainList);
     }
 
     public void tearDown() throws Exception {
@@ -533,4 +542,45 @@ public abstract class AbstractRecipientRewriteTableTest {
             .containsExactly(mapping1, mapping2, mapping3);
     }
 
+    @Test
+    public void addRegexMappingShouldThrowWhenSourceDomainIsNotInDomainList() {
+        assertThatThrownBy(() -> virtualUserTable.addRegexMapping(SOURCE_WITH_DOMAIN_NOT_IN_DOMAIN_LIST, ".*@localhost"))
+            .isInstanceOf(SourceDomainIsNotInDomainListException.class);
+    }
+
+    @Test
+    public void addAddressMappingShouldThrowWhenSourceDomainIsNotInDomainList() {
+        assertThatThrownBy(() -> virtualUserTable.addAddressMapping(SOURCE_WITH_DOMAIN_NOT_IN_DOMAIN_LIST, ADDRESS))
+            .isInstanceOf(SourceDomainIsNotInDomainListException.class);
+    }
+
+    @Test
+    public void addErrorMappingShouldThrowWhenSourceDomainIsNotInDomainList() {
+        assertThatThrownBy(() -> virtualUserTable.addErrorMapping(SOURCE_WITH_DOMAIN_NOT_IN_DOMAIN_LIST, "error"))
+            .isInstanceOf(SourceDomainIsNotInDomainListException.class);
+    }
+
+    @Test
+    public void addAliasDomainMappingShouldThrowWhenSourceDomainIsNotInDomainList() {
+        assertThatThrownBy(() -> virtualUserTable.addAliasDomainMapping(SOURCE_WITH_DOMAIN_NOT_IN_DOMAIN_LIST, SUPPORTED_DOMAIN))
+            .isInstanceOf(SourceDomainIsNotInDomainListException.class);
+    }
+
+    @Test
+    public void addForwardMappingShouldThrowWhenSourceDomainIsNotInDomainList() {
+        assertThatThrownBy(() -> virtualUserTable.addForwardMapping(SOURCE_WITH_DOMAIN_NOT_IN_DOMAIN_LIST, ADDRESS))
+            .isInstanceOf(SourceDomainIsNotInDomainListException.class);
+    }
+
+    @Test
+    public void addGroupMappingShouldThrowWhenSourceDomainIsNotInDomainList() {
+        assertThatThrownBy(() -> virtualUserTable.addGroupMapping(SOURCE_WITH_DOMAIN_NOT_IN_DOMAIN_LIST, ADDRESS))
+            .isInstanceOf(SourceDomainIsNotInDomainListException.class);
+    }
+
+    @Test
+    public void addAliasMappingShouldThrowWhenDomainIsNotInDomainList() {
+        assertThatThrownBy(() -> virtualUserTable.addAliasMapping(SOURCE_WITH_DOMAIN_NOT_IN_DOMAIN_LIST, ADDRESS))
+            .isInstanceOf(SourceDomainIsNotInDomainListException.class);
+    }
 }

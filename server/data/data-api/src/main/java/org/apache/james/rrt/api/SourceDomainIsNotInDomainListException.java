@@ -17,32 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.rrt.memory;
+package org.apache.james.rrt.api;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
-import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
-import org.apache.james.rrt.lib.RewriteTablesStepdefs;
+public class SourceDomainIsNotInDomainListException extends RecipientRewriteTableException {
 
-import cucumber.api.java.Before;
-
-public class InMemoryStepdefs {
-
-    private final RewriteTablesStepdefs mainStepdefs;
-
-    public InMemoryStepdefs(RewriteTablesStepdefs mainStepdefs) {
-        this.mainStepdefs = mainStepdefs;
-    }
-
-    @Before
-    public void setup() throws Throwable {
-        mainStepdefs.rewriteTable = getRecipientRewriteTable(); 
-    }
-
-    private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
-        MemoryRecipientRewriteTable rrt = new MemoryRecipientRewriteTable();
-        rrt.configure(new DefaultConfigurationBuilder());
-        rrt.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
-        return rrt;
+    public SourceDomainIsNotInDomainListException(String msg) {
+        super(msg);
     }
 }

@@ -17,32 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.rrt.memory;
+package org.apache.james.rrt.lib;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
-import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
-import org.apache.james.rrt.lib.RewriteTablesStepdefs;
+import org.apache.james.core.Domain;
+import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.domainlist.api.mock.SimpleDomainList;
 
-import cucumber.api.java.Before;
+public interface RecipientRewriteTableFixture {
 
-public class InMemoryStepdefs {
+    static SimpleDomainList domainListForCucumberTests() throws DomainListException {
+        SimpleDomainList domainList = new SimpleDomainList();
+        domainList.addDomain(Domain.LOCALHOST);
+        domainList.addDomain(Domain.of("aliasdomain"));
+        domainList.addDomain(Domain.of("domain1"));
+        domainList.addDomain(Domain.of("domain2"));
+        domainList.addDomain(Domain.of("domain3"));
+        domainList.addDomain(Domain.of("domain4"));
 
-    private final RewriteTablesStepdefs mainStepdefs;
-
-    public InMemoryStepdefs(RewriteTablesStepdefs mainStepdefs) {
-        this.mainStepdefs = mainStepdefs;
-    }
-
-    @Before
-    public void setup() throws Throwable {
-        mainStepdefs.rewriteTable = getRecipientRewriteTable(); 
-    }
-
-    private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
-        MemoryRecipientRewriteTable rrt = new MemoryRecipientRewriteTable();
-        rrt.configure(new DefaultConfigurationBuilder());
-        rrt.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
-        return rrt;
+        return domainList;
     }
 }

@@ -26,6 +26,7 @@ import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
+import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
 import org.junit.Rule;
 
@@ -64,6 +65,7 @@ public class CassandraStepdefs {
             new CassandraMappingsSourcesDAO(cassandra.getConf()),
             new CassandraSchemaVersionDAO(cassandra.getConf()));
         rrt.configure(new DefaultConfigurationBuilder());
+        rrt.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
         return rrt;
     }
 }

@@ -20,6 +20,7 @@
 package org.apache.james.cli;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import org.apache.james.GuiceJamesServer;
@@ -27,6 +28,7 @@ import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.cli.util.OutputCapture;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.utils.DataProbeImpl;
@@ -132,6 +134,8 @@ public class DataCommandsIntegrationTest {
 
     @Test
     public void addAddressMappingShouldWork() throws Exception {
+        dataProbe.addDomain(DOMAIN);
+
         String redirectionAddress = "redirect@apache.org";
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "addaddressmapping", USER, DOMAIN, redirectionAddress});
 
@@ -145,7 +149,20 @@ public class DataCommandsIntegrationTest {
     }
 
     @Test
+    public void addAddressMappingsShouldThrowWhenDomainIsNotInDomainList() throws Exception {
+        String redirectionAddress = "redirect@apache.org";
+
+        assertThatThrownBy(() -> ServerCmd.executeAndOutputToStream(
+                new String[] {"-h", "127.0.0.1", "-p", "9999", "addAddressMapping", USER, DOMAIN, redirectionAddress},
+                outputCapture.getPrintStream()))
+            .isInstanceOf(SourceDomainIsNotInDomainListException.class)
+            .hasMessage("Source domain '" + DOMAIN + "' is not managed by the domainList");
+    }
+
+    @Test
     public void listMappingsShouldWork() throws Exception {
+        dataProbe.addDomain(DOMAIN);
+
         String redirectionAddress = "redirect@apache.org";
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "addaddressmapping", USER, DOMAIN, redirectionAddress});
 
@@ -158,6 +175,8 @@ public class DataCommandsIntegrationTest {
 
     @Test
     public void listUsersDomainMappingShouldWork() throws Exception {
+        dataProbe.addDomain(DOMAIN);
+
         String redirectionAddress = "redirect@apache.org";
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "addaddressmapping", USER, DOMAIN, redirectionAddress});
 
@@ -170,6 +189,8 @@ public class DataCommandsIntegrationTest {
 
     @Test
     public void removeAddressMappingShouldWork() throws Exception {
+        dataProbe.addDomain(DOMAIN);
+
         String redirectionAddress = "redirect@apache.org";
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "addaddressmapping", USER, DOMAIN, redirectionAddress});
 
@@ -179,8 +200,22 @@ public class DataCommandsIntegrationTest {
             .isEmpty();
     }
 
+
+    @Test
+    public void addRegexMappingsShouldThrowWhenDomainIsNotInDomainList() throws Exception {
+        String regexMapping = ".*@apache.org";
+
+        assertThatThrownBy(() -> ServerCmd.executeAndOutputToStream(
+                new String[] {"-h", "127.0.0.1", "-p", "9999", "AddRegexMapping", USER, DOMAIN, regexMapping},
+                outputCapture.getPrintStream()))
+            .isInstanceOf(SourceDomainIsNotInDomainListException.class)
+            .hasMessage("Source domain '" + DOMAIN + "' is not managed by the domainList");
+    }
+
     @Test
     public void addRegexMappingShouldWork() throws Exception {
+        dataProbe.addDomain(DOMAIN);
+
         String regex = "regex";
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "addregexmapping", USER, DOMAIN, regex});
 
@@ -195,6 +230,8 @@ public class DataCommandsIntegrationTest {
 
     @Test
     public void removeRegexMappingShouldWork() throws Exception {
+        dataProbe.addDomain(DOMAIN);
+
         String regex = "regex";
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "addregexmapping", USER, DOMAIN, regex});
 
