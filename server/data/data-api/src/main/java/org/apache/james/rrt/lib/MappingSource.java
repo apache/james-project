@@ -123,10 +123,15 @@ public class MappingSource implements Serializable {
     }
 
     public String getFixedDomain() {
-        return OptionalUtils.or(
-                user.flatMap(User::getDomainPart).map(Domain::asString),
-                domain.map(Domain::asString))
+        return availableDomain()
+            .map(Domain::asString)
             .orElse(WILDCARD);
+    }
+
+    public Optional<Domain> availableDomain() {
+        return OptionalUtils.or(
+            user.flatMap(User::getDomainPart),
+            domain);
     }
 
     @Override

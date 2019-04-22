@@ -29,9 +29,10 @@ import org.junit.jupiter.api.Test;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class MappingSourceTest {
-    private static final String DOMAIN = "domain.tld";
+    private static final String DOMAIN_AS_STRING = "domain.tld";
+    private static final Domain DOMAIN = Domain.of(DOMAIN_AS_STRING);
     private static final  String USER = "alice";
-    private static final String MAIL_ADDRESS = USER + "@" + DOMAIN;
+    private static final String MAIL_ADDRESS = USER + "@" + DOMAIN_AS_STRING;
 
     @Test
     void shouldRespectBeanContract() {
@@ -49,14 +50,14 @@ class MappingSourceTest {
 
     @Test
     void asMailAddressStringShouldSerializeDomain() {
-        MappingSource mappingSource = MappingSource.fromDomain(Domain.of(DOMAIN));
+        MappingSource mappingSource = MappingSource.fromDomain(DOMAIN);
 
-        assertThat(mappingSource.asMailAddressString()).isEqualTo("*@" + DOMAIN);
+        assertThat(mappingSource.asMailAddressString()).isEqualTo("*@" + DOMAIN_AS_STRING);
     }
 
     @Test
     void asMailAddressStringShouldSerializeUser() {
-        MappingSource mappingSource = MappingSource.fromUser(USER, DOMAIN);
+        MappingSource mappingSource = MappingSource.fromUser(USER, DOMAIN_AS_STRING);
 
         assertThat(mappingSource.asMailAddressString()).isEqualTo(MAIL_ADDRESS);
     }
@@ -73,5 +74,29 @@ class MappingSourceTest {
         MappingSource mappingSource = MappingSource.fromMailAddress(new MailAddress(MAIL_ADDRESS));
 
         assertThat(mappingSource.asMailAddressString()).isEqualTo(MAIL_ADDRESS);
+    }
+
+    @Test
+    void availableDomainShouldReturnUserDomainIfExist() throws Exception {
+        MappingSource mappingSource = MappingSource.fromMailAddress(new MailAddress(MAIL_ADDRESS));
+
+        assertThat(mappingSource.availableDomain())
+            .contains(DOMAIN);
+    }
+
+    @Test
+    void availableDomainShouldReturnDomainIfExist() {
+        MappingSource mappingSource = MappingSource.fromDomain(DOMAIN);
+
+        assertThat(mappingSource.availableDomain())
+            .contains(DOMAIN);
+    }
+
+    @Test
+    void availableDomainShouldReturnEmptyWhenNoDomainUserOrDomain() {
+        MappingSource mappingSource = MappingSource.wildCard();
+
+        assertThat(mappingSource.availableDomain())
+            .isEmpty();
     }
 }
