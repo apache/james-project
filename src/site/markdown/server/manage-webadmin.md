@@ -1288,7 +1288,7 @@ Response codes:
 
  - 204: Success
  - 400: Forward structure or member is not valid
- - 403: Server does not own the requested domain
+ - 400: Domain in the source is not managed by the DomainList
  - 404: Requested forward address does not match an existing user
 
 ### Removing a destination of a forward

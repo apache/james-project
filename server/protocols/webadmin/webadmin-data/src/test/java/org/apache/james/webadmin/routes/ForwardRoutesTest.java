@@ -29,9 +29,10 @@ import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 import java.util.List;
 import java.util.Map;
@@ -43,7 +44,6 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
-import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -68,6 +68,7 @@ import io.restassured.http.ContentType;
 class ForwardRoutesTest {
 
     private static final Domain DOMAIN = Domain.of("b.com");
+    private static final Domain ALIAS_DOMAIN = Domain.of("alias");
     public static final String CEDRIC = "cedric@" + DOMAIN.name();
     public static final String ALICE = "alice@" + DOMAIN.name();
     public static final String ALICE_WITH_SLASH = "alice/@" + DOMAIN.name();
@@ -114,6 +115,8 @@ class ForwardRoutesTest {
                 .autoDetect(false)
                 .autoDetectIp(false));
             domainList.addDomain(DOMAIN);
+            domainList.addDomain(ALIAS_DOMAIN);
+            memoryRecipientRewriteTable.setDomainList(domainList);
             MappingSourceModule mappingSourceModule = new MappingSourceModule();
 
             usersRepository = MemoryUsersRepository.withVirtualHosting();
@@ -438,7 +441,7 @@ class ForwardRoutesTest {
             super.setUp();
             memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser("error", DOMAIN), "disabled");
             memoryRecipientRewriteTable.addRegexMapping(MappingSource.fromUser("regex", DOMAIN), ".*@b\\.com");
-            memoryRecipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(Domain.of("alias")), DOMAIN);
+            memoryRecipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(ALIAS_DOMAIN), DOMAIN);
         }
 
     }
@@ -446,14 +449,18 @@ class ForwardRoutesTest {
     @Nested
     class ExceptionHandling {
 
-        private RecipientRewriteTable memoryRecipientRewriteTable;
+        private MemoryRecipientRewriteTable memoryRecipientRewriteTable;
+        private DomainList domainList;
 
         @BeforeEach
         void setUp() throws Exception {
-            memoryRecipientRewriteTable = mock(RecipientRewriteTable.class);
+            memoryRecipientRewriteTable = spy(new MemoryRecipientRewriteTable());
             UsersRepository userRepository = mock(UsersRepository.class);
-            Mockito.when(userRepository.contains(eq(ALICE))).thenReturn(true);
-            DomainList domainList = mock(DomainList.class);
+            doReturn(true)
+                .when(userRepository).contains(any());
+
+            domainList = mock(DomainList.class);
+            memoryRecipientRewriteTable.setDomainList(domainList);
             Mockito.when(domainList.containsDomain(any())).thenReturn(true);
             createServer(new ForwardRoutes(memoryRecipientRewriteTable, userRepository, new JsonTransformer()));
         }
@@ -494,6 +501,27 @@ class ForwardRoutesTest {
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The forward is not an email address")
                 .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
+        }
+
+        @Test
+        void putWithSourceDomainNotInDomainListShouldReturnBadRequest() throws Exception {
+            doReturn(false)
+                .when(domainList).containsDomain(any());
+
+            Map<String, Object> errors = when()
+                .put("bob@not-managed-domain.tld" + SEPARATOR + "targets" + SEPARATOR + BOB)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "Source domain 'not-managed-domain.tld' is not managed by the domainList");
         }
 
         @Test
@@ -659,18 +687,6 @@ class ForwardRoutesTest {
 
             when()
                 .delete(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB)
-            .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
-        }
-
-        @Test
-        void getShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
-            doThrow(RecipientRewriteTableException.class)
-                .when(memoryRecipientRewriteTable)
-                .getStoredMappings(any());
-
-            when()
-                .get(ALICE)
             .then()
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }

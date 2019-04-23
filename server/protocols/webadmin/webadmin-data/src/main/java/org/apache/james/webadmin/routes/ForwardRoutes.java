@@ -36,6 +36,7 @@ import org.apache.james.core.User;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
@@ -142,6 +143,7 @@ public class ForwardRoutes implements Routes {
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = FORWARD_BASE_ADDRESS + " or forward structure format is not valid"),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Domain in the source is not managed by the DomainList"),
         @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "requested base forward address does not match a user"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - Something went bad on the server side.")
@@ -160,6 +162,12 @@ public class ForwardRoutes implements Routes {
             recipientRewriteTable.addForwardMapping(source, destinationAddress.asString());
         } catch (MappingAlreadyExistsException e) {
             // ignore
+        } catch (SourceDomainIsNotInDomainListException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message(e.getMessage())
+                .haltError();
         }
     }
 
