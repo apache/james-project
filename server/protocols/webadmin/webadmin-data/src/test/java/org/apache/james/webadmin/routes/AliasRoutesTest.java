@@ -31,6 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 import java.util.List;
 import java.util.Map;
@@ -42,7 +43,6 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
-import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
@@ -66,6 +66,7 @@ import io.restassured.http.ContentType;
 class AliasRoutesTest {
 
     private static final Domain DOMAIN = Domain.of("b.com");
+    private static final Domain ALIAS_DOMAIN = Domain.of("alias");
     public static final String BOB = "bob@" + DOMAIN.name();
     public static final String BOB_WITH_SLASH = "bob/@" + DOMAIN.name();
     public static final String BOB_WITH_ENCODED_SLASH = "bob%2F@" + DOMAIN.name();
@@ -115,7 +116,9 @@ class AliasRoutesTest {
                 .autoDetect(false)
                 .autoDetectIp(false));
             domainList.addDomain(DOMAIN);
+            domainList.addDomain(ALIAS_DOMAIN);
             MappingSourceModule module = new MappingSourceModule();
+            memoryRecipientRewriteTable.setDomainList(domainList);
 
             usersRepository = MemoryUsersRepository.withVirtualHosting();
             usersRepository.setDomainList(domainList);
@@ -408,7 +411,7 @@ class AliasRoutesTest {
             super.setUp();
             memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser("error", DOMAIN), "disabled");
             memoryRecipientRewriteTable.addRegexMapping(MappingSource.fromUser("regex", DOMAIN), ".*@b\\.com");
-            memoryRecipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(Domain.of("alias")), DOMAIN);
+            memoryRecipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(ALIAS_DOMAIN), DOMAIN);
         }
 
     }
@@ -416,15 +419,38 @@ class AliasRoutesTest {
     @Nested
     class ExceptionHandling {
 
-        private RecipientRewriteTable memoryRecipientRewriteTable;
+        private MemoryRecipientRewriteTable memoryRecipientRewriteTable;
+        private DomainList domainList;
 
         @BeforeEach
         void setUp() throws Exception {
-            memoryRecipientRewriteTable = mock(RecipientRewriteTable.class);
+            memoryRecipientRewriteTable = spy(new MemoryRecipientRewriteTable());
             UsersRepository userRepository = mock(UsersRepository.class);
-            DomainList domainList = mock(DomainList.class);
+            domainList = mock(DomainList.class);
+            memoryRecipientRewriteTable.setDomainList(domainList);
             Mockito.when(domainList.containsDomain(any())).thenReturn(true);
             createServer(new AliasRoutes(memoryRecipientRewriteTable, userRepository, new JsonTransformer()));
+        }
+
+        @Test
+        void putAliasSourceContainingNotManagedDomainShouldReturnBadRequest() throws Exception {
+            Mockito.when(domainList.containsDomain(any()))
+                .thenReturn(false);
+
+            Map<String, Object> errors = when()
+                .put(BOB + SEPARATOR + "sources" + SEPARATOR + "bob@not-managed-domain.tld")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "Source domain 'not-managed-domain.tld' is not managed by the domainList");
         }
 
         @Test

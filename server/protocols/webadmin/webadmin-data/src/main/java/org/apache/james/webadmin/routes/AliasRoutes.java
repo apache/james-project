@@ -38,6 +38,7 @@ import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.api.SameSourceAndDestinationException;
+import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.user.api.UsersRepository;
@@ -139,6 +140,7 @@ public class AliasRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = ALIAS_DESTINATION_ADDRESS + " or alias structure format is not valid"),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The alias source exists as an user already"),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Source and destination can't be the same!"),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Domain in the source is not managed by the DomainList"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - Something went bad on the server side.")
     })
@@ -156,7 +158,7 @@ public class AliasRoutes implements Routes {
             recipientRewriteTable.addAliasMapping(source, aliasSourceAddress.asString());
         } catch (MappingAlreadyExistsException e) {
             // ignore
-        } catch (SameSourceAndDestinationException e) {
+        } catch (SameSourceAndDestinationException | SourceDomainIsNotInDomainListException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
