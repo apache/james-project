@@ -1201,7 +1201,7 @@ Response codes:
 
  - 204: Success
  - 400: Group structure or member is not valid
- - 403: Server does not own the requested domain
+ - 400: Domain in the source is not managed by the DomainList
  - 409: Requested group address is already used for another purpose
 
 ### Removing a group member

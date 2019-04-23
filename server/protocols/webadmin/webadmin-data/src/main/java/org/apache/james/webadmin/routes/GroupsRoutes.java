@@ -39,6 +39,7 @@ import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
@@ -139,7 +140,7 @@ public class GroupsRoutes implements Routes {
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK", response = List.class),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = GROUP_ADDRESS + " or group structure format is not valid"),
-        @ApiResponse(code = HttpStatus.FORBIDDEN_403, message = "server doesn't own the domain"),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Domain in the source is not managed by the DomainList"),
         @ApiResponse(code = HttpStatus.CONFLICT_409, message = "requested group address is already used for another purpose"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - Something went bad on the server side.")
@@ -147,7 +148,6 @@ public class GroupsRoutes implements Routes {
     public HaltException addToGroup(Request request, Response response) throws RecipientRewriteTableException, UsersRepositoryException, DomainListException {
         MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), ADDRESS_TYPE);
         Domain domain = groupAddress.getDomain();
-        ensureRegisteredDomain(domain);
         ensureNotShadowingAnotherAddress(groupAddress);
         MailAddress userAddress = MailAddressParser.parseMailAddress(request.params(USER_ADDRESS), ADDRESS_TYPE);
         MappingSource source = MappingSource.fromUser(User.fromLocalPartWithDomain(groupAddress.getLocalPart(), domain));
@@ -160,15 +160,11 @@ public class GroupsRoutes implements Routes {
             recipientRewriteTable.addGroupMapping(source, userAddress.asString());
         } catch (MappingAlreadyExistsException e) {
             // do nothing
-        }
-    }
-
-    private void ensureRegisteredDomain(Domain domain) throws DomainListException {
-        if (!domainList.containsDomain(domain)) {
+        } catch (SourceDomainIsNotInDomainListException e) {
             throw ErrorResponder.builder()
-                .statusCode(HttpStatus.FORBIDDEN_403)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("Server doesn't own the domain: " + domain.name())
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message(e.getMessage())
                 .haltError();
         }
     }

@@ -28,8 +28,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 import java.util.List;
 import java.util.Map;
@@ -40,7 +42,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
-import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -66,6 +67,7 @@ import io.restassured.http.ContentType;
 class GroupsRoutesTest {
 
     private static final Domain DOMAIN = Domain.of("b.com");
+    private static final Domain ALIAS_DOMAIN = Domain.of("alias");
     private static final String GROUP1 = "group1" + "@" + DOMAIN.name();
     private static final String GROUP2 = "group2" + "@" + DOMAIN.name();
     private static final String GROUP_WITH_SLASH = "group10/10" + "@" + DOMAIN.name();
@@ -108,6 +110,8 @@ class GroupsRoutesTest {
             DNSService dnsService = mock(DNSService.class);
             domainList = new MemoryDomainList(dnsService);
             domainList.addDomain(DOMAIN);
+            domainList.addDomain(ALIAS_DOMAIN);
+            memoryRecipientRewriteTable.setDomainList(domainList);
             usersRepository = MemoryUsersRepository.withVirtualHosting();
             usersRepository.setDomainList(domainList);
             MappingSourceModule mappingSourceModule = new MappingSourceModule();
@@ -355,24 +359,6 @@ class GroupsRoutesTest {
         }
 
         @Test
-        void putUserInGroupShouldNotAllowGroupOnUnregisteredDomain() {
-            Map<String, Object> errors = when()
-                .put("group@unregisteredDomain" + SEPARATOR + USER_A)
-            .then()
-                .statusCode(HttpStatus.FORBIDDEN_403)
-                .contentType(ContentType.JSON)
-                .extract()
-                .body()
-                .jsonPath()
-                .getMap(".");
-
-            assertThat(errors)
-                .containsEntry("statusCode", HttpStatus.FORBIDDEN_403)
-                .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "Server doesn't own the domain: unregisteredDomain");
-        }
-
-        @Test
         void putUserInGroupShouldNotAllowUserShadowing() throws UsersRepositoryException {
             usersRepository.addUser(USER_A, "whatever");
 
@@ -447,7 +433,7 @@ class GroupsRoutesTest {
             super.setUp();
             memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser("error", DOMAIN), "disabled");
             memoryRecipientRewriteTable.addRegexMapping(MappingSource.fromUser("regex", DOMAIN), ".*@b\\.com");
-            memoryRecipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(Domain.of("alias")), DOMAIN);
+            memoryRecipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(ALIAS_DOMAIN), DOMAIN);
 
         }
 
@@ -456,13 +442,15 @@ class GroupsRoutesTest {
     @Nested
     class ExceptionHandling {
 
-        private RecipientRewriteTable memoryRecipientRewriteTable;
+        private MemoryRecipientRewriteTable memoryRecipientRewriteTable;
+        private DomainList domainList;
 
         @BeforeEach
         void setUp() throws Exception {
-            memoryRecipientRewriteTable = mock(RecipientRewriteTable.class);
+            memoryRecipientRewriteTable = spy(new MemoryRecipientRewriteTable());
             UsersRepository userRepository = mock(UsersRepository.class);
-            DomainList domainList = mock(DomainList.class);
+            domainList = mock(DomainList.class);
+            memoryRecipientRewriteTable.setDomainList(domainList);
             Mockito.when(domainList.containsDomain(any())).thenReturn(true);
             createServer(new GroupsRoutes(memoryRecipientRewriteTable, userRepository, domainList, new JsonTransformer()));
         }
@@ -503,6 +491,27 @@ class GroupsRoutesTest {
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
                 .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
+        }
+
+        @Test
+        void putASourceContainingANotManagedDomainShouldReturnBadRequest() throws Exception {
+            doReturn(false)
+                .when(domainList).containsDomain(any());
+
+            Map<String, Object> errors = when()
+                .put("userA@not-managed-domain.tld" + SEPARATOR + USER_A)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "Source domain 'not-managed-domain.tld' is not managed by the domainList");
         }
 
         @Test
@@ -664,18 +673,6 @@ class GroupsRoutesTest {
 
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)
-            .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
-        }
-
-        @Test
-        void getShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
-            doThrow(RecipientRewriteTableException.class)
-                .when(memoryRecipientRewriteTable)
-                .getStoredMappings(any());
-
-            when()
-                .get(GROUP1)
             .then()
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
