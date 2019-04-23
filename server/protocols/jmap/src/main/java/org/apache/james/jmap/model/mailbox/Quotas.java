@@ -19,6 +19,7 @@
 package org.apache.james.jmap.model.mailbox;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.core.quota.QuotaCount;
@@ -65,6 +66,20 @@ public class Quotas {
         @JsonValue
         public String getName() {
             return quotaRoot.getValue();
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof QuotaId) {
+                QuotaId other = (QuotaId) o;
+                return Objects.equals(quotaRoot, other.quotaRoot);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hashCode(quotaRoot);
         }
     }
 
