@@ -31,6 +31,8 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -39,8 +41,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.apache.james.core.Domain;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
-import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -52,11 +54,13 @@ import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -68,8 +72,9 @@ import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
 class DomainMappingsRoutesTest {
-    private RecipientRewriteTable recipientRewriteTable;
+    private MemoryRecipientRewriteTable recipientRewriteTable;
     private WebAdminServer webAdminServer;
+    private DomainList domainList;
 
     private void createServer(DomainMappingsRoutes domainMappingsRoutes) throws Exception {
         webAdminServer = WebAdminUtils.createWebAdminServer(
@@ -87,7 +92,9 @@ class DomainMappingsRoutesTest {
     @BeforeEach
     void setUp() throws Exception {
         recipientRewriteTable = spy(new MemoryRecipientRewriteTable());
-
+        domainList = mock(DomainList.class);
+        recipientRewriteTable.setDomainList(domainList);
+        Mockito.when(domainList.containsDomain(any())).thenReturn(true);
         createServer(new DomainMappingsRoutes(recipientRewriteTable, new JsonTransformer()));
     }
 
@@ -321,6 +328,23 @@ class DomainMappingsRoutesTest {
 
     @Nested
     class IllegalInputs {
+
+        @Test
+        void addMappingContainingSourceDomainNotInDomainListShouldReturnBadRequest() throws Exception {
+            doReturn(false)
+                .when(domainList).containsDomain(any());
+
+            given()
+                .body("destination.tld")
+            .when()
+                .put("not-managed-domain.tld")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", Matchers.is(400))
+                .body("type", Matchers.is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Source domain 'not-managed-domain.tld' is not managed by the domainList"));
+        }
+
         @Test
         void addDomainMappingShouldRespondWithNotFound() {
             when()

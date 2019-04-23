@@ -37,6 +37,7 @@ import javax.ws.rs.Produces;
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
@@ -45,7 +46,6 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
-import com.github.fge.lambdas.consumers.ThrowingBiConsumer;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 
@@ -101,12 +101,27 @@ public class DomainMappingsRoutes implements Routes {
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "Ok"),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Domain name is invalid"),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Domain in the source is not managed by the DomainList"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - Something went bad on the server side.")
     })
-    public HaltException addDomainMapping(Request request, Response response) {
-        doMapping(request, recipientRewriteTable::addAliasDomainMapping);
+    public HaltException addDomainMapping(Request request, Response response) throws RecipientRewriteTableException {
+        MappingSource mappingSource = mappingSourceFrom(request);
+        Domain destinationDomain = extractDomain(request.body());
+        addAliasDomainMapping(mappingSource, destinationDomain);
         return halt(HttpStatus.NO_CONTENT_204);
+    }
+
+    private void addAliasDomainMapping(MappingSource source, Domain destinationDomain) throws RecipientRewriteTableException {
+        try {
+            recipientRewriteTable.addAliasDomainMapping(source, destinationDomain);
+        } catch (SourceDomainIsNotInDomainListException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message(e.getMessage())
+                .haltError();
+        }
     }
 
     @DELETE
@@ -121,8 +136,11 @@ public class DomainMappingsRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - Something went bad on the server side.")
     })
-    public HaltException removeDomainMapping(Request request, Response response) {
-        doMapping(request, recipientRewriteTable::removeAliasDomainMapping);
+    public HaltException removeDomainMapping(Request request, Response response) throws RecipientRewriteTableException {
+        MappingSource mappingSource = mappingSourceFrom(request);
+        Domain destinationDomain = extractDomain(request.body());
+
+        recipientRewriteTable.removeAliasDomainMapping(mappingSource, destinationDomain);
         return halt(HttpStatus.NO_CONTENT_204);
     }
 
@@ -174,14 +192,6 @@ public class DomainMappingsRoutes implements Routes {
     private MappingSource mappingSourceFrom(final Request request) {
         Domain fromDomain = extractDomain(request.params(FROM_DOMAIN));
         return MappingSource.fromDomain(fromDomain);
-    }
-
-    private void doMapping(Request request, ThrowingBiConsumer<MappingSource, Domain> mappingOperation) {
-        MappingSource fromDomain = mappingSourceFrom(request);
-
-        Domain toDomain = extractDomain(request.body());
-
-        mappingOperation.accept(fromDomain, toDomain);
     }
 
     private Domain extractDomain(String domainAsString) {
