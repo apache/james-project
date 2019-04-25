@@ -33,7 +33,7 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
  - [Administrating quotas by users](#Administrating_quotas_by_users)
  - [Administrating quotas by domains](#Administrating_quotas_by_domains)
  - [Administrating global quotas](#Administrating_global_quotas)
- - [Cassandra Schema upgrades](#Cassandra_schema_upgrades)
+ - [Cassandra Schema upgrades](#Cassandra_Schema_upgrades)
  - [Correcting ghost mailbox](#Correcting_ghost_mailbox)
  - [Creating address group](#Creating_address_group)
  - [Creating address forwards](#Creating_address_forwards)
@@ -41,7 +41,7 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
  - [Creating address domain](#Creating_address_domain)
  - [Administrating mail repositories](#Administrating_mail_repositories)
  - [Administrating mail queues](#Administrating_mail_queues)
- - [Administrating DLP Configuration](#Administrating_dlp_configuration)
+ - [Administrating DLP Configuration](#Administrating_DLP_Configuration)
  - [Administrating Sieve quotas](#Administrating_Sieve_quotas)
  - [ReIndexing](#ReIndexing)
  - [Event Dead Letter](#Event_Dead_Letter)
@@ -2505,7 +2505,7 @@ The scheduled task will have the following type `MessageIdReIndexingTask` and th
 
 Warning: During the re-indexing, the result of search operations might be altered.
 
-## Event Dead letter
+## Event Dead Letter
 
 The EventBus allows to register 'group listeners' that are called in a (potentially) distributed fashion. These group
 listeners enable the implementation of some advanced mailbox manager feature like indexing, spam reporting, quota management
