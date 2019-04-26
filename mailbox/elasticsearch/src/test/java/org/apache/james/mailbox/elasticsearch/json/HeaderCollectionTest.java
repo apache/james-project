@@ -23,10 +23,29 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.format.DateTimeFormatter;
+import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 
 class HeaderCollectionTest {
+
+    static class UTF8FromHeaderTestSource implements ArgumentsProvider {
+
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+            return Stream.of(
+                Arguments.of("=?UTF-8?B?RnLDqWTDqXJpYyBNQVJUSU4=?= <fmartin@linagora.com>, Graham CROSMARIE <gcrosmarie@linagora.com>", "Frédéric MARTIN"),
+                Arguments.of("=?UTF-8?Q?=C3=9Csteli=C4=9Fhan_Ma=C5=9Frapa?= <ustelighanmasrapa@domain.tld>", "Üsteliğhan Maşrapa"),
+                Arguments.of("=?UTF-8?Q?Ke=C5=9Ffet_Turizm?= <kesfetturizm@domain.tld>", "Keşfet Turizm"),
+                Arguments.of("=?UTF-8?Q?MODAL=C4=B0F?= <modalif@domain.tld>", "MODALİF"));
+        }
+    }
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
@@ -75,15 +94,17 @@ class HeaderCollectionTest {
             .containsOnly(new EMailer("Christophe Hamerling", "chri.hamerling@linagora.com"));
     }
 
-    @Test
-    void displayNamesShouldBeRetrievedWhenEncodedWord() {
+    @Disabled("JAMES-2743 HeaderCollection doesn't support Q encoding")
+    @ParameterizedTest
+    @ArgumentsSource(UTF8FromHeaderTestSource.class)
+    void displayNamesShouldBeRetrievedWhenEncodedWord(String encodedFromHeader, String nameOfFromAddress) {
         HeaderCollection headerCollection = HeaderCollection.builder()
-            .add(new FieldImpl("From", "=?UTF-8?B?RnLDqWTDqXJpYyBNQVJUSU4=?= <fred.martin@linagora.com>, Graham CROSMARIE <grah.crosmarie@linagora.com>"))
+            .add(new FieldImpl("From", encodedFromHeader))
             .build();
 
         assertThat(headerCollection.getFromAddressSet())
             .extracting(EMailer::getName)
-            .contains("Frédéric MARTIN");
+            .contains(nameOfFromAddress);
     }
 
     @Test
