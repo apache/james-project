@@ -49,4 +49,11 @@ public class MemoryGetMessageListMethodTest extends GetMessageListMethodTest {
     @Test
     public void getMessageListShouldIncludeMessagesWhenTextFilterMatchesBodyWithStemming() {
     }
+
+    @Override
+    @Ignore("JAMES-2756 Memory James Server uses the SimpleMessageSearchIndex, " +
+        "it doesn't support to search on the encoded header value's names")
+    @Test
+    public void searchByFromFieldShouldSupportUTF8FromName() {
+    }
 }

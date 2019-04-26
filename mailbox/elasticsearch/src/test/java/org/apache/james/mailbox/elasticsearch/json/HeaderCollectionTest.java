@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -94,7 +93,6 @@ class HeaderCollectionTest {
             .containsOnly(new EMailer("Christophe Hamerling", "chri.hamerling@linagora.com"));
     }
 
-    @Disabled("JAMES-2743 HeaderCollection doesn't support Q encoding")
     @ParameterizedTest
     @ArgumentsSource(UTF8FromHeaderTestSource.class)
     void displayNamesShouldBeRetrievedWhenEncodedWord(String encodedFromHeader, String nameOfFromAddress) {

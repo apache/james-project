@@ -213,7 +213,7 @@ public abstract class GetMessageListMethodTest {
 
     @Category(BasicFeature.class)
     @Test
-    public void searchByFromFieldDoesntSupportUTF8FromName() throws Exception {
+    public void searchByFromFieldShouldSupportUTF8FromName() throws Exception {
         String toUsername = "username1@" + DOMAIN;
         String password = "password";
         dataProbe.addUser(toUsername, password);
@@ -247,11 +247,11 @@ public abstract class GetMessageListMethodTest {
             .body()
             .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
-        calmlyAwait.atMost(Duration.TEN_SECONDS)
-            .until(() -> searchFirstMessageByFromField(fromAddress), Matchers.notNullValue());
+        String searchedMessageId = calmlyAwait.atMost(Duration.TEN_SECONDS)
+            .until(() -> searchFirstMessageByFromField(fromName), Matchers.notNullValue());
 
-        assertThat(searchFirstMessageByFromField(fromName))
-            .isNull();
+        assertThat(searchedMessageId)
+            .isEqualTo(messageId);
     }
 
     private String searchFirstMessageByFromField(String from) {
