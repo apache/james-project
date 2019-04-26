@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.jmap.ExportRequest;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
@@ -83,37 +84,6 @@ import io.restassured.parsing.Parser;
 import io.restassured.specification.RequestSpecification;
 
 public abstract class DeletedMessagesVaultTest {
-
-    private static class ExportRequest {
-
-        private static class Builder {
-
-            @FunctionalInterface
-            interface RequireSharee {
-                RequireMatchingQuery exportTo(String sharee);
-            }
-
-            @FunctionalInterface
-            interface RequireMatchingQuery {
-                ExportRequest query(String query);
-            }
-        }
-
-        private static Builder.RequireSharee userExportFrom(String userExportFrom) {
-            return sharee -> query -> new ExportRequest(userExportFrom, sharee, query);
-        }
-
-        private final String userExportFrom;
-        private final String sharee;
-        private final String matchingQuery;
-
-        private ExportRequest(String userExportFrom, String sharee, String matchingQuery) {
-            this.userExportFrom = userExportFrom;
-            this.sharee = sharee;
-            this.matchingQuery = matchingQuery;
-        }
-    }
-
     private static final Instant NOW = Instant.now();
     private static final Instant ONE_DAY_AFTER_ONE_YEAR_EXPIRATION = NOW.plus(366, ChronoUnit.DAYS);
     private static final String FIRST_SUBJECT = "first subject";
@@ -895,9 +865,9 @@ public abstract class DeletedMessagesVaultTest {
         String taskId =
             webAdminApi.with()
                 .queryParam("action", "export")
-                .queryParam("exportTo", exportRequest.sharee)
-                .body(exportRequest.matchingQuery)
-                .post("/deletedMessages/users/" + exportRequest.userExportFrom)
+                .queryParam("exportTo", exportRequest.getSharee())
+                .body(exportRequest.getMatchingQuery())
+                .post("/deletedMessages/users/" + exportRequest.getUserExportFrom())
             .jsonPath()
                 .get("taskId");
 
