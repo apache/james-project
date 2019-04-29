@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
@@ -34,6 +33,7 @@ import javax.mail.internet.InternetAddress;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
@@ -55,7 +55,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 @ExtendWith(FileSystemExtension.class)
 class LocalFileBlobExportMechanismTest {
-    private static final byte[] BLOB_CONTENT = "blob_content".getBytes(StandardCharsets.UTF_8);
+    private static final String BLOB_CONTENT = "blob_content";
     private static final String JAMES_HOST = "james-host";
 
     private BlobStore blobStore;
@@ -124,7 +124,7 @@ class LocalFileBlobExportMechanismTest {
                 try {
                     String absoluteUrl = sentMail.getMsg().getHeader(LocalFileBlobExportMechanism.CORRESPONDING_FILE_HEADER)[0];
 
-                    assertThat(new FileInputStream(absoluteUrl)).hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
+                    assertThat(new FileInputStream(absoluteUrl)).hasSameContentAs(IOUtils.toInputStream(BLOB_CONTENT, StandardCharsets.UTF_8));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

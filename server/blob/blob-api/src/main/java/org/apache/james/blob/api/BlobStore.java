@@ -19,6 +19,7 @@
 package org.apache.james.blob.api;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import reactor.core.publisher.Mono;
 
@@ -31,4 +32,8 @@ public interface BlobStore {
     Mono<byte[]> readBytes(BlobId blobId);
 
     InputStream read(BlobId blobId);
+
+    default Mono<BlobId> save(String data) {
+        return save(data.getBytes(StandardCharsets.UTF_8));
+    }
 }

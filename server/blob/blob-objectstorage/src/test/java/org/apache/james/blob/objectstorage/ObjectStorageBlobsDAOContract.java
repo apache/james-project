@@ -21,16 +21,16 @@ package org.apache.james.blob.objectstorage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 
 
 public interface ObjectStorageBlobsDAOContract {
 
-    byte[] BYTES = "content".getBytes(StandardCharsets.UTF_8);
+    String CONTENT = "content";
 
     ContainerName containerName();
 
@@ -38,9 +38,9 @@ public interface ObjectStorageBlobsDAOContract {
         ObjectStorageBlobsDAO dao = builder.build();
         dao.createContainer(containerName()).block();
 
-        BlobId blobId = dao.save(BYTES).block();
+        BlobId blobId = dao.save(CONTENT).block();
 
         InputStream inputStream = dao.read(blobId);
-        assertThat(inputStream).hasSameContentAs(new ByteArrayInputStream(BYTES));
+        assertThat(inputStream).hasSameContentAs(IOUtils.toInputStream(CONTENT, StandardCharsets.UTF_8));
     }
 }
