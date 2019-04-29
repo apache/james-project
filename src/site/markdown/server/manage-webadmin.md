@@ -1439,7 +1439,8 @@ Response codes:
 
  - 200: OK
  - 400: The `fromDomain` resource name is invalid
- 
+ - 404: The `fromDomain` resource name is not found
+
 ### Adding a domain mapping
 ```
 curl -XPUT http://ip:port/domainMappings/sourceDomain.tld

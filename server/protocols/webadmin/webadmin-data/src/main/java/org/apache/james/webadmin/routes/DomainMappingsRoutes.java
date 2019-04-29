@@ -153,6 +153,7 @@ public class DomainMappingsRoutes implements Routes {
     })
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.OK_200, message = "Domain mappings.", responseContainer = "List"),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Domain name is invalid"),
         @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Not existing mappings."),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - Something went bad on the server side.")
