@@ -33,13 +33,16 @@ import org.apache.james.jmap.model.GetMailboxesResponse;
 import org.apache.james.jmap.model.MailboxFactory;
 import org.apache.james.jmap.model.MailboxProperty;
 import org.apache.james.jmap.model.mailbox.Mailbox;
-import org.apache.james.jmap.model.mailbox.Quotas;
+import org.apache.james.jmap.utils.quotas.QuotaLoader;
+import org.apache.james.jmap.utils.quotas.QuotaLoaderWithDefaultPreloaded;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.OptionalUtils;
@@ -57,17 +60,21 @@ public class GetMailboxesMethod implements Method {
     private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMailboxes");
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("mailboxes");
     private static final Optional<List<MailboxMetaData>> NO_PRELOADED_METADATA = Optional.empty();
-    private static final Optional<Quotas> NO_PRELOADED_QUOTAS = Optional.empty();
 
-    private final MailboxManager mailboxManager; 
+    private final MailboxManager mailboxManager;
     private final MailboxFactory mailboxFactory;
     private final MetricFactory metricFactory;
+    private final QuotaRootResolver quotaRootResolver;
+    private final QuotaManager quotaManager;
 
     @Inject
-    @VisibleForTesting public GetMailboxesMethod(MailboxManager mailboxManager, MailboxFactory mailboxFactory, MetricFactory metricFactory) {
+    @VisibleForTesting
+    public GetMailboxesMethod(MailboxManager mailboxManager, QuotaRootResolver quotaRootResolver, QuotaManager quotaManager, MailboxFactory mailboxFactory, MetricFactory metricFactory) {
         this.mailboxManager = mailboxManager;
         this.mailboxFactory = mailboxFactory;
         this.metricFactory = metricFactory;
+        this.quotaRootResolver = quotaRootResolver;
+        this.quotaManager = quotaManager;
     }
 
     @Override
@@ -126,15 +133,13 @@ public class GetMailboxesMethod implements Method {
     }
 
 
-
     private Stream<Mailbox> retrieveSpecificMailboxes(MailboxSession mailboxSession, ImmutableList<MailboxId> mailboxIds) {
         return mailboxIds
             .stream()
-            .map(mailboxId ->  mailboxFactory.builder()
+            .map(mailboxId -> mailboxFactory.builder()
                 .id(mailboxId)
                 .session(mailboxSession)
                 .usingPreloadedMailboxesMetadata(NO_PRELOADED_METADATA)
-                .usingPreloadedUserDefaultQuotas(NO_PRELOADED_QUOTAS)
                 .build()
             )
             .flatMap(OptionalUtils::toStream);
@@ -142,7 +147,7 @@ public class GetMailboxesMethod implements Method {
 
     private Stream<Mailbox> retrieveAllMailboxes(MailboxSession mailboxSession) throws MailboxException {
         List<MailboxMetaData> userMailboxes = getAllMailboxesMetaData(mailboxSession);
-        Quotas mailboxQuotas =  mailboxFactory.getUserDefaultQuotas(mailboxSession);
+        QuotaLoader quotaLoader = new QuotaLoaderWithDefaultPreloaded(quotaRootResolver, quotaManager, mailboxSession);
 
         return userMailboxes
             .stream()
@@ -151,17 +156,17 @@ public class GetMailboxesMethod implements Method {
                 .id(mailboxId)
                 .session(mailboxSession)
                 .usingPreloadedMailboxesMetadata(Optional.of(userMailboxes))
-                .usingPreloadedUserDefaultQuotas(Optional.of(mailboxQuotas))
+                .quotaLoader(quotaLoader)
                 .build())
             .flatMap(OptionalUtils::toStream);
     }
 
     private List<MailboxMetaData> getAllMailboxesMetaData(MailboxSession mailboxSession) throws MailboxException {
         return mailboxManager.search(
-                MailboxQuery.builder()
-                    .matchesAllMailboxNames()
-                    .build(),
-                mailboxSession);
+            MailboxQuery.builder()
+                .matchesAllMailboxNames()
+                .build(),
+            mailboxSession);
     }
 
 }
