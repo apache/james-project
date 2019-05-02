@@ -20,17 +20,18 @@
 package org.apache.james.mailbox.elasticsearch.json;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.format.DateTimeFormatter;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class HeaderCollectionTest {
+class HeaderCollectionTest {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
     @Test
-    public void simpleValueAddressHeaderShouldBeAddedToTheAddressSet() {
+    void simpleValueAddressHeaderShouldBeAddedToTheAddressSet() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("To", "ben.tellier@linagora.com"))
             .build();
@@ -40,7 +41,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void comaSeparatedAddressShouldBeBothAddedToTheAddressSet() {
+    void comaSeparatedAddressShouldBeBothAddedToTheAddressSet() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("To", "ben.tellier@linagora.com, btellier@minet.net"))
             .build();
@@ -52,7 +53,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void addressesOfTwoFieldsHavingTheSameNameShouldBeMerged() {
+    void addressesOfTwoFieldsHavingTheSameNameShouldBeMerged() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("To", "ben.tellier@linagora.com"))
             .add(new FieldImpl("To", "ben.tellier@linagora.com, btellier@minet.net"))
@@ -65,7 +66,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void displayNamesShouldBeRetreived() {
+    void displayNamesShouldBeRetreived() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("To", "Christophe Hamerling <chri.hamerling@linagora.com>"))
             .build();
@@ -75,7 +76,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void displayNamesShouldBeRetrievedWhenEncodedWord() {
+    void displayNamesShouldBeRetrievedWhenEncodedWord() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("From", "=?UTF-8?B?RnLDqWTDqXJpYyBNQVJUSU4=?= <fred.martin@linagora.com>, Graham CROSMARIE <grah.crosmarie@linagora.com>"))
             .build();
@@ -86,7 +87,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void getHeadersShouldDecodeValues() {
+    void getHeadersShouldDecodeValues() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("From", "=?UTF-8?B?RnLDqWTDqXJpYyBNQVJUSU4=?= <fmartin@linagora.com>, Graham CROSMARIE <gcrosmarie@linagora.com>"))
             .build();
@@ -96,7 +97,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void getHeadersShouldIgnoreHeadersWithDots() {
+    void getHeadersShouldIgnoreHeadersWithDots() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("a.b.c", "value"))
             .build();
@@ -106,7 +107,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void addressWithTwoDisplayNamesOnTheSameFieldShouldBeRetrieved() {
+    void addressWithTwoDisplayNamesOnTheSameFieldShouldBeRetrieved() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("From", "Christophe Hamerling <chri.hamerling@linagora.com>, Graham CROSMARIE <grah.crosmarie@linagora.com>"))
             .build();
@@ -117,7 +118,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void foldedFromHeaderShouldBeSupported() {
+    void foldedFromHeaderShouldBeSupported() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("From", "Christophe Hamerling <chri.hamerling@linagora.com>,\r\n" +
                 " Graham CROSMARIE <grah.crosmarie@linagora.com>"))
@@ -129,7 +130,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void foldedHeaderShouldBeSupported() {
+    void foldedHeaderShouldBeSupported() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("From", "Christophe Hamerling <chri.hamerling@linagora.com>,\r\n" +
                 " Graham CROSMARIE <grah.crosmarie@linagora.com>"))
@@ -140,7 +141,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void mixingAddressWithDisplayNamesWithOthersShouldBeAllowed() {
+    void mixingAddressWithDisplayNamesWithOthersShouldBeAllowed() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("To", "Christophe Hamerling <chri.hamerling@linagora.com>, grah.crosmarie@linagora.com"))
             .build();
@@ -151,7 +152,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void displayNamesShouldBeRetreivedOnCc() {
+    void displayNamesShouldBeRetreivedOnCc() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Cc", "Christophe Hamerling <chri.hamerling@linagora.com>"))
             .build();
@@ -161,7 +162,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void displayNamesShouldBeRetreivedOnReplyTo() {
+    void displayNamesShouldBeRetreivedOnReplyTo() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Reply-To", "Christophe Hamerling <chri.hamerling@linagora.com>"))
             .build();
@@ -171,7 +172,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void displayNamesShouldBeRetreivedOnBcc() {
+    void displayNamesShouldBeRetreivedOnBcc() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Bcc", "Christophe Hamerling <chri.hamerling@linagora.com>"))
             .build();
@@ -181,7 +182,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void headerContaingNoAddressShouldBeConsideredBothAsNameAndAddress() {
+    void headerContaingNoAddressShouldBeConsideredBothAsNameAndAddress() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Bcc", "Not an address"))
             .build();
@@ -191,7 +192,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void unclosedAddressSubpartShouldBeWellHandled() {
+    void unclosedAddressSubpartShouldBeWellHandled() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Bcc", "Mickey <tricky@mouse.com"))
             .build();
@@ -201,7 +202,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void notComaSeparatedAddressSubpartShouldBeWellHandled() {
+    void notComaSeparatedAddressSubpartShouldBeWellHandled() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Bcc", "Mickey <tricky@mouse.com> Miny<hello@polo.com>"))
             .build();
@@ -212,7 +213,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void notSeparatedAddressSubpartShouldBeWellHandled() {
+    void notSeparatedAddressSubpartShouldBeWellHandled() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Bcc", "Mickey <tricky@mouse.com>Miny<hello@polo.com>"))
             .build();
@@ -223,7 +224,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void dateShouldBeRetreived() {
+    void dateShouldBeRetreived() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Date", "Thu, 4 Jun 2015 06:08:41 +0200"))
             .build();
@@ -233,7 +234,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void partialYearShouldBeCompleted() {
+    void partialYearShouldBeCompleted() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Date", "Thu, 4 Jun 15 06:08:41 +0200"))
             .build();
@@ -243,7 +244,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void nonStandardDatesShouldBeRetreived() {
+    void nonStandardDatesShouldBeRetreived() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Date", "Thu, 4 Jun 2015 06:08:41 +0200 (UTC)"))
             .build();
@@ -253,7 +254,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void dateShouldBeAbsentOnInvalidHeader() {
+    void dateShouldBeAbsentOnInvalidHeader() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Date", "Not a date"))
             .build();
@@ -263,7 +264,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void subjectsShouldBeWellRetrieved() {
+    void subjectsShouldBeWellRetrieved() {
         String subject = "A fantastic ElasticSearch module will be available soon for JAMES";
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Subject", subject))
@@ -273,7 +274,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void getMessageIDShouldReturnMessageIdValue() {
+    void getMessageIDShouldReturnMessageIdValue() {
         String messageID = "<abc@123>";
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Message-ID", messageID))
@@ -284,7 +285,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void getMessageIDShouldReturnLatestEncounteredMessageIdValue() {
+    void getMessageIDShouldReturnLatestEncounteredMessageIdValue() {
         String messageID = "<abc@123>";
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Message-ID", "<other@toto.com>"))
@@ -296,7 +297,7 @@ public class HeaderCollectionTest {
     }
 
     @Test
-    public void getMessageIDShouldReturnEmptyWhenNoMessageId() {
+    void getMessageIDShouldReturnEmptyWhenNoMessageId() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Other", "value"))
             .build();
@@ -305,9 +306,10 @@ public class HeaderCollectionTest {
             .isEmpty();
     }
 
-    @Test(expected = NullPointerException.class)
-    public void nullFieldShouldThrow() {
-        HeaderCollection.builder().add(null).build();
+    @Test
+    void nullFieldShouldThrow() {
+        assertThatThrownBy(() -> HeaderCollection.builder().add(null).build())
+            .isInstanceOf(NullPointerException.class);
     }
 
 }
