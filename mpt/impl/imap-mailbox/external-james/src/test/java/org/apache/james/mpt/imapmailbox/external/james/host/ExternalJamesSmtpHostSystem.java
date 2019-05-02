@@ -18,13 +18,24 @@
  ****************************************************************/
 package org.apache.james.mpt.imapmailbox.external.james.host;
 
-import org.apache.james.util.Port;
+import java.io.IOException;
 
-public interface ExternalJamesConfiguration {
-    String getAddress();
+import org.apache.james.utils.SMTPMessageSender;
 
-    Port getImapPort();
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
-    Port getSmptPort();
+@Singleton
+public class ExternalJamesSmtpHostSystem implements SmtpHostSystem{
 
+    private final ExternalJamesConfiguration configuration;
+
+    @Inject
+    private ExternalJamesSmtpHostSystem(ExternalJamesConfiguration externalConfiguration) {
+        this.configuration = externalConfiguration;
+    }
+
+    public SMTPMessageSender connect(SMTPMessageSender smtpMessageSender) throws IOException {
+        return smtpMessageSender.connect(configuration.getAddress(), configuration.getSmptPort());
+    }
 }

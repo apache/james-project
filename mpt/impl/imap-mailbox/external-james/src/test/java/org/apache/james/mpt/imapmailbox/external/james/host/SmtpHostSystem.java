@@ -18,13 +18,11 @@
  ****************************************************************/
 package org.apache.james.mpt.imapmailbox.external.james.host;
 
-import org.apache.james.util.Port;
+import java.io.IOException;
 
-public interface ExternalJamesConfiguration {
-    String getAddress();
+import org.apache.james.utils.SMTPMessageSender;
 
-    Port getImapPort();
+public interface SmtpHostSystem {
 
-    Port getSmptPort();
-
+    SMTPMessageSender connect(SMTPMessageSender smtpMessageSender) throws IOException;
 }

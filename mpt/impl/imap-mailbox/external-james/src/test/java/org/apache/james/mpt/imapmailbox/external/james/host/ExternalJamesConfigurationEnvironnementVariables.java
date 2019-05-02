@@ -26,15 +26,19 @@ public class ExternalJamesConfigurationEnvironnementVariables implements Externa
 
     private static final String ENV_JAMES_ADDRESS = "JAMES_ADDRESS";
     private static final String ENV_JAMES_IMAP_PORT = "JAMES_IMAP_PORT";
+    private static final String ENV_JAMES_SMTP_PORT = "JAMES_SMTP_PORT";
 
     private final String address;
     private final Port imapPort;
+    private final Port smtpPort;
 
     public ExternalJamesConfigurationEnvironnementVariables() {
         Preconditions.checkState(System.getenv(ENV_JAMES_ADDRESS) != null, "You must have exported an environment variable called JAMES_ADDRESS in order to run these tests. For instance export JAMES_ADDRESS=127.0.0.1");
         Preconditions.checkState(System.getenv(ENV_JAMES_IMAP_PORT) != null, "You must have exported an environment variable called JAMES_IMAP_PORT in order to run these tests. For instance export JAMES_IMAP_PORT=143");
+        Preconditions.checkState(System.getenv(ENV_JAMES_SMTP_PORT) != null, "You must have exported an environment variable called JAMES_SMTP_PORT in order to run these tests. For instance export JAMES_IMAP_PORT=143");
         this.address = System.getenv(ENV_JAMES_ADDRESS);
         this.imapPort = Port.of(Integer.parseInt(System.getenv(ENV_JAMES_IMAP_PORT)));
+        this.smtpPort = Port.of(Integer.parseInt(System.getenv(ENV_JAMES_SMTP_PORT)));
     }
 
     @Override
@@ -47,4 +51,8 @@ public class ExternalJamesConfigurationEnvironnementVariables implements Externa
         return imapPort;
     }
 
+    @Override
+    public Port getSmptPort() {
+        return smtpPort;
+    }
 }

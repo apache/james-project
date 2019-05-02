@@ -22,6 +22,8 @@ package org.apache.james.mpt.imapmailbox.external.james;
 import java.util.Locale;
 
 import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesSmtpHostSystem;
+import org.apache.james.mpt.imapmailbox.external.james.host.SmtpHostSystem;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,7 +35,9 @@ public abstract class DeploymentValidation {
     public static final String PASSWORD = "password";
 
     protected abstract ImapHostSystem createImapHostSystem();
-    
+
+    protected abstract SmtpHostSystem createSmtpHostSystem();
+
     private ImapHostSystem system;
     private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
@@ -41,10 +45,10 @@ public abstract class DeploymentValidation {
     public void setUp() throws Exception {
         system = createImapHostSystem();
         simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
-                .withUser(USER + "@" + DOMAIN, PASSWORD)
-                .withLocale(Locale.US);
+            .withUser(USER + "@" + DOMAIN, PASSWORD)
+            .withLocale(Locale.US);
     }
-    
+
     @Test
     public void validateDeployment() throws Exception {
         simpleScriptedTestProtocol.run("ValidateDeployment");

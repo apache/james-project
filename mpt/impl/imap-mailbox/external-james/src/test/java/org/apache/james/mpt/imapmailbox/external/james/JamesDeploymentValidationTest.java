@@ -20,6 +20,7 @@
 package org.apache.james.mpt.imapmailbox.external.james;
 
 import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.external.james.host.SmtpHostSystem;
 import org.junit.After;
 import org.junit.Before;
 
@@ -29,12 +30,14 @@ import com.google.inject.Injector;
 public class JamesDeploymentValidationTest extends DeploymentValidation {
 
     private ImapHostSystem system;
+    private SmtpHostSystem smtpHostSystem;
 
     @Override
     @Before
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(new ExternalJamesModule());
         system = injector.getInstance(ImapHostSystem.class);
+        smtpHostSystem = injector.getInstance(SmtpHostSystem.class);
         system.beforeTest();
         super.setUp();
     }
@@ -43,11 +46,16 @@ public class JamesDeploymentValidationTest extends DeploymentValidation {
     protected ImapHostSystem createImapHostSystem() {
         return system;
     }
-    
+
+    @Override
+    protected SmtpHostSystem createSmtpHostSystem() {
+        return smtpHostSystem;
+    }
+
     @After
     public void tearDown() throws Exception {
         system.afterTest();
     }
 
-    
+
 }
