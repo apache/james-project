@@ -456,6 +456,17 @@ public class DownloadStepdefs {
         assertThat(response.getFirstHeader("Content-Length").getValue()).isEqualTo(String.valueOf(size));
     }
 
+    @Then("^there is no Content-Type$")
+    public void assertNoContentType() {
+        assertThat(response.getFirstHeader("Content-Type"))
+            .isNull();
+    }
+
+    @Then("^the Content-Type is \"([^\"]*)\"$")
+    public void assertContentType(String contentType) {
+        assertThat(response.getFirstHeader("Content-Type").getValue()).isEqualTo(contentType);
+    }
+
     private void assertEncodedFilenameMatches(String name) {
         String contentDispositionHeader = response.getHeaders("Content-Disposition")[0].toString();
         assertThat(contentDispositionHeader).startsWith(UTF8_CONTENT_DIPOSITION_START);
