@@ -51,10 +51,10 @@ Feature: Download GET
     And the attachment is named "ديناصور.odt"
 
   Scenario: Getting an attachment with a specified Content-Type
-    Given "alice@domain.tld" mailbox "INBOX" contains a message "1" with an attachment "2"
+    Given "alice@domain.tld" mailbox "INBOX" contains a message "1" with an attachment "2" having "application/pdf" contentType
     When "alice@domain.tld" downloads "2" with "myFileName.txt" name
     Then she can read that blob
-    And there is no Content-Type
+    And the Content-Type is "application/pdf"
 
   @BasicFeature
   Scenario: Getting a message blob previously stored
