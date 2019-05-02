@@ -23,6 +23,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
 import static io.restassured.config.ParamConfig.UpdateStrategy.REPLACE;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JmapCommonRequests.deleteMessages;
 import static org.apache.james.jmap.JmapCommonRequests.getLastMessageId;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
@@ -44,7 +45,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.filesystem.api.FileSystem;
@@ -807,17 +807,6 @@ public abstract class DeletedMessagesVaultTest {
 
     private void bartDeletesMessages(List<String> idsToDestroy) {
         deleteMessages(bartAccessToken, idsToDestroy);
-    }
-
-    private void deleteMessages(AccessToken accessToken, List<String> idsToDestroy) {
-        String idString = idsToDestroy.stream()
-            .map(id -> "\"" + id + "\"")
-            .collect(Collectors.joining(","));
-
-        with()
-            .header("Authorization", accessToken.serialize())
-            .body("[[\"setMessages\", {\"destroy\": [" + idString + "]}, \"#0\"]]")
-            .post("/jmap");
     }
 
     private void restoreAllMessagesOfHomer() {

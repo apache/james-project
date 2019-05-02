@@ -29,6 +29,7 @@ import static org.hamcrest.Matchers.not;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.Role;
@@ -150,5 +151,16 @@ public class JmapCommonRequests {
             .expectBody(ARGUMENTS + ".error", isEmptyOrNullString())
             .expectBody(NOT_UPDATED, not(hasKey(messageId)));
         return builder.build();
+    }
+
+    public static void deleteMessages(AccessToken accessToken, List<String> idsToDestroy) {
+        String idString = idsToDestroy.stream()
+            .map(id -> "\"" + id + "\"")
+            .collect(Collectors.joining(","));
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"setMessages\", {\"destroy\": [" + idString + "]}, \"#0\"]]")
+            .post("/jmap");
     }
 }

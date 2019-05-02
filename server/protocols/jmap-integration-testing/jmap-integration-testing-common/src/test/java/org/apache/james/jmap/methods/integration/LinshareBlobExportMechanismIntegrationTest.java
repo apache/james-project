@@ -22,6 +22,7 @@ package org.apache.james.jmap.methods.integration;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JmapCommonRequests.deleteMessages;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
@@ -38,7 +39,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.ExportRequest;
@@ -243,17 +243,6 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
 
     private void homerDeletesMessages(List<String> idsToDestroy) {
         deleteMessages(homerAccessToken, idsToDestroy);
-    }
-
-    private void deleteMessages(AccessToken accessToken, List<String> idsToDestroy) {
-        String idString = idsToDestroy.stream()
-            .map(id -> "\"" + id + "\"")
-            .collect(Collectors.joining(","));
-
-        with()
-            .header("Authorization", accessToken.serialize())
-            .body("[[\"setMessages\", {\"destroy\": [" + idString + "]}, \"#0\"]]")
-            .post("/jmap");
     }
 
     private void exportVaultContent(ExportRequest exportRequest) {
