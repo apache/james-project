@@ -16,29 +16,13 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.mpt.imapmailbox.external.james.host;
 
-package org.apache.james.mpt.imapmailbox.external.james;
+import org.apache.james.util.Port;
 
-import org.apache.james.mpt.api.HostSystem;
-import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.api.UserAdder;
-import org.apache.james.mpt.host.ExternalHostSystem;
-import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesConfiguration;
-import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesConfigurationEnvironnementVariables;
-import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesImapHostSystem;
-import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesUserAdder;
+public interface ExternalJamesConfiguration {
+    String getAddress();
 
-import com.google.inject.AbstractModule;
-
-public class ExternalJamesModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        bind(ExternalJamesConfiguration.class).to(ExternalJamesConfigurationEnvironnementVariables.class);
-        bind(ImapHostSystem.class).to(ExternalJamesImapHostSystem.class);
-        bind(HostSystem.class).to(ExternalJamesImapHostSystem.class);
-        bind(ExternalHostSystem.class).to(ExternalJamesImapHostSystem.class);
-        bind(UserAdder.class).to(ExternalJamesUserAdder.class);
-    }
+    Port getImapPort();
 
 }

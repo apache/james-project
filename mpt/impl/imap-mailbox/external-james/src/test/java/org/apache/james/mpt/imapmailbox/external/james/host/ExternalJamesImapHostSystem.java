@@ -35,23 +35,17 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
-public class ExternalJamesHostSystem extends ExternalHostSystem {
-    
-    private static final String ENV_JAMES_ADDRESS = "JAMES_ADDRESS";
-    private static final String ENV_JAMES_IMAP_PORT = "JAMES_IMAP_PORT";
+public class ExternalJamesImapHostSystem extends ExternalHostSystem {
+
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
     
     private static final String SHABANG = "* OK IMAP4rev1 Server ready";
     private final Supplier<InetSocketAddress> addressSupplier;
 
     @Inject
-    private ExternalJamesHostSystem(ExternalJamesUserAdder userAdder) {
+    private ExternalJamesImapHostSystem(ExternalJamesUserAdder userAdder, ExternalJamesConfiguration configuration) {
         super(SUPPORTED_FEATURES, new NullMonitor(), SHABANG, userAdder);
-        Preconditions.checkState(System.getenv(ENV_JAMES_ADDRESS) != null, "You must have exported an environment variable called JAMES_ADDRESS in order to run these tests. For instance export JAMES_ADDRESS=127.0.0.1");
-        Preconditions.checkState(System.getenv(ENV_JAMES_IMAP_PORT) != null,"You must have exported an environment variable called JAMES_IMAP_PORT in order to run these tests. For instance export JAMES_IMAP_PORT=143");
-        this.addressSupplier = () -> new InetSocketAddress(
-            System.getenv(ENV_JAMES_ADDRESS),
-            Integer.parseInt(System.getenv(ENV_JAMES_IMAP_PORT)));
+        this.addressSupplier = () -> new InetSocketAddress(configuration.getAddress(), configuration.getImapPort().getValue());
     }
 
     @Override
