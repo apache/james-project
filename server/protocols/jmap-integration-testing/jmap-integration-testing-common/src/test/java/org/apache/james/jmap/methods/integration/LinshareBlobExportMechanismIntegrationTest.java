@@ -21,6 +21,7 @@ package org.apache.james.jmap.methods.integration;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
+import static org.apache.james.jmap.DeletedMessagesVaultRequests.exportVaultContent;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapCommonRequests.deleteMessages;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
@@ -36,7 +37,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 
 import java.util.List;
 
@@ -127,7 +127,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
         homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
         WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
-        exportVaultContent(EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
+        exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
 
         assertThat(user1LinshareAPI.receivedShares())
             .hasSize(1)
@@ -149,7 +149,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
 
         WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
-        exportVaultContent(EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
+        exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
 
         assertThat(user1LinshareAPI.receivedShares())
             .hasSize(1)
@@ -166,7 +166,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
         homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
         WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
-        exportVaultContent(EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
+        exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
 
         WAIT_TEN_SECONDS.untilAsserted(
             () -> fakeSmtpRequestSpecification
@@ -195,7 +195,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
 
         WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
-        exportVaultContent(EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
+        exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
 
         WAIT_TEN_SECONDS.untilAsserted(
                 () -> fakeSmtpRequestSpecification
@@ -243,21 +243,5 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
 
     private void homerDeletesMessages(List<String> idsToDestroy) {
         deleteMessages(homerAccessToken, idsToDestroy);
-    }
-
-    private void exportVaultContent(ExportRequest exportRequest) {
-        String taskId =
-            webAdminApi.with()
-                .queryParam("action", "export")
-                .queryParam("exportTo", exportRequest.getSharee())
-                .body(exportRequest.getMatchingQuery())
-                .post("/deletedMessages/users/" + exportRequest.getUserExportFrom())
-            .jsonPath()
-                .get("taskId");
-
-        webAdminApi.with()
-            .get("/tasks/" + taskId + "/await")
-        .then()
-            .body("status", is("completed"));
     }
 }

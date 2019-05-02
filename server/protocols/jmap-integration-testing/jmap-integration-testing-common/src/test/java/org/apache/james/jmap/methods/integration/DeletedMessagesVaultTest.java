@@ -22,6 +22,10 @@ package org.apache.james.jmap.methods.integration;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
 import static io.restassured.config.ParamConfig.UpdateStrategy.REPLACE;
+import static org.apache.james.jmap.DeletedMessagesVaultRequests.deleteFromVault;
+import static org.apache.james.jmap.DeletedMessagesVaultRequests.exportVaultContent;
+import static org.apache.james.jmap.DeletedMessagesVaultRequests.purgeVault;
+import static org.apache.james.jmap.DeletedMessagesVaultRequests.restoreMessagesForUserWithQuery;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapCommonRequests.deleteMessages;
 import static org.apache.james.jmap.JmapCommonRequests.getLastMessageId;
@@ -37,7 +41,6 @@ import static org.apache.james.mailbox.backup.ZipAssert.EntryChecks.hasName;
 import static org.apache.james.mailbox.backup.ZipAssert.assertThatZip;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.is;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -258,7 +261,7 @@ public abstract class DeletedMessagesVaultTest {
             "    }" +
             "  ]" +
             "}";
-        restoreMessagesFor(HOMER, query);
+        restoreMessagesForUserWithQuery(webAdminApi, HOMER, query);
 
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
 
@@ -294,7 +297,7 @@ public abstract class DeletedMessagesVaultTest {
             "    }" +
             "  ]" +
             "}";
-        restoreMessagesFor(HOMER, query);
+        restoreMessagesForUserWithQuery(webAdminApi, HOMER, query);
 
 
         Thread.sleep(Duration.FIVE_SECONDS.getValueInMS());
@@ -591,7 +594,7 @@ public abstract class DeletedMessagesVaultTest {
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
         clock.setInstant(ONE_DAY_AFTER_ONE_YEAR_EXPIRATION);
-        purgeVault();
+        purgeVault(webAdminApi);
 
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
@@ -616,7 +619,7 @@ public abstract class DeletedMessagesVaultTest {
         homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
-        purgeVault();
+        purgeVault(webAdminApi);
 
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
@@ -635,7 +638,7 @@ public abstract class DeletedMessagesVaultTest {
         homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
-        purgeVault();
+        purgeVault(webAdminApi);
 
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
@@ -652,7 +655,7 @@ public abstract class DeletedMessagesVaultTest {
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
         clock.setInstant(ONE_DAY_AFTER_ONE_YEAR_EXPIRATION);
-        purgeVault();
+        purgeVault(webAdminApi);
 
         assertThat(listMessageIdsForAccount(homerAccessToken))
             .hasSize(0);
@@ -668,7 +671,7 @@ public abstract class DeletedMessagesVaultTest {
         homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
-        deleteVault(HOMER, messageIdOfHomer);
+        deleteFromVault(webAdminApi, HOMER, messageIdOfHomer);
 
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
@@ -683,7 +686,7 @@ public abstract class DeletedMessagesVaultTest {
 
         String messageIdOfHomer = listMessageIdsForAccount(homerAccessToken).get(0);
 
-        deleteVault(HOMER, messageIdOfHomer);
+        deleteFromVault(webAdminApi, HOMER, messageIdOfHomer);
 
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
@@ -702,7 +705,7 @@ public abstract class DeletedMessagesVaultTest {
         homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
-        deleteVault(HOMER, messageIdOfBart);
+        deleteFromVault(webAdminApi, HOMER, messageIdOfBart);
 
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
@@ -721,7 +724,7 @@ public abstract class DeletedMessagesVaultTest {
         homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
-        deleteVault(HOMER, messageIdOfHomer);
+        deleteFromVault(webAdminApi, HOMER, messageIdOfHomer);
 
         assertThat(listMessageIdsForAccount(homerAccessToken))
             .hasSize(0);
@@ -729,7 +732,7 @@ public abstract class DeletedMessagesVaultTest {
 
     private String exportAndGetFileLocationFromLastMail(ExportRequest exportRequest, AccessToken shareeAccessToken) {
         int currentNumberOfMessages = listMessageIdsForAccount(shareeAccessToken).size();
-        exportVaultContent(exportRequest);
+        exportVaultContent(webAdminApi, exportRequest);
 
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(shareeAccessToken).size() == currentNumberOfMessages + 1);
         String exportingMessageId = getLastMessageId(shareeAccessToken);
@@ -814,20 +817,7 @@ public abstract class DeletedMessagesVaultTest {
     }
 
     private void restoreMessagesFor(String user) {
-        restoreMessagesFor(user, MATCH_ALL_QUERY);
-    }
-
-    private void restoreMessagesFor(String user, String criteria) {
-        String taskId = webAdminApi.with()
-            .body(criteria)
-            .post("/deletedMessages/users/" + user + "?action=restore")
-            .jsonPath()
-            .get("taskId");
-
-        webAdminApi.given()
-            .get("/tasks/" + taskId + "/await")
-            .then()
-            .body("status", is("completed"));
+        restoreMessagesForUserWithQuery(webAdminApi, user, MATCH_ALL_QUERY);
     }
 
     private void homerMovesTheMailInAnotherMailbox(String messageId) {
@@ -848,48 +838,5 @@ public abstract class DeletedMessagesVaultTest {
             .body(updateRequestBody)
             .when()
             .post("/jmap");
-    }
-
-    private void exportVaultContent(ExportRequest exportRequest) {
-        String taskId =
-            webAdminApi.with()
-                .queryParam("action", "export")
-                .queryParam("exportTo", exportRequest.getSharee())
-                .body(exportRequest.getMatchingQuery())
-                .post("/deletedMessages/users/" + exportRequest.getUserExportFrom())
-            .jsonPath()
-                .get("taskId");
-
-        webAdminApi.with()
-                .get("/tasks/" + taskId + "/await")
-            .then()
-                .body("status", is("completed"));
-    }
-
-    private void purgeVault() {
-        String taskId =
-            webAdminApi.with()
-                .queryParam("scope", "expired")
-                .delete("/deletedMessages")
-            .jsonPath()
-                .get("taskId");
-
-        webAdminApi.with()
-            .get("/tasks/" + taskId + "/await")
-        .then()
-            .body("status", is("completed"));
-    }
-
-    private void deleteVault(String user, String messageId) {
-        String taskId =
-            webAdminApi.with()
-                .delete("/deletedMessages/users/" + user + "/messages/" + messageId)
-            .jsonPath()
-                .get("taskId");
-
-        webAdminApi.with()
-            .get("/tasks/" + taskId + "/await")
-        .then()
-            .body("status", is("completed"));
     }
 }
