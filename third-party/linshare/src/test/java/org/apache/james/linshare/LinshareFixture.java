@@ -80,4 +80,8 @@ public interface LinshareFixture {
     Map<String, Credential> USER_CREDENTIAL_MAP = USER_CREDENTIALS.stream()
         .collect(Guavate.toImmutableMap(Credential::getUsername, Function.identity()));
 
+    String MATCH_ALL_QUERY = "{" +
+        "\"combinator\": \"and\"," +
+        "\"criteria\": []" +
+        "}";
 }

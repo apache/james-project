@@ -32,6 +32,7 @@ import static org.apache.james.jmap.TestingConstants.DOMAIN;
 import static org.apache.james.jmap.TestingConstants.LOCALHOST_IP;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
+import static org.apache.james.linshare.LinshareFixture.MATCH_ALL_QUERY;
 import static org.apache.james.linshare.LinshareFixture.USER_1;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -72,10 +73,6 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
     private static final String BART_PASSWORD = "bartPassword";
     private static final ConditionFactory WAIT_TEN_SECONDS = calmlyAwait.atMost(Duration.TEN_SECONDS);
     private static final String SUBJECT = "This mail will be restored from the vault!!";
-    private static final String MATCH_ALL_QUERY = "{" +
-        "\"combinator\": \"and\"," +
-        "\"criteria\": []" +
-        "}";
     private static final ExportRequest EXPORT_ALL_HOMER_MESSAGES_TO_USER_1 = ExportRequest
         .userExportFrom(HOMER)
         .exportTo(USER_1.getUsername())

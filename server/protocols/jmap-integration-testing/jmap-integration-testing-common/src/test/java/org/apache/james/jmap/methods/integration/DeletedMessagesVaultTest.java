@@ -37,6 +37,7 @@ import static org.apache.james.jmap.TestingConstants.DOMAIN;
 import static org.apache.james.jmap.TestingConstants.LOCALHOST_IP;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
+import static org.apache.james.linshare.LinshareFixture.MATCH_ALL_QUERY;
 import static org.apache.james.mailbox.backup.ZipAssert.EntryChecks.hasName;
 import static org.apache.james.mailbox.backup.ZipAssert.assertThatZip;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -98,10 +99,6 @@ public abstract class DeletedMessagesVaultTest {
     private static final ConditionFactory WAIT_TWO_MINUTES = calmlyAwait.atMost(Duration.TWO_MINUTES);
     private static final String SUBJECT = "This mail will be restored from the vault!!";
     private static final String MAILBOX_NAME = "toBeDeleted";
-    private static final String MATCH_ALL_QUERY = "{" +
-        "\"combinator\": \"and\"," +
-        "\"criteria\": []" +
-        "}";
     private static final ExportRequest EXPORT_ALL_HOMER_MESSAGES_TO_BART = ExportRequest
         .userExportFrom(HOMER)
         .exportTo(BART)
