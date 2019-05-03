@@ -20,11 +20,10 @@
 package org.apache.james.mpt.imapmailbox.external.james;
 
 import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.external.james.host.external.ExternalJamesConfiguration;
-import org.apache.james.mpt.imapmailbox.external.james.host.external.NoopDomainsAndUserAdder;
-import org.apache.james.mpt.imapmailbox.external.james.host.external.ExternalJamesConfigurationEnvironnementVariables;
 import org.apache.james.mpt.imapmailbox.external.james.host.SmtpHostSystem;
-import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.mpt.imapmailbox.external.james.host.external.ExternalJamesConfiguration;
+import org.apache.james.mpt.imapmailbox.external.james.host.external.ExternalJamesConfigurationEnvironnementVariables;
+import org.apache.james.mpt.imapmailbox.external.james.host.external.NoopDomainsAndUserAdder;
 import org.junit.After;
 import org.junit.Before;
 
@@ -56,6 +55,11 @@ public class JamesDeploymentValidationTest extends DeploymentValidation {
     @Override
     protected SmtpHostSystem createSmtpHostSystem() {
         return smtpHostSystem;
+    }
+
+    @Override
+    protected ExternalJamesConfiguration getConfiguration() {
+        return configuration;
     }
 
     @After

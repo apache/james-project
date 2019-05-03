@@ -22,6 +22,7 @@ package org.apache.james.mpt.imapmailbox.external.james;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.external.james.host.ProvisioningAPI;
 import org.apache.james.mpt.imapmailbox.external.james.host.SmtpHostSystem;
+import org.apache.james.mpt.imapmailbox.external.james.host.external.ExternalJamesConfiguration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -47,7 +48,7 @@ public class DockerDeploymentValidationGuiceJPATest extends DeploymentValidation
         dockerJamesRule.start();
 
         ProvisioningAPI provisioningAPI = dockerJamesRule.cliJarDomainsAndUsersAdder();
-        Injector injector = Guice.createInjector(new ExternalJamesModule(dockerJamesRule.getConfiguration(), provisioningAPI));
+        Injector injector = Guice.createInjector(new ExternalJamesModule(getConfiguration(), provisioningAPI));
         provisioningAPI.addDomain(DOMAIN);
         provisioningAPI.addUser(USER_ADDRESS, PASSWORD);
         system = injector.getInstance(ImapHostSystem.class);
@@ -63,6 +64,12 @@ public class DockerDeploymentValidationGuiceJPATest extends DeploymentValidation
     public void validateDeployment() throws Exception {
     }
 
+    @Test
+    @Ignore("Not to be run on CI, as it will not use the current build. Uncomment to test on local dev environment")
+    @Override
+    public void validateDeploymentWithMailsFromSmtp() throws Exception {
+    }
+
     @Override
     protected ImapHostSystem createImapHostSystem() {
         return system;
@@ -71,6 +78,11 @@ public class DockerDeploymentValidationGuiceJPATest extends DeploymentValidation
     @Override
     protected SmtpHostSystem createSmtpHostSystem() {
         return smtpHostSystem;
+    }
+
+    @Override
+    protected ExternalJamesConfiguration getConfiguration() {
+        return dockerJamesRule.getConfiguration();
     }
 
     @After
