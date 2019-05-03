@@ -19,6 +19,7 @@
 
 package org.apache.james.util.docker;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.time.Duration;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.DockerClientFactory;
+import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
@@ -111,6 +113,10 @@ public class DockerGenericContainer implements TestRule {
     public DockerGenericContainer withCommands(String... commands) {
         container.withCommand(commands);
         return this;
+    }
+
+    public Container.ExecResult exec(String... command) throws IOException, InterruptedException {
+       return container.execInContainer(command);
     }
 
     public void start() {

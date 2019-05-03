@@ -16,27 +16,15 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mpt.imapmailbox.external.james.host;
+package org.apache.james.mpt.imapmailbox.external.james.host.external;
 
-import java.io.IOException;
+import org.apache.james.util.Port;
 
-import org.apache.james.utils.SMTPMessageSender;
+public interface ExternalJamesConfiguration {
+    String getAddress();
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+    Port getImapPort();
 
-@Singleton
-public class ExternalJamesSmtpHostSystem implements SmtpHostSystem{
+    Port getSmptPort();
 
-    private final ExternalJamesConfiguration configuration;
-
-    @Inject
-    private ExternalJamesSmtpHostSystem(ExternalJamesConfiguration externalConfiguration) {
-        this.configuration = externalConfiguration;
-    }
-
-    @Override
-    public SMTPMessageSender connect(SMTPMessageSender smtpMessageSender) throws IOException {
-        return smtpMessageSender.connect(configuration.getAddress(), configuration.getSmptPort());
-    }
 }

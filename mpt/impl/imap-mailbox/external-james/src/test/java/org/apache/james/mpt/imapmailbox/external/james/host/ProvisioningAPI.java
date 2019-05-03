@@ -16,17 +16,10 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.mpt.imapmailbox.external.james.host;
 
-package org.apache.james.mpt.api;
+import org.apache.james.mpt.api.DomainAdder;
+import org.apache.james.mpt.api.UserAdder;
 
-/**
- * Adds users on demand.
- */
-public interface UserAdder {
-    
-    /**
-     * @param user not null
-     * @param password not null
-     */
-    void addUser(String user, String password) throws Exception;
+public interface ProvisioningAPI extends DomainAdder, UserAdder {
 }

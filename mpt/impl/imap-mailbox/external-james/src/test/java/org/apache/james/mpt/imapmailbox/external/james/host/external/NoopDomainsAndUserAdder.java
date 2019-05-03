@@ -16,15 +16,25 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mpt.imapmailbox.external.james.host;
+package org.apache.james.mpt.imapmailbox.external.james.host.external;
 
-import org.apache.james.util.Port;
+import org.apache.james.mpt.imapmailbox.external.james.host.ProvisioningAPI;
 
-public interface ExternalJamesConfiguration {
-    String getAddress();
+public class NoopDomainsAndUserAdder implements ProvisioningAPI {
 
-    Port getImapPort();
+    public NoopDomainsAndUserAdder() {
 
-    Port getSmptPort();
+    }
 
+    @Override
+    public void addUser(String user, String password) throws Exception {
+        // User should already be configured
+        // We do not throw an exception in order to use BaseImapProtocol based tests
+    }
+
+    @Override
+    public void addDomain(String domain) throws Exception {
+        // Domain should already be configured
+        // We do not throw an exception in order to use BaseImapProtocol based tests
+    }
 }

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mpt.imapmailbox.external.james.host;
+package org.apache.james.mpt.imapmailbox.external.james.host.external;
 
 import java.net.InetSocketAddress;
 import java.util.function.Supplier;
@@ -30,7 +30,6 @@ import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.ExternalHostSystem;
 import org.apache.james.mpt.monitor.NullMonitor;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -43,7 +42,7 @@ public class ExternalJamesImapHostSystem extends ExternalHostSystem {
     private final Supplier<InetSocketAddress> addressSupplier;
 
     @Inject
-    private ExternalJamesImapHostSystem(ExternalJamesUserAdder userAdder, ExternalJamesConfiguration configuration) {
+    private ExternalJamesImapHostSystem(NoopDomainsAndUserAdder userAdder, ExternalJamesConfiguration configuration) {
         super(SUPPORTED_FEATURES, new NullMonitor(), SHABANG, userAdder);
         this.addressSupplier = () -> new InetSocketAddress(configuration.getAddress(), configuration.getImapPort().getValue());
     }

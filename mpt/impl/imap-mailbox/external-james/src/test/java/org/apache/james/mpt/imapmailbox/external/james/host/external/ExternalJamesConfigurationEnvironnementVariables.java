@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mpt.imapmailbox.external.james.host;
+package org.apache.james.mpt.imapmailbox.external.james.host.external;
 
 import org.apache.james.util.Port;
 

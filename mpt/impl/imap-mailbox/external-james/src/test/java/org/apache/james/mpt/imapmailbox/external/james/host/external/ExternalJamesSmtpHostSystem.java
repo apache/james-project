@@ -16,43 +16,28 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.mpt.imapmailbox.external.james.host.external;
 
-package org.apache.james.mpt.imapmailbox.external.james;
+import java.io.IOException;
 
-import java.util.Locale;
-
-import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.external.james.host.SmtpHostSystem;
-import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
-import org.junit.Before;
-import org.junit.Test;
+import org.apache.james.utils.SMTPMessageSender;
 
-public abstract class DeploymentValidation {
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
-    public static final String DOMAIN = "domain";
-    public static final String USER = "imapuser";
-    public static final String USER_ADDRESS = USER + "@" + DOMAIN;
-    public static final String PASSWORD = "password";
+@Singleton
+public class ExternalJamesSmtpHostSystem implements SmtpHostSystem {
 
-    protected abstract ImapHostSystem createImapHostSystem();
+    private final ExternalJamesConfiguration configuration;
 
-    protected abstract SmtpHostSystem createSmtpHostSystem();
-
-    private ImapHostSystem system;
-    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
-
-    @Before
-    public void setUp() throws Exception {
-        system = createImapHostSystem();
-
-        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
-            .withUser(USER_ADDRESS, PASSWORD)
-            .withLocale(Locale.US);
+    @Inject
+    private ExternalJamesSmtpHostSystem(ExternalJamesConfiguration externalConfiguration) {
+        this.configuration = externalConfiguration;
     }
 
-    @Test
-    public void validateDeployment() throws Exception {
-        simpleScriptedTestProtocol.run("ValidateDeployment");
+    @Override
+    public SMTPMessageSender connect(SMTPMessageSender smtpMessageSender) throws IOException {
+        return smtpMessageSender.connect(configuration.getAddress(), configuration.getSmptPort());
     }
-
 }

@@ -16,43 +16,11 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.mpt.imapmailbox.external.james;
 
-import java.util.Locale;
+public class ProvisioningException extends Exception {
 
-import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.external.james.host.SmtpHostSystem;
-import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
-import org.junit.Before;
-import org.junit.Test;
-
-public abstract class DeploymentValidation {
-
-    public static final String DOMAIN = "domain";
-    public static final String USER = "imapuser";
-    public static final String USER_ADDRESS = USER + "@" + DOMAIN;
-    public static final String PASSWORD = "password";
-
-    protected abstract ImapHostSystem createImapHostSystem();
-
-    protected abstract SmtpHostSystem createSmtpHostSystem();
-
-    private ImapHostSystem system;
-    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
-
-    @Before
-    public void setUp() throws Exception {
-        system = createImapHostSystem();
-
-        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
-            .withUser(USER_ADDRESS, PASSWORD)
-            .withLocale(Locale.US);
+    public ProvisioningException(String message) {
+        super(message);
     }
-
-    @Test
-    public void validateDeployment() throws Exception {
-        simpleScriptedTestProtocol.run("ValidateDeployment");
-    }
-
 }

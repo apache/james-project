@@ -18,21 +18,34 @@
  ****************************************************************/
 package org.apache.james.mpt.imapmailbox.external.james.host;
 
-import org.apache.james.mpt.api.UserAdder;
+import org.apache.james.mpt.imapmailbox.external.james.host.external.ExternalJamesConfiguration;
+import org.apache.james.util.Port;
 
-import com.google.inject.Singleton;
+public class StaticJamesConfiguration implements ExternalJamesConfiguration {
 
-@Singleton
-public class ExternalJamesUserAdder implements UserAdder {
+    private final String address;
+    private final Port imapPort;
+    private final Port smtpPort;
 
-    public ExternalJamesUserAdder() {
 
+    public StaticJamesConfiguration(String address, Port imapPort, Port smtpPort) {
+        this.address = address;
+        this.imapPort = imapPort;
+        this.smtpPort = smtpPort;
     }
 
     @Override
-    public void addUser(String user, String password) throws Exception {
-        // User should already be configured
-        // We do not throw an exception in order to use BaseImapProtocol based tests
+    public String getAddress() {
+        return address;
     }
 
+    @Override
+    public Port getImapPort() {
+        return imapPort;
+    }
+
+    @Override
+    public Port getSmptPort() {
+        return smtpPort;
+    }
 }

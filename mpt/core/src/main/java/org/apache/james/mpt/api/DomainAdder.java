@@ -20,13 +20,12 @@
 package org.apache.james.mpt.api;
 
 /**
- * Adds users on demand.
+ * Adds domains on demand.
  */
-public interface UserAdder {
+public interface DomainAdder {
     
     /**
-     * @param user not null
-     * @param password not null
+     * @param domain not null
      */
-    void addUser(String user, String password) throws Exception;
+    void addDomain(String domain) throws Exception;
 }

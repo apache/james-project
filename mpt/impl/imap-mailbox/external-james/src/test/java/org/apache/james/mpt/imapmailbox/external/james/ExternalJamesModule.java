@@ -19,29 +19,38 @@
 
 package org.apache.james.mpt.imapmailbox.external.james;
 
+import org.apache.james.mpt.api.DomainAdder;
 import org.apache.james.mpt.api.HostSystem;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.api.UserAdder;
 import org.apache.james.mpt.host.ExternalHostSystem;
-import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesConfiguration;
-import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesConfigurationEnvironnementVariables;
-import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesImapHostSystem;
-import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesSmtpHostSystem;
-import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesUserAdder;
+import org.apache.james.mpt.imapmailbox.external.james.host.ProvisioningAPI;
 import org.apache.james.mpt.imapmailbox.external.james.host.SmtpHostSystem;
+import org.apache.james.mpt.imapmailbox.external.james.host.external.ExternalJamesConfiguration;
+import org.apache.james.mpt.imapmailbox.external.james.host.external.ExternalJamesImapHostSystem;
+import org.apache.james.mpt.imapmailbox.external.james.host.external.ExternalJamesSmtpHostSystem;
 
 import com.google.inject.AbstractModule;
 
 public class ExternalJamesModule extends AbstractModule {
 
+    private final ExternalJamesConfiguration configuration;
+    private final ProvisioningAPI provisioningAPI;
+
+    public ExternalJamesModule(ExternalJamesConfiguration configuration, ProvisioningAPI provisioningAPI) {
+        this.configuration = configuration;
+        this.provisioningAPI = provisioningAPI;
+    }
+
     @Override
     protected void configure() {
-        bind(ExternalJamesConfiguration.class).to(ExternalJamesConfigurationEnvironnementVariables.class);
+        bind(ExternalJamesConfiguration.class).toInstance(configuration);
         bind(ImapHostSystem.class).to(ExternalJamesImapHostSystem.class);
         bind(HostSystem.class).to(ExternalJamesImapHostSystem.class);
         bind(ExternalHostSystem.class).to(ExternalJamesImapHostSystem.class);
         bind(SmtpHostSystem.class).to(ExternalJamesSmtpHostSystem.class);
-        bind(UserAdder.class).to(ExternalJamesUserAdder.class);
+        bind(DomainAdder.class).toInstance(provisioningAPI);
+        bind(UserAdder.class).toInstance(provisioningAPI);
     }
 
 }

@@ -19,40 +19,64 @@
 
 package org.apache.james.mpt.imapmailbox.external.james;
 
-import java.util.Locale;
-
 import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.external.james.host.ProvisioningAPI;
 import org.apache.james.mpt.imapmailbox.external.james.host.SmtpHostSystem;
-import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
-public abstract class DeploymentValidation {
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
-    public static final String DOMAIN = "domain";
-    public static final String USER = "imapuser";
-    public static final String USER_ADDRESS = USER + "@" + DOMAIN;
-    public static final String PASSWORD = "password";
-
-    protected abstract ImapHostSystem createImapHostSystem();
-
-    protected abstract SmtpHostSystem createSmtpHostSystem();
+@Ignore("Not to be run on CI, as it will not use the current build")
+public class DockerDeploymentValidationSpringJPATest extends DeploymentValidation {
 
     private ImapHostSystem system;
-    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+    private SmtpHostSystem smtpHostSystem;
 
+    @Rule
+    public DockerJamesRule dockerJamesRule = new DockerJamesRule("linagora/james-jpa-spring");
+
+    @Override
     @Before
     public void setUp() throws Exception {
-        system = createImapHostSystem();
 
-        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
-            .withUser(USER_ADDRESS, PASSWORD)
-            .withLocale(Locale.US);
+        dockerJamesRule.start();
+
+        ProvisioningAPI provisioningAPI = dockerJamesRule.cliShellDomainsAndUsersAdder();
+        Injector injector = Guice.createInjector(new ExternalJamesModule(dockerJamesRule.getConfiguration(), provisioningAPI));
+        system = injector.getInstance(ImapHostSystem.class);
+        provisioningAPI.addDomain(DOMAIN);
+        provisioningAPI.addUser(USER_ADDRESS, PASSWORD);
+        smtpHostSystem = injector.getInstance(SmtpHostSystem.class);
+        system.beforeTest();
+
+        super.setUp();
     }
 
     @Test
+    @Ignore("Not to be run on CI, as it will not use the current build. Uncomment to test on local dev environment")
+    @Override
     public void validateDeployment() throws Exception {
-        simpleScriptedTestProtocol.run("ValidateDeployment");
+    }
+
+    @Override
+    protected ImapHostSystem createImapHostSystem() {
+        return system;
+    }
+
+    @Override
+    protected SmtpHostSystem createSmtpHostSystem() {
+        return smtpHostSystem;
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        system.afterTest();
+        dockerJamesRule.stop();
     }
 
 }
