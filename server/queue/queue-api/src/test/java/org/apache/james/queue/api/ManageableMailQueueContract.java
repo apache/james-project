@@ -42,6 +42,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
+
 import reactor.core.publisher.Flux;
 
 public interface ManageableMailQueueContract extends MailQueueContract {
@@ -611,6 +612,21 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         getManageableMailQueue().clear();
 
         assertThat(getManageableMailQueue().browse()).isEmpty();
+    }
+
+    @Test
+    default void deletedElementsShouldNotBeDequeued() throws Exception {
+        enQueue(defaultMail()
+            .name("name1")
+            .build());
+        enQueue(defaultMail()
+            .name("name2")
+            .build());
+
+        getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "name1");
+
+        assertThat(Flux.from(getManageableMailQueue().deQueue()).blockFirst().getMail().getName())
+            .isEqualTo("name2");
     }
 
 }
