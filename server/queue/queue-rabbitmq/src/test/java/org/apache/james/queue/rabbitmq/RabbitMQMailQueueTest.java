@@ -233,14 +233,6 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
 
     }
 
-    @Disabled("JAMES-2733 Deleted elements are still dequeued")
-    @Test
-    @Override
-    public void deletedElementsShouldNotBeDequeued() {
-
-    }
-
-
     private void enqueueSomeMails(Function<Integer, String> namePattern, int emailCount) {
         IntStream.rangeClosed(1, emailCount)
             .forEach(Throwing.intConsumer(i -> enQueue(defaultMail()
