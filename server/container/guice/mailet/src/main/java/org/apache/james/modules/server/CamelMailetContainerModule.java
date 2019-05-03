@@ -175,7 +175,6 @@ public class CamelMailetContainerModule extends AbstractModule {
             jamesMailSpooler.setMailProcessor(camelCompositeProcessor);
             jamesMailSpooler.configure(getJamesSpoolerConfiguration());
             jamesMailSpooler.init();
-            jamesMailSpooler.run();
         }
 
         private HierarchicalConfiguration getJamesSpoolerConfiguration() {

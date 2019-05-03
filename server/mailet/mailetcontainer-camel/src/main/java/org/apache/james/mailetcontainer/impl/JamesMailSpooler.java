@@ -105,9 +105,10 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
         spooler = Schedulers.fromExecutor(Executors.newFixedThreadPool(numThreads, NamedThreadFactory.withName("spooler")));
         LOGGER.info("uses {} Thread(s)", numThreads);
+        run();
     }
 
-    public void run() {
+    private void run() {
         LOGGER.info("Queue={}", queue);
 
         disposable = Flux.from(queue.deQueue())
