@@ -820,6 +820,18 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    public void addressShouldReturnTheRightUidOfTheMessageContainingUTF8EncodingToHeaderName() throws Exception {
+        Assume.assumeTrue(storeMailboxManager
+            .getSupportedSearchCapabilities()
+            .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.To, "Üsteliğhan"));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(m8.getUid());
+    }
+
+    @Test
     public void addressShouldReturnUidHavingRightRecipientWhenToIsSpecified() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.To, "root@listes.minet.net"));
 
