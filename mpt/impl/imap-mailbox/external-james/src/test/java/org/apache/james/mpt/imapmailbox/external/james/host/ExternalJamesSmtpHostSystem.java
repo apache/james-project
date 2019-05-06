@@ -35,6 +35,7 @@ public class ExternalJamesSmtpHostSystem implements SmtpHostSystem{
         this.configuration = externalConfiguration;
     }
 
+    @Override
     public SMTPMessageSender connect(SMTPMessageSender smtpMessageSender) throws IOException {
         return smtpMessageSender.connect(configuration.getAddress(), configuration.getSmptPort());
     }
