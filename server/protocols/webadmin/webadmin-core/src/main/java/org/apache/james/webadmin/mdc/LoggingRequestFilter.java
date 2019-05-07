@@ -19,9 +19,13 @@
 
 package org.apache.james.webadmin.mdc;
 
+import static org.apache.james.webadmin.authentication.AuthenticationFilter.LOGIN;
+
 import org.apache.james.util.MDCStructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableSet;
 
 import spark.Filter;
 import spark.Request;
@@ -29,11 +33,20 @@ import spark.Response;
 
 public class LoggingRequestFilter implements Filter {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggingRequestFilter.class);
-    private static final String REQUEST_BODY = "request-body";
+    static final String REQUEST_BODY = "request-body";
+    static final String METHOD = "method";
+    static final String ENDPOINT = "endpoint";
+    static final String QUERY_PARAMETERS = "queryParameters";
+    static final String IP = "ip";
 
     @Override
-    public void handle(Request request, Response response) throws Exception {
+    public void handle(Request request, Response response) {
         MDCStructuredLogger.forLogger(LOGGER)
+            .addField(IP, request.ip())
+            .addField(ENDPOINT, request.url())
+            .addField(METHOD, request.requestMethod())
+            .addField(LOGIN, request.attribute(LOGIN))
+            .addField(QUERY_PARAMETERS, ImmutableSet.copyOf(request.queryParams()))
             .addField(REQUEST_BODY, request.body())
             .log(logger -> logger.info("WebAdmin request received"));
     }
