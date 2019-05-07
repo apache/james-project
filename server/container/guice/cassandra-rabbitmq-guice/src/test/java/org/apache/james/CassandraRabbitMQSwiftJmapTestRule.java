@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.james.backend.rabbitmq.DockerRabbitMQSingleton;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
-import org.apache.james.modules.TestESMetricReporterModule;
+import org.apache.james.modules.TestDockerESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.TestSwiftBlobStoreModule;
@@ -43,17 +43,20 @@ public class CassandraRabbitMQSwiftJmapTestRule implements TestRule {
     private final TemporaryFolder temporaryFolder;
 
     public static CassandraRabbitMQSwiftJmapTestRule defaultTestRule() {
-        return new CassandraRabbitMQSwiftJmapTestRule(new EmbeddedElasticSearchRule());
+        return new CassandraRabbitMQSwiftJmapTestRule();
     }
 
     private final GuiceModuleTestRule guiceModuleTestRule;
+    private final DockerElasticSearchRule dockerElasticSearchRule;
 
     public CassandraRabbitMQSwiftJmapTestRule(GuiceModuleTestRule... guiceModuleTestRule) {
         TempFilesystemTestRule tempFilesystemTestRule = new TempFilesystemTestRule();
+        this.dockerElasticSearchRule = new DockerElasticSearchRule();
         this.temporaryFolder = tempFilesystemTestRule.getTemporaryFolder();
         this.guiceModuleTestRule =
                 AggregateGuiceModuleTestRule
                     .of(guiceModuleTestRule)
+                    .aggregate(dockerElasticSearchRule)
                     .aggregate(tempFilesystemTestRule);
     }
 
@@ -69,7 +72,7 @@ public class CassandraRabbitMQSwiftJmapTestRule implements TestRule {
             .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
             .overrideWith(new TestSwiftBlobStoreModule())
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-            .overrideWith(new TestESMetricReporterModule())
+            .overrideWith(new TestDockerESMetricReporterModule(dockerElasticSearchRule.getDockerEs().getHttpHost()))
             .overrideWith(guiceModuleTestRule.getModule())
             .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()))
             .overrideWith(additionals);
