@@ -28,7 +28,7 @@ import com.google.common.base.Preconditions;
 
 public class Document {
 
-    static class DocumentId {
+    public static class DocumentId {
         private final UUID id;
 
         DocumentId(UUID id) {

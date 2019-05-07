@@ -25,6 +25,7 @@ import static org.apache.james.linshare.client.LinshareAPI.Headers.ACCEPT_APPLIC
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.james.linshare.client.Document;
 import org.apache.james.linshare.client.LinshareAPI;
 import org.apache.james.linshare.client.User;
 import org.apache.james.utils.FakeSmtp;
@@ -36,6 +37,7 @@ import com.github.fge.lambdas.Throwing;
 import feign.Feign;
 import feign.Headers;
 import feign.Logger;
+import feign.Param;
 import feign.RequestLine;
 import feign.auth.BasicAuthRequestInterceptor;
 import feign.form.FormEncoder;
@@ -47,6 +49,9 @@ public class LinshareExtension implements BeforeEachCallback {
 
     private interface LinshareAPIForTesting {
 
+        String CONTENT_DISPOSITION_ATTACHMENT = "Content-Disposition: attachment; filename=\"{filename}\"";
+        String CONTENT_TYPE_APPLICATION_OCTET_STREAM = "Content-Type: application/octet-stream";
+
         static LinshareAPIForTesting from(LinshareFixture.Credential credential, Linshare linshare) {
 
             return Feign.builder()
@@ -54,7 +59,10 @@ public class LinshareExtension implements BeforeEachCallback {
                 .logger(new Slf4jLogger(LinshareAPIForTesting.class))
                 .logLevel(Logger.Level.FULL)
                 .encoder(new FormEncoder(new JacksonEncoder()))
-                .decoder(new JacksonDecoder())
+                .decoder(CombinedDecoder.builder()
+                    .defaultDecoder(new JacksonDecoder())
+                    .registerSingleTypeDecoder(new ByteArrayDecoder())
+                    .build())
                 .target(LinshareAPIForTesting.class, linshare.getUrl());
         }
 
@@ -65,6 +73,10 @@ public class LinshareExtension implements BeforeEachCallback {
         @RequestLine("GET /linshare/webservice/rest/user/v2/users")
         @Headers(ACCEPT_APPLICATION_JSON)
         List<User> allUsers();
+
+        @RequestLine("GET /linshare/webservice/rest/user/v2/received_shares/{documentId}/download")
+        @Headers({ CONTENT_TYPE_APPLICATION_OCTET_STREAM, CONTENT_DISPOSITION_ATTACHMENT })
+        byte[] downloadShare(@Param("documentId") String documentId, @Param("filename") String filename);
     }
 
     private final Linshare linshare = LinshareSingleton.singleton;
@@ -90,6 +102,11 @@ public class LinshareExtension implements BeforeEachCallback {
             .urlAsString(linshare.getUrl())
             .authorizationToken(token)
             .build();
+    }
+
+    public byte[] downloadSharedFile(LinshareFixture.Credential credential, Document.DocumentId document, String filename) {
+        return LinshareAPIForTesting.from(credential, linshare)
+            .downloadShare(document.asString(), filename);
     }
 
     private void deleteAllUsersDocuments() {
