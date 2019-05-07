@@ -61,8 +61,9 @@ public class AwsS3ObjectStorage {
     public static final int MAX_THREADS = 5;
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(MAX_THREADS, NamedThreadFactory.withClassName(AwsS3ObjectStorage.class));
     private static final boolean DO_NOT_SHUTDOWN_THREAD_POOL = false;
-    public static final int MAX_UPLOAD_THREADS = 5;
     private static final int MAX_ERROR_RETRY = 5;
+    private static final int FIRST_TRY = 0;
+    private static final int MAX_RETRY_ON_EXCEPTION = 3;
     public static Size MULTIPART_UPLOAD_THRESHOLD;
 
     static {
@@ -83,8 +84,7 @@ public class AwsS3ObjectStorage {
             try {
                 file = File.createTempFile(UUID.randomUUID().toString(), ".tmp");
                 FileUtils.copyToFile(blob.getPayload().openStream(), file);
-
-                put(blobIdFactory, containerName, configuration, blob, file);
+                putWithRetry(blobIdFactory, containerName, configuration, blob, file, FIRST_TRY);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             } finally {
@@ -93,6 +93,18 @@ public class AwsS3ObjectStorage {
                 }
             }
         });
+    }
+
+    private static void putWithRetry(BlobId.Factory blobIdFactory, ContainerName containerName, AwsS3AuthConfiguration configuration, Blob blob, File file, int tried) {
+        try {
+            put(blobIdFactory, containerName, configuration, blob, file);
+        } catch (RuntimeException e) {
+            if (tried < MAX_RETRY_ON_EXCEPTION) {
+                putWithRetry(blobIdFactory, containerName, configuration, blob, file, tried + 1);
+            } else {
+                throw e;
+            }
+        }
     }
 
     private static void put(BlobId.Factory blobIdFactory, ContainerName containerName, AwsS3AuthConfiguration configuration, Blob blob, File file) {

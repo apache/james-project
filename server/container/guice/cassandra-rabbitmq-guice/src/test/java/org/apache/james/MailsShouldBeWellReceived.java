@@ -43,7 +43,6 @@ interface MailsShouldBeWellReceived {
         .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
         .await();
 
-
     @Test
     default void mailsShouldBeWellReceived(GuiceJamesServer server) throws Exception {
         server.getProbe(DataProbeImpl.class).fluent()
