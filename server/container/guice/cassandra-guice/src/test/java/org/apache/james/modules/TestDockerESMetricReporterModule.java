@@ -17,39 +17,38 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.modules;
 
-import org.apache.james.backends.es.DockerElasticSearch;
-import org.apache.james.backends.es.DockerElasticSearchSingleton;
-import org.apache.james.backends.es.ElasticSearchConfiguration;
-import org.junit.jupiter.api.extension.ExtensionContext;
+import javax.inject.Singleton;
 
-import com.google.inject.Module;
+import org.apache.james.metrics.es.ESReporterConfiguration;
+import org.apache.james.util.Host;
 
-public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 
-    @Override
-    public void beforeEach(ExtensionContext extensionContext) {
-        getDockerES().start();
+public class TestDockerESMetricReporterModule extends AbstractModule {
+
+    public static final String METRICS_INDEX = "metrics";
+
+    private final Host esHttpHost;
+
+    public TestDockerESMetricReporterModule(Host esHttpHost) {
+        this.esHttpHost = esHttpHost;
     }
 
     @Override
-    public void afterEach(ExtensionContext extensionContext) {
+    protected void configure() {
     }
 
-    @Override
-    public Module getModule() {
-        return binder -> binder.bind(ElasticSearchConfiguration.class)
-            .toInstance(getElasticSearchConfigurationForDocker());
-    }
-
-    private ElasticSearchConfiguration getElasticSearchConfigurationForDocker() {
-        return ElasticSearchConfiguration.builder()
-            .addHost(getDockerES().getTcpHost())
+    @Provides
+    @Singleton
+    public ESReporterConfiguration provideConfiguration() {
+        return ESReporterConfiguration.builder()
+            .enabled()
+            .onHost(esHttpHost.getHostName(), esHttpHost.getPort())
+            .onIndex(METRICS_INDEX)
+            .periodInSecond(1L)
             .build();
-    }
-
-    public DockerElasticSearch getDockerES() {
-        return DockerElasticSearchSingleton.INSTANCE;
     }
 }

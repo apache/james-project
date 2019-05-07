@@ -17,39 +17,36 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.modules;
 
-import org.apache.james.backends.es.DockerElasticSearch;
-import org.apache.james.backends.es.DockerElasticSearchSingleton;
+import javax.inject.Singleton;
+
 import org.apache.james.backends.es.ElasticSearchConfiguration;
-import org.junit.jupiter.api.extension.ExtensionContext;
+import org.apache.james.backends.es.EmbeddedElasticSearch;
+import org.apache.james.backends.es.utils.TestingClientProvider;
+import org.apache.james.mailbox.elasticsearch.MailboxIndexCreationUtil;
+import org.elasticsearch.client.Client;
 
-import com.google.inject.Module;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 
-public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
+public class TestEmbeddedElasticSearchModule extends AbstractModule {
 
-    @Override
-    public void beforeEach(ExtensionContext extensionContext) {
-        getDockerES().start();
+    private final EmbeddedElasticSearch embeddedElasticSearch;
+
+    public TestEmbeddedElasticSearchModule(EmbeddedElasticSearch embeddedElasticSearch) {
+        this.embeddedElasticSearch = embeddedElasticSearch;
     }
 
     @Override
-    public void afterEach(ExtensionContext extensionContext) {
+    protected void configure() {
+
     }
 
-    @Override
-    public Module getModule() {
-        return binder -> binder.bind(ElasticSearchConfiguration.class)
-            .toInstance(getElasticSearchConfigurationForDocker());
-    }
-
-    private ElasticSearchConfiguration getElasticSearchConfigurationForDocker() {
-        return ElasticSearchConfiguration.builder()
-            .addHost(getDockerES().getTcpHost())
-            .build();
-    }
-
-    public DockerElasticSearch getDockerES() {
-        return DockerElasticSearchSingleton.INSTANCE;
+    @Provides
+    @Singleton
+    protected Client provideClientProvider() {
+        Client client = new TestingClientProvider(embeddedElasticSearch.getNode()).get();
+        return MailboxIndexCreationUtil.prepareDefaultClient(client, ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
     }
 }

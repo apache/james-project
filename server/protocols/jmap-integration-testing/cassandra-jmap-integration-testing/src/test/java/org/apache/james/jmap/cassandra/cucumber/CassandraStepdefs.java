@@ -36,8 +36,8 @@ import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
-import org.apache.james.modules.TestESMetricReporterModule;
-import org.apache.james.modules.TestElasticSearchModule;
+import org.apache.james.modules.TestEmbeddedESMetricReporterModule;
+import org.apache.james.modules.TestEmbeddedElasticSearchModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.CassandraTruncateTableTask;
 import org.apache.james.server.core.configuration.Configuration;
@@ -79,8 +79,8 @@ public class CassandraStepdefs {
         mainStepdefs.jmapServer = GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(new TestJMAPServerModule(10))
-            .overrideWith(new TestESMetricReporterModule())
-            .overrideWith(new TestElasticSearchModule(embeddedElasticSearch))
+            .overrideWith(new TestEmbeddedESMetricReporterModule())
+            .overrideWith(new TestEmbeddedElasticSearchModule(embeddedElasticSearch))
             .overrideWith(cassandraServer.getModule())
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(DefaultTextExtractor.class))
             .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))

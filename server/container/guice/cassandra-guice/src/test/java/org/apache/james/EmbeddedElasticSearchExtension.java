@@ -21,7 +21,7 @@ package org.apache.james;
 
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.junit.TemporaryFolderExtension;
-import org.apache.james.modules.TestElasticSearchModule;
+import org.apache.james.modules.TestEmbeddedElasticSearchModule;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;
@@ -49,7 +49,7 @@ public class EmbeddedElasticSearchExtension implements GuiceModuleTestExtension 
 
     @Override
     public Module getModule() {
-        return new TestElasticSearchModule(embeddedElasticSearch);
+        return new TestEmbeddedElasticSearchModule(embeddedElasticSearch);
     }
 
     @Override

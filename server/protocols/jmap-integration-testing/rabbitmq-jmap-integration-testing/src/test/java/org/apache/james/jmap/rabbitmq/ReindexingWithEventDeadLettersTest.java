@@ -20,8 +20,6 @@
 package org.apache.james.jmap.rabbitmq;
 
 import static io.restassured.RestAssured.with;
-import static org.apache.james.DockerElasticSearchExtension.ELASTIC_SEARCH_HTTP_PORT;
-import static org.apache.james.DockerElasticSearchExtension.ELASTIC_SEARCH_PORT;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapCommonRequests.getDraftId;
 import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
@@ -47,8 +45,6 @@ import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.objectstorage.PayloadCodecFactory;
-import org.apache.james.util.docker.DockerGenericContainer;
-import org.apache.james.util.docker.Images;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.WebAdminGuiceProbe;
@@ -75,8 +71,7 @@ class ReindexingWithEventDeadLettersTest {
         .atMost(Duration.ONE_MINUTE)
         .await();
 
-    private static DockerGenericContainer elasticSearchContainer = new DockerGenericContainer(Images.ELASTICSEARCH_2)
-        .withExposedPorts(ELASTIC_SEARCH_HTTP_PORT, ELASTIC_SEARCH_PORT);
+    private static final DockerElasticSearchExtension dockerElasticSearch = new DockerElasticSearchExtension();
 
     private static final JamesServerBuilder.ServerProvider CONFIGURATION_BUILDER = configuration -> GuiceJamesServer
             .forConfiguration(configuration)
@@ -88,7 +83,7 @@ class ReindexingWithEventDeadLettersTest {
 
     @RegisterExtension
     JamesServerExtension testExtension = new JamesServerBuilder()
-        .extension(new DockerElasticSearchExtension(elasticSearchContainer))
+        .extension(dockerElasticSearch)
         .extension(new CassandraExtension())
         .extension(new RabbitMQExtension())
         .extension(new AwsS3BlobStoreExtension(PayloadCodecFactory.AES256))
@@ -114,7 +109,7 @@ class ReindexingWithEventDeadLettersTest {
 
         aliceAccessToken = authenticateJamesUser(baseUri(jamesServer), ALICE, ALICE_PASSWORD);
 
-        elasticSearchContainer.pause();
+        dockerElasticSearch.getDockerES().pause();
         Thread.sleep(Duration.TEN_SECONDS.getValueInMS()); // Docker pause is asynchronous and we found no way to poll for it
     }
 
@@ -152,7 +147,7 @@ class ReindexingWithEventDeadLettersTest {
     }
 
     private void unpauseElasticSearch() throws Exception {
-        elasticSearchContainer.unpause();
+        dockerElasticSearch.getDockerES().unpause();
         Thread.sleep(Duration.FIVE_SECONDS.getValueInMS()); // Docker unpause is asynchronous and we found no way to poll for it
     }
 

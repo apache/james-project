@@ -21,32 +21,53 @@ package org.apache.james.modules;
 
 import javax.inject.Singleton;
 
+import org.apache.james.CleanupTasksPerformer;
+import org.apache.james.backends.es.DockerElasticSearch;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
-import org.apache.james.backends.es.EmbeddedElasticSearch;
-import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.mailbox.elasticsearch.MailboxIndexCreationUtil;
 import org.elasticsearch.client.Client;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.multibindings.Multibinder;
 
-public class TestElasticSearchModule extends AbstractModule {
+public class TestDockerElasticSearchModule extends AbstractModule {
 
-    private final EmbeddedElasticSearch embeddedElasticSearch;
+    private static class ESContainerCleanUp implements CleanupTasksPerformer.CleanupTask {
 
-    public TestElasticSearchModule(EmbeddedElasticSearch embeddedElasticSearch) {
-        this.embeddedElasticSearch = embeddedElasticSearch;
+        private final DockerElasticSearch elasticSearch;
+
+        private ESContainerCleanUp(DockerElasticSearch elasticSearch) {
+            this.elasticSearch = elasticSearch;
+        }
+
+        @Override
+        public Result run() {
+            elasticSearch.cleanUpData();
+
+            return Result.COMPLETED;
+        }
+    }
+
+    private final DockerElasticSearch elasticSearch;
+
+    public TestDockerElasticSearchModule(DockerElasticSearch elasticSearch) {
+        this.elasticSearch = elasticSearch;
     }
 
     @Override
     protected void configure() {
-
+        Multibinder.newSetBinder(binder(), CleanupTasksPerformer.CleanupTask.class)
+            .addBinding()
+            .toInstance(new ESContainerCleanUp(elasticSearch));
     }
 
     @Provides
     @Singleton
     protected Client provideClientProvider() {
-        Client client = new TestingClientProvider(embeddedElasticSearch.getNode()).get();
-        return MailboxIndexCreationUtil.prepareDefaultClient(client, ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
+        Client client = elasticSearch.clientProvider().get();
+        return MailboxIndexCreationUtil.prepareDefaultClient(client, ElasticSearchConfiguration.builder()
+            .addHost(elasticSearch.getTcpHost())
+            .build());
     }
 }

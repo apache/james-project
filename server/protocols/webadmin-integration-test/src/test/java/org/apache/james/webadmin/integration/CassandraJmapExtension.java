@@ -28,8 +28,8 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
-import org.apache.james.modules.TestESMetricReporterModule;
-import org.apache.james.modules.TestElasticSearchModule;
+import org.apache.james.modules.TestEmbeddedESMetricReporterModule;
+import org.apache.james.modules.TestEmbeddedElasticSearchModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.util.Runnables;
@@ -68,9 +68,9 @@ public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallba
         return GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE).overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
                 .overrideWith(new TestJMAPServerModule(LIMIT_TO_20_MESSAGES))
-                .overrideWith(new TestESMetricReporterModule())
+                .overrideWith(new TestEmbeddedESMetricReporterModule())
                 .overrideWith(cassandra.getModule())
-                .overrideWith(new TestElasticSearchModule(elasticSearch))
+                .overrideWith(new TestEmbeddedElasticSearchModule(elasticSearch))
                 .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION))
                 .overrideWith(new UnauthorizedModule())
                 .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()));

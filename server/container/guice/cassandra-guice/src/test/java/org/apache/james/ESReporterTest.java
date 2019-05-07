@@ -37,7 +37,7 @@ import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
-import org.apache.james.modules.TestESMetricReporterModule;
+import org.apache.james.modules.TestEmbeddedESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
@@ -71,7 +71,7 @@ class ESReporterTest {
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-            .overrideWith(new TestESMetricReporterModule()))
+            .overrideWith(new TestEmbeddedESMetricReporterModule()))
         .build();
 
     private static final int DELAY_IN_MS = 100;
@@ -156,7 +156,7 @@ class ESReporterTest {
             return !Arrays.stream(client.prepareSearch()
                     .setQuery(QueryBuilders.matchAllQuery())
                     .get().getHits().getHits())
-                .filter(searchHit -> searchHit.getIndex().startsWith(TestESMetricReporterModule.METRICS_INDEX))
+                .filter(searchHit -> searchHit.getIndex().startsWith(TestEmbeddedESMetricReporterModule.METRICS_INDEX))
                 .collect(Collectors.toList())
                 .isEmpty();
         } catch (Exception e) {

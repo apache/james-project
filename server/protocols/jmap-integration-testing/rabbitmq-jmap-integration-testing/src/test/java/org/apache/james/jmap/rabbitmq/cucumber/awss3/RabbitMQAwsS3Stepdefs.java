@@ -20,6 +20,7 @@
 package org.apache.james.jmap.rabbitmq.cucumber.awss3;
 
 import java.util.Arrays;
+
 import javax.inject.Inject;
 
 import org.apache.activemq.store.PersistenceAdapter;
@@ -35,18 +36,18 @@ import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.modules.DockerRabbitMQRule;
-import org.apache.james.modules.TestESMetricReporterModule;
-import org.apache.james.modules.TestElasticSearchModule;
+import org.apache.james.modules.TestEmbeddedESMetricReporterModule;
+import org.apache.james.modules.TestEmbeddedElasticSearchModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.apache.james.server.CassandraTruncateTableTask;
 import org.apache.james.server.core.configuration.Configuration;
-
 import org.junit.rules.TemporaryFolder;
 
 import com.github.fge.lambdas.runnable.ThrowingRunnable;
 import com.google.inject.multibindings.Multibinder;
+
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.runtime.java.guice.ScenarioScoped;
@@ -86,10 +87,10 @@ public class RabbitMQAwsS3Stepdefs {
         mainStepdefs.jmapServer = GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
                 .overrideWith(new TestJMAPServerModule(JMAP_GET_MESSAGE_LIST_MAXIMUM_LIMIT))
-                .overrideWith(new TestESMetricReporterModule())
+                .overrideWith(new TestEmbeddedESMetricReporterModule())
                 .overrideWith(new TestRabbitMQModule(rabbitMQServer.dockerRabbitMQ()))
                 .overrideWith(swiftServer.getModule())
-                .overrideWith(new TestElasticSearchModule(embeddedElasticSearch))
+                .overrideWith(new TestEmbeddedElasticSearchModule(embeddedElasticSearch))
                 .overrideWith(cassandraServer.getModule())
                 .overrideWith(binder -> binder.bind(TextExtractor.class).to(DefaultTextExtractor.class))
                 .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))

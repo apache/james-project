@@ -21,35 +21,33 @@ package org.apache.james;
 
 import org.apache.james.backends.es.DockerElasticSearch;
 import org.apache.james.backends.es.DockerElasticSearchSingleton;
-import org.apache.james.backends.es.ElasticSearchConfiguration;
-import org.junit.jupiter.api.extension.ExtensionContext;
+import org.apache.james.modules.TestDockerElasticSearchModule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
 import com.google.inject.Module;
 
-public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
+
+public class DockerElasticSearchRule implements GuiceModuleTestRule {
+
+    private final DockerElasticSearch elasticSearch = DockerElasticSearchSingleton.INSTANCE;
 
     @Override
-    public void beforeEach(ExtensionContext extensionContext) {
-        getDockerES().start();
+    public Statement apply(Statement base, Description description) {
+        return base;
     }
 
     @Override
-    public void afterEach(ExtensionContext extensionContext) {
+    public void await() {
+        elasticSearch.awaitForElasticSearch();
     }
 
     @Override
     public Module getModule() {
-        return binder -> binder.bind(ElasticSearchConfiguration.class)
-            .toInstance(getElasticSearchConfigurationForDocker());
+        return new TestDockerElasticSearchModule(elasticSearch);
     }
 
-    private ElasticSearchConfiguration getElasticSearchConfigurationForDocker() {
-        return ElasticSearchConfiguration.builder()
-            .addHost(getDockerES().getTcpHost())
-            .build();
-    }
-
-    public DockerElasticSearch getDockerES() {
-        return DockerElasticSearchSingleton.INSTANCE;
+    public DockerElasticSearch getDockerEs() {
+        return elasticSearch;
     }
 }
