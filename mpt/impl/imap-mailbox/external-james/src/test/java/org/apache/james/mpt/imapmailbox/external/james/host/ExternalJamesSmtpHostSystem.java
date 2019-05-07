@@ -16,46 +16,27 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.mpt.imapmailbox.external.james.host;
 
-package org.apache.james.mpt.imapmailbox.external.james;
+import java.io.IOException;
 
-import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.external.james.host.SmtpHostSystem;
-import org.junit.After;
-import org.junit.Before;
+import org.apache.james.utils.SMTPMessageSender;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
-public class JamesDeploymentValidationTest extends DeploymentValidation {
+@Singleton
+public class ExternalJamesSmtpHostSystem implements SmtpHostSystem{
 
-    private ImapHostSystem system;
-    private SmtpHostSystem smtpHostSystem;
+    private final ExternalJamesConfiguration configuration;
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        Injector injector = Guice.createInjector(new ExternalJamesModule());
-        system = injector.getInstance(ImapHostSystem.class);
-        smtpHostSystem = injector.getInstance(SmtpHostSystem.class);
-        system.beforeTest();
-        super.setUp();
+    @Inject
+    private ExternalJamesSmtpHostSystem(ExternalJamesConfiguration externalConfiguration) {
+        this.configuration = externalConfiguration;
     }
 
     @Override
-    protected ImapHostSystem createImapHostSystem() {
-        return system;
+    public SMTPMessageSender connect(SMTPMessageSender smtpMessageSender) throws IOException {
+        return smtpMessageSender.connect(configuration.getAddress(), configuration.getSmptPort());
     }
-
-    @Override
-    protected SmtpHostSystem createSmtpHostSystem() {
-        return smtpHostSystem;
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
-    }
-
-
 }

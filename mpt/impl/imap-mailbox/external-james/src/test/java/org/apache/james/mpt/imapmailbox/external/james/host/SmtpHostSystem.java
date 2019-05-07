@@ -16,46 +16,13 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.mpt.imapmailbox.external.james.host;
 
-package org.apache.james.mpt.imapmailbox.external.james;
+import java.io.IOException;
 
-import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.external.james.host.SmtpHostSystem;
-import org.junit.After;
-import org.junit.Before;
+import org.apache.james.utils.SMTPMessageSender;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+public interface SmtpHostSystem {
 
-public class JamesDeploymentValidationTest extends DeploymentValidation {
-
-    private ImapHostSystem system;
-    private SmtpHostSystem smtpHostSystem;
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        Injector injector = Guice.createInjector(new ExternalJamesModule());
-        system = injector.getInstance(ImapHostSystem.class);
-        smtpHostSystem = injector.getInstance(SmtpHostSystem.class);
-        system.beforeTest();
-        super.setUp();
-    }
-
-    @Override
-    protected ImapHostSystem createImapHostSystem() {
-        return system;
-    }
-
-    @Override
-    protected SmtpHostSystem createSmtpHostSystem() {
-        return smtpHostSystem;
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
-    }
-
-
+    SMTPMessageSender connect(SMTPMessageSender smtpMessageSender) throws IOException;
 }

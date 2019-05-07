@@ -23,8 +23,12 @@ import org.apache.james.mpt.api.HostSystem;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.api.UserAdder;
 import org.apache.james.mpt.host.ExternalHostSystem;
-import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesHostSystem;
+import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesConfiguration;
+import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesConfigurationEnvironnementVariables;
+import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesImapHostSystem;
+import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesSmtpHostSystem;
 import org.apache.james.mpt.imapmailbox.external.james.host.ExternalJamesUserAdder;
+import org.apache.james.mpt.imapmailbox.external.james.host.SmtpHostSystem;
 
 import com.google.inject.AbstractModule;
 
@@ -32,9 +36,11 @@ public class ExternalJamesModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(ImapHostSystem.class).to(ExternalJamesHostSystem.class);
-        bind(HostSystem.class).to(ExternalJamesHostSystem.class);
-        bind(ExternalHostSystem.class).to(ExternalJamesHostSystem.class);
+        bind(ExternalJamesConfiguration.class).to(ExternalJamesConfigurationEnvironnementVariables.class);
+        bind(ImapHostSystem.class).to(ExternalJamesImapHostSystem.class);
+        bind(HostSystem.class).to(ExternalJamesImapHostSystem.class);
+        bind(ExternalHostSystem.class).to(ExternalJamesImapHostSystem.class);
+        bind(SmtpHostSystem.class).to(ExternalJamesSmtpHostSystem.class);
         bind(UserAdder.class).to(ExternalJamesUserAdder.class);
     }
 
