@@ -29,7 +29,6 @@ import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
 import org.apache.james.blob.objectstorage.PutBlobFunction;
@@ -78,13 +77,13 @@ public class AwsS3ObjectStorage {
         return ObjectStorageBlobsDAOBuilder.forBlobStore(new BlobStoreBuilder(configuration));
     }
 
-    public static Optional<PutBlobFunction> putBlob(BlobId.Factory blobIdFactory, ContainerName containerName, AwsS3AuthConfiguration configuration) {
+    public static Optional<PutBlobFunction> putBlob(ContainerName containerName, AwsS3AuthConfiguration configuration) {
         return Optional.of((blob) -> {
             File file = null;
             try {
                 file = File.createTempFile(UUID.randomUUID().toString(), ".tmp");
                 FileUtils.copyToFile(blob.getPayload().openStream(), file);
-                putWithRetry(blobIdFactory, containerName, configuration, blob, file, FIRST_TRY);
+                putWithRetry(containerName, configuration, blob, file, FIRST_TRY);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             } finally {
@@ -95,19 +94,19 @@ public class AwsS3ObjectStorage {
         });
     }
 
-    private static void putWithRetry(BlobId.Factory blobIdFactory, ContainerName containerName, AwsS3AuthConfiguration configuration, Blob blob, File file, int tried) {
+    private static void putWithRetry(ContainerName containerName, AwsS3AuthConfiguration configuration, Blob blob, File file, int tried) {
         try {
-            put(blobIdFactory, containerName, configuration, blob, file);
+            put(containerName, configuration, blob, file);
         } catch (RuntimeException e) {
             if (tried < MAX_RETRY_ON_EXCEPTION) {
-                putWithRetry(blobIdFactory, containerName, configuration, blob, file, tried + 1);
+                putWithRetry(containerName, configuration, blob, file, tried + 1);
             } else {
                 throw e;
             }
         }
     }
 
-    private static void put(BlobId.Factory blobIdFactory, ContainerName containerName, AwsS3AuthConfiguration configuration, Blob blob, File file) {
+    private static void put(ContainerName containerName, AwsS3AuthConfiguration configuration, Blob blob, File file) {
         try {
             PutObjectRequest request = new PutObjectRequest(containerName.value(),
                 blob.getMetadata().getName(),

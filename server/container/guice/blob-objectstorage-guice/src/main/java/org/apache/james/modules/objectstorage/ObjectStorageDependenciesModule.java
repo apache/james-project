@@ -90,7 +90,7 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
             case SWIFT:
                 return Optional.empty();
             case AWSS3:
-                return AwsS3ObjectStorage.putBlob(blobIdFactory, configuration.getNamespace(), (AwsS3AuthConfiguration) configuration.getSpecificAuthConfiguration());
+                return AwsS3ObjectStorage.putBlob(configuration.getNamespace(), (AwsS3AuthConfiguration) configuration.getSpecificAuthConfiguration());
         }
         throw new IllegalArgumentException("unknown provider " + configuration.getProvider());
 
