@@ -28,12 +28,15 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.nio.charset.StandardCharsets;
+
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.export.api.BlobExportMechanism;
 import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.blob.memory.MemoryBlobStore;
 import org.apache.james.core.MailAddress;
+import org.apache.james.linshare.client.Document;
 import org.apache.james.linshare.client.LinshareAPI;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
@@ -52,6 +55,7 @@ class LinshareBlobExportMechanismTest {
     private MemoryBlobStore blobStore;
     private LinshareBlobExportMechanism testee;
     private HashBlobId.Factory blobIdFactory;
+    private LinshareAPI user2API;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -61,6 +65,8 @@ class LinshareBlobExportMechanismTest {
         testee = new LinshareBlobExportMechanism(
             linshareExtension.getAPIFor(USER_1),
             blobStore);
+
+        user2API = linshareExtension.getAPIFor(USER_2);
     }
 
     @Test
@@ -72,8 +78,6 @@ class LinshareBlobExportMechanismTest {
             .explanation(EXPLANATION)
             .fileExtension(FileExtension.of("txt"))
             .export();
-
-        LinshareAPI user2API = linshareExtension.getAPIFor(USER_2);
 
         assertThat(user2API.receivedShares())
             .hasSize(1)
@@ -108,6 +112,21 @@ class LinshareBlobExportMechanismTest {
             .body("[1].subject", containsString("John Doe has shared a file with you"))
             .body("[1].to", hasItem(USER_2.getUsername()))
             .body("[1].html", containsString(EXPLANATION));
+    }
+
+    @Test
+    void exportShouldShareTheDocumentAndAllowDownloadViaLinShare() throws Exception {
+        BlobId blobId = blobStore.save("content").block();
+
+        testee.blobId(blobId)
+            .with(new MailAddress(USER_2.getUsername()))
+            .explanation(EXPLANATION)
+            .fileExtension(FileExtension.of("txt"))
+            .export();
+
+        Document sharedDoc = user2API.receivedShares().get(0).getDocument();
+        byte[] sharedFile =  linshareExtension.downloadSharedFile(USER_2, sharedDoc.getId(), sharedDoc.getName());
+        assertThat(sharedFile).isEqualTo("content".getBytes(StandardCharsets.UTF_8));
     }
 
     @Test

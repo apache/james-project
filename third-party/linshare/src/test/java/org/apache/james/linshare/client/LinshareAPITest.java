@@ -34,6 +34,7 @@ import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.linshare.LinshareExtension;
 import org.assertj.core.api.SoftAssertions;
@@ -230,6 +231,24 @@ class LinshareAPITest {
                 assertThat(sharedDoc.getName()).isEqualTo(user1Document.getName());
                 assertThat(sharedDoc.getSize()).isEqualTo(user1Document.getSize());
             });
+    }
+
+    @Test
+    void downloadShareShouldGetUploadedSharedFile() throws Exception {
+        File user1File = templateFile();
+        Document user1Document = user1LinshareAPI.uploadDocument(user1File);
+
+        ShareRequest shareRequest = ShareRequest.builder()
+            .message(MESSAGE)
+            .addDocumentId(user1Document.getId())
+            .addRecipient(new MailAddress(USER_2.getUsername()))
+            .build();
+
+        user1LinshareAPI.share(shareRequest);
+        Document sharedDoc = user2LinshareAPI.receivedShares().get(0).getDocument();
+
+        byte[] sharedFile =  linshareExtension.downloadSharedFile(USER_2, sharedDoc.getId(), sharedDoc.getName());
+        assertThat(sharedFile).isEqualTo(FileUtils.readFileToByteArray(user1File));
     }
 
     private File templateFile() throws Exception {
