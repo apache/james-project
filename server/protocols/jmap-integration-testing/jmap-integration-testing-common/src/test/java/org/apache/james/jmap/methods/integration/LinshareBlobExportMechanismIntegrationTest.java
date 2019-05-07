@@ -34,19 +34,23 @@ import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.apache.james.linshare.LinshareFixture.MATCH_ALL_QUERY;
 import static org.apache.james.linshare.LinshareFixture.USER_1;
+import static org.apache.james.mailbox.backup.ZipAssert.assertThatZip;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.ExportRequest;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.linshare.LinshareExtension;
+import org.apache.james.linshare.client.Document;
 import org.apache.james.linshare.client.LinshareAPI;
 import org.apache.james.mailbox.DefaultMailboxes;
+import org.apache.james.mailbox.backup.ZipAssert;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -77,6 +81,8 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
         .userExportFrom(HOMER)
         .exportTo(USER_1.getUsername())
         .query(MATCH_ALL_QUERY);
+
+    private static LinshareExtension linshareExtension = new LinshareExtension();
 
     private AccessToken homerAccessToken;
     private AccessToken bartAccessToken;
@@ -110,9 +116,9 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
 
         homerAccessToken = authenticateJamesUser(baseUri(jmapServer), HOMER, HOMER_PASSWORD);
         bartAccessToken = authenticateJamesUser(baseUri(jmapServer), BART, BART_PASSWORD);
-        user1LinshareAPI = new LinshareExtension().getAPIFor(USER_1);
+        user1LinshareAPI = linshareExtension.getAPIFor(USER_1);
 
-        fakeSmtpRequestSpecification = given(new LinshareExtension().getLinshare().fakeSmtpRequestSpecification());
+        fakeSmtpRequestSpecification = given(linshareExtension.getLinshare().fakeSmtpRequestSpecification());
     }
 
     @Test
@@ -205,6 +211,49 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
         .then()
             .body("[1].subject", containsString("John Doe has shared a file with you"))
             .body("[1].to", hasItem(USER_1.getUsername()));
+    }
+
+    @Test
+    void exportShouldShareNonEmptyZipViaLinShareWhenJmapDelete() throws Exception {
+        bartSendMessageToHomer();
+
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
+
+        Document sharedDoc = user1LinshareAPI.receivedShares().get(0).getDocument();
+        byte[] sharedFile =  linshareExtension.downloadSharedFile(USER_1, sharedDoc.getId(), sharedDoc.getName());
+
+        try (ZipAssert zipAssert = assertThatZip(new ByteArrayInputStream(sharedFile))) {
+            zipAssert.hasEntriesSize(1);
+        }
+    }
+
+    @Test
+    void exportShouldShareNonEmptyZipViaLinShareWhenImapDelete() throws Exception {
+        bartSendMessageToHomer();
+
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        imapMessageReader.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(HOMER, HOMER_PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .setFlagsForAllMessagesInMailbox("\\Deleted");
+        imapMessageReader.expunge();
+
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
+
+        Document sharedDoc = user1LinshareAPI.receivedShares().get(0).getDocument();
+        byte[] sharedFile =  linshareExtension.downloadSharedFile(USER_1, sharedDoc.getId(), sharedDoc.getName());
+
+        try (ZipAssert zipAssert = assertThatZip(new ByteArrayInputStream(sharedFile))) {
+            zipAssert.hasEntriesSize(1);
+        }
     }
 
     private void bartSendMessageToHomer() {
