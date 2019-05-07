@@ -42,9 +42,11 @@ import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 
 import com.amazonaws.AmazonClientException;
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.retry.PredefinedRetryPolicies;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.PutObjectRequest;
@@ -59,7 +61,9 @@ public class AwsS3ObjectStorage {
     public static final int MAX_THREADS = 5;
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(MAX_THREADS, NamedThreadFactory.withClassName(AwsS3ObjectStorage.class));
     private static final boolean DO_NOT_SHUTDOWN_THREAD_POOL = false;
-    private static Size MULTIPART_UPLOAD_THRESHOLD;
+    public static final int MAX_UPLOAD_THREADS = 5;
+    private static final int MAX_ERROR_RETRY = 5;
+    public static Size MULTIPART_UPLOAD_THRESHOLD;
 
     static {
         try {
@@ -106,11 +110,8 @@ public class AwsS3ObjectStorage {
     }
 
     private static TransferManager getTransferManager(AwsS3AuthConfiguration configuration) {
-        AmazonS3 amazonS3 = AmazonS3ClientBuilder
-            .standard()
-            .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(configuration.getAccessKeyId(), configuration.getSecretKey())))
-            .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(configuration.getEndpoint(), null))
-            .build();
+        ClientConfiguration clientConfiguration = getClientConfiguration();
+        AmazonS3 amazonS3 = getS3Client(configuration, clientConfiguration);
 
         return TransferManagerBuilder
             .standard()
@@ -119,6 +120,21 @@ public class AwsS3ObjectStorage {
             .withExecutorFactory(() -> EXECUTOR_SERVICE)
             .withShutDownThreadPools(DO_NOT_SHUTDOWN_THREAD_POOL)
             .build();
+    }
+
+    private static AmazonS3 getS3Client(AwsS3AuthConfiguration configuration, ClientConfiguration clientConfiguration) {
+        return AmazonS3ClientBuilder
+                .standard()
+                .withClientConfiguration(clientConfiguration)
+                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(configuration.getAccessKeyId(), configuration.getSecretKey())))
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(configuration.getEndpoint(), null))
+                .build();
+    }
+
+    private static ClientConfiguration getClientConfiguration() {
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        clientConfiguration.setRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(MAX_ERROR_RETRY));
+        return clientConfiguration;
     }
 
     private static class BlobStoreBuilder implements Supplier<BlobStore> {
