@@ -125,6 +125,10 @@ public class DockerGenericContainer implements TestRule {
         DockerClientFactory.instance().client().pauseContainerCmd(container.getContainerInfo().getId()).exec();
     }
 
+    public boolean isRunning() {
+        return container.isRunning();
+    }
+
     public void unpause() {
         DockerClientFactory.instance().client().unpauseContainerCmd(container.getContainerInfo().getId()).exec();
     }
