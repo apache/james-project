@@ -24,6 +24,7 @@ import static org.apache.james.webadmin.mdc.LoggingRequestFilter.ENDPOINT;
 import static org.apache.james.webadmin.mdc.LoggingRequestFilter.IP;
 import static org.apache.james.webadmin.mdc.LoggingRequestFilter.METHOD;
 import static org.apache.james.webadmin.mdc.LoggingRequestFilter.QUERY_PARAMETERS;
+import static org.apache.james.webadmin.mdc.LoggingRequestFilter.REQUEST_ID;
 
 import org.apache.james.util.MDCStructuredLogger;
 import org.slf4j.Logger;
@@ -42,7 +43,10 @@ public class LoggingResponseFilter implements Filter {
 
     @Override
     public void handle(Request request, Response response) {
+        RequestId requestId = request.attribute(REQUEST_ID);
+
         MDCStructuredLogger.forLogger(LOGGER)
+            .addField(REQUEST_ID, requestId.asString())
             .addField(IP, request.ip())
             .addField(ENDPOINT, request.url())
             .addField(METHOD, request.requestMethod())

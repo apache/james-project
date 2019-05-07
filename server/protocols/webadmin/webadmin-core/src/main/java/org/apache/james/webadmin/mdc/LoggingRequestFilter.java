@@ -38,10 +38,16 @@ public class LoggingRequestFilter implements Filter {
     static final String ENDPOINT = "endpoint";
     static final String QUERY_PARAMETERS = "queryParameters";
     static final String IP = "ip";
+    static final String REQUEST_ID = "requestId";
 
     @Override
     public void handle(Request request, Response response) {
+        RequestId requestId = RequestId.random();
+
+        request.attribute(REQUEST_ID, requestId);
+
         MDCStructuredLogger.forLogger(LOGGER)
+            .addField(REQUEST_ID, requestId.asString())
             .addField(IP, request.ip())
             .addField(ENDPOINT, request.url())
             .addField(METHOD, request.requestMethod())
