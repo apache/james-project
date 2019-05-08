@@ -21,28 +21,21 @@ package org.apache.james.backends.es;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
 
 public class IndexCreationFactoryTest {
     public static final IndexName INDEX_NAME = new IndexName("index");
     public static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
 
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
-
     @Rule
-    public RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
-
+    public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
     private ClientProvider clientProvider;
 
     @Before
     public void setUp() {
-        clientProvider = new TestingClientProvider(embeddedElasticSearch.getNode());
+        clientProvider = elasticSearch.clientProvider();
         new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
