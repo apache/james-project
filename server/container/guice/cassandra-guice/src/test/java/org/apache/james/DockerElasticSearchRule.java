@@ -50,4 +50,8 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
     public DockerElasticSearch getDockerEs() {
         return elasticSearch;
     }
+
+    public void start() {
+        elasticSearch.start();
+    }
 }
