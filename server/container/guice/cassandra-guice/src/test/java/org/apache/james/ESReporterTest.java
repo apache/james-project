@@ -37,7 +37,7 @@ import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
-import org.apache.james.modules.TestEmbeddedESMetricReporterModule;
+import org.apache.james.modules.TestDockerESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
@@ -60,18 +60,17 @@ class ESReporterTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ESReporterTest.class);
     private static final int LIMIT_TO_10_MESSAGES = 10;
 
-
-    static final EmbeddedElasticSearchExtension embeddedElasticSearchExtension = new EmbeddedElasticSearchExtension();
+    static final DockerElasticSearchExtension elasticSearchExtension = new DockerElasticSearchExtension();
 
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
-        .extension(embeddedElasticSearchExtension)
+        .extension(elasticSearchExtension)
         .extension(new CassandraExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-            .overrideWith(new TestEmbeddedESMetricReporterModule()))
+            .overrideWith(new TestDockerESMetricReporterModule(elasticSearchExtension.getDockerES().getHttpHost())))
         .build();
 
     private static final int DELAY_IN_MS = 100;
@@ -152,11 +151,11 @@ class ESReporterTest {
     }
 
     private boolean checkMetricRecordedInElasticSearch() {
-        try (Client client = embeddedElasticSearchExtension.getEmbeddedElasticSearch().getNode().client()) {
+        try (Client client = elasticSearchExtension.getDockerES().clientProvider().get()) {
             return !Arrays.stream(client.prepareSearch()
                     .setQuery(QueryBuilders.matchAllQuery())
                     .get().getHits().getHits())
-                .filter(searchHit -> searchHit.getIndex().startsWith(TestEmbeddedESMetricReporterModule.METRICS_INDEX))
+                .filter(searchHit -> searchHit.getIndex().startsWith(TestDockerESMetricReporterModule.METRICS_INDEX))
                 .collect(Collectors.toList())
                 .isEmpty();
         } catch (Exception e) {
