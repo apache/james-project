@@ -25,17 +25,13 @@ import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import java.util.concurrent.Executors;
 
-import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.node.Node;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
 
 import com.google.common.collect.ImmutableList;
 
@@ -45,37 +41,35 @@ public class ElasticSearchIndexerTest {
     private static final IndexName INDEX_NAME = new IndexName("index_name");
     private static final WriteAliasName ALIAS_NAME = new WriteAliasName("alias_name");
     private static final TypeName TYPE_NAME = new TypeName("type_name");
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
 
     @Rule
-    public RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
-
-    private Node node;
+    public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
     private ElasticSearchIndexer testee;
 
     @Before
     public void setup() {
-        node = embeddedElasticSearch.getNode();
-        TestingClientProvider clientProvider = new TestingClientProvider(node);
         new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
-            .createIndexAndAliases(clientProvider.get());
-        testee = new ElasticSearchIndexer(clientProvider.get(),
+            .createIndexAndAliases(getESClient());
+        testee = new ElasticSearchIndexer(getESClient(),
             Executors.newSingleThreadExecutor(NamedThreadFactory.withClassName(getClass())),
             ALIAS_NAME, TYPE_NAME, MINIMUM_BATCH_SIZE);
     }
-    
+
+    private Client getESClient() {
+        return elasticSearch.clientProvider().get();
+    }
+
     @Test
     public void indexMessageShouldWork() {
         String messageId = "1";
         String content = "{\"message\": \"trying out Elasticsearch\"}";
         
         testee.index(messageId, content);
-        embeddedElasticSearch.awaitForElasticSearch();
+        elasticSearch.awaitForElasticSearch();
         
-        try (Client client = node.client()) {
+        try (Client client = getESClient()) {
             SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
                     .setTypes(TYPE_NAME.getValue())
                     .setQuery(QueryBuilders.matchQuery("message", "trying"))
@@ -96,12 +90,12 @@ public class ElasticSearchIndexerTest {
         String content = "{\"message\": \"trying out Elasticsearch\",\"field\":\"Should be unchanged\"}";
 
         testee.index(messageId, content);
-        embeddedElasticSearch.awaitForElasticSearch();
+        elasticSearch.awaitForElasticSearch();
 
         testee.update(ImmutableList.of(new UpdatedRepresentation(messageId, "{\"message\": \"mastering out Elasticsearch\"}")));
-        embeddedElasticSearch.awaitForElasticSearch();
+        elasticSearch.awaitForElasticSearch();
 
-        try (Client client = node.client()) {
+        try (Client client = getESClient()) {
             SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
                 .setTypes(TYPE_NAME.getValue())
                 .setQuery(QueryBuilders.matchQuery("message", "mastering"))
@@ -109,7 +103,7 @@ public class ElasticSearchIndexerTest {
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
         }
 
-        try (Client client = node.client()) {
+        try (Client client = getESClient()) {
             SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
                 .setTypes(TYPE_NAME.getValue())
                 .setQuery(QueryBuilders.matchQuery("field", "unchanged"))
@@ -148,12 +142,12 @@ public class ElasticSearchIndexerTest {
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
 
         testee.index(messageId, content);
-        embeddedElasticSearch.awaitForElasticSearch();
+        elasticSearch.awaitForElasticSearch();
         
         testee.deleteAllMatchingQuery(termQuery("property", "1")).get();
-        embeddedElasticSearch.awaitForElasticSearch();
+        elasticSearch.awaitForElasticSearch();
         
-        try (Client client = node.client()) {
+        try (Client client = getESClient()) {
             SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
                     .setTypes(TYPE_NAME.getValue())
                     .setQuery(QueryBuilders.matchAllQuery())
@@ -178,12 +172,12 @@ public class ElasticSearchIndexerTest {
         String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"property\":\"2\"}";
         
         testee.index(messageId3, content3);
-        embeddedElasticSearch.awaitForElasticSearch();
+        elasticSearch.awaitForElasticSearch();
 
         testee.deleteAllMatchingQuery(termQuery("property", "1")).get();
-        embeddedElasticSearch.awaitForElasticSearch();
+        elasticSearch.awaitForElasticSearch();
         
-        try (Client client = node.client()) {
+        try (Client client = getESClient()) {
             SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
                     .setTypes(TYPE_NAME.getValue())
                     .setQuery(QueryBuilders.matchAllQuery())
@@ -198,12 +192,12 @@ public class ElasticSearchIndexerTest {
         String content = "{\"message\": \"trying out Elasticsearch\"}";
 
         testee.index(messageId, content);
-        embeddedElasticSearch.awaitForElasticSearch();
+        elasticSearch.awaitForElasticSearch();
 
         testee.delete(ImmutableList.of(messageId));
-        embeddedElasticSearch.awaitForElasticSearch();
+        elasticSearch.awaitForElasticSearch();
         
-        try (Client client = node.client()) {
+        try (Client client = getESClient()) {
             SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
                     .setTypes(TYPE_NAME.getValue())
                     .setQuery(QueryBuilders.matchAllQuery())
@@ -228,12 +222,12 @@ public class ElasticSearchIndexerTest {
         String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"mailboxId\":\"2\"}";
 
         testee.index(messageId3, content3);
-        embeddedElasticSearch.awaitForElasticSearch();
+        elasticSearch.awaitForElasticSearch();
 
         testee.delete(ImmutableList.of(messageId, messageId3));
-        embeddedElasticSearch.awaitForElasticSearch();
+        elasticSearch.awaitForElasticSearch();
 
-        try (Client client = node.client()) {
+        try (Client client = getESClient()) {
             SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
                 .setTypes(TYPE_NAME.getValue())
                 .setQuery(QueryBuilders.matchAllQuery())
