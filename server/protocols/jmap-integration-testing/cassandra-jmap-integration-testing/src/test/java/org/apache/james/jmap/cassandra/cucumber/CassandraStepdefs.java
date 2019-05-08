@@ -29,15 +29,14 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.DockerCassandraRule;
+import org.apache.james.DockerElasticSearchRule;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.jmap.methods.integration.cucumber.ImapStepdefs;
 import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
-import org.apache.james.modules.TestEmbeddedESMetricReporterModule;
-import org.apache.james.modules.TestEmbeddedElasticSearchModule;
+import org.apache.james.modules.TestDockerESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.CassandraTruncateTableTask;
 import org.apache.james.server.core.configuration.Configuration;
@@ -55,9 +54,9 @@ public class CassandraStepdefs {
 
     private final MainStepdefs mainStepdefs;
     private final ImapStepdefs imapStepdefs;
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
-    private DockerCassandraRule cassandraServer = CucumberCassandraSingleton.cassandraServer;
+    private final TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private final DockerElasticSearchRule elasticSearch = CucumberElasticSearchSingleton.elasticSearch;
+    private final DockerCassandraRule cassandraServer = CucumberCassandraSingleton.cassandraServer;
 
     @Inject
     private CassandraStepdefs(MainStepdefs mainStepdefs, ImapStepdefs imapStepdefs) {
@@ -69,7 +68,8 @@ public class CassandraStepdefs {
     public void init() throws Exception {
         cassandraServer.start();
         temporaryFolder.create();
-        embeddedElasticSearch.before();
+        elasticSearch.start();
+
         mainStepdefs.messageIdFactory = new CassandraMessageId.Factory();
         Configuration configuration = Configuration.builder()
             .workingDirectory(temporaryFolder.newFolder())
@@ -79,14 +79,14 @@ public class CassandraStepdefs {
         mainStepdefs.jmapServer = GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(new TestJMAPServerModule(10))
-            .overrideWith(new TestEmbeddedESMetricReporterModule())
-            .overrideWith(new TestEmbeddedElasticSearchModule(embeddedElasticSearch))
+            .overrideWith(new TestDockerESMetricReporterModule(elasticSearch.getDockerEs().getHttpHost()))
+            .overrideWith(elasticSearch.getModule())
             .overrideWith(cassandraServer.getModule())
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(DefaultTextExtractor.class))
             .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
             .overrideWith(binder -> Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class).addBinding().to(CassandraTruncateTableTask.class))
             .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()));
-        mainStepdefs.awaitMethod = () -> embeddedElasticSearch.awaitForElasticSearch();
+        mainStepdefs.awaitMethod = () -> elasticSearch.getDockerEs().awaitForElasticSearch();
         mainStepdefs.init();
     }
 
@@ -94,7 +94,7 @@ public class CassandraStepdefs {
     public void tearDown() {
         ignoreFailures(imapStepdefs::closeConnections,
                 mainStepdefs::tearDown,
-                () -> embeddedElasticSearch.after(),
+                () -> elasticSearch.getDockerEs().cleanUpData(),
                 () -> temporaryFolder.delete());
     }
 
