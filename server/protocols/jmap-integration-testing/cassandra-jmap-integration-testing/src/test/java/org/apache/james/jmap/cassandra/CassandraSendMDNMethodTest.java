@@ -22,7 +22,7 @@ package org.apache.james.jmap.cassandra;
 import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 
 import org.apache.james.CassandraExtension;
-import org.apache.james.EmbeddedElasticSearchExtension;
+import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
@@ -40,7 +40,7 @@ public class CassandraSendMDNMethodTest extends SendMDNMethodTest {
 
     @RegisterExtension
     JamesServerExtension testExtension = new JamesServerBuilder()
-        .extension(new EmbeddedElasticSearchExtension())
+        .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)

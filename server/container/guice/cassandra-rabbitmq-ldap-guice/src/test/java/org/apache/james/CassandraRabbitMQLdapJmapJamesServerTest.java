@@ -86,7 +86,7 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
 
     JamesServerBuilder baseJamesServerExtensionBuilder() {
         return new JamesServerBuilder()
-            .extension(new EmbeddedElasticSearchExtension())
+            .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
             .extension(new LdapTestExtension());

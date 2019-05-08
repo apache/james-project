@@ -37,7 +37,7 @@ class DefaultCassandraJamesServerTest {
 
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
-        .extension(new EmbeddedElasticSearchExtension())
+        .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)

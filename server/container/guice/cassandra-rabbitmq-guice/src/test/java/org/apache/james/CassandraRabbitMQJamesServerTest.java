@@ -176,7 +176,7 @@ class CassandraRabbitMQJamesServerTest {
 
     private static JamesServerBuilder baseExtensionBuilder() {
         return new JamesServerBuilder()
-            .extension(new EmbeddedElasticSearchExtension())
+            .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
             .server(CONFIGURATION_BUILDER);

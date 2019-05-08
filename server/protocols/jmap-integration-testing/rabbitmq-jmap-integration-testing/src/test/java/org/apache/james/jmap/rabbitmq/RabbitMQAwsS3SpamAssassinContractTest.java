@@ -20,7 +20,7 @@ package org.apache.james.jmap.rabbitmq;
 
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
-import org.apache.james.EmbeddedElasticSearchExtension;
+import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
@@ -40,7 +40,7 @@ class RabbitMQAwsS3SpamAssassinContractTest implements SpamAssassinContract {
     private static final SpamAssassinModuleExtension spamAssassinExtension = new SpamAssassinModuleExtension();
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
-        .extension(new EmbeddedElasticSearchExtension())
+        .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(new RabbitMQExtension())
         .extension(new AwsS3BlobStoreExtension())

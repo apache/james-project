@@ -55,7 +55,7 @@ class CassandraLdapJamesServerTest implements JamesServerContract {
 
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
-        .extension(new EmbeddedElasticSearchExtension())
+        .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(new LdapTestExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
