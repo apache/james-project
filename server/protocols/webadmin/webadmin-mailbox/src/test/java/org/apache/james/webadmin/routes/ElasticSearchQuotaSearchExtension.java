@@ -24,10 +24,10 @@ import static org.mockito.Mockito.mock;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import org.apache.james.backends.es.DockerElasticSearch;
+import org.apache.james.backends.es.DockerElasticSearchSingleton;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
-import org.apache.james.backends.es.EmbeddedElasticSearch;
-import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -51,19 +51,21 @@ import org.junit.rules.TemporaryFolder;
 
 public class ElasticSearchQuotaSearchExtension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
 
+    private final DockerElasticSearch elasticSearch = DockerElasticSearchSingleton.INSTANCE;
     private WebAdminQuotaSearchTestSystem restQuotaSearchTestSystem;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
 
     @Override
     public void beforeEach(ExtensionContext context) {
         try {
             temporaryFolder.create();
-            embeddedElasticSearch.before();
+            elasticSearch.start();
 
             Client client = QuotaSearchIndexCreationUtil.prepareDefaultClient(
-                new TestingClientProvider(embeddedElasticSearch.getNode()).get(),
-                ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
+                elasticSearch.clientProvider().get(),
+                ElasticSearchConfiguration.builder()
+                    .addHost(elasticSearch.getTcpHost())
+                    .build());
 
             InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
 
@@ -94,7 +96,7 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
                 usersRepository,
                 domainList,
                 resources.getCurrentQuotaManager(),
-                () -> embeddedElasticSearch.awaitForElasticSearch());
+                () -> elasticSearch.awaitForElasticSearch());
 
             restQuotaSearchTestSystem = new WebAdminQuotaSearchTestSystem(quotaSearchTestSystem);
         } catch (Exception e) {
@@ -106,7 +108,7 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
     public void afterEach(ExtensionContext context) {
         restQuotaSearchTestSystem.getWebAdminServer().destroy();
 
-        embeddedElasticSearch.after();
+        elasticSearch.cleanUpData();
         temporaryFolder.delete();
     }
 
