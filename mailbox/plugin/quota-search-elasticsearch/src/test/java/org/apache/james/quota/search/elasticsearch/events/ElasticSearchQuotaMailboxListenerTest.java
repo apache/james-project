@@ -29,10 +29,9 @@ import static org.mockito.Mockito.mock;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import org.apache.james.backends.es.DockerElasticSearchRule;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
-import org.apache.james.backends.es.EmbeddedElasticSearch;
-import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.quota.QuotaFixture.Counts;
@@ -47,8 +46,6 @@ import org.elasticsearch.client.Client;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
 
 public class ElasticSearchQuotaMailboxListenerTest {
     private static Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
@@ -56,18 +53,18 @@ public class ElasticSearchQuotaMailboxListenerTest {
     private static final int BATCH_SIZE = 1;
     private static final Event DUMB_EVENT = mock(Event.class);
 
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
-
     @Rule
-    public RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
+    public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
     private ElasticSearchQuotaMailboxListener quotaMailboxListener;
     private Client client;
 
     @Before
     public void setUp() {
         client = QuotaSearchIndexCreationUtil.prepareDefaultClient(
-            new TestingClientProvider(embeddedElasticSearch.getNode()).get(), ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
+            elasticSearch.clientProvider().get(),
+            ElasticSearchConfiguration.builder()
+                .addHost(elasticSearch.getTcpHost())
+                .build());
 
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
         quotaMailboxListener = new ElasticSearchQuotaMailboxListener(
@@ -86,20 +83,6 @@ public class ElasticSearchQuotaMailboxListenerTest {
     }
 
     @Test
-    public void eventShouldDoNothingWhenNoQuotaEvent() throws Exception {
-        quotaMailboxListener.event(DUMB_EVENT);
-
-        embeddedElasticSearch.awaitForElasticSearch();
-
-        SearchResponse searchResponse = client.prepareSearch(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
-            .setTypes(QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE.getValue())
-            .setQuery(matchAllQuery())
-            .execute()
-            .get();
-        assertThat(searchResponse.getHits().totalHits()).isEqualTo(0);
-    }
-
-    @Test
     public void eventShouldIndexEventWhenQuotaEvent() throws Exception {
         quotaMailboxListener.event(EventFactory.quotaUpdated()
             .eventId(EVENT_ID)
@@ -110,7 +93,7 @@ public class ElasticSearchQuotaMailboxListenerTest {
             .instant(NOW)
             .build());
 
-        embeddedElasticSearch.awaitForElasticSearch();
+        elasticSearch.awaitForElasticSearch();
 
         SearchResponse searchResponse = client.prepareSearch(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
             .setTypes(QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE.getValue())
