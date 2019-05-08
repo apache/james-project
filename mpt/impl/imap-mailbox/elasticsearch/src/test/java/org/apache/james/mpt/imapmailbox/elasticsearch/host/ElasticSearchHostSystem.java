@@ -19,18 +19,15 @@
 
 package org.apache.james.mpt.imapmailbox.elasticsearch.host;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.ZoneId;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.backends.es.DockerElasticSearch;
+import org.apache.james.backends.es.DockerElasticSearchSingleton;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
-import org.apache.james.backends.es.EmbeddedElasticSearch;
-import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -65,30 +62,29 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
         Feature.MOD_SEQ_SEARCH);
 
-    private EmbeddedElasticSearch embeddedElasticSearch;
-    private Path tempDirectory;
+    private DockerElasticSearch dockerElasticSearch;
     private StoreMailboxManager mailboxManager;
-
 
     @Override
     public void beforeTest() throws Exception {
         super.beforeTest();
-        this.tempDirectory = Files.createTempDirectory("elasticsearch");
-        this.embeddedElasticSearch = new EmbeddedElasticSearch(tempDirectory);
-        embeddedElasticSearch.before();
+        this.dockerElasticSearch = DockerElasticSearchSingleton.INSTANCE;
+        dockerElasticSearch.start();
         initFields();
     }
 
     @Override
-    public void afterTest() throws Exception {
-        embeddedElasticSearch.after();
-        FileUtils.deleteDirectory(tempDirectory.toFile());
+    public void afterTest() {
+        dockerElasticSearch.cleanUpData();
     }
 
     private void initFields() {
         Client client = MailboxIndexCreationUtil.prepareDefaultClient(
-            new TestingClientProvider(embeddedElasticSearch.getNode()).get(),
-            ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
+            dockerElasticSearch.clientProvider().get(),
+            ElasticSearchConfiguration.builder()
+                .addHost(dockerElasticSearch.getTcpHost())
+                .build());
+
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
 
@@ -145,6 +141,6 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
     @Override
     protected void await() {
-        embeddedElasticSearch.awaitForElasticSearch();
+        dockerElasticSearch.awaitForElasticSearch();
     }
 }
