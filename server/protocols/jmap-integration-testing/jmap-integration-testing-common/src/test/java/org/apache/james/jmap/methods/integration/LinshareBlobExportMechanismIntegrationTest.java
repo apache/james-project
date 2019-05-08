@@ -122,13 +122,13 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
     }
 
     @Test
-    void exportShouldShareTheDocumentViaLinShareWhenJmapDelete() {
+    void exportShouldShareTheDocumentViaLinshareWhenJmapDelete() {
         bartSendMessageToHomer();
 
         WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
 
         homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
-        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).isEmpty());
 
         exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
 
@@ -139,7 +139,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
     }
 
     @Test
-    void exportShouldShareTheDocumentViaLinShareWhenImapDelete() throws Exception {
+    void exportShouldShareTheDocumentViaLinshareWhenImapDelete() throws Exception {
         bartSendMessageToHomer();
 
         WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
@@ -150,7 +150,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
             .setFlagsForAllMessagesInMailbox("\\Deleted");
         imapMessageReader.expunge();
 
-        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).isEmpty());
 
         exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
 
@@ -167,7 +167,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
         WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
 
         homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
-        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).isEmpty());
 
         exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
 
@@ -196,15 +196,15 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
             .setFlagsForAllMessagesInMailbox("\\Deleted");
         imapMessageReader.expunge();
 
-        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).isEmpty());
 
         exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
 
         WAIT_TEN_SECONDS.untilAsserted(
-                () -> fakeSmtpRequestSpecification
-                    .get("/api/email")
-                .then()
-                    .body("", hasSize(2)));
+            () -> fakeSmtpRequestSpecification
+                .get("/api/email")
+            .then()
+                .body("", hasSize(2)));
 
         fakeSmtpRequestSpecification
             .get("/api/email")
@@ -214,13 +214,13 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
     }
 
     @Test
-    void exportShouldShareNonEmptyZipViaLinShareWhenJmapDelete() throws Exception {
+    void exportShouldShareNonEmptyZipViaLinshareWhenJmapDelete() throws Exception {
         bartSendMessageToHomer();
 
         WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
 
         homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
-        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).isEmpty());
 
         exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
 
@@ -233,7 +233,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
     }
 
     @Test
-    void exportShouldShareNonEmptyZipViaLinShareWhenImapDelete() throws Exception {
+    void exportShouldShareNonEmptyZipViaLinshareWhenImapDelete() throws Exception {
         bartSendMessageToHomer();
 
         WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
@@ -244,7 +244,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
             .setFlagsForAllMessagesInMailbox("\\Deleted");
         imapMessageReader.expunge();
 
-        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).isEmpty());
 
         exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
 

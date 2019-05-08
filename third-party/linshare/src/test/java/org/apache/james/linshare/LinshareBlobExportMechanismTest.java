@@ -47,7 +47,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import io.restassured.specification.RequestSpecification;
 
 class LinshareBlobExportMechanismTest {
+    private static final String FILE_CONTENT = "content";
     private static final String EXPLANATION = "Explanation about the file being shared";
+    private static final FileExtension FILE_TEXT_EXTENSION = FileExtension.of("txt");
 
     @RegisterExtension
     static LinshareExtension linshareExtension = new LinshareExtension();
@@ -70,13 +72,13 @@ class LinshareBlobExportMechanismTest {
     }
 
     @Test
-    void exportShouldShareTheDocumentViaLinShare() throws Exception {
-        BlobId blobId = blobStore.save("content").block();
+    void exportShouldShareTheDocumentViaLinshare() throws Exception {
+        BlobId blobId = blobStore.save(FILE_CONTENT).block();
 
         testee.blobId(blobId)
             .with(new MailAddress(USER_2.getUsername()))
             .explanation(EXPLANATION)
-            .fileExtension(FileExtension.of("txt"))
+            .fileExtension(FILE_TEXT_EXTENSION)
             .export();
 
         assertThat(user2API.receivedShares())
@@ -88,12 +90,12 @@ class LinshareBlobExportMechanismTest {
 
     @Test
     void exportShouldSendAnEmailToSharee() throws Exception {
-        BlobId blobId = blobStore.save("content").block();
+        BlobId blobId = blobStore.save(FILE_CONTENT).block();
 
         testee.blobId(blobId)
             .with(new MailAddress(USER_2.getUsername()))
             .explanation(EXPLANATION)
-            .fileExtension(FileExtension.of("txt"))
+            .fileExtension(FILE_TEXT_EXTENSION)
             .export();
 
         RequestSpecification request = given(linshareExtension.getLinshare().fakeSmtpRequestSpecification());
@@ -115,18 +117,18 @@ class LinshareBlobExportMechanismTest {
     }
 
     @Test
-    void exportShouldShareTheDocumentAndAllowDownloadViaLinShare() throws Exception {
-        BlobId blobId = blobStore.save("content").block();
+    void exportShouldShareTheDocumentAndAllowDownloadViaLinshare() throws Exception {
+        BlobId blobId = blobStore.save(FILE_CONTENT).block();
 
         testee.blobId(blobId)
             .with(new MailAddress(USER_2.getUsername()))
             .explanation(EXPLANATION)
-            .fileExtension(FileExtension.of("txt"))
+            .fileExtension(FILE_TEXT_EXTENSION)
             .export();
 
         Document sharedDoc = user2API.receivedShares().get(0).getDocument();
         byte[] sharedFile =  linshareExtension.downloadSharedFile(USER_2, sharedDoc.getId(), sharedDoc.getName());
-        assertThat(sharedFile).isEqualTo("content".getBytes(StandardCharsets.UTF_8));
+        assertThat(sharedFile).isEqualTo(FILE_CONTENT.getBytes(StandardCharsets.UTF_8));
     }
 
     @Test
@@ -137,7 +139,7 @@ class LinshareBlobExportMechanismTest {
             () -> testee.blobId(blobId)
                 .with(new MailAddress(USER_2.getUsername()))
                 .explanation(EXPLANATION)
-                .fileExtension(FileExtension.of("txt"))
+                .fileExtension(FILE_TEXT_EXTENSION)
                 .export())
             .isInstanceOf(BlobExportMechanism.BlobExportException.class);
     }
