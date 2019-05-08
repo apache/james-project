@@ -21,13 +21,10 @@ package org.apache.james.backends.es;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
-import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
 
 public class NodeMappingFactoryTest {
     public static final String MESSAGE = "message";
@@ -35,17 +32,13 @@ public class NodeMappingFactoryTest {
     public static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
     public static final TypeName TYPE_NAME = new TypeName("type");
 
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
-
     @Rule
-    public RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
-
+    public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
     private ClientProvider clientProvider;
 
     @Before
     public void setUp() throws Exception {
-        clientProvider = new TestingClientProvider(embeddedElasticSearch.getNode());
+        clientProvider = elasticSearch.clientProvider();
         new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
@@ -71,7 +64,7 @@ public class NodeMappingFactoryTest {
             TYPE_NAME,
             getMappingsSources());
 
-        embeddedElasticSearch.awaitForElasticSearch();
+        elasticSearch.awaitForElasticSearch();
 
         NodeMappingFactory.applyMapping(clientProvider.get(),
             INDEX_NAME,
