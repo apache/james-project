@@ -22,6 +22,7 @@ package org.apache.james.jmap.methods.integration;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JmapCommonRequests.concatMessageIds;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
@@ -34,7 +35,6 @@ import static org.hamcrest.Matchers.hasItem;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.quota.QuotaSize;
@@ -112,9 +112,7 @@ public abstract class QuotaMailingTest {
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 2);
 
         List<String> ids = listMessageIdsForAccount(homerAccessToken);
-        String idString = ids.stream()
-            .map(id -> "\"" + id + "\"")
-            .collect(Collectors.joining(","));
+        String idString = concatMessageIds(ids);
 
         given()
             .header("Authorization", homerAccessToken.serialize())
@@ -143,9 +141,7 @@ public abstract class QuotaMailingTest {
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 4);
 
         List<String> ids = listMessageIdsForAccount(homerAccessToken);
-        String idString = ids.stream()
-            .map(id -> "\"" + id + "\"")
-            .collect(Collectors.joining(","));
+        String idString = concatMessageIds(ids);
 
         given()
             .header("Authorization", homerAccessToken.serialize())

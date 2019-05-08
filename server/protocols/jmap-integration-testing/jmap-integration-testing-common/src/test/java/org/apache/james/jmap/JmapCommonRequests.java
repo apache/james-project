@@ -154,13 +154,17 @@ public class JmapCommonRequests {
     }
 
     public static void deleteMessages(AccessToken accessToken, List<String> idsToDestroy) {
-        String idString = idsToDestroy.stream()
-            .map(id -> "\"" + id + "\"")
-            .collect(Collectors.joining(","));
+        String idString = concatMessageIds(idsToDestroy);
 
         with()
             .header("Authorization", accessToken.serialize())
             .body("[[\"setMessages\", {\"destroy\": [" + idString + "]}, \"#0\"]]")
             .post("/jmap");
+    }
+
+    public static String concatMessageIds(List<String> ids) {
+        return ids.stream()
+            .map(id -> "\"" + id + "\"")
+            .collect(Collectors.joining(","));
     }
 }
