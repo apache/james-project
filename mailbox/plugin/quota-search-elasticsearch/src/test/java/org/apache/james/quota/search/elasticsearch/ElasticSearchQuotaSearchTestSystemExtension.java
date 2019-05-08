@@ -24,10 +24,10 @@ import static org.mockito.Mockito.mock;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import org.apache.james.backends.es.DockerElasticSearch;
+import org.apache.james.backends.es.DockerElasticSearchSingleton;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
-import org.apache.james.backends.es.EmbeddedElasticSearch;
-import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -44,12 +44,10 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
-import org.junit.rules.TemporaryFolder;
 
 public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
 
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
+    private final DockerElasticSearch elasticSearch = DockerElasticSearchSingleton.INSTANCE;
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
@@ -60,7 +58,10 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         try {
             Client client = QuotaSearchIndexCreationUtil.prepareDefaultClient(
-                new TestingClientProvider(embeddedElasticSearch.getNode()).get(), ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
+                elasticSearch.clientProvider().get(),
+                ElasticSearchConfiguration.builder()
+                    .addHost(elasticSearch.getTcpHost())
+                    .build());
 
             InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
 
@@ -91,7 +92,7 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
                 usersRepository,
                 domainList,
                 resources.getCurrentQuotaManager(),
-                () -> embeddedElasticSearch.awaitForElasticSearch());
+                () -> elasticSearch.awaitForElasticSearch());
         } catch (Exception e) {
             throw new ParameterResolutionException("Error while resolving parameter", e);
         }
@@ -99,13 +100,11 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
 
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
-        temporaryFolder.create();
-        embeddedElasticSearch.before();
+        elasticSearch.start();
     }
 
     @Override
     public void afterEach(ExtensionContext context) {
-        embeddedElasticSearch.after();
-        temporaryFolder.delete();
+        elasticSearch.cleanUpData();
     }
 }
