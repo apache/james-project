@@ -28,6 +28,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
+import javax.annotation.PreDestroy;
+import javax.inject.Inject;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
@@ -51,14 +54,14 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 
 public class AwsS3ObjectStorage {
 
     private static final Iterable<Module> JCLOUDS_MODULES = ImmutableSet.of(new SLF4JLoggingModule());
-    public static final int MAX_THREADS = 5;
-    private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(MAX_THREADS, NamedThreadFactory.withClassName(AwsS3ObjectStorage.class));
+    public  static final int MAX_THREADS = 5;
     private static final boolean DO_NOT_SHUTDOWN_THREAD_POOL = false;
     private static final int MAX_ERROR_RETRY = 5;
     private static final int FIRST_TRY = 0;
@@ -73,11 +76,24 @@ public class AwsS3ObjectStorage {
         }
     }
 
+    private final ExecutorService executorService;
+
+    @Inject
+    @VisibleForTesting
+    AwsS3ObjectStorage() {
+        executorService = Executors.newFixedThreadPool(MAX_THREADS, NamedThreadFactory.withClassName(AwsS3ObjectStorage.class));
+    }
+
+    @PreDestroy
+    public void tearDown() {
+        executorService.shutdownNow();
+    }
+
     public static ObjectStorageBlobsDAOBuilder.RequireContainerName daoBuilder(AwsS3AuthConfiguration configuration) {
         return ObjectStorageBlobsDAOBuilder.forBlobStore(new BlobStoreBuilder(configuration));
     }
 
-    public static Optional<PutBlobFunction> putBlob(ContainerName containerName, AwsS3AuthConfiguration configuration) {
+    public Optional<PutBlobFunction> putBlob(ContainerName containerName, AwsS3AuthConfiguration configuration) {
         return Optional.of((blob) -> {
             File file = null;
             try {
@@ -94,7 +110,7 @@ public class AwsS3ObjectStorage {
         });
     }
 
-    private static void putWithRetry(ContainerName containerName, AwsS3AuthConfiguration configuration, Blob blob, File file, int tried) {
+    private void putWithRetry(ContainerName containerName, AwsS3AuthConfiguration configuration, Blob blob, File file, int tried) {
         try {
             put(containerName, configuration, blob, file);
         } catch (RuntimeException e) {
@@ -106,7 +122,7 @@ public class AwsS3ObjectStorage {
         }
     }
 
-    private static void put(ContainerName containerName, AwsS3AuthConfiguration configuration, Blob blob, File file) {
+    private void put(ContainerName containerName, AwsS3AuthConfiguration configuration, Blob blob, File file) {
         try {
             PutObjectRequest request = new PutObjectRequest(containerName.value(),
                 blob.getMetadata().getName(),
@@ -120,7 +136,7 @@ public class AwsS3ObjectStorage {
         }
     }
 
-    private static TransferManager getTransferManager(AwsS3AuthConfiguration configuration) {
+    private TransferManager getTransferManager(AwsS3AuthConfiguration configuration) {
         ClientConfiguration clientConfiguration = getClientConfiguration();
         AmazonS3 amazonS3 = getS3Client(configuration, clientConfiguration);
 
@@ -128,7 +144,7 @@ public class AwsS3ObjectStorage {
             .standard()
             .withS3Client(amazonS3)
             .withMultipartUploadThreshold(MULTIPART_UPLOAD_THRESHOLD.getValue())
-            .withExecutorFactory(() -> EXECUTOR_SERVICE)
+            .withExecutorFactory(() -> executorService)
             .withShutDownThreadPools(DO_NOT_SHUTDOWN_THREAD_POOL)
             .build();
     }

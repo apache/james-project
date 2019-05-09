@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration.Configuration;
@@ -64,12 +65,12 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private ObjectStorageBlobsDAO buildObjectStore(ObjectStorageBlobConfiguration configuration, BlobId.Factory blobIdFactory) throws InterruptedException, ExecutionException, TimeoutException {
+    private ObjectStorageBlobsDAO buildObjectStore(ObjectStorageBlobConfiguration configuration, BlobId.Factory blobIdFactory, Provider<AwsS3ObjectStorage> awsS3ObjectStorageProvider) throws InterruptedException, ExecutionException, TimeoutException {
         ObjectStorageBlobsDAO dao = selectDaoBuilder(configuration)
             .container(configuration.getNamespace())
             .blobIdFactory(blobIdFactory)
             .payloadCodec(configuration.getPayloadCodec())
-            .putBlob(putBlob(blobIdFactory, configuration))
+            .putBlob(putBlob(blobIdFactory, configuration, awsS3ObjectStorageProvider))
             .build();
         dao.createContainer(configuration.getNamespace()).block(Duration.ofMinutes(1));
         return dao;
@@ -85,12 +86,14 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
         throw new IllegalArgumentException("unknown provider " + configuration.getProvider());
     }
 
-    private Optional<PutBlobFunction> putBlob(BlobId.Factory blobIdFactory, ObjectStorageBlobConfiguration configuration) {
+    private Optional<PutBlobFunction> putBlob(BlobId.Factory blobIdFactory, ObjectStorageBlobConfiguration configuration, Provider<AwsS3ObjectStorage> awsS3ObjectStorageProvider) {
         switch (configuration.getProvider()) {
             case SWIFT:
                 return Optional.empty();
             case AWSS3:
-                return AwsS3ObjectStorage.putBlob(configuration.getNamespace(), (AwsS3AuthConfiguration) configuration.getSpecificAuthConfiguration());
+                return awsS3ObjectStorageProvider
+                    .get()
+                    .putBlob(configuration.getNamespace(), (AwsS3AuthConfiguration) configuration.getSpecificAuthConfiguration());
         }
         throw new IllegalArgumentException("unknown provider " + configuration.getProvider());
 
