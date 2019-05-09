@@ -24,12 +24,14 @@ import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystemRule;
 import org.apache.james.mpt.imapmailbox.suite.Condstore;
 import org.junit.Rule;
+import org.junit.rules.RuleChain;
 
 public class CassandraCondstoreTest extends Condstore {
-    @Rule
     public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
-    @Rule
     public CassandraHostSystemRule cassandraHostSystemRule = new CassandraHostSystemRule(cassandraServer);
+
+    @Rule
+    public RuleChain ruleChain = RuleChain.outerRule(cassandraServer).around(cassandraHostSystemRule);
 
     @Override
     protected JamesImapHostSystem createJamesImapHostSystem() {
