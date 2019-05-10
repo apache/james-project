@@ -27,8 +27,8 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailrepository.api.MailRepositoryProvider;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
-import org.apache.james.mailrepository.file.FileMailRepositoryProvider;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
+import org.apache.james.mailrepository.memory.MemoryMailRepositoryProvider;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.GuiceProbe;
@@ -56,7 +56,7 @@ public class MailStoreRepositoryModule extends AbstractModule {
         bind(MailRepositoryStore.class).to(MemoryMailRepositoryStore.class);
 
         Multibinder<MailRepositoryProvider> multibinder = Multibinder.newSetBinder(binder(), MailRepositoryProvider.class);
-        multibinder.addBinding().to(FileMailRepositoryProvider.class);
+        multibinder.addBinding().to(MemoryMailRepositoryProvider.class);
         Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(MailRepositoryStoreModuleInitialisationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MailRepositoryProbeImpl.class);
     }

@@ -42,10 +42,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-data-file</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-memory</artifactId>
         </dependency>
         <dependency>
@@ -91,6 +87,10 @@
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-smtp</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-mailrepository-memory</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

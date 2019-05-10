@@ -41,7 +41,7 @@
         <processor state="error" enableJmx="false">
             <mailet match="All" class="Bounce"/>
             <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/error/</repositoryPath>
+                <repositoryPath>memory://var/mail/error/</repositoryPath>
             </mailet>
         </processor>
 
@@ -99,7 +99,7 @@
 
         <processor state="spam" enableJmx="false">
             <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/spam/</repositoryPath>
+                <repositoryPath>memory://var/mail/spam/</repositoryPath>
             </mailet>
         </processor>
 
@@ -108,7 +108,7 @@
                 <attachment>none</attachment>
             </mailet>
             <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/address-error/</repositoryPath>
+                <repositoryPath>memory://var/mail/address-error/</repositoryPath>
             </mailet>
         </processor>
 
@@ -117,7 +117,7 @@
                 <attachment>none</attachment>
             </mailet>
             <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/relay-denied/</repositoryPath>
+                <repositoryPath>memory://var/mail/relay-denied/</repositoryPath>
                 <notice>Warning: You are sending an e-mail to a remote server. You must be authentified to perform such an operation</notice>
             </mailet>
         </processor>
@@ -130,7 +130,7 @@
 
         <processor state="rrt-error" enableJmx="false">
             <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/rrt-error/</repositoryPath>
+                <repositoryPath>memory://var/mail/rrt-error/</repositoryPath>
                 <passThrough>true</passThrough>
             </mailet>
             <mailet match="IsSenderInRRTLoop" class="Null"/>

@@ -33,6 +33,7 @@
     <name>Apache James :: Server :: Guice</name>
 
     <modules>
+        <module>activemq</module>
         <module>blob-api-guice</module>
         <module>blob-export-guice</module>
         <module>blob-memory-guice</module>
@@ -72,9 +73,10 @@
         <module>protocols/webadmin-mailqueue</module>
         <module>protocols/webadmin-mailrepository</module>
         <module>protocols/webadmin-swagger</module>
-        <module>activemq</module>
         <module>rabbitmq</module>
         <module>testing</module>
+        <module>sieve-file</module>
+        <module>sieve-jpa</module>
     </modules>
 
     <dependencyManagement>
@@ -155,6 +157,16 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-rabbitmq</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-sieve-file</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-sieve-jpa</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
