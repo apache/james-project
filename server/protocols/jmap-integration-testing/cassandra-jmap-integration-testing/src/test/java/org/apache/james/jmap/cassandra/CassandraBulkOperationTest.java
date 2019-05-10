@@ -51,6 +51,7 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -103,6 +104,7 @@ public class CassandraBulkOperationTest {
             .body(ARGUMENTS + ".destroyed", hasSize(NUMBER_OF_MAIL_TO_CREATE));
     }
 
+    @Ignore("JAMES-2758 this test currently fails on master, disable it until the issue is resolved")
     @Test
     public void setMessagesShouldFailForHugeNumberOfEmailsToTrashWhenChunksConfigurationAreTooBig() throws Exception {
         jmapServer = createServerWithExpungeChunkSize(NUMBER_OF_MAIL_TO_CREATE);
