@@ -238,9 +238,4 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
     @Override
     public void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesWithStemming() throws Exception {
     }
-
-    @Ignore("JAMES-2756 SimpleMessageSearchIndex doesn't decode header values before searching")
-    @Override
-    public void addressShouldReturnTheRightUidOfTheMessageContainingUTF8EncodingToHeaderName() {
-    }
 }
