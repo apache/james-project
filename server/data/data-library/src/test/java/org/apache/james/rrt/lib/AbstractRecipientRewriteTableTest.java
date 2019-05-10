@@ -426,13 +426,44 @@ public abstract class AbstractRecipientRewriteTableTest {
     }
 
     @Test
-    public void listSourcesShouldThrowExceptionWhenHasDomainMapping() throws Exception {
+    public void listSourcesShouldHandleDomainMapping() throws Exception {
         Mapping mapping = Mapping.domain(Domain.of("domain"));
 
         virtualUserTable.addMapping(SOURCE, mapping);
 
-        assertThatThrownBy(() -> virtualUserTable.listSources(mapping))
-            .isInstanceOf(IllegalArgumentException.class);
+        assertThat(virtualUserTable.listSources(mapping))
+            .containsExactly(SOURCE);
+    }
+
+    @Test
+    public void listSourcesShouldReturnEmptyWhenNoDomainAlias() throws Exception {
+        Mapping mapping = Mapping.domain(Domain.of("domain"));
+
+        assertThat(virtualUserTable.listSources(mapping)).isEmpty();
+    }
+
+    @Test
+    public void listSourcesShouldHandleDomainSource() throws Exception {
+        Mapping mapping = Mapping.domain(Domain.of("domain"));
+
+        MappingSource source = MappingSource.fromDomain(Domain.of("source.org"));
+        virtualUserTable.addMapping(source, mapping);
+
+        assertThat(virtualUserTable.listSources(mapping))
+            .containsExactly(source);
+    }
+
+    @Test
+    public void listSourcesShouldHandleDomainSources() throws Exception {
+        Mapping mapping = Mapping.domain(Domain.of("domain"));
+
+        MappingSource source1 = MappingSource.fromDomain(Domain.of("source1.org"));
+        MappingSource source2 = MappingSource.fromDomain(Domain.of("source2.org"));
+        virtualUserTable.addMapping(source1, mapping);
+        virtualUserTable.addMapping(source2, mapping);
+
+        assertThat(virtualUserTable.listSources(mapping))
+            .containsExactlyInAnyOrder(source1, source2);
     }
 
     @Test

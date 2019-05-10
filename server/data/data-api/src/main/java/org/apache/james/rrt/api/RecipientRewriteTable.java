@@ -52,7 +52,8 @@ public interface RecipientRewriteTable {
         Mapping.Type.Group,
         Mapping.Type.Forward,
         Mapping.Type.Address,
-        Mapping.Type.Alias);
+        Mapping.Type.Alias,
+        Mapping.Type.Domain);
 
     void addMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException;
 
