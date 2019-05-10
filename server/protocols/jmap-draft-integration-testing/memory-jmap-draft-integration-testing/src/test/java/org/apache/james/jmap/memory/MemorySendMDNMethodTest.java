@@ -21,8 +21,6 @@ package org.apache.james.jmap.memory;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
@@ -46,7 +44,6 @@ public class MemorySendMDNMethodTest extends SendMDNMethodTest {
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-            .overrideWith(binder -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(binder -> binder.bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class)))
         .build();
