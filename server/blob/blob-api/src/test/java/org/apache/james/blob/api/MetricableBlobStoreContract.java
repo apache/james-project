@@ -75,8 +75,8 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
 
     @Test
     default void saveInputStreamShouldPublishSaveInputStreamTimerMetrics() {
-        testee().save(new ByteArrayInputStream(BYTES_CONTENT), BYTES_CONTENT.length).block();
-        testee().save(new ByteArrayInputStream(BYTES_CONTENT), BYTES_CONTENT.length).block();
+        testee().save(new ByteArrayInputStream(BYTES_CONTENT)).block();
+        testee().save(new ByteArrayInputStream(BYTES_CONTENT)).block();
 
         assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_INPUT_STREAM_TIMER_NAME))
             .hasSize(2);

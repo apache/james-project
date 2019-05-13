@@ -26,7 +26,6 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.google.common.base.Preconditions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -67,7 +66,7 @@ public interface Store<T, I> {
     class Impl<T, I extends BlobPartsId> implements Store<T, I> {
 
         public interface Encoder<T> {
-            Stream<Pair<BlobType, FixedLengthInputStream>> encode(T t);
+            Stream<Pair<BlobType, InputStream>> encode(T t);
         }
 
         public interface Decoder<T> {
@@ -94,9 +93,9 @@ public interface Store<T, I> {
                 .map(idFactory::generate);
         }
 
-        private Mono<Tuple2<BlobType, BlobId>> saveEntry(Pair<BlobType, FixedLengthInputStream> entry) {
+        private Mono<Tuple2<BlobType, BlobId>> saveEntry(Pair<BlobType, InputStream> entry) {
             return Mono.just(entry.getLeft())
-                .zipWith(blobStore.save(entry.getRight().getInputStream(), entry.getRight().getContentLength()));
+                .zipWith(blobStore.save(entry.getRight()));
         }
 
         @Override
@@ -109,27 +108,6 @@ public interface Store<T, I> {
                 .collectList()
                 .map(Collection::stream)
                 .map(decoder::decode);
-        }
-    }
-
-    class FixedLengthInputStream {
-
-        private final InputStream inputStream;
-        private final long contentLength;
-
-        public FixedLengthInputStream(InputStream inputStream, long contentLength) {
-            Preconditions.checkNotNull(inputStream, "'inputStream' is mandatory");
-            Preconditions.checkArgument(contentLength >= 0, "'contentLength' should be greater than or equal to 0");
-            this.inputStream = inputStream;
-            this.contentLength = contentLength;
-        }
-
-        public InputStream getInputStream() {
-            return inputStream;
-        }
-
-        public long getContentLength() {
-            return contentLength;
         }
     }
 }

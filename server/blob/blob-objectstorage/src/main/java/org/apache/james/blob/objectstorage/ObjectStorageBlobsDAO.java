@@ -54,13 +54,17 @@ public class ObjectStorageBlobsDAO implements BlobStore {
 
     private final ContainerName containerName;
     private final org.jclouds.blobstore.BlobStore blobStore;
+    private final PutBlobFunction putBlobFunction;
     private final PayloadCodec payloadCodec;
 
     ObjectStorageBlobsDAO(ContainerName containerName, BlobId.Factory blobIdFactory,
-                          org.jclouds.blobstore.BlobStore blobStore, PayloadCodec payloadCodec) {
+                          org.jclouds.blobstore.BlobStore blobStore,
+                          PutBlobFunction putBlobFunction,
+                          PayloadCodec payloadCodec) {
         this.blobIdFactory = blobIdFactory;
         this.containerName = containerName;
         this.blobStore = blobStore;
+        this.putBlobFunction = putBlobFunction;
         this.payloadCodec = payloadCodec;
     }
 
@@ -89,15 +93,15 @@ public class ObjectStorageBlobsDAO implements BlobStore {
 
     @Override
     public Mono<BlobId> save(byte[] data) {
-        return save(new ByteArrayInputStream(data), data.length);
+        return save(new ByteArrayInputStream(data));
     }
 
     @Override
-    public Mono<BlobId> save(InputStream data, long contentLength) {
+    public Mono<BlobId> save(InputStream data) {
         Preconditions.checkNotNull(data);
 
         BlobId tmpId = blobIdFactory.randomId();
-        return save(data, contentLength, tmpId)
+        return save(data, tmpId)
             .flatMap(id -> updateBlobId(tmpId, id));
     }
 
@@ -109,16 +113,15 @@ public class ObjectStorageBlobsDAO implements BlobStore {
             .thenReturn(to);
     }
 
-    private Mono<BlobId> save(InputStream data, long contentLength, BlobId id) {
+    private Mono<BlobId> save(InputStream data, BlobId id) {
         String containerName = this.containerName.value();
         HashingInputStream hashingInputStream = new HashingInputStream(Hashing.sha256(), data);
         Payload payload = payloadCodec.write(hashingInputStream);
         Blob blob = blobStore.blobBuilder(id.asString())
                             .payload(payload.getPayload())
-                            .contentLength(payload.getLength().orElse(contentLength))
                             .build();
 
-        return Mono.fromCallable(() -> blobStore.putBlob(containerName, blob))
+        return Mono.fromRunnable(() -> putBlobFunction.putBlob(blob))
             .then(Mono.fromCallable(() -> blobIdFactory.from(hashingInputStream.hash().toString())));
     }
 

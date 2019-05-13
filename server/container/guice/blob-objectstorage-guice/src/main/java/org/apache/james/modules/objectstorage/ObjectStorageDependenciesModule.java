@@ -21,9 +21,11 @@ package org.apache.james.modules.objectstorage;
 
 import java.io.FileNotFoundException;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration.Configuration;
@@ -32,6 +34,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
+import org.apache.james.blob.objectstorage.PutBlobFunction;
 import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 import org.apache.james.blob.objectstorage.aws.AwsS3ObjectStorage;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
@@ -62,11 +65,12 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private ObjectStorageBlobsDAO buildObjectStore(ObjectStorageBlobConfiguration configuration, BlobId.Factory blobIdFactory) throws InterruptedException, ExecutionException, TimeoutException {
+    private ObjectStorageBlobsDAO buildObjectStore(ObjectStorageBlobConfiguration configuration, BlobId.Factory blobIdFactory, Provider<AwsS3ObjectStorage> awsS3ObjectStorageProvider) throws InterruptedException, ExecutionException, TimeoutException {
         ObjectStorageBlobsDAO dao = selectDaoBuilder(configuration)
             .container(configuration.getNamespace())
             .blobIdFactory(blobIdFactory)
             .payloadCodec(configuration.getPayloadCodec())
+            .putBlob(putBlob(blobIdFactory, configuration, awsS3ObjectStorageProvider))
             .build();
         dao.createContainer(configuration.getNamespace()).block(Duration.ofMinutes(1));
         return dao;
@@ -80,6 +84,19 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
                 return AwsS3ObjectStorage.daoBuilder((AwsS3AuthConfiguration) configuration.getSpecificAuthConfiguration());
         }
         throw new IllegalArgumentException("unknown provider " + configuration.getProvider());
+    }
+
+    private Optional<PutBlobFunction> putBlob(BlobId.Factory blobIdFactory, ObjectStorageBlobConfiguration configuration, Provider<AwsS3ObjectStorage> awsS3ObjectStorageProvider) {
+        switch (configuration.getProvider()) {
+            case SWIFT:
+                return Optional.empty();
+            case AWSS3:
+                return awsS3ObjectStorageProvider
+                    .get()
+                    .putBlob(configuration.getNamespace(), (AwsS3AuthConfiguration) configuration.getSpecificAuthConfiguration());
+        }
+        throw new IllegalArgumentException("unknown provider " + configuration.getProvider());
+
     }
 
 }

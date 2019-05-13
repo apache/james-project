@@ -56,7 +56,7 @@ public interface BlobStoreContract {
 
     @Test
     default void saveShouldThrowWhenNullInputStream() {
-        assertThatThrownBy(() -> testee().save((InputStream) null, 0).block())
+        assertThatThrownBy(() -> testee().save((InputStream) null).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -80,7 +80,7 @@ public interface BlobStoreContract {
 
     @Test
     default void saveShouldSaveEmptyInputStream() {
-        BlobId blobId = testee().save(new ByteArrayInputStream(EMPTY_BYTEARRAY), EMPTY_BYTEARRAY.length).block();
+        BlobId blobId = testee().save(new ByteArrayInputStream(EMPTY_BYTEARRAY)).block();
 
         byte[] bytes = testee().readBytes(blobId).block();
 
@@ -104,7 +104,7 @@ public interface BlobStoreContract {
     @Test
     default void saveShouldReturnBlobIdOfInputStream() {
         BlobId blobId =
-            testee().save(new ByteArrayInputStream(SHORT_BYTEARRAY), SHORT_BYTEARRAY.length).block();
+            testee().save(new ByteArrayInputStream(SHORT_BYTEARRAY)).block();
 
         assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
     }
