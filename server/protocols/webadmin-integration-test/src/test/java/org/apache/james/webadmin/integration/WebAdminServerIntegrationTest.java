@@ -254,7 +254,9 @@ public class WebAdminServerIntegrationTest {
             .get("taskId");
 
         with()
-            .get("/task/" + taskId + "/await");
+            .get("/tasks/" + taskId + "/await")
+        .then()
+            .body("status", is("completed"));
 
         Awaitility.await()
             .atMost(Duration.TEN_SECONDS)
@@ -275,7 +277,9 @@ public class WebAdminServerIntegrationTest {
             .get("taskId");
 
         with()
-            .get("/task/" + taskId + "/await");
+            .get("/tasks/" + taskId + "/await")
+        .then()
+            .body("status", is("completed"));
 
         when()
             .get(VERSION)
