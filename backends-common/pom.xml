@@ -38,6 +38,7 @@
         <module>elasticsearch</module>
         <module>jpa</module>
         <module>rabbitmq</module>
+        <module>elasticsearch-v6</module>
     </modules>
 
 </project>
