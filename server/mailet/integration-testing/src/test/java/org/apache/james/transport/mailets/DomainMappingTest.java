@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.apache.james.mailets.configuration.CommonProcessors.RRT_ERROR_REPOSITORY;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
@@ -31,11 +32,14 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailets.TemporaryJamesServer;
+import org.apache.james.mailets.configuration.CommonProcessors;
+import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -56,6 +60,8 @@ public class DomainMappingTest {
     private static final String SENDER = SENDER_LOCAL_PART + "@" + DOMAIN1;
     private static final String USER_DOMAIN1 = "user@" + DOMAIN1;
     private static final String USER_DOMAIN2 = "user@" + DOMAIN2;
+    private static final String BOB_DOMAIN1 = "bob@" + DOMAIN1;
+    private static final String BOB_DOMAIN2 = "bob@" + DOMAIN2;
     private static final String MESSAGE_CONTENT = "any text";
 
     private TemporaryJamesServer jamesServer;
@@ -71,7 +77,12 @@ public class DomainMappingTest {
 
     @Before
     public void setup() throws Exception {
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .putProcessor(CommonProcessors.rrtErrorEnabledTransport())
+            .putProcessor(CommonProcessors.rrtErrorProcessor());
+
         jamesServer = TemporaryJamesServer.builder()
+            .withMailetContainer(mailetContainer)
             .build(temporaryFolder);
 
         jamesServer.getProbe(DataProbeImpl.class).fluent()
@@ -130,5 +141,41 @@ public class DomainMappingTest {
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
         assertThat(imapMessageReader.readFirstMessage()).contains(MESSAGE_CONTENT);
+    }
+
+    @Test
+    public void mailShouldGoToRRTErrorMailRepositoryUponDomainLoop() throws Exception {
+        webAdminApi.put("/domains/" + DOMAIN1 + "/aliases/" + DOMAIN2);
+        webAdminApi.put("/domains/" + DOMAIN2 + "/aliases/" + DOMAIN1);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FakeMail.builder()
+                .name("name")
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(USER_DOMAIN2));
+
+        awaitAtMostOneMinute.until(
+            () -> jamesServer.getProbe(MailRepositoryProbeImpl.class)
+                .getRepositoryMailCount(RRT_ERROR_REPOSITORY) == 1);
+    }
+
+    @Test
+    public void mailShouldGoToRRTErrorMailRepositoryUponLoopCombiningDomainAndAlias() throws Exception {
+        jamesServer.getProbe(DataProbeImpl.class).addUser(BOB_DOMAIN2, PASSWORD);
+
+        webAdminApi.put("/domains/" + DOMAIN1 + "/aliases/" + DOMAIN2);
+        webAdminApi.put("/address/aliases/" + BOB_DOMAIN2 + "/sources/" + BOB_DOMAIN1);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FakeMail.builder()
+                .name("name")
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(BOB_DOMAIN1));
+
+        awaitAtMostOneMinute.until(
+            () -> jamesServer.getProbe(MailRepositoryProbeImpl.class)
+                .getRepositoryMailCount(RRT_ERROR_REPOSITORY) == 1);
     }
 }
