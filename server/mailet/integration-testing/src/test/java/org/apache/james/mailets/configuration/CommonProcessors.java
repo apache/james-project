@@ -37,6 +37,7 @@ import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.mailets.ToRepository;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.HasMailAttribute;
+import org.apache.james.transport.matchers.IsSenderInRRTLoop;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.transport.matchers.RelayLimit;
 import org.apache.james.transport.matchers.SMTPAuthSuccessful;
@@ -44,6 +45,8 @@ import org.apache.james.transport.matchers.SMTPAuthSuccessful;
 public class CommonProcessors {
 
     public static final MailRepositoryUrl ERROR_REPOSITORY = MailRepositoryUrl.from("file://var/mail/error/");
+    public static final MailRepositoryUrl RRT_ERROR_REPOSITORY = MailRepositoryUrl.from("file://var/mail/rrt-error/");
+    private static final String RRT_ERROR = "rrt-error";
 
     public static ProcessorConfiguration root() {
         return ProcessorConfiguration.root()
@@ -138,5 +141,36 @@ public class CommonProcessors {
                         .mailet(DSNBounce.class)
                         .addProperty("passThrough", "false"))
                 .build();
+    }
+
+    public static final ProcessorConfiguration.Builder rrtErrorEnabledTransport() {
+        return ProcessorConfiguration.transport()
+            .addMailet(MailetConfiguration.builder()
+                .matcher(All.class)
+                .mailet(RecipientRewriteTable.class)
+                .addProperty("errorProcessor", RRT_ERROR))
+            .addMailet(MailetConfiguration.builder()
+                .matcher(RecipientIsLocal.class)
+                .mailet(VacationMailet.class))
+            .addMailet(MailetConfiguration.builder()
+                .matcher(RecipientIsLocal.class)
+                .mailet(JMAPFiltering.class))
+            .addMailetsFrom(CommonProcessors.deliverOnlyTransport());
+    }
+
+    public static ProcessorConfiguration.Builder rrtErrorProcessor() {
+        return ProcessorConfiguration.builder()
+            .state(RRT_ERROR)
+            .addMailet(MailetConfiguration.builder()
+                .matcher(All.class)
+                .mailet(ToRepository.class)
+                .addProperty("passThrough", "true")
+                .addProperty("repositoryPath", RRT_ERROR_REPOSITORY.asString()))
+            .addMailet(MailetConfiguration.builder()
+                .matcher(IsSenderInRRTLoop.class)
+                .mailet(Null.class))
+            .addMailet(MailetConfiguration.builder()
+                .matcher(All.class)
+                .mailet(Bounce.class));
     }
 }

@@ -28,23 +28,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
-import org.apache.james.jmap.mailet.VacationMailet;
-import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
-import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
-import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.transport.matchers.All;
-import org.apache.james.transport.matchers.IsSenderInRRTLoop;
-import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.MailRepositoryProbeImpl;
@@ -100,28 +93,8 @@ public class AliasMappingTest {
     @Before
     public void setup() throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-            .putProcessor(ProcessorConfiguration.transport()
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(All.class)
-                    .mailet(RecipientRewriteTable.class)
-                    .addProperty("errorProcessor", RRT_ERROR))
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(RecipientIsLocal.class)
-                    .mailet(VacationMailet.class))
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(RecipientIsLocal.class)
-                    .mailet(JMAPFiltering.class))
-                .addMailetsFrom(CommonProcessors.deliverOnlyTransport()))
-            .putProcessor(ProcessorConfiguration.builder()
-                .state(RRT_ERROR)
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(All.class)
-                    .mailet(ToRepository.class)
-                    .addProperty("passThrough", "true")
-                    .addProperty("repositoryPath", RRT_ERROR_REPOSITORY.asString()))
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(IsSenderInRRTLoop.class)
-                    .mailet(Null.class)));
+            .putProcessor(CommonProcessors.rrtErrorEnabledTransport())
+            .putProcessor(CommonProcessors.rrtErrorProcessor());
 
         jamesServer = TemporaryJamesServer.builder()
             .withMailetContainer(mailetContainer)
