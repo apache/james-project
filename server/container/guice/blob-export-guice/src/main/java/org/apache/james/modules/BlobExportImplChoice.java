@@ -29,7 +29,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-enum  BlobExportImplChoice {
+public enum  BlobExportImplChoice {
     LOCAL_FILE("localFile"),
     LINSHARE("linshare");
 

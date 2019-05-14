@@ -78,6 +78,8 @@ public class GuiceJamesServer {
     public void start() throws Exception {
         Injector injector = Guice.createInjector(module);
         preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {}));
+        injector.getInstance(StartUpChecksPerformer.class)
+            .performCheck();
         injector.getInstance(ConfigurationsPerformer.class).initModules();
         guiceProbeProvider = injector.getInstance(GuiceProbeProvider.class);
         isStartedProbe.notifyStarted();
