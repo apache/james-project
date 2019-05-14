@@ -178,4 +178,46 @@ public class DomainMappingTest {
             () -> jamesServer.getProbe(MailRepositoryProbeImpl.class)
                 .getRepositoryMailCount(RRT_ERROR_REPOSITORY) == 1);
     }
+
+    @Test
+    public void domainAliasShouldBeIgnoredWhenUserAlias() throws Exception {
+        jamesServer.getProbe(DataProbeImpl.class).addUser(BOB_DOMAIN1, PASSWORD);
+
+        webAdminApi.put("/address/aliases/" + BOB_DOMAIN1 + "/sources/" + USER_DOMAIN2);
+        webAdminApi.put("/domains/" + DOMAIN1 + "/aliases/" + DOMAIN2);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FakeMail.builder()
+                .name("name")
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(USER_DOMAIN2));
+
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(BOB_DOMAIN1, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).contains(MESSAGE_CONTENT);
+    }
+
+    @Test
+    public void domainAliasShouldBeChainedIfApplicableAfterUserAliasRewrite() throws Exception {
+        jamesServer.getProbe(DataProbeImpl.class).addUser(BOB_DOMAIN1, PASSWORD);
+
+        webAdminApi.put("/address/aliases/" + BOB_DOMAIN2 + "/sources/" + USER_DOMAIN2);
+        webAdminApi.put("/domains/" + DOMAIN1 + "/aliases/" + DOMAIN2);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FakeMail.builder()
+                .name("name")
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(USER_DOMAIN2));
+
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(BOB_DOMAIN1, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).contains(MESSAGE_CONTENT);
+    }
 }
