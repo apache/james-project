@@ -124,6 +124,9 @@ Response codes:
    - [Delete a domain](#Delete_a_domain)
    - [Test if a domain exists](#Test_if_a_domain_exists)
    - [Get the list of domains](#Get_the_list_of_domains)
+   - [Get the list of aliases for a domain](#Get_the_list_of_aliases_for_a_domain)
+   - [Create an alias for a domain](#Create_an_alias_for_a_domain)
+   - [Delete an alias for a domain](#Delete_an_alias_for_a_domain)
 
 ### Create a domain
 
@@ -179,6 +182,67 @@ Possible response:
 Response codes:
 
  - 200: The domain list was successfully retrieved
+
+### Get the list of aliases for a domain
+
+```
+curl -XGET http://ip:port/domains/destination.domain.tld/aliases
+```
+
+Possible response:
+
+```
+[
+  {"source": "source1.domain.tld"},
+  {"source": "source2.domain.tld"}
+]
+```
+
+When sending an email to an email address having source1.domain.tld or source2.domain.tld as a domain part (exemple: benwa@source1.domain.tld), then
+the domain part will be rewritten into destination.domain.tld (so into benwa@destination.domain.tld).
+
+Response codes:
+
+ - 200: The domain aliases was successfully retrieved
+ - 400: destination.domain.tld has an invalid syntax
+ - 404: destination.domain.tld is not part of handled domains or does not have local domains as aliases.
+
+### Create an alias for a domain
+
+To create a domain alias execute the following query:
+
+```
+curl -XPUT http://ip:port/domains/destination.domain.tld/aliases/source.domain.tld
+```
+
+When sending an email to an email address having source.domain.tld as a domain part (exemple: benwa@source.domain.tld), then
+the domain part will be rewritten into destination.domain.tld (so into benwa@destination.domain.tld).
+
+
+Response codes:
+
+ - 204: The redirection now exists
+ - 400: source.domain.tld or destination.domain.tld have an invalid syntax
+ - 404: source.domain.tld are not part of handled domains.
+
+### Delete an alias for a domain
+
+
+To delete a domain alias execute the following query:
+
+```
+curl -XDELETE http://ip:port/domains/destination.domain.tld/aliases/source.domain.tld
+```
+
+When sending an email to an email address having source.domain.tld as a domain part (exemple: benwa@source.domain.tld), then
+the domain part will be rewritten into destination.domain.tld (so into benwa@destination.domain.tld).
+
+
+Response codes:
+
+ - 204: The redirection now exists
+ - 400: source.domain.tld or destination.domain.tld have an invalid syntax
+ - 404: source.domain.tld are not part of handled domains.
 
 ## Administrating users
 
