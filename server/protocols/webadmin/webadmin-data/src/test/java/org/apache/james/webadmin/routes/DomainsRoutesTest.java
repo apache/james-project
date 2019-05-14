@@ -62,6 +62,7 @@ public class DomainsRoutesTest {
     private static final String ALIAS_DOMAIN = "alias.domain";
     private static final String ALIAS_DOMAIN_2 = "alias.domain.bis";
     public static final String EXTERNAL_DOMAIN = "external.domain.tld";
+    public static final String DOMAIN_2 = "domain2";
 
     private WebAdminServer webAdminServer;
 
@@ -505,6 +506,41 @@ public class DomainsRoutesTest {
                     .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                     .body("type", is("InvalidArgument"))
                     .body("message", is("Invalid request for domain creation invalid@domain"));
+            }
+
+            @Test
+            void deleteSourceDomainShouldRemoveTheCorrespondingAlias() {
+                with().put(ALIAS_DOMAIN_2);
+                with().put(ALIAS_DOMAIN);
+
+                with().put(DOMAIN + "/aliases/" + ALIAS_DOMAIN);
+                with().put(DOMAIN + "/aliases/" + ALIAS_DOMAIN_2);
+
+                with().delete(ALIAS_DOMAIN_2);
+
+                when()
+                    .get(DOMAIN + "/aliases")
+                    .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                    .body("source", containsInAnyOrder(ALIAS_DOMAIN));
+            }
+
+            @Test
+            void deleteDestinationDomainShouldHaveNoImpactOnAliasesAliases() {
+                with().put(DOMAIN);
+                with().put(ALIAS_DOMAIN);
+
+                with().put(DOMAIN + "/aliases/" + ALIAS_DOMAIN);
+
+                with().delete(DOMAIN);
+
+                when()
+                    .get(DOMAIN + "/aliases")
+                    .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                    .body("source", containsInAnyOrder(ALIAS_DOMAIN));
             }
         }
 

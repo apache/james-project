@@ -48,6 +48,7 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -228,15 +229,24 @@ public class DomainsRoutes implements Routes {
         service.put(SPECIFIC_ALIAS, this::addDomainAlias, jsonTransformer);
     }
 
-    private String removeDomain(Request request, Response response) {
+    private String removeDomain(Request request, Response response) throws RecipientRewriteTableException {
         try {
             Domain domain = checkValidDomain(request.params(DOMAIN_NAME));
             domainList.removeDomain(domain);
+
+            removeCorrespondingDomainAliases(domain);
         } catch (DomainListException e) {
             LOGGER.info("{} did not exists", request.params(DOMAIN_NAME));
         }
         response.status(HttpStatus.NO_CONTENT_204);
         return Constants.EMPTY_BODY;
+    }
+
+    private void removeCorrespondingDomainAliases(Domain domain) throws RecipientRewriteTableException {
+        MappingSource mappingSource = MappingSource.fromDomain(domain);
+        recipientRewriteTable.getStoredMappings(mappingSource)
+            .asStream()
+            .forEach(Throwing.<Mapping>consumer(mapping -> recipientRewriteTable.removeMapping(mappingSource, mapping)).sneakyThrow());
     }
 
     private String addDomain(Request request, Response response) {
