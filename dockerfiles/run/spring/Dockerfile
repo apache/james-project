@@ -13,13 +13,23 @@ FROM openjdk:8u181-jre
 # 587 SMTP with authentication and startTLS enabled
 # 993 IMAP with socketTLS enabled
 
-EXPOSE 25 110 143 465 587 993
+EXPOSE 25 110 143 465 587 993 4000
 
 WORKDIR /root
 
 # Get data we need to run James : build results and configuration
 ADD destination/james-server-app-3.4.0-SNAPSHOT-app.zip /root/james-server-app-3.4.0-SNAPSHOT-app.zip
 ADD destination/conf /root/conf
+ADD destination/glowroot/plugins /root/glowroot/plugins
+ADD destination/glowroot/glowroot.jar /root/glowroot/glowroot.jar
+ADD destination/glowroot/lib/glowroot-embedded-collector.jar /root/glowroot/lib/glowroot-embedded-collector.jar
+ADD destination/glowroot/lib/glowroot-logging-logstash.jar /root/glowroot/lib/glowroot-logging-logstash.jar
+ADD destination/glowroot/admin.json /root/glowroot/admin.json
+ADD destination/run_james.sh /root/run_james.sh
+
+VOLUME /logs
+VOLUME /root/conf
+VOLUME /root/glowroot/plugins
 
 # Unzip build result
 RUN unzip james-server-app-3.4.0-SNAPSHOT-app.zip
@@ -31,5 +41,7 @@ RUN rm -r james-server-app-3.4.0-SNAPSHOT/conf/*
 RUN cp -r conf/* james-server-app-3.4.0-SNAPSHOT/conf
 RUN cp wrapper.conf james-server-app-3.4.0-SNAPSHOT/conf
 
+ENV PATH "$PATH:/root/glowroot/lib"
+
 WORKDIR /root/james-server-app-3.4.0-SNAPSHOT/bin
-ENTRYPOINT ["./wrapper-linux-x86-64","../conf/wrapper.conf", "wrapper.syslog.ident=james", "wrapper.pidfile=../var/james.pid", "wrapper.daemonize=FALSE"]
+ENTRYPOINT /root/run_james.sh

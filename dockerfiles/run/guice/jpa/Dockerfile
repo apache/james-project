@@ -14,7 +14,7 @@ FROM openjdk:8u181-jre
 # 993  IMAP with socketTLS enabled
 # 8000 Web Admin interface (unsecured: expose at your own risks)
 
-EXPOSE 25 110 143 465 587 993 8000
+EXPOSE 25 110 143 465 587 993 4000 8000
 
 WORKDIR /root
 
@@ -24,8 +24,20 @@ ADD destination/james-server-jpa-guice.lib /root/james-server-jpa-guice.lib
 ADD destination/james-server-cli.jar /root/james-cli.jar
 ADD destination/james-server-cli.lib /root/james-server-cli.lib
 ADD destination/conf /root/conf
+ADD destination/glowroot/plugins /root/glowroot/plugins
+ADD destination/glowroot/glowroot.jar /root/glowroot/glowroot.jar
+ADD destination/glowroot/lib/glowroot-embedded-collector.jar /root/glowroot/lib/glowroot-embedded-collector.jar
+ADD destination/glowroot/lib/glowroot-logging-logstash.jar /root/glowroot/lib/glowroot-logging-logstash.jar
+ADD destination/glowroot/admin.json /root/glowroot/admin.json
+ADD destination/run_james.sh /root/run_james.sh
 
 VOLUME /logs
+VOLUME /root/conf
+VOLUME /root/glowroot/plugins
+VOLUME /root/glowroot/data
 
-ENV JVM_OPTIONS=""
-ENTRYPOINT java -classpath '/root/james-server.jar:/root/james-server-jpa-guice.lib/*' -javaagent:/root/james-server-jpa-guice.lib/openjpa-3.0.0.jar -Dlogback.configurationFile=/root/conf/logback.xml -Dworking.directory=/root/ $JVM_OPTIONS org.apache.james.JPAJamesServerMain
+ENV PATH "$PATH:/root/glowroot/lib" \
+    JVM_OPTIONS="" \
+    GLOWROOT_ACTIVATED="false"
+
+ENTRYPOINT ./run_james.sh
