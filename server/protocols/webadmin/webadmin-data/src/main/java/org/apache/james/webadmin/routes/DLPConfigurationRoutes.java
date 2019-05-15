@@ -20,7 +20,6 @@
 package org.apache.james.webadmin.routes;
 
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
-import static org.apache.james.webadmin.Constants.EMPTY_BODY;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
@@ -46,6 +45,7 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
 import io.swagger.annotations.Api;
@@ -131,8 +131,7 @@ public class DLPConfigurationRoutes implements Routes {
 
             dlpConfigurationStore.store(senderDomain, rules);
 
-            response.status(HttpStatus.NO_CONTENT_204);
-            return EMPTY_BODY;
+            return Responses.returnNoContent(response);
         });
     }
 
@@ -197,8 +196,7 @@ public class DLPConfigurationRoutes implements Routes {
             Domain senderDomain = parseDomain(request);
             dlpConfigurationStore.clear(senderDomain);
 
-            response.status(HttpStatus.NO_CONTENT_204);
-            return EMPTY_BODY;
+            return Responses.returnNoContent(response);
         }, jsonTransformer);
     }
 

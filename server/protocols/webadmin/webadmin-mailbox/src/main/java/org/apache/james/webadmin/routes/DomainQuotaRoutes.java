@@ -47,6 +47,7 @@ import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
+import org.apache.james.webadmin.utils.Responses;
 import org.apache.james.webadmin.validation.Quotas;
 import org.eclipse.jetty.http.HttpStatus;
 
@@ -133,8 +134,7 @@ public class DomainQuotaRoutes implements Routes {
             Domain domain = checkDomainExist(request);
             QuotaDTO quotaDTO = parseQuotaDTO(request);
             domainQuotaService.defineQuota(domain, quotaDTO);
-            response.status(HttpStatus.NO_CONTENT_204);
-            return response;
+            return Responses.returnNoContent(response);
         }));
     }
 
@@ -169,8 +169,7 @@ public class DomainQuotaRoutes implements Routes {
         service.delete(SIZE_ENDPOINT, (request, response) -> {
             Domain domain = checkDomainExist(request);
             domainQuotaService.remoteMaxQuotaSize(domain);
-            response.status(HttpStatus.NO_CONTENT_204);
-            return response;
+            return Responses.returnNoContent(response);
         });
     }
 
@@ -193,8 +192,7 @@ public class DomainQuotaRoutes implements Routes {
             Domain domain = checkDomainExist(request);
             QuotaSize quotaSize = Quotas.quotaSize(request.body());
             domainQuotaService.setMaxSizeQuota(domain, quotaSize);
-            response.status(HttpStatus.NO_CONTENT_204);
-            return response;
+            return Responses.returnNoContent(response);
         });
     }
 
@@ -215,8 +213,7 @@ public class DomainQuotaRoutes implements Routes {
             if (maxSizeQuota.isPresent()) {
                 return maxSizeQuota;
             }
-            response.status(HttpStatus.NO_CONTENT_204);
-            return null;
+            return Responses.returnNoContent(response);
         }, jsonTransformer);
     }
 
@@ -233,8 +230,7 @@ public class DomainQuotaRoutes implements Routes {
         service.delete(COUNT_ENDPOINT, (request, response) -> {
             Domain domain = checkDomainExist(request);
             domainQuotaService.remoteMaxQuotaCount(domain);
-            response.status(HttpStatus.NO_CONTENT_204);
-            return response;
+            return Responses.returnNoContent(response);
         });
     }
 
@@ -257,8 +253,7 @@ public class DomainQuotaRoutes implements Routes {
             Domain domain = checkDomainExist(request);
             QuotaCount quotaCount = Quotas.quotaCount(request.body());
             domainQuotaService.setMaxCountQuota(domain, quotaCount);
-            response.status(HttpStatus.NO_CONTENT_204);
-            return response;
+            return Responses.returnNoContent(response);
         });
     }
 
@@ -278,8 +273,7 @@ public class DomainQuotaRoutes implements Routes {
             if (maxCountQuota.isPresent()) {
                 return maxCountQuota;
             }
-            response.status(HttpStatus.NO_CONTENT_204);
-            return null;
+            return Responses.returnNoContent(response);
         }, jsonTransformer);
     }
 

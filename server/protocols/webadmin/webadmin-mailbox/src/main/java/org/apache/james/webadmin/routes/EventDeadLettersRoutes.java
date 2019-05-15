@@ -42,6 +42,7 @@ import org.apache.james.webadmin.dto.TaskIdDto;
 import org.apache.james.webadmin.service.EventDeadLettersService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
 import io.swagger.annotations.Api;
@@ -252,13 +253,12 @@ public class EventDeadLettersRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name or insertion id"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
-    private Response deleteEvent(Request request, Response response) {
+    private String deleteEvent(Request request, Response response) {
         Group group = parseGroup(request);
         EventDeadLetters.InsertionId insertionId = parseInsertionId(request);
 
         eventDeadLettersService.deleteEvent(group, insertionId);
-        response.status(HttpStatus.NO_CONTENT_204);
-        return response;
+        return Responses.returnNoContent(response);
     }
 
     @POST

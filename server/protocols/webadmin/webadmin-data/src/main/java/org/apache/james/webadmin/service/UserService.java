@@ -30,6 +30,7 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.webadmin.dto.UserResponse;
+import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +72,7 @@ public class UserService {
         User user = usersRepository.getUserByName(username);
         try {
             upsert(user, username, password);
-            response.status(HttpStatus.NO_CONTENT_204);
+            return Responses.returnNoContent(response);
         } catch (UsersRepositoryException e) {
             LOGGER.info("Error creating or updating user : {}", e.getMessage());
             response.status(HttpStatus.CONFLICT_409);
