@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -49,52 +50,53 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class RecipientRewriteTableProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecipientRewriteTableProcessor.class);
 
     private static class RrtExecutionResult {
         private static RrtExecutionResult empty() {
-            return new RrtExecutionResult(ImmutableList.of(), ImmutableList.of());
+            return new RrtExecutionResult(ImmutableSet.of(), ImmutableSet.of());
         }
 
         private static RrtExecutionResult error(MailAddress mailAddress) {
-            return new RrtExecutionResult(ImmutableList.of(), ImmutableList.of(mailAddress));
+            return new RrtExecutionResult(ImmutableSet.of(), ImmutableSet.of(mailAddress));
         }
 
         private static RrtExecutionResult success(MailAddress mailAddress) {
-            return new RrtExecutionResult(ImmutableList.of(mailAddress), ImmutableList.of());
+            return new RrtExecutionResult(ImmutableSet.of(mailAddress), ImmutableSet.of());
         }
 
         private static RrtExecutionResult success(List<MailAddress> mailAddresses) {
-            return new RrtExecutionResult(ImmutableList.copyOf(mailAddresses), ImmutableList.of());
+            return new RrtExecutionResult(ImmutableSet.copyOf(mailAddresses), ImmutableSet.of());
         }
 
         private static RrtExecutionResult merge(RrtExecutionResult result1, RrtExecutionResult result2) {
             return new RrtExecutionResult(
-                ImmutableList.<MailAddress>builder()
+                ImmutableSet.<MailAddress>builder()
                     .addAll(result1.getNewRecipients())
                     .addAll(result2.getNewRecipients())
                     .build(),
-                ImmutableList.<MailAddress>builder()
+                ImmutableSet.<MailAddress>builder()
                     .addAll(result1.getRecipientWithError())
                     .addAll(result2.getRecipientWithError())
                     .build());
         }
 
-        private final ImmutableList<MailAddress> newRecipients;
-        private final ImmutableList<MailAddress> recipientWithError;
+        private final ImmutableSet<MailAddress> newRecipients;
+        private final ImmutableSet<MailAddress> recipientWithError;
 
-        public RrtExecutionResult(ImmutableList<MailAddress> newRecipients, ImmutableList<MailAddress> recipientWithError) {
+        public RrtExecutionResult(ImmutableSet<MailAddress> newRecipients, ImmutableSet<MailAddress> recipientWithError) {
             this.newRecipients = newRecipients;
             this.recipientWithError = recipientWithError;
         }
 
-        public List<MailAddress> getNewRecipients() {
+        public Set<MailAddress> getNewRecipients() {
             return newRecipients;
         }
 
-        public List<MailAddress> getRecipientWithError() {
+        public Set<MailAddress> getRecipientWithError() {
             return recipientWithError;
         }
 

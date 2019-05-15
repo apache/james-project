@@ -343,4 +343,23 @@ public class AliasMappingTest {
                 .getRepositoryMailCount(RRT_ERROR_REPOSITORY) == 1);
     }
 
+    @Test
+    public void userShouldNotReceiveDuplicatesWhenUserAndAliasRegisteredToAGroup() throws Exception {
+        webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + BOB_ALIAS);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ADDRESS + "/" + BOB_ADDRESS);
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ADDRESS + "/" + BOB_ALIAS);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FakeMail.builder()
+                .name("name")
+                .mimeMessage(message)
+                .sender(ALICE_ADDRESS)
+                .recipient(GROUP_ADDRESS));
+
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(BOB_ADDRESS, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessageCount(awaitAtMostOneMinute, 1);
+    }
+
 }
