@@ -28,6 +28,16 @@ import com.google.inject.Module;
 
 public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
 
+    private final DockerElasticSearch dockerElasticSearch;
+
+    public DockerElasticSearchExtension() {
+        this(DockerElasticSearchSingleton.INSTANCE);
+    }
+
+    public DockerElasticSearchExtension(DockerElasticSearch dockerElasticSearch) {
+        this.dockerElasticSearch = dockerElasticSearch;
+    }
+
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
         getDockerES().start();
@@ -55,6 +65,6 @@ public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
     }
 
     public DockerElasticSearch getDockerES() {
-        return DockerElasticSearchSingleton.INSTANCE;
+        return dockerElasticSearch;
     }
 }
