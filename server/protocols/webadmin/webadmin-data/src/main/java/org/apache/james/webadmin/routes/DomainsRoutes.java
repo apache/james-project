@@ -34,24 +34,19 @@ import javax.ws.rs.Produces;
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.apache.james.rrt.lib.Mapping;
-import org.apache.james.rrt.lib.MappingSource;
-import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.DomainAliasResponse;
+import org.apache.james.webadmin.service.DomainAliasService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import io.swagger.annotations.Api;
@@ -69,10 +64,6 @@ import spark.Service;
 @Path(DomainsRoutes.DOMAINS)
 @Produces("application/json")
 public class DomainsRoutes implements Routes {
-    @FunctionalInterface
-    interface MappingOperation {
-        void perform(MappingSource mappingSource, Mapping mapping) throws RecipientRewriteTableException;
-    }
 
     public static final String DOMAINS = "/domains";
     private static final Logger LOGGER = LoggerFactory.getLogger(DomainsRoutes.class);
@@ -86,14 +77,14 @@ public class DomainsRoutes implements Routes {
     private static final int MAXIMUM_DOMAIN_SIZE = 256;
 
     private final DomainList domainList;
-    private final RecipientRewriteTable recipientRewriteTable;
+    private final DomainAliasService domainAliasService;
     private final JsonTransformer jsonTransformer;
     private Service service;
 
     @Inject
-    public DomainsRoutes(DomainList domainList, RecipientRewriteTable recipientRewriteTable, JsonTransformer jsonTransformer) {
+    DomainsRoutes(DomainList domainList, DomainAliasService domainAliasService, JsonTransformer jsonTransformer) {
         this.domainList = domainList;
-        this.recipientRewriteTable = recipientRewriteTable;
+        this.domainAliasService = domainAliasService;
         this.jsonTransformer = jsonTransformer;
     }
 
@@ -234,26 +225,18 @@ public class DomainsRoutes implements Routes {
             Domain domain = checkValidDomain(request.params(DOMAIN_NAME));
             domainList.removeDomain(domain);
 
-            removeCorrespondingDomainAliases(domain);
+            domainAliasService.removeCorrespondingDomainAliases(domain);
         } catch (DomainListException e) {
             LOGGER.info("{} did not exists", request.params(DOMAIN_NAME));
         }
-        response.status(HttpStatus.NO_CONTENT_204);
-        return Constants.EMPTY_BODY;
-    }
-
-    private void removeCorrespondingDomainAliases(Domain domain) throws RecipientRewriteTableException {
-        MappingSource mappingSource = MappingSource.fromDomain(domain);
-        recipientRewriteTable.getStoredMappings(mappingSource)
-            .asStream()
-            .forEach(Throwing.<Mapping>consumer(mapping -> recipientRewriteTable.removeMapping(mappingSource, mapping)).sneakyThrow());
+        return Responses.returnNoContent(response);
     }
 
     private String addDomain(Request request, Response response) {
         Domain domain = checkValidDomain(request.params(DOMAIN_NAME));
         try {
             addDomain(domain);
-            response.status(204);
+            return Responses.returnNoContent(response);
         } catch (DomainListException e) {
             LOGGER.info("{} already exists", domain);
             throw ErrorResponder.builder()
@@ -271,7 +254,6 @@ public class DomainsRoutes implements Routes {
                 .cause(e)
                 .haltError();
         }
-        return Constants.EMPTY_BODY;
     }
 
     private Domain checkValidDomain(String domainName) {
@@ -292,53 +274,48 @@ public class DomainsRoutes implements Routes {
         domainList.addDomain(domain);
     }
 
-    private Response exists(Request request, Response response) throws DomainListException {
+    private String exists(Request request, Response response) throws DomainListException {
         Domain domain = checkValidDomain(request.params(DOMAIN_NAME));
 
         if (!domainList.containsDomain(domain)) {
             throw domainNotFound(domain);
         } else {
-            response.status(HttpStatus.NO_CONTENT_204);
-            return response;
+            return Responses.returnNoContent(response);
         }
     }
 
     private ImmutableSet<DomainAliasResponse> listDomainAliases(Request request, Response response) throws DomainListException, RecipientRewriteTableException {
         Domain domain = checkValidDomain(request.params(DOMAIN_NAME));
 
-        if (!hasAliases(domain)) {
+        if (!domainAliasService.hasAliases(domain)) {
             throw domainHasNoAliases(domain);
         } else {
-            return recipientRewriteTable.listSources(Mapping.domain(domain))
-                .map(DomainAliasResponse::new)
-                .collect(Guavate.toImmutableSet());
+            return domainAliasService.listDomainAliases(domain);
         }
     }
 
     private String addDomainAlias(Request request, Response response) throws DomainListException, RecipientRewriteTableException {
-        return performOperationOnAlias(request, response, recipientRewriteTable::addMapping);
-    }
-
-    private String removeDomainAlias(Request request, Response response) throws DomainListException, RecipientRewriteTableException {
-        return performOperationOnAlias(request, response, recipientRewriteTable::removeMapping);
-    }
-
-    private String performOperationOnAlias(Request request, Response response, MappingOperation operation) throws DomainListException, RecipientRewriteTableException {
         Domain sourceDomain = checkValidDomain(request.params(SOURCE_DOMAIN));
         Domain destinationDomain = checkValidDomain(request.params(DESTINATION_DOMAIN));
 
-        if (!domainList.containsDomain(sourceDomain)) {
-            throw domainNotFound(sourceDomain);
+        try {
+            domainAliasService.addDomainAlias(sourceDomain, destinationDomain);
+            return Responses.returnNoContent(response);
+        } catch (DomainAliasService.DomainNotFound e) {
+            throw domainNotFound(e.getDomain());
         }
-
-        operation.perform(MappingSource.fromDomain(sourceDomain), Mapping.domain(destinationDomain));
-        response.status(HttpStatus.NO_CONTENT_204);
-        return Constants.EMPTY_BODY;
     }
 
-    private boolean hasAliases(Domain domain) throws DomainListException, RecipientRewriteTableException {
-        return domainList.containsDomain(domain)
-            || recipientRewriteTable.listSources(Mapping.domain(domain)).findFirst().isPresent();
+    private String removeDomainAlias(Request request, Response response) throws DomainListException, RecipientRewriteTableException {
+        Domain sourceDomain = checkValidDomain(request.params(SOURCE_DOMAIN));
+        Domain destinationDomain = checkValidDomain(request.params(DESTINATION_DOMAIN));
+
+        try {
+            domainAliasService.removeDomainAlias(sourceDomain, destinationDomain);
+            return Responses.returnNoContent(response);
+        } catch (DomainAliasService.DomainNotFound e) {
+            throw domainNotFound(e.getDomain());
+        }
     }
 
     private HaltException domainNotFound(Domain domain) {

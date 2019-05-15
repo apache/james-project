@@ -46,6 +46,7 @@ import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.service.DomainAliasService;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
@@ -57,19 +58,19 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
 
-public class DomainsRoutesTest {
+class DomainsRoutesTest {
     private static final String DOMAIN = "domain";
     private static final String ALIAS_DOMAIN = "alias.domain";
     private static final String ALIAS_DOMAIN_2 = "alias.domain.bis";
-    public static final String EXTERNAL_DOMAIN = "external.domain.tld";
-    public static final String DOMAIN_2 = "domain2";
+    private static final String EXTERNAL_DOMAIN = "external.domain.tld";
 
     private WebAdminServer webAdminServer;
 
     private void createServer(DomainList domainList) throws Exception {
+        DomainAliasService domainAliasService = new DomainAliasService(new MemoryRecipientRewriteTable(), domainList);
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
-            new DomainsRoutes(domainList, new MemoryRecipientRewriteTable(), new JsonTransformer()));
+            new DomainsRoutes(domainList, domainAliasService, new JsonTransformer()));
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
 
