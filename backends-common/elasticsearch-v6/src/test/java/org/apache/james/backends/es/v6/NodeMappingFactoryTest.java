@@ -19,18 +19,20 @@
 
 package org.apache.james.backends.es.v6;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
+import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class NodeMappingFactoryTest {
-    public static final String MESSAGE = "message";
-    public static final IndexName INDEX_NAME = new IndexName("index");
-    public static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
-    public static final TypeName TYPE_NAME = new TypeName("type");
+    private static final String MESSAGE = "message";
+    private static final IndexName INDEX_NAME = new IndexName("index");
+    private static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
+    private static final TypeName TYPE_NAME = new TypeName("type");
 
     @Rule
     public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
@@ -58,7 +60,7 @@ public class NodeMappingFactoryTest {
     }
 
     @Test
-    public void applyMappingShouldNotThrowWhenIndexerChanges() throws Exception {
+    public void applyMappingShouldThrowWhenTryingIndexerChanges() throws Exception {
         NodeMappingFactory.applyMapping(clientProvider.get(),
             INDEX_NAME,
             TYPE_NAME,
@@ -66,20 +68,19 @@ public class NodeMappingFactoryTest {
 
         elasticSearch.awaitForElasticSearch();
 
-        NodeMappingFactory.applyMapping(clientProvider.get(),
+        assertThatThrownBy(() ->NodeMappingFactory.applyMapping(clientProvider.get(),
             INDEX_NAME,
             TYPE_NAME,
-            getOtherMappingsSources());
+            getOtherMappingsSources()))
+        .isInstanceOf(ElasticsearchStatusException.class);
     }
 
     private XContentBuilder getMappingsSources() throws Exception {
         return jsonBuilder()
             .startObject()
-                .startObject(TYPE_NAME.getValue())
-                    .startObject(NodeMappingFactory.PROPERTIES)
-                        .startObject(MESSAGE)
-                            .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                        .endObject()
+                .startObject(NodeMappingFactory.PROPERTIES)
+                    .startObject(MESSAGE)
+                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.TEXT)
                     .endObject()
                 .endObject()
             .endObject();
@@ -88,12 +89,10 @@ public class NodeMappingFactoryTest {
     private XContentBuilder getOtherMappingsSources() throws Exception {
         return jsonBuilder()
             .startObject()
-                .startObject(TYPE_NAME.getValue())
-                    .startObject(NodeMappingFactory.PROPERTIES)
-                        .startObject(MESSAGE)
-                            .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                            .field(NodeMappingFactory.INDEX, NodeMappingFactory.NOT_ANALYZED)
-                        .endObject()
+                .startObject(NodeMappingFactory.PROPERTIES)
+                    .startObject(MESSAGE)
+                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.TEXT)
+                        .field(NodeMappingFactory.INDEX, false)
                     .endObject()
                 .endObject()
             .endObject();

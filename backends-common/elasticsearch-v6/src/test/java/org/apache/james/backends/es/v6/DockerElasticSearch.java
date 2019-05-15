@@ -57,13 +57,14 @@ public class DockerElasticSearch {
     }
 
     private static final int ES_HTTP_PORT = 9200;
-    private static final int ES_TCP_PORT = 9300;
 
     private final DockerGenericContainer eSContainer;
 
     public DockerElasticSearch() {
-        this.eSContainer = new DockerGenericContainer(Images.ELASTICSEARCH_2)
-            .withExposedPorts(ES_HTTP_PORT, ES_TCP_PORT)
+        this.eSContainer = new DockerGenericContainer(Images.ELASTICSEARCH_6)
+            .withEnv("discovery.type", "single-node")
+            .withAffinityToContainer()
+            .withExposedPorts(ES_HTTP_PORT)
             .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     }
 
@@ -81,16 +82,8 @@ public class DockerElasticSearch {
         return eSContainer.getMappedPort(ES_HTTP_PORT);
     }
 
-    public int getTcpPort() {
-        return eSContainer.getMappedPort(ES_TCP_PORT);
-    }
-
     public String getIp() {
         return eSContainer.getHostIp();
-    }
-
-    public Host getTcpHost() {
-        return Host.from(getIp(), getTcpPort());
     }
 
     public Host getHttpHost() {
@@ -117,7 +110,7 @@ public class DockerElasticSearch {
 
     public ClientProvider clientProvider() {
         Optional<String> noClusterName = Optional.empty();
-        return ClientProviderImpl.fromHosts(ImmutableList.of(getTcpHost()), noClusterName);
+        return ClientProviderImpl.fromHosts(ImmutableList.of(getHttpHost()), noClusterName);
     }
 
     private ElasticSearchAPI esAPI() {

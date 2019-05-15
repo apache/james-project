@@ -26,8 +26,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class IndexCreationFactoryTest {
-    public static final IndexName INDEX_NAME = new IndexName("index");
-    public static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
+    private static final IndexName INDEX_NAME = new IndexName("index");
+    private static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
 
     @Rule
     public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();

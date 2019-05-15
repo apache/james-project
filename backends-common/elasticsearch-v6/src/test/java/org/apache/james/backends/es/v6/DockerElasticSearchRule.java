@@ -19,7 +19,6 @@
 
 package org.apache.james.backends.es.v6;
 
-import org.apache.james.util.Host;
 import org.junit.rules.ExternalResource;
 
 public class DockerElasticSearchRule extends ExternalResource {
@@ -42,9 +41,5 @@ public class DockerElasticSearchRule extends ExternalResource {
     
     public void awaitForElasticSearch() {
         dockerElasticSearch.awaitForElasticSearch();
-    }
-
-    public Host getTcpHost() {
-        return dockerElasticSearch.getTcpHost();
     }
 }

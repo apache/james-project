@@ -26,9 +26,12 @@ import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import java.util.concurrent.Executors;
 
 import org.apache.james.util.concurrent.NamedThreadFactory;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,23 +60,24 @@ public class ElasticSearchIndexerTest {
             ALIAS_NAME, TYPE_NAME, MINIMUM_BATCH_SIZE);
     }
 
-    private Client getESClient() {
+    private RestHighLevelClient getESClient() {
         return elasticSearch.clientProvider().get();
     }
 
     @Test
-    public void indexMessageShouldWork() {
+    public void indexMessageShouldWork() throws Exception {
         String messageId = "1";
         String content = "{\"message\": \"trying out Elasticsearch\"}";
         
         testee.index(messageId, content);
         elasticSearch.awaitForElasticSearch();
         
-        try (Client client = getESClient()) {
-            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
-                    .setTypes(TYPE_NAME.getValue())
-                    .setQuery(QueryBuilders.matchQuery("message", "trying"))
-                    .get();
+        try (RestHighLevelClient client = getESClient()) {
+            SearchResponse searchResponse = client.search(
+                new SearchRequest(INDEX_NAME.getValue())
+                    .types(TYPE_NAME.getValue())
+                    .source(new SearchSourceBuilder().query(QueryBuilders.matchQuery("message", "trying"))),
+                RequestOptions.DEFAULT);
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
         }
     }
@@ -85,7 +89,7 @@ public class ElasticSearchIndexerTest {
     }
     
     @Test
-    public void updateMessages() {
+    public void updateMessages() throws Exception {
         String messageId = "1";
         String content = "{\"message\": \"trying out Elasticsearch\",\"field\":\"Should be unchanged\"}";
 
@@ -95,19 +99,21 @@ public class ElasticSearchIndexerTest {
         testee.update(ImmutableList.of(new UpdatedRepresentation(messageId, "{\"message\": \"mastering out Elasticsearch\"}")));
         elasticSearch.awaitForElasticSearch();
 
-        try (Client client = getESClient()) {
-            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
-                .setTypes(TYPE_NAME.getValue())
-                .setQuery(QueryBuilders.matchQuery("message", "mastering"))
-                .get();
+        try (RestHighLevelClient client = getESClient()) {
+            SearchResponse searchResponse = client.search(
+                new SearchRequest(INDEX_NAME.getValue())
+                    .types(TYPE_NAME.getValue())
+                    .source(new SearchSourceBuilder().query(QueryBuilders.matchQuery("message", "mastering"))),
+                RequestOptions.DEFAULT);
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
         }
 
-        try (Client client = getESClient()) {
-            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
-                .setTypes(TYPE_NAME.getValue())
-                .setQuery(QueryBuilders.matchQuery("field", "unchanged"))
-                .get();
+        try (RestHighLevelClient client = getESClient()) {
+            SearchResponse searchResponse = client.search(
+                new SearchRequest(INDEX_NAME.getValue())
+                    .types(TYPE_NAME.getValue())
+                    .source(new SearchSourceBuilder().query(QueryBuilders.matchQuery("field", "unchanged"))),
+                RequestOptions.DEFAULT);
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
         }
     }
@@ -147,11 +153,12 @@ public class ElasticSearchIndexerTest {
         testee.deleteAllMatchingQuery(termQuery("property", "1")).get();
         elasticSearch.awaitForElasticSearch();
         
-        try (Client client = getESClient()) {
-            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
-                    .setTypes(TYPE_NAME.getValue())
-                    .setQuery(QueryBuilders.matchAllQuery())
-                    .get();
+        try (RestHighLevelClient client = getESClient()) {
+            SearchResponse searchResponse = client.search(
+                new SearchRequest(INDEX_NAME.getValue())
+                    .types(TYPE_NAME.getValue())
+                    .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
+                RequestOptions.DEFAULT);
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(0);
         }
     }
@@ -177,17 +184,18 @@ public class ElasticSearchIndexerTest {
         testee.deleteAllMatchingQuery(termQuery("property", "1")).get();
         elasticSearch.awaitForElasticSearch();
         
-        try (Client client = getESClient()) {
-            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
-                    .setTypes(TYPE_NAME.getValue())
-                    .setQuery(QueryBuilders.matchAllQuery())
-                    .get();
+        try (RestHighLevelClient client = getESClient()) {
+            SearchResponse searchResponse = client.search(
+                new SearchRequest(INDEX_NAME.getValue())
+                    .types(TYPE_NAME.getValue())
+                    .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
+                RequestOptions.DEFAULT);
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
         }
     }
     
     @Test
-    public void deleteMessage() {
+    public void deleteMessage() throws Exception {
         String messageId = "1:2";
         String content = "{\"message\": \"trying out Elasticsearch\"}";
 
@@ -197,17 +205,18 @@ public class ElasticSearchIndexerTest {
         testee.delete(ImmutableList.of(messageId));
         elasticSearch.awaitForElasticSearch();
         
-        try (Client client = getESClient()) {
-            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
-                    .setTypes(TYPE_NAME.getValue())
-                    .setQuery(QueryBuilders.matchAllQuery())
-                    .get();
+        try (RestHighLevelClient client = getESClient()) {
+            SearchResponse searchResponse = client.search(
+                new SearchRequest(INDEX_NAME.getValue())
+                    .types(TYPE_NAME.getValue())
+                    .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
+                RequestOptions.DEFAULT);
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(0);
         }
     }
 
     @Test
-    public void deleteShouldWorkWhenMultipleMessages() {
+    public void deleteShouldWorkWhenMultipleMessages() throws Exception {
         String messageId = "1:1";
         String content = "{\"message\": \"trying out Elasticsearch\", \"mailboxId\":\"1\"}";
 
@@ -227,22 +236,23 @@ public class ElasticSearchIndexerTest {
         testee.delete(ImmutableList.of(messageId, messageId3));
         elasticSearch.awaitForElasticSearch();
 
-        try (Client client = getESClient()) {
-            SearchResponse searchResponse = client.prepareSearch(INDEX_NAME.getValue())
-                .setTypes(TYPE_NAME.getValue())
-                .setQuery(QueryBuilders.matchAllQuery())
-                .get();
+        try (RestHighLevelClient client = getESClient()) {
+            SearchResponse searchResponse = client.search(
+                new SearchRequest(INDEX_NAME.getValue())
+                    .types(TYPE_NAME.getValue())
+                    .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
+                RequestOptions.DEFAULT);
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
         }
     }
     
     @Test
-    public void updateMessagesShouldNotThrowWhenEmptyList() {
+    public void updateMessagesShouldNotThrowWhenEmptyList() throws Exception {
         testee.update(ImmutableList.of());
     }
     
     @Test
-    public void deleteMessagesShouldNotThrowWhenEmptyList() {
+    public void deleteMessagesShouldNotThrowWhenEmptyList() throws Exception {
         testee.delete(ImmutableList.of());
     }
 }
