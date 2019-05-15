@@ -18,17 +18,14 @@
  ****************************************************************/
 package org.apache.james.backends.es.v6;
 
-import java.net.InetAddress;
 import java.util.Optional;
 
+import org.apache.http.HttpHost;
 import org.apache.james.util.Host;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
 
-import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.consumers.ConsumerChainer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -50,6 +47,7 @@ public class ClientProviderImpl implements ClientProvider {
     }
 
     private static final String CLUSTER_NAME_SETTING = "cluster.name";
+    private static final String HTTP_HOST_SCHEME = "http";
 
     private final ImmutableList<Host> hosts;
     private final Optional<String> clusterName;
@@ -60,19 +58,15 @@ public class ClientProviderImpl implements ClientProvider {
         this.clusterName = clusterName;
     }
 
+    private HttpHost[] hostsToHttpHosts() {
+        return hosts.stream()
+            .map(host -> new HttpHost(host.getHostName(), host.getPort(), HTTP_HOST_SCHEME))
+            .toArray(HttpHost[]::new);
+    }
 
     @Override
-    public Client get() {
-        TransportClient transportClient = TransportClient.builder()
-                .settings(settings())
-                .build();
-        ConsumerChainer<Host> consumer = Throwing.consumer(host -> transportClient
-            .addTransportAddress(
-                new InetSocketTransportAddress(
-                    InetAddress.getByName(host.getHostName()),
-                    host.getPort())));
-        hosts.forEach(consumer.sneakyThrow());
-        return transportClient;
+    public RestHighLevelClient get() {
+        return new RestHighLevelClient(RestClient.builder(hostsToHttpHosts()));
     }
 
     @VisibleForTesting Settings settings() {

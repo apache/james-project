@@ -19,32 +19,29 @@
 
 package org.apache.james.backends.es.v6;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import org.apache.james.backends.es.v6.search.ScrollIterable;
-import org.elasticsearch.action.ListenableActionFuture;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 
 import com.google.common.annotations.VisibleForTesting;
 
 public class DeleteByQueryPerformer {
     public static final TimeValue TIMEOUT = new TimeValue(60000);
 
-    private final Client client;
+    private final RestHighLevelClient client;
     private final ExecutorService executor;
     private final int batchSize;
     private final WriteAliasName aliasName;
     private final TypeName typeName;
 
     @VisibleForTesting
-    public DeleteByQueryPerformer(Client client, ExecutorService executor, int batchSize, WriteAliasName aliasName, TypeName typeName) {
+    public DeleteByQueryPerformer(RestHighLevelClient client, ExecutorService executor, int batchSize, WriteAliasName aliasName, TypeName typeName) {
         this.client = client;
         this.executor = executor;
         this.batchSize = batchSize;
@@ -56,29 +53,14 @@ public class DeleteByQueryPerformer {
         return executor.submit(() -> doDeleteByQuery(queryBuilder));
     }
 
-    protected Void doDeleteByQuery(QueryBuilder queryBuilder) {
-        new ScrollIterable(client,
-            client.prepareSearch(aliasName.getValue())
-                .setTypes(typeName.getValue())
-                .setScroll(TIMEOUT)
-                .setNoFields()
-                .setQuery(queryBuilder)
-                .setSize(batchSize))
-            .stream()
-            .map(searchResponse -> deleteRetrievedIds(client, searchResponse))
-            .forEach(ListenableActionFuture::actionGet);
+    protected Void doDeleteByQuery(QueryBuilder queryBuilder) throws IOException {
+        DeleteByQueryRequest request = new DeleteByQueryRequest(aliasName.getValue())
+            .setDocTypes(typeName.getValue())
+            .setScroll(TIMEOUT)
+            .setQuery(queryBuilder)
+            .setBatchSize(batchSize);
+
+        client.deleteByQuery(request, RequestOptions.DEFAULT);
         return null;
     }
-
-    private ListenableActionFuture<BulkResponse> deleteRetrievedIds(Client client, SearchResponse searchResponse) {
-        BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-        for (SearchHit hit : searchResponse.getHits()) {
-            bulkRequestBuilder.add(client.prepareDelete()
-                .setIndex(aliasName.getValue())
-                .setType(typeName.getValue())
-                .setId(hit.getId()));
-        }
-        return bulkRequestBuilder.execute();
-    }
-
 }

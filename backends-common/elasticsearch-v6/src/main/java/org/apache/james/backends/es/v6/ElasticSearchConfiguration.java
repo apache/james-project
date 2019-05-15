@@ -123,7 +123,7 @@ public class ElasticSearchConfiguration {
     public static final int DEFAULT_CONNECTION_MIN_DELAY = 3000;
     public static final int DEFAULT_NB_SHARDS = 5;
     public static final int DEFAULT_NB_REPLICA = 1;
-    public static final int DEFAULT_PORT = 9300;
+    public static final int DEFAULT_PORT = 9200;
     private static final String LOCALHOST = "127.0.0.1";
     public static final Optional<Integer> DEFAULT_PORT_AS_OPTIONAL = Optional.of(DEFAULT_PORT);
 

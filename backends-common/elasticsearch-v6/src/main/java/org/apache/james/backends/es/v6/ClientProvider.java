@@ -18,9 +18,9 @@
  ****************************************************************/
 package org.apache.james.backends.es.v6;
 
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RestHighLevelClient;
 
 public interface ClientProvider {
 
-    Client get();
+    RestHighLevelClient get();
 }

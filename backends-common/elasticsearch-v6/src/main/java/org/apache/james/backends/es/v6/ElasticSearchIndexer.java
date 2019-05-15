@@ -18,17 +18,23 @@
  ****************************************************************/
 package org.apache.james.backends.es.v6;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.ValidationException;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,19 +48,19 @@ public class ElasticSearchIndexer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchIndexer.class);
 
-    private final Client client;
+    private final RestHighLevelClient client;
     private final DeleteByQueryPerformer deleteByQueryPerformer;
     private final AliasName aliasName;
     private final TypeName typeName;
 
-    public ElasticSearchIndexer(Client client, ExecutorService executor,
+    public ElasticSearchIndexer(RestHighLevelClient client, ExecutorService executor,
                                 WriteAliasName aliasName,
                                 TypeName typeName) {
         this(client, executor, aliasName, typeName, DEFAULT_BATCH_SIZE);
     }
 
     @VisibleForTesting
-    public ElasticSearchIndexer(Client client, ExecutorService executor,
+    public ElasticSearchIndexer(RestHighLevelClient client, ExecutorService executor,
                                 WriteAliasName aliasName,
                                 TypeName typeName,
                                 int batchSize) {
@@ -64,42 +70,42 @@ public class ElasticSearchIndexer {
         this.typeName = typeName;
     }
 
-    public IndexResponse index(String id, String content) {
+    public IndexResponse index(String id, String content) throws IOException {
         checkArgument(content);
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Indexing {}: {}", id, StringUtils.left(content, DEBUG_MAX_LENGTH_CONTENT));
         }
-        return client.prepareIndex(aliasName.getValue(), typeName.getValue(), id)
-            .setSource(content)
-            .get();
+        return client.index(
+            new IndexRequest(aliasName.getValue(), typeName.getValue(), id)
+                .source(content, XContentType.JSON),
+            RequestOptions.DEFAULT);
     }
 
-    public Optional<BulkResponse> update(List<UpdatedRepresentation> updatedDocumentParts) {
+    public Optional<BulkResponse> update(List<UpdatedRepresentation> updatedDocumentParts) throws IOException {
         try {
             Preconditions.checkNotNull(updatedDocumentParts);
-            BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-            updatedDocumentParts.forEach(updatedDocumentPart -> bulkRequestBuilder.add(
-                client.prepareUpdate(
-                    aliasName.getValue(),
+            BulkRequest request = new BulkRequest();
+            updatedDocumentParts.forEach(updatedDocumentPart -> request.add(
+                new UpdateRequest(aliasName.getValue(),
                     typeName.getValue(),
                     updatedDocumentPart.getId())
-                    .setDoc(updatedDocumentPart.getUpdatedDocumentPart())));
-            return Optional.of(bulkRequestBuilder.get());
+                .doc(updatedDocumentPart.getUpdatedDocumentPart(), XContentType.JSON)));
+            return Optional.of(client.bulk(request, RequestOptions.DEFAULT));
         } catch (ValidationException e) {
             LOGGER.warn("Error while updating index", e);
             return Optional.empty();
         }
     }
 
-    public Optional<BulkResponse> delete(List<String> ids) {
+    public Optional<BulkResponse> delete(List<String> ids) throws IOException {
         try {
-            BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-            ids.forEach(id -> bulkRequestBuilder.add(
-                client.prepareDelete(
+            BulkRequest request = new BulkRequest();
+            ids.forEach(id -> request.add(
+                new DeleteRequest(
                     aliasName.getValue(),
                     typeName.getValue(),
                     id)));
-            return Optional.of(bulkRequestBuilder.get());
+            return Optional.of(client.bulk(request, RequestOptions.DEFAULT));
         } catch (ValidationException e) {
             LOGGER.warn("Error while deleting index", e);
             return Optional.empty();
