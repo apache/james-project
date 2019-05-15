@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james;
+package org.apache.james.modules.mailbox;
 
 import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,6 +31,12 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.Optional;
 
+import org.apache.james.CassandraExtension;
+import org.apache.james.DockerElasticSearchExtension;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.StartUpChecksPerformer.StartUpChecksException;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
@@ -45,9 +51,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import reactor.core.publisher.Mono;
 
-class CassandraVersionCheckingTest {
+class CassandraSchemaVersionStartUpCheckTest {
     private static final int LIMIT_TO_10_MESSAGES = 10;
     private static final String LOCAL_HOST = "127.0.0.1";
+    private static final String EXPECTED_SERVER_CONNECTED_MESSAGE = "* OK JAMES IMAP4rev1 Server";
     private static final SchemaVersion MIN_VERSION = new SchemaVersion(2);
     private static final SchemaVersion MAX_VERSION = new SchemaVersion(4);
 
@@ -85,7 +92,9 @@ class CassandraVersionCheckingTest {
         when(versionDAO.getCurrentSchemaVersion())
             .thenReturn(Mono.just(Optional.of(MAX_VERSION)));
 
-        assertThatServerStartCorrectly(server);
+        server.start();
+        assertThat(responseAfterConnectTo(server))
+            .startsWith(EXPECTED_SERVER_CONNECTED_MESSAGE);
     }
 
     @Test
@@ -93,7 +102,9 @@ class CassandraVersionCheckingTest {
         when(versionDAO.getCurrentSchemaVersion())
             .thenReturn(Mono.just(Optional.of(MIN_VERSION.next())));
 
-        assertThatServerStartCorrectly(server);
+        server.start();
+        assertThat(responseAfterConnectTo(server))
+            .startsWith(EXPECTED_SERVER_CONNECTED_MESSAGE);
     }
 
     @Test
@@ -101,7 +112,9 @@ class CassandraVersionCheckingTest {
         when(versionDAO.getCurrentSchemaVersion())
             .thenReturn(Mono.just(Optional.of(MIN_VERSION)));
 
-        assertThatServerStartCorrectly(server);
+        server.start();
+        assertThat(responseAfterConnectTo(server))
+            .startsWith(EXPECTED_SERVER_CONNECTED_MESSAGE);
     }
 
     @Test
@@ -109,7 +122,11 @@ class CassandraVersionCheckingTest {
         when(versionDAO.getCurrentSchemaVersion())
             .thenReturn(Mono.just(Optional.of(MIN_VERSION.previous())));
 
-        assertThatThrownBy(server::start).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(server::start)
+            .isInstanceOfSatisfying(
+                StartUpChecksException.class,
+                exception -> assertThat(exception.badCheckNames())
+                    .containsOnly(CassandraSchemaVersionStartUpCheck.CHECK_NAME));
     }
 
     @Test
@@ -117,17 +134,16 @@ class CassandraVersionCheckingTest {
         when(versionDAO.getCurrentSchemaVersion())
             .thenReturn(Mono.just(Optional.of(MAX_VERSION.next())));
 
-        assertThatThrownBy(server::start).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(server::start)
+            .isInstanceOfSatisfying(
+                StartUpChecksException.class,
+                exception -> assertThat(exception.badCheckNames())
+                    .containsOnly(CassandraSchemaVersionStartUpCheck.CHECK_NAME));
     }
 
-    private void assertThatServerStartCorrectly(GuiceJamesServer server) throws Exception {
-        server.start();
+    private String responseAfterConnectTo(GuiceJamesServer server) throws IOException {
         socketChannel.connect(new InetSocketAddress(LOCAL_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort()));
-        assertThat(getServerConnectionResponse(socketChannel))
-            .startsWith("* OK JAMES IMAP4rev1 Server");
-    }
 
-    private String getServerConnectionResponse(SocketChannel socketChannel) throws IOException {
         ByteBuffer byteBuffer = ByteBuffer.allocate(1000);
         socketChannel.read(byteBuffer);
         byte[] bytes = byteBuffer.array();

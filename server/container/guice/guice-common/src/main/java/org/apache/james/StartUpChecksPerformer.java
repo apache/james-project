@@ -65,6 +65,13 @@ public class StartUpChecksPerformer {
         public List<StartUpCheck.CheckResult> getBadChecks() {
             return badChecks;
         }
+
+        @VisibleForTesting
+        public List<String> badCheckNames() {
+            return badChecks.stream()
+                .map(StartUpCheck.CheckResult::getName)
+                .collect(Guavate.toImmutableList());
+        }
     }
 
     public interface StartUpCheck {
@@ -75,19 +82,19 @@ public class StartUpChecksPerformer {
 
         class CheckResult {
 
-            static class Builder {
+            public static class Builder {
 
                 @FunctionalInterface
-                interface RequireCheckName {
+                public interface RequireCheckName {
                     RequireResultType checkName(String name);
                 }
 
                 @FunctionalInterface
-                interface RequireResultType {
+                public interface RequireResultType {
                     ReadyToBuild resultType(ResultType resultType);
                 }
 
-                static class ReadyToBuild {
+                public static class ReadyToBuild {
                     private final String name;
                     private final ResultType resultType;
                     private Optional<String> description;
