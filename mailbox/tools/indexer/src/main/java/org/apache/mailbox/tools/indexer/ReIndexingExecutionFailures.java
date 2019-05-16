@@ -19,43 +19,45 @@
 
 package org.apache.mailbox.tools.indexer;
 
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.List;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxId;
 
-import com.google.common.collect.ImmutableList;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.Multimap;
 
-class ReprocessingContext {
-    private final AtomicInteger successfullyReprocessedMails;
-    private final AtomicInteger failedReprocessingMails;
-    private final ConcurrentLinkedDeque<ReIndexingExecutionFailures.ReIndexingFailure> failures;
+public class ReIndexingExecutionFailures {
+    public static class ReIndexingFailure {
+        private final MailboxId mailboxId;
+        private final MessageUid uid;
 
-    ReprocessingContext() {
-        failedReprocessingMails = new AtomicInteger(0);
-        successfullyReprocessedMails = new AtomicInteger(0);
-        failures = new ConcurrentLinkedDeque<>();
+        public ReIndexingFailure(MailboxId mailboxId, MessageUid uid) {
+            this.mailboxId = mailboxId;
+            this.uid = uid;
+        }
+
+        @JsonIgnore
+        public String getMailboxId() {
+            return mailboxId.serialize();
+        }
+
+        public long getUid() {
+            return uid.asLong();
+        }
     }
 
-    void recordFailureDetailsForMessage(MailboxId mailboxId, MessageUid uid) {
-        failures.add(new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, uid));
-        failedReprocessingMails.incrementAndGet();
+    private final List<ReIndexingFailure> failures;
+
+    public ReIndexingExecutionFailures(List<ReIndexingFailure> failures) {
+        this.failures = failures;
     }
 
-    void recordSuccess() {
-        successfullyReprocessedMails.incrementAndGet();
-    }
-
-    int successfullyReprocessedMailCount() {
-        return successfullyReprocessedMails.get();
-    }
-
-    int failedReprocessingMailCount() {
-        return failedReprocessingMails.get();
-    }
-
-    ReIndexingExecutionFailures failures() {
-        return new ReIndexingExecutionFailures(ImmutableList.copyOf(failures));
+    @JsonValue
+    public Multimap<String, ReIndexingFailure> failures() {
+        return failures.stream()
+            .collect(Guavate.toImmutableListMultimap(ReIndexingFailure::getMailboxId));
     }
 }

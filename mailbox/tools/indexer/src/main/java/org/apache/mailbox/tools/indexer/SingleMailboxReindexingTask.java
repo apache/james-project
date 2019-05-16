@@ -52,6 +52,10 @@ public class SingleMailboxReindexingTask implements Task {
         public int getFailedReprocessedMailCount() {
             return reprocessingContext.failedReprocessingMailCount();
         }
+
+        public ReIndexingExecutionFailures failures() {
+            return reprocessingContext.failures();
+        }
     }
 
     private final ReIndexerPerformer reIndexerPerformer;

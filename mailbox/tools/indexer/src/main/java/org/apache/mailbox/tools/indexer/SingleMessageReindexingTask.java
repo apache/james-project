@@ -60,7 +60,7 @@ public class SingleMessageReindexingTask implements Task {
     private final AdditionalInformation additionalInformation;
 
     @Inject
-    public SingleMessageReindexingTask(ReIndexerPerformer reIndexerPerformer, MailboxId mailboxId, MessageUid uid) {
+    SingleMessageReindexingTask(ReIndexerPerformer reIndexerPerformer, MailboxId mailboxId, MessageUid uid) {
         this.reIndexerPerformer = reIndexerPerformer;
         this.mailboxId = mailboxId;
         this.uid = uid;
@@ -70,9 +70,9 @@ public class SingleMessageReindexingTask implements Task {
     @Override
     public Result run() {
         try {
-            return reIndexerPerformer.handleMessageReIndexing(mailboxId, uid);
+            return reIndexerPerformer.handleMessageReIndexing(mailboxId, uid, new ReprocessingContext());
         } catch (MailboxException e) {
-            LOGGER.warn("Error encounteres while reindexing {} : {}",mailboxId, uid, e);
+            LOGGER.warn("Error encounteres while reindexing {} : {}", mailboxId, uid, e);
             return Result.PARTIAL;
         }
     }

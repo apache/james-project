@@ -75,8 +75,7 @@ public class ReIndexerPerformer {
                 mailboxSessionMapperFactory.getMessageMapper(mailboxSession)
                     .findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, NO_LIMIT))
                 .map(MailboxMessage::getUid)
-                .map(uid -> handleMessageReIndexing(mailboxSession, mailbox, uid))
-                .peek(reprocessingContext::updateAccordingToReprocessingResult)
+                .map(uid -> handleMessageReIndexing(mailboxSession, mailbox, uid, reprocessingContext))
                 .reduce(Task::combine)
                 .orElse(Task.Result.COMPLETED);
         } finally {
@@ -113,11 +112,11 @@ public class ReIndexerPerformer {
         }
     }
 
-    Task.Result handleMessageReIndexing(MailboxId mailboxId, MessageUid uid) throws MailboxException {
+    Task.Result handleMessageReIndexing(MailboxId mailboxId, MessageUid uid, ReprocessingContext reprocessingContext) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXING);
 
         Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
-        return handleMessageReIndexing(mailboxSession, mailbox, uid);
+        return handleMessageReIndexing(mailboxSession, mailbox, uid, reprocessingContext);
     }
 
     private Task.Result reIndex(Stream<MailboxId> mailboxIds, ReprocessingContext reprocessingContext) {
@@ -134,14 +133,16 @@ public class ReIndexerPerformer {
             .orElse(Task.Result.COMPLETED);
     }
 
-    private Task.Result handleMessageReIndexing(MailboxSession mailboxSession, Mailbox mailbox, MessageUid uid) {
+    private Task.Result handleMessageReIndexing(MailboxSession mailboxSession, Mailbox mailbox, MessageUid uid, ReprocessingContext reprocessingContext) {
         try {
             Optional.of(uid)
                 .flatMap(Throwing.function(mUid -> fullyReadMessage(mailboxSession, mailbox, mUid)))
                 .ifPresent(Throwing.consumer(message -> messageSearchIndex.add(mailboxSession, mailbox, message)));
+            reprocessingContext.recordSuccess();
             return Task.Result.COMPLETED;
         } catch (Exception e) {
             LOGGER.warn("ReIndexing failed for {} {}", mailbox.generateAssociatedPath(), uid, e);
+            reprocessingContext.recordFailureDetailsForMessage(mailbox.getMailboxId(), uid);
             return Task.Result.PARTIAL;
         }
     }
