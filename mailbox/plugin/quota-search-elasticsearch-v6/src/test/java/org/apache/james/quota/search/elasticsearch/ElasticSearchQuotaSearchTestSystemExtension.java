@@ -21,13 +21,10 @@ package org.apache.james.quota.search.elasticsearch;
 
 import static org.mockito.Mockito.mock;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-
-import org.apache.james.backends.es.DockerElasticSearch;
-import org.apache.james.backends.es.DockerElasticSearchSingleton;
-import org.apache.james.backends.es.ElasticSearchConfiguration;
-import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.v6.DockerElasticSearch;
+import org.apache.james.backends.es.v6.DockerElasticSearchSingleton;
+import org.apache.james.backends.es.v6.ElasticSearchConfiguration;
+import org.apache.james.backends.es.v6.ElasticSearchIndexer;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -36,8 +33,7 @@ import org.apache.james.quota.search.QuotaSearchTestSystem;
 import org.apache.james.quota.search.elasticsearch.events.ElasticSearchQuotaMailboxListener;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
 import org.apache.james.user.memory.MemoryUsersRepository;
-import org.apache.james.util.concurrent.NamedThreadFactory;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -57,10 +53,10 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         try {
-            Client client = QuotaSearchIndexCreationUtil.prepareDefaultClient(
+            RestHighLevelClient client = QuotaSearchIndexCreationUtil.prepareDefaultClient(
                 elasticSearch.clientProvider().get(),
                 ElasticSearchConfiguration.builder()
-                    .addHost(elasticSearch.getTcpHost())
+                    .addHost(elasticSearch.getHttpHost())
                     .build());
 
             InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
@@ -71,11 +67,9 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
             MemoryDomainList domainList = new MemoryDomainList(dnsService);
             usersRepository.setDomainList(domainList);
 
-            ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
             ElasticSearchQuotaMailboxListener listener = new ElasticSearchQuotaMailboxListener(
-                new ElasticSearchIndexer(client, Executors.newSingleThreadExecutor(threadFactory),
-                    QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS,
-                    QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE),
+                new ElasticSearchIndexer(client,
+                    QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
                 new QuotaRatioToElasticSearchJson());
 
             resources.getMailboxManager().getEventBus().register(listener);
@@ -92,7 +86,7 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
                 usersRepository,
                 domainList,
                 resources.getCurrentQuotaManager(),
-                () -> elasticSearch.awaitForElasticSearch());
+                elasticSearch::awaitForElasticSearch);
         } catch (Exception e) {
             throw new ParameterResolutionException("Error while resolving parameter", e);
         }

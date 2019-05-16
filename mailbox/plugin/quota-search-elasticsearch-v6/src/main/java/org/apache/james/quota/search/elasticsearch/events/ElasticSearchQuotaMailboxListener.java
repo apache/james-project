@@ -18,18 +18,18 @@
  ****************************************************************/
 package org.apache.james.quota.search.elasticsearch.events;
 
+import java.io.IOException;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.v6.ElasticSearchIndexer;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.quota.search.elasticsearch.QuotaRatioElasticSearchConstants;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class ElasticSearchQuotaMailboxListener implements MailboxListener.GroupMailboxListener {
     public static class ElasticSearchQuotaMailboxListenerGroup extends Group {
@@ -59,11 +59,11 @@ public class ElasticSearchQuotaMailboxListener implements MailboxListener.GroupM
     }
 
     @Override
-    public void event(Event event) throws JsonProcessingException {
+    public void event(Event event) throws IOException {
         handleEvent(event.getUser(), (QuotaUsageUpdatedEvent) event);
     }
 
-    private void handleEvent(User user, QuotaUsageUpdatedEvent event) throws JsonProcessingException {
+    private void handleEvent(User user, QuotaUsageUpdatedEvent event) throws IOException {
         indexer.index(user.asString(),
             quotaRatioToElasticSearchJson.convertToJson(user.asString(), event));
     }

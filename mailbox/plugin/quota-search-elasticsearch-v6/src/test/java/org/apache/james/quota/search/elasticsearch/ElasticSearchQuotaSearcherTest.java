@@ -23,6 +23,6 @@ import org.apache.james.quota.search.QuotaSearcherContract;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(ElasticSearchQuotaSearchTestSystemExtension.class)
-public class ElasticSearchQuotaSearcherTest implements QuotaSearcherContract {
+class ElasticSearchQuotaSearcherTest implements QuotaSearcherContract {
 
 }

@@ -19,12 +19,10 @@
 
 package org.apache.james.quota.search.elasticsearch;
 
-import static org.apache.james.backends.es.NodeMappingFactory.DOUBLE;
-import static org.apache.james.backends.es.NodeMappingFactory.INDEX;
-import static org.apache.james.backends.es.NodeMappingFactory.NOT_ANALYZED;
-import static org.apache.james.backends.es.NodeMappingFactory.PROPERTIES;
-import static org.apache.james.backends.es.NodeMappingFactory.STRING;
-import static org.apache.james.backends.es.NodeMappingFactory.TYPE;
+import static org.apache.james.backends.es.v6.NodeMappingFactory.DOUBLE;
+import static org.apache.james.backends.es.v6.NodeMappingFactory.KEYWORD;
+import static org.apache.james.backends.es.v6.NodeMappingFactory.PROPERTIES;
+import static org.apache.james.backends.es.v6.NodeMappingFactory.TYPE;
 import static org.apache.james.quota.search.elasticsearch.json.JsonMessageConstants.DOMAIN;
 import static org.apache.james.quota.search.elasticsearch.json.JsonMessageConstants.QUOTA_RATIO;
 import static org.apache.james.quota.search.elasticsearch.json.JsonMessageConstants.USER;
@@ -34,29 +32,24 @@ import java.io.IOException;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
-public class QuotaRatioMappingFactory {
+class QuotaRatioMappingFactory {
 
     public static XContentBuilder getMappingContent() {
         try {
             return jsonBuilder()
                 .startObject()
+                    .startObject(PROPERTIES)
 
-                    .startObject(QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE.getValue())
-                        .startObject(PROPERTIES)
+                        .startObject(USER)
+                            .field(TYPE, KEYWORD)
+                        .endObject()
 
-                            .startObject(USER)
-                                .field(TYPE, STRING)
-                                .field(INDEX, NOT_ANALYZED)
-                            .endObject()
+                        .startObject(DOMAIN)
+                            .field(TYPE, KEYWORD)
+                        .endObject()
 
-                            .startObject(DOMAIN)
-                                .field(TYPE, STRING)
-                                .field(INDEX, NOT_ANALYZED)
-                            .endObject()
-
-                            .startObject(QUOTA_RATIO)
-                                .field(TYPE, DOUBLE)
-                            .endObject()
+                        .startObject(QUOTA_RATIO)
+                            .field(TYPE, DOUBLE)
                         .endObject()
                     .endObject()
                 .endObject();

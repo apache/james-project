@@ -19,10 +19,9 @@
 
 package org.apache.james.quota.search.elasticsearch;
 
-import org.apache.james.backends.es.IndexName;
-import org.apache.james.backends.es.ReadAliasName;
-import org.apache.james.backends.es.TypeName;
-import org.apache.james.backends.es.WriteAliasName;
+import org.apache.james.backends.es.v6.IndexName;
+import org.apache.james.backends.es.v6.ReadAliasName;
+import org.apache.james.backends.es.v6.WriteAliasName;
 
 public interface QuotaRatioElasticSearchConstants {
 
@@ -33,5 +32,4 @@ public interface QuotaRatioElasticSearchConstants {
     WriteAliasName DEFAULT_QUOTA_RATIO_WRITE_ALIAS = new WriteAliasName("quota_ratio_write_alias");
     ReadAliasName DEFAULT_QUOTA_RATIO_READ_ALIAS = new ReadAliasName("quota_ratio_read_alias");
     IndexName DEFAULT_QUOTA_RATIO_INDEX = new IndexName("quota_ratio_v1");
-    TypeName QUOTA_RATIO_TYPE = new TypeName("quota_ratio");
 }

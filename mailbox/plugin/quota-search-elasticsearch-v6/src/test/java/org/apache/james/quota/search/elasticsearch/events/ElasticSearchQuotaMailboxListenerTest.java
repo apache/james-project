@@ -23,15 +23,13 @@ import static org.apache.james.quota.search.QuotaSearchFixture.TestConstants.BOB
 import static org.apache.james.quota.search.QuotaSearchFixture.TestConstants.NOW;
 import static org.apache.james.quota.search.QuotaSearchFixture.TestConstants.QUOTAROOT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.mockito.Mockito.mock;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.io.IOException;
 
-import org.apache.james.backends.es.DockerElasticSearchRule;
-import org.apache.james.backends.es.ElasticSearchConfiguration;
-import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.v6.DockerElasticSearchRule;
+import org.apache.james.backends.es.v6.ElasticSearchConfiguration;
+import org.apache.james.backends.es.v6.ElasticSearchIndexer;
+import org.apache.james.backends.es.v6.NodeMappingFactory;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.quota.QuotaFixture.Counts;
@@ -40,9 +38,12 @@ import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.quota.search.elasticsearch.QuotaRatioElasticSearchConstants;
 import org.apache.james.quota.search.elasticsearch.QuotaSearchIndexCreationUtil;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
-import org.apache.james.util.concurrent.NamedThreadFactory;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,27 +52,23 @@ public class ElasticSearchQuotaMailboxListenerTest {
     private static Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
 
     private static final int BATCH_SIZE = 1;
-    private static final Event DUMB_EVENT = mock(Event.class);
 
     @Rule
     public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
     private ElasticSearchQuotaMailboxListener quotaMailboxListener;
-    private Client client;
+    private RestHighLevelClient client;
 
     @Before
-    public void setUp() {
-        client = QuotaSearchIndexCreationUtil.prepareDefaultClient(
-            elasticSearch.clientProvider().get(),
-            ElasticSearchConfiguration.builder()
-                .addHost(elasticSearch.getTcpHost())
-                .build());
+    public void setUp() throws IOException {
+        client = elasticSearch.clientProvider().get();
 
-        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        QuotaSearchIndexCreationUtil.prepareDefaultClient(client, ElasticSearchConfiguration.builder()
+            .addHost(elasticSearch.getDockerElasticSearch().getHttpHost())
+            .build());
+
         quotaMailboxListener = new ElasticSearchQuotaMailboxListener(
             new ElasticSearchIndexer(client,
-                Executors.newSingleThreadExecutor(threadFactory),
                 QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS,
-                QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE,
                 BATCH_SIZE),
             new QuotaRatioToElasticSearchJson());
     }
@@ -95,11 +92,12 @@ public class ElasticSearchQuotaMailboxListenerTest {
 
         elasticSearch.awaitForElasticSearch();
 
-        SearchResponse searchResponse = client.prepareSearch(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
-            .setTypes(QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE.getValue())
-            .setQuery(matchAllQuery())
-            .execute()
-            .get();
-        assertThat(searchResponse.getHits().totalHits()).isEqualTo(1);
+        SearchResponse searchResponse = client.search(new SearchRequest(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
+                .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                .source(new SearchSourceBuilder()
+                    .query(QueryBuilders.matchAllQuery())),
+            RequestOptions.DEFAULT);
+
+        assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
     }
 }

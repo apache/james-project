@@ -19,22 +19,24 @@
 
 package org.apache.james.quota.search.elasticsearch;
 
-import static org.apache.james.quota.search.elasticsearch.QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE;
 import static org.apache.james.quota.search.elasticsearch.json.JsonMessageConstants.USER;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.apache.james.backends.es.AliasName;
-import org.apache.james.backends.es.ReadAliasName;
-import org.apache.james.backends.es.search.ScrollIterable;
+import org.apache.james.backends.es.v6.AliasName;
+import org.apache.james.backends.es.v6.NodeMappingFactory;
+import org.apache.james.backends.es.v6.ReadAliasName;
+import org.apache.james.backends.es.v6.search.ScrollIterable;
 import org.apache.james.core.User;
 import org.apache.james.quota.search.QuotaQuery;
 import org.apache.james.quota.search.QuotaSearcher;
-import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 
@@ -43,11 +45,11 @@ import com.github.steveash.guavate.Guavate;
 public class ElasticSearchQuotaSearcher implements QuotaSearcher {
     private static final TimeValue TIMEOUT = new TimeValue(60000);
 
-    private final Client client;
+    private final RestHighLevelClient client;
     private final AliasName readAlias;
     private final QuotaQueryConverter quotaQueryConverter;
 
-    public ElasticSearchQuotaSearcher(Client client, ReadAliasName readAlias) {
+    public ElasticSearchQuotaSearcher(RestHighLevelClient client, ReadAliasName readAlias) {
         this.client = client;
         this.readAlias = readAlias;
         this.quotaQueryConverter = new QuotaQueryConverter();
@@ -59,8 +61,7 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
             .stream()
             .flatMap(searchResponse -> Arrays.stream(searchResponse.getHits()
                 .getHits()))
-            .map(hit -> hit.field(USER))
-            .map(field -> (String) field.getValue())
+            .map(SearchHit::getId)
             .map(User::fromUsername)
             .skip(query.getOffset().getValue());
 
@@ -70,22 +71,20 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
             .collect(Guavate.toImmutableList());
     }
 
-    public SearchRequestBuilder prepareSearch(QuotaQuery query) {
-        SearchRequestBuilder searchRequestBuilder = client.prepareSearch(readAlias.getValue())
-            .setTypes(QUOTA_RATIO_TYPE.getValue())
-            .setScroll(TIMEOUT)
-            .addFields(USER)
-            .setQuery(quotaQueryConverter.from(query));
+    public SearchRequest prepareSearch(QuotaQuery query) {
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+            .query(quotaQueryConverter.from(query))
+            .sort(SortBuilders.fieldSort(USER)
+                .order(SortOrder.ASC));
 
         query.getLimit()
             .getValue()
-            .ifPresent(searchRequestBuilder::setSize);
+            .ifPresent(sourceBuilder::size);
 
-        searchRequestBuilder.addSort(
-            SortBuilders.fieldSort(USER)
-                .order(SortOrder.ASC));
-
-        return searchRequestBuilder;
+        return new SearchRequest(readAlias.getValue())
+            .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+            .scroll(TIMEOUT)
+            .source(sourceBuilder);
     }
 
 }
