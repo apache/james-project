@@ -23,7 +23,6 @@ import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.StartUpChecksPerformer;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
@@ -35,6 +34,7 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.core.healthcheck.HealthCheck;
+import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.server.CassandraProbe;
 import org.apache.james.util.Host;
@@ -74,7 +74,7 @@ public class CassandraSessionModule extends AbstractModule {
         bind(CassandraSchemaVersionManager.class).in(Scopes.SINGLETON);
         bind(CassandraSchemaVersionDAO.class).in(Scopes.SINGLETON);
 
-        Multibinder.newSetBinder(binder(), StartUpChecksPerformer.StartUpCheck.class)
+        Multibinder.newSetBinder(binder(), StartUpCheck.class)
             .addBinding().to(CassandraSchemaVersionStartUpCheck.class);
 
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(CassandraProbe.class);

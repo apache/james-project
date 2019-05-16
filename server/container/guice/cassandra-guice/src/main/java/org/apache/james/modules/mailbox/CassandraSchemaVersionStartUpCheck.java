@@ -19,14 +19,14 @@
 
 package org.apache.james.modules.mailbox;
 
-import org.apache.james.StartUpChecksPerformer;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
+import org.apache.james.lifecycle.api.StartUpCheck;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
-public class CassandraSchemaVersionStartUpCheck implements StartUpChecksPerformer.StartUpCheck {
+public class CassandraSchemaVersionStartUpCheck implements StartUpCheck {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraSchemaVersionStartUpCheck.class);
     static final String CHECK_NAME = "CassandraSchemaVersionStartUpCheck";

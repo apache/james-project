@@ -20,18 +20,17 @@
 package org.apache.james;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.apache.james.lifecycle.api.StartUpCheck;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 
@@ -72,102 +71,6 @@ public class StartUpChecksPerformer {
                 .map(StartUpCheck.CheckResult::getName)
                 .collect(Guavate.toImmutableList());
         }
-    }
-
-    public interface StartUpCheck {
-
-        enum ResultType {
-            GOOD, BAD
-        }
-
-        class CheckResult {
-
-            public static class Builder {
-
-                @FunctionalInterface
-                public interface RequireCheckName {
-                    RequireResultType checkName(String name);
-                }
-
-                @FunctionalInterface
-                public interface RequireResultType {
-                    ReadyToBuild resultType(ResultType resultType);
-                }
-
-                public static class ReadyToBuild {
-                    private final String name;
-                    private final ResultType resultType;
-                    private Optional<String> description;
-
-                    ReadyToBuild(String name, ResultType resultType) {
-                        this.name = name;
-                        this.resultType = resultType;
-                        this.description = Optional.empty();
-                    }
-
-                    public ReadyToBuild description(String description) {
-                        this.description = Optional.ofNullable(description);
-                        return this;
-                    }
-
-                    public CheckResult build() {
-                        return new CheckResult(name, resultType, description);
-                    }
-                }
-
-            }
-
-            public static Builder.RequireCheckName builder() {
-                return name -> resultType -> new Builder.ReadyToBuild(name, resultType);
-            }
-
-            private final String name;
-            private final ResultType resultType;
-            private final Optional<String> description;
-
-            private CheckResult(String name, ResultType resultType, Optional<String> description) {
-                Preconditions.checkNotNull(name);
-                Preconditions.checkNotNull(resultType);
-                Preconditions.checkNotNull(description);
-
-                this.name = name;
-                this.resultType = resultType;
-                this.description = description;
-            }
-
-            public String getName() {
-                return name;
-            }
-
-            public ResultType getResultType() {
-                return resultType;
-            }
-
-            public Optional<String> getDescription() {
-                return description;
-            }
-
-            public boolean isBad() {
-                return resultType.equals(ResultType.BAD);
-            }
-
-            public boolean isGood() {
-                return resultType.equals(ResultType.GOOD);
-            }
-
-            @Override
-            public String toString() {
-                return MoreObjects.toStringHelper(this)
-                    .add("name", name)
-                    .add("resultType", resultType)
-                    .add("description", description)
-                    .toString();
-            }
-        }
-
-        CheckResult check();
-
-        String checkName();
     }
 
     static class StartUpChecks {

@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.apache.james.StartUpChecksPerformer.StartUpCheck;
+import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.BlobExportImplChoice;

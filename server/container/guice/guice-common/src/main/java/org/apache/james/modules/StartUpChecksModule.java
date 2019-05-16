@@ -19,7 +19,7 @@
 
 package org.apache.james.modules;
 
-import org.apache.james.StartUpChecksPerformer;
+import org.apache.james.lifecycle.api.StartUpCheck;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -28,6 +28,6 @@ public class StartUpChecksModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), StartUpChecksPerformer.StartUpCheck.class);
+        Multibinder.newSetBinder(binder(), StartUpCheck.class);
     }
 }
