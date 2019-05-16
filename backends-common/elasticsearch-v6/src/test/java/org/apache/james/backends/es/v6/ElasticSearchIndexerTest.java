@@ -21,11 +21,10 @@ package org.apache.james.backends.es.v6;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
-import java.util.concurrent.Executors;
-
-import org.apache.james.util.concurrent.NamedThreadFactory;
+import org.awaitility.Duration;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -55,9 +54,7 @@ public class ElasticSearchIndexerTest {
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(getESClient());
-        testee = new ElasticSearchIndexer(getESClient(),
-            Executors.newSingleThreadExecutor(NamedThreadFactory.withClassName(getClass())),
-            ALIAS_NAME, TYPE_NAME, MINIMUM_BATCH_SIZE);
+        testee = new ElasticSearchIndexer(getESClient(), ALIAS_NAME, TYPE_NAME, MINIMUM_BATCH_SIZE);
     }
 
     private RestHighLevelClient getESClient() {
@@ -150,16 +147,17 @@ public class ElasticSearchIndexerTest {
         testee.index(messageId, content);
         elasticSearch.awaitForElasticSearch();
         
-        testee.deleteAllMatchingQuery(termQuery("property", "1")).get();
+        testee.deleteAllMatchingQuery(termQuery("property", "1"));
         elasticSearch.awaitForElasticSearch();
         
         try (RestHighLevelClient client = getESClient()) {
-            SearchResponse searchResponse = client.search(
-                new SearchRequest(INDEX_NAME.getValue())
-                    .types(TYPE_NAME.getValue())
-                    .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
-                RequestOptions.DEFAULT);
-            assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(0);
+            await().atMost(Duration.TEN_SECONDS)
+                .until(() -> client.search(
+                        new SearchRequest(INDEX_NAME.getValue())
+                            .types(TYPE_NAME.getValue())
+                            .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
+                        RequestOptions.DEFAULT)
+                    .getHits().getTotalHits() == 0);
         }
     }
 
@@ -181,16 +179,17 @@ public class ElasticSearchIndexerTest {
         testee.index(messageId3, content3);
         elasticSearch.awaitForElasticSearch();
 
-        testee.deleteAllMatchingQuery(termQuery("property", "1")).get();
+        testee.deleteAllMatchingQuery(termQuery("property", "1"));
         elasticSearch.awaitForElasticSearch();
         
         try (RestHighLevelClient client = getESClient()) {
-            SearchResponse searchResponse = client.search(
-                new SearchRequest(INDEX_NAME.getValue())
-                    .types(TYPE_NAME.getValue())
-                    .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
-                RequestOptions.DEFAULT);
-            assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
+            await().atMost(Duration.TEN_SECONDS)
+                .until(() -> client.search(
+                    new SearchRequest(INDEX_NAME.getValue())
+                        .types(TYPE_NAME.getValue())
+                        .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
+                    RequestOptions.DEFAULT)
+                    .getHits().getTotalHits() == 1);
         }
     }
     
