@@ -23,7 +23,6 @@ import static org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 import javax.inject.Inject;
 
@@ -39,8 +38,133 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class IndexCreationFactory {
+
+    static class AliasSpecificationStep {
+        private final int nbShards;
+        private final int nbReplica;
+        private final IndexName indexName;
+        private final ImmutableList.Builder<AliasName> aliases;
+
+        AliasSpecificationStep(int nbShards, int nbReplica, IndexName indexName) {
+            this.nbShards = nbShards;
+            this.nbReplica = nbReplica;
+            this.indexName = indexName;
+            this.aliases = ImmutableList.builder();
+        }
+
+        public AliasSpecificationStep addAlias(AliasName aliasName) {
+            Preconditions.checkNotNull(aliasName);
+            this.aliases.add(aliasName);
+            return this;
+        }
+
+        public RestHighLevelClient createIndexAndAliases(RestHighLevelClient client) {
+            return new IndexCreationPerformer(nbShards, nbReplica, indexName, aliases.build()).createIndexAndAliases(client);
+        }
+    }
+
+    static class IndexCreationPerformer {
+        private final int nbShards;
+        private final int nbReplica;
+        private final IndexName indexName;
+        private final ImmutableList<AliasName> aliases;
+
+        public IndexCreationPerformer(int nbShards, int nbReplica, IndexName indexName, ImmutableList<AliasName> aliases) {
+            this.nbShards = nbShards;
+            this.nbReplica = nbReplica;
+            this.indexName = indexName;
+            this.aliases = aliases;
+        }
+
+        public RestHighLevelClient createIndexAndAliases(RestHighLevelClient client) {
+            Preconditions.checkNotNull(indexName);
+            try {
+                createIndexIfNeeded(client, indexName, generateSetting(nbShards, nbReplica));
+                aliases.forEach(Throwing.consumer(alias -> createAliasIfNeeded(client, indexName, alias)));
+            } catch (IOException e) {
+                LOGGER.error("Error while creating index : ", e);
+            }
+            return client;
+        }
+
+        private void createAliasIfNeeded(RestHighLevelClient client, IndexName indexName, AliasName aliasName) throws IOException {
+            if (!aliasExist(client, aliasName)) {
+                client.indices()
+                    .updateAliases(
+                        new IndicesAliasesRequest().addAliasAction(
+                            new AliasActions(AliasActions.Type.ADD)
+                                .index(indexName.getValue())
+                                .alias(aliasName.getValue())),
+                        RequestOptions.DEFAULT);
+            }
+        }
+
+        private boolean aliasExist(RestHighLevelClient client, AliasName aliasName) throws IOException {
+            return client.indices()
+                .existsAlias(new GetAliasesRequest().aliases(aliasName.getValue()),
+                    RequestOptions.DEFAULT);
+        }
+
+        private void createIndexIfNeeded(RestHighLevelClient client, IndexName indexName, XContentBuilder settings) throws IOException {
+            try {
+                client.indices()
+                    .create(
+                        new CreateIndexRequest(indexName.getValue())
+                            .source(settings),
+                        RequestOptions.DEFAULT);
+            } catch (ElasticsearchStatusException exception) {
+                if (exception.getMessage().contains(INDEX_ALREADY_EXISTS_EXCEPTION_MESSAGE)) {
+                    LOGGER.info("Index [{}] already exist", indexName);
+                } else {
+                    throw exception;
+                }
+            }
+        }
+
+        private XContentBuilder generateSetting(int nbShards, int nbReplica) throws IOException {
+            return jsonBuilder()
+                .startObject()
+                    .startObject("settings")
+                        .field("number_of_shards", nbShards)
+                        .field("number_of_replicas", nbReplica)
+                        .startObject("analysis")
+                            .startObject("analyzer")
+                                .startObject(CASE_INSENSITIVE)
+                                    .field("tokenizer", "keyword")
+                                    .startArray("filter")
+                                        .value("lowercase")
+                                    .endArray()
+                                .endObject()
+                                .startObject(KEEP_MAIL_AND_URL)
+                                    .field("tokenizer", "uax_url_email")
+                                    .startArray("filter")
+                                        .value("lowercase")
+                                        .value("stop")
+                                    .endArray()
+                                .endObject()
+                                .startObject(SNOWBALL_KEEP_MAIL_AND_URL)
+                                    .field("tokenizer", "uax_url_email")
+                                    .startArray("filter")
+                                        .value("lowercase")
+                                        .value("stop")
+                                        .value(ENGLISH_SNOWBALL)
+                                    .endArray()
+                                .endObject()
+                            .endObject()
+                            .startObject("filter")
+                                .startObject(ENGLISH_SNOWBALL)
+                                    .field("type", "snowball")
+                                    .field("language", "English")
+                                .endObject()
+                            .endObject()
+                        .endObject()
+                    .endObject()
+                .endObject();
+        }
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexCreationFactory.class);
     private static final String INDEX_ALREADY_EXISTS_EXCEPTION_MESSAGE = "type=resource_already_exists_exception";
@@ -49,115 +173,17 @@ public class IndexCreationFactory {
     private static final String SNOWBALL_KEEP_MAIL_AND_URL = "snowball_keep_mail_and_token";
     private static final String ENGLISH_SNOWBALL = "english_snowball";
 
-    private IndexName indexName;
-    private ArrayList<AliasName> aliases;
-    private int nbShards;
-    private int nbReplica;
+    private final int nbShards;
+    private final int nbReplica;
 
     @Inject
     public IndexCreationFactory(ElasticSearchConfiguration configuration) {
-        indexName = null;
-        aliases = new ArrayList<>();
-        nbShards = configuration.getNbShards();
-        nbReplica = configuration.getNbReplica();
+        this.nbShards = configuration.getNbShards();
+        this.nbReplica = configuration.getNbReplica();
     }
 
-    public IndexCreationFactory useIndex(IndexName indexName) {
+    public AliasSpecificationStep useIndex(IndexName indexName) {
         Preconditions.checkNotNull(indexName);
-        this.indexName = indexName;
-        return this;
+        return new AliasSpecificationStep(nbShards, nbReplica, indexName);
     }
-
-    public IndexCreationFactory addAlias(AliasName aliasName) {
-        Preconditions.checkNotNull(aliasName);
-        this.aliases.add(aliasName);
-        return this;
-    }
-
-    public RestHighLevelClient createIndexAndAliases(RestHighLevelClient client) {
-        Preconditions.checkNotNull(indexName);
-        try {
-            createIndexIfNeeded(client, indexName, generateSetting(nbShards, nbReplica));
-            aliases.forEach(Throwing.consumer(alias -> createAliasIfNeeded(client, indexName, alias)));
-        } catch (IOException e) {
-            LOGGER.error("Error while creating index : ", e);
-        }
-        return client;
-    }
-
-    private void createAliasIfNeeded(RestHighLevelClient client, IndexName indexName, AliasName aliasName) throws IOException {
-        if (!aliasExist(client, aliasName)) {
-            client.indices()
-                .updateAliases(
-                    new IndicesAliasesRequest().addAliasAction(
-                        new AliasActions(AliasActions.Type.ADD)
-                            .index(indexName.getValue())
-                            .alias(aliasName.getValue())),
-                    RequestOptions.DEFAULT);
-        }
-    }
-
-    private boolean aliasExist(RestHighLevelClient client, AliasName aliasName) throws IOException {
-        return client.indices()
-            .existsAlias(new GetAliasesRequest().aliases(aliasName.getValue()),
-                RequestOptions.DEFAULT);
-    }
-
-    private void createIndexIfNeeded(RestHighLevelClient client, IndexName indexName, XContentBuilder settings) throws IOException {
-        try {
-            client.indices()
-                .create(
-                    new CreateIndexRequest(indexName.getValue())
-                        .source(settings),
-                    RequestOptions.DEFAULT);
-        } catch (ElasticsearchStatusException exception) {
-            if (exception.getMessage().contains(INDEX_ALREADY_EXISTS_EXCEPTION_MESSAGE)) {
-                LOGGER.info("Index [{}] already exist", indexName);
-            } else {
-                throw exception;
-            }
-        }
-    }
-
-    private XContentBuilder generateSetting(int nbShards, int nbReplica) throws IOException {
-        return jsonBuilder()
-            .startObject()
-                .startObject("settings")
-                    .field("number_of_shards", nbShards)
-                    .field("number_of_replicas", nbReplica)
-                    .startObject("analysis")
-                        .startObject("analyzer")
-                            .startObject(CASE_INSENSITIVE)
-                                .field("tokenizer", "keyword")
-                                .startArray("filter")
-                                    .value("lowercase")
-                                .endArray()
-                            .endObject()
-                            .startObject(KEEP_MAIL_AND_URL)
-                                .field("tokenizer", "uax_url_email")
-                                .startArray("filter")
-                                    .value("lowercase")
-                                    .value("stop")
-                                .endArray()
-                            .endObject()
-                            .startObject(SNOWBALL_KEEP_MAIL_AND_URL)
-                                .field("tokenizer", "uax_url_email")
-                                .startArray("filter")
-                                    .value("lowercase")
-                                    .value("stop")
-                                    .value(ENGLISH_SNOWBALL)
-                                .endArray()
-                            .endObject()
-                        .endObject()
-                        .startObject("filter")
-                            .startObject(ENGLISH_SNOWBALL)
-                                .field("type", "snowball")
-                                .field("language", "English")
-                            .endObject()
-                        .endObject()
-                    .endObject()
-                .endObject()
-            .endObject();
-    }
-
 }

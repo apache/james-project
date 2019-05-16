@@ -62,6 +62,7 @@ public class IndexCreationFactoryTest {
     public void addAliasShouldThrowWhenNull() {
         assertThatThrownBy(() ->
             new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
+                .useIndex(INDEX_NAME)
                 .addAlias(null))
             .isInstanceOf(NullPointerException.class);
     }
