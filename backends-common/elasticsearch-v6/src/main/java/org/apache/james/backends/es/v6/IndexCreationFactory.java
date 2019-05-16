@@ -42,7 +42,7 @@ import com.google.common.collect.ImmutableList;
 
 public class IndexCreationFactory {
 
-    static class AliasSpecificationStep {
+    public static class AliasSpecificationStep {
         private final int nbShards;
         private final int nbReplica;
         private final IndexName indexName;
