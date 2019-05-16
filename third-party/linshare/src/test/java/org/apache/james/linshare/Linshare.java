@@ -37,6 +37,7 @@ import io.restassured.specification.RequestSpecification;
 
 public class Linshare {
     private static final String WAIT_FOR_BACKEND_INIT_LOG = ".*Server startup.*";
+    private static final String WAIT_FOR_LDAP_INIT_LOG = ".*The following user provider for domain '.*' was successfully created.*";
     private static final int LINSHARE_BACKEND_PORT = 8080;
 
     private final GenericContainer<?> linshareBackend;
@@ -44,6 +45,7 @@ public class Linshare {
     private final GenericContainer<?> linshareSmtp;
     private final GenericContainer<?> linshareLdap;
     private final GenericContainer<?> linshareMongodb;
+    private final GenericContainer<?> linshareDBInit;
 
     private Network network;
 
@@ -55,6 +57,7 @@ public class Linshare {
         linshareLdap = createDockerLdap();
         linshareSmtp = createDockerSmtp();
         linshareBackend = createDockerBackend();
+        linshareDBInit = createLinshareBackendInit();
     }
 
     public void start() {
@@ -63,11 +66,11 @@ public class Linshare {
         linshareLdap.start();
         linshareSmtp.start();
         linshareBackend.start();
-
-        LDAPConfigurationPerformer.configureLdap(this);
+        linshareDBInit.start();
     }
 
     public void stop() {
+        linshareDBInit.stop();
         linshareDatabase.stop();
         linshareMongodb.stop();
         linshareLdap.stop();
@@ -135,6 +138,26 @@ public class Linshare {
             .withEnv("THUMBNAIL_ENABLE", "false")
             .withExposedPorts(LINSHARE_BACKEND_PORT)
             .waitingFor(Wait.forLogMessage(WAIT_FOR_BACKEND_INIT_LOG, 1)
+                .withStartupTimeout(Duration.ofMinutes(10)))
+            .withNetwork(network);
+    }
+
+    private GenericContainer createLinshareBackendInit() {
+        return new GenericContainer<>("linagora/linshare-init:2.2")
+            .withNetworkAliases("init")
+            .withEnv("LS_HOST", "backend")
+            .withEnv("LS_PORT", "8080")
+            .withEnv("LS_LDAP_NAME", "ldap-local")
+            .withEnv("LS_LDAP_URL", "ldap://ldap:389")
+            .withEnv("LS_LDAP_BASE_DN", "ou=People,dc=linshare,dc=org")
+            .withEnv("LS_LDAP_DN", "cn=linshare,dc=linshare,dc=org")
+            .withEnv("LS_LDAP_PW", "linshare")
+            .withEnv("LS_DOMAIN_PATTERN_NAME", "openldap-local")
+            .withEnv("LS_DOMAIN_PATTERN_MODEL", "868400c0-c12e-456a-8c3c-19e985290586")
+            .withEnv("NO_REPLY_ADDRESS", "linshare-noreply@linshare.org")
+            .withEnv("DEBUG", "1")
+            .withEnv("FORCE_INIT", "1")
+            .waitingFor(Wait.forLogMessage(WAIT_FOR_LDAP_INIT_LOG, 1)
                 .withStartupTimeout(Duration.ofMinutes(10)))
             .withNetwork(network);
     }
