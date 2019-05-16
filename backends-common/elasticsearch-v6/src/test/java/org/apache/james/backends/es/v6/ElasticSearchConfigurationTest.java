@@ -31,7 +31,15 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 public class ElasticSearchConfigurationTest {
+
+    @Test
+    public void elasticSearchConfigurationShouldRespectBeanContract() {
+        EqualsVerifier.forClass(ElasticSearchConfiguration.class)
+            .verify();
+    }
 
     @Test
     public void getNbReplicaShouldReturnConfiguredValue() throws ConfigurationException {
