@@ -173,13 +173,14 @@ public class IndexCreationFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexCreationFactory.class);
     private static final String INDEX_ALREADY_EXISTS_EXCEPTION_MESSAGE = "type=resource_already_exists_exception";
-    private static final String CASE_INSENSITIVE = "case_insensitive";
-    private static final String KEEP_MAIL_AND_URL = "keep_mail_and_url";
-    private static final String SNOWBALL_KEEP_MAIL_AND_URL = "snowball_keep_mail_and_token";
-    private static final String ENGLISH_SNOWBALL = "english_snowball";
 
     private final int nbShards;
     private final int nbReplica;
+
+    public static final String CASE_INSENSITIVE = "case_insensitive";
+    public static final String KEEP_MAIL_AND_URL = "keep_mail_and_url";
+    public static final String SNOWBALL_KEEP_MAIL_AND_URL = "snowball_keep_mail_and_token";
+    public static final String ENGLISH_SNOWBALL = "english_snowball";
 
     @Inject
     public IndexCreationFactory(ElasticSearchConfiguration configuration) {

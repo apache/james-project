@@ -19,8 +19,8 @@
 
 package org.apache.james.mailbox.elasticsearch.v6.query;
 
-import static org.apache.james.backends.es.NodeMappingFactory.RAW;
-import static org.apache.james.backends.es.NodeMappingFactory.SPLIT_EMAIL;
+import static org.apache.james.backends.es.v6.NodeMappingFactory.RAW;
+import static org.apache.james.backends.es.v6.NodeMappingFactory.SPLIT_EMAIL;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
@@ -45,6 +45,7 @@ import org.apache.james.mailbox.elasticsearch.v6.json.JsonMessageConstants;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.HeaderOperator;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -275,10 +276,12 @@ public class CriterionConverter {
     }
 
     private QueryBuilder manageAddressFields(String headerName, String value) {
-        return nestedQuery(getFieldNameFromHeaderName(headerName), boolQuery()
-            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.NAME, value))
-            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS, value))
-            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS + "." + RAW, value)));
+        return nestedQuery(getFieldNameFromHeaderName(headerName),
+            boolQuery()
+                .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.NAME, value))
+                .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS, value))
+                .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS + "." + RAW, value)),
+            ScoreMode.Avg);
     }
 
     private String getFieldNameFromHeaderName(String headerName) {

@@ -23,9 +23,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.james.backends.es.IndexName;
-import org.apache.james.backends.es.ReadAliasName;
-import org.apache.james.backends.es.WriteAliasName;
+import org.apache.james.backends.es.v6.IndexName;
+import org.apache.james.backends.es.v6.ReadAliasName;
+import org.apache.james.backends.es.v6.WriteAliasName;
 import org.apache.james.util.OptionalUtils;
 
 public class ElasticSearchMailboxConfiguration {
@@ -114,7 +114,7 @@ public class ElasticSearchMailboxConfiguration {
     public static final boolean DEFAULT_INDEX_ATTACHMENTS = true;
     public static final int DEFAULT_NB_SHARDS = 5;
     public static final int DEFAULT_NB_REPLICA = 1;
-    public static final int DEFAULT_PORT = 9300;
+    public static final int DEFAULT_PORT = 9200;
     public static final Optional<Integer> DEFAULT_PORT_AS_OPTIONAL = Optional.of(DEFAULT_PORT);
 
     public static final ElasticSearchMailboxConfiguration DEFAULT_CONFIGURATION = builder().build();
