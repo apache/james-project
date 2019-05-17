@@ -19,10 +19,9 @@
 
 package org.apache.james.backends.es.v6;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
-import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Before;
 import org.junit.Rule;
@@ -32,7 +31,6 @@ public class NodeMappingFactoryTest {
     private static final String MESSAGE = "message";
     private static final IndexName INDEX_NAME = new IndexName("index");
     private static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
-    private static final TypeName TYPE_NAME = new TypeName("type");
 
     @Rule
     public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
@@ -47,7 +45,6 @@ public class NodeMappingFactoryTest {
             .createIndexAndAliases(clientProvider.get());
         NodeMappingFactory.applyMapping(clientProvider.get(),
             INDEX_NAME,
-            TYPE_NAME,
             getMappingsSources());
     }
 
@@ -55,24 +52,21 @@ public class NodeMappingFactoryTest {
     public void applyMappingShouldNotThrowWhenCalledSeveralTime() throws Exception {
         NodeMappingFactory.applyMapping(clientProvider.get(),
             INDEX_NAME,
-            TYPE_NAME,
             getMappingsSources());
     }
 
     @Test
-    public void applyMappingShouldThrowWhenTryingIndexerChanges() throws Exception {
+    public void applyMappingShouldNotThrowWhenIncrementalChanges() throws Exception {
         NodeMappingFactory.applyMapping(clientProvider.get(),
             INDEX_NAME,
-            TYPE_NAME,
             getMappingsSources());
 
         elasticSearch.awaitForElasticSearch();
 
-        assertThatThrownBy(() ->NodeMappingFactory.applyMapping(clientProvider.get(),
+        assertThatCode(() ->NodeMappingFactory.applyMapping(clientProvider.get(),
             INDEX_NAME,
-            TYPE_NAME,
             getOtherMappingsSources()))
-        .isInstanceOf(ElasticsearchStatusException.class);
+        .doesNotThrowAnyException();
     }
 
     private XContentBuilder getMappingsSources() throws Exception {

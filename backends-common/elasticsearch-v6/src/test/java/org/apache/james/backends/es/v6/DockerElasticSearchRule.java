@@ -42,4 +42,8 @@ public class DockerElasticSearchRule extends ExternalResource {
     public void awaitForElasticSearch() {
         dockerElasticSearch.awaitForElasticSearch();
     }
+
+    public DockerElasticSearch getDockerElasticSearch() {
+        return dockerElasticSearch;
+    }
 }

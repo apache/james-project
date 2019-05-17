@@ -42,7 +42,6 @@ public class ElasticSearchIndexerTest {
     private static final int MINIMUM_BATCH_SIZE = 1;
     private static final IndexName INDEX_NAME = new IndexName("index_name");
     private static final WriteAliasName ALIAS_NAME = new WriteAliasName("alias_name");
-    private static final TypeName TYPE_NAME = new TypeName("type_name");
 
     @Rule
     public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
@@ -54,7 +53,7 @@ public class ElasticSearchIndexerTest {
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(getESClient());
-        testee = new ElasticSearchIndexer(getESClient(), ALIAS_NAME, TYPE_NAME, MINIMUM_BATCH_SIZE);
+        testee = new ElasticSearchIndexer(getESClient(), ALIAS_NAME, MINIMUM_BATCH_SIZE);
     }
 
     private RestHighLevelClient getESClient() {
@@ -72,7 +71,6 @@ public class ElasticSearchIndexerTest {
         try (RestHighLevelClient client = getESClient()) {
             SearchResponse searchResponse = client.search(
                 new SearchRequest(INDEX_NAME.getValue())
-                    .types(TYPE_NAME.getValue())
                     .source(new SearchSourceBuilder().query(QueryBuilders.matchQuery("message", "trying"))),
                 RequestOptions.DEFAULT);
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
@@ -99,7 +97,6 @@ public class ElasticSearchIndexerTest {
         try (RestHighLevelClient client = getESClient()) {
             SearchResponse searchResponse = client.search(
                 new SearchRequest(INDEX_NAME.getValue())
-                    .types(TYPE_NAME.getValue())
                     .source(new SearchSourceBuilder().query(QueryBuilders.matchQuery("message", "mastering"))),
                 RequestOptions.DEFAULT);
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
@@ -108,7 +105,6 @@ public class ElasticSearchIndexerTest {
         try (RestHighLevelClient client = getESClient()) {
             SearchResponse searchResponse = client.search(
                 new SearchRequest(INDEX_NAME.getValue())
-                    .types(TYPE_NAME.getValue())
                     .source(new SearchSourceBuilder().query(QueryBuilders.matchQuery("field", "unchanged"))),
                 RequestOptions.DEFAULT);
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
@@ -154,7 +150,6 @@ public class ElasticSearchIndexerTest {
             await().atMost(Duration.TEN_SECONDS)
                 .until(() -> client.search(
                         new SearchRequest(INDEX_NAME.getValue())
-                            .types(TYPE_NAME.getValue())
                             .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
                         RequestOptions.DEFAULT)
                     .getHits().getTotalHits() == 0);
@@ -186,7 +181,6 @@ public class ElasticSearchIndexerTest {
             await().atMost(Duration.TEN_SECONDS)
                 .until(() -> client.search(
                     new SearchRequest(INDEX_NAME.getValue())
-                        .types(TYPE_NAME.getValue())
                         .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
                     RequestOptions.DEFAULT)
                     .getHits().getTotalHits() == 1);
@@ -207,7 +201,6 @@ public class ElasticSearchIndexerTest {
         try (RestHighLevelClient client = getESClient()) {
             SearchResponse searchResponse = client.search(
                 new SearchRequest(INDEX_NAME.getValue())
-                    .types(TYPE_NAME.getValue())
                     .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
                 RequestOptions.DEFAULT);
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(0);
@@ -238,7 +231,6 @@ public class ElasticSearchIndexerTest {
         try (RestHighLevelClient client = getESClient()) {
             SearchResponse searchResponse = client.search(
                 new SearchRequest(INDEX_NAME.getValue())
-                    .types(TYPE_NAME.getValue())
                     .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
                 RequestOptions.DEFAULT);
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);

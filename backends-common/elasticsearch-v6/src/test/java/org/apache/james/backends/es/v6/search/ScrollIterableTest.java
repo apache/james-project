@@ -32,8 +32,8 @@ import org.apache.james.backends.es.v6.DockerElasticSearchRule;
 import org.apache.james.backends.es.v6.ElasticSearchConfiguration;
 import org.apache.james.backends.es.v6.IndexCreationFactory;
 import org.apache.james.backends.es.v6.IndexName;
+import org.apache.james.backends.es.v6.NodeMappingFactory;
 import org.apache.james.backends.es.v6.ReadAliasName;
-import org.apache.james.backends.es.v6.TypeName;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.elasticsearch.action.index.IndexRequest;
@@ -55,7 +55,6 @@ public class ScrollIterableTest {
     private static final String MESSAGE = "message";
     private static final IndexName INDEX_NAME = new IndexName("index");
     private static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
-    private static final TypeName TYPE_NAME = new TypeName("messages");
 
     private static final ConditionFactory WAIT_CONDITION = await().timeout(Duration.FIVE_SECONDS);
 
@@ -77,7 +76,6 @@ public class ScrollIterableTest {
     public void scrollIterableShouldWorkWhenEmpty() throws Exception {
         try (RestHighLevelClient client = clientProvider.get()) {
             SearchRequest searchRequest = new SearchRequest(INDEX_NAME.getValue())
-                .types(TYPE_NAME.getValue())
                 .scroll(TIMEOUT)
                 .source(new SearchSourceBuilder()
                     .query(QueryBuilders.matchAllQuery())
@@ -92,7 +90,9 @@ public class ScrollIterableTest {
     public void scrollIterableShouldWorkWhenOneElement() throws Exception {
         try (RestHighLevelClient client = clientProvider.get()) {
             String id = "1";
-            client.index(new IndexRequest(INDEX_NAME.getValue(), TYPE_NAME.getValue(), id)
+            client.index(new IndexRequest(INDEX_NAME.getValue())
+                    .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                    .id(id)
                     .source(MESSAGE, "Sample message"),
                 RequestOptions.DEFAULT);
 
@@ -100,7 +100,6 @@ public class ScrollIterableTest {
             WAIT_CONDITION.untilAsserted(() -> hasIdsInIndex(client, id));
 
             SearchRequest searchRequest = new SearchRequest(INDEX_NAME.getValue())
-                .types(TYPE_NAME.getValue())
                 .scroll(TIMEOUT)
                 .source(new SearchSourceBuilder()
                     .query(QueryBuilders.matchAllQuery())
@@ -115,12 +114,16 @@ public class ScrollIterableTest {
     public void scrollIterableShouldWorkWhenSizeElement() throws Exception {
         try (RestHighLevelClient client = clientProvider.get()) {
             String id1 = "1";
-            client.index(new IndexRequest(INDEX_NAME.getValue(), TYPE_NAME.getValue(), id1)
+            client.index(new IndexRequest(INDEX_NAME.getValue())
+                    .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                    .id(id1)
                     .source(MESSAGE, "Sample message"),
                 RequestOptions.DEFAULT);
 
             String id2 = "2";
-            client.index(new IndexRequest(INDEX_NAME.getValue(), TYPE_NAME.getValue(), id2)
+            client.index(new IndexRequest(INDEX_NAME.getValue())
+                    .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                    .id(id2)
                     .source(MESSAGE, "Sample message"),
                 RequestOptions.DEFAULT);
 
@@ -128,7 +131,6 @@ public class ScrollIterableTest {
             WAIT_CONDITION.untilAsserted(() -> hasIdsInIndex(client, id1, id2));
 
             SearchRequest searchRequest = new SearchRequest(INDEX_NAME.getValue())
-                .types(TYPE_NAME.getValue())
                 .scroll(TIMEOUT)
                 .source(new SearchSourceBuilder()
                     .query(QueryBuilders.matchAllQuery())
@@ -143,17 +145,23 @@ public class ScrollIterableTest {
     public void scrollIterableShouldWorkWhenMoreThanSizeElement() throws Exception {
         try (RestHighLevelClient client = clientProvider.get()) {
             String id1 = "1";
-            client.index(new IndexRequest(INDEX_NAME.getValue(), TYPE_NAME.getValue(), id1)
+            client.index(new IndexRequest(INDEX_NAME.getValue())
+                    .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                    .id(id1)
                     .source(MESSAGE, "Sample message"),
                 RequestOptions.DEFAULT);
 
             String id2 = "2";
-            client.index(new IndexRequest(INDEX_NAME.getValue(), TYPE_NAME.getValue(), id2)
+            client.index(new IndexRequest(INDEX_NAME.getValue())
+                    .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                    .id(id2)
                     .source(MESSAGE, "Sample message"),
                 RequestOptions.DEFAULT);
 
             String id3 = "3";
-            client.index(new IndexRequest(INDEX_NAME.getValue(), TYPE_NAME.getValue(), id3)
+            client.index(new IndexRequest(INDEX_NAME.getValue())
+                    .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                    .id(id3)
                     .source(MESSAGE, "Sample message"),
                 RequestOptions.DEFAULT);
 
@@ -161,7 +169,6 @@ public class ScrollIterableTest {
             WAIT_CONDITION.untilAsserted(() -> hasIdsInIndex(client, id1, id2, id3));
 
             SearchRequest searchRequest = new SearchRequest(INDEX_NAME.getValue())
-                .types(TYPE_NAME.getValue())
                 .scroll(TIMEOUT)
                 .source(new SearchSourceBuilder()
                     .query(QueryBuilders.matchAllQuery())
@@ -181,7 +188,6 @@ public class ScrollIterableTest {
 
     private void hasIdsInIndex(RestHighLevelClient client, String... ids) throws IOException {
         SearchRequest searchRequest = new SearchRequest(INDEX_NAME.getValue())
-            .types(TYPE_NAME.getValue())
             .scroll(TIMEOUT)
             .source(new SearchSourceBuilder()
                 .query(QueryBuilders.matchAllQuery()));

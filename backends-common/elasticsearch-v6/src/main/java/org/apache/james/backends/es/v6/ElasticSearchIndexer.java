@@ -51,23 +51,19 @@ public class ElasticSearchIndexer {
 
     private final RestHighLevelClient client;
     private final AliasName aliasName;
-    private final TypeName typeName;
     private final int batchSize;
 
     public ElasticSearchIndexer(RestHighLevelClient client,
-                                WriteAliasName aliasName,
-                                TypeName typeName) {
-        this(client, aliasName, typeName, DEFAULT_BATCH_SIZE);
+                                WriteAliasName aliasName) {
+        this(client, aliasName, DEFAULT_BATCH_SIZE);
     }
 
     @VisibleForTesting
     public ElasticSearchIndexer(RestHighLevelClient client,
                                 WriteAliasName aliasName,
-                                TypeName typeName,
                                 int batchSize) {
         this.client = client;
         this.aliasName = aliasName;
-        this.typeName = typeName;
         this.batchSize = batchSize;
     }
 
@@ -77,7 +73,9 @@ public class ElasticSearchIndexer {
             LOGGER.debug("Indexing {}: {}", id, StringUtils.left(content, DEBUG_MAX_LENGTH_CONTENT));
         }
         return client.index(
-            new IndexRequest(aliasName.getValue(), typeName.getValue(), id)
+            new IndexRequest(aliasName.getValue())
+                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                .id(id)
                 .source(content, XContentType.JSON),
             RequestOptions.DEFAULT);
     }
@@ -88,7 +86,7 @@ public class ElasticSearchIndexer {
             BulkRequest request = new BulkRequest();
             updatedDocumentParts.forEach(updatedDocumentPart -> request.add(
                 new UpdateRequest(aliasName.getValue(),
-                    typeName.getValue(),
+                    NodeMappingFactory.DEFAULT_MAPPING_NAME,
                     updatedDocumentPart.getId())
                 .doc(updatedDocumentPart.getUpdatedDocumentPart(), XContentType.JSON)));
             return Optional.of(client.bulk(request, RequestOptions.DEFAULT));
@@ -102,10 +100,9 @@ public class ElasticSearchIndexer {
         try {
             BulkRequest request = new BulkRequest();
             ids.forEach(id -> request.add(
-                new DeleteRequest(
-                    aliasName.getValue(),
-                    typeName.getValue(),
-                    id)));
+                new DeleteRequest(aliasName.getValue())
+                    .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                    .id(id)));
             return Optional.of(client.bulk(request, RequestOptions.DEFAULT));
         } catch (ValidationException e) {
             LOGGER.warn("Error while deleting index", e);
@@ -115,7 +112,7 @@ public class ElasticSearchIndexer {
 
     public void deleteAllMatchingQuery(QueryBuilder queryBuilder) {
         DeleteByQueryRequest request = new DeleteByQueryRequest(aliasName.getValue())
-            .setDocTypes(typeName.getValue())
+            .setDocTypes(NodeMappingFactory.DEFAULT_MAPPING_NAME)
             .setScroll(TIMEOUT)
             .setQuery(queryBuilder)
             .setBatchSize(batchSize);
