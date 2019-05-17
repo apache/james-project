@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import org.apache.james.mailets.configuration.MailetsConfigurationModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.activemq.ActiveMQQueueModule;
 import org.apache.james.modules.data.JPADataModule;
@@ -95,7 +96,8 @@ public class JPAJamesServerMain {
 
         GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
                     .combineWith(JPA_MODULE_AGGREGATE,
-                            new JMXServerModule());
+                            new JMXServerModule(),
+                            new MailetsConfigurationModule());
         server.start();
     }
 

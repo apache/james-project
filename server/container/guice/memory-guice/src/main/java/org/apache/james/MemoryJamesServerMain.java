@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.jwt.JwtConfiguration;
+import org.apache.james.mailets.configuration.MailetsConfigurationModule;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.BlobMemoryModule;
 import org.apache.james.modules.MailboxModule;
@@ -123,7 +124,8 @@ public class MemoryJamesServerMain {
         IN_MEMORY_SERVER_MODULE,
         PROTOCOLS,
         JMAP,
-        WEBADMIN);
+        WEBADMIN,
+        new MailetsConfigurationModule());
 
     public static void main(String[] args) throws Exception {
         Configuration configuration = Configuration.builder()

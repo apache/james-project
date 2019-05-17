@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import org.apache.james.mailets.configuration.MailetsConfigurationModule;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.activemq.ActiveMQQueueModule;
@@ -131,7 +132,8 @@ public class CassandraJamesServerMain {
         CASSANDRA_SERVER_CORE_MODULE,
         CASSANDRA_MAILBOX_MODULE,
         PROTOCOLS,
-        PLUGINS);
+        PLUGINS,
+        new MailetsConfigurationModule());
 
     public static void main(String[] args) throws Exception {
         Configuration configuration = Configuration.builder()
