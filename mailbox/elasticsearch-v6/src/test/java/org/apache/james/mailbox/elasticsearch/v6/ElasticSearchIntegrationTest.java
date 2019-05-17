@@ -21,14 +21,13 @@ package org.apache.james.mailbox.elasticsearch.v6;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
-import org.apache.james.backends.es.DockerElasticSearchRule;
-import org.apache.james.backends.es.ElasticSearchConfiguration;
-import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.v6.DockerElasticSearchRule;
+import org.apache.james.backends.es.v6.ElasticSearchConfiguration;
+import org.apache.james.backends.es.v6.ElasticSearchIndexer;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
@@ -50,8 +49,7 @@ import org.apache.james.mailbox.tika.TikaHttpClientImpl;
 import org.apache.james.mailbox.tika.TikaTextExtractor;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.mime4j.dom.Message;
-import org.apache.james.util.concurrent.NamedThreadFactory;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -87,15 +85,14 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     }
 
     @Override
-    protected void initializeMailboxManager() {
-        Client client = MailboxIndexCreationUtil.prepareDefaultClient(
+    protected void initializeMailboxManager() throws IOException {
+        RestHighLevelClient client = MailboxIndexCreationUtil.prepareDefaultClient(
             elasticSearch.clientProvider().get(),
             ElasticSearchConfiguration.builder()
-                .addHost(elasticSearch.getTcpHost())
+                .addHost(elasticSearch.getDockerElasticSearch().getHttpHost())
                 .build());
 
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
-        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
 
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
@@ -106,14 +103,11 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
             .listeningSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 new ElasticSearchIndexer(client,
-                    Executors.newSingleThreadExecutor(threadFactory),
                     MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
-                    MailboxElasticSearchConstants.MESSAGE_TYPE,
                     BATCH_SIZE),
                 new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
                     new InMemoryId.Factory(), messageIdFactory,
-                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
-                    MailboxElasticSearchConstants.MESSAGE_TYPE),
+                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS),
                 new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES),
                 preInstanciationStage.getSessionProvider()))
             .noPreDeletionHooks()

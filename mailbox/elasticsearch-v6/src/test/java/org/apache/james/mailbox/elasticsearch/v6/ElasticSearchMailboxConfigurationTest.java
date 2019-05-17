@@ -22,9 +22,9 @@ package org.apache.james.mailbox.elasticsearch.v6;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.james.backends.es.IndexName;
-import org.apache.james.backends.es.ReadAliasName;
-import org.apache.james.backends.es.WriteAliasName;
+import org.apache.james.backends.es.v6.IndexName;
+import org.apache.james.backends.es.v6.ReadAliasName;
+import org.apache.james.backends.es.v6.WriteAliasName;
 import org.junit.Test;
 
 public class ElasticSearchMailboxConfigurationTest {
