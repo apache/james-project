@@ -24,7 +24,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.james.backends.es.v6.ElasticSearchIndexer;
-import org.apache.james.core.User;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
@@ -60,11 +59,11 @@ public class ElasticSearchQuotaMailboxListener implements MailboxListener.GroupM
 
     @Override
     public void event(Event event) throws IOException {
-        handleEvent(event.getUser(), (QuotaUsageUpdatedEvent) event);
+        handleEvent((QuotaUsageUpdatedEvent) event);
     }
 
-    private void handleEvent(User user, QuotaUsageUpdatedEvent event) throws IOException {
-        indexer.index(user.asString(),
-            quotaRatioToElasticSearchJson.convertToJson(user.asString(), event));
+    private void handleEvent(QuotaUsageUpdatedEvent event) throws IOException {
+        indexer.index(event.getUser().asString(),
+            quotaRatioToElasticSearchJson.convertToJson(event));
     }
 }

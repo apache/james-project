@@ -50,7 +50,7 @@ class QuotaRatioToElasticSearchJsonTest {
             .instant(Instant.now())
             .build();
         QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson = new QuotaRatioToElasticSearchJson();
-        String convertToJson = quotaRatioToElasticSearchJson.convertToJson(user, event);
+        String convertToJson = quotaRatioToElasticSearchJson.convertToJson(event);
 
         assertThatJson(convertToJson)
             .when(IGNORING_ARRAY_ORDER)
@@ -69,9 +69,8 @@ class QuotaRatioToElasticSearchJsonTest {
             .instant(Instant.now())
             .build();
 
-
         QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson = new QuotaRatioToElasticSearchJson();
-        String convertToJson = quotaRatioToElasticSearchJson.convertToJson(user, event);
+        String convertToJson = quotaRatioToElasticSearchJson.convertToJson( event);
 
         assertThatJson(convertToJson)
             .when(IGNORING_ARRAY_ORDER)
