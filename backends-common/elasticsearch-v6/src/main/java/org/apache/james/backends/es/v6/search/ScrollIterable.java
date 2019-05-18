@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+import org.apache.james.backends.es.v6.ListenerToFuture;
 import org.apache.james.util.streams.Iterators;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;

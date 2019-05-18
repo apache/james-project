@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.es.v6.search;
+package org.apache.james.backends.es.v6;
 
 import java.util.concurrent.CompletableFuture;
 

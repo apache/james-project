@@ -117,7 +117,7 @@ public class ElasticSearchIndexer {
             .setQuery(queryBuilder)
             .setBatchSize(batchSize);
 
-        client.deleteByQueryAsync(request, RequestOptions.DEFAULT, new DeleteByQueryActionListener());
+        client.deleteByQueryAsync(request, RequestOptions.DEFAULT, new ListenerToFuture<>());
     }
 
     private void checkArgument(String content) {
