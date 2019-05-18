@@ -93,7 +93,7 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
     }
 
     @Override
-    public void beforeEach(ExtensionContext context) throws Exception {
+    public void beforeEach(ExtensionContext context) {
         elasticSearch.start();
     }
 

@@ -71,7 +71,7 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
             .collect(Guavate.toImmutableList());
     }
 
-    public SearchRequest prepareSearch(QuotaQuery query) {
+    private SearchRequest prepareSearch(QuotaQuery query) {
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
             .query(quotaQueryConverter.from(query))
             .sort(SortBuilders.fieldSort(USER)

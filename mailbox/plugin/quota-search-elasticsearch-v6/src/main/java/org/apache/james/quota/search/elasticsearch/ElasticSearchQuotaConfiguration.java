@@ -23,7 +23,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.backends.es.v6.IndexName;
 import org.apache.james.backends.es.v6.ReadAliasName;
 import org.apache.james.backends.es.v6.WriteAliasName;
@@ -88,7 +87,7 @@ public class ElasticSearchQuotaConfiguration {
 
     public static final ElasticSearchQuotaConfiguration DEFAULT_CONFIGURATION = builder().build();
 
-    public static ElasticSearchQuotaConfiguration fromProperties(Configuration configuration) throws ConfigurationException {
+    public static ElasticSearchQuotaConfiguration fromProperties(Configuration configuration) {
         return builder()
             .indexQuotaRatioName(computeQuotaSearchIndexName(configuration))
             .readAliasQuotaRatioName(computeQuotaSearchReadAlias(configuration))

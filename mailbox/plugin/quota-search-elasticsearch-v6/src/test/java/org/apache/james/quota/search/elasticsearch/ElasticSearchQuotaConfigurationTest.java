@@ -21,17 +21,16 @@ package org.apache.james.quota.search.elasticsearch;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.es.v6.IndexName;
 import org.apache.james.backends.es.v6.ReadAliasName;
 import org.apache.james.backends.es.v6.WriteAliasName;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ElasticSearchQuotaConfigurationTest {
+class ElasticSearchQuotaConfigurationTest {
 
     @Test
-    public void getReadAliasQuotaRatioNameShouldReturnConfiguredValue() throws ConfigurationException {
+    void getReadAliasQuotaRatioNameShouldReturnConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
         configuration.addProperty("elasticsearch.alias.read.quota.ratio.name", name);
@@ -44,7 +43,7 @@ public class ElasticSearchQuotaConfigurationTest {
     }
 
     @Test
-    public void getReadAliasQuotaRatioNameShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
+    void getReadAliasQuotaRatioNameShouldReturnDefaultValueWhenMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
@@ -55,7 +54,7 @@ public class ElasticSearchQuotaConfigurationTest {
     }
 
     @Test
-    public void getWriteAliasQuotaRatioNameShouldReturnConfiguredValue() throws ConfigurationException {
+    void getWriteAliasQuotaRatioNameShouldReturnConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
         configuration.addProperty("elasticsearch.alias.write.quota.ratio.name", name);
@@ -68,7 +67,7 @@ public class ElasticSearchQuotaConfigurationTest {
     }
 
     @Test
-    public void getWriteAliasQuotaRatioNameShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
+    void getWriteAliasQuotaRatioNameShouldReturnDefaultValueWhenMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
@@ -79,7 +78,7 @@ public class ElasticSearchQuotaConfigurationTest {
     }
 
     @Test
-    public void getIndexQuotaRatioNameShouldReturnConfiguredValue() throws ConfigurationException {
+    void getIndexQuotaRatioNameShouldReturnConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
         configuration.addProperty("elasticsearch.index.quota.ratio.name", name);
@@ -92,7 +91,7 @@ public class ElasticSearchQuotaConfigurationTest {
     }
 
     @Test
-    public void getIndexQuotaRatioNameShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
+    void getIndexQuotaRatioNameShouldReturnDefaultValueWhenMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
