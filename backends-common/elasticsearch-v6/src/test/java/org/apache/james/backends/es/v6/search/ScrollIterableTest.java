@@ -50,7 +50,7 @@ import org.junit.Test;
 
 public class ScrollIterableTest {
 
-    private static final TimeValue TIMEOUT = new TimeValue(6000);
+    private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
     private static final int SIZE = 2;
     private static final String MESSAGE = "message";
     private static final IndexName INDEX_NAME = new IndexName("index");

@@ -45,7 +45,7 @@ import com.google.common.base.Preconditions;
 public class ElasticSearchIndexer {
     private static final int DEBUG_MAX_LENGTH_CONTENT = 1000;
     private static final int DEFAULT_BATCH_SIZE = 100;
-    private static final TimeValue TIMEOUT = new TimeValue(60000);
+    private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchIndexer.class);
 

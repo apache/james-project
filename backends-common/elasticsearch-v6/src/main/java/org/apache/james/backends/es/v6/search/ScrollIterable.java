@@ -33,7 +33,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
 
 public class ScrollIterable implements Iterable<SearchResponse> {
-    private static final TimeValue TIMEOUT = new TimeValue(60000);
+    private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
 
     private final RestHighLevelClient client;
     private final SearchRequest searchRequest;

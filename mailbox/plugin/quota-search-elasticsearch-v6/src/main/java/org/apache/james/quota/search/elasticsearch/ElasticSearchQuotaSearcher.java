@@ -43,7 +43,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import com.github.steveash.guavate.Guavate;
 
 public class ElasticSearchQuotaSearcher implements QuotaSearcher {
-    private static final TimeValue TIMEOUT = new TimeValue(60000);
+    private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
 
     private final RestHighLevelClient client;
     private final AliasName readAlias;
