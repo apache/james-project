@@ -21,20 +21,19 @@ package org.apache.james.quota.search.elasticsearch;
 
 import static org.apache.james.quota.search.elasticsearch.json.JsonMessageConstants.USER;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.apache.james.backends.es.v6.AliasName;
 import org.apache.james.backends.es.v6.NodeMappingFactory;
 import org.apache.james.backends.es.v6.ReadAliasName;
-import org.apache.james.backends.es.v6.search.ScrollIterable;
 import org.apache.james.core.User;
 import org.apache.james.quota.search.QuotaQuery;
 import org.apache.james.quota.search.QuotaSearcher;
 import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
@@ -43,8 +42,6 @@ import org.elasticsearch.search.sort.SortOrder;
 import com.github.steveash.guavate.Guavate;
 
 public class ElasticSearchQuotaSearcher implements QuotaSearcher {
-    private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
-
     private final RestHighLevelClient client;
     private final AliasName readAlias;
     private final QuotaQueryConverter quotaQueryConverter;
@@ -57,25 +54,24 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
 
     @Override
     public List<User> search(QuotaQuery query) {
-        Stream<User> results = new ScrollIterable(client, prepareSearch(query))
-            .stream()
-            .flatMap(searchResponse -> Arrays.stream(searchResponse.getHits()
-                .getHits()))
-            .map(SearchHit::getId)
-            .map(User::fromUsername)
-            .skip(query.getOffset().getValue());
-
-        return query.getLimit().getValue()
-            .map(results::limit)
-            .orElse(results)
-            .collect(Guavate.toImmutableList());
+        try {
+            return Arrays.stream(client.search(prepareSearch(query), RequestOptions.DEFAULT)
+                .getHits()
+                .getHits())
+                .map(SearchHit::getId)
+                .map(User::fromUsername)
+                .collect(Guavate.toImmutableList());
+        } catch (IOException e) {
+            throw new RuntimeException("Unexpected exception while executing " + query, e);
+        }
     }
 
     private SearchRequest prepareSearch(QuotaQuery query) {
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
             .query(quotaQueryConverter.from(query))
             .sort(SortBuilders.fieldSort(USER)
-                .order(SortOrder.ASC));
+                .order(SortOrder.ASC))
+            .from(query.getOffset().getValue());
 
         query.getLimit()
             .getValue()
@@ -83,8 +79,6 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
 
         return new SearchRequest(readAlias.getValue())
             .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
-            .scroll(TIMEOUT)
             .source(sourceBuilder);
     }
-
 }
