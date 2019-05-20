@@ -41,6 +41,12 @@ public class LinshareGuiceExtension implements GuiceModuleTestExtension {
     }
 
     @Override
+    public void afterAll(ExtensionContext extensionContext) throws Exception {
+        linshareExtension.getLinshare()
+            .stop();
+    }
+
+    @Override
     public Module getModule() {
         return Modules.combine(
             binder -> binder.bind(BlobExportImplChoice.class)

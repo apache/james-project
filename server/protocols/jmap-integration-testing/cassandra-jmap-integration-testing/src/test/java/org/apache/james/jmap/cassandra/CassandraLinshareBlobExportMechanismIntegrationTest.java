@@ -41,7 +41,7 @@ public class CassandraLinshareBlobExportMechanismIntegrationTest extends Linshar
 
     private static final long LIMIT_TO_10_MESSAGES = 10;
 
-    private final LinshareGuiceExtension linshareGuiceExtension = new LinshareGuiceExtension();
+    private static final LinshareGuiceExtension linshareGuiceExtension = new LinshareGuiceExtension();
 
     @RegisterExtension
     JamesServerExtension testExtension = new JamesServerBuilder()

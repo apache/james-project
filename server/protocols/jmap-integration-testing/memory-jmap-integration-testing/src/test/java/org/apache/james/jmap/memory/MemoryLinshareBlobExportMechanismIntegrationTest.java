@@ -38,7 +38,7 @@ class MemoryLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExpor
 
     private static final int LIMIT_TO_10_MESSAGES = 10;
 
-    private final LinshareGuiceExtension linshareGuiceExtension = new LinshareGuiceExtension();
+    private static final LinshareGuiceExtension linshareGuiceExtension = new LinshareGuiceExtension();
 
     @RegisterExtension
     JamesServerExtension jamesServerExtension = new JamesServerBuilder()
