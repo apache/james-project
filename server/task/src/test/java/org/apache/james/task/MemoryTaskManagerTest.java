@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.awaitility.Duration.ONE_MINUTE;
 import static org.awaitility.Duration.ONE_SECOND;
 
 import java.util.List;
@@ -40,12 +39,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.consumers.ConsumerChainer;
-
 public class MemoryTaskManagerTest {
 
-    public static final int TIME_TO_ENQUEUE = 200;
     private MemoryTaskManager memoryTaskManager;
 
     @Rule
@@ -61,15 +56,14 @@ public class MemoryTaskManagerTest {
         memoryTaskManager.stop();
     }
 
-    Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
-    ConditionFactory calmlyAwait = Awaitility.with()
+    private final Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
+    private final ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)
         .and()
         .with()
         .pollDelay(slowPacedPollInterval)
         .await();
-    ConditionFactory awaitAtMostOneMinute = calmlyAwait.atMost(ONE_MINUTE);
-    ConditionFactory awaitAtMostOneSecond = calmlyAwait.atMost(ONE_SECOND);
+    private final ConditionFactory awaitAtMostOneSecond = calmlyAwait.atMost(ONE_SECOND);
 
     @Test
     public void getStatusShouldReturnUnknownWhenUnknownId() {
@@ -95,16 +89,18 @@ public class MemoryTaskManagerTest {
 
     @Test
     public void taskCodeAfterCancelIsNotRun() {
+        CountDownLatch waitForTaskToBeLaunched = new CountDownLatch(1);
         CountDownLatch task1Latch = new CountDownLatch(1);
         AtomicInteger count = new AtomicInteger(0);
 
         TaskId id = memoryTaskManager.submit(() -> {
+            waitForTaskToBeLaunched.countDown();
             await(task1Latch);
             count.incrementAndGet();
             return Task.Result.COMPLETED;
         });
 
-        sleep(TIME_TO_ENQUEUE);
+        await(waitForTaskToBeLaunched);
         memoryTaskManager.cancel(id);
         task1Latch.countDown();
 
@@ -112,20 +108,18 @@ public class MemoryTaskManagerTest {
     }
 
     @Test
-    public void getStatusShouldBeCancelledWhenCancelled() throws Exception {
-
+    public void getStatusShouldBeCancelledWhenCancelled() {
         TaskId id = memoryTaskManager.submit(() -> {
             sleep(500);
             return Task.Result.COMPLETED;
         });
 
-        sleep(TIME_TO_ENQUEUE);
+        awaitUntilTaskHasStatus(id, TaskManager.Status.IN_PROGRESS);
         memoryTaskManager.cancel(id);
 
         assertThat(memoryTaskManager.getExecutionDetails(id).getStatus())
             .isEqualTo(TaskManager.Status.CANCELLED);
     }
-
 
     @Test
     public void cancelShouldBeIdempotent() {
@@ -135,26 +129,24 @@ public class MemoryTaskManagerTest {
             await(task1Latch);
             return Task.Result.COMPLETED;
         });
-        sleep(TIME_TO_ENQUEUE);
+        awaitUntilTaskHasStatus(id, TaskManager.Status.IN_PROGRESS);
         memoryTaskManager.cancel(id);
         assertThatCode(() -> memoryTaskManager.cancel(id))
             .doesNotThrowAnyException();
     }
 
     @Test
-    public void getStatusShouldReturnInProgressWhenProcessingIsInProgress() throws Exception {
+    public void getStatusShouldReturnInProgressWhenProcessingIsInProgress() {
         CountDownLatch latch1 = new CountDownLatch(1);
-        CountDownLatch latch2 = new CountDownLatch(1);
 
         TaskId taskId = memoryTaskManager.submit(() -> {
-            latch2.countDown();
             await(latch1);
             return Task.Result.COMPLETED;
         });
-        latch2.await();
-
+        awaitUntilTaskHasStatus(taskId, TaskManager.Status.IN_PROGRESS);
         assertThat(memoryTaskManager.getExecutionDetails(taskId).getStatus())
             .isEqualTo(TaskManager.Status.IN_PROGRESS);
+        latch1.countDown();
     }
 
     @Test
@@ -163,8 +155,7 @@ public class MemoryTaskManagerTest {
         TaskId taskId = memoryTaskManager.submit(
             () -> Task.Result.COMPLETED);
 
-        sleep(500);
-
+        awaitUntilTaskHasStatus(taskId, TaskManager.Status.COMPLETED);
         assertThat(memoryTaskManager.getExecutionDetails(taskId).getStatus())
             .isEqualTo(TaskManager.Status.COMPLETED);
     }
@@ -175,21 +166,16 @@ public class MemoryTaskManagerTest {
         TaskId taskId = memoryTaskManager.submit(
             () -> Task.Result.PARTIAL);
 
-        sleep(TIME_TO_ENQUEUE);
+        awaitUntilTaskHasStatus(taskId, TaskManager.Status.FAILED);
 
         assertThat(memoryTaskManager.getExecutionDetails(taskId).getStatus())
             .isEqualTo(TaskManager.Status.FAILED);
     }
 
-    private ConsumerChainer<TaskId> countDownCallback(CountDownLatch latch) {
-        return Throwing.consumer(id -> latch.countDown());
-    }
-
     @Test
-    public void listShouldReturnTaskSatus() throws Exception {
+    public void listShouldReturnTaskStatus() throws Exception {
         CountDownLatch latch1 = new CountDownLatch(1);
         CountDownLatch latch2 = new CountDownLatch(1);
-        CountDownLatch latch3 = new CountDownLatch(1);
 
         TaskId failedId = memoryTaskManager.submit(
             () -> Task.Result.PARTIAL);
@@ -197,20 +183,14 @@ public class MemoryTaskManagerTest {
             () -> Task.Result.COMPLETED);
         TaskId inProgressId = memoryTaskManager.submit(
             () -> {
-                await(latch1);
-                latch2.countDown();
-                await(latch3);
+                latch1.countDown();
+                await(latch2);
                 return Task.Result.COMPLETED;
             });
         TaskId waitingId = memoryTaskManager.submit(
-            () -> {
-                await(latch3);
-                latch2.countDown();
-                return Task.Result.COMPLETED;
-            });
+            () -> Task.Result.COMPLETED);
 
-        latch1.countDown();
-        latch2.await();
+        latch1.await();
 
         List<TaskExecutionDetails> list = memoryTaskManager.list();
         softly.assertThat(list).hasSize(4);
@@ -222,7 +202,7 @@ public class MemoryTaskManagerTest {
             .isEqualTo(TaskManager.Status.COMPLETED);
         softly.assertThat(entryWithId(list, inProgressId))
             .isEqualTo(TaskManager.Status.IN_PROGRESS);
-        latch3.countDown();
+        latch2.countDown();
     }
 
     private TaskManager.Status entryWithId(List<TaskExecutionDetails> list, TaskId taskId) {
@@ -262,6 +242,7 @@ public class MemoryTaskManagerTest {
         assertThat(memoryTaskManager.list(TaskManager.Status.WAITING))
             .extracting(TaskExecutionDetails::getTaskId)
             .containsOnly(waitingId);
+        latch3.countDown();
     }
 
     @Test
@@ -294,6 +275,7 @@ public class MemoryTaskManagerTest {
         assertThat(memoryTaskManager.list(TaskManager.Status.COMPLETED))
             .extracting(TaskExecutionDetails::getTaskId)
             .containsOnly(successfulId);
+        latch3.countDown();
     }
 
     @Test
@@ -326,6 +308,7 @@ public class MemoryTaskManagerTest {
         assertThat(memoryTaskManager.list(TaskManager.Status.FAILED))
             .extracting(TaskExecutionDetails::getTaskId)
             .containsOnly(failedId);
+        latch3.countDown();
     }
 
     @Test
@@ -358,6 +341,7 @@ public class MemoryTaskManagerTest {
         assertThat(memoryTaskManager.list(TaskManager.Status.IN_PROGRESS))
             .extracting(TaskExecutionDetails::getTaskId)
             .containsOnly(inProgressId);
+        latch3.countDown();
     }
 
     @Test
@@ -397,26 +381,29 @@ public class MemoryTaskManagerTest {
     public void submittedTaskShouldExecuteSequentially() {
         ConcurrentLinkedQueue<Integer> queue = new ConcurrentLinkedQueue<>();
 
-        TaskId id1 = memoryTaskManager.submit(() -> {
+        memoryTaskManager.submit(() -> {
             queue.add(1);
-            sleep(200);
+            sleep(50);
             queue.add(2);
             return Task.Result.COMPLETED;
         });
-        TaskId id2 = memoryTaskManager.submit(() -> {
+        memoryTaskManager.submit(() -> {
             queue.add(3);
-            sleep(200);
+            sleep(50);
             queue.add(4);
             return Task.Result.COMPLETED;
         });
-        sleep(TIME_TO_ENQUEUE);
-        memoryTaskManager.await(id1);
-        memoryTaskManager.await(id2);
+        memoryTaskManager.submit(() -> {
+            queue.add(5);
+            sleep(50);
+            queue.add(6);
+            return Task.Result.COMPLETED;
+        });
 
-        awaitAtMostOneSecond.until(() -> queue.contains(4));
+        awaitAtMostOneSecond.until(() -> queue.contains(6));
 
         assertThat(queue)
-            .containsExactly(1, 2, 3, 4);
+            .containsExactly(1, 2, 3, 4, 5, 6);
     }
 
     @Test
@@ -424,9 +411,8 @@ public class MemoryTaskManagerTest {
         TaskId taskId = memoryTaskManager.submit(() -> {
             throw new RuntimeException();
         });
-        sleep(TIME_TO_ENQUEUE);
-        TaskExecutionDetails executionDetails = memoryTaskManager.await(taskId);
-        assertThat(executionDetails.getStatus())
+        awaitUntilTaskHasStatus(taskId, TaskManager.Status.FAILED);
+        assertThat(memoryTaskManager.getExecutionDetails(taskId).getStatus())
             .isEqualTo(TaskManager.Status.FAILED);
     }
 
@@ -435,14 +421,12 @@ public class MemoryTaskManagerTest {
         TaskId taskId = memoryTaskManager.submit(() -> {
             throw new RuntimeException();
         });
-        sleep(TIME_TO_ENQUEUE);
-        memoryTaskManager.await(taskId);
-
+        awaitUntilTaskHasStatus(taskId, TaskManager.Status.FAILED);
         assertThat(memoryTaskManager.getExecutionDetails(taskId).getStatus())
             .isEqualTo(TaskManager.Status.FAILED);
     }
 
-    public void sleep(int durationInMs) {
+    private void sleep(int durationInMs) {
         try {
             Thread.sleep(durationInMs);
         } catch (InterruptedException e) {
@@ -450,11 +434,15 @@ public class MemoryTaskManagerTest {
         }
     }
 
-    public void await(CountDownLatch countDownLatch) {
+    private void await(CountDownLatch countDownLatch) {
         try {
             countDownLatch.await();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void awaitUntilTaskHasStatus(TaskId id, TaskManager.Status status) {
+        awaitAtMostOneSecond.until(() -> memoryTaskManager.getExecutionDetails(id).getStatus().equals(status));
     }
 }
