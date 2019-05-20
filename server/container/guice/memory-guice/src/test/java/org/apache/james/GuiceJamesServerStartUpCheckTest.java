@@ -46,9 +46,14 @@ class GuiceJamesServerStartUpCheckTest {
         @Override
         public CheckResult check() {
             return CheckResult.builder()
-                .checkName(CHECK_NAME)
+                .checkName(checkName())
                 .resultType(ResultType.GOOD)
                 .build();
+        }
+
+        @Override
+        public String checkName() {
+            return CHECK_NAME;
         }
     }
 
@@ -59,10 +64,15 @@ class GuiceJamesServerStartUpCheckTest {
         @Override
         public CheckResult check() {
             return CheckResult.builder()
-                .checkName(CHECK_NAME)
+                .checkName(checkName())
                 .resultType(ResultType.BAD)
                 .description("Failing by intention")
                 .build();
+        }
+
+        @Override
+        public String checkName() {
+            return CHECK_NAME;
         }
     }
 
@@ -81,9 +91,14 @@ class GuiceJamesServerStartUpCheckTest {
         @Override
         public CheckResult check() {
             return CheckResult.builder()
-                .checkName(CHECK_NAME)
+                .checkName(checkName())
                 .resultType(ResultType.GOOD)
                 .build();
+        }
+
+        @Override
+        public String checkName() {
+            return CHECK_NAME;
         }
     }
 

@@ -166,6 +166,8 @@ public class StartUpChecksPerformer {
         }
 
         CheckResult check();
+
+        String checkName();
     }
 
     static class StartUpChecks {

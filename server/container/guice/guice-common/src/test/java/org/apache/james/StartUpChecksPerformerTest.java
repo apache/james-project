@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.StartUpChecksPerformer.StartUpCheck.CheckResult;
 import org.apache.james.StartUpChecksPerformer.StartUpCheck.ResultType;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class StartUpChecksPerformerTest {
@@ -46,11 +47,26 @@ class StartUpChecksPerformerTest {
         .resultType(ResultType.BAD)
         .build();
 
+    private static StartUpChecksPerformer.StartUpCheck fromResult(CheckResult checkResult) {
+        return new StartUpChecksPerformer.StartUpCheck() {
+
+            @Override
+            public CheckResult check() {
+                return checkResult;
+            }
+
+            @Override
+            public String checkName() {
+                return checkResult.getName();
+            }
+        };
+    }
+
     @Test
     void performCheckShouldNotThrowWhenAllChecksSucceed() {
         StartUpChecksPerformer checksPerformer = StartUpChecksPerformer.from(
-            () -> GOOD_CHECK_1,
-            () -> GOOD_CHECK_2);
+            fromResult(GOOD_CHECK_1),
+            fromResult(GOOD_CHECK_2));
 
         assertThatCode(checksPerformer::performCheck)
             .doesNotThrowAnyException();
@@ -67,9 +83,9 @@ class StartUpChecksPerformerTest {
     @Test
     void performCheckShouldThrowWhenThereIsOneCheckFails() {
         StartUpChecksPerformer checksPerformer = StartUpChecksPerformer.from(
-            () -> GOOD_CHECK_1,
-            () -> GOOD_CHECK_2,
-            () -> BAD_CHECK_1);
+            fromResult(GOOD_CHECK_1),
+            fromResult(GOOD_CHECK_2),
+            fromResult(BAD_CHECK_1));
 
         assertThatThrownBy(checksPerformer::performCheck)
             .isInstanceOf(StartUpChecksPerformer.StartUpChecksException.class);
@@ -78,15 +94,40 @@ class StartUpChecksPerformerTest {
     @Test
     void performCheckShouldThrowAnExceptionContainingAllBadChecksWhenThereAreBadChecks() {
         StartUpChecksPerformer checksPerformer = StartUpChecksPerformer.from(
-            () -> GOOD_CHECK_1,
-            () -> GOOD_CHECK_2,
-            () -> BAD_CHECK_1,
-            () -> BAD_CHECK_2);
+            fromResult(GOOD_CHECK_1),
+            fromResult(GOOD_CHECK_2),
+            fromResult(BAD_CHECK_1),
+            fromResult(BAD_CHECK_2));
 
         assertThatThrownBy(checksPerformer::performCheck)
             .isInstanceOfSatisfying(
                 StartUpChecksPerformer.StartUpChecksException.class,
                 exception -> assertThat(exception.getBadChecks())
                     .containsOnly(BAD_CHECK_1, BAD_CHECK_2));
+    }
+
+    @Disabled("performCheck() now doesn't support this")
+    @Test
+    void performCheckShouldNotPropagateUnExpectedExceptionDuringChecking() {
+        String checkName = "throwing check name";
+        StartUpChecksPerformer checksPerformer = StartUpChecksPerformer.from(
+
+            new StartUpChecksPerformer.StartUpCheck() {
+                @Override
+                public CheckResult check() {
+                    throw new RuntimeException("unexpected");
+                }
+
+                @Override
+                public String checkName() {
+                    return checkName;
+                }
+            });
+
+        assertThatThrownBy(checksPerformer::performCheck)
+            .isInstanceOfSatisfying(
+                StartUpChecksPerformer.StartUpChecksException.class,
+                exception -> assertThat(exception.badCheckNames())
+                    .containsOnly(checkName));
     }
 }

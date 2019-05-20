@@ -54,11 +54,16 @@ public class CassandraSchemaVersionStartUpCheck implements StartUpChecksPerforme
                 String unknownSchemaStateMessage = "Unknown schema state " + schemaState;
                 LOGGER.error(unknownSchemaStateMessage);
                 return CheckResult.builder()
-                    .checkName(CHECK_NAME)
+                    .checkName(checkName())
                     .resultType(ResultType.BAD)
                     .description(unknownSchemaStateMessage)
                     .build();
         }
+    }
+
+    @Override
+    public String checkName() {
+        return CHECK_NAME;
     }
 
     private CheckResult checkUpgradeAbleState() {
@@ -68,7 +73,7 @@ public class CassandraSchemaVersionStartUpCheck implements StartUpChecksPerforme
                 versionManager.getMaximumSupportedVersion().getValue());
         LOGGER.warn(upgradeVersionMessage);
         return CheckResult.builder()
-            .checkName(CHECK_NAME)
+            .checkName(checkName())
             .resultType(ResultType.GOOD)
             .description(upgradeVersionMessage)
             .build();
@@ -78,7 +83,7 @@ public class CassandraSchemaVersionStartUpCheck implements StartUpChecksPerforme
         String message = "Schema version is up-to-date";
         LOGGER.info(message);
         return CheckResult.builder()
-            .checkName(CHECK_NAME)
+            .checkName(checkName())
             .resultType(ResultType.GOOD)
             .description(message)
             .build();
@@ -93,7 +98,7 @@ public class CassandraSchemaVersionStartUpCheck implements StartUpChecksPerforme
                 versionManager.getMaximumSupportedVersion().getValue());
         LOGGER.error(versionExceedMaximumSupportedMessage);
         return CheckResult.builder()
-            .checkName(CHECK_NAME)
+            .checkName(checkName())
             .resultType(ResultType.BAD)
             .description(versionExceedMaximumSupportedMessage)
             .build();
@@ -108,7 +113,7 @@ public class CassandraSchemaVersionStartUpCheck implements StartUpChecksPerforme
                 versionManager.getMaximumSupportedVersion().getValue());
         LOGGER.error(versionToOldMessage);
         return CheckResult.builder()
-            .checkName(CHECK_NAME)
+            .checkName(checkName())
             .resultType(ResultType.BAD)
             .description(versionToOldMessage)
             .build();
