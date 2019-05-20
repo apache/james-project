@@ -182,9 +182,22 @@ public class StartUpChecksPerformer {
         public List<StartUpCheck.CheckResult> check() {
             return Flux.fromIterable(startUpChecks)
                 .publishOn(Schedulers.elastic())
-                .map(StartUpCheck::check)
+                .map(this::checkQuietly)
                 .collect(Guavate.toImmutableList())
                 .block();
+        }
+
+        private StartUpCheck.CheckResult checkQuietly(StartUpCheck startUpCheck) {
+            try {
+                return startUpCheck.check();
+            } catch (Exception e) {
+                LOGGER.error("Error during the {} check", startUpCheck.checkName(), e);
+                return StartUpCheck.CheckResult.builder()
+                    .checkName(startUpCheck.checkName())
+                    .resultType(StartUpCheck.ResultType.BAD)
+                    .description(e.getMessage())
+                    .build();
+            }
         }
     }
 

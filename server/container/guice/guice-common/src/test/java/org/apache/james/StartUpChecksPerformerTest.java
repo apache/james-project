@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.StartUpChecksPerformer.StartUpCheck.CheckResult;
 import org.apache.james.StartUpChecksPerformer.StartUpCheck.ResultType;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class StartUpChecksPerformerTest {
@@ -106,7 +105,6 @@ class StartUpChecksPerformerTest {
                     .containsOnly(BAD_CHECK_1, BAD_CHECK_2));
     }
 
-    @Disabled("performCheck() now doesn't support this")
     @Test
     void performCheckShouldNotPropagateUnExpectedExceptionDuringChecking() {
         String checkName = "throwing check name";
