@@ -66,10 +66,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.stubbing.Answer;
 
 import com.rabbitmq.client.Connection;
+
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
@@ -85,8 +87,23 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     KeyContract.SingleEventBusKeyContract, KeyContract.MultipleEventBusKeyContract,
     ErrorHandlingContract {
 
+    static class RestartingRabbitMQExtension extends RabbitMQExtension {
+
+        @Override
+        public void beforeEach(ExtensionContext extensionContext) throws Exception {
+            getRabbitMQ().start();
+            super.beforeEach(extensionContext);
+        }
+
+        @Override
+        public void afterEach(ExtensionContext context) {
+            super.afterEach(context);
+            getRabbitMQ().stop();
+        }
+    }
+
     @RegisterExtension
-    static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
+    static RestartingRabbitMQExtension rabbitMQExtension = new RestartingRabbitMQExtension();
 
     private RabbitMQEventBus eventBus;
     private RabbitMQEventBus eventBus2;
