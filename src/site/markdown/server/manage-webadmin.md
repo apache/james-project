@@ -2708,10 +2708,10 @@ To move deleted messages in the vault, you need to specifically configure the De
 
 Here are the following actions available on the 'Deleted Messages Vault'
 
- - [Restore Deleted Messages](#Restore_deleted_messages)
- - [Export Deleted Messages](#Export_deleted_messages)
- - [Purge Deleted Messages](#Purge_deleted_messages)
- - [Permanently remove Deleted Message](#Permanently_remove_deleted_message) 
+ - [Restore Deleted Messages](#Restore_Deleted_Messages)
+ - [Export Deleted Messages](#Export_Deleted_Messages)
+ - [Purge Deleted Messages](#Purge_Deleted_Messages)
+ - [Permanently Remove Deleted Message](#Permanently_Remove_Deleted_Message)
 
  Note that the 'Deleted Messages Vault' feature is only supported on top of Cassandra-Guice.
 
@@ -2765,14 +2765,17 @@ curl -XPOST http://ip:port/deletedMessages/users/userToRestore@domain.ext?action
 ```
 
 The requested Json body is made from list of criterion objects which have following structure:
+
 ```
 {
   "fieldName": "supportedFieldName",
   "operator": "supportedOperator",
-  "testedValue": "plain string represents for the matching value of corresponding field"
+  "value": "A plain string represents for the matching value of the corresponding field"
 }
 ```
+
 Deleted Messages which are matched with **all** criterions in the query body will be restored. Here are list of supported fieldName for the restoring:
+
  - subject: represents for deleted message `subject` field matching. Supports below string operators:
    - contains
    - containsIgnoreCase
@@ -2796,11 +2799,13 @@ Deleted Messages which are matched with **all** criterions in the query body wil
 Messages in the Deleted Messages Vault of an specified user that are matched with Query Json Object in the body will be appended to his 'Restored-Messages' mailbox, which will be created if needed.
 
 **Note**:
+
  - Query parameter `action` is required and should have value `restore` to represent for restoring feature. Otherwise, a bad request response will be returned
  - Query parameter `action` is case sensitive
  - fieldName & operator for passing to the routes are case sensitive
  - Currently, we only support query combinator `and` value, otherwise, requests will be rejected 
  - If you only want to restore by only one criterion, the json body could be simplified to a single criterion:
+
 ```
 {
   "fieldName": "subject", 
@@ -2808,7 +2813,9 @@ Messages in the Deleted Messages Vault of an specified user that are matched wit
   "value": "Apache James"
 }
 ```
+
  - For restoring all deleted messages, passing a query json with empty criterion list to represent `matching all deleted messages`: 
+
 ```
 {
   "combinator": "and",
@@ -2905,7 +2912,7 @@ Response code:
 
 You may want to call this endpoint on a regular basis.
 
-### Permanently remove Deleted Message
+### Permanently Remove Deleted Message
 
 Delete a Deleted Message with MessageId
 
