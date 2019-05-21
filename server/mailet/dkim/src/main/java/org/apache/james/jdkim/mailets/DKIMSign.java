@@ -20,12 +20,18 @@
 package org.apache.james.jdkim.mailets;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.RSAPrivateCrtKeySpec;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,7 +40,7 @@ import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.ssl.PKCS8Key;
+import org.apache.commons.io.IOUtils;
 import org.apache.james.jdkim.DKIMSigner;
 import org.apache.james.jdkim.api.BodyHasher;
 import org.apache.james.jdkim.api.Headers;
@@ -42,6 +48,13 @@ import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.PermFailException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.bouncycastle.jce.provider.JCERSAPrivateCrtKey;
+import org.bouncycastle.openssl.PEMDecryptorProvider;
+import org.bouncycastle.openssl.PEMEncryptedKeyPair;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 
 /**
  * This mailet sign a message using the DKIM protocol
@@ -86,14 +99,14 @@ public class DKIMSign extends GenericMailet {
     /**
      * @return the signatureTemplate
      */
-    protected String getSignatureTemplate() {
+    private String getSignatureTemplate() {
         return signatureTemplate;
     }
 
     /**
      * @return the privateKey
      */
-    protected PrivateKey getPrivateKey() {
+    private PrivateKey getPrivateKey() {
         return privateKey;
     }
 
@@ -102,18 +115,16 @@ public class DKIMSign extends GenericMailet {
         String privateKeyString = getInitParameter("privateKey");
         String privateKeyPassword = getInitParameter("privateKeyPassword", null);
         forceCRLF = getInitParameter("forceCRLF", true);
+
         try {
-            PKCS8Key pkcs8 = new PKCS8Key(new ByteArrayInputStream(
-                    privateKeyString.getBytes()),
-                    privateKeyPassword != null ? privateKeyPassword
-                            .toCharArray() : null);
-            privateKey = pkcs8.getPrivateKey();
+            char[] passphrase = privateKeyPassword != null ? privateKeyPassword.toCharArray() : null;
+            privateKey = extractPrivateKey(new ByteArrayInputStream(privateKeyString.getBytes()), passphrase);
         } catch (NoSuchAlgorithmException e) {
             throw new MessagingException("Unknown private key algorythm: " + e.getMessage(), e);
         } catch (InvalidKeySpecException e) {
             throw new MessagingException("PrivateKey should be in base64 encoded PKCS8 (der) format: " + e.getMessage(), e);
-        } catch (GeneralSecurityException e) {
-            throw new MessagingException("General security exception: " + e.getMessage(), e);
+        } catch (IOException e) {
+            throw new MessagingException("Problem during reading: " + e.getMessage(), e);
         }
     }
 
@@ -170,4 +181,27 @@ public class DKIMSign extends GenericMailet {
         }
     }
 
+    private PrivateKey extractPrivateKey(InputStream rawKey, char[] passphrase) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+
+        PEMParser pemParser = new PEMParser(new InputStreamReader(rawKey));
+        Object pemObject = pemParser.readObject();
+        JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
+        KeyPair keyPair;
+        if (pemObject instanceof PEMEncryptedKeyPair)
+        {
+            PEMEncryptedKeyPair pemEncryptedKeyPair = (PEMEncryptedKeyPair) pemObject;
+            PEMDecryptorProvider decProv = new JcePEMDecryptorProviderBuilder().build(passphrase);
+            keyPair = converter.getKeyPair(pemEncryptedKeyPair.decryptKeyPair(decProv));
+        }
+        else
+        {
+            keyPair = converter.getKeyPair((PEMKeyPair) pemObject);
+        }
+
+        KeyFactory keyFac = KeyFactory.getInstance("RSA");
+        RSAPrivateCrtKeySpec privateKeySpec = keyFac.getKeySpec(keyPair.getPrivate(), RSAPrivateCrtKeySpec.class);
+
+        return keyFac.generatePrivate(privateKeySpec);
+    }
 }
