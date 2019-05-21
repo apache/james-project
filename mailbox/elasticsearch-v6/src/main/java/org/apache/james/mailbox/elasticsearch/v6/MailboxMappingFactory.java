@@ -77,8 +77,6 @@ public class MailboxMappingFactory {
     private static final int MAXIMUM_TERM_LENGTH = 4096;
     private static final String STANDARD = "standard";
     private static final String STORE = "store";
-    private static final String FIELD_DATA = "fielddata";
-
 
     public static XContentBuilder getMappingContent() {
         try {

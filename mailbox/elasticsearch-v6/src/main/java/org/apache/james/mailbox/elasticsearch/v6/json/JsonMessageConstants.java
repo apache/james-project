@@ -74,10 +74,4 @@ public interface JsonMessageConstants {
         String FILE_EXTENSION = "fileExtension";
     }
 
-    interface Property {
-        String NAMESPACE = "namespace";
-        String NAME = "name";
-        String VALUE = "value";
-    }
-
 }
