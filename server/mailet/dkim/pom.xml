@@ -33,7 +33,7 @@
     <description>Mailet adapter for the JDKIM library</description>
 
     <properties>
-        <jdkim.version>0.3-SNAPSHOT</jdkim.version>
+        <jdkim.version>0.2</jdkim.version>
     </properties>
 
     <dependencies>
