@@ -24,16 +24,19 @@ import static org.apache.james.quota.search.elasticsearch.json.JsonMessageConsta
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.james.backends.es.v6.AliasName;
 import org.apache.james.backends.es.v6.NodeMappingFactory;
 import org.apache.james.backends.es.v6.ReadAliasName;
+import org.apache.james.backends.es.v6.search.ScrollIterable;
 import org.apache.james.core.User;
 import org.apache.james.quota.search.QuotaQuery;
 import org.apache.james.quota.search.QuotaSearcher;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
@@ -42,6 +45,8 @@ import org.elasticsearch.search.sort.SortOrder;
 import com.github.steveash.guavate.Guavate;
 
 public class ElasticSearchQuotaSearcher implements QuotaSearcher {
+    private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
+
     private final RestHighLevelClient client;
     private final AliasName readAlias;
     private final QuotaQueryConverter quotaQueryConverter;
@@ -55,9 +60,7 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
     @Override
     public List<User> search(QuotaQuery query) {
         try {
-            return Arrays.stream(client.search(prepareSearch(query), RequestOptions.DEFAULT)
-                .getHits()
-                .getHits())
+            return searchHits(query)
                 .map(SearchHit::getId)
                 .map(User::fromUsername)
                 .collect(Guavate.toImmutableList());
@@ -66,19 +69,43 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
         }
     }
 
-    private SearchRequest prepareSearch(QuotaQuery query) {
-        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
-            .query(quotaQueryConverter.from(query))
-            .sort(SortBuilders.fieldSort(USER)
-                .order(SortOrder.ASC))
+    private Stream<SearchHit> searchHits(QuotaQuery query) throws IOException {
+        if (query.getLimit().isLimited()) {
+            return executeSingleSearch(query);
+        } else {
+            return executeScrolledSearch(query);
+        }
+    }
+
+    private Stream<SearchHit> executeSingleSearch(QuotaQuery query) throws IOException {
+        SearchSourceBuilder searchSourceBuilder = searchSourceBuilder(query)
             .from(query.getOffset().getValue());
+        query.getLimit().getValue()
+            .ifPresent(searchSourceBuilder::size);
 
-        query.getLimit()
-            .getValue()
-            .ifPresent(sourceBuilder::size);
-
-        return new SearchRequest(readAlias.getValue())
+        SearchRequest searchRequest = new SearchRequest(readAlias.getValue())
             .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
-            .source(sourceBuilder);
+            .source(searchSourceBuilder);
+
+        return Arrays.stream(client.search(searchRequest, RequestOptions.DEFAULT)
+            .getHits()
+            .getHits());
+    }
+
+    private Stream<SearchHit> executeScrolledSearch(QuotaQuery query) {
+        return new ScrollIterable(client,
+            new SearchRequest(readAlias.getValue())
+                .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                .source(searchSourceBuilder(query))
+            .scroll(TIMEOUT))
+            .stream()
+            .flatMap(searchResponse -> Arrays.stream(searchResponse.getHits().getHits()))
+            .skip(query.getOffset().getValue());
+    }
+
+    private SearchSourceBuilder searchSourceBuilder(QuotaQuery query) {
+        return new SearchSourceBuilder()
+            .query(quotaQueryConverter.from(query))
+            .sort(SortBuilders.fieldSort(USER).order(SortOrder.ASC));
     }
 }

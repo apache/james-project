@@ -45,6 +45,10 @@ public class Limit {
         return value;
     }
 
+    public boolean isLimited() {
+        return value.isPresent();
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof Limit) {
