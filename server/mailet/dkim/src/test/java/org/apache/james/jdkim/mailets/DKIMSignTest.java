@@ -50,21 +50,7 @@ import org.junit.jupiter.api.Test;
 
 public class DKIMSignTest {
 
-    private static final String TESTING_PEM = "-----BEGIN RSA PRIVATE KEY-----\r\n" +
-            "MIICXAIBAAKBgQDYDaYKXzwVYwqWbLhmuJ66aTAN8wmDR+rfHE8HfnkSOax0oIoT\r\n" +
-            "M5zquZrTLo30870YMfYzxwfB6j/Nz3QdwrUD/t0YMYJiUKyWJnCKfZXHJBJ+yfRH\r\n" +
-            "r7oW+UW3cVo9CG2bBfIxsInwYe175g9UjyntJpWueqdEIo1c2bhv9Mp66QIDAQAB\r\n" +
-            "AoGBAI8XcwnZi0Sq5N89wF+gFNhnREFo3rsJDaCY8iqHdA5DDlnr3abb/yhipw0I\r\n" +
-            "/1HlgC6fIG2oexXOXFWl+USgqRt1kTt9jXhVFExg8mNko2UelAwFtsl8CRjVcYQO\r\n" +
-            "cedeH/WM/mXjg2wUqqZenBmlKlD6vNb70jFJeVaDJ/7n7j8BAkEA9NkH2D4Zgj/I\r\n" +
-            "OAVYccZYH74+VgO0e7VkUjQk9wtJ2j6cGqJ6Pfj0roVIMUWzoBb8YfErR8l6JnVQ\r\n" +
-            "bfy83gJeiQJBAOHk3ow7JjAn8XuOyZx24KcTaYWKUkAQfRWYDFFOYQF4KV9xLSEt\r\n" +
-            "ycY0kjsdxGKDudWcsATllFzXDCQF6DTNIWECQEA52ePwTjKrVnLTfCLEG4OgHKvl\r\n" +
-            "Zud4amthwDyJWoMEH2ChNB2je1N4JLrABOE+hk+OuoKnKAKEjWd8f3Jg/rkCQHj8\r\n" +
-            "mQmogHqYWikgP/FSZl518jV48Tao3iXbqvU9Mo2T6yzYNCCqIoDLFWseNVnCTZ0Q\r\n" +
-            "b+IfiEf1UeZVV5o4J+ECQDatNnS3V9qYUKjj/krNRD/U0+7eh8S2ylLqD3RlSn9K\r\n" +
-            "tYGRMgAtUXtiOEizBH6bd/orzI9V9sw8yBz+ZqIH25Q=\r\n" +
-            "-----END RSA PRIVATE KEY-----\r\n";
+    private static final String TESTING_PEM_FILE = "test-dkim.pem";
     private static final FakeMailContext FAKE_MAIL_CONTEXT = FakeMailContext.defaultContext();
 
     @Test
@@ -80,7 +66,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKey", TESTING_PEM)
+                .setProperty("privateKey", TESTING_PEM_FILE)
                 .build();
 
         mailet.init(mci);
@@ -129,7 +115,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; t=" + ((System.currentTimeMillis() / 1000) + 1000) + "; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKey", TESTING_PEM)
+                .setProperty("privateKey", TESTING_PEM_FILE)
                 .build();
 
         mailet.init(mci);
@@ -175,7 +161,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; t=; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKey", TESTING_PEM)
+                .setProperty("privateKey", TESTING_PEM_FILE)
                 .build();
 
         mailet.init(mci);
@@ -228,7 +214,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKey", TESTING_PEM)
+                .setProperty("privateKey", TESTING_PEM_FILE)
                 .build();
 
         mailet.init(mci);
@@ -275,7 +261,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKey", TESTING_PEM)
+                .setProperty("privateKey", TESTING_PEM_FILE)
                 .build();
 
         Mail mail = FakeMail.builder()
@@ -323,7 +309,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKey", TESTING_PEM)
+                .setProperty("privateKey", TESTING_PEM_FILE)
                 .build();
 
         Mail mail = FakeMail.builder()

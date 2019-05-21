@@ -67,23 +67,7 @@ import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
  * <pre><code>
  * &lt;mailet match=&quot;All&quot; class=&quot;DKIMSign&quot;&gt;
  *   &lt;signatureTemplate&gt;v=1; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;&lt;/signatureTemplate&gt;
- *   &lt;privateKey&gt;
- *   -----BEGIN RSA PRIVATE KEY-----
- *   MIICXAIBAAKBgQDYDaYKXzwVYwqWbLhmuJ66aTAN8wmDR+rfHE8HfnkSOax0oIoT
- *   M5zquZrTLo30870YMfYzxwfB6j/Nz3QdwrUD/t0YMYJiUKyWJnCKfZXHJBJ+yfRH
- *   r7oW+UW3cVo9CG2bBfIxsInwYe175g9UjyntJpWueqdEIo1c2bhv9Mp66QIDAQAB
- *   AoGBAI8XcwnZi0Sq5N89wF+gFNhnREFo3rsJDaCY8iqHdA5DDlnr3abb/yhipw0I
- *   /1HlgC6fIG2oexXOXFWl+USgqRt1kTt9jXhVFExg8mNko2UelAwFtsl8CRjVcYQO
- *   cedeH/WM/mXjg2wUqqZenBmlKlD6vNb70jFJeVaDJ/7n7j8BAkEA9NkH2D4Zgj/I
- *   OAVYccZYH74+VgO0e7VkUjQk9wtJ2j6cGqJ6Pfj0roVIMUWzoBb8YfErR8l6JnVQ
- *   bfy83gJeiQJBAOHk3ow7JjAn8XuOyZx24KcTaYWKUkAQfRWYDFFOYQF4KV9xLSEt
- *   ycY0kjsdxGKDudWcsATllFzXDCQF6DTNIWECQEA52ePwTjKrVnLTfCLEG4OgHKvl
- *   Zud4amthwDyJWoMEH2ChNB2je1N4JLrABOE+hk+OuoKnKAKEjWd8f3Jg/rkCQHj8
- *   mQmogHqYWikgP/FSZl518jV48Tao3iXbqvU9Mo2T6yzYNCCqIoDLFWseNVnCTZ0Q
- *   b+IfiEf1UeZVV5o4J+ECQDatNnS3V9qYUKjj/krNRD/U0+7eh8S2ylLqD3RlSn9K
- *   tYGRMgAtUXtiOEizBH6bd/orzI9V9sw8yBz+ZqIH25Q=
- *   -----END RSA PRIVATE KEY-----
- *   &lt;/privateKey&gt;
+ *   &lt;privateKey&gt;dkim-signing.pem&lt;/privateKey&gt;
  * &lt;/mailet&gt;
  * </code></pre>
  * 
@@ -113,13 +97,13 @@ public class DKIMSign extends GenericMailet {
 
     public void init() throws MessagingException {
         signatureTemplate = getInitParameter("signatureTemplate");
-        String privateKeyString = getInitParameter("privateKey");
+        String privateKeyFilePath = getInitParameter("privateKey");
         String privateKeyPassword = getInitParameter("privateKeyPassword", null);
         forceCRLF = getInitParameter("forceCRLF", true);
 
         try {
             char[] passphrase = privateKeyPassword != null ? privateKeyPassword.toCharArray() : null;
-            privateKey = extractPrivateKey(new ByteArrayInputStream(privateKeyString.getBytes()), passphrase);
+            privateKey = extractPrivateKey(ClassLoader.getSystemResourceAsStream(privateKeyFilePath), passphrase);
         } catch (NoSuchAlgorithmException e) {
             throw new MessagingException("Unknown private key algorythm: " + e.getMessage(), e);
         } catch (InvalidKeySpecException e) {
