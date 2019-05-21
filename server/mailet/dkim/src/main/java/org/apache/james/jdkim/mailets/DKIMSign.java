@@ -32,14 +32,15 @@ import java.security.PrivateKey;
 import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPrivateCrtKeySpec;
-import java.util.Enumeration;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.jdkim.DKIMSigner;
 import org.apache.james.jdkim.api.BodyHasher;
@@ -142,10 +143,14 @@ public class DKIMSign extends GenericMailet {
                     os = new CRLFOutputStream(os);
                 }
                 message.writeTo(os);
-                bhj.getOutputStream().close();
             } catch (IOException e) {
-                throw new MessagingException("Exception calculating bodyhash: "
-                        + e.getMessage(), e);
+                throw new MessagingException("Exception calculating bodyhash: " + e.getMessage(), e);
+            } finally {
+                try {
+                    bhj.getOutputStream().close();
+                } catch (IOException e) {
+                    throw new MessagingException("Exception calculating bodyhash: " + e.getMessage(), e);
+                }
             }
             String signatureHeader = signer.sign(headers, bhj);
             // Unfortunately JavaMail does not give us a method to add headers
@@ -153,32 +158,22 @@ public class DKIMSign extends GenericMailet {
             // message.addHeaderLine(signatureHeader);
             prependHeader(message, signatureHeader);
         } catch (PermFailException e) {
-            throw new MessagingException("PermFail while signing: "
-                    + e.getMessage(), e);
+            throw new MessagingException("PermFail while signing: " + e.getMessage(), e);
         }
 
     }
 
     private void prependHeader(MimeMessage message, String signatureHeader)
             throws MessagingException {
-        List<String> prevHeader = new LinkedList<>();
-        // read all the headers
-        for (Enumeration<String> e = message.getAllHeaderLines(); e.hasMoreElements();) {
-            String headerLine = e.nextElement();
-            prevHeader.add(headerLine);
-        }
-        // remove all the headers
-        for (Enumeration<Header> e = message.getAllHeaders(); e.hasMoreElements();) {
-            Header header = e.nextElement();
-            message.removeHeader(header.getName());
-        }
-        // add our header
+        List<String> prevHeader = Collections.list(message.getAllHeaderLines());
+        Collections.list(message.getAllHeaders())
+            .stream()
+            .map(Header::getName)
+            .forEach(Throwing.consumer(message::removeHeader).sneakyThrow());
+
         message.addHeaderLine(signatureHeader);
-        // add the remaining headers using "addHeaderLine" that won't alter the
-        // insertion order.
-        for (String header : prevHeader) {
-            message.addHeaderLine(header);
-        }
+        prevHeader
+            .forEach(Throwing.consumer(message::addHeaderLine).sneakyThrow());
     }
 
     private PrivateKey extractPrivateKey(InputStream rawKey, char[] passphrase) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {

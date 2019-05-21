@@ -106,12 +106,20 @@ public class DKIMVerify extends GenericMailet {
                     os = new CRLFOutputStream(os);
                 }
                 message.writeTo(os);
-                bh.getOutputStream().close();
             }
 
         } catch (IOException e) {
             throw new MessagingException("Exception calculating bodyhash: "
                     + e.getMessage(), e);
+        } finally {
+            try {
+                if (bh != null) {
+                    bh.getOutputStream().close();
+                }
+            } catch (IOException e) {
+                throw new MessagingException("Exception calculating bodyhash: "
+                        + e.getMessage(), e);
+            }
         }
         return verifier.verify(bh);
     }

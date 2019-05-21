@@ -19,44 +19,45 @@
 
 package org.apache.james.jdkim.mailets;
 
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.jdkim.api.Headers;
+
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Streams;
 
 /**
  * An adapter to let DKIMSigner read headers from MimeMessage
  */
 final class MimeMessageHeaders implements Headers {
 
-    private final Map<String, List<String>> headers;
+    private final ImmutableListMultimap<String, String> headers;
     private final List<String> fields;
 
     public MimeMessageHeaders(MimeMessage message) throws MessagingException {
-        headers = new HashMap<>();
-        fields = new LinkedList<>();
-        for (Enumeration<String> e = message.getAllHeaderLines(); e.hasMoreElements();) {
-            String head = e.nextElement();
-            int p = head.indexOf(':');
-            if (p <= 0) {
-                throw new MessagingException("Bad header line: " + head);
-            }
-            String headerName = head.substring(0, p).trim();
-            String headerNameLC = headerName.toLowerCase();
-            fields.add(headerName);
-            List<String> strings = headers.get(headerNameLC);
-            if (strings == null) {
-                strings = new LinkedList<>();
-                headers.put(headerNameLC, strings);
-            }
-            strings.add(head);
-        }
+        ImmutableList<Pair<String, String>> headsAndLines = Streams.stream(Iterators.forEnumeration(message.getAllHeaderLines()))
+                .map(Throwing.function(this::extractHeaderLine).sneakyThrow())
+                .collect(Guavate.toImmutableList());
+
+        fields = headsAndLines
+            .stream()
+            .map(Pair::getKey)
+            .collect(Guavate.toImmutableList());
+
+        headers = headsAndLines
+            .stream()
+            .collect(Guavate.toImmutableListMultimap(
+                pair -> pair.getKey().toLowerCase(Locale.US),
+                Pair::getValue));
     }
 
     public List<String> getFields() {
@@ -64,6 +65,14 @@ final class MimeMessageHeaders implements Headers {
     }
 
     public List<String> getFields(String name) {
-        return headers.get(name.toLowerCase());
+        return headers.get(name.toLowerCase(Locale.US));
+    }
+
+    private Pair<String, String> extractHeaderLine(String header) throws MessagingException {
+        int fieldSeperatorPosition = header.indexOf(':');
+        if (fieldSeperatorPosition <= 0) {
+            throw new MessagingException("Bad header line: " + header);
+        }
+        return Pair.of(header.substring(0, fieldSeperatorPosition).trim(), header);
     }
 }
