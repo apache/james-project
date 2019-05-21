@@ -205,7 +205,7 @@ Response codes:
 
  - 200: The domain aliases was successfully retrieved
  - 400: destination.domain.tld has an invalid syntax
- - 404: destination.domain.tld is not part of handled domains or does not have local domains as aliases.
+ - 404: destination.domain.tld is not part of handled domains and does not have local domains as aliases.
 
 ### Create an alias for a domain
 
