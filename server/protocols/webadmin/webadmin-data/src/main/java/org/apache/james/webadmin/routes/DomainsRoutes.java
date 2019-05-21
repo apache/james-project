@@ -35,6 +35,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.api.SameSourceAndDestinationException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.DomainAliasResponse;
 import org.apache.james.webadmin.service.DomainAliasService;
@@ -303,6 +304,8 @@ public class DomainsRoutes implements Routes {
             return Responses.returnNoContent(response);
         } catch (DomainAliasService.DomainNotFound e) {
             throw domainNotFound(e.getDomain());
+        } catch (SameSourceAndDestinationException e) {
+            throw sameSourceAndDestination(sourceDomain);
         }
     }
 
@@ -315,6 +318,8 @@ public class DomainsRoutes implements Routes {
             return Responses.returnNoContent(response);
         } catch (DomainAliasService.DomainNotFound e) {
             throw domainNotFound(e.getDomain());
+        } catch (SameSourceAndDestinationException e) {
+            throw sameSourceAndDestination(sourceDomain);
         }
     }
 
@@ -331,6 +336,14 @@ public class DomainsRoutes implements Routes {
             .statusCode(HttpStatus.NOT_FOUND_404)
             .type(ErrorType.INVALID_ARGUMENT)
             .message("The following domain is not in the domain list and has no registered local aliases: " + domain.name())
+            .haltError();
+    }
+
+    private HaltException sameSourceAndDestination(Domain sameDomain) {
+        return ErrorResponder.builder()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .type(ErrorType.INVALID_ARGUMENT)
+            .message("Source domain and destination domain can not have same value(" + sameDomain.name() + ")")
             .haltError();
     }
 }

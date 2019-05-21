@@ -223,6 +223,7 @@ Response codes:
 
  - 204: The redirection now exists
  - 400: source.domain.tld or destination.domain.tld have an invalid syntax
+ - 400: source domain and destination domain are the same
  - 404: source.domain.tld are not part of handled domains.
 
 ### Delete an alias for a domain
@@ -242,6 +243,7 @@ Response codes:
 
  - 204: The redirection now exists
  - 400: source.domain.tld or destination.domain.tld have an invalid syntax
+ - 400: source domain and destination domain are the same
  - 404: source.domain.tld are not part of handled domains.
 
 ## Administrating users

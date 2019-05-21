@@ -26,6 +26,7 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.api.SameSourceAndDestinationException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.webadmin.dto.DomainAliasResponse;
@@ -92,7 +93,13 @@ public class DomainAliasService {
             throw new DomainNotFound(sourceDomain);
         }
 
+        checkSameSourceAndDestination(sourceDomain, destinationDomain);
         operation.perform(MappingSource.fromDomain(sourceDomain), Mapping.domain(destinationDomain));
     }
 
+    private void checkSameSourceAndDestination(Domain source, Domain destination) throws RecipientRewriteTableException {
+        if (source.equals(destination)) {
+            throw new SameSourceAndDestinationException("Source and destination domain can't be the same!");
+        }
+    }
 }

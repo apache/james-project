@@ -398,6 +398,20 @@ class DomainsRoutesTest {
             }
 
             @Test
+            void putShouldReturnBadRequestWhenSourceAndDestinationAreTheSame() {
+                with().put(DOMAIN);
+
+                when()
+                    .put(DOMAIN + "/aliases/" + DOMAIN)
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+                    .body("type", is("InvalidArgument"))
+                    .body("message", is("Source domain and destination domain can not have same value(" + DOMAIN + ")"));
+            }
+
+            @Test
             void putShouldNotFailOnExternalDomainAlias() {
                 with().put(DOMAIN);
 
@@ -507,6 +521,20 @@ class DomainsRoutesTest {
                     .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                     .body("type", is("InvalidArgument"))
                     .body("message", is("Invalid request for domain creation invalid@domain"));
+            }
+
+            @Test
+            void deleteShouldReturnBadRequestWhenSourceAndDestinationAreTheSame() {
+                with().put(DOMAIN);
+
+                when()
+                    .delete(DOMAIN + "/aliases/" + DOMAIN)
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+                    .body("type", is("InvalidArgument"))
+                    .body("message", is("Source domain and destination domain can not have same value(" + DOMAIN + ")"));
             }
 
             @Test
