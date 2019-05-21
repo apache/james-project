@@ -20,99 +20,62 @@
 package org.apache.james.task;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
 import java.util.function.Consumer;
 
 import javax.annotation.PreDestroy;
 
-import org.apache.james.util.MDCBuilder;
-import org.apache.james.util.concurrent.NamedThreadFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.WorkQueueProcessor;
+import reactor.core.scheduler.Schedulers;
 
 public class MemoryTaskManager implements TaskManager {
-    private static final boolean INTERRUPT_IF_RUNNING = true;
-    private static final Logger LOGGER = LoggerFactory.getLogger(MemoryTaskManager.class);
-
+    private final WorkQueueProcessor<TaskWithId> workQueue;
+    private final TaskManagerWorker worker;
     private final ConcurrentHashMap<TaskId, TaskExecutionDetails> idToExecutionDetails;
-    private final ConcurrentHashMap<TaskId, Future<?>> idToFuture;
-    private final ExecutorService executor;
+    private final ConcurrentHashMap<TaskId, Mono<Task.Result>> tasksResult;
+    private final ExecutorService taskExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService requestTaskExecutor = Executors.newSingleThreadExecutor();
 
     public MemoryTaskManager() {
+        workQueue = WorkQueueProcessor.<TaskWithId>builder()
+            .executor(taskExecutor)
+            .requestTaskExecutor(requestTaskExecutor)
+            .build();
         idToExecutionDetails = new ConcurrentHashMap<>();
-        idToFuture = new ConcurrentHashMap<>();
-        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
-        executor = Executors.newSingleThreadExecutor(threadFactory);
+        tasksResult = new ConcurrentHashMap<>();
+        worker = new MemoryTaskManagerWorker();
+        workQueue
+            .subscribeOn(Schedulers.single())
+            .filter(task -> !listIds(Status.CANCELLED).contains(task.getId()))
+            .subscribe(this::treatTask);
     }
 
-    @Override
+    private void treatTask(TaskWithId task) {
+        Mono<Task.Result> result = worker.executeTask(task, updateDetails(task.getId()));
+        tasksResult.put(task.getId(), result);
+        try {
+            result.block();
+        } catch (CancellationException e) {
+            // Do not throw CancellationException
+        }
+    }
+
     public TaskId submit(Task task) {
-        return submit(task, id -> { });
-    }
-
-    @VisibleForTesting
-    TaskId submit(Task task, Consumer<TaskId> callback) {
         TaskId taskId = TaskId.generateTaskId();
         TaskExecutionDetails executionDetails = TaskExecutionDetails.from(task, taskId);
-
         idToExecutionDetails.put(taskId, executionDetails);
-        idToFuture.put(taskId,
-            executor.submit(() -> runWithMdc(executionDetails, task, callback)));
+        workQueue.onNext(new TaskWithId(taskId, task));
         return taskId;
-    }
-
-    private void runWithMdc(TaskExecutionDetails executionDetails, Task task, Consumer<TaskId> callback) {
-        MDCBuilder.withMdc(
-            MDCBuilder.create()
-                .addContext(Task.TASK_ID, executionDetails.getTaskId())
-                .addContext(Task.TASK_TYPE, executionDetails.getType())
-                .addContext(Task.TASK_DETAILS, executionDetails.getAdditionalInformation()),
-            () -> run(executionDetails, task, callback));
-    }
-
-    private void run(TaskExecutionDetails executionDetails, Task task, Consumer<TaskId> callback) {
-        TaskExecutionDetails started = executionDetails.start();
-        idToExecutionDetails.put(started.getTaskId(), started);
-        try {
-            task.run()
-                .onComplete(() -> success(started))
-                .onFailure(() -> failed(started,
-                    logger -> logger.info("Task was partially performed. Check logs for more details")));
-        } catch (Exception e) {
-            failed(started,
-                logger -> logger.error("Error while running task", executionDetails, e));
-        } finally {
-            idToFuture.remove(executionDetails.getTaskId());
-            callback.accept(executionDetails.getTaskId());
-        }
-    }
-
-    private void success(TaskExecutionDetails started) {
-        if (!wasCancelled(started.getTaskId())) {
-            idToExecutionDetails.put(started.getTaskId(), started.completed());
-            LOGGER.info("Task success");
-        }
-    }
-
-    private void failed(TaskExecutionDetails started, Consumer<Logger> logOperation) {
-        if (!wasCancelled(started.getTaskId())) {
-            idToExecutionDetails.put(started.getTaskId(), started.failed());
-            logOperation.accept(LOGGER);
-        }
-    }
-
-    private boolean wasCancelled(TaskId taskId) {
-        return idToExecutionDetails.get(taskId).getStatus() == Status.CANCELLED;
     }
 
     @Override
@@ -128,32 +91,45 @@ public class MemoryTaskManager implements TaskManager {
 
     @Override
     public List<TaskExecutionDetails> list(Status status) {
-        return idToExecutionDetails.values()
+        return ImmutableList.copyOf(tasksFiltered(status).values());
+    }
+
+    public Set<TaskId> listIds(Status status) {
+        return tasksFiltered(status).keySet();
+    }
+
+    public Map<TaskId, TaskExecutionDetails> tasksFiltered(Status status) {
+        return idToExecutionDetails.entrySet()
             .stream()
-            .filter(details -> details.getStatus().equals(status))
-            .collect(Guavate.toImmutableList());
+            .filter(details -> details.getValue().getStatus().equals(status))
+            .collect(Guavate.entriesToImmutableMap());
     }
 
     @Override
     public void cancel(TaskId id) {
-        Optional.ofNullable(idToFuture.get(id))
-            .ifPresent(future -> {
-                TaskExecutionDetails executionDetails = idToExecutionDetails.get(id);
-                idToExecutionDetails.put(id, executionDetails.cancel());
-                future.cancel(INTERRUPT_IF_RUNNING);
-                idToFuture.remove(id);
-            });
+        TaskExecutionDetails details = getExecutionDetails(id);
+        if (details.getStatus().equals(Status.IN_PROGRESS) || details.getStatus().equals(Status.WAITING)) {
+            worker.cancelTask(id, updateDetails(id));
+        }
     }
 
     @Override
     public TaskExecutionDetails await(TaskId id) {
-        Optional.ofNullable(idToFuture.get(id))
-            .ifPresent(Throwing.consumer(Future::get));
+        Optional.ofNullable(tasksResult.get(id))
+            .ifPresent(Throwing.<Mono<Task.Result>>consumer(Mono::block).orDoNothing());
         return getExecutionDetails(id);
     }
 
     @PreDestroy
     public void stop() {
-        executor.shutdownNow();
+        taskExecutor.shutdown();
+        requestTaskExecutor.shutdown();
+    }
+
+    private Consumer<TaskExecutionDetailsUpdater> updateDetails(TaskId taskId) {
+        return updater -> {
+            TaskExecutionDetails newDetails = updater.update(idToExecutionDetails.get(taskId));
+            idToExecutionDetails.replace(taskId, newDetails);
+        };
     }
 }
