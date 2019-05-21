@@ -27,11 +27,15 @@ import java.util.Optional;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.james.jdkim.DKIMVerifier;
 import org.apache.james.jdkim.api.BodyHasher;
 import org.apache.james.jdkim.api.Headers;
 import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.FailException;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
@@ -50,9 +54,9 @@ import org.apache.mailet.base.GenericMailet;
  */
 public class DKIMVerify extends GenericMailet {
 
-    public static final String DKIM_AUTH_RESULT_ATTRIBUTE = "jDKIM.AUTHRESULT";
+    public static final AttributeName DKIM_AUTH_RESULT = AttributeName.of("jDKIM.AUTHRESULT");
     
-    protected DKIMVerifier verifier = null;
+    @VisibleForTesting DKIMVerifier verifier = null;
     private boolean forceCRLF;
 
     @Override
@@ -67,7 +71,7 @@ public class DKIMVerify extends GenericMailet {
             List<SignatureRecord> res = verify(verifier, message, forceCRLF);
             if (res == null || res.isEmpty()) {
                 // neutral
-                mail.setAttribute(DKIM_AUTH_RESULT_ATTRIBUTE, "neutral (no signatures)");
+                mail.setAttribute(new Attribute(DKIM_AUTH_RESULT, AttributeValue.of("neutral (no signatures)")));
             } else {
                 // pass
                 StringBuilder msg = new StringBuilder();
@@ -78,18 +82,19 @@ public class DKIMVerify extends GenericMailet {
                     msg.append(rec.getIdentity().toString());
                     msg.append(")");
                 }
-                mail.setAttribute(DKIM_AUTH_RESULT_ATTRIBUTE, msg.toString());
+                mail.setAttribute(new Attribute(DKIM_AUTH_RESULT, AttributeValue.of(msg.toString())));
             }
         } catch (FailException e) {
             // fail
             String relatedRecordIdentity = Optional.ofNullable(e.getRelatedRecordIdentity())
                 .map(value -> "identity" + value + ":")
                 .orElse("");
-            mail.setAttribute(DKIM_AUTH_RESULT_ATTRIBUTE, "fail (" + relatedRecordIdentity + e.getMessage() + ")");
+            mail.setAttribute(new Attribute(DKIM_AUTH_RESULT, AttributeValue.of("fail (" + relatedRecordIdentity + e.getMessage() + ")")));
         }
     }
 
-    protected static List<SignatureRecord> verify(DKIMVerifier verifier, MimeMessage message, boolean forceCRLF)
+    @VisibleForTesting
+    static List<SignatureRecord> verify(DKIMVerifier verifier, MimeMessage message, boolean forceCRLF)
             throws MessagingException, FailException {
         Headers headers = new MimeMessageHeaders(message);
         BodyHasher bh = verifier.newBodyHasher(headers);

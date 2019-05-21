@@ -19,8 +19,8 @@
 
 package org.apache.james.jdkim.mailets;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -45,8 +45,8 @@ import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Assert;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 public class DKIMSignTest {
 
@@ -68,7 +68,7 @@ public class DKIMSignTest {
     private static final FakeMailContext FAKE_MAIL_CONTEXT = FakeMailContext.defaultContext();
 
     @Test
-    public void testDKIMSign() throws MessagingException, IOException,
+    void testDKIMSign() throws MessagingException, IOException,
             FailException {
         String message = "Received: by 10.XX.XX.12 with SMTP id dfgskldjfhgkljsdfhgkljdhfg;\r\n\tTue, 06 Oct 2009 07:37:34 -0700 (PDT)\r\nReturn-Path: <bounce@example.com>\r\nReceived: from example.co.uk (example.co.uk [XX.XXX.125.19])\r\n\tby mx.example.com with ESMTP id dgdfgsdfgsd.97.2009.10.06.07.37.32;\r\n\tTue, 06 Oct 2009 07:37:32 -0700 (PDT)\r\nFrom: apache@bago.org\r\nTo: apache@bago.org\r\n\r\nbody\r\nprova\r\n";
 
@@ -111,13 +111,13 @@ public class DKIMSignTest {
                                          MockPublicKeyRecordRetriever mockPublicKeyRecordRetriever)
             throws MessagingException, FailException {
         List<SignatureRecord> signs = DKIMVerify.verify(new DKIMVerifier(mockPublicKeyRecordRetriever), new MimeMessage(Session.getDefaultInstance(new Properties()), new ByteArrayInputStream(rawMessage.toByteArray())), true);
-        assertNotNull(signs);
-        assertEquals(1, signs.size());
+        assertThat(signs).hasSize(1);
+
         return signs;
     }
 
     @Test
-    public void testDKIMSignFuture() throws MessagingException, IOException,
+    void testDKIMSignFuture() throws MessagingException, IOException,
             FailException {
         String message = "Received: by 10.XX.XX.12 with SMTP id dfgskldjfhgkljsdfhgkljdhfg;\r\n\tTue, 06 Oct 2009 07:37:34 -0700 (PDT)\r\nReturn-Path: <bounce@example.com>\r\nReceived: from example.co.uk (example.co.uk [XX.XXX.125.19])\r\n\tby mx.example.com with ESMTP id dgdfgsdfgsd.97.2009.10.06.07.37.32;\r\n\tTue, 06 Oct 2009 07:37:32 -0700 (PDT)\r\nFrom: apache@bago.org\r\nTo: apache@bago.org\r\n\r\nbody\r\nprova\r\n";
 
@@ -155,7 +155,7 @@ public class DKIMSignTest {
                 "selector", "example.com");
         try {
             verify(rawMessage, mockPublicKeyRecordRetriever);
-            Assert.fail("Expecting signature to be ignored");
+            fail("Expecting signature to be ignored");
         } catch (PermFailException e) {
             // signature ignored, so fail for missing signatures.
         }
@@ -163,7 +163,7 @@ public class DKIMSignTest {
 
 
     @Test
-    public void testDKIMSignTime() throws MessagingException, IOException,
+    void testDKIMSignTime() throws MessagingException, IOException,
             FailException {
         String message = "Received: by 10.XX.XX.12 with SMTP id dfgskldjfhgkljsdfhgkljdhfg;\r\n\tTue, 06 Oct 2009 07:37:34 -0700 (PDT)\r\nReturn-Path: <bounce@example.com>\r\nReceived: from example.co.uk (example.co.uk [XX.XXX.125.19])\r\n\tby mx.example.com with ESMTP id dgdfgsdfgsd.97.2009.10.06.07.37.32;\r\n\tTue, 06 Oct 2009 07:37:32 -0700 (PDT)\r\nFrom: apache@bago.org\r\nTo: apache@bago.org\r\n\r\nbody\r\nprova\r\n";
 
@@ -204,15 +204,15 @@ public class DKIMSignTest {
         List<SignatureRecord> rs = verify(rawMessage, mockPublicKeyRecordRetriever);
 
         // check we have a valued signatureTimestamp
-        Assert.assertNotNull(rs.get(0).getSignatureTimestamp());
+        assertThat(rs.get(0).getSignatureTimestamp()).isNotNull();
         long ref = System.currentTimeMillis() / 1000;
         // Chech that the signature timestamp is in the past 60 seconds.
-        Assert.assertTrue(rs.get(0).getSignatureTimestamp() <= ref);
-        Assert.assertTrue(rs.get(0).getSignatureTimestamp() >= ref - 60);
+        assertThat(rs.get(0).getSignatureTimestamp() <= ref).isTrue();
+        assertThat(rs.get(0).getSignatureTimestamp() >= ref - 60).isTrue();
     }
 
     @Test
-    public void testDKIMSignMessageAsText() throws MessagingException,
+    void testDKIMSignMessageAsText() throws MessagingException,
             IOException, FailException {
         MimeMessage mm = new MimeMessage(Session
                 .getDefaultInstance(new Properties()));
@@ -256,7 +256,7 @@ public class DKIMSignTest {
     }
 
     @Test
-    public void testDKIMSignMessageAsObjectConvertedTo7Bit()
+    void testDKIMSignMessageAsObjectConvertedTo7Bit()
             throws MessagingException, IOException, FailException {
         MimeMessage mm = new MimeMessage(Session
                 .getDefaultInstance(new Properties()));
@@ -304,7 +304,7 @@ public class DKIMSignTest {
     }
 
     @Test
-    public void testDKIMSignMessageAsObjectNotConverted()
+    void testDKIMSignMessageAsObjectNotConverted()
             throws MessagingException, IOException, FailException {
         MimeMessage mm = new MimeMessage(Session
                 .getDefaultInstance(new Properties()));
@@ -350,7 +350,7 @@ public class DKIMSignTest {
                 "selector", "example.com");
         try {
             verify(rawMessage, mockPublicKeyRecordRetriever);
-            Assert.fail("Expected PermFail");
+            fail("Expected PermFail");
         } catch (PermFailException e) {
 
         }
