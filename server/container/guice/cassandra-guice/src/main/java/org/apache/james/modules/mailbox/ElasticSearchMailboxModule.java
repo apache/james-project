@@ -31,6 +31,7 @@ import javax.inject.Singleton;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.james.backends.es.ClientProviderImpl;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
@@ -112,7 +113,8 @@ public class ElasticSearchMailboxModule extends AbstractModule {
             Configuration configuration = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
             return ElasticSearchConfiguration.fromProperties(configuration);
         } catch (FileNotFoundException e) {
-            LOGGER.warn("Could not find " + ELASTICSEARCH_CONFIGURATION_NAME + " configuration file. Using 127.0.0.1:9300 as contact point");
+            LOGGER.warn("Could not find " + ELASTICSEARCH_CONFIGURATION_NAME + " configuration file. Using {}:{} as contact point",
+                ElasticSearchConfiguration.LOCALHOST, ElasticSearchConfiguration.DEFAULT_PORT);
             return ElasticSearchConfiguration.DEFAULT_CONFIGURATION;
         }
     }
@@ -137,7 +139,9 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
         Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
         return Mono.fromCallable(() -> connectToCluster(configuration, mailboxConfiguration, quotaConfiguration))
-            .doOnError(e -> LOGGER.warn("Error establishing ElasticSearch connection. Next retry scheduled in {} ms", waitDelay, e))
+            .doOnError(e -> LOGGER.warn("Error establishing ElasticSearch connection. Next retry scheduled in {}",
+                DurationFormatUtils.formatDurationWords(waitDelay.toMillis(), true, true),
+                e))
             .retryBackoff(configuration.getMaxRetries(), waitDelay, waitDelay)
             .publishOn(Schedulers.elastic())
             .block();
