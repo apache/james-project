@@ -24,7 +24,6 @@ import javax.inject.Singleton;
 
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
-import org.apache.james.modules.server.AsyncTasksExecutorModule;
 import org.apache.james.modules.server.DNSServiceModule;
 import org.apache.james.modules.server.DropWizardMetricsModule;
 import org.apache.james.modules.server.TaskManagerModule;
@@ -58,7 +57,6 @@ public class CommonServicesModule extends AbstractModule {
         install(new StartablesModule());
         install(new PreDestroyModule());
         install(new DNSServiceModule());
-        install(new AsyncTasksExecutorModule());
         install(new DropWizardMetricsModule());
         install(new TaskManagerModule());
         install(new CleanupTaskModule());
