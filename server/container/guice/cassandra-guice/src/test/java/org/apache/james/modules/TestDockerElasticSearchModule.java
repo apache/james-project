@@ -19,13 +19,15 @@
 
 package org.apache.james.modules;
 
+import java.io.IOException;
+
 import javax.inject.Singleton;
 
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.backends.es.DockerElasticSearch;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.mailbox.elasticsearch.MailboxIndexCreationUtil;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RestHighLevelClient;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -64,10 +66,10 @@ public class TestDockerElasticSearchModule extends AbstractModule {
 
     @Provides
     @Singleton
-    protected Client provideClientProvider() {
-        Client client = elasticSearch.clientProvider().get();
+    protected RestHighLevelClient provideClientProvider() throws IOException {
+        RestHighLevelClient client = elasticSearch.clientProvider().get();
         return MailboxIndexCreationUtil.prepareDefaultClient(client, ElasticSearchConfiguration.builder()
-            .addHost(elasticSearch.getTcpHost())
+            .addHost(elasticSearch.getHttpHost())
             .build());
     }
 }

@@ -88,7 +88,9 @@ public class ElasticSearchMailboxConfiguration {
     private static final String ELASTICSEARCH_INDEX_ATTACHMENTS = "elasticsearch.indexAttachments";
     private static final boolean DEFAULT_INDEX_ATTACHMENTS = true;
 
-    static ElasticSearchMailboxConfiguration fromProperties(Configuration configuration) {
+    public static final ElasticSearchMailboxConfiguration DEFAULT_CONFIGURATION = builder().build();
+
+    public static ElasticSearchMailboxConfiguration fromProperties(Configuration configuration) {
         return builder()
             .indexMailboxName(computeMailboxIndexName(configuration))
             .readAliasMailboxName(computeMailboxReadAlias(configuration))
@@ -144,19 +146,19 @@ public class ElasticSearchMailboxConfiguration {
     }
 
 
-    IndexName getIndexMailboxName() {
+    public IndexName getIndexMailboxName() {
         return indexMailboxName;
     }
 
-    ReadAliasName getReadAliasMailboxName() {
+    public ReadAliasName getReadAliasMailboxName() {
         return readAliasMailboxName;
     }
 
-    WriteAliasName getWriteAliasMailboxName() {
+    public WriteAliasName getWriteAliasMailboxName() {
         return writeAliasMailboxName;
     }
 
-    IndexAttachments getIndexAttachment() {
+    public IndexAttachments getIndexAttachment() {
         return indexAttachment;
     }
 

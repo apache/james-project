@@ -22,9 +22,9 @@ package org.apache.james.modules.mailbox;
 import static org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher.DEFAULT_SEARCH_SIZE;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.concurrent.ExecutorService;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -49,7 +49,7 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.quota.search.elasticsearch.ElasticSearchQuotaConfiguration;
 import org.apache.james.quota.search.elasticsearch.QuotaSearchIndexCreationUtil;
 import org.apache.james.utils.PropertiesProvider;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,19 +82,16 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     @Provides
     @Singleton
     @Named(MailboxElasticSearchConstants.InjectionNames.MAILBOX)
-    private ElasticSearchIndexer createMailboxElasticSearchIndexer(Client client,
-                                                                   @Named("AsyncExecutor") ExecutorService executor,
+    private ElasticSearchIndexer createMailboxElasticSearchIndexer(RestHighLevelClient client,
                                                                    ElasticSearchMailboxConfiguration configuration) {
         return new ElasticSearchIndexer(
             client,
-            executor,
-            configuration.getWriteAliasMailboxName(),
-            MailboxElasticSearchConstants.MESSAGE_TYPE);
+            configuration.getWriteAliasMailboxName());
     }
 
     @Provides
     @Singleton
-    private ElasticSearchSearcher createMailboxElasticSearchSearcher(Client client,
+    private ElasticSearchSearcher createMailboxElasticSearchSearcher(RestHighLevelClient client,
                                                                      QueryConverter queryConverter,
                                                                      MailboxId.Factory mailboxIdFactory,
                                                                      MessageId.Factory messageIdFactory,
@@ -105,8 +102,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
             DEFAULT_SEARCH_SIZE,
             mailboxIdFactory,
             messageIdFactory,
-            configuration.getReadAliasMailboxName(),
-            MailboxElasticSearchConstants.MESSAGE_TYPE);
+            configuration.getReadAliasMailboxName());
     }
 
     @Provides
@@ -135,7 +131,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    protected Client provideClient(ElasticSearchConfiguration configuration,
+    protected RestHighLevelClient provideClient(ElasticSearchConfiguration configuration,
                                    ElasticSearchMailboxConfiguration mailboxConfiguration,
                                    ElasticSearchQuotaConfiguration quotaConfiguration) {
 
@@ -147,12 +143,12 @@ public class ElasticSearchMailboxModule extends AbstractModule {
             .block();
     }
 
-    private Client connectToCluster(ElasticSearchConfiguration configuration,
+    private RestHighLevelClient connectToCluster(ElasticSearchConfiguration configuration,
                                     ElasticSearchMailboxConfiguration mailboxConfiguration,
-                                    ElasticSearchQuotaConfiguration quotaConfiguration) {
+                                    ElasticSearchQuotaConfiguration quotaConfiguration) throws IOException {
         LOGGER.info("Trying to connect to ElasticSearch service at {}", LocalDateTime.now());
 
-        Client client = ClientProviderImpl.fromHosts(configuration.getHosts(), configuration.getClusterName()).get();
+        RestHighLevelClient client = ClientProviderImpl.fromHosts(configuration.getHosts(), configuration.getClusterName()).get();
 
         MailboxIndexCreationUtil.prepareClient(client,
             mailboxConfiguration.getReadAliasMailboxName(),

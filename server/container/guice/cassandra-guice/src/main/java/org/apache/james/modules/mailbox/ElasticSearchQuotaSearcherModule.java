@@ -22,9 +22,6 @@ package org.apache.james.modules.mailbox;
 import static org.apache.james.modules.mailbox.ElasticSearchMailboxModule.ELASTICSEARCH_CONFIGURATION_NAME;
 
 import java.io.FileNotFoundException;
-import java.util.concurrent.ExecutorService;
-
-import javax.inject.Named;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -33,11 +30,10 @@ import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.quota.search.QuotaSearcher;
 import org.apache.james.quota.search.elasticsearch.ElasticSearchQuotaConfiguration;
 import org.apache.james.quota.search.elasticsearch.ElasticSearchQuotaSearcher;
-import org.apache.james.quota.search.elasticsearch.QuotaRatioElasticSearchConstants;
 import org.apache.james.quota.search.elasticsearch.events.ElasticSearchQuotaMailboxListener;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
 import org.apache.james.utils.PropertiesProvider;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +54,7 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public QuotaSearcher provideSearcher(Client client, ElasticSearchQuotaConfiguration configuration) {
+    public QuotaSearcher provideSearcher(RestHighLevelClient client, ElasticSearchQuotaConfiguration configuration) {
         return new ElasticSearchQuotaSearcher(client,
             configuration.getReadAliasQuotaRatioName());
     }
@@ -79,14 +75,11 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public ElasticSearchQuotaMailboxListener provideListener(Client client,
-                                                             @Named("AsyncExecutor") ExecutorService executor,
+    public ElasticSearchQuotaMailboxListener provideListener(RestHighLevelClient client,
                                                              ElasticSearchQuotaConfiguration configuration) {
         return new ElasticSearchQuotaMailboxListener(
             new ElasticSearchIndexer(client,
-                executor,
-                configuration.getWriteAliasQuotaRatioName(),
-                QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE),
+                configuration.getWriteAliasQuotaRatioName()),
                 new QuotaRatioToElasticSearchJson());
     }
 }

@@ -60,7 +60,7 @@ public class DockerElasticSearchExtension implements GuiceModuleTestExtension {
 
     private ElasticSearchConfiguration getElasticSearchConfigurationForDocker() {
         return ElasticSearchConfiguration.builder()
-            .addHost(getDockerES().getTcpHost())
+            .addHost(getDockerES().getHttpHost())
             .build();
     }
 

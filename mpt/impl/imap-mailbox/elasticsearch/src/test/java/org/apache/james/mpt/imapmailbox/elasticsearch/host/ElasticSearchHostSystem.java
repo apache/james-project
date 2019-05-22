@@ -20,8 +20,6 @@
 package org.apache.james.mpt.imapmailbox.elasticsearch.host;
 
 import java.time.ZoneId;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.backends.es.DockerElasticSearch;
@@ -54,8 +52,7 @@ import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
-import org.apache.james.util.concurrent.NamedThreadFactory;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RestHighLevelClient;
 
 public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
@@ -78,15 +75,14 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
         dockerElasticSearch.cleanUpData();
     }
 
-    private void initFields() {
-        Client client = MailboxIndexCreationUtil.prepareDefaultClient(
+    private void initFields() throws Exception {
+        RestHighLevelClient client = MailboxIndexCreationUtil.prepareDefaultClient(
             dockerElasticSearch.clientProvider().get(),
             ElasticSearchConfiguration.builder()
-                .addHost(dockerElasticSearch.getTcpHost())
+                .addHost(dockerElasticSearch.getHttpHost())
                 .build());
 
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
-        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
 
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .authenticator(authenticator)
@@ -97,13 +93,10 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
             .listeningSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 new ElasticSearchIndexer(client,
-                    Executors.newSingleThreadExecutor(threadFactory),
-                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
-                    MailboxElasticSearchConstants.MESSAGE_TYPE),
+                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
                 new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), ElasticSearchSearcher.DEFAULT_SEARCH_SIZE,
                     new InMemoryId.Factory(), messageIdFactory,
-                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
-                    MailboxElasticSearchConstants.MESSAGE_TYPE),
+                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS),
                 new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES),
                 preInstanciationStage.getSessionProvider()))
             .noPreDeletionHooks()

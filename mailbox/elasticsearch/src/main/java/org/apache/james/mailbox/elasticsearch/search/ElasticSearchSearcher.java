@@ -50,6 +50,8 @@ import com.google.common.collect.ImmutableList;
 
 public class ElasticSearchSearcher {
 
+    public static final int DEFAULT_SEARCH_SIZE = 100;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchSearcher.class);
     private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
     private static final ImmutableList STORED_FIELDS = ImmutableList.of(JsonMessageConstants.MAILBOX_ID,

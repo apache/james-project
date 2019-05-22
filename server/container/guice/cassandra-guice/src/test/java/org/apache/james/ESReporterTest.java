@@ -43,8 +43,11 @@ import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.awaitility.Duration;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -151,10 +154,14 @@ class ESReporterTest {
     }
 
     private boolean checkMetricRecordedInElasticSearch() {
-        try (Client client = elasticSearchExtension.getDockerES().clientProvider().get()) {
-            return !Arrays.stream(client.prepareSearch()
-                    .setQuery(QueryBuilders.matchAllQuery())
-                    .get().getHits().getHits())
+        try (RestHighLevelClient client = elasticSearchExtension.getDockerES().clientProvider().get()) {
+            SearchRequest searchRequest = new SearchRequest()
+                .source(new SearchSourceBuilder()
+                    .query(QueryBuilders.matchAllQuery()));
+            return !Arrays.stream(client
+                    .search(searchRequest, RequestOptions.DEFAULT)
+                    .getHits()
+                    .getHits())
                 .filter(searchHit -> searchHit.getIndex().startsWith(TestDockerESMetricReporterModule.METRICS_INDEX))
                 .collect(Collectors.toList())
                 .isEmpty();
