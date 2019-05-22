@@ -30,7 +30,7 @@ import java.util.function.Consumer;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Mono;
 

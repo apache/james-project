@@ -30,28 +30,24 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.assertj.core.api.JUnitSoftAssertions;
+import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class MemoryTaskManagerTest {
 
     private MemoryTaskManager memoryTaskManager;
 
-    @Rule
-    public JUnitSoftAssertions softly = new JUnitSoftAssertions();
-
-    @Before
+    @BeforeEach
     public void setUp() {
         memoryTaskManager = new MemoryTaskManager();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         memoryTaskManager.stop();
     }
@@ -231,6 +227,8 @@ public class MemoryTaskManagerTest {
 
     @Test
     public void listShouldReturnTaskStatus() throws Exception {
+        SoftAssertions softly = new SoftAssertions();
+
         CountDownLatch latch1 = new CountDownLatch(1);
         CountDownLatch latch2 = new CountDownLatch(1);
 
