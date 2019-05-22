@@ -23,9 +23,9 @@ import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -50,6 +50,7 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
+import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,13 +99,13 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
     
     @Override
-    public Iterator<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) {
+    public Stream<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         Optional<Integer> noLimit = Optional.empty();
+
         return searcher
-                .search(ImmutableList.of(mailbox.getMailboxId()), searchQuery, noLimit)
-                .map(SearchResult::getMessageUid)
-                .iterator();
+            .search(ImmutableList.of(mailbox.getMailboxId()), searchQuery, noLimit)
+            .map(SearchResult::getMessageUid);
     }
     
     @Override
@@ -115,13 +116,15 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
             return ImmutableList.of();
         }
 
-        return searcher.search(mailboxIds, searchQuery, Optional.empty())
-            .peek(this::logIfNoMessageId)
-            .map(SearchResult::getMessageId)
-            .map(Optional::get)
-            .distinct()
-            .limit(limit)
-            .collect(Guavate.toImmutableList());
+        try (Stream<SearchResult> searchResults = searcher.search(mailboxIds, searchQuery, Optional.empty())) {
+            return searchResults
+                .peek(this::logIfNoMessageId)
+                .map(SearchResult::getMessageId)
+                .flatMap(OptionalUtils::toStream)
+                .distinct()
+                .limit(limit)
+                .collect(Guavate.toImmutableList());
+        }
     }
 
     @Override

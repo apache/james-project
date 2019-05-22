@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
@@ -584,9 +585,8 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             }
             searchQuery.andCriteria(SearchQuery.uid(nRanges));
             searchQuery.andCriteria(SearchQuery.modSeqGreaterThan(changedSince));
-            Iterator<MessageUid> uids = mailbox.search(searchQuery, session);
-            while (uids.hasNext()) {
-                vanishedUids.remove(uids.next());
+            try (Stream<MessageUid> uids = mailbox.search(searchQuery, session)) {
+                uids.forEach(vanishedUids::remove);
             }
             UidRange[] vanishedIdRanges = uidRanges(MessageRange.toRanges(vanishedUids));
             responder.respond(new VanishedResponse(vanishedIdRanges, true));

@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.backends.es.ReadAliasName;
-import org.apache.james.backends.es.search.ScrollIterable;
+import org.apache.james.backends.es.search.ScrolledSearch;
 import org.apache.james.core.User;
 import org.apache.james.quota.search.QuotaQuery;
 import org.apache.james.quota.search.QuotaSearcher;
@@ -59,10 +59,12 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
     @Override
     public List<User> search(QuotaQuery query) {
         try {
-            return searchHits(query)
-                .map(SearchHit::getId)
-                .map(User::fromUsername)
-                .collect(Guavate.toImmutableList());
+            try (Stream<SearchHit> searchHits = searchHits(query)) {
+                return searchHits
+                    .map(SearchHit::getId)
+                    .map(User::fromUsername)
+                    .collect(Guavate.toImmutableList());
+            }
         } catch (IOException e) {
             throw new RuntimeException("Unexpected exception while executing " + query, e);
         }
@@ -92,13 +94,12 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
     }
 
     private Stream<SearchHit> executeScrolledSearch(QuotaQuery query) {
-        return new ScrollIterable(client,
+        return new ScrolledSearch(client,
             new SearchRequest(readAlias.getValue())
                 .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .source(searchSourceBuilder(query))
                 .scroll(TIMEOUT))
-            .stream()
-            .flatMap(searchResponse -> Arrays.stream(searchResponse.getHits().getHits()))
+            .searchHits()
             .skip(query.getOffset().getValue());
     }
 

@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.stream.Stream;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -469,7 +470,7 @@ public class SearchProcessorTest {
     private void check(SearchKey key, final SearchQuery query) throws Exception {
         when(session.getAttribute(SearchProcessor.SEARCH_MODSEQ)).thenReturn(null);
         when(session.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
-        when(mailbox.search(query, mailboxSession)).thenReturn(new ArrayList<MessageUid>().iterator());
+        when(mailbox.search(query, mailboxSession)).thenReturn(Stream.empty());
         when(selectedMailbox.getApplicableFlags()).thenReturn(new Flags());
         when(selectedMailbox.hasNewApplicableFlags()).thenReturn(false);
 

@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Date;
+import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
@@ -55,8 +56,6 @@ import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class MailboxEventAnalyserTest {
     private static final MessageUid UID = MessageUid.of(900);
@@ -152,7 +151,7 @@ public class MailboxEventAnalyserTest {
         when(messageManager.getApplicableFlags(any())).thenReturn(new Flags());
         when(messageManager.getId()).thenReturn(MAILBOX_ID);
         when(messageManager.search(any(), any()))
-            .thenReturn(ImmutableList.of(MESSAGE_UID).iterator());
+            .thenReturn(Stream.of(MESSAGE_UID));
         when(messageManager.getMessages(any(), any(), any()))
             .thenReturn(new SingleMessageResultIterator(messageResult));
 

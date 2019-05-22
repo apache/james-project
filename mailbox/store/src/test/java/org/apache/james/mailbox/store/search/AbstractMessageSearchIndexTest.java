@@ -62,7 +62,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 
@@ -1488,7 +1487,7 @@ public abstract class AbstractMessageSearchIndexTest {
             .await()
             .atMost(30, TimeUnit.SECONDS)
             .until(
-                () -> Iterators.size(messageSearchIndex.search(session, newBox.getMailboxEntity(), searchQuery)) == 9);
+                () -> messageSearchIndex.search(session, newBox.getMailboxEntity(), searchQuery).count() == 9);
     }
 
     @Test

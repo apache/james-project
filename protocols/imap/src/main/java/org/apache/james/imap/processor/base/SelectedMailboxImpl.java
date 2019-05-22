@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Stream;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -49,7 +50,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 
-import com.google.common.collect.ImmutableList;
+import com.github.steveash.guavate.Guavate;
 
 /**
  * Default implementation of {@link SelectedMailbox}
@@ -92,8 +93,9 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
         registration = eventBus.register(this, new MailboxIdRegistrationKey(mailboxId));
 
         applicableFlags = messageManager.getApplicableFlags(mailboxSession);
-        uidMsnConverter.addAll(ImmutableList.copyOf(
-            messageManager.search(new SearchQuery(SearchQuery.all()), mailboxSession)));
+        try (Stream<MessageUid> stream = messageManager.search(new SearchQuery(SearchQuery.all()), mailboxSession)) {
+            uidMsnConverter.addAll(stream.collect(Guavate.toImmutableList()));
+        }
     }
 
     @Override

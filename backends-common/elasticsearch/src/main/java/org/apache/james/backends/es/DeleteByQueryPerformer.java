@@ -19,7 +19,7 @@
 
 package org.apache.james.backends.es;
 
-import org.apache.james.backends.es.search.ScrollIterable;
+import org.apache.james.backends.es.search.ScrolledSearch;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -51,7 +51,7 @@ public class DeleteByQueryPerformer {
     }
 
     public Mono<Void> perform(QueryBuilder queryBuilder) {
-        return Flux.fromStream(new ScrollIterable(client, prepareSearch(queryBuilder)).stream())
+        return Flux.fromStream(new ScrolledSearch(client, prepareSearch(queryBuilder)).searchResponses())
             .flatMap(searchResponse -> deleteRetrievedIds(client, searchResponse))
             .thenEmpty(Mono.empty());
     }

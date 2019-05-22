@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.elasticsearch.search;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -27,7 +26,7 @@ import java.util.stream.Stream;
 import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.backends.es.ReadAliasName;
-import org.apache.james.backends.es.search.ScrollIterable;
+import org.apache.james.backends.es.search.ScrolledSearch;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
@@ -37,7 +36,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.unit.TimeValue;
@@ -49,9 +47,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableList;
 
 public class ElasticSearchSearcher {
-
     public static final int DEFAULT_SEARCH_SIZE = 100;
-
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchSearcher.class);
     private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
     private static final ImmutableList<String> STORED_FIELDS = ImmutableList.of(JsonMessageConstants.MAILBOX_ID,
@@ -78,8 +74,9 @@ public class ElasticSearchSearcher {
     public Stream<MessageSearchIndex.SearchResult> search(Collection<MailboxId> mailboxIds, SearchQuery query,
                                                           Optional<Integer> limit) {
         SearchRequest searchRequest = prepareSearch(mailboxIds, query, limit);
-        Stream<MessageSearchIndex.SearchResult> pairStream = new ScrollIterable(client, searchRequest).stream()
-            .flatMap(this::transformResponseToUidStream);
+        Stream<MessageSearchIndex.SearchResult> pairStream = new ScrolledSearch(client, searchRequest)
+            .searchHits()
+            .flatMap(this::extractContentFromHit);
 
         return limit.map(pairStream::limit)
             .orElse(pairStream);
@@ -107,27 +104,20 @@ public class ElasticSearchSearcher {
             .orElse(size);
     }
 
-    private Stream<MessageSearchIndex.SearchResult> transformResponseToUidStream(SearchResponse searchResponse) {
-        return Arrays.stream(searchResponse.getHits().getHits())
-            .map(this::extractContentFromHit)
-            .filter(Optional::isPresent)
-            .map(Optional::get);
-    }
-
-    private Optional<MessageSearchIndex.SearchResult> extractContentFromHit(SearchHit hit) {
+    private Stream<MessageSearchIndex.SearchResult> extractContentFromHit(SearchHit hit) {
         DocumentField mailboxId = hit.field(JsonMessageConstants.MAILBOX_ID);
         DocumentField uid = hit.field(JsonMessageConstants.UID);
         Optional<DocumentField> id = retrieveMessageIdField(hit);
         if (mailboxId != null && uid != null) {
             Number uidAsNumber = uid.getValue();
-            return Optional.of(
+            return Stream.of(
                 new MessageSearchIndex.SearchResult(
                     id.map(field -> messageIdFactory.fromString(field.getValue())),
                     mailboxIdFactory.fromString(mailboxId.getValue()),
                     MessageUid.of(uidAsNumber.longValue())));
         } else {
             LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result {}", hit.getId());
-            return Optional.empty();
+            return Stream.empty();
         }
     }
 

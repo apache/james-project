@@ -24,10 +24,10 @@ import java.nio.charset.Charset;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -160,7 +160,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void bodySearchShouldMatchPhraseInBody() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains(CUSTARD));
-        Iterator<MessageUid> result = index.search(session, mailbox3, query);
+        Stream<MessageUid> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(uid5);
     }
 
@@ -168,7 +168,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void bodySearchShouldNotMatchAbsentPhraseInBody() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains(CUSTARD + CUSTARD));
-        Iterator<MessageUid> result = index.search(session, mailbox3, query);
+        Stream<MessageUid> result = index.search(session, mailbox3, query);
         assertThat(result).isEmpty();
     }
     
@@ -176,7 +176,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void bodySearchShouldBeCaseInsensitive() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains(RHUBARD));
-        Iterator<MessageUid> result = index.search(session, mailbox3, query);
+        Stream<MessageUid> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(uid5);
     }
 
@@ -184,7 +184,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void bodySearchNotMatchPhraseOnlyInFrom() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains(FROM_ADDRESS));
-        Iterator<MessageUid> result = index.search(session, mailbox3, query);
+        Stream<MessageUid> result = index.search(session, mailbox3, query);
         assertThat(result).isEmpty();
     }
 
@@ -192,7 +192,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void bodySearchShouldNotMatchPhraseOnlyInSubject() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains(SUBJECT_PART));
-        Iterator<MessageUid> result = index.search(session, mailbox3, query);
+        Stream<MessageUid> result = index.search(session, mailbox3, query);
         assertThat(result).isEmpty();
     }
 
@@ -200,7 +200,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void textSearchShouldMatchPhraseInBody() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.mailContains(CUSTARD));
-        Iterator<MessageUid> result = index.search(session, mailbox3, query);
+        Stream<MessageUid> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(uid5);
     }
 
@@ -208,7 +208,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void textSearchShouldNotAbsentMatchPhraseInBody() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.mailContains(CUSTARD + CUSTARD));
-        Iterator<MessageUid> result = index.search(session, mailbox3, query);
+        Stream<MessageUid> result = index.search(session, mailbox3, query);
         assertThat(result).isEmpty();
     }
 
@@ -216,7 +216,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void textSearchMatchShouldBeCaseInsensitive() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.mailContains(RHUBARD.toLowerCase(Locale.US)));
-        Iterator<MessageUid> result = index.search(session, mailbox3, query);
+        Stream<MessageUid> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(uid5);
     }
 
@@ -224,7 +224,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void addressSearchShouldMatchToFullAddress() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.address(AddressType.To,FROM_ADDRESS));
-        Iterator<MessageUid> result = index.search(session, mailbox3, query);
+        Stream<MessageUid> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(uid5);
     }
 
@@ -232,7 +232,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void addressSearchShouldMatchToDisplayName() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.address(AddressType.To,"Harry"));
-        Iterator<MessageUid> result = index.search(session, mailbox3, query);
+        Stream<MessageUid> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(uid5);
     }
     
@@ -240,7 +240,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void addressSearchShouldMatchToEmail() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.address(AddressType.To,"Harry@example.org"));
-        Iterator<MessageUid> result = index.search(session, mailbox3, query);
+        Stream<MessageUid> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(uid5);
     }
     
@@ -248,7 +248,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void addressSearchShouldMatchFrom() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.address(AddressType.From,"ser-from@domain.or"));
-        Iterator<MessageUid> result = index.search(session, mailbox3, query);
+        Stream<MessageUid> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(uid5);
     }
 
@@ -256,7 +256,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void textSearchShouldMatchPhraseOnlyInToHeader() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.mailContains(FROM_ADDRESS));
-        Iterator<MessageUid> result = index.search(session, mailbox3, query);
+        Stream<MessageUid> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(uid5);
     }
     
@@ -264,7 +264,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void textSearchShouldMatchPhraseOnlyInSubjectHeader() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.mailContains(SUBJECT_PART));
-        Iterator<MessageUid> result = index.search(session, mailbox3, query);
+        Stream<MessageUid> result = index.search(session, mailbox3, query);
         assertThat(result).containsExactly(uid5);
     }
     
@@ -272,7 +272,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void searchAllShouldMatchAllMailboxEmails() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
-        Iterator<MessageUid> result = index.search(session, mailbox2, query);
+        Stream<MessageUid> result = index.search(session, mailbox2, query);
         assertThat(result).containsExactly(uid2);
     }
 
@@ -325,7 +325,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void flagSearchShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.flagIsSet(Flag.DELETED));
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid4);
     }
     
@@ -333,7 +333,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void bodySearchShouldMatchSeveralEmails() throws Exception {    
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.bodyContains("body"));
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid3, uid4);
     }
     
@@ -341,7 +341,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void textSearchShouldMatchSeveralEmails() throws Exception {    
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.mailContains("body"));
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid3, uid4);
     }
     
@@ -349,7 +349,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void headerSearchShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.headerContains("Subject", "test"));
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid4);
     }
     
@@ -357,7 +357,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void headerExistsShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.headerExists("Subject"));
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid4);
     }
     
@@ -365,7 +365,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void flagUnsetShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.flagIsUnSet(Flag.DRAFT));
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid3, uid4);
     }
     
@@ -376,7 +376,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         cal.setTime(new Date());
         query.andCriteria(SearchQuery.internalDateBefore(cal.getTime(), DateResolution.Day));
         
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3);
     }
     
@@ -387,7 +387,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         query.andCriteria(SearchQuery.internalDateAfter(cal.getTime(), DateResolution.Day));
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid4);
     }
     
@@ -399,7 +399,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         query.andCriteria(SearchQuery.internalDateOn(cal.getTime(), DateResolution.Day));
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1);
     }
     
@@ -409,7 +409,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         query.andCriteria(SearchQuery.uid(new SearchQuery.UidRange[] {new SearchQuery.UidRange(uid1)}));
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1);
     }
     
@@ -419,7 +419,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         query.andCriteria(SearchQuery.uid(new SearchQuery.UidRange[] {new SearchQuery.UidRange(uid1), new SearchQuery.UidRange(uid3,uid4)}));
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid3, uid4);
     }
     
@@ -427,7 +427,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void sizeEqualsShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.sizeEquals(200));
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1);
     }
     
@@ -435,7 +435,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void sizeLessThanShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.sizeLessThan(200));
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid4);
     }
     
@@ -443,7 +443,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void sizeGreaterThanShouldMatch() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.sizeGreaterThan(6));
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid3, uid4);
     }
     
@@ -451,7 +451,7 @@ public class LuceneMailboxMessageSearchIndexTest {
     public void uidShouldBeSorted() throws Exception {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.all());
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid3, uid4);
     }
     
@@ -460,7 +460,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.Uid, Order.REVERSE)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid4, uid3, uid1);
     }
     
@@ -469,7 +469,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.SentDate, Order.NATURAL)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid4, uid1);
     }
     
@@ -478,7 +478,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.SentDate, Order.REVERSE)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid4, uid3);
     }
 
@@ -487,7 +487,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.BaseSubject, Order.NATURAL)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid1, uid4);
     }
     
@@ -496,7 +496,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.BaseSubject, Order.REVERSE)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid4, uid1, uid3);
     }
     
@@ -505,7 +505,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.MailboxFrom, Order.NATURAL)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid4, uid1);
     }
     
@@ -514,7 +514,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.MailboxFrom, Order.REVERSE)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid4, uid3);
     }
     
@@ -523,7 +523,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.MailboxCc, Order.NATURAL)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid3, uid4);
     }
     
@@ -532,7 +532,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.MailboxCc, Order.REVERSE)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid4, uid1);
     }
     
@@ -541,7 +541,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.MailboxTo, Order.NATURAL)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid4, uid1, uid3);
     }
     
@@ -550,7 +550,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.MailboxTo, Order.REVERSE)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid1, uid4);
     }
     
@@ -559,7 +559,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.DisplayTo, Order.NATURAL)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid4, uid1, uid3);
     }
     
@@ -568,7 +568,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.DisplayTo, Order.REVERSE)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid1, uid4);
     }
     
@@ -577,7 +577,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.DisplayFrom, Order.NATURAL)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid4, uid1);
     }
     
@@ -586,7 +586,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.DisplayFrom, Order.REVERSE)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid4, uid3);
     }
     
@@ -595,7 +595,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, Order.NATURAL)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid1, uid4);
     }
     
@@ -604,7 +604,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, Order.REVERSE)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid4, uid1, uid3);
     }
     
@@ -613,7 +613,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.Size, Order.NATURAL)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid4, uid1);
     }
     
@@ -622,7 +622,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery(SearchQuery.all());
         query.setSorts(ImmutableList.of(new Sort(SortClause.Size, Order.REVERSE)));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid1, uid3, uid4);
     }
     
@@ -631,7 +631,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = new SearchQuery();
         query.andCriteria(SearchQuery.not(SearchQuery.uid(new SearchQuery.UidRange[] { new SearchQuery.UidRange(uid1)})));
 
-        Iterator<MessageUid> result = index.search(session, mailbox, query);
+        Stream<MessageUid> result = index.search(session, mailbox, query);
         assertThat(result).containsExactly(uid3, uid4);
     }
 }

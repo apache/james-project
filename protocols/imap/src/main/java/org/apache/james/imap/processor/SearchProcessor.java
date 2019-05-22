@@ -23,10 +23,9 @@ import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.TreeSet;
+import java.util.stream.Stream;
 
 import javax.mail.Flags.Flag;
 
@@ -68,6 +67,7 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> implements CapabilityImplementingProcessor {
@@ -94,27 +94,10 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
 
             final SearchQuery query = toQuery(searchKey, session);
             MailboxSession msession = ImapSessionUtils.getMailboxSession(session);
-            final Iterator<MessageUid> it = mailbox.search(query, msession);
-            
-            final Collection<Long> results = new TreeSet<>();
-            final Collection<MessageUid> uids = new TreeSet<>();
-            
-            while (it.hasNext()) {
-                final MessageUid uid = it.next();
-                final Long number;
-                if (useUids) {
-                    uids.add(uid);
-                    results.add(uid.asLong());
-                } else {
-                    final int msn = session.getSelected().msn(uid);
-                    number = (long) msn;
-                    if (number == SelectedMailbox.NO_SUCH_MESSAGE == false) {
-                        results.add(number);
-                    }
-                }
-                
-            }
-            
+
+            final Collection<MessageUid> uids = performUidSearch(mailbox, query, msession);
+            final Collection<Long> results = asResults(session, useUids, uids);
+
             // Check if the search did contain the MODSEQ searchkey. If so we need to include the highest mod in the response.
             //
             // See RFC4551: 3.4. MODSEQ Search Criterion in SEARCH
@@ -220,7 +203,27 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             session.setAttribute(SEARCH_MODSEQ, null);
         }
     }
-    
+
+    private Collection<Long> asResults(ImapSession session, boolean useUids, Collection<MessageUid> uids) {
+        if (useUids) {
+            return uids.stream()
+                .map(MessageUid::asLong)
+                .collect(Guavate.toImmutableList());
+        } else {
+            return uids.stream()
+                .map(uid -> session.getSelected().msn(uid))
+                .map(Integer::longValue)
+                .filter(msn -> msn != SelectedMailbox.NO_SUCH_MESSAGE)
+                .collect(Guavate.toImmutableList());
+        }
+    }
+
+    private Collection<MessageUid> performUidSearch(MessageManager mailbox, SearchQuery query, MailboxSession msession) throws MailboxException {
+        try (Stream<MessageUid> stream = mailbox.search(query, msession)) {
+            return stream.collect(Guavate.toImmutableList());
+        }
+    }
+
     private long[] toArray(Collection<Long> results) {
         return results.stream().mapToLong(x -> x).toArray();
     }
