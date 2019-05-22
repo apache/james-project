@@ -27,7 +27,6 @@ import java.util.Optional;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.james.jdkim.DKIMVerifier;
 import org.apache.james.jdkim.api.BodyHasher;
 import org.apache.james.jdkim.api.Headers;
@@ -38,6 +37,8 @@ import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * This mailet verify a message using the DKIM protocol

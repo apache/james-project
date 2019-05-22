@@ -19,8 +19,6 @@
 
 package org.apache.james.jdkim.mailets;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -39,9 +37,6 @@ import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
-import org.apache.commons.io.IOUtils;
 import org.apache.james.jdkim.DKIMSigner;
 import org.apache.james.jdkim.api.BodyHasher;
 import org.apache.james.jdkim.api.Headers;
@@ -49,13 +44,15 @@ import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.PermFailException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
-import org.bouncycastle.jce.provider.JCERSAPrivateCrtKey;
+
 import org.bouncycastle.openssl.PEMDecryptorProvider;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
+
+import com.github.fge.lambdas.Throwing;
 
 /**
  * This mailet sign a message using the DKIM protocol
@@ -167,14 +164,11 @@ public class DKIMSign extends GenericMailet {
         Object pemObject = pemParser.readObject();
         JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
         KeyPair keyPair;
-        if (pemObject instanceof PEMEncryptedKeyPair)
-        {
+        if (pemObject instanceof PEMEncryptedKeyPair) {
             PEMEncryptedKeyPair pemEncryptedKeyPair = (PEMEncryptedKeyPair) pemObject;
             PEMDecryptorProvider decProv = new JcePEMDecryptorProviderBuilder().build(passphrase);
             keyPair = converter.getKeyPair(pemEncryptedKeyPair.decryptKeyPair(decProv));
-        }
-        else
-        {
+        } else {
             keyPair = converter.getKeyPair((PEMKeyPair) pemObject);
         }
 
