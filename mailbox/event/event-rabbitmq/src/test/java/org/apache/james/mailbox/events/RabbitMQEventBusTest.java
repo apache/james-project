@@ -52,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.james.backend.rabbitmq.RabbitMQExtension;
 import org.apache.james.backend.rabbitmq.RabbitMQFixture;
 import org.apache.james.backend.rabbitmq.RabbitMQManagementAPI;
+import org.apache.james.backend.rabbitmq.SimpleConnectionPool;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.events.EventBusTestFixture.GroupA;
 import org.apache.james.mailbox.events.EventBusTestFixture.MailboxListenerCountingSuccessfulExecution;
@@ -65,6 +66,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.stubbing.Answer;
 
@@ -83,6 +85,21 @@ import reactor.rabbitmq.SenderOptions;
 class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract, GroupContract.MultipleEventBusGroupContract,
     KeyContract.SingleEventBusKeyContract, KeyContract.MultipleEventBusKeyContract,
     ErrorHandlingContract {
+
+    static class TestScopedRabbitMQExtension extends RabbitMQExtension {
+
+        @Override
+        public void beforeEach(ExtensionContext extensionContext) throws Exception {
+            super.beforeAll(extensionContext);
+            super.beforeEach(extensionContext);
+        }
+
+        @Override
+        public void afterEach(ExtensionContext context) {
+            super.afterEach(context);
+            super.afterAll(context);
+        }
+    }
 
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
@@ -128,7 +145,11 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     }
 
     private RabbitMQEventBus newEventBus() {
-        return new RabbitMQEventBus(rabbitMQExtension.getRabbitConnectionPool(), eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter, memoryEventDeadLetters, new NoopMetricFactory());
+        return newEventBus(rabbitMQExtension.getRabbitConnectionPool());
+    }
+
+    private RabbitMQEventBus newEventBus(SimpleConnectionPool connectionPool) {
+        return new RabbitMQEventBus(connectionPool, eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter, memoryEventDeadLetters, new NoopMetricFactory());
     }
 
     @Override
@@ -294,6 +315,38 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
         @Nested
         class SingleEventBus {
+
+            @Nested
+            class DispatchingWhenNetWorkIssue {
+
+                @RegisterExtension
+                TestScopedRabbitMQExtension rabbitMQNetWorkIssueExtension = new TestScopedRabbitMQExtension();
+
+                private RabbitMQEventBus rabbitMQEventBusWithNetWorkIssue;
+
+                @BeforeEach
+                void beforeEach() {
+                    rabbitMQEventBusWithNetWorkIssue = newEventBus(rabbitMQNetWorkIssueExtension.getRabbitConnectionPool());
+                }
+
+                @Test
+                void dispatchShouldWorkAfterNetworkIssuesForOldRegistration() throws Exception {
+                    rabbitMQEventBusWithNetWorkIssue.start();
+                    MailboxListener listener = newListener();
+                    rabbitMQEventBusWithNetWorkIssue.register(listener, GROUP_A);
+
+                    rabbitMQNetWorkIssueExtension.getRabbitMQ().pause();
+
+                    assertThatThrownBy(() -> rabbitMQEventBusWithNetWorkIssue.dispatch(EVENT, NO_KEYS).block())
+                        .isInstanceOf(RabbitFluxException.class);
+
+                    rabbitMQNetWorkIssueExtension.getRabbitMQ().unpause();
+
+                    rabbitMQEventBusWithNetWorkIssue.dispatch(EVENT, NO_KEYS).block();
+                    assertThatListenerReceiveOneEvent(listener);
+                }
+            }
+
             @Test
             void startShouldCreateEventExchange() {
                 eventBus.start();
