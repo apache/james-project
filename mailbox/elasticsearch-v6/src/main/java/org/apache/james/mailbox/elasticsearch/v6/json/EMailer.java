@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 
-public class EMailer implements Serializable {
+public class EMailer implements SerializableMessage {
 
     private final String name;
     private final String address;

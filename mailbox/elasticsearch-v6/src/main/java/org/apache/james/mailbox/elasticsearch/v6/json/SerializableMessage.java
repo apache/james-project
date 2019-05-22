@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.elasticsearch.v6.json;
 
-public interface Serializable {
+public interface SerializableMessage {
 
     String serialize();
 }

@@ -62,7 +62,7 @@ public class MessageUpdateJson {
 
     @JsonProperty(JsonMessageConstants.IS_UNREAD)
     public boolean isUnRead() {
-        return ! flags.contains(Flags.Flag.SEEN);
+        return !flags.contains(Flags.Flag.SEEN);
     }
 
 

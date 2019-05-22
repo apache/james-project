@@ -52,8 +52,8 @@ import org.elasticsearch.index.query.QueryBuilders;
 
 public class CriterionConverter {
 
-    private final Map<Class<?>, Function<SearchQuery.Criterion, QueryBuilder>> criterionConverterMap;
-    private final Map<Class<?>, BiFunction<String, SearchQuery.HeaderOperator, QueryBuilder>> headerOperatorConverterMap;
+    private final Map<Class<?>, Function<Criterion, QueryBuilder>> criterionConverterMap;
+    private final Map<Class<?>, BiFunction<String, HeaderOperator, QueryBuilder>> headerOperatorConverterMap;
 
     public CriterionConverter() {
         criterionConverterMap = new HashMap<>();
@@ -118,7 +118,7 @@ public class CriterionConverter {
         headerOperatorConverterMap.put(type, (BiFunction<String, HeaderOperator, QueryBuilder>) f);
     }
 
-    public QueryBuilder convertCriterion(SearchQuery.Criterion criterion) {
+    public QueryBuilder convertCriterion(Criterion criterion) {
         return criterionConverterMap.get(criterion.getClass()).apply(criterion);
     }
 

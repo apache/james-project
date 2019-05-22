@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 
-public class Subjects implements Serializable {
+public class Subjects implements SerializableMessage {
 
     public static Subjects from(Set<String> subjects) {
         Preconditions.checkNotNull(subjects, "'subjects' is mandatory");

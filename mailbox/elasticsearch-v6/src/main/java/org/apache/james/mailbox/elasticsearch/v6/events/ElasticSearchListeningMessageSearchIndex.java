@@ -152,34 +152,36 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
 
     @Override
     public void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) throws IOException {
-            elasticSearchIndexer.delete(expungedUids.stream()
-                .map(uid ->  indexIdFor(mailbox, uid))
-                .collect(Guavate.toImmutableList()));
+            elasticSearchIndexer
+                .delete(expungedUids.stream()
+                    .map(uid ->  indexIdFor(mailbox, uid))
+                    .collect(Guavate.toImmutableList()));
     }
 
     @Override
     public void deleteAll(MailboxSession session, Mailbox mailbox) {
-            elasticSearchIndexer.deleteAllMatchingQuery(
-                termQuery(
-                    JsonMessageConstants.MAILBOX_ID,
-                    mailbox.getMailboxId().serialize()));
+            elasticSearchIndexer
+                .deleteAllMatchingQuery(
+                    termQuery(
+                        JsonMessageConstants.MAILBOX_ID,
+                        mailbox.getMailboxId().serialize()));
     }
 
     @Override
     public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws IOException {
-            elasticSearchIndexer.update(updatedFlagsList.stream()
-                .map(Throwing.<UpdatedFlags, UpdatedRepresentation>function(
-                    updatedFlags -> createUpdatedDocumentPartFromUpdatedFlags(mailbox, updatedFlags))
-                    .sneakyThrow())
-                .collect(Guavate.toImmutableList()));
+            elasticSearchIndexer
+                .update(updatedFlagsList.stream()
+                    .map(Throwing.<UpdatedFlags, UpdatedRepresentation>function(
+                            updatedFlags -> createUpdatedDocumentPartFromUpdatedFlags(mailbox, updatedFlags))
+                        .sneakyThrow())
+                    .collect(Guavate.toImmutableList()));
     }
 
     private UpdatedRepresentation createUpdatedDocumentPartFromUpdatedFlags(Mailbox mailbox, UpdatedFlags updatedFlags) throws JsonProcessingException {
             return new UpdatedRepresentation(
                 indexIdFor(mailbox, updatedFlags.getUid()),
-                    messageToElasticSearchJson.getUpdatedJsonMessagePart(
-                        updatedFlags.getNewFlags(),
-                        updatedFlags.getModSeq()));
+                messageToElasticSearchJson
+                    .getUpdatedJsonMessagePart(updatedFlags.getNewFlags(), updatedFlags.getModSeq()));
     }
 
     private String indexIdFor(Mailbox mailbox, MessageUid uid) {
