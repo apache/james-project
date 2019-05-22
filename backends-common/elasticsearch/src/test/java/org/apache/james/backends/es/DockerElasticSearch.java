@@ -61,10 +61,14 @@ public class DockerElasticSearch {
     private final DockerGenericContainer eSContainer;
 
     public DockerElasticSearch() {
-        this.eSContainer = new DockerGenericContainer(Images.ELASTICSEARCH_6)
+        this(Images.ELASTICSEARCH_6);
+    }
+
+    public DockerElasticSearch(String imageName) {
+        this.eSContainer = new DockerGenericContainer(imageName)
+            .withExposedPorts(ES_HTTP_PORT)
             .withEnv("discovery.type", "single-node")
             .withAffinityToContainer()
-            .withExposedPorts(ES_HTTP_PORT)
             .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     }
 
