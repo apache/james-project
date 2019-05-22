@@ -66,7 +66,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKey", TESTING_PEM_FILE)
+                .setProperty("privateKeyFilepath", TESTING_PEM_FILE)
                 .build();
 
         mailet.init(mci);
@@ -115,7 +115,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; t=" + ((System.currentTimeMillis() / 1000) + 1000) + "; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKey", TESTING_PEM_FILE)
+                .setProperty("privateKeyFilepath", TESTING_PEM_FILE)
                 .build();
 
         mailet.init(mci);
@@ -161,7 +161,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; t=; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKey", TESTING_PEM_FILE)
+                .setProperty("privateKeyFilepath", TESTING_PEM_FILE)
                 .build();
 
         mailet.init(mci);
@@ -214,7 +214,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKey", TESTING_PEM_FILE)
+                .setProperty("privateKeyFilepath", TESTING_PEM_FILE)
                 .build();
 
         mailet.init(mci);
@@ -261,7 +261,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKey", TESTING_PEM_FILE)
+                .setProperty("privateKeyFilepath", TESTING_PEM_FILE)
                 .build();
 
         Mail mail = FakeMail.builder()
@@ -309,7 +309,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKey", TESTING_PEM_FILE)
+                .setProperty("privateKeyFilepath", TESTING_PEM_FILE)
                 .build();
 
         Mail mail = FakeMail.builder()

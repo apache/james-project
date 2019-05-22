@@ -19,6 +19,7 @@
 
 package org.apache.james.jdkim.mailets;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,6 +33,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPrivateCrtKeySpec;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.mail.Header;
 import javax.mail.MessagingException;
@@ -58,19 +60,44 @@ import com.github.fge.lambdas.Throwing;
  * This mailet sign a message using the DKIM protocol
  * If the privateKey is encoded using a password then you can pass
  * the password as privateKeyPassword parameter.
- * 
- * Sample configuration:
- * 
+ *
+ * Sample configuration with inlined private key:
+ *
  * <pre><code>
  * &lt;mailet match=&quot;All&quot; class=&quot;DKIMSign&quot;&gt;
  *   &lt;signatureTemplate&gt;v=1; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;&lt;/signatureTemplate&gt;
- *   &lt;privateKey&gt;dkim-signing.pem&lt;/privateKey&gt;
+ *   &lt;privateKey&gt;
+ *   -----BEGIN RSA PRIVATE KEY-----
+ *   MIICXAIBAAKBgQDYDaYKXzwVYwqWbLhmuJ66aTAN8wmDR+rfHE8HfnkSOax0oIoT
+ *   M5zquZrTLo30870YMfYzxwfB6j/Nz3QdwrUD/t0YMYJiUKyWJnCKfZXHJBJ+yfRH
+ *   r7oW+UW3cVo9CG2bBfIxsInwYe175g9UjyntJpWueqdEIo1c2bhv9Mp66QIDAQAB
+ *   AoGBAI8XcwnZi0Sq5N89wF+gFNhnREFo3rsJDaCY8iqHdA5DDlnr3abb/yhipw0I
+ *   /1HlgC6fIG2oexXOXFWl+USgqRt1kTt9jXhVFExg8mNko2UelAwFtsl8CRjVcYQO
+ *   cedeH/WM/mXjg2wUqqZenBmlKlD6vNb70jFJeVaDJ/7n7j8BAkEA9NkH2D4Zgj/I
+ *   OAVYccZYH74+VgO0e7VkUjQk9wtJ2j6cGqJ6Pfj0roVIMUWzoBb8YfErR8l6JnVQ
+ *   bfy83gJeiQJBAOHk3ow7JjAn8XuOyZx24KcTaYWKUkAQfRWYDFFOYQF4KV9xLSEt
+ *   ycY0kjsdxGKDudWcsATllFzXDCQF6DTNIWECQEA52ePwTjKrVnLTfCLEG4OgHKvl
+ *   Zud4amthwDyJWoMEH2ChNB2je1N4JLrABOE+hk+OuoKnKAKEjWd8f3Jg/rkCQHj8
+ *   mQmogHqYWikgP/FSZl518jV48Tao3iXbqvU9Mo2T6yzYNCCqIoDLFWseNVnCTZ0Q
+ *   b+IfiEf1UeZVV5o4J+ECQDatNnS3V9qYUKjj/krNRD/U0+7eh8S2ylLqD3RlSn9K
+ *   tYGRMgAtUXtiOEizBH6bd/orzI9V9sw8yBz+ZqIH25Q=
+ *   -----END RSA PRIVATE KEY-----
+ *   &lt;/privateKey&gt;
  * &lt;/mailet&gt;
  * </code></pre>
- * 
- * By default the mailet assume that Javamail will convert LF to CRLF when sending 
- * so will compute the hash using converted newlines. If you don't want this 
- * behaviout then set forceCRLF attribute to false. 
+ *
+ * Sample configuration with file-provided private key:
+ *
+ * <pre><code>
+ * &lt;mailet match=&quot;All&quot; class=&quot;DKIMSign&quot;&gt;
+ *   &lt;signatureTemplate&gt;v=1; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;&lt;/signatureTemplate&gt;
+ *   &lt;privateKeyFilepath&gt;dkim-signing.pem&lt;/privateKeyFilepath&gt;
+ * &lt;/mailet&gt;
+ * </code></pre>
+ *
+ * By default the mailet assume that Javamail will convert LF to CRLF when sending
+ * so will compute the hash using converted newlines. If you don't want this
+ * behaviour then set forceCRLF attribute to false.
  */
 public class DKIMSign extends GenericMailet {
 
@@ -94,13 +121,18 @@ public class DKIMSign extends GenericMailet {
 
     public void init() throws MessagingException {
         signatureTemplate = getInitParameter("signatureTemplate");
-        String privateKeyFilePath = getInitParameter("privateKey");
-        String privateKeyPassword = getInitParameter("privateKeyPassword", null);
+        Optional<String> privateKeyPassword = getInitParameterAsOptional("privateKeyPassword");
         forceCRLF = getInitParameter("forceCRLF", true);
 
         try {
-            char[] passphrase = privateKeyPassword != null ? privateKeyPassword.toCharArray() : null;
-            privateKey = extractPrivateKey(ClassLoader.getSystemResourceAsStream(privateKeyFilePath), passphrase);
+            char[] passphrase = privateKeyPassword.map(String::toCharArray).orElse(null);
+            InputStream pem = getInitParameterAsOptional("privateKey")
+                .map(String::getBytes)
+                .map(ByteArrayInputStream::new)
+                .map(byteArrayInputStream -> (InputStream) byteArrayInputStream)
+                .orElseGet(Throwing.supplier(() -> ClassLoader.getSystemResourceAsStream(getInitParameter("privateKeyFilepath"))).sneakyThrow());
+
+            privateKey = extractPrivateKey(pem, passphrase);
         } catch (NoSuchAlgorithmException e) {
             throw new MessagingException("Unknown private key algorythm: " + e.getMessage(), e);
         } catch (InvalidKeySpecException e) {
@@ -160,21 +192,24 @@ public class DKIMSign extends GenericMailet {
     private PrivateKey extractPrivateKey(InputStream rawKey, char[] passphrase) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 
-        PEMParser pemParser = new PEMParser(new InputStreamReader(rawKey));
-        Object pemObject = pemParser.readObject();
-        JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
-        KeyPair keyPair;
-        if (pemObject instanceof PEMEncryptedKeyPair) {
-            PEMEncryptedKeyPair pemEncryptedKeyPair = (PEMEncryptedKeyPair) pemObject;
-            PEMDecryptorProvider decProv = new JcePEMDecryptorProviderBuilder().build(passphrase);
-            keyPair = converter.getKeyPair(pemEncryptedKeyPair.decryptKeyPair(decProv));
-        } else {
-            keyPair = converter.getKeyPair((PEMKeyPair) pemObject);
+        try (InputStreamReader pemReader = new InputStreamReader(rawKey)) {
+            try (PEMParser pemParser = new PEMParser(pemReader)) {
+                Object pemObject = pemParser.readObject();
+                JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
+                KeyPair keyPair;
+                if (pemObject instanceof PEMEncryptedKeyPair) {
+                    PEMEncryptedKeyPair pemEncryptedKeyPair = (PEMEncryptedKeyPair) pemObject;
+                    PEMDecryptorProvider decProv = new JcePEMDecryptorProviderBuilder().build(passphrase);
+                    keyPair = converter.getKeyPair(pemEncryptedKeyPair.decryptKeyPair(decProv));
+                } else {
+                    keyPair = converter.getKeyPair((PEMKeyPair) pemObject);
+                }
+
+                KeyFactory keyFac = KeyFactory.getInstance("RSA");
+                RSAPrivateCrtKeySpec privateKeySpec = keyFac.getKeySpec(keyPair.getPrivate(), RSAPrivateCrtKeySpec.class);
+
+                return keyFac.generatePrivate(privateKeySpec);
+            }
         }
-
-        KeyFactory keyFac = KeyFactory.getInstance("RSA");
-        RSAPrivateCrtKeySpec privateKeySpec = keyFac.getKeySpec(keyPair.getPrivate(), RSAPrivateCrtKeySpec.class);
-
-        return keyFac.generatePrivate(privateKeySpec);
     }
 }
