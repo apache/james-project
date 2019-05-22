@@ -379,6 +379,21 @@ public class MemoryTaskManagerTest {
     }
 
     @Test
+    public void awaitShouldAwaitWaitingTask() {
+        CountDownLatch latch = new CountDownLatch(1);
+        memoryTaskManager.submit(
+            () -> {
+                await(latch);
+                return Task.Result.COMPLETED;
+            });
+        latch.countDown();
+        TaskId task2 = memoryTaskManager.submit(
+            () -> Task.Result.COMPLETED);
+
+        assertThat(memoryTaskManager.await(task2).getStatus()).isEqualTo(TaskManager.Status.COMPLETED);
+    }
+
+    @Test
     public void submittedTaskShouldExecuteSequentially() {
         ConcurrentLinkedQueue<Integer> queue = new ConcurrentLinkedQueue<>();
 

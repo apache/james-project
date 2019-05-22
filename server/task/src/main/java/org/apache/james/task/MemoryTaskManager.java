@@ -19,6 +19,7 @@
 
 package org.apache.james.task;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,11 +35,14 @@ import javax.annotation.PreDestroy;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.WorkQueueProcessor;
 import reactor.core.scheduler.Schedulers;
 
 public class MemoryTaskManager implements TaskManager {
+    public static final Duration AWAIT_POLLING_DURATION = Duration.ofMillis(500);
+    public static final Duration NOW = Duration.ZERO;
     private final WorkQueueProcessor<TaskWithId> workQueue;
     private final TaskManagerWorker worker;
     private final ConcurrentHashMap<TaskId, TaskExecutionDetails> idToExecutionDetails;
@@ -115,9 +119,19 @@ public class MemoryTaskManager implements TaskManager {
 
     @Override
     public TaskExecutionDetails await(TaskId id) {
-        Optional.ofNullable(tasksResult.get(id))
-            .ifPresent(Throwing.<Mono<Task.Result>>consumer(Mono::block).orDoNothing());
-        return getExecutionDetails(id);
+        if (Optional.ofNullable(getExecutionDetails(id)).isPresent()) {
+            return Flux.interval(NOW, AWAIT_POLLING_DURATION, Schedulers.elastic())
+                .filter(ignore -> tasksResult.get(id) != null)
+                .map(ignore -> {
+                    Optional.ofNullable(tasksResult.get(id))
+                        .ifPresent(Throwing.<Mono<Task.Result>>consumer(Mono::block).orDoNothing());
+                    return getExecutionDetails(id);
+                })
+                .take(1)
+                .blockFirst();
+        } else {
+            return null;
+        }
     }
 
     @PreDestroy
