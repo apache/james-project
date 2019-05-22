@@ -108,6 +108,35 @@ public class MemoryTaskManagerTest {
     }
 
     @Test
+    public void completedTaskShouldNotBeCancelled() {
+        TaskId id = memoryTaskManager.submit(() -> Task.Result.COMPLETED);
+
+        awaitUntilTaskHasStatus(id, TaskManager.Status.COMPLETED);
+        memoryTaskManager.cancel(id);
+
+       try {
+           awaitUntilTaskHasStatus(id, TaskManager.Status.CANCELLED);
+       } catch (Exception e) {
+           //Should timeout
+       }
+        assertThat(memoryTaskManager.getExecutionDetails(id).getStatus()).isEqualTo(TaskManager.Status.COMPLETED);
+    }
+    @Test
+    public void failedTaskShouldNotBeCancelled() {
+        TaskId id = memoryTaskManager.submit(() -> Task.Result.PARTIAL);
+
+        awaitUntilTaskHasStatus(id, TaskManager.Status.FAILED);
+        memoryTaskManager.cancel(id);
+
+       try {
+           awaitUntilTaskHasStatus(id, TaskManager.Status.CANCELLED);
+       } catch (Exception e) {
+           //Should timeout
+       }
+        assertThat(memoryTaskManager.getExecutionDetails(id).getStatus()).isEqualTo(TaskManager.Status.FAILED);
+    }
+
+    @Test
     public void getStatusShouldBeCancelledWhenCancelled() {
         TaskId id = memoryTaskManager.submit(() -> {
             sleep(500);
