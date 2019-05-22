@@ -18,21 +18,27 @@
  ****************************************************************/
 package org.apache.james.task;
 
+import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MemoryTaskManagerWorker implements TaskManagerWorker {
     private static final boolean INTERRUPT_IF_RUNNING = true;
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryTaskManagerWorker.class);
+    public static final Duration CHECK_CANCELED_PERIOD = Duration.ofMillis(100);
+    public static final int FIRST = 1;
     private final ConcurrentHashMap<TaskId, CompletableFuture<Task.Result>> idToFuture = new ConcurrentHashMap<>();
 
     @Override
@@ -42,8 +48,12 @@ public class MemoryTaskManagerWorker implements TaskManagerWorker {
         idToFuture.put(taskWithId.getId(), futureResult);
 
         Mono<Task.Result> result = Mono.<Task.Result>fromFuture(futureResult)
-            .doOnError(res -> failed(updateDetails,
-                (logger, details) -> logger.error("Task was partially performed. Check logs for more details")))
+            .doOnError(res -> {
+                if (!(res instanceof CancellationException)) {
+                    failed(updateDetails,
+                        (logger, details) -> logger.error("Task was partially performed. Check logs for more details"));
+                }
+            })
             .doOnTerminate(() -> idToFuture.remove(taskWithId.getId()));
 
         return result;
@@ -79,11 +89,26 @@ public class MemoryTaskManagerWorker implements TaskManagerWorker {
             .ifPresent(future -> {
                 updateDetails.accept(details -> {
                     if (details.getStatus().equals(TaskManager.Status.WAITING) || details.getStatus().equals(TaskManager.Status.IN_PROGRESS)) {
-                        return details.cancel();
+                        return details.cancelRequested();
                     }
                     return details;
                 });
                 future.cancel(INTERRUPT_IF_RUNNING);
+
+                Flux.interval(CHECK_CANCELED_PERIOD)
+                    .map(ignore -> future.isCancelled())
+                    .filter(FunctionalUtils.identityPredicate())
+                    .take(FIRST)
+                    .subscribe(effectivelyCancelled -> {
+                        updateDetails.accept(details -> {
+                            if (details.getStatus().equals(TaskManager.Status.WAITING)
+                                || details.getStatus().equals(TaskManager.Status.IN_PROGRESS)
+                                || details.getStatus().equals(TaskManager.Status.CANCEL_REQUESTED)) {
+                                return details.cancelEffectively();
+                            }
+                            return details;
+                        });
+                    });
             });
     }
 

@@ -27,6 +27,7 @@ public interface TaskManager {
         WAITING("waiting"),
         IN_PROGRESS("inProgress"),
         COMPLETED("completed"),
+        CANCEL_REQUESTED("canceledRequested"),
         CANCELLED("canceled"),
         FAILED("failed");
 
