@@ -26,6 +26,8 @@ import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isIn;
+import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.Matchers.not;
 
 import java.util.UUID;
@@ -204,8 +206,14 @@ public class TasksRoutesTest {
 
     @Test
     public void deleteShouldCancelMatchingTask() {
+        CountDownLatch inProgressLatch = new CountDownLatch(1);
+
         TaskId taskId = taskManager.submit(() -> {
-            await();
+            try {
+                inProgressLatch.await();
+            } catch (InterruptedException e) {
+                //ignore
+            }
             return Task.Result.COMPLETED;
         });
 
@@ -216,7 +224,17 @@ public class TasksRoutesTest {
             .get("/" + taskId.getValue())
         .then()
             .statusCode(HttpStatus.OK_200)
+            .body("status", isOneOf("canceledRequested", "canceled"));
+
+        inProgressLatch.countDown();
+        when()
+            .get("/" + taskId.getValue())
+            .then()
+            .statusCode(HttpStatus.OK_200)
             .body("status", is("canceled"));
+
+
+
     }
 
     @Test

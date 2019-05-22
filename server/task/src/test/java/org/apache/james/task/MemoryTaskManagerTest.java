@@ -108,6 +108,35 @@ public class MemoryTaskManagerTest {
     }
 
     @Test
+    public void completedTaskShouldNotBeCancelled() {
+        TaskId id = memoryTaskManager.submit(() -> Task.Result.COMPLETED);
+
+        awaitUntilTaskHasStatus(id, TaskManager.Status.COMPLETED);
+        memoryTaskManager.cancel(id);
+
+       try {
+           awaitUntilTaskHasStatus(id, TaskManager.Status.CANCELLED);
+       } catch (Exception e) {
+           //Should timeout
+       }
+        assertThat(memoryTaskManager.getExecutionDetails(id).getStatus()).isEqualTo(TaskManager.Status.COMPLETED);
+    }
+    @Test
+    public void failedTaskShouldNotBeCancelled() {
+        TaskId id = memoryTaskManager.submit(() -> Task.Result.PARTIAL);
+
+        awaitUntilTaskHasStatus(id, TaskManager.Status.FAILED);
+        memoryTaskManager.cancel(id);
+
+       try {
+           awaitUntilTaskHasStatus(id, TaskManager.Status.CANCELLED);
+       } catch (Exception e) {
+           //Should timeout
+       }
+        assertThat(memoryTaskManager.getExecutionDetails(id).getStatus()).isEqualTo(TaskManager.Status.FAILED);
+    }
+
+    @Test
     public void getStatusShouldBeCancelledWhenCancelled() {
         TaskId id = memoryTaskManager.submit(() -> {
             sleep(500);
@@ -118,7 +147,35 @@ public class MemoryTaskManagerTest {
         memoryTaskManager.cancel(id);
 
         assertThat(memoryTaskManager.getExecutionDetails(id).getStatus())
+            .isIn(TaskManager.Status.CANCELLED, TaskManager.Status.CANCEL_REQUESTED);
+
+        awaitUntilTaskHasStatus(id, TaskManager.Status.CANCELLED);
+        assertThat(memoryTaskManager.getExecutionDetails(id).getStatus())
             .isEqualTo(TaskManager.Status.CANCELLED);
+
+    }
+
+    @Test
+    public void aWaitingTaskShouldBeCancelled() {
+        TaskId id = memoryTaskManager.submit(() -> {
+            sleep(500);
+            return Task.Result.COMPLETED;
+        });
+
+        TaskId idTaskToCancel = memoryTaskManager.submit(() -> Task.Result.COMPLETED);
+
+        memoryTaskManager.cancel(idTaskToCancel);
+
+        awaitUntilTaskHasStatus(id, TaskManager.Status.IN_PROGRESS);
+
+
+        assertThat(memoryTaskManager.getExecutionDetails(idTaskToCancel).getStatus())
+            .isIn(TaskManager.Status.CANCELLED, TaskManager.Status.CANCEL_REQUESTED);
+
+        awaitUntilTaskHasStatus(idTaskToCancel, TaskManager.Status.CANCELLED);
+        assertThat(memoryTaskManager.getExecutionDetails(idTaskToCancel).getStatus())
+            .isEqualTo(TaskManager.Status.CANCELLED);
+
     }
 
     @Test
@@ -345,17 +402,22 @@ public class MemoryTaskManagerTest {
     }
 
     @Test
-    public void listShouldBeEmptyWhenNoTasks() throws Exception {
+    public void listShouldBeEmptyWhenNoTasks() {
         assertThat(memoryTaskManager.list()).isEmpty();
     }
 
     @Test
-    public void listCancelledShouldBeEmptyWhenNoTasks() throws Exception {
+    public void listCancelledShouldBeEmptyWhenNoTasks() {
         assertThat(memoryTaskManager.list(TaskManager.Status.CANCELLED)).isEmpty();
     }
 
     @Test
-    public void awaitShouldNotThrowWhenCompletedTask() throws Exception {
+    public void listCancelRequestedShouldBeEmptyWhenNoTasks() {
+        assertThat(memoryTaskManager.list(TaskManager.Status.CANCEL_REQUESTED)).isEmpty();
+    }
+
+    @Test
+    public void awaitShouldNotThrowWhenCompletedTask() {
         TaskId taskId = memoryTaskManager.submit(
             () -> Task.Result.COMPLETED);
         memoryTaskManager.await(taskId);

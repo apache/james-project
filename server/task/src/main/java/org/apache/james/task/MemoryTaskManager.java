@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import javax.annotation.PreDestroy;
 
@@ -60,8 +61,24 @@ public class MemoryTaskManager implements TaskManager {
         worker = new MemoryTaskManagerWorker();
         workQueue
             .subscribeOn(Schedulers.single())
-            .filter(task -> !listIds(Status.CANCELLED).contains(task.getId()))
-            .subscribe(this::treatTask);
+            .filter(isTaskWaiting().or(isTaskRequestedForCancellation()))
+            .subscribe(this::sendTaskToWorker);
+    }
+
+    private void sendTaskToWorker(TaskWithId taskWithId) {
+        if (isTaskWaiting().test(taskWithId)) {
+            treatTask(taskWithId);
+        } else if (isTaskRequestedForCancellation().test(taskWithId)) {
+            updateDetails(taskWithId.getId()).accept(TaskExecutionDetails::cancelEffectively);
+        }
+    }
+
+    private Predicate<TaskWithId> isTaskWaiting() {
+        return task -> listIds(Status.WAITING).contains(task.getId());
+    }
+
+    private Predicate<TaskWithId> isTaskRequestedForCancellation() {
+        return task -> listIds(Status.CANCEL_REQUESTED).contains(task.getId());
     }
 
     private void treatTask(TaskWithId task) {
@@ -111,15 +128,18 @@ public class MemoryTaskManager implements TaskManager {
 
     @Override
     public void cancel(TaskId id) {
-        TaskExecutionDetails details = getExecutionDetails(id);
-        if (details.getStatus().equals(Status.IN_PROGRESS) || details.getStatus().equals(Status.WAITING)) {
-            worker.cancelTask(id, updateDetails(id));
-        }
+        Optional.ofNullable(idToExecutionDetails.get(id)).ifPresent(details -> {
+                if (details.getStatus().equals(Status.WAITING)) {
+                    updateDetails(id).accept(currentDetails -> currentDetails.cancelRequested());
+                }
+                worker.cancelTask(id, updateDetails(id));
+            }
+        );
     }
 
     @Override
     public TaskExecutionDetails await(TaskId id) {
-        if (Optional.ofNullable(getExecutionDetails(id)).isPresent()) {
+        if (Optional.ofNullable(idToExecutionDetails.get(id)).isPresent()) {
             return Flux.interval(NOW, AWAIT_POLLING_DURATION, Schedulers.elastic())
                 .filter(ignore -> tasksResult.get(id) != null)
                 .map(ignore -> {
