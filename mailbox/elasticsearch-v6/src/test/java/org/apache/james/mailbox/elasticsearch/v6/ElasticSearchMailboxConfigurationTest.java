@@ -27,7 +27,15 @@ import org.apache.james.backends.es.v6.ReadAliasName;
 import org.apache.james.backends.es.v6.WriteAliasName;
 import org.junit.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 public class ElasticSearchMailboxConfigurationTest {
+    @Test
+    public void elasticSearchMailboxConfigurationShouldRespectBeanContract() {
+        EqualsVerifier.forClass(ElasticSearchMailboxConfiguration.class)
+            .verify();
+    }
+
     @Test
     public void getIndexMailboxNameShouldReturnOldConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();

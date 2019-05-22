@@ -51,7 +51,7 @@ public class EMailer implements SerializableMessage {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public final boolean equals(Object o) {
         if (o instanceof EMailer) {
             EMailer otherEMailer = (EMailer) o;
             return Objects.equals(name, otherEMailer.name)
@@ -61,7 +61,7 @@ public class EMailer implements SerializableMessage {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hash(name, address);
     }
 
