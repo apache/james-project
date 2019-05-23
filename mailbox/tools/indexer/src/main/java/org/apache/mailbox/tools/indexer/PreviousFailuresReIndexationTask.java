@@ -21,44 +21,15 @@ package org.apache.mailbox.tools.indexer;
 
 import java.util.Optional;
 
-import org.apache.james.mailbox.indexer.IndexingDetailInformation;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class PreviousFailuresReIndexationTask implements Task {
-    public static final String PREVIOUS_FAILURES_INDEXING = "ReIndexPreviousFailures";
-
-    public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation, IndexingDetailInformation {
-        private final ReprocessingContext reprocessingContext;
-
-        AdditionalInformation(ReprocessingContext reprocessingContext) {
-            this.reprocessingContext = reprocessingContext;
-        }
-
-        public int getSuccessfullyReprocessMailCount() {
-            return reprocessingContext.successfullyReprocessedMailCount();
-        }
-
-        public int getFailedReprocessedMailCount() {
-            return reprocessingContext.failedReprocessingMailCount();
-        }
-        @JsonIgnore
-        public ReIndexingExecutionFailures failures() {
-            return reprocessingContext.failures();
-        }
-
-        @JsonProperty("failures")
-        public SerializableReIndexingExecutionFailures failuresAsJson() {
-            return SerializableReIndexingExecutionFailures.from(failures());
-        }
-    }
+    private static final String PREVIOUS_FAILURES_INDEXING = "ReIndexPreviousFailures";
 
     private final ReIndexerPerformer reIndexerPerformer;
-    private final AdditionalInformation additionalInformation;
+    private final ReprocessingContextInformation additionalInformation;
     private final ReprocessingContext reprocessingContext;
     private final ReIndexingExecutionFailures previousFailures;
 
@@ -66,7 +37,7 @@ public class PreviousFailuresReIndexationTask implements Task {
         this.reIndexerPerformer = reIndexerPerformer;
         this.previousFailures = previousFailures;
         this.reprocessingContext = new ReprocessingContext();
-        this.additionalInformation = new AdditionalInformation(reprocessingContext);
+        this.additionalInformation = new ReprocessingContextInformation(reprocessingContext);
     }
 
     @Override

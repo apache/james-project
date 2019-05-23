@@ -25,46 +25,19 @@ import javax.inject.Inject;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.indexer.IndexingDetailInformation;
-import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class UserReindexingTask implements Task {
 
     public static final String USER_RE_INDEXING = "userReIndexing";
 
-    public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation, IndexingDetailInformation {
-        private final ReprocessingContext reprocessingContext;
+    public static class AdditionalInformation extends ReprocessingContextInformation {
         private final User user;
 
         AdditionalInformation(ReprocessingContext reprocessingContext, User user) {
-            this.reprocessingContext = reprocessingContext;
+            super(reprocessingContext);
             this.user = user;
-        }
-
-        @Override
-        public int getSuccessfullyReprocessMailCount() {
-            return reprocessingContext.successfullyReprocessedMailCount();
-        }
-
-        @Override
-        public int getFailedReprocessedMailCount() {
-            return reprocessingContext.failedReprocessingMailCount();
-        }
-
-        @Override
-        @JsonIgnore
-        public ReIndexingExecutionFailures failures() {
-            return reprocessingContext.failures();
-        }
-
-        @JsonProperty("failures")
-        public SerializableReIndexingExecutionFailures failuresAsJson() {
-            return SerializableReIndexingExecutionFailures.from(failures());
         }
 
         public String getUser() {

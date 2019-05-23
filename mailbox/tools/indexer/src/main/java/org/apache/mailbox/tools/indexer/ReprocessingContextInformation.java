@@ -19,45 +19,38 @@
 
 package org.apache.mailbox.tools.indexer;
 
-import java.util.Optional;
-
-import javax.inject.Inject;
-
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.task.Task;
+import org.apache.james.mailbox.indexer.IndexingDetailInformation;
+import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.task.TaskExecutionDetails;
 
-public class FullReindexingTask implements Task {
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-    public static final String FULL_RE_INDEXING = "FullReIndexing";
-
-    private final ReIndexerPerformer reIndexerPerformer;
-    private final ReprocessingContextInformation additionalInformation;
+public class ReprocessingContextInformation implements TaskExecutionDetails.AdditionalInformation, IndexingDetailInformation {
     private final ReprocessingContext reprocessingContext;
 
-    @Inject
-    public FullReindexingTask(ReIndexerPerformer reIndexerPerformer) {
-        this.reIndexerPerformer = reIndexerPerformer;
-        this.reprocessingContext = new ReprocessingContext();
-        this.additionalInformation = new ReprocessingContextInformation(reprocessingContext);
+    ReprocessingContextInformation(ReprocessingContext reprocessingContext) {
+        this.reprocessingContext = reprocessingContext;
     }
 
     @Override
-    public Result run() {
-        try {
-            return reIndexerPerformer.reIndex(reprocessingContext);
-        } catch (MailboxException e) {
-            return Result.PARTIAL;
-        }
+    public int getSuccessfullyReprocessMailCount() {
+        return reprocessingContext.successfullyReprocessedMailCount();
     }
 
     @Override
-    public String type() {
-        return FULL_RE_INDEXING;
+    public int getFailedReprocessedMailCount() {
+        return reprocessingContext.failedReprocessingMailCount();
     }
 
     @Override
-    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(additionalInformation);
+    @JsonIgnore
+    public ReIndexingExecutionFailures failures() {
+        return reprocessingContext.failures();
+    }
+
+    @JsonProperty
+    public SerializableReIndexingExecutionFailures failuresAsJson() {
+        return SerializableReIndexingExecutionFailures.from(failures());
     }
 }
