@@ -17,49 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.elasticsearch.v6.json;
+package org.apache.james.mailbox.elasticsearch.json;
 
-import java.util.Objects;
+import org.junit.jupiter.api.Test;
 
-import org.apache.james.mime4j.stream.Field;
-import org.apache.james.mime4j.util.ByteSequence;
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class FieldImpl implements Field {
-    private final String name;
-    private final String body;
-
-    public FieldImpl(String name, String body) {
-        this.name = name;
-        this.body = body;
-    }
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public String getBody() {
-        return body;
-    }
-
-    @Override
-    public ByteSequence getRaw() {
-        return null;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, body);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof  FieldImpl) {
-            FieldImpl otherField = (FieldImpl) o;
-            return Objects.equals(name, otherField.name)
-                && Objects.equals(body, otherField.body);
-        }
-        return false;
+class EMailerTest {
+    @Test
+    void eMailerShouldRespectBeanContract() {
+        EqualsVerifier.forClass(EMailer.class)
+            .verify();
     }
 }

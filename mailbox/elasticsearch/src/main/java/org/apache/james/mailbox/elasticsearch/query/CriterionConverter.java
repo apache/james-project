@@ -45,14 +45,15 @@ import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.HeaderOperator;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 public class CriterionConverter {
 
-    private final Map<Class<?>, Function<SearchQuery.Criterion, QueryBuilder>> criterionConverterMap;
-    private final Map<Class<?>, BiFunction<String, SearchQuery.HeaderOperator, QueryBuilder>> headerOperatorConverterMap;
+    private final Map<Class<?>, Function<Criterion, QueryBuilder>> criterionConverterMap;
+    private final Map<Class<?>, BiFunction<String, HeaderOperator, QueryBuilder>> headerOperatorConverterMap;
 
     public CriterionConverter() {
         criterionConverterMap = new HashMap<>();
@@ -117,7 +118,7 @@ public class CriterionConverter {
         headerOperatorConverterMap.put(type, (BiFunction<String, HeaderOperator, QueryBuilder>) f);
     }
 
-    public QueryBuilder convertCriterion(SearchQuery.Criterion criterion) {
+    public QueryBuilder convertCriterion(Criterion criterion) {
         return criterionConverterMap.get(criterion.getClass()).apply(criterion);
     }
 
@@ -275,10 +276,12 @@ public class CriterionConverter {
     }
 
     private QueryBuilder manageAddressFields(String headerName, String value) {
-        return nestedQuery(getFieldNameFromHeaderName(headerName), boolQuery()
-            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.NAME, value))
-            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS, value))
-            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS + "." + RAW, value)));
+        return nestedQuery(getFieldNameFromHeaderName(headerName),
+            boolQuery()
+                .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.NAME, value))
+                .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS, value))
+                .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS + "." + RAW, value)),
+            ScoreMode.Avg);
     }
 
     private String getFieldNameFromHeaderName(String headerName) {

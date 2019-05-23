@@ -29,6 +29,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -159,7 +160,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void deleteShouldWork() {
+    public void deleteShouldWork() throws IOException {
         //Given
         BulkResponse expectedBulkResponse = mock(BulkResponse.class);
         when(elasticSearchIndexer.delete(any(List.class)))
@@ -174,7 +175,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void deleteShouldWorkWhenMultipleMessageIds() {
+    public void deleteShouldWorkWhenMultipleMessageIds() throws IOException {
         //Given
         MessageUid messageId2 = MessageUid.of(2);
         MessageUid messageId3 = MessageUid.of(3);
@@ -194,7 +195,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void deleteShouldPropagateExceptionWhenExceptionOccurs() {
+    public void deleteShouldPropagateExceptionWhenExceptionOccurs() throws IOException {
         //Given
         when(elasticSearchIndexer.delete(any(List.class)))
             .thenThrow(new ElasticsearchException(""));

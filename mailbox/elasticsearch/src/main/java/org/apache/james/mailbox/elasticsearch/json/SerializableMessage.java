@@ -17,36 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.elasticsearch.v6.json;
+package org.apache.james.mailbox.elasticsearch.json;
 
-import java.util.Set;
-import java.util.stream.Collectors;
+public interface SerializableMessage {
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.base.Preconditions;
-
-public class EMailers implements SerializableMessage {
-
-    public static EMailers from(Set<EMailer> emailers) {
-        Preconditions.checkNotNull(emailers, "'emailers' is mandatory");
-        return new EMailers(emailers);
-    }
-
-    private final Set<EMailer> emailers;
-
-    private EMailers(Set<EMailer> emailers) {
-        this.emailers = emailers;
-    }
-
-    @JsonValue
-    public Set<EMailer> getEmailers() {
-        return emailers;
-    }
-
-    @Override
-    public String serialize() {
-        return emailers.stream()
-            .map(EMailer::serialize)
-            .collect(Collectors.joining(" "));
-    }
+    String serialize();
 }

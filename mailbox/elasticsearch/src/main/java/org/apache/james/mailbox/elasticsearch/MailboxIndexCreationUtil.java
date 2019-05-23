@@ -19,22 +19,23 @@
 
 package org.apache.james.mailbox.elasticsearch;
 
+import java.io.IOException;
+
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.backends.es.ReadAliasName;
 import org.apache.james.backends.es.WriteAliasName;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RestHighLevelClient;
 
 public class MailboxIndexCreationUtil {
 
-    public static Client prepareClient(Client client,
+    public static RestHighLevelClient prepareClient(RestHighLevelClient client,
                                        ReadAliasName readAlias,
                                        WriteAliasName writeAlias,
                                        IndexName indexName,
-                                       ElasticSearchConfiguration configuration) {
-
+                                       ElasticSearchConfiguration configuration) throws IOException {
         return NodeMappingFactory.applyMapping(
             new IndexCreationFactory(configuration)
                 .useIndex(indexName)
@@ -42,15 +43,14 @@ public class MailboxIndexCreationUtil {
                 .addAlias(writeAlias)
                 .createIndexAndAliases(client),
             indexName,
-            MailboxElasticSearchConstants.MESSAGE_TYPE,
             MailboxMappingFactory.getMappingContent());
     }
 
-    public static Client prepareDefaultClient(Client client, ElasticSearchConfiguration configuration) {
+    public static RestHighLevelClient prepareDefaultClient(RestHighLevelClient client, ElasticSearchConfiguration configuration) throws IOException {
         return prepareClient(client,
             MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
             MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
             MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX,
-                configuration);
+            configuration);
     }
 }
