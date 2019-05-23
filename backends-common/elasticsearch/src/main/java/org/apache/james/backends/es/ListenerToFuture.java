@@ -17,33 +17,35 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.es.v6;
+package org.apache.james.backends.es;
 
-import org.junit.rules.ExternalResource;
+import java.util.concurrent.CompletableFuture;
 
-public class DockerElasticSearchRule extends ExternalResource {
+import org.elasticsearch.action.ActionListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    private final DockerElasticSearch dockerElasticSearch = DockerElasticSearchSingleton.INSTANCE;
+public class ListenerToFuture<T> implements ActionListener<T> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ListenerToFuture.class);
 
-    @Override
-    protected void before() throws Throwable {
-        dockerElasticSearch.start();
+    private CompletableFuture<T> future;
+
+    public ListenerToFuture() {
+        this.future = new CompletableFuture<>();
     }
 
     @Override
-    protected void after() {
-        dockerElasticSearch.cleanUpData();
+    public void onResponse(T t) {
+        future.complete(t);
     }
 
-    public ClientProvider clientProvider() {
-        return dockerElasticSearch.clientProvider();
-    }
-    
-    public void awaitForElasticSearch() {
-        dockerElasticSearch.awaitForElasticSearch();
+    @Override
+    public void onFailure(Exception e) {
+        LOGGER.warn("Error while waiting ElasticSearch query execution: ", e);
+        future.completeExceptionally(e);
     }
 
-    public DockerElasticSearch getDockerElasticSearch() {
-        return dockerElasticSearch;
+    public CompletableFuture<T> getFuture() {
+        return future;
     }
 }

@@ -17,10 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.es.v6;
+package org.apache.james.backends.es;
 
-public class WriteAliasName extends AliasName {
-    public WriteAliasName(String value) {
-        super(value);
+import org.junit.jupiter.api.Test;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
+
+class AliasNameTest {
+    @Test
+    void aliasNameShouldRespectBeanContract() {
+        EqualsVerifier.forClass(AliasName.class)
+            .verify();
     }
 }

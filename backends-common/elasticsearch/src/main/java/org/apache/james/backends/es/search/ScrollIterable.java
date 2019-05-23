@@ -20,29 +20,32 @@
 package org.apache.james.backends.es.search;
 
 import java.util.Iterator;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+import org.apache.james.backends.es.ListenerToFuture;
 import org.apache.james.util.streams.Iterators;
-import org.elasticsearch.action.ListenableActionFuture;
-import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
 
 public class ScrollIterable implements Iterable<SearchResponse> {
+    private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
 
-    private static final TimeValue TIMEOUT = new TimeValue(60000);
-    private final Client client;
-    private final SearchRequestBuilder searchRequestBuilder;
+    private final RestHighLevelClient client;
+    private final SearchRequest searchRequest;
 
-    public ScrollIterable(Client client, SearchRequestBuilder searchRequestBuilder) {
+    public ScrollIterable(RestHighLevelClient client, SearchRequest searchRequest) {
         this.client = client;
-        this.searchRequestBuilder = searchRequestBuilder;
+        this.searchRequest = searchRequest;
     }
 
     @Override
     public Iterator<SearchResponse> iterator() {
-        return new ScrollIterator(client, searchRequestBuilder);
+        return new ScrollIterator(client, searchRequest);
     }
 
     public Stream<SearchResponse> stream() {
@@ -50,26 +53,34 @@ public class ScrollIterable implements Iterable<SearchResponse> {
     }
 
     public static class ScrollIterator implements Iterator<SearchResponse> {
+        private final RestHighLevelClient client;
+        private CompletableFuture<SearchResponse> searchResponseFuture;
 
-        private final Client client;
-        private ListenableActionFuture<SearchResponse> searchResponseFuture;
-
-        public ScrollIterator(Client client, SearchRequestBuilder searchRequestBuilder) {
+        ScrollIterator(RestHighLevelClient client, SearchRequest searchRequest) {
             this.client = client;
-            this.searchResponseFuture = searchRequestBuilder.execute();
+            ListenerToFuture<SearchResponse> listener = new ListenerToFuture<>();
+            client.searchAsync(searchRequest, RequestOptions.DEFAULT, listener);
+
+            this.searchResponseFuture = listener.getFuture();
         }
 
         @Override
         public boolean hasNext() {
-            return !allSearchResponsesConsumed(searchResponseFuture.actionGet());
+            SearchResponse join = searchResponseFuture.join();
+            return !allSearchResponsesConsumed(join);
         }
 
         @Override
         public SearchResponse next() {
-            SearchResponse result = searchResponseFuture.actionGet();
-            searchResponseFuture =  client.prepareSearchScroll(result.getScrollId())
-                .setScroll(TIMEOUT)
-                .execute();
+            SearchResponse result = searchResponseFuture.join();
+            ListenerToFuture<SearchResponse> listener = new ListenerToFuture<>();
+            client.scrollAsync(
+                new SearchScrollRequest()
+                    .scrollId(result.getScrollId())
+                    .scroll(TIMEOUT),
+                RequestOptions.DEFAULT,
+                listener);
+            searchResponseFuture = listener.getFuture();
             return result;
         }
 
