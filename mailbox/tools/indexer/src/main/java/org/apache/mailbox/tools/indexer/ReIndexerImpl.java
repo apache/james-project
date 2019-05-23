@@ -27,6 +27,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.indexer.ReIndexer;
+import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -94,6 +95,11 @@ public class ReIndexerImpl implements ReIndexer {
         validateIdExists(mailboxId);
 
         return new SingleMessageReindexingTask(reIndexerPerformer, mailboxId, uid);
+    }
+
+    @Override
+    public Task reIndex(ReIndexingExecutionFailures previousFailures) {
+        return new PreviousFailuresReIndexationTask(reIndexerPerformer, previousFailures);
     }
 
     private void validateIdExists(MailboxId mailboxId) throws MailboxException {
