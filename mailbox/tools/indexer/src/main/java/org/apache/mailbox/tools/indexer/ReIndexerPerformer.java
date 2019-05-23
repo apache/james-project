@@ -83,6 +83,26 @@ public class ReIndexerPerformer {
         }
     }
 
+    Task.Result reIndex(ReprocessingContext reprocessingContext, ReIndexingExecutionFailures previousReIndexingFailures) {
+        return previousReIndexingFailures.failures()
+            .stream()
+            .map(previousFailure -> reIndex(reprocessingContext, previousFailure))
+            .reduce(Task::combine)
+            .orElse(Task.Result.COMPLETED);
+    }
+
+    private Task.Result reIndex(ReprocessingContext reprocessingContext, ReIndexingExecutionFailures.ReIndexingFailure previousReIndexingFailure) {
+        MailboxId mailboxId = previousReIndexingFailure.getMailboxId();
+        MessageUid uid = previousReIndexingFailure.getUid();
+        try {
+            return handleMessageReIndexing(mailboxId, uid, reprocessingContext);
+        } catch (MailboxException e) {
+            LOGGER.warn("ReIndexing failed for {} {}", mailboxId, uid, e);
+            reprocessingContext.recordFailureDetailsForMessage(mailboxId, uid);
+            return Task.Result.PARTIAL;
+        }
+    }
+
     Task.Result reIndex(ReprocessingContext reprocessingContext) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXING);
         LOGGER.info("Starting a full reindex");

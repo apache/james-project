@@ -25,8 +25,10 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxId;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 
 public class ReIndexingExecutionFailures {
@@ -40,12 +42,21 @@ public class ReIndexingExecutionFailures {
         }
 
         @JsonIgnore
-        public String getMailboxId() {
+        public String getSerializedMailboxId() {
             return mailboxId.serialize();
         }
 
-        public long getUid() {
+        public MailboxId getMailboxId() {
+            return mailboxId;
+        }
+
+        @JsonProperty("uid")
+        public long getSerializedUid() {
             return uid.asLong();
+        }
+
+        public MessageUid getUid() {
+            return uid;
         }
     }
 
@@ -56,8 +67,13 @@ public class ReIndexingExecutionFailures {
     }
 
     @JsonValue
-    public Multimap<String, ReIndexingFailure> failures() {
+    public Multimap<String, ReIndexingFailure> serializedFailures() {
         return failures.stream()
-            .collect(Guavate.toImmutableListMultimap(ReIndexingFailure::getMailboxId));
+            .collect(Guavate.toImmutableListMultimap(ReIndexingFailure::getSerializedMailboxId));
+    }
+
+    @JsonIgnore
+    public List<ReIndexingFailure> failures() {
+        return ImmutableList.copyOf(failures);
     }
 }
