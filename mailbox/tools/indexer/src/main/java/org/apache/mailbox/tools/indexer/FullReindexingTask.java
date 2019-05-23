@@ -31,21 +31,24 @@ public class FullReindexingTask implements Task {
 
     public static final String FULL_RE_INDEXING = "FullReIndexing";
 
-    public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
+    public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation, IndexingDetailInformation {
         private final ReprocessingContext reprocessingContext;
 
         AdditionalInformation(ReprocessingContext reprocessingContext) {
             this.reprocessingContext = reprocessingContext;
         }
 
+        @Override
         public int getSuccessfullyReprocessMailCount() {
             return reprocessingContext.successfullyReprocessedMailCount();
         }
 
+        @Override
         public int getFailedReprocessedMailCount() {
             return reprocessingContext.failedReprocessingMailCount();
         }
 
+        @Override
         public ReIndexingExecutionFailures failures() {
             return reprocessingContext.failures();
         }

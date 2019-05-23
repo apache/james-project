@@ -31,7 +31,7 @@ public class SingleMailboxReindexingTask implements Task {
 
     public static final String MAILBOX_RE_INDEXING = "mailboxReIndexing";
 
-    public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
+    public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation, IndexingDetailInformation {
         private final MailboxId mailboxId;
         private final ReprocessingContext reprocessingContext;
 
@@ -45,14 +45,17 @@ public class SingleMailboxReindexingTask implements Task {
             return mailboxId.serialize();
         }
 
+        @Override
         public int getSuccessfullyReprocessMailCount() {
             return reprocessingContext.successfullyReprocessedMailCount();
         }
 
+        @Override
         public int getFailedReprocessedMailCount() {
             return reprocessingContext.failedReprocessingMailCount();
         }
 
+        @Override
         public ReIndexingExecutionFailures failures() {
             return reprocessingContext.failures();
         }

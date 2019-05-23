@@ -32,7 +32,7 @@ public class UserReindexingTask implements Task {
 
     public static final String USER_RE_INDEXING = "userReIndexing";
 
-    public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
+    public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation, IndexingDetailInformation {
         private final ReprocessingContext reprocessingContext;
         private final User user;
 
@@ -41,12 +41,19 @@ public class UserReindexingTask implements Task {
             this.user = user;
         }
 
+        @Override
         public int getSuccessfullyReprocessMailCount() {
             return reprocessingContext.successfullyReprocessedMailCount();
         }
 
+        @Override
         public int getFailedReprocessedMailCount() {
             return reprocessingContext.failedReprocessingMailCount();
+        }
+
+        @Override
+        public ReIndexingExecutionFailures failures() {
+            return reprocessingContext.failures();
         }
 
         public String getUser() {

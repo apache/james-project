@@ -27,7 +27,7 @@ import org.apache.james.task.TaskExecutionDetails;
 public class PreviousFailuresReIndexationTask implements Task {
     public static final String PREVIOUS_FAILURES_INDEXING = "ReIndexPreviousFailures";
 
-    public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
+    public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation, IndexingDetailInformation {
         private final ReprocessingContext reprocessingContext;
 
         AdditionalInformation(ReprocessingContext reprocessingContext) {
