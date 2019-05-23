@@ -50,6 +50,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.backend.rabbitmq.RabbitMQExtension;
+import org.apache.james.backend.rabbitmq.RabbitMQExtension.DockerRestartPolicy;
 import org.apache.james.backend.rabbitmq.RabbitMQFixture;
 import org.apache.james.backend.rabbitmq.RabbitMQManagementAPI;
 import org.apache.james.backend.rabbitmq.SimpleConnectionPool;
@@ -66,11 +67,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.stubbing.Answer;
 
 import com.rabbitmq.client.Connection;
+
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
@@ -86,23 +87,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     KeyContract.SingleEventBusKeyContract, KeyContract.MultipleEventBusKeyContract,
     ErrorHandlingContract {
 
-    static class TestScopedRabbitMQExtension extends RabbitMQExtension {
-
-        @Override
-        public void beforeEach(ExtensionContext extensionContext) throws Exception {
-            super.beforeAll(extensionContext);
-            super.beforeEach(extensionContext);
-        }
-
-        @Override
-        public void afterEach(ExtensionContext context) {
-            super.afterEach(context);
-            super.afterAll(context);
-        }
-    }
-
     @RegisterExtension
-    static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
+    static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ();
 
     private RabbitMQEventBus eventBus;
     private RabbitMQEventBus eventBus2;
@@ -320,7 +306,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             class DispatchingWhenNetWorkIssue {
 
                 @RegisterExtension
-                TestScopedRabbitMQExtension rabbitMQNetWorkIssueExtension = new TestScopedRabbitMQExtension();
+                RabbitMQExtension rabbitMQNetWorkIssueExtension = RabbitMQExtension.defaultRabbitMQ()
+                    .restartPolicy(DockerRestartPolicy.PER_TEST);
 
                 private RabbitMQEventBus rabbitMQEventBusWithNetWorkIssue;
 

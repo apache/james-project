@@ -87,7 +87,7 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
         CassandraSchemaVersionModule.MODULE));
 
     @RegisterExtension
-    static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
+    static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ();
 
     private RabbitMQMailQueueFactory mailQueueFactory;
     private UpdatableTickingClock clock;
