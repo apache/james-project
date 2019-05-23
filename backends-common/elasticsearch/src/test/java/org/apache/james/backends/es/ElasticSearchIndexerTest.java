@@ -21,10 +21,12 @@ package org.apache.james.backends.es;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.awaitility.Awaitility.await;
+import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
+import org.awaitility.Awaitility;
 import org.awaitility.Duration;
+import org.awaitility.core.ConditionFactory;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -42,6 +44,11 @@ public class ElasticSearchIndexerTest {
     private static final int MINIMUM_BATCH_SIZE = 1;
     private static final IndexName INDEX_NAME = new IndexName("index_name");
     private static final WriteAliasName ALIAS_NAME = new WriteAliasName("alias_name");
+
+    private static final ConditionFactory CALMLY_AWAIT = Awaitility
+        .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
+        .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
+        .await();
 
     @Rule
     public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
@@ -147,7 +154,7 @@ public class ElasticSearchIndexerTest {
         elasticSearch.awaitForElasticSearch();
         
         try (RestHighLevelClient client = getESClient()) {
-            await().atMost(Duration.TEN_SECONDS)
+            CALMLY_AWAIT.atMost(Duration.TEN_SECONDS)
                 .until(() -> client.search(
                         new SearchRequest(INDEX_NAME.getValue())
                             .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
@@ -178,7 +185,7 @@ public class ElasticSearchIndexerTest {
         elasticSearch.awaitForElasticSearch();
         
         try (RestHighLevelClient client = getESClient()) {
-            await().atMost(Duration.TEN_SECONDS)
+            CALMLY_AWAIT.atMost(Duration.TEN_SECONDS)
                 .until(() -> client.search(
                     new SearchRequest(INDEX_NAME.getValue())
                         .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),

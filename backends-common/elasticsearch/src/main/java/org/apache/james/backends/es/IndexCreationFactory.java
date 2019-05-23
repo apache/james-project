@@ -83,7 +83,8 @@ public class IndexCreationFactory {
             Preconditions.checkNotNull(indexName);
             try {
                 createIndexIfNeeded(client, indexName, generateSetting(nbShards, nbReplica));
-                aliases.forEach(Throwing.consumer(alias -> createAliasIfNeeded(client, indexName, alias)));
+                aliases.forEach(Throwing.<AliasName>consumer(alias -> createAliasIfNeeded(client, indexName, alias))
+                    .sneakyThrow());
             } catch (IOException e) {
                 LOGGER.error("Error while creating index : ", e);
             }
