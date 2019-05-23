@@ -17,12 +17,41 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.mailbox.tools.indexer;
+package org.apache.james.mailbox.indexer;
 
-public interface IndexingDetailInformation {
-    int getSuccessfullyReprocessMailCount();
+import java.util.List;
 
-    int getFailedReprocessedMailCount();
+import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.MailboxId;
 
-    ReIndexingExecutionFailures failures();
+import com.google.common.collect.ImmutableList;
+
+public class ReIndexingExecutionFailures {
+    public static class ReIndexingFailure {
+        private final MailboxId mailboxId;
+        private final MessageUid uid;
+
+        public ReIndexingFailure(MailboxId mailboxId, MessageUid uid) {
+            this.mailboxId = mailboxId;
+            this.uid = uid;
+        }
+
+        public MailboxId getMailboxId() {
+            return mailboxId;
+        }
+
+        public MessageUid getUid() {
+            return uid;
+        }
+    }
+
+    private final List<ReIndexingFailure> failures;
+
+    public ReIndexingExecutionFailures(List<ReIndexingFailure> failures) {
+        this.failures = failures;
+    }
+
+    public List<ReIndexingFailure> failures() {
+        return ImmutableList.copyOf(failures);
+    }
 }

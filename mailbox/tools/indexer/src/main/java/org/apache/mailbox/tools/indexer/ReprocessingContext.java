@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.MailboxId;
 
 import com.google.common.collect.ImmutableList;

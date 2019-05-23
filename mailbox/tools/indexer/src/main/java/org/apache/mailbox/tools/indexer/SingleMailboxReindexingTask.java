@@ -23,9 +23,14 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.mailbox.indexer.IndexingDetailInformation;
+import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingleMailboxReindexingTask implements Task {
 
@@ -56,8 +61,14 @@ public class SingleMailboxReindexingTask implements Task {
         }
 
         @Override
+        @JsonIgnore
         public ReIndexingExecutionFailures failures() {
             return reprocessingContext.failures();
+        }
+
+        @JsonProperty("failures")
+        public SerializableReIndexingExecutionFailures failuresAsJson() {
+            return SerializableReIndexingExecutionFailures.from(failures());
         }
     }
 

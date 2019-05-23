@@ -22,6 +22,7 @@ package org.apache.mailbox.tools.indexer;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +33,7 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 
 import net.javacrumbs.jsonunit.core.Option;
 
-class ReIndexingExecutionFailuresTest {
+class SerializableReIndexingExecutionFailuresTest {
     private ObjectMapper objectMapper;
 
     @BeforeEach
@@ -45,7 +46,7 @@ class ReIndexingExecutionFailuresTest {
     void failuresShouldBeSerializedAsEmptyArrayWhenNone() throws Exception {
         ReIndexingExecutionFailures failures = new ReIndexingExecutionFailures(ImmutableList.of());
 
-        assertThatJson(objectMapper.writeValueAsString(failures))
+        assertThatJson(objectMapper.writeValueAsString(SerializableReIndexingExecutionFailures.from(failures)))
             .when(Option.IGNORING_ARRAY_ORDER)
             .isEqualTo("{}");
     }
@@ -60,7 +61,7 @@ class ReIndexingExecutionFailuresTest {
             new ReIndexingExecutionFailures.ReIndexingFailure(InMemoryId.of(41), MessageUid.of(18)),
             new ReIndexingExecutionFailures.ReIndexingFailure(InMemoryId.of(16), MessageUid.of(24))));
 
-        assertThatJson(objectMapper.writeValueAsString(failures))
+        assertThatJson(objectMapper.writeValueAsString(SerializableReIndexingExecutionFailures.from(failures)))
             .when(Option.IGNORING_ARRAY_ORDER)
             .isEqualTo("{" +
                 "  \"45\":[{\"uid\":34}, {\"uid\":33}]," +
