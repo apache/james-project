@@ -23,13 +23,15 @@ import java.util.Arrays;
 import java.util.List;
 
 public interface TaskManager {
+    boolean FINISHED = true;
+
     enum Status {
-        WAITING("waiting"),
-        IN_PROGRESS("inProgress"),
-        COMPLETED("completed"),
-        CANCEL_REQUESTED("canceledRequested"),
-        CANCELLED("canceled"),
-        FAILED("failed");
+        WAITING("waiting", !FINISHED),
+        IN_PROGRESS("inProgress", !FINISHED),
+        CANCEL_REQUESTED("canceledRequested", !FINISHED),
+        COMPLETED("completed", FINISHED),
+        CANCELLED("canceled", FINISHED),
+        FAILED("failed", FINISHED);
 
         public static Status fromString(String value) {
             return Arrays.stream(values())
@@ -40,13 +42,19 @@ public interface TaskManager {
         }
 
         private final String value;
+        private final boolean finished;
 
-        Status(String value) {
+        Status(String value, boolean finished) {
             this.value = value;
+            this.finished = finished;
         }
 
         public String getValue() {
             return value;
+        }
+
+        public boolean isFinished() {
+            return finished;
         }
     }
 

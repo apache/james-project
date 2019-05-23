@@ -99,7 +99,7 @@ public class TasksRoutesTest {
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(1))
             .body("[0].status", is(TaskManager.Status.IN_PROGRESS.getValue()))
-            .body("[0].taskId", is(taskId.getValue().toString()))
+            .body("[0].taskId", is(taskId.asString()))
             .body("[0].class", is(not(empty())));
     }
 
@@ -130,7 +130,7 @@ public class TasksRoutesTest {
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(1))
             .body("[0].status", is(TaskManager.Status.IN_PROGRESS.getValue()))
-            .body("[0].taskId", is(taskId.getValue().toString()))
+            .body("[0].taskId", is(taskId.asString()))
             .body("[0].type", is(Task.UNKNOWN));
     }
 

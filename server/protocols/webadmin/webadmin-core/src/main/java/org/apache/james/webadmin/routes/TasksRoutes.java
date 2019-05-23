@@ -21,7 +21,6 @@ package org.apache.james.webadmin.routes;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Supplier;
 
 import javax.inject.Inject;
@@ -172,7 +171,7 @@ public class TasksRoutes implements Routes {
     private TaskId getTaskId(Request req) {
         try {
             String id = req.params("id");
-            return new TaskId(UUID.fromString(id));
+            return TaskId.fromString(id);
         } catch (Exception e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)

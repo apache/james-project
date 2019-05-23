@@ -28,13 +28,16 @@ import org.apache.james.core.User;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.indexer.IndexingDetailInformation;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
+import org.apache.james.task.TaskNotFoundException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.TaskIdDto;
+import org.apache.james.webadmin.service.PreviousReIndexingService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
@@ -62,19 +65,22 @@ public class ReindexingRoutes implements Routes {
 
     private static final String BASE_PATH = "/mailboxes";
     private static final String USER_QUERY_PARAM = "user";
+    private static final String RE_INDEX_FAILED_MESSAGES_QUERY_PARAM = "reIndexFailedMessagesOf";
     private static final String MAILBOX_PARAM = ":mailbox";
     private static final String UID_PARAM = ":uid";
     private static final String MAILBOX_PATH = BASE_PATH + "/" + MAILBOX_PARAM;
     private static final String MESSAGE_PATH = MAILBOX_PATH + "/mails/" + UID_PARAM;
 
     private final TaskManager taskManager;
+    private final PreviousReIndexingService previousReIndexingService;
     private final MailboxId.Factory mailboxIdFactory;
     private final ReIndexer reIndexer;
     private final JsonTransformer jsonTransformer;
 
     @Inject
-    ReindexingRoutes(TaskManager taskManager, MailboxId.Factory mailboxIdFactory, ReIndexer reIndexer, JsonTransformer jsonTransformer) {
+    ReindexingRoutes(TaskManager taskManager, PreviousReIndexingService previousReIndexingService, MailboxId.Factory mailboxIdFactory, ReIndexer reIndexer, JsonTransformer jsonTransformer) {
         this.taskManager = taskManager;
+        this.previousReIndexingService = previousReIndexingService;
         this.mailboxIdFactory = mailboxIdFactory;
         this.reIndexer = reIndexer;
         this.jsonTransformer = jsonTransformer;
@@ -110,7 +116,15 @@ public class ReindexingRoutes implements Routes {
             dataType = "String",
             defaultValue = "none",
             example = "?user=toto%40domain.tld",
-            value = "optional. If present, only mailboxes of that user will be reIndexed.")
+            value = "optional. If present, only mailboxes of that user will be reIndexed."),
+        @ApiImplicitParam(
+            name = "reIndexFailedMessagesOf",
+            paramType = "query parameter",
+            dataType = "String",
+            defaultValue = "none",
+            example = "?reIndexFailedMessagesOf=3294a976-ce63-491e-bd52-1b6f465ed7a2",
+            value = "optional. References a previously run reIndexing task. if present, the messages that this previous " +
+                "task failed to index will be reIndexed.")
     })
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
@@ -118,10 +132,62 @@ public class ReindexingRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
     })
     private TaskIdDto reIndexAll(Request request, Response response) {
-        if (Strings.isNullOrEmpty(request.queryParams(USER_QUERY_PARAM))) {
-            return wrap(request, response, reIndexer::reIndex);
+        boolean userReIndexing = !Strings.isNullOrEmpty(request.queryParams(USER_QUERY_PARAM));
+        boolean indexingCorrection = !Strings.isNullOrEmpty(request.queryParams(RE_INDEX_FAILED_MESSAGES_QUERY_PARAM));
+        if (userReIndexing && indexingCorrection) {
+            return rejectInvalidQueryParameterCombination();
         }
-        return wrap(request, response, () -> reIndexer.reIndex(extractUser(request)));
+        if (userReIndexing) {
+            return wrap(request, response, () -> reIndexer.reIndex(extractUser(request)));
+        }
+        if (indexingCorrection) {
+                IndexingDetailInformation indexingDetailInformation = retrieveIndexingExecutionDetails(request);
+                return wrap(request, response, () -> reIndexer.reIndex(indexingDetailInformation.failures()));
+        }
+        return wrap(request, response, reIndexer::reIndex);
+    }
+
+    private IndexingDetailInformation retrieveIndexingExecutionDetails(Request request) {
+        TaskId taskId = getTaskId(request);
+        try {
+            return previousReIndexingService.retrieveIndexingExecutionDetails(taskId);
+        } catch (PreviousReIndexingService.NotAnIndexingRetryiableTask | PreviousReIndexingService.TaskNotYetFinishedException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("Invalid task id")
+                .cause(e)
+                .haltError();
+        } catch (TaskNotFoundException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("TaskId " + taskId.asString() + " does not exist")
+                .cause(e)
+                .haltError();
+        }
+    }
+
+    private TaskId getTaskId(Request request) {
+        try {
+            String id = request.queryParams(RE_INDEX_FAILED_MESSAGES_QUERY_PARAM);
+            return TaskId.fromString(id);
+        } catch (Exception e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .cause(e)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("Invalid task id")
+                .haltError();
+        }
+    }
+
+    private TaskIdDto rejectInvalidQueryParameterCombination() {
+        throw ErrorResponder.builder()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+            .message("Can not specify '" + USER_QUERY_PARAM + "' and '" + RE_INDEX_FAILED_MESSAGES_QUERY_PARAM + "' query parameters at the same time")
+            .haltError();
     }
 
     @POST

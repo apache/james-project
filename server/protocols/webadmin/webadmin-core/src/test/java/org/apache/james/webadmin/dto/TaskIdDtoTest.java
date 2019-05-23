@@ -24,8 +24,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-import java.util.UUID;
-
 import org.apache.james.task.TaskId;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Test;
@@ -38,7 +36,7 @@ public class TaskIdDtoTest {
     @Test
     public void respondShouldReturnCreatedWithTaskIdHeader() {
         Response response = mock(Response.class);
-        TaskId taskId = new TaskId(UUID.fromString(UID_VALUE));
+        TaskId taskId = TaskId.fromString(UID_VALUE);
 
         TaskIdDto.respond(response, taskId);
 
