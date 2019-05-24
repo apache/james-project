@@ -39,6 +39,7 @@ import org.apache.commons.compress.archivers.zip.ZipExtraField;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.junit.TemporaryFolderExtension;
+import org.apache.james.mailbox.backup.ZipAssert.EntryChecks;
 import org.apache.james.mailbox.backup.zip.SizeExtraField;
 import org.apache.james.mailbox.backup.zip.UidExtraField;
 import org.junit.jupiter.api.BeforeEach;
@@ -618,7 +619,7 @@ public class ZipAssertTest {
 
             try (ZipFile assertedZipFile = zipFile(destination, firstEntry, secondEntry)) {
                 assertThatThrownBy(() -> assertThatZip(assertedZipFile)
-                    .allSatisfies(entry -> entry.hasName("entry 1")))
+                    .allSatisfies(entry -> EntryChecks.hasName("entry 1")))
                     .isInstanceOf(AssertionError.class);
             }
         }

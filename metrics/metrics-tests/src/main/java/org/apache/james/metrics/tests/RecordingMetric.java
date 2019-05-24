@@ -25,12 +25,10 @@ import java.util.function.Consumer;
 import org.apache.james.metrics.api.Metric;
 
 public class RecordingMetric implements Metric {
-    private final String name;
     private final AtomicInteger value;
     private final Consumer<Integer> publishCallback;
 
-    public RecordingMetric(String name, Consumer<Integer> publishCallback) {
-        this.name = name;
+    public RecordingMetric(Consumer<Integer> publishCallback) {
         this.value = new AtomicInteger();
         this.publishCallback = publishCallback;
     }

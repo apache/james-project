@@ -91,7 +91,6 @@ class CassandraTableTest {
         assertThat(left.reduce(right)).isEqualByComparingTo(expectedResult);
     }
 
-    @SuppressWarnings("unused")
     private static Stream<Arguments> initializationStatusReduceShouldFallIntoTheRightState() {
         return Stream.of(
                 Arguments.of(ALREADY_DONE, ALREADY_DONE, ALREADY_DONE),

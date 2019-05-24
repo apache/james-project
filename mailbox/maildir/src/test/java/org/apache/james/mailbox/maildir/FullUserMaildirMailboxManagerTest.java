@@ -36,10 +36,10 @@ public class FullUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreM
     }
 
     @Nested
-    class BasicFeaturesTests extends MailboxManagerTest.BasicFeaturesTests {
+    class BasicFeaturesTests extends MailboxManagerTest<StoreMailboxManager>.BasicFeaturesTests {
         @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
         @Test
-        void renameMailboxShouldChangeTheMailboxPathOfAMailbox() {
+        protected void renameMailboxShouldChangeTheMailboxPathOfAMailbox() {
         }
     }
 

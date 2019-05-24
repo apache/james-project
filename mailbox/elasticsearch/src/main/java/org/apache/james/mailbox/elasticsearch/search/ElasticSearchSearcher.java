@@ -54,7 +54,7 @@ public class ElasticSearchSearcher {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchSearcher.class);
     private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
-    private static final ImmutableList STORED_FIELDS = ImmutableList.of(JsonMessageConstants.MAILBOX_ID,
+    private static final ImmutableList<String> STORED_FIELDS = ImmutableList.of(JsonMessageConstants.MAILBOX_ID,
         JsonMessageConstants.UID, JsonMessageConstants.MESSAGE_ID);
 
     private final RestHighLevelClient client;

@@ -42,6 +42,7 @@ class JMAPModuleTest {
         private EnumSet<MailboxManager.MessageCapabilities> mockMessageCapabilities;
         private EnumSet<MailboxManager.SearchCapabilities> mockSearchCapabilities;
 
+        @SuppressWarnings("unchecked")
         @BeforeEach
         void beforeEach() {
             mockMailboxManager = mock(MailboxManager.class);

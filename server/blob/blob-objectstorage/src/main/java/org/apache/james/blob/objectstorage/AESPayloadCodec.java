@@ -36,8 +36,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.objectstorage.crypto.CryptoConfig;
 import org.jclouds.io.Payloads;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.io.ByteSource;
 import com.google.common.io.FileBackedOutputStream;
@@ -47,7 +45,6 @@ import com.google.crypto.tink.subtle.AesGcmJce;
 
 public class AESPayloadCodec implements PayloadCodec {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AESPayloadCodec.class);
     private static final byte[] EMPTY_ASSOCIATED_DATA = new byte[0];
     private static final int PBKDF2_ITERATIONS = 65536;
     private static final int KEY_SIZE = 256;

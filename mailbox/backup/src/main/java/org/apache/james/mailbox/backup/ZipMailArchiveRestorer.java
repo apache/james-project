@@ -81,6 +81,9 @@ public class ZipMailArchiveRestorer implements MailArchiveRestorer {
                 case MAILBOX:
                     mailboxes.add((MailboxWithAnnotationsArchiveEntry) entry);
                     break;
+                case MESSAGE:
+                    //Ignore for know, TODO: implementation
+                    break;
                 case UNKNOWN:
                     String entryName = ((UnknownArchiveEntry) entry).getEntryName();
                     LOGGER.warn("unknown entry found in zip :" + entryName);

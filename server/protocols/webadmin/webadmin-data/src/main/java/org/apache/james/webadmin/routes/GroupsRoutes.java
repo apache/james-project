@@ -34,7 +34,6 @@ import javax.ws.rs.Produces;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.User;
-import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
@@ -84,16 +83,14 @@ public class GroupsRoutes implements Routes {
     private static final String ADDRESS_TYPE = "group";
 
     private final UsersRepository usersRepository;
-    private final DomainList domainList;
     private final JsonTransformer jsonTransformer;
     private final RecipientRewriteTable recipientRewriteTable;
 
     @Inject
     @VisibleForTesting
     GroupsRoutes(RecipientRewriteTable recipientRewriteTable, UsersRepository usersRepository,
-                 DomainList domainList, JsonTransformer jsonTransformer) {
+                 JsonTransformer jsonTransformer) {
         this.usersRepository = usersRepository;
-        this.domainList = domainList;
         this.jsonTransformer = jsonTransformer;
         this.recipientRewriteTable = recipientRewriteTable;
     }

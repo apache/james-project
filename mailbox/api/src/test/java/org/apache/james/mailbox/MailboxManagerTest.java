@@ -1194,7 +1194,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
-        void renameMailboxShouldChangeTheMailboxPathOfAMailbox() throws Exception {
+        protected void renameMailboxShouldChangeTheMailboxPathOfAMailbox() throws Exception {
             MailboxSession session = mailboxManager.createSystemSession(USER_1);
 
             MailboxPath mailboxPath1 = MailboxPath.forUser(USER_1, "mbx1");

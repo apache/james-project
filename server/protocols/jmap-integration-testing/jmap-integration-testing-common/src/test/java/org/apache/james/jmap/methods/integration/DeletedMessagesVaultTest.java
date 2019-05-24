@@ -57,6 +57,7 @@ import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.backup.ZipAssert;
+import org.apache.james.mailbox.backup.ZipAssert.EntryChecks;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -451,7 +452,7 @@ public abstract class DeletedMessagesVaultTest {
 
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
-                .allSatisfies(entry -> entry.hasName(messageIdOfHomer + ".eml"));
+                .allSatisfies(entry -> EntryChecks.hasName(messageIdOfHomer + ".eml"));
         }
     }
 
@@ -474,7 +475,7 @@ public abstract class DeletedMessagesVaultTest {
 
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
-                .allSatisfies(entry -> entry.hasName(messageIdOfHomer + ".eml"));
+                .allSatisfies(entry -> EntryChecks.hasName(messageIdOfHomer + ".eml"));
         }
     }
 
@@ -499,7 +500,7 @@ public abstract class DeletedMessagesVaultTest {
 
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
-                .allSatisfies(entry -> entry.hasName(messageIdOfHomer + ".eml"));
+                .allSatisfies(entry -> EntryChecks.hasName(messageIdOfHomer + ".eml"));
         }
     }
 
@@ -511,7 +512,6 @@ public abstract class DeletedMessagesVaultTest {
 
         bartSendMessageToHomerWithSubject(SECOND_SUBJECT);
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 2);
-        String secondMessageIdOfHomer = listMessageIdsForAccount(homerAccessToken).get(1);
 
         homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
@@ -621,7 +621,7 @@ public abstract class DeletedMessagesVaultTest {
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
-                .allSatisfies(entry -> entry.hasName(messageIdOfNotExpiredMessage + ".eml"));
+                .allSatisfies(entry -> EntryChecks.hasName(messageIdOfNotExpiredMessage + ".eml"));
         }
     }
 
@@ -707,7 +707,7 @@ public abstract class DeletedMessagesVaultTest {
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
-                .allSatisfies(entry -> entry.hasName(messageIdOfHomer + ".eml"));
+                .allSatisfies(entry -> EntryChecks.hasName(messageIdOfHomer + ".eml"));
         }
     }
 

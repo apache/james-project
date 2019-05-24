@@ -80,6 +80,7 @@ class GuiceJamesServerStartUpCheckTest {
 
         private static final String CHECK_NAME = "TestBlobExportMechanismStartUpCheck";
 
+        @SuppressWarnings("unused")
         private final BlobExportImplChoice blobExportImplChoice;
 
         @Inject

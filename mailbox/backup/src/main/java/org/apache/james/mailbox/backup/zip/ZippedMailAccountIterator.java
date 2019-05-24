@@ -42,7 +42,6 @@ public class ZippedMailAccountIterator implements MailArchiveIterator {
     private static final Logger LOGGER = LoggerFactory.getLogger(ZippedMailAccountIterator.class);
     private static final List<MailboxAnnotation> NO_ANNOTATION = ImmutableList.of();
     private final ZipEntryIterator zipEntryIterator;
-    private Optional<MailboxWithAnnotationsArchiveEntry> currentMailBox;
     private Optional<ZipEntry> next;
 
     public ZippedMailAccountIterator(ZipEntryIterator zipEntryIterator) {

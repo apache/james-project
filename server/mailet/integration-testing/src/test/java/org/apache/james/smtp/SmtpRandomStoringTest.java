@@ -154,13 +154,17 @@ public class SmtpRandomStoringTest {
 
         awaitAtMostTenSeconds
             .untilAsserted(() -> checkMailboxesHaveBeenFilled(connections, numberOfMails));
+
+        connections.forEach(Throwing.consumer(IMAPMessageReader::close));
     }
 
     private IMAPMessageReader createIMAPConnection(String username) {
         try {
-            return new IMAPMessageReader()
+            IMAPMessageReader reader = new IMAPMessageReader();
+            reader
                 .connect(LOCALHOST_IP, imapProbe.getImapPort())
                 .login(username, PASSWORD);
+            return reader;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

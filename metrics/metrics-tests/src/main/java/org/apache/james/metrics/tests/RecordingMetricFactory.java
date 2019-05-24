@@ -39,7 +39,7 @@ public class RecordingMetricFactory implements MetricFactory {
 
     @Override
     public Metric generate(String name) {
-        return new RecordingMetric(name, executionValue -> counters.put(name, executionValue));
+        return new RecordingMetric(executionValue -> counters.put(name, executionValue));
     }
 
     @Override

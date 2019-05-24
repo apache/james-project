@@ -239,10 +239,6 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
         return MessageManager.AppendCommand.builder().withFlags(flags1).build(MESSAGE_1.getFullContent());
     }
 
-    private MessageManager.AppendCommand getMessage2AppendCommand() throws IOException {
-        return MessageManager.AppendCommand.builder().withFlags(flags1).build(MESSAGE_2.getFullContent());
-    }
-
     private MessageManager.AppendCommand getMessage1OtherUserAppendCommand() throws IOException {
         return MessageManager.AppendCommand.builder().withFlags(flags1).build(MESSAGE_1_OTHER_USER.getFullContent());
     }

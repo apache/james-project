@@ -255,7 +255,8 @@ class LinshareAPITest {
         return Files.createTempFile("linshare-api-test", ".temp").toFile();
     }
 
-    private List<Document> sharedDocs(List<ReceivedShare>...shares) {
+    @SafeVarargs
+    private final List<Document> sharedDocs(List<ReceivedShare>... shares) {
         return ImmutableList.copyOf(shares).stream()
             .flatMap(Collection::stream)
             .map(ReceivedShare::getDocument)

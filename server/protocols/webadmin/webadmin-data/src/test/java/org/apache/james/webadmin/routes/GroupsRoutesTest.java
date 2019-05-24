@@ -115,7 +115,7 @@ class GroupsRoutesTest {
             usersRepository = MemoryUsersRepository.withVirtualHosting();
             usersRepository.setDomainList(domainList);
             MappingSourceModule mappingSourceModule = new MappingSourceModule();
-            createServer(new GroupsRoutes(memoryRecipientRewriteTable, usersRepository, domainList, new JsonTransformer(mappingSourceModule)));
+            createServer(new GroupsRoutes(memoryRecipientRewriteTable, usersRepository, new JsonTransformer(mappingSourceModule)));
         }
 
         @Test
@@ -452,7 +452,7 @@ class GroupsRoutesTest {
             domainList = mock(DomainList.class);
             memoryRecipientRewriteTable.setDomainList(domainList);
             Mockito.when(domainList.containsDomain(any())).thenReturn(true);
-            createServer(new GroupsRoutes(memoryRecipientRewriteTable, userRepository, domainList, new JsonTransformer()));
+            createServer(new GroupsRoutes(memoryRecipientRewriteTable, userRepository, new JsonTransformer()));
         }
 
         @Test

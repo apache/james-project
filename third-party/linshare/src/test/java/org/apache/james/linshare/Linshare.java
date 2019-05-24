@@ -49,7 +49,6 @@ public class Linshare {
 
     private Network network;
 
-    @SuppressWarnings("resource")
     public Linshare() {
         network = Network.newNetwork();
         linshareDatabase = createDockerDatabase();
@@ -90,7 +89,8 @@ public class Linshare {
         return "http://" + getIp() + ":" + getPort();
     }
 
-    private GenericContainer createDockerDatabase() {
+    @SuppressWarnings("resource")
+    private GenericContainer<?> createDockerDatabase() {
         return new GenericContainer<>("linagora/linshare-database:2.2")
             .withNetworkAliases("database", "linshare_database")
             .withEnv("PGDATA", "/var/lib/postgresql/data/pgdata")
@@ -99,26 +99,30 @@ public class Linshare {
             .withNetwork(network);
     }
 
-    private GenericContainer createDockerMongodb() {
+    @SuppressWarnings("resource")
+    private GenericContainer<?> createDockerMongodb() {
         return new GenericContainer<>("mongo:3.2")
             .withNetworkAliases("mongodb", "linshare_mongodb")
             .withCommand("mongod --smallfiles")
             .withNetwork(network);
     }
 
-    private GenericContainer createDockerLdap() {
+    @SuppressWarnings("resource")
+    private GenericContainer<?> createDockerLdap() {
         return new GenericContainer<>("linagora/linshare-ldap-for-tests:1.0")
             .withNetworkAliases("ldap")
             .withNetwork(network);
     }
 
-    private GenericContainer createDockerSmtp() {
+    @SuppressWarnings("resource")
+    private GenericContainer<?> createDockerSmtp() {
         return new GenericContainer<>(Images.FAKE_SMTP)
             .withNetworkAliases("smtp", "linshare_smtp")
             .withNetwork(network);
     }
 
-    private GenericContainer createDockerBackend() {
+    @SuppressWarnings("resource")
+    private GenericContainer<?> createDockerBackend() {
         return new GenericContainer<>(
             new ImageFromDockerfile()
                 .withFileFromClasspath("conf/log4j.properties", "backend/conf/log4j.properties")
@@ -142,7 +146,8 @@ public class Linshare {
             .withNetwork(network);
     }
 
-    private GenericContainer createLinshareBackendInit() {
+    @SuppressWarnings("resource")
+    private GenericContainer<?> createLinshareBackendInit() {
         return new GenericContainer<>("linagora/linshare-init:2.2")
             .withNetworkAliases("init")
             .withEnv("LS_HOST", "backend")

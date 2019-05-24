@@ -114,7 +114,6 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     }
 
     private Mono<BlobId> save(InputStream data, BlobId id) {
-        String containerName = this.containerName.value();
         HashingInputStream hashingInputStream = new HashingInputStream(Hashing.sha256(), data);
         Payload payload = payloadCodec.write(hashingInputStream);
         Blob blob = blobStore.blobBuilder(id.asString())
