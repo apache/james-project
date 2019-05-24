@@ -20,6 +20,7 @@
 package org.apache.james.modules;
 
 import org.apache.james.GuiceModuleTestExtension;
+import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;
@@ -41,5 +42,9 @@ public class RabbitMQExtension implements GuiceModuleTestExtension {
     @Override
     public Module getModule() {
         return new TestRabbitMQModule(rabbitMQRule.dockerRabbitMQ());
+    }
+
+    public DockerRabbitMQ dockerRabbitMQ() {
+        return rabbitMQRule.dockerRabbitMQ();
     }
 }

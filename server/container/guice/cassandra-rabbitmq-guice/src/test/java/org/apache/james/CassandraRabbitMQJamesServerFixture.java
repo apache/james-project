@@ -34,10 +34,14 @@ public class CassandraRabbitMQJamesServerFixture {
             .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE);
 
     public static JamesServerBuilder baseExtensionBuilder() {
+        return baseExtensionBuilder(new RabbitMQExtension());
+    }
+
+    public static JamesServerBuilder baseExtensionBuilder(RabbitMQExtension rabbitMQExtension) {
         return new JamesServerBuilder()
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
-            .extension(new RabbitMQExtension())
+            .extension(rabbitMQExtension)
             .server(CONFIGURATION_BUILDER);
     }
 }
