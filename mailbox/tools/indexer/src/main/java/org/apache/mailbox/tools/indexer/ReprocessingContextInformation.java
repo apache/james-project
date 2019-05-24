@@ -49,7 +49,7 @@ public class ReprocessingContextInformation implements TaskExecutionDetails.Addi
         return reprocessingContext.failures();
     }
 
-    @JsonProperty
+    @JsonProperty("failures")
     public SerializableReIndexingExecutionFailures failuresAsJson() {
         return SerializableReIndexingExecutionFailures.from(failures());
     }

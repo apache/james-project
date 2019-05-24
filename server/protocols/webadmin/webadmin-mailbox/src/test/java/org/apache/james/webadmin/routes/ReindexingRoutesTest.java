@@ -197,6 +197,40 @@ class ReindexingRoutesTest {
                     .body("submitDate", is(notNullValue()))
                     .body("completedDate", is(notNullValue()));
             }
+
+            @Test
+            void fullReprocessingShouldReturnTaskDetailsWhenFailing() throws Exception {
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
+                ComposedMessageId composedMessageId = mailboxManager.getMailbox(INBOX, systemSession)
+                    .appendMessage(
+                        MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
+                        systemSession);
+
+                doThrow(new RuntimeException())
+                    .when(searchIndex)
+                    .add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
+
+                String taskId = with()
+                    .post("/mailboxes?task=reIndex")
+                    .jsonPath()
+                    .get("taskId");
+
+                long uidAsLong = composedMessageId.getUid().asLong();
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", is("failed"))
+                    .body("taskId", is(notNullValue()))
+                    .body("type", is(FullReindexingTask.FULL_RE_INDEXING))
+                    .body("additionalInformation.successfullyReprocessMailCount", is(0))
+                    .body("additionalInformation.failedReprocessedMailCount", is(1))
+                    .body("additionalInformation.failures.\"" + mailboxId.serialize() + "\"[0].uid", is(Long.valueOf(uidAsLong).intValue()))
+                    .body("startedDate", is(notNullValue()))
+                    .body("submitDate", is(notNullValue()));
+            }
         }
 
         @Nested
@@ -343,6 +377,42 @@ class ReindexingRoutesTest {
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()))
                     .body("completedDate", is(notNullValue()));
+            }
+
+            @Test
+            void userReprocessingShouldReturnTaskDetailsWhenFailing() throws Exception {
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
+                ComposedMessageId composedMessageId = mailboxManager.getMailbox(INBOX, systemSession)
+                    .appendMessage(
+                        MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
+                        systemSession);
+
+                doThrow(new RuntimeException())
+                    .when(searchIndex)
+                    .add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
+
+                String taskId = with()
+                    .queryParam("user", USERNAME)
+                    .queryParam("task", "reIndex")
+                    .post("/mailboxes")
+                    .jsonPath()
+                    .get("taskId");
+
+                long uidAsLong = composedMessageId.getUid().asLong();
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", is("failed"))
+                    .body("taskId", is(notNullValue()))
+                    .body("type", is(UserReindexingTask.USER_RE_INDEXING))
+                    .body("additionalInformation.successfullyReprocessMailCount", is(0))
+                    .body("additionalInformation.failedReprocessedMailCount", is(1))
+                    .body("additionalInformation.failures.\"" + mailboxId.serialize() + "\"[0].uid", is(Long.valueOf(uidAsLong).intValue()))
+                    .body("startedDate", is(notNullValue()))
+                    .body("submitDate", is(notNullValue()));
             }
         }
 
@@ -498,8 +568,42 @@ class ReindexingRoutesTest {
                     .body("additionalInformation.successfullyReprocessMailCount", is(1))
                     .body("additionalInformation.failedReprocessedMailCount", is(0))
                     .body("startedDate", is(notNullValue()))
-                    .body("submitDate", is(notNullValue()))
-                    .body("completedDate", is(notNullValue()));
+                    .body("submitDate", is(notNullValue()));
+            }
+
+            @Test
+            void mailboxReprocessingShouldReturnTaskDetailsWhenFailing() throws Exception {
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
+                ComposedMessageId composedMessageId = mailboxManager.getMailbox(INBOX, systemSession)
+                    .appendMessage(
+                        MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
+                        systemSession);
+
+                doThrow(new RuntimeException())
+                    .when(searchIndex)
+                    .add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
+
+                String taskId = with()
+                    .queryParam("task", "reIndex")
+                    .post("/mailboxes/" + mailboxId.serialize())
+                    .jsonPath()
+                    .get("taskId");
+
+                long uidAsLong = composedMessageId.getUid().asLong();
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", is("failed"))
+                    .body("taskId", is(notNullValue()))
+                    .body("type", is(SingleMailboxReindexingTask.MAILBOX_RE_INDEXING))
+                    .body("additionalInformation.successfullyReprocessMailCount", is(0))
+                    .body("additionalInformation.failedReprocessedMailCount", is(1))
+                    .body("additionalInformation.failures.\"" + mailboxId.serialize() + "\"[0].uid", is(Long.valueOf(uidAsLong).intValue()))
+                    .body("startedDate", is(notNullValue()))
+                    .body("submitDate", is(notNullValue()));
             }
         }
 
@@ -999,6 +1103,51 @@ class ReindexingRoutesTest {
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()))
                     .body("completedDate", is(notNullValue()));
+            }
+
+            @Test
+            void mailboxReprocessingShouldReturnTaskDetailsWhenFailing() throws Exception {
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
+                ComposedMessageId composedMessageId = mailboxManager.getMailbox(INBOX, systemSession)
+                    .appendMessage(
+                        MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
+                        systemSession);
+
+                doThrow(new RuntimeException())
+                    .when(searchIndex)
+                    .add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
+
+                String taskId = with()
+                    .post("/mailboxes?task=reIndex")
+                    .jsonPath()
+                    .get("taskId");
+
+                with()
+                    .basePath(TasksRoutes.BASE)
+                    .get(taskId + "/await");
+
+                String fixingTaskId = with()
+                    .queryParam("reIndexFailedMessagesOf", taskId)
+                    .queryParam("task", "reIndex")
+                    .post("/mailboxes")
+                    .jsonPath()
+                    .get("taskId");
+
+                long uidAsLong = composedMessageId.getUid().asLong();
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(fixingTaskId + "/await")
+                .then()
+                    .body("status", is("failed"))
+                    .body("taskId", is(notNullValue()))
+                    .body("type", is("ReIndexPreviousFailures"))
+                    .body("additionalInformation.successfullyReprocessMailCount", is(0))
+                    .body("additionalInformation.failedReprocessedMailCount", is(1))
+                    .body("additionalInformation.failures.\"" + mailboxId.serialize() + "\"[0].uid", is(Long.valueOf(uidAsLong).intValue()))
+                    .body("startedDate", is(notNullValue()))
+                    .body("submitDate", is(notNullValue()));
             }
         }
 
