@@ -21,11 +21,11 @@ package org.apache.james.mpt.imapmailbox.external.james.host.docker;
 import java.io.IOException;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mpt.imapmailbox.external.james.ProvisioningException;
 import org.apache.james.mpt.imapmailbox.external.james.host.ProvisioningAPI;
 import org.apache.james.util.docker.DockerGenericContainer;
 import org.testcontainers.containers.Container;
-import org.testcontainers.shaded.org.apache.commons.lang.StringUtils;
 
 import com.google.common.collect.ImmutableList;
 
@@ -39,8 +39,8 @@ public class CliProvisioningAPI implements ProvisioningAPI {
     private final DockerGenericContainer container;
     private final String[] cmd;
 
-    private final static String[] jarCmd = {"java", "-jar", "/root/james-cli.jar"};
-    private final static String[] hostAndPort = {"-h", "127.0.0.1", "-p", "9999"};
+    private static final String[] jarCmd = {"java", "-jar", "/root/james-cli.jar"};
+    private static final String[] hostAndPort = {"-h", "127.0.0.1", "-p", "9999"};
 
     public CliProvisioningAPI(CliType cliType, DockerGenericContainer container) throws InterruptedException, ProvisioningException, IOException, IllegalArgumentException {
         this.container = container;

@@ -32,7 +32,6 @@ import com.google.inject.Injector;
 
 public class JamesDeploymentValidationTest extends DeploymentValidation {
 
-    private final String USER_ADDRESS = USER + "@" + DOMAIN;
     private ImapHostSystem system;
     private SmtpHostSystem smtpHostSystem;
     private final ExternalJamesConfiguration configuration = new ExternalJamesConfigurationEnvironnementVariables();

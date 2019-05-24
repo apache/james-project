@@ -117,6 +117,7 @@ public class MemoryTaskManagerTest {
        }
         assertThat(memoryTaskManager.getExecutionDetails(id).getStatus()).isEqualTo(TaskManager.Status.COMPLETED);
     }
+
     @Test
     public void failedTaskShouldNotBeCancelled() {
         TaskId id = memoryTaskManager.submit(() -> Task.Result.PARTIAL);

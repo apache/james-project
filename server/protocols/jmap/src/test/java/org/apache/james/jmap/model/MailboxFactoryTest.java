@@ -24,8 +24,6 @@ import java.util.Optional;
 
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.MailboxNamespace;
-import org.apache.james.jmap.utils.quotas.DefaultQuotaLoader;
-import org.apache.james.jmap.utils.quotas.QuotaLoader;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;

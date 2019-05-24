@@ -68,6 +68,7 @@ public class GetMailboxesMethodTest {
 
     private QuotaRootResolver quotaRootResolver;
     private QuotaManager quotaManager;
+
     @Before
     public void setup() throws Exception {
         clientId = ClientId.of("#0");

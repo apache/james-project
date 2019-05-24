@@ -265,7 +265,7 @@ class DomainsRoutesTest {
         }
 
         @Nested
-        class DomainAlias{
+        class DomainAlias {
             @Test
             void getAliasesShouldReturnNotFoundWhenDomainDoesNotExist() {
                 when()

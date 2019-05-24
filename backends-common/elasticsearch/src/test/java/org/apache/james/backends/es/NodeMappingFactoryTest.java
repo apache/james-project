@@ -63,7 +63,7 @@ public class NodeMappingFactoryTest {
 
         elasticSearch.awaitForElasticSearch();
 
-        assertThatCode(() ->NodeMappingFactory.applyMapping(clientProvider.get(),
+        assertThatCode(() -> NodeMappingFactory.applyMapping(clientProvider.get(),
             INDEX_NAME,
             getOtherMappingsSources()))
         .doesNotThrowAnyException();

@@ -90,6 +90,7 @@ public class MemoryTaskManagerWorkerTest {
         assertThat(idToDetails.get(id).getStatus()).isEqualTo(TaskManager.Status.IN_PROGRESS);
         latch.countDown();
     }
+
     @Test
     public void theWorkerShouldNotRunATaskRequestedForCancellation() {
         TaskId id = TaskId.generateTaskId();

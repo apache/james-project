@@ -67,8 +67,8 @@ public class EventDeadLettersIntegrationTest {
 
     public static class RetryEventsListenerGroup extends Group {}
 
-    public class RetryEventsListener implements MailboxListener.GroupMailboxListener {
-        final Group GROUP = new RetryEventsListenerGroup();
+    public static class RetryEventsListener implements MailboxListener.GroupMailboxListener {
+        static final Group GROUP = new RetryEventsListenerGroup();
 
         private int retriesBeforeSuccess;
         private Map<Event.EventId, Integer> retries;
