@@ -34,8 +34,8 @@ public class PreviousReIndexingService {
         }
     }
 
-    public static class NotAnIndexingRetryiableTask extends RuntimeException {
-        NotAnIndexingRetryiableTask(String type) {
+    public static class NotAnIndexingRetriableTask extends RuntimeException {
+        NotAnIndexingRetriableTask(String type) {
             super("'" + type + "' is not a valid type of task for retrying a failed indexing");
         }
     }
@@ -47,7 +47,7 @@ public class PreviousReIndexingService {
         this.taskManager = taskManager;
     }
 
-    public IndexingDetailInformation retrieveIndexingExecutionDetails(TaskId taskId) throws NotAnIndexingRetryiableTask, TaskNotFoundException, TaskNotYetFinishedException {
+    public IndexingDetailInformation retrieveIndexingExecutionDetails(TaskId taskId) throws NotAnIndexingRetriableTask, TaskNotFoundException, TaskNotYetFinishedException {
         TaskExecutionDetails executionDetails = taskManager.getExecutionDetails(taskId);
         if (!executionDetails.getStatus().isFinished()) {
             throw new TaskNotYetFinishedException(executionDetails.getStatus());
@@ -55,6 +55,6 @@ public class PreviousReIndexingService {
         return executionDetails.getAdditionalInformation()
             .filter(additionalInformation -> additionalInformation instanceof IndexingDetailInformation)
             .map(additionalInformation -> (IndexingDetailInformation) additionalInformation)
-            .orElseThrow(() -> new NotAnIndexingRetryiableTask(executionDetails.getType()));
+            .orElseThrow(() -> new NotAnIndexingRetriableTask(executionDetails.getType()));
     }
 }

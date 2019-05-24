@@ -141,8 +141,8 @@ public class ReindexingRoutes implements Routes {
             return wrap(request, response, () -> reIndexer.reIndex(extractUser(request)));
         }
         if (indexingCorrection) {
-                IndexingDetailInformation indexingDetailInformation = retrieveIndexingExecutionDetails(request);
-                return wrap(request, response, () -> reIndexer.reIndex(indexingDetailInformation.failures()));
+            IndexingDetailInformation indexingDetailInformation = retrieveIndexingExecutionDetails(request);
+            return wrap(request, response, () -> reIndexer.reIndex(indexingDetailInformation.failures()));
         }
         return wrap(request, response, reIndexer::reIndex);
     }
@@ -151,7 +151,7 @@ public class ReindexingRoutes implements Routes {
         TaskId taskId = getTaskId(request);
         try {
             return previousReIndexingService.retrieveIndexingExecutionDetails(taskId);
-        } catch (PreviousReIndexingService.NotAnIndexingRetryiableTask | PreviousReIndexingService.TaskNotYetFinishedException e) {
+        } catch (PreviousReIndexingService.NotAnIndexingRetriableTask | PreviousReIndexingService.TaskNotYetFinishedException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)

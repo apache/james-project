@@ -2392,7 +2392,11 @@ The scheduled task will have the following type `FullReIndexing` and the followi
 ```
 {
   "successfullyReprocessMailCount":18,
-  "failedReprocessedMailCount": 1
+  "failedReprocessedMailCount": 3,
+  "failures": {
+    "mbx1": [{"uid": 35}, {"uid": 45}],
+    "mbx2": [{"uid": 38}]
+  }
 }
 ```
 
@@ -2436,7 +2440,11 @@ The scheduled task will have the following type `userReIndexing` and the followi
 {
   "user":"bob@domain.com",
   "successfullyReprocessMailCount":18,
-  "failedReprocessedMailCount": 1
+  "failedReprocessedMailCount": 3,
+  "failures": {
+    "mbx1": [{"uid": 35}, {"uid": 45}],
+    "mbx2": [{"uid": 38}]
+  }
 }
 ```
 
@@ -2482,7 +2490,11 @@ The scheduled task will have the following type `mailboxReIndexing` and the foll
 {
   "mailboxId":"{mailboxId}",
   "successfullyReprocessMailCount":18,
-  "failedReprocessedMailCount": 1
+  "failedReprocessedMailCount": 3,
+  "failures": {
+    "mbx1": [{"uid": 35}, {"uid": 45}],
+    "mbx2": [{"uid": 38}]
+  }
 }
 ```
 
@@ -2492,6 +2504,48 @@ Warning: Canceling this task should be considered unsafe as it will leave the cu
 
 Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
 concurrent changes done during the reIndexing might be ignored.
+
+### Fixing previously failed ReIndexing
+
+Given `bbdb69c9-082a-44b0-a85a-6e33e74287a5` being a taskId generated for a reIndexing tasks
+
+```
+curl -XPOST http://ip:port/mailboxes?task=reIndex&reIndexFailedMessagesOf=bbdb69c9-082a-44b0-a85a-6e33e74287a5
+```
+
+Will schedule a task for reIndexing all the mails that this task failed to reIndex.
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positioned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `ReIndexPreviousFailures` and the following `additionalInformation`:
+
+```
+{
+  "successfullyReprocessMailCount":18,
+  "failedReprocessedMailCount": 3,
+  "failures": {
+    "mbx1": [{"uid": 35}, {"uid": 45}],
+    "mbx2": [{"uid": 38}]
+  }
+}
+```
 
 ### ReIndexing a single mail
 
