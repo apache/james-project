@@ -23,7 +23,9 @@ services:
       - "993:993"
 
   elasticsearch:
-    image: elasticsearch:2.4.6
+    image: elasticsearch:6.7.2
+    environment:
+      - discovery.type=single-node
 
   cassandra:
     image: cassandra:3.11.3

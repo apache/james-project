@@ -182,7 +182,7 @@ public class ElasticSearchConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String hostname = "myHost";
         configuration.addProperty("elasticsearch.masterHost", hostname);
-        int port = 9300;
+        int port = 9200;
         configuration.addProperty("elasticsearch.port", port);
 
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
@@ -196,7 +196,7 @@ public class ElasticSearchConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String hostname = "myHost";
         configuration.addProperty("elasticsearch.masterHost", hostname);
-        int port = 9300;
+        int port = 9200;
         configuration.addProperty("elasticsearch.port", port);
 
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
@@ -210,7 +210,7 @@ public class ElasticSearchConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String hostname = "myHost";
         configuration.addProperty("elasticsearch.masterHost", hostname);
-        int port = 9300;
+        int port = 9200;
         configuration.addProperty("elasticsearch.port", port);
         configuration.addProperty("elasticsearch.clusterName", null);
 
@@ -225,7 +225,7 @@ public class ElasticSearchConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String hostname = "myHost";
         configuration.addProperty("elasticsearch.masterHost", hostname);
-        int port = 9300;
+        int port = 9200;
         configuration.addProperty("elasticsearch.port", port);
         String clusterName = "myClusterName";
         configuration.addProperty("elasticsearch.clusterName", clusterName);

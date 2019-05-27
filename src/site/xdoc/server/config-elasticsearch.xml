@@ -44,7 +44,7 @@
 
       <dl>
           <dt><strong>elasticsearch.hosts</strong></dt>
-          <dd>List of comma separated hosts. An host is composed of an address and a port separated by a ':'. Example : elasticsearch.hosts=host1:9300,host2:9300</dd>
+          <dd>List of comma separated hosts. An host is composed of an address and a port separated by a ':'. Example : elasticsearch.hosts=host1:9200,host2:9200</dd>
       </dl>
 
       Other options includes :
