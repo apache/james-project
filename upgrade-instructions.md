@@ -14,6 +14,53 @@ Note: this section is in progress. It will be updated during all the development
 
 Changes to apply between 3.3.x and 3.4.x will be reported here.
 
+Change list:
+
+ - [Upgrade to ElasticSearch 6.7](#upgrade-to-elasticsearch-6.7)
+
+#### Upgrade to ElasticSearch 6.7
+
+Date: 27/05/2019
+
+SHA-1: bbdf88e56d7a22fe92e1360ef563004f3bc0dd98
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-2766
+
+Concerned products: (experimental) Cassandra-guice products.
+
+In version 3.3.0 indexing for the Cassandra product was handled using ElasticSearch 2.2 released on the 31 march 2016. Some major upgrades had been included in recent ElasticSearch version.
+
+Note that ElasticSearch APIs had been undergoing some major changes, making a smooth migration hard to provide. We proposed 2 migration strategies. A
+simple one leading to major search inconsistencies in the process, and another one mitigating these inconsistencies (but getting rid of them).
+
+##### Simple strategy
+
+Procedure:
+ - From a running James 3.3.0 cluster connected to a running ElacticSearch 2.2 cluster
+ - Start an empty ElasticSearch 6.7 cluster
+ - Shutdown James 3.3.0 cluster and start a James 3.4.0 cluster connected to ElasticSearch 6.7
+ - Search result will then be empty and thus innacurate
+ - Thus trigger a [Full ReIndexing](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails) to restore search consistency.
+
+Keep in mind that full reIndexing needs to process all users email and thus can be slow.
+
+Obviously this approach trades search consistency against ease of migration.
+
+If search consistency during the migration is important for you, consider the next approach
+
+##### Strategy for minimizing search inconsistency during the migration
+
+Procedure:
+ - From a running James 3.3.0 cluster connected to a running ElacticSearch 2.2 cluster
+ - Start an empty ElasticSearch 6.7 cluster
+ - Start a James 3.4.0 cluster connected to ElasticSearch 6.7 cluster as well as the Cassandra source of trust database. Traffic should be directed to the James 3.3.0 cluster.
+ - Trigger an offline [Full ReIndexing](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails) on the James 3.4.0 cluster
+ - Once done, direct the traffic to the James 3.4.0 cluster, and dispose the James 3.3.0 cluster as well as the ElasticSearch 2.2 cluster
+ - Search result will omit changes that took place during the switching process (starting from the reIndexing start)
+ - Thus trigger a [Full ReIndexing](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails) to restore search consistency.
+
+Keep in mind that full reIndexing needs to process all users email and thus can be slow.
+
 ## 3.3.0 version
 
 Changes to apply between 3.2.0 and 3.3.0 had been reported here.
