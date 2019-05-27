@@ -26,7 +26,7 @@ import org.junit.Test;
 public class TaskWithIdTest {
 
     @Test
-    public void twoTaskWithSameIdShouldBeEquals() {
+    public void twoTasksWithSameIdShouldBeEqual() {
         TaskId id = TaskId.generateTaskId();
         Task task1 = () -> Task.Result.COMPLETED;
         Task task2 = () -> Task.Result.COMPLETED;
@@ -36,7 +36,7 @@ public class TaskWithIdTest {
     }
 
     @Test
-    public void sameTaskWithDifferentIdShouldNotBeEquals() {
+    public void sameTaskWithDifferentIdShouldNotBeEqual() {
         TaskId id1 = TaskId.generateTaskId();
         TaskId id2 = TaskId.generateTaskId();
         Task task = () -> Task.Result.COMPLETED;
