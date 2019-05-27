@@ -137,8 +137,8 @@ $ mv keystore conf/keystore</code></pre>
 
                 <pre><code>docker run \
 --name james_run \
---port "25:25" --port "465:465" --port "587:587" \
---port "143:143"  --port "993:993" \
+-p "25:25" -p "465:465" -p "587:587" \
+-p "143:143"  -p "993:993" \
 --volume "$PWD/conf:/root/conf/" \
 --volume "$PWD/var:/root/var/" \
 linagora/james-jpa-guice:latest</code></pre>

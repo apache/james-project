@@ -47,10 +47,10 @@ $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
 You need to have a Cassandra, ElasticSearch and RabbitMQ instance running. You can either install the servers or launch them via docker:
 
 ```bash
-$ docker run -d --port 9042:9042 --name=cassandra cassandra:3.11.3
-$ docker run -d --port 9200:9200 --name=elasticsearch --env 'discovery.type=single-node' elasticsearch:6.7.2
-$ docker run -d --port 5672:5672 --port 15672:15672 --name=rabbitmq rabbitmq:3.7.7-management
-$ docker run -d --port 5000:5000 --port 8080:8080 --port 35357:35357 --name=swift linagora/openstack-keystone-swift:pike
+$ docker run -d -p 9042:9042 --name=cassandra cassandra:3.11.3
+$ docker run -d -p 9200:9200 --name=elasticsearch --env 'discovery.type=single-node' elasticsearch:6.7.2
+$ docker run -d -p 5672:5672 -p 15672:15672 --name=rabbitmq rabbitmq:3.7.7-management
+$ docker run -d -p 5000:5000 -p 8080:8080 -p 35357:35357 --name=swift linagora/openstack-keystone-swift:pike
 ```
 
 Once everything is set up, you just have to run the jar with:
@@ -73,7 +73,7 @@ objectstorage.s3.secretKey=verySecretKey1
 To use Scality S3 server you have to launch it instead of swift container:
 
 ```
-$ docker run -d --port 8080:8000 --name=s3 scality/s3server:6018536a
+$ docker run -d -p 8080:8000 --name=s3 scality/s3server:6018536a
 ```
 
 More informations about available options [here](https://hub.docker.com/r/scality/s3server).

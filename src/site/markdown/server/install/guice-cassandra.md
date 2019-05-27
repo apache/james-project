@@ -45,8 +45,8 @@ $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
 You need to have a Cassandra and an ElasticSearch instance running. You can either install the servers or launch them via docker:
 
 ```bash
-$ docker run -d --port 9042:9042 --name=cassandra cassandra:3.11.3
-$ docker run -d --port 9200:9200 --name=elasticsearch --env 'discovery.type=single-node' elasticsearch:6.7.2
+$ docker run -d -p 9042:9042 --name=cassandra cassandra:3.11.3
+$ docker run -d -p 9200:9200 --name=elasticsearch --env 'discovery.type=single-node' elasticsearch:6.7.2
 ```
 
 Once everything is set up, you just have to run the jar with:
