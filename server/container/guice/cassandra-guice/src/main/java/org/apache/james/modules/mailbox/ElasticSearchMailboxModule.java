@@ -37,6 +37,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.james.backends.es.ClientProviderImpl;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.elasticsearch.ElasticSearchMailboxConfiguration;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
@@ -134,6 +135,10 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class)
             .addBinding()
             .to(ElasticSearchMailboxIndexCreationPerformer.class);
+
+        Multibinder.newSetBinder(binder(), StartUpCheck.class)
+            .addBinding()
+            .to(ElasticSearchStartUpCheck.class);
     }
 
     @Provides

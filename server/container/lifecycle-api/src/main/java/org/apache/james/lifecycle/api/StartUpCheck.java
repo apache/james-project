@@ -19,6 +19,7 @@
 
 package org.apache.james.lifecycle.api;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import com.google.common.base.MoreObjects;
@@ -103,6 +104,24 @@ public interface StartUpCheck {
 
         public boolean isGood() {
             return resultType.equals(ResultType.GOOD);
+        }
+
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof CheckResult) {
+                CheckResult that = (CheckResult) o;
+
+                return Objects.equals(this.name, that.name)
+                    && Objects.equals(this.resultType, that.resultType)
+                    && Objects.equals(this.description, that.description);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(name, resultType, description);
         }
 
         @Override

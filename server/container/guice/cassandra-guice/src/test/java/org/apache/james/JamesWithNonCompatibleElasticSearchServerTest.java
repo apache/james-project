@@ -24,11 +24,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.backends.es.DockerElasticSearch;
+import org.apache.james.lifecycle.api.StartUpCheck;
+import org.apache.james.lifecycle.api.StartUpCheck.CheckResult;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.mailbox.ElasticSearchStartUpCheck;
 import org.apache.james.util.docker.Images;
-import org.elasticsearch.ElasticsearchStatusException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -58,7 +60,14 @@ class JamesWithNonCompatibleElasticSearchServerTest {
     @Test
     void jamesShouldStopWhenStartingWithANonCompatibleElasticSearchServer(GuiceJamesServer server) throws Exception {
         assertThatThrownBy(server::start)
-            .isInstanceOf(ElasticsearchStatusException.class);
+            .isInstanceOfSatisfying(
+                StartUpChecksPerformer.StartUpChecksException.class,
+                ex -> assertThat(ex.getBadChecks())
+                    .containsOnly(CheckResult.builder()
+                        .checkName(ElasticSearchStartUpCheck.CHECK_NAME)
+                        .resultType(StartUpCheck.ResultType.BAD)
+                        .description("ES version(2.4.6) is not compatible with the recommendation(6.7.2)")
+                        .build()));
 
         assertThat(server.isStarted())
             .isFalse();
