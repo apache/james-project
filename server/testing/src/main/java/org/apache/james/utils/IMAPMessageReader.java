@@ -193,7 +193,7 @@ public class IMAPMessageReader extends ExternalResource implements Closeable, Af
     @Override
     public void close() throws IOException {
         if (imapClient.isConnected()) {
-            imapClient.close();
+            imapClient.disconnect();
         }
     }
 
