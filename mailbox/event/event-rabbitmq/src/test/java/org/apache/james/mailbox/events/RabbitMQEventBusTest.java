@@ -87,23 +87,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     KeyContract.SingleEventBusKeyContract, KeyContract.MultipleEventBusKeyContract,
     ErrorHandlingContract {
 
-    static class RestartingRabbitMQExtension extends RabbitMQExtension {
-
-        @Override
-        public void beforeEach(ExtensionContext extensionContext) throws Exception {
-            getRabbitMQ().start();
-            super.beforeEach(extensionContext);
-        }
-
-        @Override
-        public void afterEach(ExtensionContext context) {
-            super.afterEach(context);
-            getRabbitMQ().stop();
-        }
-    }
-
     @RegisterExtension
-    static RestartingRabbitMQExtension rabbitMQExtension = new RestartingRabbitMQExtension();
+    static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
 
     private RabbitMQEventBus eventBus;
     private RabbitMQEventBus eventBus2;
