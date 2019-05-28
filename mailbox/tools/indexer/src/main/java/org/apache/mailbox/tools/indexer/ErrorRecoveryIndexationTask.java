@@ -25,15 +25,15 @@ import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
-public class PreviousFailuresReIndexationTask implements Task {
-    private static final String PREVIOUS_FAILURES_INDEXING = "ReIndexPreviousFailures";
+public class ErrorRecoveryIndexationTask implements Task {
+    private static final String PREVIOUS_FAILURES_INDEXING = "ErrorRecoveryIndexation";
 
     private final ReIndexerPerformer reIndexerPerformer;
     private final ReprocessingContextInformation additionalInformation;
     private final ReprocessingContext reprocessingContext;
     private final ReIndexingExecutionFailures previousFailures;
 
-    public PreviousFailuresReIndexationTask(ReIndexerPerformer reIndexerPerformer, ReIndexingExecutionFailures previousFailures) {
+    public ErrorRecoveryIndexationTask(ReIndexerPerformer reIndexerPerformer, ReIndexingExecutionFailures previousFailures) {
         this.reIndexerPerformer = reIndexerPerformer;
         this.previousFailures = previousFailures;
         this.reprocessingContext = new ReprocessingContext();

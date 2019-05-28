@@ -99,7 +99,7 @@ public class ReIndexerImpl implements ReIndexer {
 
     @Override
     public Task reIndex(ReIndexingExecutionFailures previousFailures) {
-        return new PreviousFailuresReIndexationTask(reIndexerPerformer, previousFailures);
+        return new ErrorRecoveryIndexationTask(reIndexerPerformer, previousFailures);
     }
 
     private void validateIdExists(MailboxId mailboxId) throws MailboxException {
