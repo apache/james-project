@@ -23,8 +23,6 @@ import static org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearche
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -33,8 +31,6 @@ import javax.inject.Singleton;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.lang3.time.DurationFormatUtils;
-import org.apache.james.backends.es.ClientProviderImpl;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.lifecycle.api.StartUpCheck;
@@ -62,9 +58,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
-
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class ElasticSearchMailboxModule extends AbstractModule {
 
@@ -190,27 +183,6 @@ public class ElasticSearchMailboxModule extends AbstractModule {
             LOGGER.warn("Could not find " + ELASTICSEARCH_CONFIGURATION_NAME + " configuration file. Providing a default ElasticSearchMailboxConfiguration");
             return ElasticSearchMailboxConfiguration.DEFAULT_CONFIGURATION;
         }
-    }
-
-    @Provides
-    @Singleton
-    protected RestHighLevelClient provideClient(ElasticSearchConfiguration configuration) {
-
-        Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
-        return Mono.fromCallable(() -> connectToCluster(configuration))
-            .doOnError(e -> LOGGER.warn("Error establishing ElasticSearch connection. Next retry scheduled in {}",
-                DurationFormatUtils.formatDurationWords(waitDelay.toMillis(), true, true),
-                e))
-            .retryBackoff(configuration.getMaxRetries(), waitDelay, waitDelay)
-            .publishOn(Schedulers.elastic())
-            .block();
-    }
-
-    private RestHighLevelClient connectToCluster(ElasticSearchConfiguration configuration) throws IOException {
-        LOGGER.info("Trying to connect to ElasticSearch service at {}", LocalDateTime.now());
-
-        return ClientProviderImpl.fromHosts(configuration.getHosts(), configuration.getClusterName())
-            .get();
     }
 
     @Provides
