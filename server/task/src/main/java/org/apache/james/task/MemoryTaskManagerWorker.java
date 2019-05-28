@@ -120,9 +120,7 @@ public class MemoryTaskManagerWorker implements TaskManagerWorker {
     }
 
     private boolean canBeCancelledEffectively(TaskExecutionDetails details) {
-        return details.getStatus().equals(TaskManager.Status.WAITING)
-            || details.getStatus().equals(TaskManager.Status.IN_PROGRESS)
-            || details.getStatus().equals(TaskManager.Status.CANCEL_REQUESTED);
+        return !details.getStatus().isFinished();
     }
 
     private void success(Consumer<TaskExecutionDetailsUpdater> updateDetails) {
