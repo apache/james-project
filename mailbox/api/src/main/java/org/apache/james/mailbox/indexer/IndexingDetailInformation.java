@@ -20,7 +20,7 @@
 package org.apache.james.mailbox.indexer;
 
 public interface IndexingDetailInformation {
-    int getSuccessfullyReprocessMailCount();
+    int getSuccessfullyReprocessedMailCount();
 
     int getFailedReprocessedMailCount();
 

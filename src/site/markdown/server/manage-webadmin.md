@@ -2391,7 +2391,7 @@ The scheduled task will have the following type `FullReIndexing` and the followi
 
 ```
 {
-  "successfullyReprocessMailCount":18,
+  "successfullyReprocessedMailCount":18,
   "failedReprocessedMailCount": 3,
   "failures": {
     "mbx1": [{"uid": 35}, {"uid": 45}],
@@ -2439,7 +2439,7 @@ The scheduled task will have the following type `userReIndexing` and the followi
 ```
 {
   "user":"bob@domain.com",
-  "successfullyReprocessMailCount":18,
+  "successfullyReprocessedMailCount":18,
   "failedReprocessedMailCount": 3,
   "failures": {
     "mbx1": [{"uid": 35}, {"uid": 45}],
@@ -2489,7 +2489,7 @@ The scheduled task will have the following type `mailboxReIndexing` and the foll
 ```
 {
   "mailboxId":"{mailboxId}",
-  "successfullyReprocessMailCount":18,
+  "successfullyReprocessedMailCount":18,
   "failedReprocessedMailCount": 3,
   "failures": {
     "mbx1": [{"uid": 35}, {"uid": 45}],
@@ -2538,7 +2538,7 @@ The scheduled task will have the following type `ReIndexPreviousFailures` and th
 
 ```
 {
-  "successfullyReprocessMailCount":18,
+  "successfullyReprocessedMailCount":18,
   "failedReprocessedMailCount": 3,
   "failures": {
     "mbx1": [{"uid": 35}, {"uid": 45}],

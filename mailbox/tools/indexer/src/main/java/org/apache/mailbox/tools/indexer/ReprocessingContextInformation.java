@@ -34,7 +34,7 @@ public class ReprocessingContextInformation implements TaskExecutionDetails.Addi
     }
 
     @Override
-    public int getSuccessfullyReprocessMailCount() {
+    public int getSuccessfullyReprocessedMailCount() {
         return reprocessingContext.successfullyReprocessedMailCount();
     }
 
