@@ -226,6 +226,114 @@ class RabbitMQConfigurationTest {
             .isEqualTo(minDelay);
     }
 
+    @Test
+    void connectionTimeoutShouldEqualsDefaultValueWhenNotGiven() throws URISyntaxException {
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
+            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .build();
+
+        assertThat(rabbitMQConfiguration.getConnectionTimeoutInMs())
+            .isEqualTo(RabbitMQConfiguration.Builder.DEFAULT_CONNECTION_TIMEOUT);
+    }
+
+    @Test
+    void connectionTimeoutShouldEqualsCustomValueWhenGiven() throws URISyntaxException {
+        int connectionTimeout = 1;
+
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
+            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .connectionTimeoutInMs(connectionTimeout)
+            .build();
+
+        assertThat(rabbitMQConfiguration.getConnectionTimeoutInMs())
+            .isEqualTo(connectionTimeout);
+    }
+
+    @Test
+    void channelRpcTimeoutShouldEqualsDefaultValueWhenNotGiven() throws URISyntaxException {
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
+            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .build();
+
+        assertThat(rabbitMQConfiguration.getChannelRpcTimeoutInMs())
+            .isEqualTo(RabbitMQConfiguration.Builder.DEFAULT_CHANNEL_RPC_TIMEOUT);
+    }
+
+    @Test
+    void channelRpcTimeoutShouldEqualsCustomValueWhenGiven() throws URISyntaxException {
+        int channelRpcTimeout = 1;
+
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
+            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .channelRpcTimeoutInMs(channelRpcTimeout)
+            .build();
+
+        assertThat(rabbitMQConfiguration.getChannelRpcTimeoutInMs())
+            .isEqualTo(channelRpcTimeout);
+    }
+    
+    @Test
+    void handshakeTimeoutShouldEqualsDefaultValueWhenNotGiven() throws URISyntaxException {
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
+            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .build();
+
+        assertThat(rabbitMQConfiguration.getHandshakeTimeoutInMs())
+            .isEqualTo(RabbitMQConfiguration.Builder.DEFAULT_HANDSHAKE_TIMEOUT);
+    }
+
+    @Test
+    void handshakeTimeoutShouldEqualsCustomValueWhenGiven() throws URISyntaxException {
+        int handshakeTimeout = 1;
+
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
+            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .handshakeTimeoutInMs(handshakeTimeout)
+            .build();
+
+        assertThat(rabbitMQConfiguration.getHandshakeTimeoutInMs())
+            .isEqualTo(handshakeTimeout);
+    }   
+    
+    @Test
+    void shutdownTimeoutShouldEqualsDefaultValueWhenNotGiven() throws URISyntaxException {
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
+            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .build();
+
+        assertThat(rabbitMQConfiguration.getShutdownTimeoutInMs())
+            .isEqualTo(RabbitMQConfiguration.Builder.DEFAULT_SHUTDOWN_TIMEOUT);
+    }
+
+    @Test
+    void shutdownTimeoutShouldEqualsCustomValueWhenGiven() throws URISyntaxException {
+        int shutdownTimeout = 1;
+
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
+            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .shutdownTimeoutInMs(shutdownTimeout)
+            .build();
+
+        assertThat(rabbitMQConfiguration.getShutdownTimeoutInMs())
+            .isEqualTo(shutdownTimeout);
+    }
+
     @Nested
     class ManagementCredentialsTest {
         @Test

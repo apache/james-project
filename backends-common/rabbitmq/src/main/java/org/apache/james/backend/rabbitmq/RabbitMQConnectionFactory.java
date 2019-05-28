@@ -43,6 +43,10 @@ public class RabbitMQConnectionFactory {
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
             connectionFactory.setUri(rabbitMQConfiguration.getUri());
+            connectionFactory.setHandshakeTimeout(rabbitMQConfiguration.getHandshakeTimeoutInMs());
+            connectionFactory.setShutdownTimeout(rabbitMQConfiguration.getShutdownTimeoutInMs());
+            connectionFactory.setChannelRpcTimeout(rabbitMQConfiguration.getChannelRpcTimeoutInMs());
+            connectionFactory.setConnectionTimeout(rabbitMQConfiguration.getConnectionTimeoutInMs());
             return connectionFactory;
         } catch (Exception e) {
             throw new RuntimeException(e);
