@@ -28,11 +28,10 @@ import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.util.docker.Images;
+import org.elasticsearch.ElasticsearchStatusException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import com.google.inject.ProvisionException;
 
 class JamesWithNonCompatibleElasticSearchServerTest {
 
@@ -59,7 +58,7 @@ class JamesWithNonCompatibleElasticSearchServerTest {
     @Test
     void jamesShouldStopWhenStartingWithANonCompatibleElasticSearchServer(GuiceJamesServer server) throws Exception {
         assertThatThrownBy(server::start)
-            .isInstanceOf(ProvisionException.class);
+            .isInstanceOf(ElasticsearchStatusException.class);
 
         assertThat(server.isStarted())
             .isFalse();

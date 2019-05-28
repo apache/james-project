@@ -25,7 +25,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -35,6 +37,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.james.backends.es.ClientProviderImpl;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.elasticsearch.ElasticSearchMailboxConfiguration;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
@@ -47,13 +50,13 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
-import org.apache.james.quota.search.elasticsearch.ElasticSearchQuotaConfiguration;
-import org.apache.james.quota.search.elasticsearch.QuotaSearchIndexCreationUtil;
+import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.PropertiesProvider;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
@@ -63,6 +66,55 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class ElasticSearchMailboxModule extends AbstractModule {
+
+    static class MailboxIndexCreator implements Startable {
+
+        private final ElasticSearchConfiguration configuration;
+        private final ElasticSearchMailboxConfiguration mailboxConfiguration;
+        private final RestHighLevelClient client;
+
+        @Inject
+        MailboxIndexCreator(ElasticSearchConfiguration configuration,
+                            ElasticSearchMailboxConfiguration mailboxConfiguration,
+                            RestHighLevelClient client) {
+            this.configuration = configuration;
+            this.mailboxConfiguration = mailboxConfiguration;
+            this.client = client;
+        }
+
+        void createIndex() throws IOException {
+            MailboxIndexCreationUtil.prepareClient(client,
+                mailboxConfiguration.getReadAliasMailboxName(),
+                mailboxConfiguration.getWriteAliasMailboxName(),
+                mailboxConfiguration.getIndexMailboxName(),
+                configuration);
+        }
+    }
+
+    static class ElasticSearchMailboxIndexCreationPerformer implements ConfigurationPerformer {
+
+        private final MailboxIndexCreator mailboxIndexCreator;
+
+        @Inject
+        ElasticSearchMailboxIndexCreationPerformer(MailboxIndexCreator mailboxIndexCreator) {
+            this.mailboxIndexCreator = mailboxIndexCreator;
+        }
+
+        @Override
+        public void initModule() {
+            try {
+                mailboxIndexCreator.createIndex();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public List<Class<? extends Startable>> forClasses() {
+            return ImmutableList.of(MailboxIndexCreator.class);
+        }
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchMailboxModule.class);
 
     public static final String ELASTICSEARCH_CONFIGURATION_NAME = "elasticsearch";
@@ -78,6 +130,10 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
             .addBinding()
             .to(ElasticSearchListeningMessageSearchIndex.class);
+
+        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class)
+            .addBinding()
+            .to(ElasticSearchMailboxIndexCreationPerformer.class);
     }
 
     @Provides
@@ -133,12 +189,10 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    protected RestHighLevelClient provideClient(ElasticSearchConfiguration configuration,
-                                   ElasticSearchMailboxConfiguration mailboxConfiguration,
-                                   ElasticSearchQuotaConfiguration quotaConfiguration) {
+    protected RestHighLevelClient provideClient(ElasticSearchConfiguration configuration) {
 
         Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
-        return Mono.fromCallable(() -> connectToCluster(configuration, mailboxConfiguration, quotaConfiguration))
+        return Mono.fromCallable(() -> connectToCluster(configuration))
             .doOnError(e -> LOGGER.warn("Error establishing ElasticSearch connection. Next retry scheduled in {}",
                 DurationFormatUtils.formatDurationWords(waitDelay.toMillis(), true, true),
                 e))
@@ -147,26 +201,11 @@ public class ElasticSearchMailboxModule extends AbstractModule {
             .block();
     }
 
-    private RestHighLevelClient connectToCluster(ElasticSearchConfiguration configuration,
-                                    ElasticSearchMailboxConfiguration mailboxConfiguration,
-                                    ElasticSearchQuotaConfiguration quotaConfiguration) throws IOException {
+    private RestHighLevelClient connectToCluster(ElasticSearchConfiguration configuration) throws IOException {
         LOGGER.info("Trying to connect to ElasticSearch service at {}", LocalDateTime.now());
 
-        RestHighLevelClient client = ClientProviderImpl.fromHosts(configuration.getHosts(), configuration.getClusterName()).get();
-
-        MailboxIndexCreationUtil.prepareClient(client,
-            mailboxConfiguration.getReadAliasMailboxName(),
-            mailboxConfiguration.getWriteAliasMailboxName(),
-            mailboxConfiguration.getIndexMailboxName(),
-            configuration);
-
-        QuotaSearchIndexCreationUtil.prepareClient(client,
-            quotaConfiguration.getReadAliasQuotaRatioName(),
-            quotaConfiguration.getWriteAliasQuotaRatioName(),
-            quotaConfiguration.getIndexQuotaRatioName(),
-            configuration);
-
-        return client;
+        return ClientProviderImpl.fromHosts(configuration.getHosts(), configuration.getClusterName())
+            .get();
     }
 
     @Provides
