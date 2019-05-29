@@ -33,6 +33,15 @@ In version 3.3.0 indexing for the Cassandra product was handled using ElasticSea
 Note that ElasticSearch APIs had been undergoing some major changes, making a smooth migration hard to provide. We proposed 2 migration strategies. A
 simple one leading to major search inconsistencies in the process, and another one mitigating these inconsistencies (but getting rid of them).
 
+#### Configuration changes
+
+ElasticSearch 6 driver is relying on the high-level REST client and no more on the internal transport protocol.
+
+Thus, you need to update your configuration files accordingly:
+
+In `elasticsearch.properties` modify the `elasticsearch.port` properties to reference the HTTP port of your ElasticSearch 
+nodes (**9200** by default instead of the previous default value of **9300**).
+
 ##### Simple strategy
 
 Procedure:
