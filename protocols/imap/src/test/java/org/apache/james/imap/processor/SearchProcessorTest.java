@@ -58,11 +58,13 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
+import org.apache.james.mailbox.model.TestId;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.After;
 import org.junit.Before;
@@ -100,6 +102,7 @@ public class SearchProcessorTest {
             new SearchQuery.UidRange(MessageUid.of(42), MessageUid.of(1048)) };
     
     private static final MailboxPath mailboxPath = new MailboxPath("namespace", "user", "name");
+    private static final MailboxId mailboxId = TestId.of(18);
 
     SearchProcessor processor;
     ImapProcessor next;
@@ -125,6 +128,7 @@ public class SearchProcessorTest {
         mailboxManager = mock(MailboxManager.class);
         mailboxSession = MailboxSessionUtil.create("user");
         selectedMailbox = mock(SelectedMailbox.class);
+        when(selectedMailbox.getMailboxId()).thenReturn(mailboxId);
         
         processor = new SearchProcessor(next,  mailboxManager, serverResponseFactory, new NoopMetricFactory());
         expectOk();
@@ -192,7 +196,7 @@ public class SearchProcessorTest {
 
     @SuppressWarnings("unchecked")
     private void expectsGetSelectedMailbox() throws Exception {
-        when(mailboxManager.getMailbox(mailboxPath, mailboxSession)).thenReturn(mailbox, mailbox);
+        when(mailboxManager.getMailbox(mailboxId, mailboxSession)).thenReturn(mailbox, mailbox);
         when(session.getSelected()).thenReturn(selectedMailbox);
         when(selectedMailbox.isRecentUidRemoved()).thenReturn(false);
         when(selectedMailbox.isSizeChanged()).thenReturn(false);

@@ -307,7 +307,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     
     private MessageManager getMailbox(ImapSession session, SelectedMailbox selected) throws MailboxException {
         final MailboxManager mailboxManager = getMailboxManager();
-        return mailboxManager.getMailbox(selected.getPath(), ImapSessionUtils.getMailboxSession(session));
+        return mailboxManager.getMailbox(selected.getMailboxId(), ImapSessionUtils.getMailboxSession(session));
     }
 
     private void addRecentResponses(SelectedMailbox selected, ImapProcessor.Responder responder) {
@@ -416,7 +416,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             result = null;
         } else {
             final MailboxManager mailboxManager = getMailboxManager();
-            result = mailboxManager.getMailbox(selectedMailbox.getPath(), ImapSessionUtils.getMailboxSession(session));
+            result = mailboxManager.getMailbox(selectedMailbox.getMailboxId(), ImapSessionUtils.getMailboxSession(session));
         }
         return result;
     }
