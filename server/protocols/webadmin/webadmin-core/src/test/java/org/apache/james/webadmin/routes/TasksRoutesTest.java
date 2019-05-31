@@ -191,6 +191,37 @@ class TasksRoutesTest {
     }
 
     @Test
+    void getAwaitShouldNotFailUponError() {
+        TaskId taskId = taskManager.submit(() -> {
+            throw new RuntimeException();
+        });
+
+        when()
+            .get("/" + taskId.getValue() + "/await")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("status", is("failed"));
+    }
+
+    @Test
+    void getAwaitShouldNotFailUponFutureError() {
+        TaskId taskId = taskManager.submit(() -> {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            throw new RuntimeException();
+        });
+
+        when()
+            .get("/" + taskId.getValue() + "/await")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("status", is("failed"));
+    }
+
+    @Test
     void deleteShouldReturnOk() {
         TaskId taskId = taskManager.submit(() -> {
             await();
