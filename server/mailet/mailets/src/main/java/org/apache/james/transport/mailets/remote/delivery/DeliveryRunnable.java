@@ -41,6 +41,7 @@ import com.google.common.annotations.VisibleForTesting;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 public class DeliveryRunnable implements Disposable {
@@ -80,11 +81,12 @@ public class DeliveryRunnable implements Disposable {
     }
 
     public void start() {
+        Scheduler remoteDeliveryScheduler = Schedulers.newElastic("RemoteDelivery");
         disposable = Flux.from(queue.deQueue())
-            .publishOn(Schedulers.newParallel("RemoteDelivery", configuration.getWorkersThreadCount()))
+            .publishOn(remoteDeliveryScheduler)
             .flatMap(this::runStep)
             .onErrorContinue(((throwable, nothing) -> LOGGER.error("Exception caught in RemoteDelivery", throwable)))
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(remoteDeliveryScheduler)
             .subscribe();
     }
 
