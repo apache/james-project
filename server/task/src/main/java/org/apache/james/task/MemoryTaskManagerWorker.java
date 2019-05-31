@@ -37,8 +37,9 @@ import reactor.core.publisher.Mono;
 public class MemoryTaskManagerWorker implements TaskManagerWorker {
     private static final boolean INTERRUPT_IF_RUNNING = true;
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryTaskManagerWorker.class);
-    public static final Duration CHECK_CANCELED_PERIOD = Duration.ofMillis(100);
-    public static final int FIRST = 1;
+    private static final Duration CHECK_CANCELED_PERIOD = Duration.ofMillis(100);
+    private static final int FIRST = 1;
+
     private final ConcurrentHashMap<TaskId, CompletableFuture<Task.Result>> idToFuture = new ConcurrentHashMap<>();
 
     @Override
@@ -47,7 +48,7 @@ public class MemoryTaskManagerWorker implements TaskManagerWorker {
 
         idToFuture.put(taskWithId.getId(), futureResult);
 
-        Mono<Task.Result> result = Mono.<Task.Result>fromFuture(futureResult)
+        return Mono.fromFuture(futureResult)
             .doOnError(res -> {
                 if (!(res instanceof CancellationException)) {
                     failed(updateDetails,
@@ -55,8 +56,6 @@ public class MemoryTaskManagerWorker implements TaskManagerWorker {
                 }
             })
             .doOnTerminate(() -> idToFuture.remove(taskWithId.getId()));
-
-        return result;
     }
 
     private Task.Result runWithMdc(TaskWithId taskWithId, Consumer<TaskExecutionDetailsUpdater> updateDetails) {
@@ -78,7 +77,7 @@ public class MemoryTaskManagerWorker implements TaskManagerWorker {
                 .onFailure(() -> failed(updateDetails, (logger, details) -> logger.error("Task was partially performed. Check logs for more details" + details.getTaskId())));
         } catch (Exception e) {
             failed(updateDetails,
-                (logger, executionDetails) -> logger.error("Error while running task", executionDetails, e));
+                (logger, executionDetails) -> logger.error("Error while running task {}", executionDetails, e));
             return Task.Result.PARTIAL;
         }
     }
@@ -88,8 +87,8 @@ public class MemoryTaskManagerWorker implements TaskManagerWorker {
         Optional.ofNullable(idToFuture.remove(id))
             .ifPresent(future -> {
                 requestCancellation(updateDetails, future);
-                waitUntilFutureIsCancelled(future)
-                    .subscribe(cancellationSuccessful -> effectivelyCancelled(updateDetails));
+                waitUntilFutureIsCancelled(future).blockFirst();
+                effectivelyCancelled(updateDetails);
             });
     }
 

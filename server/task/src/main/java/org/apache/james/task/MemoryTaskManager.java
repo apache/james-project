@@ -33,9 +33,9 @@ import java.util.function.Predicate;
 
 import javax.annotation.PreDestroy;
 
-import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.WorkQueueProcessor;
@@ -130,7 +130,7 @@ public class MemoryTaskManager implements TaskManager {
     public void cancel(TaskId id) {
         Optional.ofNullable(idToExecutionDetails.get(id)).ifPresent(details -> {
                 if (details.getStatus().equals(Status.WAITING)) {
-                    updateDetails(id).accept(currentDetails -> currentDetails.cancelRequested());
+                    updateDetails(id).accept(TaskExecutionDetails::cancelRequested);
                 }
                 worker.cancelTask(id, updateDetails(id));
             }
@@ -144,7 +144,13 @@ public class MemoryTaskManager implements TaskManager {
                 .filter(ignore -> tasksResult.get(id) != null)
                 .map(ignore -> {
                     Optional.ofNullable(tasksResult.get(id))
-                        .ifPresent(Throwing.<Mono<Task.Result>>consumer(Mono::block).orDoNothing());
+                        .ifPresent(mono -> {
+                            try {
+                                mono.block();
+                            } catch (CancellationException e) {
+                                // ignore
+                            }
+                        });
                     return getExecutionDetails(id);
                 })
                 .take(1)
