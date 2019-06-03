@@ -20,7 +20,7 @@
 package org.apache.james.mailbox.inmemory.mail;
 
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -45,14 +45,12 @@ public class InMemoryMapperProvider implements MapperProvider {
 
     private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create("user");
 
-    private final Random random;
     private final MessageId.Factory messageIdFactory;
     private final MessageUidProvider messageUidProvider;
     private final InMemoryMailboxSessionMapperFactory inMemoryMailboxSessionMapperFactory;
 
 
     public InMemoryMapperProvider() {
-        random = new Random();
         messageIdFactory = new InMemoryMessageId.Factory();
         messageUidProvider = new MessageUidProvider();
         inMemoryMailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
@@ -82,7 +80,7 @@ public class InMemoryMapperProvider implements MapperProvider {
 
     @Override
     public InMemoryId generateId() {
-        return InMemoryId.of(random.nextInt());
+        return InMemoryId.of(ThreadLocalRandom.current().nextInt());
     }
 
     @Override

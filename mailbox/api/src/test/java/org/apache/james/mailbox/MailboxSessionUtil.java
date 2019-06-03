@@ -21,17 +21,15 @@ package org.apache.james.mailbox;
 
 import java.util.ArrayList;
 import java.util.Locale;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.james.mailbox.model.MailboxConstants;
 
 import com.google.common.annotations.VisibleForTesting;
 
 public class MailboxSessionUtil {
-    private static final Random RANDOM = new Random();
-
     public static MailboxSession create(String username) {
-        return create(username, MailboxSession.SessionId.of(RANDOM.nextLong()));
+        return create(username, MailboxSession.SessionId.of(ThreadLocalRandom.current().nextLong()));
     }
 
     @VisibleForTesting

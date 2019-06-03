@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
@@ -65,7 +65,7 @@ public class RandomStoring extends GenericMailet {
     public RandomStoring(UsersRepository usersRepository, MailboxManager mailboxManager) {
         this.usersRepository = usersRepository;
         this.mailboxManager = mailboxManager;
-        this.randomRecipientsNumbers = new Random().ints(MIN_NUMBER_OF_RECIPIENTS, MAX_NUMBER_OF_RECIPIENTS + 1).boxed().iterator();
+        this.randomRecipientsNumbers = ThreadLocalRandom.current().ints(MIN_NUMBER_OF_RECIPIENTS, MAX_NUMBER_OF_RECIPIENTS + 1).boxed().iterator();
         this.reroutingInfos = Mono.fromCallable(this::retrieveReroutingInfos).cache(CACHE_DURATION);
     }
 
