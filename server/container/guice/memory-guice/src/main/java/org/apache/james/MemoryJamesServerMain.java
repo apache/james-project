@@ -23,7 +23,6 @@ import java.util.Optional;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.jwt.JwtConfiguration;
-import org.apache.james.mailets.configuration.MailetsConfigurationModule;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.BlobMemoryModule;
 import org.apache.james.modules.MailboxModule;
@@ -39,6 +38,7 @@ import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.CamelMailetContainerModule;
+import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.JMXServerModule;
@@ -125,7 +125,7 @@ public class MemoryJamesServerMain {
         PROTOCOLS,
         JMAP,
         WEBADMIN,
-        new MailetsConfigurationModule());
+        new DKIMMailetModule());
 
     public static void main(String[] args) throws Exception {
         Configuration configuration = Configuration.builder()

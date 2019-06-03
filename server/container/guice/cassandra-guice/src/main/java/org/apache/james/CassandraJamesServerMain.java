@@ -19,7 +19,6 @@
 
 package org.apache.james;
 
-import org.apache.james.mailets.configuration.MailetsConfigurationModule;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.activemq.ActiveMQQueueModule;
@@ -49,6 +48,7 @@ import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.CassandraDataRoutesModules;
 import org.apache.james.modules.server.CassandraRoutesModule;
+import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.ElasticSearchMetricReporterModule;
@@ -133,7 +133,7 @@ public class CassandraJamesServerMain {
         CASSANDRA_MAILBOX_MODULE,
         PROTOCOLS,
         PLUGINS,
-        new MailetsConfigurationModule());
+        new DKIMMailetModule());
 
     public static void main(String[] args) throws Exception {
         Configuration configuration = Configuration.builder()

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailets.configuration;
+package org.apache.james.modules.server;
 
 import org.apache.james.jdkim.api.PublicKeyRecordRetriever;
 import org.apache.james.jdkim.impl.DNSPublicKeyRecordRetriever;
@@ -25,7 +25,7 @@ import org.apache.james.jdkim.impl.MultiplexingPublicKeyRecordRetriever;
 
 import com.google.inject.AbstractModule;
 
-public class MailetsConfigurationModule extends AbstractModule {
+public class DKIMMailetModule extends AbstractModule {
     @Override
     public void configure() {
         bind(PublicKeyRecordRetriever.class).toInstance(new MultiplexingPublicKeyRecordRetriever("dns", new DNSPublicKeyRecordRetriever()));

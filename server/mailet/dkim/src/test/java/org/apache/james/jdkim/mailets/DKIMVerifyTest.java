@@ -93,16 +93,9 @@ public class DKIMVerifyTest {
     }
 
     private Mail process(String message) throws Exception {
-        Mailet mailet = new DKIMVerify() {
-
-            @Override
-            public void init() {
-                verifier = new DKIMVerifier(new MockPublicKeyRecordRetriever(
-                        "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDYDaYKXzwVYwqWbLhmuJ66aTAN8wmDR+rfHE8HfnkSOax0oIoTM5zquZrTLo30870YMfYzxwfB6j/Nz3QdwrUD/t0YMYJiUKyWJnCKfZXHJBJ+yfRHr7oW+UW3cVo9CG2bBfIxsInwYe175g9UjyntJpWueqdEIo1c2bhv9Mp66QIDAQAB;",
-                        "selector", "example.com"));
-            }
-            
-        };
+        Mailet mailet = new DKIMVerify((new MockPublicKeyRecordRetriever(
+            "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDYDaYKXzwVYwqWbLhmuJ66aTAN8wmDR+rfHE8HfnkSOax0oIoTM5zquZrTLo30870YMfYzxwfB6j/Nz3QdwrUD/t0YMYJiUKyWJnCKfZXHJBJ+yfRHr7oW+UW3cVo9CG2bBfIxsInwYe175g9UjyntJpWueqdEIo1c2bhv9Mp66QIDAQAB;",
+            "selector", "example.com")));
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .mailetName("Test")

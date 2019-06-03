@@ -24,12 +24,14 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Optional;
 
+import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.jdkim.DKIMVerifier;
 import org.apache.james.jdkim.api.BodyHasher;
 import org.apache.james.jdkim.api.Headers;
+import org.apache.james.jdkim.api.PublicKeyRecordRetriever;
 import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.FailException;
 import org.apache.mailet.Attribute;
@@ -42,30 +44,36 @@ import com.google.common.annotations.VisibleForTesting;
 
 /**
  * This mailet verify a message using the DKIM protocol
- * 
+ *
  * Sample configuration:
  * <pre><code>
  * &lt;mailet match=&quot;All&quot; class=&quot;DKIMVerify&quot;&gt;
  * &lt;/mailet&gt;
  * </code></pre>
- * 
- * By default the mailet assume that Javamail will use LF instead of CRLF 
- * so it will verify the hash using converted newlines. If you don't want this 
- * behaviout then set forceCRLF attribute to false. 
+ *
+ * By default the mailet assume that Javamail will use LF instead of CRLF
+ * so it will verify the hash using converted newlines. If you don't want this
+ * behaviour then set forceCRLF attribute to false.
  */
 public class DKIMVerify extends GenericMailet {
 
     public static final AttributeName DKIM_AUTH_RESULT = AttributeName.of("jDKIM.AUTHRESULT");
-    
-    @VisibleForTesting DKIMVerifier verifier = null;
+
+    @VisibleForTesting
+    DKIMVerifier verifier;
+
     private boolean forceCRLF;
+
+    @Inject
+    public DKIMVerify(PublicKeyRecordRetriever publicKeyRecordRetriever) {
+        verifier = new DKIMVerifier(publicKeyRecordRetriever);
+    }
 
     @Override
     public void init() {
-        verifier = new DKIMVerifier();
         forceCRLF = getInitParameter("forceCRLF", true);
     }
-    
+
     public void service(Mail mail) throws MessagingException {
         try {
             MimeMessage message = mail.getMessage();
@@ -96,13 +104,13 @@ public class DKIMVerify extends GenericMailet {
 
     @VisibleForTesting
     static List<SignatureRecord> verify(DKIMVerifier verifier, MimeMessage message, boolean forceCRLF)
-            throws MessagingException, FailException {
+        throws MessagingException, FailException {
         Headers headers = new MimeMessageHeaders(message);
         BodyHasher bh = verifier.newBodyHasher(headers);
         try {
             if (bh != null) {
                 OutputStream os = new HeaderSkippingOutputStream(bh
-                        .getOutputStream());
+                    .getOutputStream());
                 if (forceCRLF) {
                     os = new CRLFOutputStream(os);
                 }

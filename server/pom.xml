@@ -77,7 +77,6 @@
         <module>mailet/mailetcontainer-api</module>
         <module>mailet/mailetcontainer-camel</module>
         <module>mailet/mailets</module>
-        <module>mailet/mailets-guice</module>
 
         <module>mailrepository/deleted-messages-vault-repository</module>
         <module>mailrepository/mailrepository-api</module>

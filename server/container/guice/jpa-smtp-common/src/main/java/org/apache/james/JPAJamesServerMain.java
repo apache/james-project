@@ -19,12 +19,12 @@
 
 package org.apache.james;
 
-import org.apache.james.mailets.configuration.MailetsConfigurationModule;
 import org.apache.james.modules.activemq.ActiveMQQueueModule;
 import org.apache.james.modules.data.JPADataModule;
 import org.apache.james.modules.data.JPAEntityManagerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
+import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
 import org.apache.james.modules.server.ElasticSearchMetricReporterModule;
@@ -63,7 +63,7 @@ public class JPAJamesServerMain {
             .build();
 
         GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
-                    .combineWith(JPA_SERVER_MODULE, PROTOCOLS, new MailetsConfigurationModule());
+                    .combineWith(JPA_SERVER_MODULE, PROTOCOLS, new DKIMMailetModule());
         server.start();
     }
 
