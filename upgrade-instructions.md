@@ -16,9 +16,9 @@ Changes to apply between 3.3.x and 3.4.x will be reported here.
 
 Change list:
 
- - [Upgrade to ElasticSearch 6.7](#upgrade-to-elasticsearch-6.7)
+ - [Upgrade to ElasticSearch 6.3](#upgrade-to-elasticsearch-6.3)
 
-#### Upgrade to ElasticSearch 6.7
+#### Upgrade to ElasticSearch 6.3
 
 Date: 27/05/2019
 
@@ -46,8 +46,8 @@ nodes (**9200** by default instead of the previous default value of **9300**).
 
 Procedure:
  - From a running James 3.3.0 cluster connected to a running ElacticSearch 2.2 cluster
- - Start an empty ElasticSearch 6.7 cluster
- - Shutdown James 3.3.0 cluster and start a James 3.4.0 cluster connected to ElasticSearch 6.7
+ - Start an empty ElasticSearch 6.3 cluster
+ - Shutdown James 3.3.0 cluster and start a James 3.4.0 cluster connected to ElasticSearch 6.3
  - Search result will then be empty and thus innacurate
  - Thus trigger a [Full ReIndexing](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails) to restore search consistency.
 
@@ -61,8 +61,8 @@ If search consistency during the migration is important for you, consider the ne
 
 Procedure:
  - From a running James 3.3.0 cluster connected to a running ElacticSearch 2.2 cluster
- - Start an empty ElasticSearch 6.7 cluster
- - Start a James 3.4.0 cluster connected to ElasticSearch 6.7 cluster as well as the Cassandra source of trust database. Traffic should be directed to the James 3.3.0 cluster.
+ - Start an empty ElasticSearch 6.3 cluster
+ - Start a James 3.4.0 cluster connected to ElasticSearch 6.3 cluster as well as the Cassandra source of trust database. Traffic should be directed to the James 3.3.0 cluster.
  - Trigger an offline [Full ReIndexing](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails) on the James 3.4.0 cluster
  - Once done, direct the traffic to the James 3.4.0 cluster, and dispose the James 3.3.0 cluster as well as the ElasticSearch 2.2 cluster
  - Search result will omit changes that took place during the switching process (starting from the reIndexing start)
