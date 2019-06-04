@@ -262,8 +262,21 @@ If you want to pass additional options to the underlying java command, you can c
 
     --env JVM_OPTIONS="-Xms256m -Xmx2048m"
 
-
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
+
+==== Instrumentation
+You can use Glowroot to instrumentalize James. The provided guice docker files allow a simple way to do it.
+In order to activate Glowroot you need to run the container with the environment variable _GLOWROOT_ACTIVATED_ set to _true_
+and to expose the glowroot instrumentation ui port.
+
+    --env GLOWROOT_ACTIVATED=true -p "4000:4000"
+
+By default, the Glowroot UI is accessible from every machines in the network as defined in the _destination/admin.json_.
+Which you could configure before building the image, if you want to restrict its accessibility to localhost for example.
+See the https://github.com/glowroot/glowroot/wiki/Agent-Installation-(with-Embedded-Collector)#user-content-optional-post-installation-steps[Glowroot post installation steps]  for more details.
+
+Or by mapping the 4000 port to the IP of the desired network interface, for example `-p 127.0.0.1:4000:4000`.
+
 
 ==== Handling attachment indexing
 
