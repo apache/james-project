@@ -56,7 +56,7 @@ pipeline {
                     docker.withTool('docker') {
                         sh "docker run -d --name=cassandra cassandra:3.11.3"
                         sh "docker run -d --name=rabbitmq rabbitmq:3.7.7-management"
-                        sh "docker run -d --name=elasticsearch --env 'discovery.type=single-node' elasticsearch:6.7.2"
+                        sh "docker run -d --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:6.3.2"
 
                         sh "docker run -d --hostname HOSTNAME -p 25:25 -p 8081:80 -p 110:110 -p 143:143 -p 465:465 -p 587:587 -p 993:993 --link cassandra:cassandra --link rabbitmq:rabbitmq --link elasticsearch:elasticsearch --name james_run -t james_run"
                         try {

@@ -5,7 +5,7 @@
 ### Requirements
 
  - Java 8 SDK
- - Docker ∕ ElasticSearch 6.7.2 and Cassandra 3.11.3
+ - Docker ∕ ElasticSearch 6.3.2 and Cassandra 3.11.3
  - Maven 3
 
 ### Building the artifacts
@@ -26,7 +26,7 @@ mvn clean install
 ### Requirements
 
  * Cassandra 3.11.3
- * ElasticSearch 6.7.2
+ * ElasticSearch 6.3.2
 
 ### James Launch
 
@@ -46,7 +46,7 @@ You need to have a Cassandra and an ElasticSearch instance running. You can eith
 
 ```bash
 $ docker run -d -p 9042:9042 --name=cassandra cassandra:3.11.3
-$ docker run -d -p 9200:9200 --name=elasticsearch --env 'discovery.type=single-node' elasticsearch:6.7.2
+$ docker run -d -p 9200:9200 --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:6.3.2
 ```
 
 Once everything is set up, you just have to run the jar with:

@@ -5,7 +5,7 @@
 ### Requirements
 
  - Java 8 SDK
- - Docker ∕ ElasticSearch 6.7.2, RabbitMQ Management 3.3.7, Swift ObjectStorage 2.15.1 and Cassandra 3.11.3
+ - Docker ∕ ElasticSearch 6.3.2, RabbitMQ Management 3.3.7, Swift ObjectStorage 2.15.1 and Cassandra 3.11.3
  - Maven 3
 
 ### Building the artifacts
@@ -26,7 +26,7 @@ mvn clean install
 ### Requirements
 
  * Cassandra 3.11.3
- * ElasticSearch 6.7.2
+ * ElasticSearch 6.3.2
  * RabbitMQ-Management 3.7.7
  * Swift ObjectStorage 2.15.1 or Scality S3 server or AWS S3
 
@@ -48,7 +48,7 @@ You need to have a Cassandra, ElasticSearch and RabbitMQ instance running. You c
 
 ```bash
 $ docker run -d -p 9042:9042 --name=cassandra cassandra:3.11.3
-$ docker run -d -p 9200:9200 --name=elasticsearch --env 'discovery.type=single-node' elasticsearch:6.7.2
+$ docker run -d -p 9200:9200 --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:6.3.2
 $ docker run -d -p 5672:5672 -p 15672:15672 --name=rabbitmq rabbitmq:3.7.7-management
 $ docker run -d -p 5000:5000 -p 8080:8080 -p 35357:35357 --name=swift linagora/openstack-keystone-swift:pike
 ```
