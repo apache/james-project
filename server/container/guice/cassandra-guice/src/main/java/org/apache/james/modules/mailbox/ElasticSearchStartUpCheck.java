@@ -26,7 +26,6 @@ import javax.inject.Inject;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.elasticsearch.Version;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +34,7 @@ public class ElasticSearchStartUpCheck implements StartUpCheck {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchConfiguration.class);
 
-    private static final Version RECOMMENDED_ES_VERSION = Version.fromString("6.7.2");
+    private static final Version RECOMMENDED_ES_VERSION = Version.fromString("6.3.2");
     private static final String VERSION_CHECKING_ERROR_MESSAGE = "Error when checking ES version";
 
     public static final String CHECK_NAME = "ElasticSearchStartUpCheck";
@@ -50,7 +49,7 @@ public class ElasticSearchStartUpCheck implements StartUpCheck {
     @Override
     public CheckResult check() {
         try {
-            Version esVersion = client.info(RequestOptions.DEFAULT)
+            Version esVersion = client.info()
                 .getVersion();
             if (esVersion.isCompatible(RECOMMENDED_ES_VERSION)) {
                 return CheckResult.builder()

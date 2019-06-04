@@ -66,7 +66,7 @@ class JamesWithNonCompatibleElasticSearchServerTest {
                     .containsOnly(CheckResult.builder()
                         .checkName(ElasticSearchStartUpCheck.CHECK_NAME)
                         .resultType(StartUpCheck.ResultType.BAD)
-                        .description("ES version(2.4.6) is not compatible with the recommendation(6.7.2)")
+                        .description("ES version(2.4.6) is not compatible with the recommendation(6.3.2)")
                         .build()));
 
         assertThat(server.isStarted())
