@@ -27,12 +27,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.apache.http.HttpStatus;
+import org.apache.james.backends.es.DockerElasticSearch;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
 import org.apache.james.metrics.es.ESMetricReporter;
 import org.apache.james.metrics.es.ESReporterConfiguration;
-import org.apache.james.util.docker.DockerGenericContainer;
 import org.awaitility.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,24 +47,24 @@ abstract class ESReporterContract {
     public static final long PERIOD_IN_SECOND = 1L;
     public static final int DELAY_IN_MS = 100;
     public static final int PERIOD_IN_MS = 100;
-    public static final int ES_HTTP_PORT = 9200;
 
     private ESMetricReporter esMetricReporter;
     private MetricRegistry registry;
     private Timer timer;
 
     @BeforeEach
-    void setUp(DockerGenericContainer esContainer) {
-        RestAssured.baseURI = String.format("http://%s:%d", esContainer.getHostIp(), esContainer.getMappedPort(ES_HTTP_PORT));
+    void setUp(DockerElasticSearch elasticSearch) {
+        RestAssured.baseURI = String.format("http://%s:%d",
+            elasticSearch.getHttpHost().getHostName(), elasticSearch.getHttpHost().getPort());
         await().atMost(Duration.ONE_MINUTE)
-            .untilAsserted(() -> elasticSearchStarted());
+            .untilAsserted(this::elasticSearchStarted);
 
         registry = new MetricRegistry();
         timer = new Timer();
         esMetricReporter = new ESMetricReporter(
             ESReporterConfiguration.builder()
                 .enabled()
-                .onHost(esContainer.getHostIp(), esContainer.getMappedPort(ES_HTTP_PORT))
+                .onHost(elasticSearch.getHttpHost().getHostName(), elasticSearch.getHttpHost().getPort())
                 .onIndex(INDEX)
                 .periodInSecond(PERIOD_IN_SECOND)
                 .build(),
@@ -80,7 +80,7 @@ abstract class ESReporterContract {
     }
 
     @Test
-    void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainer(DockerGenericContainer esContainer) {
+    void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainer() {
         Metric metric = new DropWizardMetricFactory(registry).generate("probe");
         TimerTask timerTask = new TimerTask() {
             @Override
@@ -95,7 +95,7 @@ abstract class ESReporterContract {
     }
 
     @Test
-    void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainerWhenRecordingTimeMetric(DockerGenericContainer esContainer) {
+    void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainerWhenRecordingTimeMetric() {
         TimeMetric metric = new DropWizardMetricFactory(registry).timer("itstime");
         TimerTask timerTask = new TimerTask() {
             @Override

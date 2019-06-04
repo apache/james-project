@@ -19,8 +19,11 @@
 
 package org.apache.james.metric.es;
 
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.apache.james.backends.es.DockerElasticSearch;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(DockerElasticSearch6Extension.class)
 class ES6ReporterTest extends ESReporterContract {
+
+    @RegisterExtension
+    static DockerElasticSearchExtension testExtension = new DockerElasticSearchExtension(new DockerElasticSearch());
 }
