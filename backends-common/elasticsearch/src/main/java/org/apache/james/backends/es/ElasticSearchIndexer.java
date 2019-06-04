@@ -29,13 +29,10 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.ValidationException;
-import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,13 +42,12 @@ import com.google.common.base.Preconditions;
 public class ElasticSearchIndexer {
     private static final int DEBUG_MAX_LENGTH_CONTENT = 1000;
     private static final int DEFAULT_BATCH_SIZE = 100;
-    private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchIndexer.class);
 
     private final RestHighLevelClient client;
     private final AliasName aliasName;
-    private final int batchSize;
+    private final DeleteByQueryPerformer deleteByQueryPerformer;
 
     public ElasticSearchIndexer(RestHighLevelClient client,
                                 WriteAliasName aliasName) {
@@ -63,8 +59,8 @@ public class ElasticSearchIndexer {
                                 WriteAliasName aliasName,
                                 int batchSize) {
         this.client = client;
+        this.deleteByQueryPerformer = new DeleteByQueryPerformer(client, batchSize, aliasName);
         this.aliasName = aliasName;
-        this.batchSize = batchSize;
     }
 
     public IndexResponse index(String id, String content) throws IOException {
@@ -76,8 +72,7 @@ public class ElasticSearchIndexer {
             new IndexRequest(aliasName.getValue())
                 .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .id(id)
-                .source(content, XContentType.JSON),
-            RequestOptions.DEFAULT);
+                .source(content, XContentType.JSON));
     }
 
     public Optional<BulkResponse> update(List<UpdatedRepresentation> updatedDocumentParts) throws IOException {
@@ -89,7 +84,7 @@ public class ElasticSearchIndexer {
                     NodeMappingFactory.DEFAULT_MAPPING_NAME,
                     updatedDocumentPart.getId())
                 .doc(updatedDocumentPart.getUpdatedDocumentPart(), XContentType.JSON)));
-            return Optional.of(client.bulk(request, RequestOptions.DEFAULT));
+            return Optional.of(client.bulk(request));
         } catch (ValidationException e) {
             LOGGER.warn("Error while updating index", e);
             return Optional.empty();
@@ -103,7 +98,7 @@ public class ElasticSearchIndexer {
                 new DeleteRequest(aliasName.getValue())
                     .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                     .id(id)));
-            return Optional.of(client.bulk(request, RequestOptions.DEFAULT));
+            return Optional.of(client.bulk(request));
         } catch (ValidationException e) {
             LOGGER.warn("Error while deleting index", e);
             return Optional.empty();
@@ -111,13 +106,7 @@ public class ElasticSearchIndexer {
     }
 
     public void deleteAllMatchingQuery(QueryBuilder queryBuilder) {
-        DeleteByQueryRequest request = new DeleteByQueryRequest(aliasName.getValue())
-            .setDocTypes(NodeMappingFactory.DEFAULT_MAPPING_NAME)
-            .setScroll(TIMEOUT)
-            .setQuery(queryBuilder)
-            .setBatchSize(batchSize);
-
-        client.deleteByQueryAsync(request, RequestOptions.DEFAULT, new ListenerToFuture<>());
+        deleteByQueryPerformer.perform(queryBuilder).block();
     }
 
     private void checkArgument(String content) {

@@ -28,7 +28,6 @@ import org.apache.james.util.streams.Iterators;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
 
@@ -59,7 +58,7 @@ public class ScrollIterable implements Iterable<SearchResponse> {
         ScrollIterator(RestHighLevelClient client, SearchRequest searchRequest) {
             this.client = client;
             ListenerToFuture<SearchResponse> listener = new ListenerToFuture<>();
-            client.searchAsync(searchRequest, RequestOptions.DEFAULT, listener);
+            client.searchAsync(searchRequest, listener);
 
             this.searchResponseFuture = listener.getFuture();
         }
@@ -74,11 +73,10 @@ public class ScrollIterable implements Iterable<SearchResponse> {
         public SearchResponse next() {
             SearchResponse result = searchResponseFuture.join();
             ListenerToFuture<SearchResponse> listener = new ListenerToFuture<>();
-            client.scrollAsync(
+            client.searchScrollAsync(
                 new SearchScrollRequest()
                     .scrollId(result.getScrollId())
                     .scroll(TIMEOUT),
-                RequestOptions.DEFAULT,
                 listener);
             searchResponseFuture = listener.getFuture();
             return result;

@@ -29,7 +29,6 @@ import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -60,7 +59,8 @@ public class ElasticSearchIndexerTest {
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(getESClient());
-        testee = new ElasticSearchIndexer(getESClient(), ALIAS_NAME, MINIMUM_BATCH_SIZE);
+        testee = new ElasticSearchIndexer(getESClient(),
+            ALIAS_NAME, MINIMUM_BATCH_SIZE);
     }
 
     private RestHighLevelClient getESClient() {
@@ -78,8 +78,7 @@ public class ElasticSearchIndexerTest {
         try (RestHighLevelClient client = getESClient()) {
             SearchResponse searchResponse = client.search(
                 new SearchRequest(INDEX_NAME.getValue())
-                    .source(new SearchSourceBuilder().query(QueryBuilders.matchQuery("message", "trying"))),
-                RequestOptions.DEFAULT);
+                    .source(new SearchSourceBuilder().query(QueryBuilders.matchQuery("message", "trying"))));
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
         }
     }
@@ -104,16 +103,14 @@ public class ElasticSearchIndexerTest {
         try (RestHighLevelClient client = getESClient()) {
             SearchResponse searchResponse = client.search(
                 new SearchRequest(INDEX_NAME.getValue())
-                    .source(new SearchSourceBuilder().query(QueryBuilders.matchQuery("message", "mastering"))),
-                RequestOptions.DEFAULT);
+                    .source(new SearchSourceBuilder().query(QueryBuilders.matchQuery("message", "mastering"))));
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
         }
 
         try (RestHighLevelClient client = getESClient()) {
             SearchResponse searchResponse = client.search(
                 new SearchRequest(INDEX_NAME.getValue())
-                    .source(new SearchSourceBuilder().query(QueryBuilders.matchQuery("field", "unchanged"))),
-                RequestOptions.DEFAULT);
+                    .source(new SearchSourceBuilder().query(QueryBuilders.matchQuery("field", "unchanged"))));
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
         }
     }
@@ -157,8 +154,7 @@ public class ElasticSearchIndexerTest {
             CALMLY_AWAIT.atMost(Duration.TEN_SECONDS)
                 .until(() -> client.search(
                         new SearchRequest(INDEX_NAME.getValue())
-                            .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
-                        RequestOptions.DEFAULT)
+                            .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())))
                     .getHits().getTotalHits() == 0);
         }
     }
@@ -188,8 +184,7 @@ public class ElasticSearchIndexerTest {
             CALMLY_AWAIT.atMost(Duration.TEN_SECONDS)
                 .until(() -> client.search(
                     new SearchRequest(INDEX_NAME.getValue())
-                        .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
-                    RequestOptions.DEFAULT)
+                        .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())))
                     .getHits().getTotalHits() == 1);
         }
     }
@@ -208,8 +203,7 @@ public class ElasticSearchIndexerTest {
         try (RestHighLevelClient client = getESClient()) {
             SearchResponse searchResponse = client.search(
                 new SearchRequest(INDEX_NAME.getValue())
-                    .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
-                RequestOptions.DEFAULT);
+                    .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())));
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(0);
         }
     }
@@ -238,8 +232,7 @@ public class ElasticSearchIndexerTest {
         try (RestHighLevelClient client = getESClient()) {
             SearchResponse searchResponse = client.search(
                 new SearchRequest(INDEX_NAME.getValue())
-                    .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
-                RequestOptions.DEFAULT);
+                    .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())));
             assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
         }
     }

@@ -38,7 +38,6 @@ import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -93,8 +92,7 @@ public class ScrollIterableTest {
             client.index(new IndexRequest(INDEX_NAME.getValue())
                     .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                     .id(id)
-                    .source(MESSAGE, "Sample message"),
-                RequestOptions.DEFAULT);
+                    .source(MESSAGE, "Sample message"));
 
             elasticSearch.awaitForElasticSearch();
             WAIT_CONDITION.untilAsserted(() -> hasIdsInIndex(client, id));
@@ -117,15 +115,13 @@ public class ScrollIterableTest {
             client.index(new IndexRequest(INDEX_NAME.getValue())
                     .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                     .id(id1)
-                    .source(MESSAGE, "Sample message"),
-                RequestOptions.DEFAULT);
+                    .source(MESSAGE, "Sample message"));
 
             String id2 = "2";
             client.index(new IndexRequest(INDEX_NAME.getValue())
                     .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                     .id(id2)
-                    .source(MESSAGE, "Sample message"),
-                RequestOptions.DEFAULT);
+                    .source(MESSAGE, "Sample message"));
 
             elasticSearch.awaitForElasticSearch();
             WAIT_CONDITION.untilAsserted(() -> hasIdsInIndex(client, id1, id2));
@@ -148,22 +144,19 @@ public class ScrollIterableTest {
             client.index(new IndexRequest(INDEX_NAME.getValue())
                     .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                     .id(id1)
-                    .source(MESSAGE, "Sample message"),
-                RequestOptions.DEFAULT);
+                    .source(MESSAGE, "Sample message"));
 
             String id2 = "2";
             client.index(new IndexRequest(INDEX_NAME.getValue())
                     .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                     .id(id2)
-                    .source(MESSAGE, "Sample message"),
-                RequestOptions.DEFAULT);
+                    .source(MESSAGE, "Sample message"));
 
             String id3 = "3";
             client.index(new IndexRequest(INDEX_NAME.getValue())
                     .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                     .id(id3)
-                    .source(MESSAGE, "Sample message"),
-                RequestOptions.DEFAULT);
+                    .source(MESSAGE, "Sample message"));
 
             elasticSearch.awaitForElasticSearch();
             WAIT_CONDITION.untilAsserted(() -> hasIdsInIndex(client, id1, id2, id3));
@@ -192,7 +185,7 @@ public class ScrollIterableTest {
             .source(new SearchSourceBuilder()
                 .query(QueryBuilders.matchAllQuery()));
 
-        SearchHit[] hits = client.search(searchRequest, RequestOptions.DEFAULT)
+        SearchHit[] hits = client.search(searchRequest)
             .getHits()
             .getHits();
 

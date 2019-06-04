@@ -29,9 +29,8 @@ import javax.inject.Inject;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
-import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,15 +97,13 @@ public class IndexCreationFactory {
                         new IndicesAliasesRequest().addAliasAction(
                             new AliasActions(AliasActions.Type.ADD)
                                 .index(indexName.getValue())
-                                .alias(aliasName.getValue())),
-                        RequestOptions.DEFAULT);
+                                .alias(aliasName.getValue())));
             }
         }
 
         private boolean aliasExist(RestHighLevelClient client, AliasName aliasName) throws IOException {
             return client.indices()
-                .existsAlias(new GetAliasesRequest().aliases(aliasName.getValue()),
-                    RequestOptions.DEFAULT);
+                .existsAlias(new GetAliasesRequest().aliases(aliasName.getValue()));
         }
 
         private void createIndexIfNeeded(RestHighLevelClient client, IndexName indexName, XContentBuilder settings) throws IOException {
@@ -114,8 +111,7 @@ public class IndexCreationFactory {
                 client.indices()
                     .create(
                         new CreateIndexRequest(indexName.getValue())
-                            .source(settings),
-                        RequestOptions.DEFAULT);
+                            .source(settings));
             } catch (ElasticsearchStatusException exception) {
                 if (exception.getMessage().contains(INDEX_ALREADY_EXISTS_EXCEPTION_MESSAGE)) {
                     LOGGER.info("Index [{}] already exist", indexName);

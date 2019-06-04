@@ -21,11 +21,10 @@ package org.apache.james.backends.es;
 
 import java.io.IOException;
 
-import org.apache.james.util.streams.Iterators;
-import org.elasticsearch.client.RequestOptions;
+import org.apache.http.HttpStatus;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.GetMappingsRequest;
-import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 public class NodeMappingFactory {
@@ -61,22 +60,22 @@ public class NodeMappingFactory {
     }
 
     public static boolean mappingAlreadyExist(RestHighLevelClient client, IndexName indexName) throws IOException {
-        return Iterators.toStream(client.indices()
-            .getMapping(
-                new GetMappingsRequest()
-                    .indices(indexName.getValue()),
-                RequestOptions.DEFAULT)
-            .mappings()
-            .values()
-            .iterator())
-            .anyMatch(mappingMetaData -> !mappingMetaData.getSourceAsMap().isEmpty());
+        try {
+            client.getLowLevelClient().performRequest("GET", indexName.getValue() + "/_mapping/" + NodeMappingFactory.DEFAULT_MAPPING_NAME);
+            return true;
+        } catch (ResponseException e) {
+            if (e.getResponse().getStatusLine().getStatusCode() != HttpStatus.SC_NOT_FOUND) {
+                throw e;
+            }
+        }
+        return false;
     }
 
     public static void createMapping(RestHighLevelClient client, IndexName indexName, XContentBuilder mappingsSources) throws IOException {
         client.indices().putMapping(
             new PutMappingRequest(indexName.getValue())
-                .source(mappingsSources),
-            RequestOptions.DEFAULT);
+                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                .source(mappingsSources));
     }
 
 }
