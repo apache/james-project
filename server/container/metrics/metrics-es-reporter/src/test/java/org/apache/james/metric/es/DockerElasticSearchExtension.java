@@ -16,46 +16,55 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.metric.es;
 
-import org.apache.james.util.docker.DockerGenericContainer;
-import org.apache.james.util.docker.Images;
-import org.apache.james.util.docker.RateLimiters;
+import org.apache.james.backends.es.DockerElasticSearch;
+import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
-import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
-public class DockerElasticSearch2Extension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
-    private final DockerGenericContainer elasticSearchContainer;
+public class DockerElasticSearchExtension implements AfterAllCallback, BeforeAllCallback, BeforeEachCallback, AfterEachCallback,
+    ParameterResolver {
 
-    private DockerElasticSearch2Extension() {
-        this.elasticSearchContainer = new DockerGenericContainer(Images.ELASTICSEARCH_2)
-            .withAffinityToContainer()
-            .withExposedPorts(ESReporterContract.ES_HTTP_PORT)
-            .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
+    private final DockerElasticSearch elasticSearch;
+
+    DockerElasticSearchExtension(DockerElasticSearch elasticSearch) {
+        this.elasticSearch = elasticSearch;
     }
 
     @Override
-    public void beforeEach(ExtensionContext extensionContext) {
-        elasticSearchContainer.start();
+    public void beforeAll(ExtensionContext context) throws Exception {
+        elasticSearch.start();
     }
 
     @Override
-    public void afterEach(ExtensionContext extensionContext) {
-        elasticSearchContainer.stop();
+    public void beforeEach(ExtensionContext context) throws Exception {
+        elasticSearch.awaitForElasticSearch();
+    }
+
+    @Override
+    public void afterEach(ExtensionContext context) throws Exception {
+        elasticSearch.cleanUpData();
+    }
+
+    @Override
+    public void afterAll(ExtensionContext context) throws Exception {
+        elasticSearch.stop();
     }
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return (parameterContext.getParameter().getType() == DockerGenericContainer.class);
+        return (parameterContext.getParameter().getType() == DockerElasticSearch.class);
     }
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return elasticSearchContainer;
+        return elasticSearch;
     }
 }
