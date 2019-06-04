@@ -40,7 +40,6 @@ import org.apache.james.quota.search.elasticsearch.QuotaSearchIndexCreationUtil;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -95,8 +94,7 @@ public class ElasticSearchQuotaMailboxListenerTest {
         SearchResponse searchResponse = client.search(new SearchRequest(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
                 .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .source(new SearchSourceBuilder()
-                    .query(QueryBuilders.matchAllQuery())),
-            RequestOptions.DEFAULT);
+                    .query(QueryBuilders.matchAllQuery())));
 
         assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
     }

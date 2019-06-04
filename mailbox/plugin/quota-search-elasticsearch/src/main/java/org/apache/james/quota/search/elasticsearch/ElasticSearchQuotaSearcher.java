@@ -34,7 +34,6 @@ import org.apache.james.core.User;
 import org.apache.james.quota.search.QuotaQuery;
 import org.apache.james.quota.search.QuotaSearcher;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.SearchHit;
@@ -87,7 +86,7 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
             .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
             .source(searchSourceBuilder);
 
-        return Arrays.stream(client.search(searchRequest, RequestOptions.DEFAULT)
+        return Arrays.stream(client.search(searchRequest)
             .getHits()
             .getHits());
     }
@@ -97,7 +96,7 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
             new SearchRequest(readAlias.getValue())
                 .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .source(searchSourceBuilder(query))
-            .scroll(TIMEOUT))
+                .scroll(TIMEOUT))
             .stream()
             .flatMap(searchResponse -> Arrays.stream(searchResponse.getHits().getHits()))
             .skip(query.getOffset().getValue());
