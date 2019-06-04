@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - Add in-memory docker image
 
 ### Changed
-- Migration to ElasticSearch 6.7
+- Migration to ElasticSearch 6.3
 - Blob export to LinShare
 
 ## [3.3.0] - 2019-03-26
