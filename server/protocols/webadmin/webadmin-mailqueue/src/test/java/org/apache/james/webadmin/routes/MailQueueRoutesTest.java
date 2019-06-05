@@ -89,12 +89,10 @@ public class MailQueueRoutesTest {
         TaskManager taskManager = new MemoryTaskManager();
         JsonTransformer jsonTransformer = new JsonTransformer();
 
-        WebAdminServer server = WebAdminUtils.createWebAdminServer(
+        return WebAdminUtils.createWebAdminServer(
             new NoopMetricFactory(),
             new MailQueueRoutes(mailQueueFactory, jsonTransformer, taskManager),
             new TasksRoutes(taskManager, jsonTransformer));
-        server.start();
-        return server;
     }
 
     RequestSpecification buildRequestSpecification(WebAdminServer server) {

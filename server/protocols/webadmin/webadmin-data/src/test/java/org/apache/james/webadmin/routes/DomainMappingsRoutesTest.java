@@ -79,7 +79,6 @@ class DomainMappingsRoutesTest {
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
             domainMappingsRoutes);
-        webAdminServer.start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(DOMAIN_MAPPINGS)

@@ -83,8 +83,6 @@ class CassandraMappingsRoutesTest {
             new CassandraMappingsRoutes(cassandraMappingsService, taskManager, jsonTransformer),
             new TasksRoutes(taskManager, jsonTransformer));
 
-        webAdminServer.start();
-
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(CassandraMappingsRoutes.ROOT_PATH)
             .build();
