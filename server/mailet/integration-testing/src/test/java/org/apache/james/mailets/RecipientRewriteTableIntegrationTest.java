@@ -25,6 +25,7 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
@@ -176,7 +177,6 @@ public class RecipientRewriteTableIntegrationTest {
     @Test
     public void messageShouldNotSendToRecipientWhenDomainMapping() throws Exception {
         dataProbe.addDomainAliasMapping(DEFAULT_DOMAIN, JAMES_ANOTHER_DOMAIN);
-        dataProbe.addUser(ANY_AT_ANOTHER_DOMAIN, PASSWORD);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, ANY_AT_JAMES);
@@ -221,5 +221,33 @@ public class RecipientRewriteTableIntegrationTest {
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
         assertThat(imapMessageReader.readFirstMessage()).isNotNull();
+    }
+
+    @Test
+    public void domainAliasMappingShouldNotCreateNonExistedUserWhenReRouting() throws Exception {
+        dataProbe.addDomain("domain1.com");
+        dataProbe.addDomain("domain2.com");
+
+        // domain2 as the source, domain1 as the destination
+        dataProbe.addDomainAliasMapping("domain2.com", "domain1.com");
+
+        dataProbe.addUser("user@domain1.com", PASSWORD);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, "user@domain2.com");
+
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login("user@domain1.com", PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+
+        // assert user  non existence
+        assertThat(dataProbe.listUsers())
+            .doesNotContain("user@domain2.com");
+
+        // assert alias address has no mailbox
+        assertThat(jamesServer.getProbe(MailboxProbeImpl.class)
+            .listUserMailboxes("user@doamin2.com"))
+            .isEmpty();
     }
 }
