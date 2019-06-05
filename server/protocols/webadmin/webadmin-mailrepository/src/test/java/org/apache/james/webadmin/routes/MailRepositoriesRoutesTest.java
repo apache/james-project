@@ -154,7 +154,7 @@ public class MailRepositoriesRoutesTest {
     }
 
     @Test
-    public void putMailRepositoryShouldReturnOkWhenRepositoryAlreadyExists() throws Exception {
+    public void putMailRepositoryShouldReturnOkWhenRepositoryAlreadyExists() {
         given()
             .params("protocol", "memory")
         .when()

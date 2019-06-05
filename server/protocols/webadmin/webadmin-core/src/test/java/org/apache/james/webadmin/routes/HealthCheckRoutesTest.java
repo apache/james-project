@@ -27,7 +27,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
-import java.net.MalformedURLException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -379,7 +378,7 @@ public class HealthCheckRoutesTest {
     }
     
     @Test
-    public void performHealthCheckShouldWorkWithEscapedPathParam() throws MalformedURLException {
+    public void performHealthCheckShouldWorkWithEscapedPathParam() {
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_3)));
         
         // disable URL encoding

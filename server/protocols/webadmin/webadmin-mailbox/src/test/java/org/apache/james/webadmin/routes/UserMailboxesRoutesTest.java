@@ -63,9 +63,9 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
 class UserMailboxesRoutesTest {
-
     private static final String USERNAME = "username";
     private static final String MAILBOX_NAME = "myMailboxName";
+
     private WebAdminServer webAdminServer;
     private UsersRepository usersRepository;
 

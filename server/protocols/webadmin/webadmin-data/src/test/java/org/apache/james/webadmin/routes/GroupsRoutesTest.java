@@ -675,7 +675,7 @@ class GroupsRoutesTest {
         }
 
         @Test
-        void getShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
+        void getShouldReturnErrorWhenRuntimeExceptionIsThrown() {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
                 .getStoredMappings(any());

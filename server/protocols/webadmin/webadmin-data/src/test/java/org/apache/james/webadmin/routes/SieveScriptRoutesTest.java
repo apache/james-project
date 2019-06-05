@@ -32,7 +32,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.User;
 import org.apache.james.filesystem.api.FileSystem;
@@ -42,10 +41,8 @@ import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
-import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.sieverepository.file.SieveFileRepository;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -58,17 +55,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import io.restassured.RestAssured;
 
 @ExtendWith(TemporaryFolderExtension.class)
-public class SieveScriptRoutesTest {
+class SieveScriptRoutesTest {
 
-    private FileSystem fileSystem;
     private WebAdminServer webAdminServer;
     private SieveRepository sieveRepository;
-    private UsersRepository usersRepository;
     private String sieveContent;
 
     @BeforeEach
-    public void setUp(TemporaryFolderExtension.TemporaryFolder temporaryFolder) throws ConfigurationException, IOException, UsersRepositoryException {
-        this.fileSystem = new FileSystem() {
+    void setUp(TemporaryFolderExtension.TemporaryFolder temporaryFolder) throws Exception {
+        FileSystem fileSystem = new FileSystem() {
             @Override
             public File getBasedir() {
                 return temporaryFolder.getTempDir();
@@ -86,7 +81,7 @@ public class SieveScriptRoutesTest {
         };
 
         sieveRepository = new SieveFileRepository(fileSystem);
-        usersRepository = MemoryUsersRepository.withoutVirtualHosting();
+        UsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
         usersRepository.addUser("userA", "password");
 
         URL sieveResource = ClassLoader.getSystemResource("sieve/my_sieve");
@@ -102,12 +97,12 @@ public class SieveScriptRoutesTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         webAdminServer.destroy();
     }
 
     @Test
-    public void defineAddActiveSieveScriptShouldReturnNotFoundWhenUserNotExisted() throws IOException {
+    void defineAddActiveSieveScriptShouldReturnNotFoundWhenUserNotExisted() {
         given()
             .pathParam("userName", "unknown")
             .pathParam("scriptName", "scriptA")
@@ -119,7 +114,7 @@ public class SieveScriptRoutesTest {
     }
 
     @Test
-    public void defineAddActiveSieveScriptShouldReturnNotFoundWhenScriptNameIsWhiteSpace() throws IOException {
+    void defineAddActiveSieveScriptShouldReturnNotFoundWhenScriptNameIsWhiteSpace() {
         String errorBody =
             "{\"statusCode\": 400," +
             " \"type\":\"InvalidArgument\"," +
@@ -141,7 +136,7 @@ public class SieveScriptRoutesTest {
     }
 
     @Test
-    public void defineAddActiveSieveScriptShouldReturnNotFoundWhenUserNameWhiteSpace() {
+    void defineAddActiveSieveScriptShouldReturnNotFoundWhenUserNameWhiteSpace() {
         String errorBody =
             "{\"statusCode\": 400," +
             " \"type\":\"InvalidArgument\"," +
@@ -163,7 +158,7 @@ public class SieveScriptRoutesTest {
     }
 
     @Test
-    public void defineAddActiveSieveScriptShouldReturnBadRequestWhenScriptIsNotSet() {
+    void defineAddActiveSieveScriptShouldReturnBadRequestWhenScriptIsNotSet() {
         given()
             .pathParam("userName", "userA")
             .pathParam("scriptName", "scriptA")
@@ -174,7 +169,7 @@ public class SieveScriptRoutesTest {
     }
 
     @Test
-    public void defineAddActiveSieveScriptShouldReturnSucceededWhenScriptIsWhiteSpace() throws ScriptNotFoundException, StorageException, IOException {
+     void defineAddActiveSieveScriptShouldReturnSucceededWhenScriptIsWhiteSpace() throws Exception {
         given()
             .pathParam("userName", "userA")
             .pathParam("scriptName", "scriptA")
@@ -190,7 +185,7 @@ public class SieveScriptRoutesTest {
     }
 
     @Test
-    public void defineAddActiveSieveScriptAddScriptSucceededOneWhenNotAddActivateParam() throws Exception {
+    void defineAddActiveSieveScriptAddScriptSucceededOneWhenNotAddActivateParam() throws Exception {
         given()
             .pathParam("userName", "userA")
             .pathParam("scriptName", "scriptA")
@@ -206,7 +201,7 @@ public class SieveScriptRoutesTest {
     }
 
     @Test
-    public void defineAddActiveSieveScriptSetActiveTrueWhenAddActivateParamTrue() throws Exception {
+    void defineAddActiveSieveScriptSetActiveTrueWhenAddActivateParamTrue() throws Exception {
         given()
             .pathParam("userName", "userA")
             .pathParam("scriptName", "scriptA")
@@ -223,7 +218,7 @@ public class SieveScriptRoutesTest {
     }
 
     @Test
-    public void defineAddActiveSieveScriptGetActiveShouldThrowsExceptionWhenAddActivateParamFalse() {
+    void defineAddActiveSieveScriptGetActiveShouldThrowsExceptionWhenAddActivateParamFalse() {
         given()
             .pathParam("userName", "userA")
             .pathParam("scriptName", "scriptA")
@@ -239,7 +234,7 @@ public class SieveScriptRoutesTest {
     }
 
     @Test
-    public void defineAddActiveSieveScriptInvokeShouldReturnBadRequestWhenAddActivateParamWithNotBooleanValue() {
+    void defineAddActiveSieveScriptInvokeShouldReturnBadRequestWhenAddActivateParamWithNotBooleanValue() {
         given()
             .pathParam("userName", "userA")
             .pathParam("scriptName", "scriptA")
@@ -252,7 +247,7 @@ public class SieveScriptRoutesTest {
             .body("message", equalTo("Invalid activate query parameter"));
     }
 
-    protected ScriptContent getScriptContent(InputStream inputStream) throws IOException {
+    ScriptContent getScriptContent(InputStream inputStream) throws IOException {
         return new ScriptContent(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
     }
 }

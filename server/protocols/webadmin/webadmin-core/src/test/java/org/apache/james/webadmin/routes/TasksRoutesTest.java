@@ -52,7 +52,7 @@ class TasksRoutesTest {
     private WebAdminServer webAdminServer;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         taskManager = new MemoryTaskManager();
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
