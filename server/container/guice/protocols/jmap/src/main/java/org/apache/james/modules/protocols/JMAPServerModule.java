@@ -22,7 +22,6 @@ package org.apache.james.modules.protocols;
 import java.security.Security;
 import java.util.List;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.JMAPModule;
 import org.apache.james.jmap.JMAPServer;
@@ -41,8 +40,6 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class JMAPServerModule extends AbstractModule {
-
-    private static final HierarchicalConfiguration NULL_CONFIGURATION = null;
 
     @Override
     protected void configure() {
@@ -71,7 +68,7 @@ public class JMAPServerModule extends AbstractModule {
             try {
                 if (jmapConfiguration.isEnabled()) {
                     signatureHandler.init();
-                    server.configure(NULL_CONFIGURATION);
+                    server.start();
                     registerPEMWithSecurityProvider();
                 }
             } catch (Exception e) {
