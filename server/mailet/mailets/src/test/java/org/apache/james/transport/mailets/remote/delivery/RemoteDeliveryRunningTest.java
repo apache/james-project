@@ -62,7 +62,7 @@ public class RemoteDeliveryRunningTest {
     public void remoteDeliveryShouldStart() throws Exception {
         when(mailQueue.deQueue()).thenAnswer(invocation -> {
             countDownLatch.countDown();
-            Thread.sleep(TimeUnit.SECONDS.toMillis(20));
+            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
             return Flux.never();
         });
         remoteDelivery.init(FakeMailetConfig.builder()
