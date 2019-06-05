@@ -22,7 +22,6 @@ package org.apache.james.webadmin.routes;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -83,7 +82,7 @@ public class HealthCheckRoutesTest {
             new DefaultMetricFactory(),
             new HealthCheckRoutes(healthChecks, new JsonTransformer()));
 
-        webAdminServer.configure(NO_CONFIGURATION);
+        webAdminServer.start();
         webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

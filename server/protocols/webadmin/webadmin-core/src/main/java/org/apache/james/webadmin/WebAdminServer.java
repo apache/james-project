@@ -31,9 +31,7 @@ import java.util.Set;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
@@ -53,10 +51,9 @@ import com.google.common.base.Preconditions;
 
 import spark.Service;
 
-public class WebAdminServer implements Configurable {
-
+public class WebAdminServer implements Startable {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebAdminServer.class);
-    public static final HierarchicalConfiguration NO_CONFIGURATION = null;
+
     public static final int DEFAULT_PORT = 8080;
 
     private final WebAdminConfiguration configuration;
@@ -79,8 +76,7 @@ public class WebAdminServer implements Configurable {
         this.service = Service.ignite();
     }
 
-    @Override
-    public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+    public void start() {
         if (configuration.isEnabled()) {
             service.port(configuration.getPort().get().getValue());
             configureExceptionHanding();

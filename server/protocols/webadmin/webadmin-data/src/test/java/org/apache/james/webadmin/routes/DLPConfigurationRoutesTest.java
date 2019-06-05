@@ -27,7 +27,6 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_FIELDS;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -71,7 +70,7 @@ class DLPConfigurationRoutesTest {
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
             new DLPConfigurationRoutes(dlpConfigurationStore, domainList, new JsonTransformer()));
-        webAdminServer.configure(NO_CONFIGURATION);
+        webAdminServer.start();
         webAdminServer.await();
 
         requestSpecification = buildRequestSpecification(webAdminServer);

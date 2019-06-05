@@ -37,7 +37,7 @@ public class WebAdminServerTest {
     @Test
     public void getPortShouldReturnPortWhenConfigured() throws Exception {
         WebAdminServer server = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory());
-        server.configure(WebAdminServer.NO_CONFIGURATION);
+        server.start();
 
         Port port = server.getPort();
 

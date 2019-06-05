@@ -20,7 +20,6 @@
 package org.apache.james.webadmin.routes;
 
 import static io.restassured.RestAssured.when;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.apache.james.webadmin.routes.ErrorRoutes.INTERNAL_SERVER_ERROR;
 import static org.apache.james.webadmin.routes.ErrorRoutes.INVALID_ARGUMENT_EXCEPTION;
 import static org.apache.james.webadmin.routes.ErrorRoutes.JSON_EXTRACT_EXCEPTION;
@@ -52,7 +51,7 @@ public class ErrorRoutesTest {
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new NoopMetricFactory(),
                 new ErrorRoutes());
-        webAdminServer.configure(NO_CONFIGURATION);
+        webAdminServer.start();
         webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

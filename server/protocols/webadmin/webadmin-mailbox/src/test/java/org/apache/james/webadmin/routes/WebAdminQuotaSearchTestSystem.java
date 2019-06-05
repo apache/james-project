@@ -19,8 +19,6 @@
 
 package org.apache.james.webadmin.routes;
 
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
-
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
 import org.apache.james.webadmin.WebAdminServer;
@@ -68,7 +66,7 @@ public class WebAdminQuotaSearchTestSystem {
             userQuotaRoutes,
             domainQuotaRoutes,
             globalQuotaRoutes);
-        this.webAdminServer.configure(NO_CONFIGURATION);
+        this.webAdminServer.start();
         this.webAdminServer.await();
 
         this.requestSpecBuilder = WebAdminUtils.buildRequestSpecification(webAdminServer)

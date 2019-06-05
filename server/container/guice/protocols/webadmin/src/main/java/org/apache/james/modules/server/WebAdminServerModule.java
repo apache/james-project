@@ -20,14 +20,12 @@
 package org.apache.james.modules.server;
 
 import static org.apache.james.webadmin.WebAdminConfiguration.DISABLED_CONFIGURATION;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 
 import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.ConfigurationPerformer;
@@ -137,11 +135,7 @@ public class WebAdminServerModule extends AbstractModule {
 
         @Override
         public void initModule() {
-            try {
-                webAdminServer.configure(NO_CONFIGURATION);
-            } catch (ConfigurationException e) {
-                throw new RuntimeException(e);
-            }
+            webAdminServer.start();
         }
 
         @Override

@@ -24,7 +24,6 @@ import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.empty;
@@ -94,7 +93,7 @@ public class MailQueueRoutesTest {
             new NoopMetricFactory(),
             new MailQueueRoutes(mailQueueFactory, jsonTransformer, taskManager),
             new TasksRoutes(taskManager, jsonTransformer));
-        server.configure(NO_CONFIGURATION);
+        server.start();
         server.await();
         return server;
     }

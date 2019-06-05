@@ -20,7 +20,6 @@
 package org.apache.james.webadmin.routes;
 
 import static io.restassured.RestAssured.given;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
@@ -63,7 +62,7 @@ class DomainQuotaRoutesNoVirtualHostingTest {
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new NoopMetricFactory(),
             domainQuotaRoutes);
-        webAdminServer.configure(NO_CONFIGURATION);
+        webAdminServer.start();
         webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

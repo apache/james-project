@@ -20,7 +20,6 @@
 package org.apache.james.webadmin.routes;
 
 import static io.restassured.RestAssured.given;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.User;
@@ -52,7 +51,7 @@ public class SieveQuotaRoutesTest {
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new DefaultMetricFactory(),
                 new SieveQuotaRoutes(sieveRepository, new JsonTransformer()));
-        webAdminServer.configure(NO_CONFIGURATION);
+        webAdminServer.start();
         webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
