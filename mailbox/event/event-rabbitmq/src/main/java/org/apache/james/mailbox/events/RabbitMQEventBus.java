@@ -32,6 +32,7 @@ import org.apache.james.metrics.api.MetricFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.rabbitmq.client.Connection;
+
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Sender;
@@ -55,7 +56,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
     private volatile boolean isStopping;
     private GroupRegistrationHandler groupRegistrationHandler;
     private KeyRegistrationHandler keyRegistrationHandler;
-    private EventDispatcher eventDispatcher;
+    EventDispatcher eventDispatcher;
     private Sender sender;
 
     @Inject
