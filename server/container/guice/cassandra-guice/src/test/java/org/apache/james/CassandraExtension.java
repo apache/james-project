@@ -49,4 +49,12 @@ public class CassandraExtension implements GuiceModuleTestExtension {
     public Module getModule() {
         return cassandra.getModule();
     }
+
+    public void pause() {
+        cassandra.pause();
+    }
+
+    public void unpause() {
+        cassandra.unpause();
+    }
 }
