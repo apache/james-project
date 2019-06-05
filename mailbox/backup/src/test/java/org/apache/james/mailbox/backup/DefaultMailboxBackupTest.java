@@ -197,7 +197,7 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
     @Test
     void restoringAccountInNonEmptyAccountShouldNotBeDone() throws Exception {
         createMailbox(sessionUser, MAILBOX_PATH_USER1_MAILBOX1);
-        createMailbox(sessionUser, MAILBOX_PATH_OTHER_USER_MAILBOX1);
+        createMailbox(sessionOtherUser, MAILBOX_PATH_OTHER_USER_MAILBOX1);
 
         ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
         backup.backupAccount(USER1, destination);
