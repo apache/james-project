@@ -113,7 +113,7 @@ class EventDeadLettersRoutesTest {
     private MemoryTaskManager taskManager;
 
     @BeforeEach
-    void beforeEach() throws Exception {
+    void beforeEach() {
         deadLetters = new MemoryEventDeadLetters();
         JsonTransformer jsonTransformer = new JsonTransformer();
         EventSerializer eventSerializer = new EventSerializer(new InMemoryId.Factory(), new InMemoryMessageId.Factory());
@@ -127,7 +127,6 @@ class EventDeadLettersRoutesTest {
             new EventDeadLettersRoutes(service, eventSerializer, taskManager, jsonTransformer),
             new TasksRoutes(taskManager, jsonTransformer));
         webAdminServer.start();
-        webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer).build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();

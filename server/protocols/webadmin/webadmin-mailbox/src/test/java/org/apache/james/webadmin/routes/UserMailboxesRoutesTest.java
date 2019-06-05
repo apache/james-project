@@ -77,7 +77,6 @@ class UserMailboxesRoutesTest {
             new DefaultMetricFactory(),
             new UserMailboxesRoutes(new UserMailboxesService(mailboxManager, usersRepository), new JsonTransformer()));
         webAdminServer.start();
-        webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(USERS_BASE + SEPARATOR + USERNAME + SEPARATOR + UserMailboxesRoutes.MAILBOXES)

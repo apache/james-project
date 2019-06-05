@@ -39,6 +39,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import com.google.common.collect.ImmutableSet;
+
 import io.restassured.RestAssured;
 
 class DomainQuotaRoutesNoVirtualHostingTest {
@@ -63,7 +64,6 @@ class DomainQuotaRoutesNoVirtualHostingTest {
             new NoopMetricFactory(),
             domainQuotaRoutes);
         webAdminServer.start();
-        webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .build();

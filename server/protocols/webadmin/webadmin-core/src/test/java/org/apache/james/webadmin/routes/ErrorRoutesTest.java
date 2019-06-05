@@ -52,7 +52,6 @@ public class ErrorRoutesTest {
                 new NoopMetricFactory(),
                 new ErrorRoutes());
         webAdminServer.start();
-        webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
                 .setBasePath(ErrorRoutes.BASE_URL)

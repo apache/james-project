@@ -172,10 +172,6 @@ public class WebAdminServer implements Startable {
         }
     }
 
-    public void await() {
-        service.awaitInitialization();
-    }
-
     public Port getPort() {
         Preconditions.checkState(port != null, "WebAdminServer should be configured.");
         return port;

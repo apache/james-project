@@ -78,7 +78,7 @@ class ReindexingRoutesTest {
     private InMemoryMailboxManager mailboxManager;
 
     @BeforeEach
-    void beforeEach() throws Exception {
+    void beforeEach() {
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         MemoryTaskManager taskManager = new MemoryTaskManager();
         InMemoryId.Factory mailboxIdFactory = new InMemoryId.Factory();
@@ -106,7 +106,6 @@ class ReindexingRoutesTest {
                 new MessageIdReIndexerImpl(mailboxManager, mailboxManager.getMapperFactory(), searchIndex),
                 jsonTransformer));
         webAdminServer.start();
-        webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer).build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();

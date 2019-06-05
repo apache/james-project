@@ -54,6 +54,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import reactor.core.publisher.Mono;
@@ -66,7 +67,7 @@ public class CassandraMigrationRoutesTest {
     private CassandraSchemaVersionDAO schemaVersionDAO;
     private MemoryTaskManager taskManager;
 
-    private void createServer() throws Exception {
+    private void createServer() {
         Migration successfulMigration = mock(Migration.class);
         when(successfulMigration.run()).thenReturn(Migration.Result.COMPLETED);
 
@@ -87,8 +88,6 @@ public class CassandraMigrationRoutesTest {
             new TasksRoutes(taskManager, jsonTransformer));
 
         webAdminServer.start();
-        webAdminServer.await();
-
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(CassandraMigrationRoutes.VERSION_BASE)

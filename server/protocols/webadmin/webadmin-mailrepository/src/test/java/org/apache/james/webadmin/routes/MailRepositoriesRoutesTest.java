@@ -128,7 +128,6 @@ public class MailRepositoriesRoutesTest {
                     jsonTransformer, reprocessingService, taskManager),
             new TasksRoutes(taskManager, jsonTransformer));
         webAdminServer.start();
-        webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(MailRepositoriesRoutes.MAIL_REPOSITORIES)

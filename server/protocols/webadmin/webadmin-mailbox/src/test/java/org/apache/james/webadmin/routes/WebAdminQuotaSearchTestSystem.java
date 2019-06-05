@@ -67,7 +67,6 @@ public class WebAdminQuotaSearchTestSystem {
             domainQuotaRoutes,
             globalQuotaRoutes);
         this.webAdminServer.start();
-        this.webAdminServer.await();
 
         this.requestSpecBuilder = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .build();

@@ -85,7 +85,7 @@ public class MailQueueRoutesTest {
     MemoryMailQueueFactory mailQueueFactory;
 
 
-    WebAdminServer createServer(MemoryMailQueueFactory mailQueueFactory) throws Exception {
+    WebAdminServer createServer(MemoryMailQueueFactory mailQueueFactory) {
         TaskManager taskManager = new MemoryTaskManager();
         JsonTransformer jsonTransformer = new JsonTransformer();
 
@@ -94,7 +94,6 @@ public class MailQueueRoutesTest {
             new MailQueueRoutes(mailQueueFactory, jsonTransformer, taskManager),
             new TasksRoutes(taskManager, jsonTransformer));
         server.start();
-        server.await();
         return server;
     }
 

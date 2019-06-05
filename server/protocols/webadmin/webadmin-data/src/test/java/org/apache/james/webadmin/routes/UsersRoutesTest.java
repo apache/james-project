@@ -59,12 +59,11 @@ class UsersRoutesTest {
     private static final String USERNAME = "username@" + DOMAIN.name();
     private WebAdminServer webAdminServer;
 
-    private void createServer(UsersRepository usersRepository) throws Exception {
+    private void createServer(UsersRepository usersRepository) {
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
             new UserRoutes(new UserService(usersRepository), new JsonTransformer()));
         webAdminServer.start();
-        webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(UserRoutes.USERS)

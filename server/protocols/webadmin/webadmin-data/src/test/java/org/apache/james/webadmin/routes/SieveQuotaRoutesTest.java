@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
-public class SieveQuotaRoutesTest {
+class SieveQuotaRoutesTest {
 
     private static final User USER_A = User.fromUsername("userA");
 
@@ -46,13 +46,12 @@ public class SieveQuotaRoutesTest {
     private SieveQuotaRepository sieveRepository;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         sieveRepository = new InMemorySieveQuotaRepository();
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new DefaultMetricFactory(),
                 new SieveQuotaRoutes(sieveRepository, new JsonTransformer()));
         webAdminServer.start();
-        webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .build();

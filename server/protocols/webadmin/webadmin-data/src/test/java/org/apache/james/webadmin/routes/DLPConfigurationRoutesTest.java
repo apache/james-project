@@ -66,12 +66,11 @@ class DLPConfigurationRoutesTest {
     private WebAdminServer webAdminServer;
     private EventSourcingDLPConfigurationStore dlpStore;
 
-    private void createServer(DLPConfigurationStore dlpConfigurationStore, DomainList domainList) throws Exception {
+    private void createServer(DLPConfigurationStore dlpConfigurationStore, DomainList domainList) {
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
             new DLPConfigurationRoutes(dlpConfigurationStore, domainList, new JsonTransformer()));
         webAdminServer.start();
-        webAdminServer.await();
 
         requestSpecification = buildRequestSpecification(webAdminServer);
     }

@@ -26,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
@@ -70,7 +69,7 @@ class CassandraMappingsRoutesTest {
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraRRTModule.MODULE);
 
     @BeforeEach
-    void setUp(CassandraCluster cassandra) throws ConfigurationException {
+    void setUp(CassandraCluster cassandra) {
         cassandraRecipientRewriteTableDAO = new CassandraRecipientRewriteTableDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         cassandraMappingsSourcesDAO = new CassandraMappingsSourcesDAO(cassandra.getConf());
         mappingsSourcesMigration = new MappingsSourcesMigration(cassandraRecipientRewriteTableDAO, cassandraMappingsSourcesDAO);
@@ -85,7 +84,6 @@ class CassandraMappingsRoutesTest {
             new TasksRoutes(taskManager, jsonTransformer));
 
         webAdminServer.start();
-        webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(CassandraMappingsRoutes.ROOT_PATH)

@@ -33,7 +33,6 @@ public class WebAdminGuiceProbe implements GuiceProbe {
     }
 
     public Port getWebAdminPort() {
-        webAdminServer.await();
         return webAdminServer.getPort();
     }
 }

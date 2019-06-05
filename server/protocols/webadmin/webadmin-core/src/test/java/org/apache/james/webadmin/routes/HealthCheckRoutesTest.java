@@ -83,7 +83,6 @@ public class HealthCheckRoutesTest {
             new HealthCheckRoutes(healthChecks, new JsonTransformer()));
 
         webAdminServer.start();
-        webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(HealthCheckRoutes.HEALTHCHECK)
