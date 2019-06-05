@@ -111,7 +111,6 @@ public class RemoteDeliveryTest {
     @Test
     public void remoteDeliveryShouldAddEmailToSpool() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build());
 
         Mail mail = FakeMail.builder().name(MAIL_NAME).recipients(MailAddressFixture.ANY_AT_JAMES).build();
@@ -130,7 +129,6 @@ public class RemoteDeliveryTest {
     @Test
     public void remoteDeliveryShouldSplitMailsByServerWhenNoGateway() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build());
 
         Mail mail = FakeMail.builder()
@@ -156,7 +154,6 @@ public class RemoteDeliveryTest {
     @Test
     public void remoteDeliveryShouldNotSplitMailsByServerWhenGateway() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, MailAddressFixture.JAMES_LOCAL)
             .build());
 
@@ -179,7 +176,6 @@ public class RemoteDeliveryTest {
     @Test
     public void remoteDeliveryShouldGhostMails() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build());
 
         Mail mail = FakeMail.builder().name(MAIL_NAME).recipients(MailAddressFixture.ANY_AT_JAMES).build();
@@ -191,7 +187,6 @@ public class RemoteDeliveryTest {
     @Test
     public void remoteDeliveryShouldAddPriorityIfSpecified() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.USE_PRIORITY, "true")
             .build());
 
@@ -211,7 +206,6 @@ public class RemoteDeliveryTest {
     @Test
     public void remoteDeliveryShouldNotForwardMailsWithNoRecipients() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build());
 
         Mail mail = FakeMail.builder().name(MAIL_NAME).build();
@@ -223,7 +217,6 @@ public class RemoteDeliveryTest {
     @Test
     public void remoteDeliveryShouldNotForwardMailsWithNoRecipientsWithGateway() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, MailAddressFixture.JAMES_LOCAL)
             .build());
 

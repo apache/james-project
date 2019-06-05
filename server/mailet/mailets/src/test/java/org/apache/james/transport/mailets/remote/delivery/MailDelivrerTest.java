@@ -69,7 +69,6 @@ public class MailDelivrerTest {
         dnsHelper = mock(DnsHelper.class);
         mailDelivrerToHost = mock(MailDelivrerToHost.class);
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.MAX_DNS_PROBLEM_RETRIES, "3")
             .setProperty(RemoteDeliveryConfiguration.DEBUG, "true")
             .build(),

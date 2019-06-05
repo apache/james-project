@@ -41,7 +41,6 @@ public class RemoteDeliveryConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RemoteDeliveryConfiguration.class);
 
-    public static final String DELIVERY_THREADS = "deliveryThreads";
     public static final String USE_PRIORITY = "usePriority";
     public static final String MAX_DNS_PROBLEM_RETRIES = "maxDnsProblemRetries";
     public static final String HELO_NAME = "heloName";
@@ -79,7 +78,6 @@ public class RemoteDeliveryConfiguration {
     private final long smtpTimeout;
     private final int dnsProblemRetry;
     private final int connectionTimeout;
-    private final int workersThreadCount;
     private final List<Duration> delayTimes;
     private final HeloNameProvider heloNameProvider;
     private final String outGoingQueueName;
@@ -107,7 +105,6 @@ public class RemoteDeliveryConfiguration {
         connectionTimeout = computeConnectionTimeout(mailetConfig);
         dnsProblemRetry = computeDnsProblemRetry(mailetConfig);
         heloNameProvider = new HeloNameProvider(mailetConfig.getInitParameter(HELO_NAME), domainList);
-        workersThreadCount = Integer.valueOf(mailetConfig.getInitParameter(DELIVERY_THREADS));
 
         String gatewayPort = mailetConfig.getInitParameter(GATEWAY_PORT);
         String gateway = mailetConfig.getInitParameter(GATEWAY);
@@ -261,10 +258,6 @@ public class RemoteDeliveryConfiguration {
 
     public int getConnectionTimeout() {
         return connectionTimeout;
-    }
-
-    public int getWorkersThreadCount() {
-        return workersThreadCount;
     }
 
     public Collection<String> getGatewayServer() {

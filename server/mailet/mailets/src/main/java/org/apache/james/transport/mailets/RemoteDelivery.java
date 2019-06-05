@@ -62,7 +62,6 @@ import com.google.common.collect.HashMultimap;
  * <p>These are the parameters that control the operation of the RemoteDelivery mailet:
  * <p/>
  * <ul>
- * <li><b>deliveryThreads</b> (required) - an Integer for the number of threads this mailet will use to deliver mail.</li>
  * <li><b>outgoing</b> (required) - a String containing the name of the queue that will hold messages being processed by this mailet.</li>
  * <li><b>bind</b> (optional) - a String describing the local IP address to which the mailet should be bound while delivering
  * emails. This tag is useful for multihomed machines. Default is to bind to the default local address of the machine.<br>

@@ -60,7 +60,6 @@ public class DeliveryRunnableTest {
     @Before
     public void setUp() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.DEBUG, "true")
             .setProperty(RemoteDeliveryConfiguration.DELAY_TIME, "1000,2000,3000,4000,5000")
             .build();

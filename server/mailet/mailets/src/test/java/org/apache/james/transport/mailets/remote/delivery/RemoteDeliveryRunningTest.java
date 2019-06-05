@@ -40,8 +40,8 @@ import org.junit.Test;
 import reactor.core.publisher.Flux;
 
 public class RemoteDeliveryRunningTest {
+    private static final String QUEUE_NAME = "queueName";
 
-    public static final String QUEUE_NAME = "queueName";
     private RemoteDelivery remoteDelivery;
     private MailQueue mailQueue;
     private CountDownLatch countDownLatch;
@@ -66,7 +66,6 @@ public class RemoteDeliveryRunningTest {
             return Flux.never();
         });
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.OUTGOING, QUEUE_NAME)
             .setProperty(RemoteDeliveryConfiguration.HELO_NAME, "Hello_name")
             .build());
@@ -76,7 +75,7 @@ public class RemoteDeliveryRunningTest {
     }
 
     @After
-    public void tearDown() throws InterruptedException {
+    public void tearDown() {
         remoteDelivery.destroy();
     }
 
