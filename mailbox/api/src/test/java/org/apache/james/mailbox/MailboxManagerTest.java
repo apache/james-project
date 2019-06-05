@@ -1325,6 +1325,24 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             assertThatCode(() -> mailboxManager.copyMessages(MessageRange.all(), inbox, inbox, session))
                 .doesNotThrowAnyException();
         }
+
+        @Test
+        void createMailboxShouldNotThrowWhenMailboxPathBelongsToUser() throws MailboxException {
+            session = mailboxManager.createSystemSession(USER_1);
+            Optional<MailboxId> mailboxId = mailboxManager
+                .createMailbox(MailboxPath.forUser(USER_1, "mailboxName"), session);
+
+            assertThat(mailboxId).isNotEmpty();
+        }
+
+        @Test
+        void createMailboxDoesNotThrowWhenMailboxPathBelongsToAnotherUser() throws MailboxException {
+            session = mailboxManager.createSystemSession(USER_1);
+
+            assertThatCode(() -> mailboxManager
+                    .createMailbox(MailboxPath.forUser(USER_2, "mailboxName"), session))
+                .doesNotThrowAnyException();
+        }
     }
 
     @Nested
