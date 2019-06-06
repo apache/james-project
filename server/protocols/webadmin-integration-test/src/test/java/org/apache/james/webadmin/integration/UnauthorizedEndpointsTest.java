@@ -21,7 +21,6 @@ package org.apache.james.webadmin.integration;
 
 import static io.restassured.RestAssured.when;
 
-import org.apache.james.GuiceJamesServer;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.AliasRoutes;
@@ -45,18 +44,19 @@ import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import io.restassured.RestAssured;
 
-@ExtendWith(CassandraJmapExtension.class)
 class UnauthorizedEndpointsTest {
+    @RegisterExtension
+    static CassandraJmapExtension cassandraJmapExtension = new CassandraJmapExtension(CassandraJmapExtension.JamesLifeCyclePolicy.COMMON_TO_ALL_TESTS);
 
     @BeforeEach
-    void setup(GuiceJamesServer james) {
-        WebAdminGuiceProbe webAdminGuiceProbe = james.getProbe(WebAdminGuiceProbe.class);
+    void setup() {
+        WebAdminGuiceProbe webAdminGuiceProbe = cassandraJmapExtension.getJames().getProbe(WebAdminGuiceProbe.class);
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort())
             .build();
