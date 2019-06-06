@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.vault.routes;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -66,6 +67,7 @@ class ExportService {
         blobExport.blobId(blobId)
             .with(exportToAddress)
             .explanation(exportMessage(user))
+            .filePrefix(Optional.of("deleted-message-of-" + user.asString() + "_"))
             .fileExtension(FileExtension.ZIP)
             .export();
     }

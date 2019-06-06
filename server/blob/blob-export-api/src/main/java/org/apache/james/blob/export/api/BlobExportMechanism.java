@@ -39,7 +39,16 @@ public interface BlobExportMechanism {
 
     @FunctionalInterface
     interface ExplanationStage {
-        FileExtensionStage explanation(String explanation);
+        FilePrefixStage explanation(String explanation);
+    }
+
+    @FunctionalInterface
+    interface FilePrefixStage {
+        FileExtensionStage filePrefix(Optional<String> prefix);
+
+        default FileExtensionStage noFileCustomPrefix() {
+            return filePrefix(Optional.empty());
+        }
     }
 
     @FunctionalInterface
