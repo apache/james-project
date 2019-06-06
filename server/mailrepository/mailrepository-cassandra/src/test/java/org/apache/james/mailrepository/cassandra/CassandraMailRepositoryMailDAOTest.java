@@ -29,6 +29,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.api.BlobId;
@@ -45,10 +46,12 @@ import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 
+@ExtendWith(CassandraRestartExtension.class)
 class CassandraMailRepositoryMailDAOTest {
     static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
     static final MailKey KEY_1 = new MailKey("key1");
