@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 ### Added
 - Add in-memory docker image
+- Support of AWS S3 as blobstore
 
 ### Changed
 - Migration to ElasticSearch 6.3
