@@ -19,12 +19,10 @@
 
 package org.apache.james;
 
-import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
 
 public class FakeSearchMailboxModule extends AbstractModule {
 
@@ -32,9 +30,5 @@ public class FakeSearchMailboxModule extends AbstractModule {
     protected void configure() {
         bind(FakeMessageSearchIndex.class).in(Scopes.SINGLETON);
         bind(ListeningMessageSearchIndex.class).to(FakeMessageSearchIndex.class);
-
-        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
-                .addBinding()
-                .to(FakeMessageSearchIndex.class);
     }
 }
