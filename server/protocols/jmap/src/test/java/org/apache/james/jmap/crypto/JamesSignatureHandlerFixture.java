@@ -19,19 +19,13 @@
 
 package org.apache.james.jmap.crypto;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Optional;
 
-import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.JMAPConfiguration;
-import org.apache.james.jmap.JMAPConfiguration.Builder;
 
-public class JamesSignatureHandlerProvider {
+class JamesSignatureHandlerFixture {
 
-    private static final String JWT_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\n" +
+    static final String JWT_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\n" +
         "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtlChO/nlVP27MpdkG0Bh\n" +
         "16XrMRf6M4NeyGa7j5+1UKm42IKUf3lM28oe82MqIIRyvskPc11NuzSor8HmvH8H\n" +
         "lhDs5DyJtx2qp35AT0zCqfwlaDnlDc/QDlZv1CoRZGpQk1Inyh6SbZwYpxxwh0fi\n" +
@@ -41,41 +35,19 @@ public class JamesSignatureHandlerProvider {
         "kwIDAQAB\n" +
         "-----END PUBLIC KEY-----";
 
-    public JamesSignatureHandlerProvider() {
-    }
+    static JamesSignatureHandler defaultSignatureHandler() {
 
-    public JamesSignatureHandler provide() throws Exception {
-        JamesSignatureHandler signatureHandler = new JamesSignatureHandler(newFileSystem(),
-                newConfigurationBuilder().build());
-        signatureHandler.init();
-        return signatureHandler;
-    }
-
-    public static Builder newConfigurationBuilder() {
-        return JMAPConfiguration.builder()
+        JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
             .enable()
+            .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
             .keystore("keystore")
             .secret("james72laBalle")
-            .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY));
+            .build();
+
+        SecurityKeyLoader loader = new SecurityKeyLoader(
+            new ClassLoaderFileSystem(),
+            jmapConfiguration);
+
+        return new JamesSignatureHandler(loader);
     }
-
-    public static FileSystem newFileSystem() {
-        return new FileSystem() {
-            @Override
-            public InputStream getResource(String url) throws IOException {
-                return ClassLoader.getSystemResourceAsStream(url);
-            }
-
-            @Override
-            public File getFile(String fileURL) throws FileNotFoundException {
-                return null;
-            }
-
-            @Override
-            public File getBasedir() throws FileNotFoundException {
-                return null;
-            }
-        };
-    }
-
 }

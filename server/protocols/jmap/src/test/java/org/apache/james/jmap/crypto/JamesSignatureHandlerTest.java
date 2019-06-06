@@ -21,9 +21,6 @@ package org.apache.james.jmap.crypto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.security.KeyStoreException;
-
-import org.apache.james.jmap.JMAPConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,19 +34,8 @@ public class JamesSignatureHandlerTest {
 
     @Before
     public void setUp() throws Exception {
-       signatureHandler = new JamesSignatureHandlerProvider().provide();
-    }
-
-    @Test(expected = KeyStoreException.class)
-    public void initShouldThrowOnUnknownKeystore() throws Exception {
-        JMAPConfiguration jmapConfiguration = JamesSignatureHandlerProvider.newConfigurationBuilder()
-            .keystore("badAliasKeystore")
-            .secret("password")
-            .build();
-
-        JamesSignatureHandler signatureHandler = new JamesSignatureHandler(JamesSignatureHandlerProvider.newFileSystem(),
-                jmapConfiguration);
-        signatureHandler.init();
+       signatureHandler = JamesSignatureHandlerFixture.defaultSignatureHandler();
+       signatureHandler.init();
     }
 
     @Test
