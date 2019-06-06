@@ -93,19 +93,19 @@ class ReindexingRoutesTest {
         JsonTransformer jsonTransformer = new JsonTransformer();
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
-            new DefaultMetricFactory(),
-            new TasksRoutes(taskManager, jsonTransformer),
-            new ReindexingRoutes(
-                taskManager,
-                new PreviousReIndexingService(taskManager),
-                mailboxIdFactory,
-                reIndexer,
-                jsonTransformer),
-            new MessageIdReindexingRoutes(taskManager,
-                new InMemoryMessageId.Factory(),
-                new MessageIdReIndexerImpl(mailboxManager, mailboxManager.getMapperFactory(), searchIndex),
-                jsonTransformer));
-        webAdminServer.start();
+                new DefaultMetricFactory(),
+                new TasksRoutes(taskManager, jsonTransformer),
+                new ReindexingRoutes(
+                    taskManager,
+                    new PreviousReIndexingService(taskManager),
+                    mailboxIdFactory,
+                    reIndexer,
+                    jsonTransformer),
+                new MessageIdReindexingRoutes(taskManager,
+                    new InMemoryMessageId.Factory(),
+                    new MessageIdReIndexerImpl(mailboxManager, mailboxManager.getMapperFactory(), searchIndex),
+                    jsonTransformer))
+            .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer).build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();

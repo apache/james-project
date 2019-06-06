@@ -28,16 +28,15 @@ import org.junit.Test;
 public class WebAdminServerTest {
 
     @Test
-    public void getPortShouldThrowWhenNotConfigured() throws Exception {
+    public void getPortShouldThrowWhenNotConfigured() {
         WebAdminServer server = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory());
-        assertThatThrownBy(() -> server.getPort())
+        assertThatThrownBy(server::getPort)
             .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void getPortShouldReturnPortWhenConfigured() throws Exception {
-        WebAdminServer server = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory());
-        server.start();
+    public void getPortShouldReturnPortWhenConfigured() {
+        WebAdminServer server = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory()).start();
 
         Port port = server.getPort();
 

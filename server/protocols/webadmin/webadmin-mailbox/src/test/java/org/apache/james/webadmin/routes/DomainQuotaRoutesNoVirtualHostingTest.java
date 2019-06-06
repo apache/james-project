@@ -60,10 +60,8 @@ class DomainQuotaRoutesNoVirtualHostingTest {
         QuotaModule quotaModule = new QuotaModule();
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
         DomainQuotaRoutes domainQuotaRoutes = new DomainQuotaRoutes(memoryDomainList, domainQuotaService, usersRepository, new JsonTransformer(quotaModule), ImmutableSet.of(quotaModule));
-        webAdminServer = WebAdminUtils.createWebAdminServer(
-            new NoopMetricFactory(),
-            domainQuotaRoutes);
-        webAdminServer.start();
+        webAdminServer = WebAdminUtils.createWebAdminServer(new NoopMetricFactory(), domainQuotaRoutes)
+            .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .build();
