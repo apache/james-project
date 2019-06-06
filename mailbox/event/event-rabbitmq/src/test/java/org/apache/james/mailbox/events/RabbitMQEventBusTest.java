@@ -346,23 +346,6 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
 
             @Test
-            void dispatchShouldWorkAfterNetworkIssuesForOldRegistration() throws Exception {
-                eventBus.start();
-                MailboxListener listener = newListener();
-                eventBus.register(listener, GROUP_A);
-
-                rabbitMQExtension.getRabbitMQ().pause();
-
-                assertThatThrownBy(() -> eventBus.dispatch(EVENT, NO_KEYS).block())
-                    .isInstanceOf(RabbitFluxException.class);
-
-                rabbitMQExtension.getRabbitMQ().unpause();
-
-                eventBus.dispatch(EVENT, NO_KEYS).block();
-                assertThatListenerReceiveOneEvent(listener);
-            }
-
-            @Test
             void dispatchShouldWorkAfterRestartForOldRegistration() throws Exception {
                 eventBus.start();
                 MailboxListener listener = newListener();
