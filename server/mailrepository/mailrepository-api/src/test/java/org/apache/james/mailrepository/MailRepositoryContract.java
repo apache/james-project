@@ -26,8 +26,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
 import javax.mail.MessagingException;
@@ -444,9 +444,8 @@ public interface MailRepositoryContract {
             .boxed()
             .collect(Guavate.toImmutableList());
 
-        Random random = new Random();
         ThrowingRunnable add = () -> {
-            int keyIndex = computeKeyIndex(nbKeys, Math.abs(random.nextInt()));
+            int keyIndex = computeKeyIndex(nbKeys, Math.abs(ThreadLocalRandom.current().nextInt()));
             MailKey key =  computeKey(keyIndex);
             synchronized (locks.get(keyIndex)) {
                 testee.store(createMail(key));
@@ -455,7 +454,7 @@ public interface MailRepositoryContract {
         };
 
         ThrowingRunnable remove = () -> {
-            int keyIndex = computeKeyIndex(nbKeys, Math.abs(random.nextInt()));
+            int keyIndex = computeKeyIndex(nbKeys, Math.abs(ThreadLocalRandom.current().nextInt()));
             MailKey key =  computeKey(keyIndex);
             synchronized (locks.get(keyIndex)) {
                 testee.remove(key);

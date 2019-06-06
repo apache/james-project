@@ -19,7 +19,7 @@
 
 package org.apache.james.util;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Range;
@@ -34,7 +34,7 @@ public class Port {
     }
 
     public static int generateValidUnprivilegedPort() {
-        return new Random().nextInt(Port.MAX_PORT_VALUE - PRIVILEGED_PORT_BOUND) + PRIVILEGED_PORT_BOUND;
+        return ThreadLocalRandom.current().nextInt(Port.MAX_PORT_VALUE - PRIVILEGED_PORT_BOUND) + PRIVILEGED_PORT_BOUND;
     }
 
     public static void assertValid(int port) {

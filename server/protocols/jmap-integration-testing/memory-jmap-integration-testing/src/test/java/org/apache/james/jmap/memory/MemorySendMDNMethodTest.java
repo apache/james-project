@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.memory;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
@@ -51,10 +51,8 @@ public class MemorySendMDNMethodTest extends SendMDNMethodTest {
             .overrideWith(binder -> binder.bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class)))
         .build();
 
-    private Random random = new Random();
-
     @Override
     protected MessageId randomMessageId() {
-        return new InMemoryMessageId.Factory().fromString(String.valueOf(random.nextInt(100000) + 100));
+        return new InMemoryMessageId.Factory().fromString(String.valueOf(ThreadLocalRandom.current().nextInt(100000) + 100));
     }
 }

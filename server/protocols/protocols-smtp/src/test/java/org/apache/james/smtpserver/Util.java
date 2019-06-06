@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -32,11 +32,9 @@ import org.apache.mailet.base.test.FakeMail;
  */
 public class Util {
 
-    private static final Random RANDOM = new Random();
-
     public static Mail createMockMail2Recipients(MimeMessage m) throws MessagingException {
         return FakeMail.builder()
-            .name("ID=" + RANDOM.nextLong())
+            .name("ID=" + ThreadLocalRandom.current().nextLong())
             .mimeMessage(m)
             .recipients("test@james.apache.org", "test2@james.apache.org")
             .build();

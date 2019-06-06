@@ -20,7 +20,7 @@
 package org.apache.james.mailbox.jpa.mail;
 
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.persistence.EntityManagerFactory;
 
@@ -82,7 +82,7 @@ public class JPAMapperProvider implements MapperProvider {
 
     @Override
     public MailboxId generateId() {
-        return JPAId.of(Math.abs(new Random().nextInt()));
+        return JPAId.of(Math.abs(ThreadLocalRandom.current().nextInt()));
     }
 
     @Override
