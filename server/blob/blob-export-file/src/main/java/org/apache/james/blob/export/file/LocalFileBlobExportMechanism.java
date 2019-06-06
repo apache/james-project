@@ -28,10 +28,10 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.export.api.BlobExportMechanism;
+import org.apache.james.blob.export.api.ExportedFileNamesGenerator;
 import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -44,9 +44,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class LocalFileBlobExportMechanism implements BlobExportMechanism {
-    private static final int STRING_LENGTH = 32;
-    private static final boolean WITH_LETTERS = true;
-    private static final boolean WITH_NUMBERS = true;
     private static final String SUBJECT = "Some content had had just been exported";
     static final String CORRESPONDING_FILE_HEADER = "corresponding-file";
 
@@ -107,18 +104,21 @@ public class LocalFileBlobExportMechanism implements BlobExportMechanism {
 
     @Override
     public ShareeStage blobId(BlobId blobId) {
-        return mailAddress -> explanation -> fileExtension -> () ->  {
-            String fileUrl = copyBlobToFile(blobId, fileExtension);
+        return mailAddress -> explanation -> fileCustomPrefix -> fileExtension -> () ->  {
+            String fileUrl = copyBlobToFile(blobId, fileCustomPrefix, fileExtension);
             sendMail(mailAddress, fileUrl, explanation);
         };
     }
 
-    private String copyBlobToFile(BlobId blobId, Optional<FileExtension> fileExtension) {
+    private String copyBlobToFile(BlobId blobId,
+                                  Optional<String> fileCustomPrefix,
+                                  Optional<FileExtension> fileExtension) {
         try {
             File exportingDirectory = fileSystem.getFile(configuration.exportDirectory);
             FileUtils.forceMkdir(exportingDirectory);
 
-            String fileURL = generateFileUrl(fileExtension);
+            String fileName = ExportedFileNamesGenerator.generateFileName(fileCustomPrefix, blobId, fileExtension);
+            String fileURL = configuration.exportDirectory + "/" + fileName;
             File file = fileSystem.getFile(fileURL);
             FileUtils.copyToFile(blobStore.read(blobId), file);
 
@@ -126,15 +126,6 @@ public class LocalFileBlobExportMechanism implements BlobExportMechanism {
         } catch (IOException e) {
             throw new BlobExportException("Error while copying blob to file", e);
         }
-    }
-
-    private String generateFileUrl(Optional<FileExtension> fileExtension) {
-        String fileName = RandomStringUtils.random(STRING_LENGTH, WITH_LETTERS, !WITH_NUMBERS);
-        String filePathWithoutExtension = configuration.exportDirectory + "/" + fileName;
-
-        return fileExtension
-            .map(extension -> extension.appendExtension(filePathWithoutExtension))
-            .orElse(filePathWithoutExtension);
     }
 
     private void sendMail(MailAddress mailAddress, String fileUrl, String explanation) {

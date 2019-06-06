@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 import java.io.FileInputStream;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 import javax.mail.Message;
 import javax.mail.internet.InternetAddress;
@@ -84,6 +85,7 @@ class LocalFileBlobExportMechanismTest {
         testee.blobId(blobId)
             .with(MailAddressFixture.RECIPIENT1)
             .explanation(explanation)
+            .noFileCustomPrefix()
             .noFileExtension()
             .export();
 
@@ -115,6 +117,7 @@ class LocalFileBlobExportMechanismTest {
         testee.blobId(blobId)
             .with(MailAddressFixture.RECIPIENT1)
             .explanation("The content of a deleted message vault had been shared with you.")
+            .noFileCustomPrefix()
             .noFileExtension()
             .export();
 
@@ -139,6 +142,7 @@ class LocalFileBlobExportMechanismTest {
             testee.blobId(blobId)
                 .with(MailAddressFixture.RECIPIENT1)
                 .explanation("The content of a deleted message vault had been shared with you.")
+                .noFileCustomPrefix()
                 .noFileExtension()
                 .export())
             .isInstanceOf(ObjectStoreException.class);
@@ -151,6 +155,7 @@ class LocalFileBlobExportMechanismTest {
         testee.blobId(blobId)
             .with(MailAddressFixture.RECIPIENT1)
             .explanation("The content of a deleted message vault had been shared with you.")
+            .noFileCustomPrefix()
             .noFileExtension()
             .export();
 
@@ -174,6 +179,7 @@ class LocalFileBlobExportMechanismTest {
         testee.blobId(blobId)
             .with(MailAddressFixture.RECIPIENT1)
             .explanation("The content of a deleted message vault had been shared with you.")
+            .noFileCustomPrefix()
             .fileExtension(FileExtension.ZIP)
             .export();
 
@@ -185,6 +191,31 @@ class LocalFileBlobExportMechanismTest {
                     String fileExtensionInString = FilenameUtils.getExtension(fileUrl);
                     assertThat(FileExtension.of(fileExtensionInString))
                         .isEqualTo(FileExtension.ZIP);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+    }
+
+    @Test
+    void exportingBlobShouldCreateAFileWithPrefixWhenDeclaringPrefix() {
+        BlobId blobId = blobStore.save(BLOB_CONTENT).block();
+        String filePrefix = "deleted-message-of-bob@james.org";
+
+        testee.blobId(blobId)
+            .with(MailAddressFixture.RECIPIENT1)
+            .explanation("The content of a deleted message vault had been shared with you.")
+            .filePrefix(Optional.of(filePrefix))
+            .fileExtension(FileExtension.ZIP)
+            .export();
+
+        assertThat(mailetContext.getSentMails())
+            .element(0)
+            .satisfies(sentMail -> {
+                try {
+                    String fileUrl = sentMail.getMsg().getHeader(LocalFileBlobExportMechanism.CORRESPONDING_FILE_HEADER)[0];
+                    assertThat(FilenameUtils.getName(fileUrl))
+                        .startsWith(filePrefix);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
