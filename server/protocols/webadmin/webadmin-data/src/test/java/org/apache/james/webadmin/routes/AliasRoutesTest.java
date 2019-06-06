@@ -85,6 +85,7 @@ class AliasRoutesTest {
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
             aliasRoutes);
+        webAdminServer.start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath("address/aliases")

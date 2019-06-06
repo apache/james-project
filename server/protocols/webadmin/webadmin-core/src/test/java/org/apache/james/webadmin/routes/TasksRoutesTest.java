@@ -59,6 +59,8 @@ class TasksRoutesTest {
             new DefaultMetricFactory(),
             new TasksRoutes(taskManager, new JsonTransformer()));
 
+        webAdminServer.start();
+
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(TasksRoutes.BASE)
             .build();

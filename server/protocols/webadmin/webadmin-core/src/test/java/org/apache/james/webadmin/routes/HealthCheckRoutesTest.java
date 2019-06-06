@@ -81,6 +81,8 @@ public class HealthCheckRoutesTest {
             new DefaultMetricFactory(),
             new HealthCheckRoutes(healthChecks, new JsonTransformer()));
 
+        webAdminServer.start();
+
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(HealthCheckRoutes.HEALTHCHECK)
             .build();

@@ -126,6 +126,7 @@ class EventDeadLettersRoutesTest {
             new DefaultMetricFactory(),
             new EventDeadLettersRoutes(service, eventSerializer, taskManager, jsonTransformer),
             new TasksRoutes(taskManager, jsonTransformer));
+        webAdminServer.start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer).build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();

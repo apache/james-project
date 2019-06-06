@@ -63,6 +63,7 @@ class UsersRoutesTest {
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
             new UserRoutes(new UserService(usersRepository), new JsonTransformer()));
+        webAdminServer.start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(UserRoutes.USERS)

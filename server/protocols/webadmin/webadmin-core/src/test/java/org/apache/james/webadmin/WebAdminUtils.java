@@ -41,12 +41,6 @@ import io.restassured.specification.RequestSpecification;
 public class WebAdminUtils {
 
     public static WebAdminServer createWebAdminServer(MetricFactory metricFactory, Routes... routes) {
-        WebAdminServer webAdminServer = createNotStartedWebAdminServer(metricFactory, routes);
-        webAdminServer.start();
-        return webAdminServer;
-    }
-
-    public static WebAdminServer createNotStartedWebAdminServer(MetricFactory metricFactory, Routes... routes) {
         return new WebAdminServer(WebAdminConfiguration.TEST_CONFIGURATION,
             privateRoutes(routes),
             publicRoutes(routes),

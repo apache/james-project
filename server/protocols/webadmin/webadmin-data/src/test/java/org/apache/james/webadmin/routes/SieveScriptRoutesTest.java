@@ -90,6 +90,7 @@ class SieveScriptRoutesTest {
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
             new SieveScriptRoutes(sieveRepository, usersRepository));
+        webAdminServer.start();
 
         RestAssured.requestSpecification = WebAdminUtils
             .buildRequestSpecification(webAdminServer)
