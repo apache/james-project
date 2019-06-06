@@ -317,7 +317,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 }
 
                 @Test
-                void dispatchShouldWorkAfterNetworkIssuesForOldRegistration() throws Exception {
+                void dispatchShouldWorkAfterNetworkIssuesForOldRegistration() {
                     rabbitMQEventBusWithNetWorkIssue.start();
                     MailboxListener listener = newListener();
                     rabbitMQEventBusWithNetWorkIssue.register(listener, GROUP_A);
@@ -346,7 +346,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
 
             @Test
-            void dispatchShouldWorkAfterRestartForOldRegistration() throws Exception {
+            void dispatchShouldWorkAfterRestartForOldRegistration() {
                 eventBus.start();
                 MailboxListener listener = newListener();
                 eventBus.register(listener, GROUP_A);
@@ -358,7 +358,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
 
             @Test
-            void dispatchShouldWorkAfterRestartForNewRegistration() throws Exception {
+            void dispatchShouldWorkAfterRestartForNewRegistration() {
                 eventBus.start();
                 MailboxListener listener = newListener();
 
@@ -373,7 +373,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
 
             @Test
-            void redeliverShouldWorkAfterRestartForOldRegistration() throws Exception {
+            void redeliverShouldWorkAfterRestartForOldRegistration() {
                 eventBus.start();
                 MailboxListener listener = newListener();
                 eventBus.register(listener, GROUP_A);
@@ -385,7 +385,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
 
             @Test
-            void redeliverShouldWorkAfterRestartForNewRegistration() throws Exception {
+            void redeliverShouldWorkAfterRestartForNewRegistration() {
                 eventBus.start();
                 MailboxListener listener = newListener();
 
@@ -398,7 +398,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
 
             @Test
-            void dispatchShouldWorkAfterRestartForOldKeyRegistration() throws Exception {
+            void dispatchShouldWorkAfterRestartForOldKeyRegistration() {
                 eventBus.start();
                 MailboxListener listener = newListener();
                 eventBus.register(listener, KEY_1);
@@ -410,7 +410,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
 
             @Test
-            void dispatchShouldWorkAfterRestartForNewKeyRegistration() throws Exception {
+            void dispatchShouldWorkAfterRestartForNewKeyRegistration() {
                 eventBus.start();
                 MailboxListener listener = newListener();
 
@@ -423,7 +423,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
 
             @Test
-            void dispatchShouldWorkAfterNetworkIssuesForNewRegistration() throws Exception {
+            void dispatchShouldWorkAfterNetworkIssuesForNewRegistration() {
                 eventBus.start();
                 MailboxListener listener = newListener();
 
@@ -440,7 +440,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
 
             @Test
-            void redeliverShouldWorkAfterNetworkIssuesForNewRegistration() throws Exception {
+            void redeliverShouldWorkAfterNetworkIssuesForNewRegistration() {
                 eventBus.start();
                 MailboxListener listener = newListener();
 
@@ -457,7 +457,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
 
             @Test
-            void dispatchShouldWorkAfterNetworkIssuesForOldKeyRegistration() throws Exception {
+            void dispatchShouldWorkAfterNetworkIssuesForOldKeyRegistration() {
                 eventBus.start();
                 MailboxListener listener = newListener();
                 when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
@@ -475,7 +475,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
 
             @Test
-            void dispatchShouldWorkAfterNetworkIssuesForNewKeyRegistration() throws Exception {
+            void dispatchShouldWorkAfterNetworkIssuesForNewKeyRegistration() {
                 eventBus.start();
                 MailboxListener listener = newListener();
                 when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
