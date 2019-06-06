@@ -17,22 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james.filesystem.api;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.james.filesystem.api.FileSystem;
-
 public class FileSystemFixture {
 
     public static final FileSystem THROWING_FILE_SYSTEM = new FileSystem() {
         @Override
         public InputStream getResource(String url) throws IOException {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -42,14 +39,14 @@ public class FileSystemFixture {
 
         @Override
         public File getBasedir() throws FileNotFoundException {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
     };
 
     public static final FileSystem CLASSPATH_FILE_SYSTEM = new FileSystem() {
         @Override
         public InputStream getResource(String url) throws IOException {
-            throw new NotImplementedException();
+            return ClassLoader.getSystemResourceAsStream(url);
         }
 
         @Override
@@ -59,14 +56,14 @@ public class FileSystemFixture {
 
         @Override
         public File getBasedir() throws FileNotFoundException {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
     };
 
     public static final FileSystem RECURSIVE_CLASSPATH_FILE_SYSTEM = new FileSystem() {
         @Override
         public InputStream getResource(String url) throws IOException {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -76,7 +73,7 @@ public class FileSystemFixture {
 
         @Override
         public File getBasedir() throws FileNotFoundException {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
     };
 }
