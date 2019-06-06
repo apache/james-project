@@ -29,6 +29,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
@@ -74,17 +75,19 @@ class LinshareBlobExportMechanismTest {
     @Test
     void exportShouldShareTheDocumentViaLinshare() throws Exception {
         BlobId blobId = blobStore.save(FILE_CONTENT).block();
+        String filePrefix = "deleted-message-of-bob@james.org-";
 
         testee.blobId(blobId)
             .with(new MailAddress(USER_2.getUsername()))
             .explanation(EXPLANATION)
+            .filePrefix(Optional.of(filePrefix))
             .fileExtension(FILE_TEXT_EXTENSION)
             .export();
 
         assertThat(user2API.receivedShares())
             .hasSize(1)
             .allSatisfy(receivedShare -> assertThat(receivedShare.getDocument().getName()).endsWith(".txt"))
-            .allSatisfy(receivedShare -> assertThat(receivedShare.getDocument().getName()).startsWith(blobId.asString()))
+            .allSatisfy(receivedShare -> assertThat(receivedShare.getDocument().getName()).startsWith(filePrefix))
             .allSatisfy(receivedShare -> assertThat(receivedShare.getSender().getMail()).isEqualTo(USER_1.getUsername()));
     }
 
@@ -95,6 +98,7 @@ class LinshareBlobExportMechanismTest {
         testee.blobId(blobId)
             .with(new MailAddress(USER_2.getUsername()))
             .explanation(EXPLANATION)
+            .noFileCustomPrefix()
             .fileExtension(FILE_TEXT_EXTENSION)
             .export();
 
@@ -123,6 +127,7 @@ class LinshareBlobExportMechanismTest {
         testee.blobId(blobId)
             .with(new MailAddress(USER_2.getUsername()))
             .explanation(EXPLANATION)
+            .noFileCustomPrefix()
             .fileExtension(FILE_TEXT_EXTENSION)
             .export();
 
@@ -139,8 +144,26 @@ class LinshareBlobExportMechanismTest {
             () -> testee.blobId(blobId)
                 .with(new MailAddress(USER_2.getUsername()))
                 .explanation(EXPLANATION)
+                .noFileCustomPrefix()
                 .fileExtension(FILE_TEXT_EXTENSION)
                 .export())
             .isInstanceOf(BlobExportMechanism.BlobExportException.class);
+    }
+
+    @Test
+    void exportWithFilePrefixShouldCreateFileWithCustomPrefix() throws Exception {
+        BlobId blobId = blobStore.save(FILE_CONTENT).block();
+        String filePrefix = "deleted-message-of-bob@james.org";
+
+        testee.blobId(blobId)
+            .with(new MailAddress(USER_2.getUsername()))
+            .explanation(EXPLANATION)
+            .filePrefix(Optional.of(filePrefix))
+            .fileExtension(FILE_TEXT_EXTENSION)
+            .export();
+
+        Document sharedDoc = user2API.receivedShares().get(0).getDocument();
+        assertThat(sharedDoc.getName())
+            .startsWith(filePrefix);
     }
 }

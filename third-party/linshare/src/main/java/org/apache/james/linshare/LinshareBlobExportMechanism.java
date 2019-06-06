@@ -29,35 +29,43 @@ import org.apache.commons.io.FileUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.export.api.BlobExportMechanism;
+import org.apache.james.blob.export.api.ExportedFileNamesGenerator;
 import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.core.MailAddress;
 import org.apache.james.linshare.client.Document;
 import org.apache.james.linshare.client.LinshareAPI;
 import org.apache.james.linshare.client.ShareRequest;
 
+import com.google.common.io.Files;
+
 public class LinshareBlobExportMechanism implements BlobExportMechanism {
+
     private final LinshareAPI linshareAPI;
     private final BlobStore blobStore;
+    private final File tempDir;
 
     @Inject
     LinshareBlobExportMechanism(LinshareAPI linshareAPI, BlobStore blobStore) {
         this.linshareAPI = linshareAPI;
         this.blobStore = blobStore;
+        this.tempDir = Files.createTempDir();
     }
 
     @Override
     public ShareeStage blobId(BlobId blobId) {
-        return mailAddress -> explanation -> fileExtension -> () ->  {
+        return mailAddress -> explanation -> fileCustomPrefix -> fileExtension -> () ->  {
             try {
-                exportBlob(blobId, mailAddress, fileExtension, explanation);
+                exportBlob(blobId, mailAddress, fileCustomPrefix, fileExtension, explanation);
             } catch (Exception e) {
                 throw new BlobExportException("Error while exporting blob " + blobId.asString() + " to " + mailAddress.asString(), e);
             }
         };
     }
 
-    private void exportBlob(BlobId blobId, MailAddress mailAddress, Optional<FileExtension> fileExtension, String explanation) throws IOException {
-        File tempFile = createTempFile(blobId, fileExtension);
+    private void exportBlob(BlobId blobId, MailAddress mailAddress, Optional<String> fileCustomPrefix,
+                            Optional<FileExtension> fileExtension, String explanation) throws IOException {
+        String fileName = ExportedFileNamesGenerator.generateFileName(fileCustomPrefix, blobId, fileExtension);
+        File tempFile = new File(tempDir, fileName);
         try {
             FileUtils.copyInputStreamToFile(blobStore.read(blobId), tempFile);
             uploadAndShare(mailAddress, tempFile, explanation);
@@ -73,10 +81,5 @@ public class LinshareBlobExportMechanism implements BlobExportMechanism {
             .addDocumentId(document.getId())
             .addRecipient(mailAddress)
             .build());
-    }
-
-    private File createTempFile(BlobId blobId, Optional<FileExtension> fileExtension) throws IOException {
-        String suffix = fileExtension.map(FileExtension::asFileSuffix).orElse("");
-        return File.createTempFile(blobId.asString() + "_", suffix);
     }
 }
