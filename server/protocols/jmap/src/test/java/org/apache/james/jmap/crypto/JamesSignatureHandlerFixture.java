@@ -21,6 +21,7 @@ package org.apache.james.jmap.crypto;
 
 import java.util.Optional;
 
+import org.apache.james.filesystem.api.FileSystemFixture;
 import org.apache.james.jmap.JMAPConfiguration;
 
 class JamesSignatureHandlerFixture {
@@ -45,7 +46,7 @@ class JamesSignatureHandlerFixture {
             .build();
 
         SecurityKeyLoader loader = new SecurityKeyLoader(
-            new ClassLoaderFileSystem(),
+            FileSystemFixture.CLASSPATH_FILE_SYSTEM,
             jmapConfiguration);
 
         return new JamesSignatureHandler(loader);

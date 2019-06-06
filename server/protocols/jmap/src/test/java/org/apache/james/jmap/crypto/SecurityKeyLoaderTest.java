@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.security.KeyStoreException;
 import java.util.Optional;
 
+import org.apache.james.filesystem.api.FileSystemFixture;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +43,7 @@ class SecurityKeyLoaderTest {
             .build();
 
         SecurityKeyLoader loader = new SecurityKeyLoader(
-            new ClassLoaderFileSystem(),
+            FileSystemFixture.CLASSPATH_FILE_SYSTEM,
             jmapConfiguration);
 
         assertThatThrownBy(loader::load)
@@ -60,7 +61,7 @@ class SecurityKeyLoaderTest {
             .build();
 
         SecurityKeyLoader loader = new SecurityKeyLoader(
-            new ClassLoaderFileSystem(),
+            FileSystemFixture.CLASSPATH_FILE_SYSTEM,
             jmapConfiguration);
 
         assertThatThrownBy(loader::load)
@@ -78,7 +79,7 @@ class SecurityKeyLoaderTest {
             .build();
 
         SecurityKeyLoader loader = new SecurityKeyLoader(
-            new ClassLoaderFileSystem(),
+            FileSystemFixture.CLASSPATH_FILE_SYSTEM,
             jmapConfiguration);
 
         assertThat(loader.load())
