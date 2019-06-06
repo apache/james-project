@@ -469,8 +469,8 @@ public interface MailRepositoryContract {
 
         ConcurrentTestRunner.builder()
             .operation((a, b) -> distribution.sample().run())
-            .threadCount(10)
-            .operationCount(10)
+            .threadCount(5)
+            .operationCount(20)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         assertThat(testee.list()).containsOnlyElementsOf(expectedResult);
