@@ -27,6 +27,7 @@ import org.apache.james.jmap.api.SimpleTokenManager;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.crypto.AccessTokenManagerImpl;
 import org.apache.james.jmap.crypto.JamesSignatureHandler;
+import org.apache.james.jmap.crypto.SecurityKeyLoader;
 import org.apache.james.jmap.crypto.SignatureHandler;
 import org.apache.james.jmap.crypto.SignedTokenFactory;
 import org.apache.james.jmap.crypto.SignedTokenManager;
@@ -64,6 +65,7 @@ public class JMAPCommonModule extends AbstractModule {
         bind(MessagePreviewGenerator.class).in(Scopes.SINGLETON);
         bind(MessageContentExtractor.class).in(Scopes.SINGLETON);
         bind(HeadersAuthenticationExtractor.class).in(Scopes.SINGLETON);
+        bind(SecurityKeyLoader.class).in(Scopes.SINGLETON);
 
         bind(SignatureHandler.class).to(JamesSignatureHandler.class);
         bind(ZonedDateTimeProvider.class).to(DefaultZonedDateTimeProvider.class);
