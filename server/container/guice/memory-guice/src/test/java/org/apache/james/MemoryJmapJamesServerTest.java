@@ -19,20 +19,91 @@
 
 package org.apache.james;
 
-import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import static org.apache.james.JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import org.apache.james.jmap.JMAPConfiguration;
+import org.apache.james.jmap.JMAPConfigurationStartUpCheck;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class MemoryJmapJamesServerTest implements JmapJamesServerContract {
+class MemoryJmapJamesServerTest {
+
     private static final int LIMIT_TO_10_MESSAGES = 10;
 
-    @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerBuilder()
-        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
-        .build();
+    @Nested
+    class JmapJamesServerTest implements JmapJamesServerContract {
+
+        @RegisterExtension
+        JamesServerExtension jamesServerExtension = new JamesServerBuilder()
+            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
+            .build();
+    }
+
+    @Nested
+    class JamesServerJmapConfigurationTest {
+
+        @Nested
+        class BadAliasKeyStore {
+
+            @RegisterExtension
+            JamesServerExtension jamesServerExtension = new JamesServerBuilder()
+                .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                    .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+                    .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                    .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE)
+                    .overrideWith(binder -> binder.bind(JMAPConfiguration.class)
+                        .toInstance(TestJMAPServerModule
+                            .jmapConfigurationBuilder()
+                            .keystore("badAliasKeystore")
+                            .secret("password")
+                            .build())))
+                .disableAutoStart()
+                .build();
+
+            @Test
+            void jamesShouldNotStartWhenBadAliasKeyStore(GuiceJamesServer server) {
+                assertThatThrownBy(server::start)
+                    .isInstanceOfSatisfying(
+                        StartUpChecksPerformer.StartUpChecksException.class,
+                        ex -> assertThat(ex.badCheckNames())
+                            .containsOnly(JMAPConfigurationStartUpCheck.CHECK_NAME))
+                    .hasMessageContaining("Alias 'james' keystore can't be found");
+            }
+        }
+
+        @Nested
+        class BadSecretKeyStore {
+
+            @RegisterExtension
+            JamesServerExtension jamesServerExtension = new JamesServerBuilder()
+                .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                    .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+                    .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                    .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE)
+                    .overrideWith(binder -> binder.bind(JMAPConfiguration.class)
+                        .toInstance(TestJMAPServerModule
+                            .jmapConfigurationBuilder()
+                            .secret("WrongSecret")
+                            .build())))
+                .disableAutoStart()
+                .build();
+
+            @Test
+            void jamesShouldNotStartWhenBadSecret(GuiceJamesServer server) {
+                assertThatThrownBy(server::start)
+                    .isInstanceOfSatisfying(
+                        StartUpChecksPerformer.StartUpChecksException.class,
+                        ex -> assertThat(ex.badCheckNames())
+                            .containsOnly(JMAPConfigurationStartUpCheck.CHECK_NAME))
+                    .hasMessageContaining("Keystore was tampered with, or password was incorrect");
+            }
+        }
+    }
 }

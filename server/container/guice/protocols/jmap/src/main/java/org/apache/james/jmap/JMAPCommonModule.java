@@ -36,6 +36,7 @@ import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.send.MailSpool;
 import org.apache.james.jmap.utils.HeadersAuthenticationExtractor;
+import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.util.date.DefaultZonedDateTimeProvider;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.util.mime.MessageContentExtractor;
@@ -46,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 public class JMAPCommonModule extends AbstractModule {
@@ -75,6 +77,9 @@ public class JMAPCommonModule extends AbstractModule {
 
         bindConstant().annotatedWith(Names.named(AccessTokenRepository.TOKEN_EXPIRATION_IN_MS)).to(DEFAULT_TOKEN_EXPIRATION_IN_MS);
         bind(AccessTokenManager.class).to(AccessTokenManagerImpl.class);
+
+        Multibinder.newSetBinder(binder(), StartUpCheck.class)
+            .addBinding().to(JMAPConfigurationStartUpCheck.class);
     }
 
     @Provides
