@@ -30,6 +30,8 @@ import java.util.Optional;
 import org.apache.james.filesystem.api.FileSystemFixture;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class SecurityKeyLoaderTest {
 
@@ -75,6 +77,29 @@ class SecurityKeyLoaderTest {
             .enable()
             .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
             .keystore("keystore")
+            .secret("james72laBalle")
+            .build();
+
+        SecurityKeyLoader loader = new SecurityKeyLoader(
+            FileSystemFixture.CLASSPATH_FILE_SYSTEM,
+            jmapConfiguration);
+
+        assertThat(loader.load())
+            .isNotNull();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "keystoreJava7",
+        "keystoreJava11",
+    })
+    void loadShouldReturnSecurityKeysWhenUsingKeyStoreGeneratedByDifferentJavaVersions(
+        String keyStoreInDifferentVersion) throws Exception {
+
+        JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
+            .enable()
+            .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
+            .keystore(keyStoreInDifferentVersion)
             .secret("james72laBalle")
             .build();
 
