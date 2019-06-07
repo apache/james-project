@@ -299,6 +299,11 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             rabbitManagementAPI = rabbitMQExtension.managementAPI();
         }
 
+        @AfterEach
+        void tearDown() {
+            rabbitMQExtension.getRabbitMQ().unpause();
+        }
+
         @Nested
         class SingleEventBus {
 
