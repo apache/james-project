@@ -41,7 +41,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
@@ -82,7 +81,7 @@ class AliasRoutesTest {
     private WebAdminServer webAdminServer;
 
     private void createServer(AliasRoutes aliasRoutes) {
-        webAdminServer = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory(), aliasRoutes)
+        webAdminServer = WebAdminUtils.createWebAdminServer(aliasRoutes)
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

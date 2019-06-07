@@ -98,7 +98,6 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.vault.DeletedMessage;
@@ -183,7 +182,6 @@ class DeletedMessagesVaultRoutesTest {
         usersRepository = createUsersRepository();
         MessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         webAdminServer = WebAdminUtils.createWebAdminServer(
-                new DefaultMetricFactory(),
                 new TasksRoutes(taskManager, jsonTransformer),
                 new DeletedMessagesVaultRoutes(vault, vaultRestore, exportService, jsonTransformer, taskManager, queryTranslator, usersRepository, messageIdFactory))
             .start();

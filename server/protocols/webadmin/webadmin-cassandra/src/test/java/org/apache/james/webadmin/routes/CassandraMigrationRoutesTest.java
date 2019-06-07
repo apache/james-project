@@ -42,7 +42,6 @@ import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.backends.cassandra.migration.MigrationTask;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -82,7 +81,6 @@ public class CassandraMigrationRoutesTest {
         taskManager = new MemoryTaskManager();
         JsonTransformer jsonTransformer = new JsonTransformer();
         webAdminServer = WebAdminUtils.createWebAdminServer(
-                new DefaultMetricFactory(),
                 new CassandraMigrationRoutes(new CassandraMigrationService(schemaVersionDAO, allMigrationClazz, LATEST_VERSION),
                     taskManager, jsonTransformer),
                 new TasksRoutes(taskManager, jsonTransformer))

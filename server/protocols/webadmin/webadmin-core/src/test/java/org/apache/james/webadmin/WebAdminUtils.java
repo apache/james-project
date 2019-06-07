@@ -27,7 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Set;
 
-import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 
@@ -40,12 +40,12 @@ import io.restassured.specification.RequestSpecification;
 
 public class WebAdminUtils {
 
-    public static WebAdminServer createWebAdminServer(MetricFactory metricFactory, Routes... routes) {
+    public static WebAdminServer createWebAdminServer(Routes... routes) {
         return new WebAdminServer(WebAdminConfiguration.TEST_CONFIGURATION,
             privateRoutes(routes),
             publicRoutes(routes),
             new NoAuthenticationFilter(),
-            metricFactory);
+            new NoopMetricFactory());
     }
 
     private static Set<Routes> privateRoutes(Routes[] routes) {

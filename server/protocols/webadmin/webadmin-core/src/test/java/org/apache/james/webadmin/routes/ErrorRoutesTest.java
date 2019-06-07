@@ -31,7 +31,6 @@ import static org.eclipse.jetty.http.HttpStatus.NOT_FOUND_404;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 
-import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -48,7 +47,7 @@ public class ErrorRoutesTest {
 
     @Before
     public void setUp() throws Exception {
-        webAdminServer = WebAdminUtils.createWebAdminServer(new NoopMetricFactory(), new ErrorRoutes())
+        webAdminServer = WebAdminUtils.createWebAdminServer(new ErrorRoutes())
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

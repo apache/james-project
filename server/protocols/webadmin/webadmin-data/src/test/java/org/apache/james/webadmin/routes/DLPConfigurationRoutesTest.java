@@ -41,7 +41,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -67,7 +66,7 @@ class DLPConfigurationRoutesTest {
     private EventSourcingDLPConfigurationStore dlpStore;
 
     private void createServer(DLPConfigurationStore dlpConfigurationStore, DomainList domainList) {
-        webAdminServer = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory(),
+        webAdminServer = WebAdminUtils.createWebAdminServer(
                 new DLPConfigurationRoutes(dlpConfigurationStore, domainList, new JsonTransformer()))
             .start();
 

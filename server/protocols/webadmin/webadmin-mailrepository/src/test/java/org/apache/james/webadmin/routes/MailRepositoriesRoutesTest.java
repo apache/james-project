@@ -59,7 +59,6 @@ import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryProvider;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
-import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
@@ -123,7 +122,6 @@ public class MailRepositoriesRoutesTest {
         ReprocessingService reprocessingService = new ReprocessingService(queueFactory, repositoryStoreService);
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
-                new NoopMetricFactory(),
                 new MailRepositoriesRoutes(repositoryStoreService,
                     jsonTransformer, reprocessingService, taskManager),
             new TasksRoutes(taskManager, jsonTransformer))

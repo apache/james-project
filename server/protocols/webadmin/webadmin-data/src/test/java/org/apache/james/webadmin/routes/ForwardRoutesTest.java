@@ -42,7 +42,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -81,7 +80,7 @@ class ForwardRoutesTest {
     private WebAdminServer webAdminServer;
 
     private void createServer(ForwardRoutes forwardRoutes) {
-        webAdminServer = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory(), forwardRoutes)
+        webAdminServer = WebAdminUtils.createWebAdminServer(forwardRoutes)
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

@@ -19,7 +19,6 @@
 
 package org.apache.james.webadmin.routes;
 
-import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -61,11 +60,7 @@ public class WebAdminQuotaSearchTestSystem {
             new GlobalQuotaService(quotaSearchTestSystem.getMaxQuotaManager()),
             jsonTransformer);
 
-        this.webAdminServer = WebAdminUtils.createWebAdminServer(
-                new NoopMetricFactory(),
-                userQuotaRoutes,
-                domainQuotaRoutes,
-                globalQuotaRoutes)
+        this.webAdminServer = WebAdminUtils.createWebAdminServer(userQuotaRoutes, domainQuotaRoutes, globalQuotaRoutes)
             .start();
 
         this.requestSpecBuilder = WebAdminUtils.buildRequestSpecification(webAdminServer)

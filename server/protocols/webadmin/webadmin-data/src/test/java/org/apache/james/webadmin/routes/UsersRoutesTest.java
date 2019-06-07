@@ -33,7 +33,6 @@ import java.util.Map;
 
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
@@ -60,9 +59,7 @@ class UsersRoutesTest {
     private WebAdminServer webAdminServer;
 
     private void createServer(UsersRepository usersRepository) {
-        webAdminServer = WebAdminUtils.createWebAdminServer(
-                new DefaultMetricFactory(),
-                new UserRoutes(new UserService(usersRepository), new JsonTransformer()))
+        webAdminServer = WebAdminUtils.createWebAdminServer(new UserRoutes(new UserService(usersRepository), new JsonTransformer()))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

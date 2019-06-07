@@ -44,7 +44,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -74,7 +73,6 @@ class UserMailboxesRoutesTest {
         when(usersRepository.contains(USERNAME)).thenReturn(true);
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
-                new DefaultMetricFactory(),
                 new UserMailboxesRoutes(new UserMailboxesService(mailboxManager, usersRepository), new JsonTransformer()))
             .start();
 

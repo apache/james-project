@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.Mails;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
@@ -90,7 +89,6 @@ class MailQueueRoutesTest {
         JsonTransformer jsonTransformer = new JsonTransformer();
 
         return WebAdminUtils.createWebAdminServer(
-                new NoopMetricFactory(),
                 new MailQueueRoutes(mailQueueFactory, jsonTransformer, taskManager),
                 new TasksRoutes(taskManager, jsonTransformer))
             .start();

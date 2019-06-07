@@ -30,7 +30,6 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.core.Domain;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;
 import org.apache.james.rrt.cassandra.CassandraRRTModule;
 import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTableDAO;
@@ -79,7 +78,6 @@ class CassandraMappingsRoutesTest {
         JsonTransformer jsonTransformer = new JsonTransformer();
         taskManager = new MemoryTaskManager();
         webAdminServer = WebAdminUtils.createWebAdminServer(
-                new DefaultMetricFactory(),
                 new CassandraMappingsRoutes(cassandraMappingsService, taskManager, jsonTransformer),
                 new TasksRoutes(taskManager, jsonTransformer))
             .start();

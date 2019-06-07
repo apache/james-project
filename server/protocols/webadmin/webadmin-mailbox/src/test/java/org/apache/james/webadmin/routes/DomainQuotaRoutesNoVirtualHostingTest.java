@@ -25,7 +25,6 @@ import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
-import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -60,7 +59,7 @@ class DomainQuotaRoutesNoVirtualHostingTest {
         QuotaModule quotaModule = new QuotaModule();
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
         DomainQuotaRoutes domainQuotaRoutes = new DomainQuotaRoutes(memoryDomainList, domainQuotaService, usersRepository, new JsonTransformer(quotaModule), ImmutableSet.of(quotaModule));
-        webAdminServer = WebAdminUtils.createWebAdminServer(new NoopMetricFactory(), domainQuotaRoutes)
+        webAdminServer = WebAdminUtils.createWebAdminServer(domainQuotaRoutes)
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

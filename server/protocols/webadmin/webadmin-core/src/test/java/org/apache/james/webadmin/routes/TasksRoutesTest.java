@@ -31,7 +31,6 @@ import static org.hamcrest.Matchers.not;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
@@ -55,7 +54,7 @@ class TasksRoutesTest {
     void setUp() {
         taskManager = new MemoryTaskManager();
 
-        webAdminServer = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory(), new TasksRoutes(taskManager, new JsonTransformer()))
+        webAdminServer = WebAdminUtils.createWebAdminServer(new TasksRoutes(taskManager, new JsonTransformer()))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

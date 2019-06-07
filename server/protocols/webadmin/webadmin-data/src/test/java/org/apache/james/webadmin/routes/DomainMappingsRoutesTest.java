@@ -41,7 +41,6 @@ import java.util.function.Function;
 
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -76,7 +75,7 @@ class DomainMappingsRoutesTest {
     private DomainList domainList;
 
     private void createServer(DomainMappingsRoutes domainMappingsRoutes) {
-        webAdminServer = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory(), domainMappingsRoutes)
+        webAdminServer = WebAdminUtils.createWebAdminServer(domainMappingsRoutes)
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

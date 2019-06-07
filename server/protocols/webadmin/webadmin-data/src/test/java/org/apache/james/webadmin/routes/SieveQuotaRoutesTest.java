@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaSize;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.memory.InMemorySieveQuotaRepository;
 import org.apache.james.webadmin.WebAdminServer;
@@ -48,7 +47,7 @@ class SieveQuotaRoutesTest {
     @BeforeEach
     void setUp() {
         sieveRepository = new InMemorySieveQuotaRepository();
-        webAdminServer = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory(), new SieveQuotaRoutes(sieveRepository, new JsonTransformer()))
+        webAdminServer = WebAdminUtils.createWebAdminServer(new SieveQuotaRoutes(sieveRepository, new JsonTransformer()))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

@@ -40,7 +40,6 @@ import org.apache.james.core.User;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -79,7 +78,7 @@ class GroupsRoutesTest {
     private WebAdminServer webAdminServer;
 
     private void createServer(GroupsRoutes groupsRoutes) {
-        webAdminServer = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory(), groupsRoutes)
+        webAdminServer = WebAdminUtils.createWebAdminServer(groupsRoutes)
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

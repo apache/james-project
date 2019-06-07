@@ -34,7 +34,6 @@ import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.core.healthcheck.ResultStatus;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -77,7 +76,7 @@ public class HealthCheckRoutesTest {
     @Before
     public void setUp() throws Exception {
         healthChecks = new HashSet<>();
-        webAdminServer = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory(), new HealthCheckRoutes(healthChecks, new JsonTransformer()))
+        webAdminServer = WebAdminUtils.createWebAdminServer(new HealthCheckRoutes(healthChecks, new JsonTransformer()))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

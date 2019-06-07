@@ -36,7 +36,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.core.User;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.junit.TemporaryFolderExtension;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -87,7 +86,7 @@ class SieveScriptRoutesTest {
         URL sieveResource = ClassLoader.getSystemResource("sieve/my_sieve");
         sieveContent = IOUtils.toString(sieveResource, StandardCharsets.UTF_8);
 
-        webAdminServer = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory(), new SieveScriptRoutes(sieveRepository, usersRepository))
+        webAdminServer = WebAdminUtils.createWebAdminServer(new SieveScriptRoutes(sieveRepository, usersRepository))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils

@@ -21,7 +21,6 @@ package org.apache.james.webadmin;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.util.Port;
 import org.junit.Test;
 
@@ -29,14 +28,14 @@ public class WebAdminServerTest {
 
     @Test
     public void getPortShouldThrowWhenNotConfigured() {
-        WebAdminServer server = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory());
+        WebAdminServer server = WebAdminUtils.createWebAdminServer();
         assertThatThrownBy(server::getPort)
             .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     public void getPortShouldReturnPortWhenConfigured() {
-        WebAdminServer server = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory()).start();
+        WebAdminServer server = WebAdminUtils.createWebAdminServer().start();
 
         Port port = server.getPort();
 

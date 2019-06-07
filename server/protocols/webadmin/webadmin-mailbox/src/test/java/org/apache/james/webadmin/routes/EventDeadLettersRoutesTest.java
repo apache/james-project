@@ -49,7 +49,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.util.EventCollector;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -122,7 +121,7 @@ class EventDeadLettersRoutesTest {
         EventDeadLettersService service = new EventDeadLettersService(redeliverService, deadLetters);
 
         taskManager = new MemoryTaskManager();
-        webAdminServer = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory(),
+        webAdminServer = WebAdminUtils.createWebAdminServer(
                 new EventDeadLettersRoutes(service, eventSerializer, taskManager, jsonTransformer),
                 new TasksRoutes(taskManager, jsonTransformer))
             .start();

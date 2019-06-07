@@ -46,7 +46,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -93,7 +92,6 @@ class ReindexingRoutesTest {
         JsonTransformer jsonTransformer = new JsonTransformer();
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
-                new DefaultMetricFactory(),
                 new TasksRoutes(taskManager, jsonTransformer),
                 new ReindexingRoutes(
                     taskManager,
