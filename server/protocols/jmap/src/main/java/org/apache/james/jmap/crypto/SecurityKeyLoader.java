@@ -34,6 +34,7 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.JMAPConfiguration;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 
 public class SecurityKeyLoader {
 
@@ -51,6 +52,8 @@ public class SecurityKeyLoader {
     }
 
     public AsymmetricKeys load() throws Exception {
+        Preconditions.checkState(jmapConfiguration.isEnabled(), "JMAP is not enabled");
+
         KeyStore keystore = KeyStore.getInstance(JKS);
         InputStream fis = fileSystem.getResource(jmapConfiguration.getKeystore());
         char[] secret = jmapConfiguration.getSecret().toCharArray();

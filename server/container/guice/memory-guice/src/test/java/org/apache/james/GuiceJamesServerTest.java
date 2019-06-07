@@ -24,16 +24,18 @@ class GuiceJamesServerTest {
 
     private static final int LIMIT_TO_10_MESSAGES = 10;
 
+    private static JamesServerBuilder extensionBuilder() {
+        return new JamesServerBuilder()
+            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
+            .disableAutoStart();
+    }
+
     @Nested
     class NormalBehaviour {
         @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerBuilder()
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class)))
-            .disableAutoStart()
-            .build();
+        JamesServerExtension jamesServerExtension = extensionBuilder().build();
 
         @Test
         void serverShouldBeStartedAfterCallingStart(GuiceJamesServer server) throws Exception {
@@ -72,15 +74,10 @@ class GuiceJamesServerTest {
         };
 
         @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerBuilder()
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(binder -> Multibinder.newSetBinder(binder, ConfigurationPerformer.class)
-                    .addBinding()
-                    .toInstance(throwingConfigurationPerformer)))
-            .disableAutoStart()
+        JamesServerExtension jamesServerExtension = extensionBuilder()
+            .overrideServerModule(binder -> Multibinder.newSetBinder(binder, ConfigurationPerformer.class)
+                .addBinding()
+                .toInstance(throwingConfigurationPerformer))
             .build();
 
         @Test

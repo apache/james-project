@@ -115,19 +115,21 @@ class GuiceJamesServerStartUpCheckTest {
         }
     }
 
+    private static JamesServerBuilder extensionBuilder() {
+        return new JamesServerBuilder()
+            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
+            .disableAutoStart();
+    }
+
     @Nested
     class WithStartUpCheckDoesntRequireGuiceComponents implements StartUpCheckSuccessContract {
 
         @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerBuilder()
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(binder -> Multibinder
-                    .newSetBinder(binder, StartUpCheck.class)
-                    .addBinding().to(NoopStartUpCheck.class)))
-            .disableAutoStart()
+        JamesServerExtension jamesServerExtension = extensionBuilder()
+            .overrideServerModule(binder -> Multibinder.newSetBinder(binder, StartUpCheck.class)
+                .addBinding().to(NoopStartUpCheck.class))
             .build();
     }
 
@@ -135,15 +137,9 @@ class GuiceJamesServerStartUpCheckTest {
     class WithStartUpCheckRequireGuiceComponents implements StartUpCheckSuccessContract {
 
         @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerBuilder()
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(binder -> Multibinder
-                    .newSetBinder(binder, StartUpCheck.class)
-                    .addBinding().to(TestBlobExportMechanismStartUpCheck.class)))
-            .disableAutoStart()
+        JamesServerExtension jamesServerExtension = extensionBuilder()
+            .overrideServerModule(binder -> Multibinder.newSetBinder(binder, StartUpCheck.class)
+                .addBinding().to(TestBlobExportMechanismStartUpCheck.class))
             .build();
     }
 
@@ -151,32 +147,21 @@ class GuiceJamesServerStartUpCheckTest {
     class WithNoStartUpCheck implements StartUpCheckSuccessContract {
 
         @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerBuilder()
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class)))
-            .disableAutoStart()
-            .build();
+        JamesServerExtension jamesServerExtension = extensionBuilder().build();
     }
 
     @Nested
     class StartUpCheckFails {
 
         @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerBuilder()
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(binder -> {
+        JamesServerExtension jamesServerExtension = extensionBuilder()
+            .overrideServerModule(binder -> {
                     Multibinder<StartUpCheck> setBinder = Multibinder
                         .newSetBinder(binder, StartUpCheck.class);
 
                     setBinder.addBinding().to(NoopStartUpCheck.class);
                     setBinder.addBinding().to(FailingStartUpCheck.class);
-                }))
-            .disableAutoStart()
+                })
             .build();
 
         @Test

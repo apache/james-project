@@ -33,7 +33,6 @@ import org.apache.james.modules.SwiftBlobStoreExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
-import org.apache.james.server.core.configuration.Configuration;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -61,7 +60,8 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
         @RegisterExtension
         JamesServerExtension testExtension = baseJamesServerExtensionBuilder()
             .extension(new SwiftBlobStoreExtension())
-            .server(configuration -> buildGuiceServer(configuration, BlobStoreChoosingConfiguration.objectStorage()))
+            .overrideServerModule(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
+                .toInstance(BlobStoreChoosingConfiguration.objectStorage()))
             .build();
     }
 
@@ -70,9 +70,10 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
     class WithAwsS3 implements ContractSuite {
         @RegisterExtension
         JamesServerExtension testExtension = baseJamesServerExtensionBuilder()
-                .extension(new AwsS3BlobStoreExtension())
-                .server(configuration -> buildGuiceServer(configuration, BlobStoreChoosingConfiguration.objectStorage()))
-                .build();
+            .extension(new AwsS3BlobStoreExtension())
+            .overrideServerModule(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
+                .toInstance(BlobStoreChoosingConfiguration.objectStorage()))
+            .build();
     }
 
     @Nested
@@ -80,7 +81,8 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
     class WithoutSwiftOrAwsS3 implements ContractSuite {
         @RegisterExtension
         JamesServerExtension testExtension = baseJamesServerExtensionBuilder()
-            .server(configuration -> buildGuiceServer(configuration, BlobStoreChoosingConfiguration.cassandra()))
+            .overrideServerModule(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
+                .toInstance(BlobStoreChoosingConfiguration.cassandra()))
             .build();
     }
 
@@ -89,15 +91,10 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
-            .extension(new LdapTestExtension());
-    }
-
-    GuiceJamesServer buildGuiceServer(Configuration configuration, BlobStoreChoosingConfiguration choosingConfiguration) {
-        return GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(CassandraRabbitMQLdapJamesServerMain.MODULES)
-            .overrideWith(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
-                .toInstance(choosingConfiguration))
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-            .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE);
+            .extension(new LdapTestExtension())
+            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                .combineWith(CassandraRabbitMQLdapJamesServerMain.MODULES)
+                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE));
     }
 }

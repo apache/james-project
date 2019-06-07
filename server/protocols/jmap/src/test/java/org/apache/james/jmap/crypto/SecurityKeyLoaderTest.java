@@ -36,6 +36,24 @@ import org.junit.jupiter.params.provider.ValueSource;
 class SecurityKeyLoaderTest {
 
     @Test
+    void loadShouldThrowWhenJMAPIsNotEnabled() throws Exception {
+        JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
+            .disable()
+            .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
+            .keystore("keystore")
+            .secret("james72laBalle")
+            .build();
+
+        SecurityKeyLoader loader = new SecurityKeyLoader(
+            FileSystemFixture.CLASSPATH_FILE_SYSTEM,
+            jmapConfiguration);
+
+        assertThatThrownBy(loader::load)
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("JMAP is not enabled");
+    }
+
+    @Test
     void loadShouldThrowWhenWrongKeystore() throws Exception {
         JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
             .enable()
@@ -72,7 +90,7 @@ class SecurityKeyLoaderTest {
     }
 
     @Test
-    void loadShouldReturnSecurityKeysWhenCorrectPassword() throws Exception {
+    void loadShouldReturnAsymmetricKeysWhenCorrectPassword() throws Exception {
         JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
             .enable()
             .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
@@ -93,7 +111,7 @@ class SecurityKeyLoaderTest {
         "keystoreJava7",
         "keystoreJava11",
     })
-    void loadShouldReturnSecurityKeysWhenUsingKeyStoreGeneratedByDifferentJavaVersions(
+    void loadShouldReturnAsymmetricKeysWhenUsingKeyStoreGeneratedByDifferentJavaVersions(
         String keyStoreInDifferentVersion) throws Exception {
 
         JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()

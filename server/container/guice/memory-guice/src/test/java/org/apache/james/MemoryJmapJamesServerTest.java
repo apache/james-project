@@ -34,16 +34,18 @@ class MemoryJmapJamesServerTest {
 
     private static final int LIMIT_TO_10_MESSAGES = 10;
 
-    @Nested
-    class JmapJamesServerTest implements JmapJamesServerContract {
-
-        @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerBuilder()
+    private static JamesServerBuilder extensionBuilder() {
+        return new JamesServerBuilder()
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
                 .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
-            .build();
+                .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE));
+    }
+
+    @Nested
+    class JmapJamesServerTest implements JmapJamesServerContract {
+        @RegisterExtension
+        JamesServerExtension jamesServerExtension = extensionBuilder().build();
     }
 
     @Nested
@@ -53,18 +55,14 @@ class MemoryJmapJamesServerTest {
         class BadAliasKeyStore {
 
             @RegisterExtension
-            JamesServerExtension jamesServerExtension = new JamesServerBuilder()
-                .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                    .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                    .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                    .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE)
-                    .overrideWith(binder -> binder.bind(JMAPConfiguration.class)
-                        .toInstance(TestJMAPServerModule
-                            .jmapConfigurationBuilder()
-                            .keystore("badAliasKeystore")
-                            .secret("password")
-                            .build())))
+            JamesServerExtension jamesServerExtension = extensionBuilder()
                 .disableAutoStart()
+                .overrideServerModule(binder -> binder.bind(JMAPConfiguration.class)
+                    .toInstance(TestJMAPServerModule
+                        .jmapConfigurationBuilder()
+                        .keystore("badAliasKeystore")
+                        .secret("password")
+                        .build()))
                 .build();
 
             @Test
@@ -82,17 +80,13 @@ class MemoryJmapJamesServerTest {
         class BadSecretKeyStore {
 
             @RegisterExtension
-            JamesServerExtension jamesServerExtension = new JamesServerBuilder()
-                .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                    .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                    .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                    .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE)
-                    .overrideWith(binder -> binder.bind(JMAPConfiguration.class)
-                        .toInstance(TestJMAPServerModule
-                            .jmapConfigurationBuilder()
-                            .secret("WrongSecret")
-                            .build())))
+            JamesServerExtension jamesServerExtension = extensionBuilder()
                 .disableAutoStart()
+                .overrideServerModule(binder -> binder.bind(JMAPConfiguration.class)
+                    .toInstance(TestJMAPServerModule
+                        .jmapConfigurationBuilder()
+                        .secret("WrongSecret")
+                        .build()))
                 .build();
 
             @Test

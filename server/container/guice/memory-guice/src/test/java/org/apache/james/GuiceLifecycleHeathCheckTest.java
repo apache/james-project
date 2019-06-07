@@ -50,6 +50,15 @@ import reactor.core.scheduler.Schedulers;
 class GuiceLifecycleHeathCheckTest {
     private static final int LIMIT_TO_10_MESSAGES = 10;
 
+    private static JamesServerBuilder extensionBuilder() {
+        return new JamesServerBuilder()
+            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                .overrideWith(binder -> binder.bind(WebAdminConfiguration.class)
+                    .toInstance(WebAdminConfiguration.TEST_CONFIGURATION)));
+    }
+
     private static void configureRequestSpecification(GuiceJamesServer server) {
         WebAdminGuiceProbe webAdminGuiceProbe = server.getProbe(WebAdminGuiceProbe.class);
 
@@ -64,13 +73,7 @@ class GuiceLifecycleHeathCheckTest {
     @Nested
     class Healthy {
         @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerBuilder()
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION)))
-            .build();
+        JamesServerExtension jamesServerExtension = extensionBuilder().build();
 
         @Test
         void startedJamesServerShouldBeHealthy(GuiceJamesServer server) {
@@ -108,14 +111,9 @@ class GuiceLifecycleHeathCheckTest {
         CountDownLatch latch = new CountDownLatch(1);
 
         @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerBuilder()
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION))
-                .overrideWith(binder -> binder.bind(CountDownLatch.class).toInstance(latch))
-                .overrideWith(binder -> binder.bind(DestroyedBeforeWebAdmin.class).asEagerSingleton()))
+        JamesServerExtension jamesServerExtension = extensionBuilder()
+            .overrideServerModule(binder -> binder.bind(CountDownLatch.class).toInstance(latch))
+            .overrideServerModule(binder -> binder.bind(DestroyedBeforeWebAdmin.class).asEagerSingleton())
             .build();
 
         @Test

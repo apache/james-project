@@ -45,6 +45,7 @@ public class JamesServerBuilder {
 
     private final ImmutableList.Builder<GuiceModuleTestExtension> extensions;
     private final TemporaryFolderRegistrableExtension folderRegistrableExtension;
+    private final ImmutableList.Builder<Module> overrideModules;
     private ServerProvider server;
     private Optional<ConfigurationProvider> configuration;
     private Optional<Boolean> autoStart;
@@ -54,6 +55,7 @@ public class JamesServerBuilder {
         extensions = ImmutableList.builder();
         folderRegistrableExtension = new TemporaryFolderRegistrableExtension();
         autoStart = Optional.empty();
+        overrideModules = ImmutableList.builder();
     }
 
     public JamesServerBuilder extensions(GuiceModuleTestExtension... extensions) {
@@ -72,6 +74,11 @@ public class JamesServerBuilder {
 
     public JamesServerBuilder server(ServerProvider server) {
         this.server = server;
+        return this;
+    }
+
+    public JamesServerBuilder overrideServerModule(Module module) {
+        this.overrideModules.add(module);
         return this;
     }
 
@@ -115,7 +122,8 @@ public class JamesServerBuilder {
         return server
             .buildServer(configurationProvider.buildConfiguration(file))
             .overrideWith(modules)
-            .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()));
+            .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()))
+            .overrideWith(overrideModules.build());
     }
 
 }

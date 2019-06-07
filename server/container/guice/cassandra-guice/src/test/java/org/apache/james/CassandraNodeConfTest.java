@@ -44,6 +44,16 @@ class CassandraNodeConfTest {
     private static final int CASSANDRA_PORT = 9042;
     private static final int LIMIT_TO_10_MESSAGES = 10;
 
+    private static JamesServerBuilder extensionBuilder() {
+        return new JamesServerBuilder()
+            .extension(new DockerElasticSearchExtension())
+            .extension(new CassandraExtension())
+            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
+            .disableAutoStart();
+    }
+
     private static String getDockerHostIp() {
         DockerClientFactory clientFactory = DockerClientFactory.instance();
         clientFactory.client();
@@ -65,15 +75,7 @@ class CassandraNodeConfTest {
     @Nested
     class NormalBehaviour {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder()
-            .extension(new DockerElasticSearchExtension())
-            .extension(new CassandraExtension())
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
-            .disableAutoStart()
-            .build();
+        JamesServerExtension testExtension = extensionBuilder().build();
 
         @Test
         void serverShouldStartServiceWhenNodeIsReachable(GuiceJamesServer server) throws Exception {
@@ -88,18 +90,11 @@ class CassandraNodeConfTest {
         private final DockerCassandraRule cassandra = new DockerCassandraRule();
 
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder()
-            .extension(new DockerElasticSearchExtension())
-            .extension(new CassandraExtension(cassandra))
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(binder -> binder.bind(ClusterConfiguration.class)
-                    .toInstance(clusterWithHosts(
-                        Host.from(unreachableNode, 9042),
-                        cassandra.getHost()))))
-            .disableAutoStart()
+        JamesServerExtension testExtension = extensionBuilder()
+            .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
+                .toInstance(clusterWithHosts(
+                    Host.from(unreachableNode, 9042),
+                    cassandra.getHost())))
             .build();
 
         @Test
@@ -113,17 +108,10 @@ class CassandraNodeConfTest {
         private final DockerCassandraRule cassandra = new DockerCassandraRule();
 
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerBuilder()
-            .extension(new DockerElasticSearchExtension())
-            .extension(new CassandraExtension(cassandra))
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(binder -> binder.bind(ClusterConfiguration.class)
-                    .toInstance(clusterWithHosts(
-                        Host.from(getDockerHostIp(), cassandra.getMappedPort(CASSANDRA_PORT))))))
-            .disableAutoStart()
+        JamesServerExtension testExtension =  extensionBuilder()
+            .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
+                .toInstance(clusterWithHosts(
+                    Host.from(getDockerHostIp(), cassandra.getMappedPort(CASSANDRA_PORT)))))
             .build();
 
         @Test
