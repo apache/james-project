@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 
 import javax.net.SocketFactory;
 
@@ -65,7 +66,7 @@ public class DockerGenericContainer implements TestRule {
             logAndCheckSkipTest(e);
         }
     }
-    
+
     private void logAndCheckSkipTest(IllegalStateException e) {
         LOGGER.error("Cannot initial a docker container", e);
         if (e.getMessage().startsWith(NO_DOCKER_ENVIRONMENT)) {
@@ -87,6 +88,11 @@ public class DockerGenericContainer implements TestRule {
 
     public DockerGenericContainer withEnv(String key, String value) {
         container.addEnv(key, value);
+        return this;
+    }
+
+    public DockerGenericContainer withTmpFs(Map<String, String> mapping) {
+        container.withTmpFs(mapping);
         return this;
     }
 

@@ -80,13 +80,12 @@ public class DockerRabbitMQ {
         this.hostNameSuffix = clusterIdentity.orElse(UUID.randomUUID().toString());
         this.rabbitHostName = hostName(hostNamePrefix);
         this.container = new GenericContainer<>(Images.RABBITMQ)
-                .withCreateContainerCmdModifier(cmd -> cmd.withName(this.rabbitHostName))
-                .withCreateContainerCmdModifier(cmd -> cmd.withHostName(this.rabbitHostName))
-                .withExposedPorts(DEFAULT_RABBITMQ_PORT, DEFAULT_RABBITMQ_ADMIN_PORT)
-                .waitingFor(waitStrategy())
-                .withLogConsumer(frame -> LOGGER.debug(frame.getUtf8String()))
-                .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig()
-                    .withTmpFs(ImmutableMap.of("/var/lib/rabbitmq/mnesia", "rw,noexec,nosuid,size=100m")));
+            .withCreateContainerCmdModifier(cmd -> cmd.withName(this.rabbitHostName))
+            .withCreateContainerCmdModifier(cmd -> cmd.withHostName(this.rabbitHostName))
+            .withExposedPorts(DEFAULT_RABBITMQ_PORT, DEFAULT_RABBITMQ_ADMIN_PORT)
+            .waitingFor(waitStrategy())
+            .withLogConsumer(frame -> LOGGER.debug(frame.getUtf8String()))
+            .withTmpFs(ImmutableMap.of("/var/lib/rabbitmq/mnesia", "rw,noexec,nosuid,size=100m"));
         net.ifPresent(this.container::withNetwork);
         erlangCookie.ifPresent(cookie -> this.container.withEnv(RABBITMQ_ERLANG_COOKIE, cookie));
         this.nodeName = DEFAULT_RABBIT_NODE_NAME_PREFIX + "@" + this.rabbitHostName;
