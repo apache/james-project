@@ -2198,7 +2198,7 @@ public abstract class SetMessagesMethodTest {
             "    \"#0\"" +
             "  ]" +
             "]";
-        
+
         given()
             .header("Authorization", accessToken.serialize())
             .body(copyDraftToOutBox)
@@ -2529,7 +2529,7 @@ public abstract class SetMessagesMethodTest {
         String outboxId = getMailboxId(accessToken, Role.OUTBOX);
         assertThat(hasNoMessageIn(bobAccessToken, outboxId)).isTrue();
     }
-    
+
     private boolean hasNoMessageIn(AccessToken accessToken, String mailboxId) {
         try {
             with()
@@ -2544,7 +2544,7 @@ public abstract class SetMessagesMethodTest {
             return true;
         } catch (AssertionError e) {
             return false;
-        } 
+        }
     }
 
     @Test
@@ -4388,7 +4388,7 @@ public abstract class SetMessagesMethodTest {
 
         checkBlobContent(blobId, rawBytes);
     }
-    
+
     @Test
     public void setMessagesShouldVerifyHeaderOfMessageInInbox() throws Exception {
         String toUsername = "username1@" + DOMAIN;
@@ -4702,7 +4702,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldUpdateIsAnsweredWhenInReplyToHeaderSentViaDraft() throws Exception {
         OriginalMessage firstMessage = receiveFirstMessage();
-        
+
         String draftCreationId = "creationId1337";
         String createDraft = "[" +
             "  [" +
@@ -4770,7 +4770,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldUpdateIsForwardedWhenXForwardedHeaderSentViaDraft() throws Exception {
         OriginalMessage firstMessage = receiveFirstMessage();
-        
+
         String draftCreationId = "creationId1337";
         String createDraft = "[" +
             "  [" +
