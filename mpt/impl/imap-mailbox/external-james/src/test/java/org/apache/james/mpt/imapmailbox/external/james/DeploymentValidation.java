@@ -82,6 +82,11 @@ public abstract class DeploymentValidation {
     }
 
     @Test
+    public void selectThenFetchWithExistingMessages() throws Exception {
+        simpleScriptedTestProtocol.run("SelectThenFetchWithExistingMessages");
+    }
+
+    @Test
     public void validateDeploymentWithMailsFromSmtp() throws Exception {
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender("another-domain");
         smtpSystem.connect(smtpMessageSender).sendMessage("test@" + DOMAIN, USER_ADDRESS);
