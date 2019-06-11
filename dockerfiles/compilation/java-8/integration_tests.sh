@@ -5,6 +5,7 @@ printUsage() {
    echo "./integration_tests.sh URL BRANCH JAMES_IP JAMES_IMAP_PORT"
    echo "    JAMES_IP: IP of the James server to be tests"
    echo "    JAMES_IMAP_PORT: Exposed IMAP port of this James server"
+   echo "    JAMES_SMTP_PORT: Exposed SMTP port of this James server"
    echo "    SHA1(optional): Branch to build or master if none"
    exit 1
 }
@@ -26,7 +27,10 @@ do
             JAMES_IMAP_PORT=$2
          fi
          if ! [ -z "$3" ]; then
-            SHA1=$3
+            JAMES_SMTP_PORT=$3
+         fi
+         if ! [ -z "$4" ]; then
+            SHA1=$4
          fi
          ;;
    esac
@@ -42,12 +46,18 @@ if [ -z "$JAMES_IMAP_PORT" ]; then
    printUsage
 fi
 
+if [ -z "$JAMES_SMTP_PORT" ]; then
+   echo "You must provide a JAMES_SMTP_PORT"
+   printUsage
+fi
+
 if [ -z "$SHA1" ]; then
    SHA1=master
 fi
 
 export JAMES_ADDRESS=$JAMES_ADDRESS
 export JAMES_IMAP_PORT=$JAMES_IMAP_PORT
+export JAMES_SMTP_PORT=$JAMES_SMTP_PORT
 
 git clone $ORIGIN/.
 git checkout $SHA1
