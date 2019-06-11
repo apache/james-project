@@ -49,6 +49,7 @@ class TasksRoutesTest {
 
     private MemoryTaskManager taskManager;
     private WebAdminServer webAdminServer;
+    private CountDownLatch waitingForResultLatch;
 
     @BeforeEach
     void setUp() {
@@ -60,10 +61,13 @@ class TasksRoutesTest {
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(TasksRoutes.BASE)
             .build();
+
+        waitingForResultLatch = new CountDownLatch(1);
     }
 
     @AfterEach
     void tearDown() {
+        waitingForResultLatch.countDown();
         taskManager.stop();
         webAdminServer.destroy();
     }
@@ -81,7 +85,7 @@ class TasksRoutesTest {
         CountDownLatch taskInProgressLatch = new CountDownLatch(1);
         TaskId taskId = taskManager.submit(() -> {
             taskInProgressLatch.countDown();
-            await();
+            waitForResult();
             return Task.Result.COMPLETED;
         });
 
@@ -97,12 +101,16 @@ class TasksRoutesTest {
             .body("[0].class", is(not(empty())));
     }
 
-    private void await() {
+    private void await(CountDownLatch latch) {
         try {
-            new CountDownLatch(1).await();
+            latch.await();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void waitForResult() {
+        await(waitingForResultLatch);
     }
 
     @Test
@@ -110,7 +118,7 @@ class TasksRoutesTest {
         CountDownLatch inProgressLatch = new CountDownLatch(1);
         TaskId taskId = taskManager.submit(() -> {
             inProgressLatch.countDown();
-            await();
+            waitForResult();
             return Task.Result.COMPLETED;
         });
 
@@ -133,7 +141,7 @@ class TasksRoutesTest {
         CountDownLatch inProgressLatch = new CountDownLatch(1);
         taskManager.submit(() -> {
             inProgressLatch.countDown();
-            await();
+            waitForResult();
             return Task.Result.COMPLETED;
         });
 
@@ -153,7 +161,7 @@ class TasksRoutesTest {
         CountDownLatch inProgressLatch = new CountDownLatch(1);
         TaskId taskId = taskManager.submit(() -> {
             inProgressLatch.countDown();
-            await();
+            waitForResult();
             return Task.Result.COMPLETED;
         });
 
@@ -218,7 +226,7 @@ class TasksRoutesTest {
     @Test
     void deleteShouldReturnOk() {
         TaskId taskId = taskManager.submit(() -> {
-            await();
+            waitForResult();
             return Task.Result.COMPLETED;
         });
 
