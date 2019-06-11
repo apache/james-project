@@ -42,6 +42,7 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
@@ -132,19 +133,31 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
         }
     }
 
-    private Mono<Void> processMail(MailQueueItem queueItem) throws MailQueue.MailQueueException {
+    private Mono<Void> processMail(MailQueueItem queueItem) {
         Mail mail = queueItem.getMail();
-        LOGGER.debug("==== Begin processing mail {} ====", mail.getName());
+        return Mono.fromRunnable(() -> LOGGER.debug("==== Begin processing mail {} ====", mail.getName()))
+            .subscribeOn(Schedulers.elastic())
+            .then(Mono.fromCallable(() -> performProcessMail(mail)))
+            .flatMap(any -> acknowledgeItem(queueItem, true))
+            .onErrorResume(any -> acknowledgeItem(queueItem, false))
+            .then(Mono.fromRunnable(() -> LOGGER.debug("==== End processing mail {} ====", mail.getName())))
+            .then(Mono.fromRunnable(() -> LifecycleUtil.dispose(mail)));
+    }
+
+    private Mono<Void> acknowledgeItem(MailQueueItem queueItem, boolean success) {
+        return Mono.fromRunnable(Throwing.runnable(() -> queueItem.done(success)).sneakyThrow());
+    }
+
+    private boolean performProcessMail(Mail mail) {
         try {
             mailProcessor.service(mail);
-            queueItem.done(true);
-            return Mono.empty();
+
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException("Thread has been interrupted");
+            }
+            return true;
         } catch (Exception e) {
-            queueItem.done(false);
-            return Mono.error(e);
-        } finally {
-            LOGGER.debug("==== End processing mail {} ====", mail.getName());
-            LifecycleUtil.dispose(mail);
+            throw new RuntimeException(e);
         }
     }
 
