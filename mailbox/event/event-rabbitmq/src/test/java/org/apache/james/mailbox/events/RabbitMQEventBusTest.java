@@ -186,7 +186,6 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     class ConcurrentTest implements EventBusConcurrentTestContract.MultiEventBusConcurrentContract,
         EventBusConcurrentTestContract.SingleEventBusConcurrentContract {
 
-        @Disabled("consuming too many threads")
         @Test
         void rabbitMQEventBusCannotHandleHugeDispatchingOperations() throws Exception {
             EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
@@ -199,7 +198,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             int totalDispatchOperations = threadCount * operationCount;
             eventBus = (RabbitMQEventBus) eventBus();
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> eventBus.dispatch(EVENT, NO_KEYS))
+                .operation((threadNumber, operationNumber) -> eventBus.dispatch(EVENT, NO_KEYS).block())
                 .threadCount(threadCount)
                 .operationCount(operationCount)
                 .runSuccessfullyWithin(Duration.ofMinutes(10));

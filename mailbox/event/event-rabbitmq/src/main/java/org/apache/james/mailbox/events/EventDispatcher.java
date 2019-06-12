@@ -82,6 +82,7 @@ class EventDispatcher {
             .concat(
                 dispatchToLocalListeners(event, keys),
                 dispatchToRemoteListeners(serializeEvent(event), keys))
+            .subscribeOn(Schedulers.elastic())
             .then()
             .doOnSuccess(any -> dispatchCount.incrementAndGet())
             .subscribeWith(MonoProcessor.create());
@@ -89,7 +90,6 @@ class EventDispatcher {
 
     private Mono<Void> dispatchToLocalListeners(Event event, Set<RegistrationKey> keys) {
         return Flux.fromIterable(keys)
-            .subscribeOn(Schedulers.elastic())
             .flatMap(key -> localListenerRegistry.getLocalMailboxListeners(key)
                 .map(listener -> Tuples.of(key, listener)))
             .filter(pair -> pair.getT2().getExecutionMode().equals(MailboxListener.ExecutionMode.SYNCHRONOUS))
@@ -127,9 +127,7 @@ class EventDispatcher {
         Stream<OutboundMessage> outboundMessages = routingKeys
             .map(routingKey -> new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME, routingKey.asString(), basicProperties, serializedEvent));
 
-        return sender.send(Flux.fromStream(outboundMessages))
-            .publishOn(Schedulers.elastic())
-            .doOnError(th -> th.printStackTrace());
+        return sender.send(Flux.fromStream(outboundMessages));
     }
 
     private byte[] serializeEvent(Event event) {
