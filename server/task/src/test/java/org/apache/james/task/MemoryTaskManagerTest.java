@@ -92,6 +92,7 @@ class MemoryTaskManagerTest {
         TaskId id = memoryTaskManager.submit(() -> {
             waitForTaskToBeLaunched.countDown();
             await(task1Latch);
+            Thread.sleep(1);
             count.incrementAndGet();
             return Task.Result.COMPLETED;
         });
