@@ -27,7 +27,7 @@ import org.junit.Test;
 
 public class MigrationTest {
     @Test
-    public void combineShouldNotExecuteSecondMigrationExecutionWhenTheFirstOneIsFailing() {
+    public void combineShouldNotExecuteSecondMigrationExecutionWhenTheFirstOneIsFailing() throws InterruptedException {
         AtomicBoolean migration2Done = new AtomicBoolean(false);
 
         Migration migration1 = () -> Migration.Result.PARTIAL;
@@ -42,7 +42,7 @@ public class MigrationTest {
     }
 
     @Test
-    public void combineShouldTriggerSecondMigrationWhenTheFirstOneSucceed() {
+    public void combineShouldTriggerSecondMigrationWhenTheFirstOneSucceed() throws InterruptedException {
         AtomicBoolean migration2Done = new AtomicBoolean(false);
 
         Migration migration1 = () -> Migration.Result.COMPLETED;
@@ -57,7 +57,7 @@ public class MigrationTest {
     }
 
     @Test
-    public void combineShouldExecuteTheFirstMigrationWhenSecondWillFail() {
+    public void combineShouldExecuteTheFirstMigrationWhenSecondWillFail() throws InterruptedException {
         AtomicBoolean migration1Done = new AtomicBoolean(false);
 
         Migration migration1 = () -> {
@@ -73,7 +73,7 @@ public class MigrationTest {
     }
 
     @Test
-    public void combineShouldExecuteTheFirstMigration() {
+    public void combineShouldExecuteTheFirstMigration() throws InterruptedException {
         AtomicBoolean migration1Done = new AtomicBoolean(false);
 
         Migration migration1 = () -> {

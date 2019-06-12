@@ -66,7 +66,7 @@ public class CassandraMigrationRoutesTest {
     private CassandraSchemaVersionDAO schemaVersionDAO;
     private MemoryTaskManager taskManager;
 
-    private void createServer() {
+    private void createServer() throws InterruptedException {
         Migration successfulMigration = mock(Migration.class);
         when(successfulMigration.run()).thenReturn(Migration.Result.COMPLETED);
 
@@ -92,7 +92,7 @@ public class CassandraMigrationRoutesTest {
     }
 
     @Before
-    public void setUp() {
+    public void setUp() throws InterruptedException {
         createServer();
     }
 

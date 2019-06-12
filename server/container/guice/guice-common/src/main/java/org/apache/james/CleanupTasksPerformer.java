@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import org.apache.james.task.Task;
 import org.apache.james.util.Runnables;
 
+import com.github.fge.lambdas.Throwing;
 import reactor.core.publisher.Flux;
 
 public class CleanupTasksPerformer {
@@ -47,7 +48,7 @@ public class CleanupTasksPerformer {
         Runnables
             .runParallel(
                 Flux.fromIterable(cleanupTasks)
-                    .map(cleanupTask -> cleanupTask::run));
+                    .map(cleanupTask -> Throwing.runnable(cleanupTask::run).sneakyThrow()));
     }
 
 }

@@ -92,6 +92,8 @@ class MemoryTaskManagerTest {
         TaskId id = memoryTaskManager.submit(() -> {
             waitForTaskToBeLaunched.countDown();
             waitForResult();
+            //We sleep to handover the CPU to the scheduler
+            Thread.sleep(1);
             count.incrementAndGet();
             return Task.Result.COMPLETED;
         });
