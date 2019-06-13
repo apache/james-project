@@ -142,7 +142,7 @@ public class SmtpRandomStoringTest {
         SMTPMessageSender authenticatedSmtpConnection = messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
                 .authenticate(FROM, PASSWORD);
 
-        IntStream.range(1, numberOfMails)
+        IntStream.range(0, numberOfMails)
             .forEach(Throwing.intConsumer(index ->
                 authenticatedSmtpConnection
                     .sendMessage(buildMail("Message " + index))).sneakyThrow());
@@ -155,7 +155,7 @@ public class SmtpRandomStoringTest {
         awaitAtMostTenSeconds
             .untilAsserted(() -> checkMailboxesHaveBeenFilled(connections, numberOfMails));
 
-        connections.forEach(Throwing.consumer(IMAPMessageReader::close));
+        connections.forEach(Throwing.consumer(IMAPMessageReader::close).sneakyThrow());
     }
 
     private IMAPMessageReader createIMAPConnection(String username) {
