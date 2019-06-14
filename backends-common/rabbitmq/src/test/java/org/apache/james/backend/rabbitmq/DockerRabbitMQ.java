@@ -66,6 +66,7 @@ public class DockerRabbitMQ {
     private final String nodeName;
     private final String rabbitHostName;
     private final String hostNameSuffix;
+    private boolean paused;
 
     public static DockerRabbitMQ withCookieAndHostName(String hostNamePrefix, String clusterIdentity, String erlangCookie, Network network) {
         return new DockerRabbitMQ(Optional.ofNullable(hostNamePrefix), Optional.ofNullable(clusterIdentity), Optional.ofNullable(erlangCookie), Optional.of(network));
@@ -77,6 +78,7 @@ public class DockerRabbitMQ {
 
     @SuppressWarnings("resource")
     private DockerRabbitMQ(Optional<String> hostNamePrefix, Optional<String> clusterIdentity, Optional<String> erlangCookie, Optional<Network> net) {
+        paused = false;
         this.hostNameSuffix = clusterIdentity.orElse(UUID.randomUUID().toString());
         this.rabbitHostName = hostName(hostNamePrefix);
         this.container = new GenericContainer<>(Images.RABBITMQ)
@@ -236,11 +238,17 @@ public class DockerRabbitMQ {
     }
 
     public void pause() {
-        DockerClientFactory.instance().client().pauseContainerCmd(container.getContainerId()).exec();
+        if (!paused) {
+            DockerClientFactory.instance().client().pauseContainerCmd(container.getContainerId()).exec();
+            paused = true;
+        }
     }
 
     public void unpause() {
-        DockerClientFactory.instance().client().unpauseContainerCmd(container.getContainerId()).exec();
+        if (paused) {
+            DockerClientFactory.instance().client().unpauseContainerCmd(container.getContainerId()).exec();
+            paused = false;
+        }
     }
 
     public RabbitMQConnectionFactory createRabbitConnectionFactory() throws URISyntaxException {

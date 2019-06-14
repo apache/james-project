@@ -21,12 +21,10 @@ package org.apache.james.transport.mailets;
 
 import java.time.Duration;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -59,13 +57,13 @@ public class RandomStoring extends GenericMailet {
     private final Mono<List<ReroutingInfos>> reroutingInfos;
     private final UsersRepository usersRepository;
     private final MailboxManager mailboxManager;
-    private final Iterator<Integer> randomRecipientsNumbers;
+    private final Supplier<Integer> randomRecipientsNumbers;
 
     @Inject
     public RandomStoring(UsersRepository usersRepository, MailboxManager mailboxManager) {
         this.usersRepository = usersRepository;
         this.mailboxManager = mailboxManager;
-        this.randomRecipientsNumbers = ThreadLocalRandom.current().ints(MIN_NUMBER_OF_RECIPIENTS, MAX_NUMBER_OF_RECIPIENTS + 1).boxed().iterator();
+        this.randomRecipientsNumbers = () -> ThreadLocalRandom.current().nextInt(MIN_NUMBER_OF_RECIPIENTS, MAX_NUMBER_OF_RECIPIENTS + 1);
         this.reroutingInfos = Mono.fromCallable(this::retrieveReroutingInfos).cache(CACHE_DURATION);
     }
 
@@ -93,11 +91,14 @@ public class RandomStoring extends GenericMailet {
 
     private Collection<ReroutingInfos> generateRandomMailboxes() {
         List<ReroutingInfos> reroutingInfos = this.reroutingInfos.block();
-        Collections.shuffle(reroutingInfos);
 
-        return reroutingInfos
-            .stream()
-            .limit(randomRecipientsNumbers.next())
+        // Replaces Collections.shuffle() which has a too poor statistical distribution
+        return ThreadLocalRandom
+            .current()
+            .ints(0, reroutingInfos.size())
+            .mapToObj(reroutingInfos::get)
+            .distinct()
+            .limit(randomRecipientsNumbers.get())
             .collect(Guavate.toImmutableSet());
     }
 
@@ -105,8 +106,7 @@ public class RandomStoring extends GenericMailet {
         return Streams.stream(usersRepository.list())
             .map(User::fromUsername)
             .flatMap(this::buildReRoutingInfos)
-            .distinct()
-            .collect(Collectors.toList());
+            .collect(Guavate.toImmutableList());
     }
 
     private Stream<ReroutingInfos> buildReRoutingInfos(User user) {

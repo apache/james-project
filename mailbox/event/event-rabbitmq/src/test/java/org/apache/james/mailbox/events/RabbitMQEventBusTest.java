@@ -19,12 +19,15 @@
 
 package org.apache.james.mailbox.events;
 
+import static com.jayway.awaitility.Awaitility.await;
 import static org.apache.james.backend.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backend.rabbitmq.Constants.DIRECT_EXCHANGE;
 import static org.apache.james.backend.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backend.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backend.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backend.rabbitmq.Constants.NO_ARGUMENTS;
+import static org.apache.james.mailbox.events.EventBusConcurrentTestContract.newCountingListener;
+import static org.apache.james.mailbox.events.EventBusConcurrentTestContract.totalEventsReceived;
 import static org.apache.james.mailbox.events.EventBusTestFixture.ALL_GROUPS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT;
 import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_A;
@@ -47,6 +50,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.backend.rabbitmq.RabbitMQExtension;
@@ -70,6 +74,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.stubbing.Answer;
 
+import com.google.common.collect.ImmutableList;
 import com.rabbitmq.client.Connection;
 
 import reactor.core.publisher.Mono;
@@ -180,6 +185,35 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     @Nested
     class ConcurrentTest implements EventBusConcurrentTestContract.MultiEventBusConcurrentContract,
         EventBusConcurrentTestContract.SingleEventBusConcurrentContract {
+
+        @Test
+        void rabbitMQEventBusCannotHandleHugeDispatchingOperations() throws Exception {
+            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
+
+            eventBus().register(countingListener1, new EventBusTestFixture.GroupA());
+            int totalGlobalRegistrations = 1; // GroupA + GroupB + GroupC
+
+            int threadCount = 10;
+            int operationCount = 10000;
+            int totalDispatchOperations = threadCount * operationCount;
+            eventBus = (RabbitMQEventBus) eventBus();
+            ConcurrentTestRunner.builder()
+                .operation((threadNumber, operationNumber) -> eventBus.dispatch(EVENT, NO_KEYS).block())
+                .threadCount(threadCount)
+                .operationCount(operationCount)
+                .runSuccessfullyWithin(Duration.ofMinutes(10));
+
+            // there is a moment when RabbitMQ EventBus consumed amount of messages, then it will stop to consume more
+            await()
+                .pollInterval(com.jayway.awaitility.Duration.FIVE_SECONDS)
+                .timeout(com.jayway.awaitility.Duration.TEN_MINUTES).until(() -> {
+                    int totalEventsReceived = totalEventsReceived(ImmutableList.of(countingListener1));
+                    System.out.println("event received: " + totalEventsReceived);
+                    System.out.println("dispatching count: " + eventBus.eventDispatcher.dispatchCount.get());
+                    assertThat(totalEventsReceived)
+                        .isEqualTo(totalGlobalRegistrations * totalDispatchOperations);
+                });
+        }
 
         @Override
         public EventBus eventBus3() {
@@ -297,6 +331,11 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         @BeforeEach
         void setUp() throws Exception {
             rabbitManagementAPI = rabbitMQExtension.managementAPI();
+        }
+
+        @AfterEach
+        void tearDown() {
+            rabbitMQExtension.getRabbitMQ().unpause();
         }
 
         @Nested
