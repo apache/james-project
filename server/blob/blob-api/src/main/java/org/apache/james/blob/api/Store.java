@@ -28,6 +28,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 
 public interface Store<T, I> {
@@ -101,6 +102,7 @@ public interface Store<T, I> {
         @Override
         public Mono<T> read(I blobIds) {
             return Flux.fromIterable(blobIds.asMap().entrySet())
+                .publishOn(Schedulers.elastic())
                 .flatMapSequential(
                     entry -> blobStore.readBytes(entry.getValue())
                         .zipWith(Mono.just(entry.getKey())))
