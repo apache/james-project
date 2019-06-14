@@ -72,34 +72,20 @@ public class JamesMailetContext implements MailetContext, Configurable {
      * A hash table of server attributes These are the MailetContext attributes
      */
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
-    protected DNSService dns;
 
-    private UsersRepository localusers;
-
+    protected final DNSService dns;
+    private final UsersRepository localusers;
+    private final DomainList domains;
+    private final MailQueueFactory<?> mailQueueFactory;
     private MailQueue rootMailQueue;
-
-    private DomainList domains;
-
     private MailAddress postmaster;
 
     @Inject
-    public void retrieveRootMailQueue(MailQueueFactory<?> mailQueueFactory) {
-        this.rootMailQueue = mailQueueFactory.createQueue(MailQueueFactory.SPOOL);
-    }
-
-    @Inject
-    public void setDNSService(DNSService dns) {
+    public JamesMailetContext(DNSService dns, UsersRepository localusers, DomainList domains, MailQueueFactory<?> mailQueueFactory) {
         this.dns = dns;
-    }
-
-    @Inject
-    public void setUsersRepository(UsersRepository localusers) {
         this.localusers = localusers;
-    }
-
-    @Inject
-    public void setDomainList(DomainList domains) {
         this.domains = domains;
+        this.mailQueueFactory = mailQueueFactory;
     }
 
     @Override
@@ -460,6 +446,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
 
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+        this.rootMailQueue = mailQueueFactory.createQueue(MailQueueFactory.SPOOL);
         try {
 
             // Get postmaster

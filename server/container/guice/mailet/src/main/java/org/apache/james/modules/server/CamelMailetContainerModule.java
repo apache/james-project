@@ -28,8 +28,6 @@ import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.SimpleRegistry;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.MailetLoader;
@@ -44,7 +42,6 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.transport.mailets.RemoveMimeHeader;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.user.api.UsersRepository;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceMailetLoader;
 import org.apache.james.utils.GuiceMatcherLoader;
@@ -61,7 +58,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
@@ -84,6 +80,7 @@ public class CamelMailetContainerModule extends AbstractModule {
         bind(JamesMailSpooler.class).in(Scopes.SINGLETON);
         bind(MailSpoolerMBean.class).to(JamesMailSpooler.class);
 
+        bind(JamesMailetContext.class).in(Scopes.SINGLETON);
         bind(MailetContext.class).to(JamesMailetContext.class);
 
         bind(MailetLoader.class).to(GuiceMailetLoader.class);
@@ -95,20 +92,6 @@ public class CamelMailetContainerModule extends AbstractModule {
 
         Multibinder<CamelMailetContainerModule.TransportProcessorCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), CamelMailetContainerModule.TransportProcessorCheck.class);
         transportProcessorChecks.addBinding().toInstance(BCC_Check);
-    }
-
-    @Provides
-    @Singleton
-    private JamesMailetContext provideMailetContext(MailQueueFactory<?> mailQueueFactory,
-                                                    DNSService dns,
-                                                    UsersRepository localusers,
-                                                    DomainList domains) {
-        JamesMailetContext jamesMailetContext = new JamesMailetContext();
-        jamesMailetContext.setDNSService(dns);
-        jamesMailetContext.retrieveRootMailQueue(mailQueueFactory);
-        jamesMailetContext.setUsersRepository(localusers);
-        jamesMailetContext.setDomainList(domains);
-        return jamesMailetContext;
     }
 
     @Singleton
@@ -189,7 +172,6 @@ public class CamelMailetContainerModule extends AbstractModule {
 
         private void configureMailetContext() throws ConfigurationException {
             mailetContext.configure(getMailetContextConfiguration());
-            mailetContext.retrieveRootMailQueue(mailQueueFactory);
         }
 
         private HierarchicalConfiguration getMailetContextConfiguration() {
