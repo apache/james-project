@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Locale;
 import java.util.Optional;
 
-import org.apache.james.mailbox.Role;
 import org.junit.Test;
 
 public class RoleTest {
@@ -96,6 +95,11 @@ public class RoleTest {
     }
 
     @Test
+    public void isSystemRoleShouldBeTrueWhenRestoredMessages() {
+        assertThat(Role.RESTORED_MESSAGES.isSystemRole()).isTrue();
+    }
+
+    @Test
     public void isSystemRoleShouldBeFalseWhenUserDefinedRole() {
         Role userRole = Role.from(Role.USER_DEFINED_ROLE_PREFIX + "myRole").get();
         assertThat(userRole.isSystemRole()).isFalse();
@@ -158,6 +162,18 @@ public class RoleTest {
     @Test
     public void theTrAsHMailboxNameShouldNotBeASystemMailbox() {
         Optional<Role> role = Role.from("TrAsH");
+        assertThat(role).isEmpty();
+    }
+
+    @Test
+    public void theRestoredMessagesMailboxNameShouldBeASystemMailbox() {
+        Role role = Role.from("Restored-Messages").get();
+        assertThat(role.isSystemRole()).isTrue();
+    }
+
+    @Test
+    public void theReStOrEdMeSsAgEsMailboxNameShouldNotBeASystemMailbox() {
+        Optional<Role> role = Role.from("ReStOrEd-MeSsAgEs");
         assertThat(role).isEmpty();
     }
 }

@@ -41,6 +41,7 @@ public class SortOrder implements Comparable<SortOrder> {
                 .put(Role.TRASH, SortOrder.of(60))
                 .put(Role.SPAM, SortOrder.of(70))
                 .put(Role.TEMPLATES, SortOrder.of(80))
+                .put(Role.RESTORED_MESSAGES, SortOrder.of(90))
                 .build();
 
     private static Optional<SortOrder> getDefaultSortOrder(Role role) {

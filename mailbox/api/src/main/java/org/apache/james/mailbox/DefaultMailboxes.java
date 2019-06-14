@@ -34,6 +34,7 @@ public interface DefaultMailboxes {
     String ARCHIVE = "Archive";
     String SPAM = "Spam";
     String TEMPLATES = "Templates";
+    String RESTORED_MESSAGES = "Restored-Messages";
 
     List<String> DEFAULT_MAILBOXES = ImmutableList.of(INBOX, OUTBOX, SENT, TRASH, DRAFTS, SPAM);
 }

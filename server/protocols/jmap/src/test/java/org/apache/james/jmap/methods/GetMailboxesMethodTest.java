@@ -380,6 +380,7 @@ public class GetMailboxesMethodTest {
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Trash"), mailboxSession);
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Spam"), mailboxSession);
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Templates"), mailboxSession);
+        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Restored-Messages"), mailboxSession);
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "WITHOUT ROLE"), mailboxSession);
 
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
@@ -403,6 +404,7 @@ public class GetMailboxesMethodTest {
                         Tuple.tuple("Trash", Optional.of(Role.TRASH)),
                         Tuple.tuple("Spam", Optional.of(Role.SPAM)),
                         Tuple.tuple("Templates", Optional.of(Role.TEMPLATES)),
+                        Tuple.tuple("Restored-Messages", Optional.of(Role.RESTORED_MESSAGES)),
                         Tuple.tuple("WITHOUT ROLE", Optional.empty()));
     }
 }
