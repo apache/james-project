@@ -40,7 +40,6 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes.MESSAGE_PATH_PARAM;
 import static org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes.USERS;
 import static org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes.USER_PATH;
-import static org.apache.james.webadmin.vault.routes.RestoreService.RESTORE_MAILBOX_NAME;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT2;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT3;
@@ -83,6 +82,7 @@ import org.apache.james.core.User;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
+import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -1673,7 +1673,7 @@ class DeletedMessagesVaultRoutesTest {
         @Test
         void restoreShouldNotDeleteExistingMessagesInTheUserMailbox() throws Exception {
             MailboxSession session = mailboxManager.createSystemSession(USER.asString());
-            MailboxPath restoreMailboxPath = MailboxPath.forUser(USER.asString(), RESTORE_MAILBOX_NAME);
+            MailboxPath restoreMailboxPath = MailboxPath.forUser(USER.asString(), DefaultMailboxes.RESTORED_MESSAGES);
             mailboxManager.createMailbox(restoreMailboxPath, session);
             MessageManager messageManager = mailboxManager.getMailbox(restoreMailboxPath, session);
             messageManager.appendMessage(
@@ -2294,7 +2294,7 @@ class DeletedMessagesVaultRoutesTest {
 
     private List<MessageResult> restoreMailboxMessages(User user) throws Exception {
         MailboxSession session = mailboxManager.createSystemSession(user.asString());
-        MessageManager messageManager = mailboxManager.getMailbox(MailboxPath.forUser(user.asString(), RESTORE_MAILBOX_NAME), session);
+        MessageManager messageManager = mailboxManager.getMailbox(MailboxPath.forUser(user.asString(), DefaultMailboxes.RESTORED_MESSAGES), session);
         return ImmutableList.copyOf(messageManager.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, session));
     }
 

@@ -26,6 +26,7 @@ import static org.apache.james.webadmin.vault.routes.RestoreService.RestoreResul
 import javax.inject.Inject;
 
 import org.apache.james.core.User;
+import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -53,8 +54,6 @@ class RestoreService {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RestoreService.class);
-
-    static final String RESTORE_MAILBOX_NAME = "Restored-Messages";
 
     private final DeletedMessageVault deletedMessageVault;
     private final MailboxManager mailboxManager;
@@ -92,7 +91,7 @@ class RestoreService {
     }
 
     private MessageManager restoreMailboxManager(MailboxSession session) throws MailboxException {
-        MailboxPath restoreMailbox = MailboxPath.forUser(session.getUser().asString(), RESTORE_MAILBOX_NAME);
+        MailboxPath restoreMailbox = MailboxPath.forUser(session.getUser().asString(), DefaultMailboxes.RESTORED_MESSAGES);
         try {
             return mailboxManager.getMailbox(restoreMailbox, session);
         } catch (MailboxNotFoundException e) {
