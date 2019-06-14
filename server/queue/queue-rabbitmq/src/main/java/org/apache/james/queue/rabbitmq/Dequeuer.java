@@ -100,14 +100,14 @@ class Dequeuer {
     private Mono<RabbitMQMailQueueItem> loadItem(AcknowledgableDelivery response) {
         try {
             Mail mail = loadMail(response);
-            ThrowingConsumer<Boolean> ack = ack(response, response.getEnvelope().getDeliveryTag(), mail);
+            ThrowingConsumer<Boolean> ack = ack(response, mail);
             return Mono.just(new RabbitMQMailQueueItem(ack, mail));
         } catch (MailQueue.MailQueueException e) {
             return Mono.error(e);
         }
     }
 
-    private ThrowingConsumer<Boolean> ack(AcknowledgableDelivery response, long deliveryTag, Mail mail) {
+    private ThrowingConsumer<Boolean> ack(AcknowledgableDelivery response, Mail mail) {
         return success -> {
             if (success) {
                 dequeueMetric.increment();
