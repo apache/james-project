@@ -62,7 +62,7 @@ public class JmapCommonRequests {
     public static List<Map<String, String>> getAllMailboxesIds(AccessToken accessToken) {
         return with()
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMailboxes\", {\"properties\": [\"role\", \"id\"]}, \"#0\"]]")
+            .body("[[\"getMailboxes\", {\"properties\": [\"role\", \"name\", \"id\"]}, \"#0\"]]")
             .post("/jmap")
         .andReturn()
             .body()

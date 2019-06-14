@@ -28,6 +28,7 @@ import static org.apache.james.jmap.DeletedMessagesVaultRequests.purgeVault;
 import static org.apache.james.jmap.DeletedMessagesVaultRequests.restoreMessagesForUserWithQuery;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapCommonRequests.deleteMessages;
+import static org.apache.james.jmap.JmapCommonRequests.getAllMailboxesIds;
 import static org.apache.james.jmap.JmapCommonRequests.getLastMessageId;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
@@ -56,6 +57,7 @@ import org.apache.james.jmap.ExportRequest;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
+import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.backup.ZipAssert;
 import org.apache.james.mailbox.backup.ZipAssert.EntryChecks;
 import org.apache.james.mailbox.model.MailboxId;
@@ -237,6 +239,20 @@ public abstract class DeletedMessagesVaultTest {
             .statusCode(200)
             .log().ifValidationFails()
             .body(ARGUMENTS + ".list.subject", hasItem(SUBJECT));
+    }
+
+    @Test
+    public void restoreShouldCreateRestoreMessagesMailbox() {
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        restoreAllMessagesOfHomer();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        assertThat(homerHasMailboxWithRole(Role.RESTORED_MESSAGES)).isTrue();
     }
 
     @Test
@@ -835,5 +851,12 @@ public abstract class DeletedMessagesVaultTest {
             .body(updateRequestBody)
             .when()
             .post("/jmap");
+    }
+
+    private boolean homerHasMailboxWithRole(Role role) {
+        return getAllMailboxesIds(homerAccessToken).stream()
+            .filter(mailbox -> mailbox.get("role") != null)
+            .anyMatch(mailbox -> mailbox.get("role").equalsIgnoreCase(role.serialize())
+                && mailbox.get("name").equalsIgnoreCase(role.getDefaultMailbox()));
     }
 }
