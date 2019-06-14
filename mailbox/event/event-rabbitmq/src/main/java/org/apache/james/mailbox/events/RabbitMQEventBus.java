@@ -34,11 +34,15 @@ import com.google.common.base.Preconditions;
 import com.rabbitmq.client.Connection;
 
 import reactor.core.publisher.Mono;
+import reactor.rabbitmq.ChannelPool;
+import reactor.rabbitmq.ChannelPoolFactory;
+import reactor.rabbitmq.ChannelPoolOptions;
 import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Sender;
 import reactor.rabbitmq.SenderOptions;
 
 public class RabbitMQEventBus implements EventBus, Startable {
+    private static final int MAX_CHANNELS_NUMBER = 5;
     private static final String NOT_RUNNING_ERROR_MESSAGE = "Event Bus is not running";
     static final String MAILBOX_EVENT = "mailboxEvent";
     static final String MAILBOX_EVENT_EXCHANGE_NAME = MAILBOX_EVENT + "-exchange";
@@ -54,6 +58,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
 
     private volatile boolean isRunning;
     private volatile boolean isStopping;
+    private ChannelPool channelPool;
     private GroupRegistrationHandler groupRegistrationHandler;
     private KeyRegistrationHandler keyRegistrationHandler;
     EventDispatcher eventDispatcher;
@@ -77,7 +82,11 @@ public class RabbitMQEventBus implements EventBus, Startable {
 
     public void start() {
         if (!isRunning && !isStopping) {
-            sender = RabbitFlux.createSender(new SenderOptions().connectionMono(connectionMono)
+            this.channelPool = ChannelPoolFactory.createChannelPool(
+                    connectionMono,
+                    new ChannelPoolOptions().maxCacheSize(MAX_CHANNELS_NUMBER)
+            );
+            sender = RabbitFlux.createSender(new SenderOptions().connectionMono(connectionMono).channelPool(channelPool)
                 .resourceManagementChannelMono(connectionMono.map(Throwing.function(Connection::createChannel))));
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
             keyRegistrationHandler = new KeyRegistrationHandler(eventBusId, eventSerializer, sender, connectionMono, routingKeyConverter, localListenerRegistry, mailboxListenerExecutor);
@@ -97,6 +106,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
             isRunning = false;
             groupRegistrationHandler.stop();
             keyRegistrationHandler.stop();
+            channelPool.close();
             sender.close();
         }
     }
