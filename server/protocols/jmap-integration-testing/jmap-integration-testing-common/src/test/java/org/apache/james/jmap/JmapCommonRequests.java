@@ -54,8 +54,8 @@ public class JmapCommonRequests {
 
     public static String getMailboxId(AccessToken accessToken, Role role) {
         return getAllMailboxesIds(accessToken).stream()
-            .filter(x -> x.get("role").equalsIgnoreCase(role.serialize()))
-            .map(x -> x.get("id"))
+            .filter(mailbox -> mailbox.get("role").equalsIgnoreCase(role.serialize()))
+            .map(mailbox -> mailbox.get("id"))
             .findFirst().get();
     }
 
