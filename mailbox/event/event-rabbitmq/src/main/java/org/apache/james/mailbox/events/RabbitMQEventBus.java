@@ -106,8 +106,8 @@ public class RabbitMQEventBus implements EventBus, Startable {
             isRunning = false;
             groupRegistrationHandler.stop();
             keyRegistrationHandler.stop();
-            channelPool.close();
             sender.close();
+            channelPool.close();
         }
     }
 
