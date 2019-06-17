@@ -497,7 +497,7 @@ S: b OK STORE completed.
 
 # Indexation may be asynchronous
 LOG INFO Waiting for indexation
-WAIT 5000
+WAIT 10000
 
 C: c SEARCH FLAGGED
 S: \* SEARCH 1 2 3 4
@@ -508,7 +508,7 @@ S: d OK STORE completed.
 
 # Indexation may be asynchronous
 LOG INFO Waiting for indexation
-WAIT 5000
+WAIT 10000
 
 C: e SEARCH FLAGGED
 S: \* SEARCH 1 2
