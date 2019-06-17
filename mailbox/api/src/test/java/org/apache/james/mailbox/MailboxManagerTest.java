@@ -696,7 +696,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         @Test
         void searchShouldNotReturnResultsFromOtherUsers() throws Exception {
             session = mailboxManager.createSystemSession(USER_1);
-            mailboxManager.createMailbox(MailboxPath.forUser(USER_2, "Other"), session);
+            MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
+            mailboxManager.createMailbox(MailboxPath.forUser(USER_2, "Other"), session2);
             mailboxManager.createMailbox(MailboxPath.inbox(session), session);
             List<MailboxMetaData> metaDatas = mailboxManager.search(
                 MailboxQuery.privateMailboxesBuilder(session)
@@ -1324,6 +1325,24 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             assertThatCode(() -> mailboxManager.copyMessages(MessageRange.all(), inbox, inbox, session))
                 .doesNotThrowAnyException();
+        }
+
+        @Test
+        void createMailboxShouldNotThrowWhenMailboxPathBelongsToUser() throws MailboxException {
+            session = mailboxManager.createSystemSession(USER_1);
+            Optional<MailboxId> mailboxId = mailboxManager
+                .createMailbox(MailboxPath.forUser(USER_1, "mailboxName"), session);
+
+            assertThat(mailboxId).isNotEmpty();
+        }
+
+        @Test
+        void createMailboxShouldThrowWhenMailboxPathBelongsToAnotherUser() throws MailboxException {
+            session = mailboxManager.createSystemSession(USER_1);
+
+            assertThatThrownBy(() -> mailboxManager
+                    .createMailbox(MailboxPath.forUser(USER_2, "mailboxName"), session))
+                .isInstanceOf(MailboxException.class);
         }
     }
 

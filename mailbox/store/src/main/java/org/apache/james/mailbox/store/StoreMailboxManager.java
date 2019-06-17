@@ -43,6 +43,7 @@ import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
+import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -322,6 +323,9 @@ public class StoreMailboxManager implements MailboxManager {
     public Optional<MailboxId> createMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession)
             throws MailboxException {
         LOGGER.debug("createMailbox {}", mailboxPath);
+
+        assertMailboxPathBelongToUser(mailboxSession, mailboxPath);
+
         if (mailboxPath.getName().isEmpty()) {
             LOGGER.warn("Ignoring mailbox with empty name");
         } else {
@@ -365,6 +369,13 @@ public class StoreMailboxManager implements MailboxManager {
             }
         }
         return Optional.empty();
+    }
+
+    private void assertMailboxPathBelongToUser(MailboxSession mailboxSession, MailboxPath mailboxPath) throws MailboxException {
+        if (!mailboxPath.belongsTo(mailboxSession)) {
+            throw new InsufficientRightsException("mailboxPath '" + mailboxPath.asString() + "'"
+                + " does not belong to user '" + mailboxSession.getUser().asString() + "'");
+        }
     }
 
     public boolean isMailboxNameTooLong(MailboxPath mailboxPath) {
