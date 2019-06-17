@@ -27,7 +27,6 @@ import static org.apache.james.backend.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backend.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backend.rabbitmq.Constants.NO_ARGUMENTS;
 import static org.apache.james.mailbox.events.EventBusConcurrentTestContract.newCountingListener;
-import static org.apache.james.mailbox.events.EventBusConcurrentTestContract.totalEventsReceived;
 import static org.apache.james.mailbox.events.EventBusTestFixture.ALL_GROUPS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT;
 import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_A;
@@ -74,7 +73,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.stubbing.Answer;
 
-import com.google.common.collect.ImmutableList;
 import com.rabbitmq.client.Connection;
 
 import reactor.core.publisher.Mono;
@@ -191,7 +189,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
 
             eventBus().register(countingListener1, new EventBusTestFixture.GroupA());
-            int totalGlobalRegistrations = 1; // GroupA + GroupB + GroupC
+            int totalGlobalRegistrations = 1;
 
             int threadCount = 10;
             int operationCount = 10000;
@@ -206,13 +204,9 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             // there is a moment when RabbitMQ EventBus consumed amount of messages, then it will stop to consume more
             await()
                 .pollInterval(com.jayway.awaitility.Duration.FIVE_SECONDS)
-                .timeout(com.jayway.awaitility.Duration.TEN_MINUTES).until(() -> {
-                    int totalEventsReceived = totalEventsReceived(ImmutableList.of(countingListener1));
-                    System.out.println("event received: " + totalEventsReceived);
-                    System.out.println("dispatching count: " + eventBus.eventDispatcher.dispatchCount.get());
-                    assertThat(totalEventsReceived)
-                        .isEqualTo(totalGlobalRegistrations * totalDispatchOperations);
-                });
+                .timeout(com.jayway.awaitility.Duration.TEN_MINUTES).until(() ->
+                    assertThat(countingListener1.numberOfEventCalls())
+                        .isEqualTo(totalGlobalRegistrations * totalDispatchOperations));
         }
 
         @Override
