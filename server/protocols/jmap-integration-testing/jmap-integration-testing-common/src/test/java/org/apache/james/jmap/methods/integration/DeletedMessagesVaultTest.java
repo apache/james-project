@@ -856,7 +856,7 @@ public abstract class DeletedMessagesVaultTest {
     private boolean homerHasMailboxWithRole(Role role) {
         return getAllMailboxesIds(homerAccessToken).stream()
             .filter(mailbox -> mailbox.get("role") != null)
-            .anyMatch(mailbox -> mailbox.get("role").equalsIgnoreCase(role.serialize())
-                && mailbox.get("name").equalsIgnoreCase(role.getDefaultMailbox()));
+            .anyMatch(mailbox -> mailbox.get("role").equals(role.serialize())
+                && mailbox.get("name").equals(role.getDefaultMailbox()));
     }
 }
