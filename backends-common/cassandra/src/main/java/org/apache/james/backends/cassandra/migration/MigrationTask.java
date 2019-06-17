@@ -48,7 +48,7 @@ public class MigrationTask implements Migration {
     }
 
     @Override
-    public Result run() throws InterruptedException {
+    public Result run() {
         return migration.run();
     }
 

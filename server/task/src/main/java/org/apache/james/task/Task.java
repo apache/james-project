@@ -74,7 +74,7 @@ public interface Task {
      *
      * @return Return true if fully migrated. Returns false otherwise.
      */
-    Result run() throws InterruptedException;
+    Result run();
 
 
     default String type() {
