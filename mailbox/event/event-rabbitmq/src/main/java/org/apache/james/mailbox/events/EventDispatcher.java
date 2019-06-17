@@ -26,7 +26,6 @@ import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXC
 
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import org.apache.james.event.json.EventSerializer;
@@ -58,7 +57,6 @@ class EventDispatcher {
     private final LocalListenerRegistry localListenerRegistry;
     private final AMQP.BasicProperties basicProperties;
     private final MailboxListenerExecutor mailboxListenerExecutor;
-    final AtomicInteger dispatchCount = new AtomicInteger();
 
     EventDispatcher(EventBusId eventBusId, EventSerializer eventSerializer, Sender sender, LocalListenerRegistry localListenerRegistry, MailboxListenerExecutor mailboxListenerExecutor) {
         this.eventSerializer = eventSerializer;
@@ -84,7 +82,6 @@ class EventDispatcher {
                 dispatchToRemoteListeners(serializeEvent(event), keys))
             .subscribeOn(Schedulers.elastic())
             .then()
-            .doOnSuccess(any -> dispatchCount.incrementAndGet())
             .subscribeWith(MonoProcessor.create());
     }
 
