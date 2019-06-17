@@ -221,14 +221,14 @@ public interface DeletedMessageVaultContract {
     }
 
     @Test
-    default void deleteExpiredMessagesTaskShouldCompleteWhenNoMail() {
+    default void deleteExpiredMessagesTaskShouldCompleteWhenNoMail() throws Exception {
         Task.Result result = getVault().deleteExpiredMessagesTask().run();
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
     }
 
     @Test
-    default void deleteExpiredMessagesTaskShouldCompleteWhenAllMailsDeleted() {
+    default void deleteExpiredMessagesTaskShouldCompleteWhenAllMailsDeleted() throws Exception {
         Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
         Mono.from(getVault().delete(USER, DELETED_MESSAGE.getMessageId())).block();
 
@@ -238,7 +238,7 @@ public interface DeletedMessageVaultContract {
     }
 
     @Test
-    default void deleteExpiredMessagesTaskShouldCompleteWhenOnlyRecentMails() {
+    default void deleteExpiredMessagesTaskShouldCompleteWhenOnlyRecentMails() throws Exception {
         Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         Task.Result result = getVault().deleteExpiredMessagesTask().run();
@@ -247,7 +247,7 @@ public interface DeletedMessageVaultContract {
     }
 
     @Test
-    default void deleteExpiredMessagesTaskShouldCompleteWhenOnlyOldMails() {
+    default void deleteExpiredMessagesTaskShouldCompleteWhenOnlyOldMails() throws Exception {
         Mono.from(getVault().append(USER, OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         Task.Result result = getVault().deleteExpiredMessagesTask().run();
@@ -256,7 +256,7 @@ public interface DeletedMessageVaultContract {
     }
 
     @Test
-    default void deleteExpiredMessagesTaskShouldDoNothingWhenEmpty() {
+    default void deleteExpiredMessagesTaskShouldDoNothingWhenEmpty() throws Exception {
         getVault().deleteExpiredMessagesTask().run();
 
         assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
@@ -264,7 +264,7 @@ public interface DeletedMessageVaultContract {
     }
 
     @Test
-    default void deleteExpiredMessagesTaskShouldNotDeleteRecentMails() {
+    default void deleteExpiredMessagesTaskShouldNotDeleteRecentMails() throws Exception {
         Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         getVault().deleteExpiredMessagesTask().run();
@@ -274,7 +274,7 @@ public interface DeletedMessageVaultContract {
     }
 
     @Test
-    default void deleteExpiredMessagesTaskShouldDeleteOldMails() {
+    default void deleteExpiredMessagesTaskShouldDeleteOldMails() throws Exception {
         Mono.from(getVault().append(USER, OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         getVault().deleteExpiredMessagesTask().run();
