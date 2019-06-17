@@ -186,11 +186,10 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         EventBusConcurrentTestContract.SingleEventBusConcurrentContract {
 
         @Test
-        void rabbitMQEventBusCannotHandleHugeDispatchingOperations() throws Exception {
+        void rabbitMQEventBusShouldHandleBulksGracefully() throws Exception {
             EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
-
             eventBus().register(countingListener1, new EventBusTestFixture.GroupA());
-            int totalGlobalRegistrations = 1;
+            int totalGlobalRegistrations = 1; // GroupA
 
             int threadCount = 10;
             int operationCount = 10000;
@@ -200,9 +199,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 .operation((threadNumber, operationNumber) -> eventBus.dispatch(EVENT, NO_KEYS).block())
                 .threadCount(threadCount)
                 .operationCount(operationCount)
-                .runSuccessfullyWithin(Duration.ofMinutes(10));
+                .runSuccessfullyWithin(Duration.ofMinutes(3));
 
-            // there is a moment when RabbitMQ EventBus consumed amount of messages, then it will stop to consume more
             await()
                 .pollInterval(com.jayway.awaitility.Duration.FIVE_SECONDS)
                 .timeout(com.jayway.awaitility.Duration.TEN_MINUTES).until(() ->
