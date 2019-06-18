@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.cassandra.access;
 
-import java.util.concurrent.CompletableFuture;
-
 import javax.inject.Inject;
 
 import org.apache.james.jmap.api.access.AccessToken;
@@ -28,6 +26,7 @@ import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
 import com.google.common.base.Preconditions;
+import reactor.core.publisher.Mono;
 
 public class CassandraAccessTokenRepository implements AccessTokenRepository {
 
@@ -39,7 +38,7 @@ public class CassandraAccessTokenRepository implements AccessTokenRepository {
     }
 
     @Override
-    public CompletableFuture<Void> addToken(String username, AccessToken accessToken) {
+    public Mono<Void> addToken(String username, AccessToken accessToken) {
         Preconditions.checkNotNull(username);
         Preconditions.checkArgument(! username.isEmpty(), "Username should not be empty");
         Preconditions.checkNotNull(accessToken);
@@ -48,18 +47,17 @@ public class CassandraAccessTokenRepository implements AccessTokenRepository {
     }
 
     @Override
-    public CompletableFuture<Void> removeToken(AccessToken accessToken) {
+    public Mono<Void> removeToken(AccessToken accessToken) {
         Preconditions.checkNotNull(accessToken);
 
         return cassandraAccessTokenDAO.removeToken(accessToken);
     }
 
     @Override
-    public CompletableFuture<String> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken {
+    public Mono<String> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken {
         Preconditions.checkNotNull(accessToken);
 
         return cassandraAccessTokenDAO.getUsernameFromToken(accessToken)
-            .thenApply(
-                optional -> optional.<InvalidAccessToken>orElseThrow(() -> new InvalidAccessToken(accessToken)));
+            .switchIfEmpty(Mono.error(new InvalidAccessToken(accessToken)));
     }
 }

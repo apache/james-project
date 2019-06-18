@@ -19,13 +19,14 @@
 
 package org.apache.james.mailbox.maildir;
 
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerStressTest;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
-public class UserMaildirMailboxManagerStressTest extends MailboxManagerStressTest {
+public class UserMaildirMailboxManagerStressTest extends MailboxManagerStressTest<StoreMailboxManager> {
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
     
@@ -36,7 +37,7 @@ public class UserMaildirMailboxManagerStressTest extends MailboxManagerStressTes
     }
     
     @Override
-    protected MailboxManager provideManager() {
+    protected StoreMailboxManager provideManager() {
         try {
             return MaildirMailboxManagerProvider.createMailboxManager("/%user", tmpFolder);
         } catch (Exception e) {
@@ -44,5 +45,8 @@ public class UserMaildirMailboxManagerStressTest extends MailboxManagerStressTes
         }
     }
 
-
+    @Override
+    protected EventBus retrieveEventBus(StoreMailboxManager mailboxManager) {
+        return mailboxManager.getEventBus();
+    }
 }

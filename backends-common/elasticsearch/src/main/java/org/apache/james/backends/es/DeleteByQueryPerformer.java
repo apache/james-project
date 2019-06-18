@@ -19,66 +19,66 @@
 
 package org.apache.james.backends.es;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-
-import org.apache.james.backends.es.search.ScrollIterable;
-import org.elasticsearch.action.ListenableActionFuture;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.apache.james.backends.es.search.ScrolledSearch;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 
-public class DeleteByQueryPerformer {
-    public static final TimeValue TIMEOUT = new TimeValue(60000);
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-    private final Client client;
-    private final ExecutorService executor;
+public class DeleteByQueryPerformer {
+    private static final TimeValue TIMEOUT = new TimeValue(60000);
+
+    private final RestHighLevelClient client;
     private final int batchSize;
     private final WriteAliasName aliasName;
-    private final TypeName typeName;
 
     @VisibleForTesting
-    public DeleteByQueryPerformer(Client client, ExecutorService executor, int batchSize, WriteAliasName aliasName, TypeName typeName) {
+    public DeleteByQueryPerformer(RestHighLevelClient client, int batchSize, WriteAliasName aliasName) {
         this.client = client;
-        this.executor = executor;
         this.batchSize = batchSize;
         this.aliasName = aliasName;
-        this.typeName = typeName;
     }
 
-    public Future<Void> perform(QueryBuilder queryBuilder) {
-        return executor.submit(() -> doDeleteByQuery(queryBuilder));
+    public Mono<Void> perform(QueryBuilder queryBuilder) {
+        return Flux.fromStream(new ScrolledSearch(client, prepareSearch(queryBuilder)).searchResponses())
+            .flatMap(searchResponse -> deleteRetrievedIds(client, searchResponse))
+            .thenEmpty(Mono.empty());
     }
 
-    protected Void doDeleteByQuery(QueryBuilder queryBuilder) {
-        new ScrollIterable(client,
-            client.prepareSearch(aliasName.getValue())
-                .setTypes(typeName.getValue())
-                .setScroll(TIMEOUT)
-                .setNoFields()
-                .setQuery(queryBuilder)
-                .setSize(batchSize))
-            .stream()
-            .map(searchResponse -> deleteRetrievedIds(client, searchResponse))
-            .forEach(ListenableActionFuture::actionGet);
-        return null;
+    private SearchRequest prepareSearch(QueryBuilder queryBuilder) {
+        return new SearchRequest(aliasName.getValue())
+            .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+            .scroll(TIMEOUT)
+            .source(searchSourceBuilder(queryBuilder));
     }
 
-    private ListenableActionFuture<BulkResponse> deleteRetrievedIds(Client client, SearchResponse searchResponse) {
-        BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
+    private SearchSourceBuilder searchSourceBuilder(QueryBuilder queryBuilder) {
+        return new SearchSourceBuilder()
+            .query(queryBuilder)
+            .size(batchSize);
+    }
+
+    private Mono<BulkResponse> deleteRetrievedIds(RestHighLevelClient client, SearchResponse searchResponse) {
+        BulkRequest request = new BulkRequest();
+
         for (SearchHit hit : searchResponse.getHits()) {
-            bulkRequestBuilder.add(client.prepareDelete()
-                .setIndex(aliasName.getValue())
-                .setType(typeName.getValue())
-                .setId(hit.getId()));
+            request.add(
+                new DeleteRequest(aliasName.getValue())
+                    .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                    .id(hit.getId()));
         }
-        return bulkRequestBuilder.execute();
-    }
 
+        return Mono.fromCallable(() -> client.bulk(request));
+    }
 }

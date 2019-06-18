@@ -21,12 +21,20 @@ package org.apache.james.utils;
 
 import java.util.List;
 
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 
 public interface ConfigurationPerformer {
 
     void initModule();
 
-    List<Class<? extends Configurable>> forClasses();
+    /**
+     * In order to initialize components in the right order, every
+     * {@link ConfigurationPerformer} is supposed to declare which
+     * classes it will initialize.
+     *
+     * @return the list of Classes that this object will initialize.
+     *  The list should never be empty.
+     */
+    List<Class<? extends Startable>> forClasses();
 
 }

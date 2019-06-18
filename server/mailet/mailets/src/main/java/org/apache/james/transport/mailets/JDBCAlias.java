@@ -54,8 +54,13 @@ import org.slf4j.LoggerFactory;
  *   &lt;target_column&gt;target_email_address&lt;/target_column&gt;
  * &lt;/mailet&gt;
  * </pre>
+ *
+ * @deprecated JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release
+ *
+ * Please use org.apache.james.transport.mailets.RecipientRewriteTable
  */
 @Experimental
+@Deprecated
 public class JDBCAlias extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(JDBCAlias.class);
 

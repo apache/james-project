@@ -149,10 +149,6 @@
     </bean>
 
     <!-- Event system -->
-    <bean id="dispatcher" class="org.apache.james.mailbox.store.event.MailboxEventDispatcher">
-        <constructor-arg index="0" ref="delegating-listener"/>
-    </bean>
-
     <import resource="classpath:META-INF/spring/event-system.xml"/>
 
     <!-- Mailbox Copier -->
@@ -287,6 +283,9 @@
     <bean id="quotamanagermanagement" class="org.apache.james.adapter.mailbox.QuotaManagement"/>
     <bean id="reindexermanagement" class="org.apache.james.adapter.mailbox.ReIndexerManagement"/>
     <bean id="sievemanagerbean" class="org.apache.james.sieverepository.lib.SieveRepositoryManagement"/>
+
+
+    <bean id="taskManager" class="org.apache.james.task.MemoryTaskManager"/>
     <!--
         <bean id="james23importermanagement" class="org.apache.james.container.spring.tool.James23ImporterManagement" />
     -->

@@ -77,7 +77,7 @@ public class MailboxAppender {
         createMailboxIfNotExist(session, path);
         final MessageManager mailbox = mailboxManager.getMailbox(path, session);
         if (mailbox == null) {
-            throw new MessagingException("Mailbox " + path + " for user " + session.getUser().getUserName() + " was not found on this server.");
+            throw new MessagingException("Mailbox " + path + " for user " + session.getUser().asString() + " was not found on this server.");
         }
         return mailbox.appendMessage(MessageManager.AppendCommand.builder()
             .recent()

@@ -35,8 +35,10 @@ import org.apache.james.user.lib.model.DefaultUser;
  * <code>DefaultJamesUser</code>, only properties from the DefaultUser class are
  * persisted.
  * <p/>
- * TODO Please note that default configuration uses JamesUsersJdbcRepository
- * instead of this class. So we could also delete this implementation.
+ *
+ * @deprecated JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release, unless it finds a maintainer
+ *
+ * Please migrate to other UsersRepository implementations like JpaUsersRepository
  */
 @Deprecated
 public class DefaultUsersJdbcRepository extends AbstractJdbcUsersRepository {

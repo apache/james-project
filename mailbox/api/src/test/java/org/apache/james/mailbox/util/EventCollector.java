@@ -19,48 +19,37 @@
 
 package org.apache.james.mailbox.util;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.Event;
+import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.MailboxListener;
 
-public class EventCollector implements MailboxListener {
+public class EventCollector implements MailboxListener.GroupMailboxListener {
+    public static class EventCollectorGroup extends Group {}
 
-    private final List<Event> events = new ArrayList<>();
+    private static final Group GROUP = new EventCollectorGroup();
 
-    private final ListenerType listenerType;
+    private final ConcurrentLinkedDeque<Event> events = new ConcurrentLinkedDeque<>();
 
-    public EventCollector(ListenerType listenerType) {
-        this.listenerType = listenerType;
+    @Override
+    public Group getDefaultGroup() {
+        return GROUP;
     }
 
-    public EventCollector() {
-        this(ListenerType.EACH_NODE);
+    public Collection<Event> getEvents() {
+        return events;
     }
 
     @Override
-    public ListenerType getType() {
-        return listenerType;
-    }
-
-    public List<Event> getEvents() {
-        return events;
+    public boolean isHandling(Event event) {
+        return true;
     }
 
     @Override
     public void event(Event event) {
         events.add(event);
-    }
-
-    public void mailboxDeleted() {
-    }
-
-    public void mailboxRenamed(String origName, String newName) {
-    }
-
-    public boolean isClosed() {
-        return false;
     }
 
 }

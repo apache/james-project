@@ -69,17 +69,6 @@ public class BucketedSlices {
             return new Slice(sliceStartInstant);
         }
 
-        public static Stream<Slice> allSlicesTill(Slice firstSlice, Instant endAt, Duration windowSize) {
-            long sliceCount = calculateSliceCount(firstSlice, endAt, windowSize);
-            long startAtSeconds =  firstSlice.getStartSliceInstant().getEpochSecond();
-            long sliceWindowSizeInSecond = windowSize.getSeconds();
-
-            return LongStream.range(0, sliceCount)
-                .map(slicePosition -> startAtSeconds + sliceWindowSizeInSecond * slicePosition)
-                .mapToObj(Instant::ofEpochSecond)
-                .map(Slice::of);
-        }
-
         private static long calculateSliceCount(Slice firstSlice, Instant endAt, Duration windowSize) {
             long startAtSeconds =  firstSlice.getStartSliceInstant().getEpochSecond();
             long endAtSeconds = endAt.getEpochSecond();
@@ -102,6 +91,17 @@ public class BucketedSlices {
 
         public Instant getStartSliceInstant() {
             return startSliceInstant;
+        }
+
+        public Stream<Slice> allSlicesTill(Instant endAt, Duration windowSize) {
+            long sliceCount = calculateSliceCount(this, endAt, windowSize);
+            long startAtSeconds = this.getStartSliceInstant().getEpochSecond();
+            long sliceWindowSizeInSecond = windowSize.getSeconds();
+
+            return LongStream.range(0, sliceCount)
+                .map(slicePosition -> startAtSeconds + sliceWindowSizeInSecond * slicePosition)
+                .mapToObj(Instant::ofEpochSecond)
+                .map(Slice::of);
         }
 
 

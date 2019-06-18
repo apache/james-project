@@ -19,34 +19,38 @@
 
 package org.apache.james.quota.search.elasticsearch;
 
+import java.io.IOException;
+
 import org.apache.james.backends.es.AliasName;
+import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.NodeMappingFactory;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RestHighLevelClient;
 
 public class QuotaSearchIndexCreationUtil {
 
-    public static Client prepareClient(Client client,
+    public static RestHighLevelClient prepareClient(RestHighLevelClient client,
                                        AliasName readAlias,
                                        AliasName writeAlias,
-                                       IndexName indexName) {
+                                       IndexName indexName,
+                                       ElasticSearchConfiguration configuration) throws IOException {
 
         return NodeMappingFactory.applyMapping(
-            new IndexCreationFactory()
+            new IndexCreationFactory(configuration)
                 .useIndex(indexName)
                 .addAlias(readAlias)
                 .addAlias(writeAlias)
                 .createIndexAndAliases(client),
             indexName,
-            QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE,
             QuotaRatioMappingFactory.getMappingContent());
     }
 
-    public static Client prepareDefaultClient(Client client) {
+    public static RestHighLevelClient prepareDefaultClient(RestHighLevelClient client, ElasticSearchConfiguration configuration) throws IOException {
         return prepareClient(client,
             QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS,
             QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS,
-            QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_INDEX);
+            QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_INDEX,
+            configuration);
     }
 }

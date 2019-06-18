@@ -21,6 +21,7 @@ package org.apache.james.mailbox.model.search;
 
 import java.util.Optional;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -42,7 +43,7 @@ public final class MailboxQuery {
     public static Builder privateMailboxesBuilder(MailboxSession session) {
         return builder()
             .namespace(MailboxConstants.USER_NAMESPACE)
-            .username(session.getUser().getUserName())
+            .username(session.getUser().asString())
             .matchesAllMailboxNames();
     }
 
@@ -75,6 +76,11 @@ public final class MailboxQuery {
             return this;
         }
 
+        public Builder user(User user) {
+            this.username(user.asString());
+            return this;
+        }
+
         public Builder namespace(String namespace) {
             Preconditions.checkState(!this.namespace.isPresent());
 
@@ -88,7 +94,7 @@ public final class MailboxQuery {
             this.namespace = Optional.of(MailboxConstants.USER_NAMESPACE);
             return this;
         }
-        
+
         public Builder expression(MailboxNameExpression expression) {
             this.mailboxNameExpression = Optional.of(expression);
             return this;
@@ -137,9 +143,9 @@ public final class MailboxQuery {
     }
 
     public boolean isPrivateMailboxes(MailboxSession session) {
-        MailboxSession.User sessionUser = session.getUser();
+        User sessionUser = session.getUser();
         return namespace.map(MailboxConstants.USER_NAMESPACE::equals).orElse(false)
-            && user.map(sessionUser::isSameUser).orElse(false);
+            && user.map(User::fromUsername).map(sessionUser::equals).orElse(false);
     }
 
     @VisibleForTesting

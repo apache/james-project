@@ -48,6 +48,8 @@ import java.io.IOException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.categories.BasicFeature;
+import org.apache.james.jmap.categories.CassandraAndElasticSearchCategory;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -65,6 +67,7 @@ import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -115,6 +118,7 @@ public abstract class SetMailboxesMethodTest {
     }
 
     @Test
+    @Category(CassandraAndElasticSearchCategory.class)
     public void setMailboxesShouldNotCreateWhenOverLimitName() {
         String overLimitName = StringUtils.repeat("a", MAILBOX_NAME_LENGTH_64K);
         String requestBody =
@@ -146,6 +150,7 @@ public abstract class SetMailboxesMethodTest {
     }
 
     @Test
+    @Category(CassandraAndElasticSearchCategory.class)
     public void setMailboxesShouldNotUpdateMailboxWhenOverLimitName() {
         String overLimitName = StringUtils.repeat("a", MAILBOX_NAME_LENGTH_64K);
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
@@ -240,6 +245,7 @@ public abstract class SetMailboxesMethodTest {
         assertThat(mailboxProbe.listSubscriptions(username)).doesNotContain(overLimitName);
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void userShouldBeSubscribedOnCreatedMailboxWhenCreateMailbox() throws Exception {
         String requestBody =
@@ -410,6 +416,7 @@ public abstract class SetMailboxesMethodTest {
             DefaultMailboxes.DRAFTS);
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void subscriptionUserShouldBeDeletedWhenCreateThenDestroyMailboxWithJMAP() throws Exception {
         String requestBody =
@@ -521,6 +528,7 @@ public abstract class SetMailboxesMethodTest {
             .body(ARGUMENTS + ".description", equalTo("The field 'sortOrder' of 'MailboxCreateRequest' is not supported"));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void setMailboxesShouldReturnCreatedMailbox() {
         String requestBody =
@@ -866,6 +874,7 @@ public abstract class SetMailboxesMethodTest {
                         ));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void setMailboxesShouldReturnDestroyedMailbox() {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
@@ -1117,6 +1126,7 @@ public abstract class SetMailboxesMethodTest {
             .body(ARGUMENTS + ".updated", contains(mailboxId.serialize()));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void setMailboxesShouldReturnUpdatedWhenNameUpdateAskedOnExistingMailbox() {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
@@ -1324,6 +1334,7 @@ public abstract class SetMailboxesMethodTest {
             .body(FIRST_MAILBOX + ".sharedWith", hasEntry(user, ImmutableList.of(ADMINISTER, WRITE)));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void updateShouldModifyStoredDataWhenUpdatingACL() {
         String myBox = "myBox";
@@ -1539,6 +1550,7 @@ public abstract class SetMailboxesMethodTest {
             .body(ARGUMENTS + ".list[0].name", equalTo("myRenamedBox"));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void setMailboxesShouldReturnMailboxIdWhenMovingToAnotherParentMailbox() {
         MailboxId mailboxId = mailboxProbe

@@ -22,8 +22,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -36,24 +36,22 @@ import org.apache.james.jmap.methods.RequestHandler;
 import org.apache.james.jmap.send.PostDequeueDecoratorFactory;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
 import org.apache.james.jmap.utils.JsoupHtmlTextExtractor;
-import org.apache.james.jmap.utils.SystemMailboxesProvider;
-import org.apache.james.jmap.utils.SystemMailboxesProviderImpl;
 import org.apache.james.jwt.JwtConfiguration;
-import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.transport.matchers.RecipientIsLocal;
-import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.base.Preconditions;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -94,19 +92,17 @@ public class JMAPModule extends AbstractModule {
         bind(RequestHandler.class).in(Scopes.SINGLETON);
         bind(UploadHandler.class).in(Scopes.SINGLETON);
         bind(JsoupHtmlTextExtractor.class).in(Scopes.SINGLETON);
-        bind(SystemMailboxesProviderImpl.class).in(Scopes.SINGLETON);
 
         bind(HtmlTextExtractor.class).to(JsoupHtmlTextExtractor.class);
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(RequiredCapabilitiesPrecondition.class);
+        Multibinder.newSetBinder(binder(), StartUpCheck.class).addBinding().to(RequiredCapabilitiesStartUpCheck.class);
 
         Multibinder<CamelMailetContainerModule.TransportProcessorCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), CamelMailetContainerModule.TransportProcessorCheck.class);
         transportProcessorChecks.addBinding().toInstance(VACATION_MAILET_CHECK);
         transportProcessorChecks.addBinding().toInstance(FILTERING_MAILET_CHECK);
 
-        bind(SystemMailboxesProvider.class).to(SystemMailboxesProviderImpl.class);
         bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class).in(Scopes.SINGLETON);
 
-        Multibinder.newSetBinder(binder(), MailboxListener.class).addBinding().to(PropagateLookupRightListener.class);
+        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class).addBinding().to(PropagateLookupRightListener.class);
     }
 
     @Provides
@@ -140,39 +136,62 @@ public class JMAPModule extends AbstractModule {
     }
 
     @Singleton
-    public static class RequiredCapabilitiesPrecondition implements ConfigurationPerformer {
+    public static class RequiredCapabilitiesStartUpCheck implements StartUpCheck {
+
+        public static final String CHECK_NAME = "MailboxCapabilitiesForJMAP";
 
         private final MailboxManager mailboxManager;
 
         @Inject
-        public RequiredCapabilitiesPrecondition(MailboxManager mailboxManager) {
+        public RequiredCapabilitiesStartUpCheck(MailboxManager mailboxManager) {
             this.mailboxManager = mailboxManager;
         }
 
         @Override
-        public void initModule() {
-            Preconditions.checkArgument(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move),
-                    "MOVE support in MailboxManager is required by JMAP Module");
-            Preconditions.checkArgument(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.ACL),
-                    "ACL support in MailboxManager is required by JMAP Module");
-
+        public CheckResult check() {
             EnumSet<MailboxManager.MessageCapabilities> messageCapabilities = mailboxManager.getSupportedMessageCapabilities();
-            Preconditions.checkArgument(messageCapabilities.contains(MailboxManager.MessageCapabilities.UniqueID),
-                    "MessageIdManager is not defined by this Mailbox implementation");
-
             EnumSet<SearchCapabilities> searchCapabilities = mailboxManager.getSupportedSearchCapabilities();
-            Preconditions.checkArgument(searchCapabilities.contains(MailboxManager.SearchCapabilities.MultimailboxSearch),
-                    "Multimailbox search in MailboxManager is required by JMAP Module");
-            Preconditions.checkArgument(searchCapabilities.contains(MailboxManager.SearchCapabilities.Attachment),
-                    "Attachment Search support in MailboxManager is required by JMAP Module");
-            Preconditions.checkArgument(searchCapabilities.contains(SearchCapabilities.AttachmentFileName),
-                    "Attachment file name Search support in MailboxManager is required by JMAP Module");
+
+            ImmutableList<String> badCheckDescriptions = Stream.of(
+                    badCheckDescription(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move),
+                        "MOVE support in MailboxManager is required by JMAP Module"),
+                    badCheckDescription(mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.ACL),
+                        "ACL support in MailboxManager is required by JMAP Module"),
+                    badCheckDescription(messageCapabilities.contains(MailboxManager.MessageCapabilities.UniqueID),
+                        "MessageIdManager is not defined by this Mailbox implementation"),
+                    badCheckDescription(searchCapabilities.contains(SearchCapabilities.MultimailboxSearch),
+                        "Multimailbox search in MailboxManager is required by JMAP Module"),
+                    badCheckDescription(searchCapabilities.contains(SearchCapabilities.Attachment),
+                        "Attachment Search support in MailboxManager is required by JMAP Module"),
+                    badCheckDescription(searchCapabilities.contains(SearchCapabilities.AttachmentFileName),
+                    "Attachment file name Search support in MailboxManager is required by JMAP Module"))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Guavate.toImmutableList());
+
+            if (!badCheckDescriptions.isEmpty()) {
+                return CheckResult.builder()
+                    .checkName(checkName())
+                    .resultType(ResultType.BAD)
+                    .description(Joiner.on(",").join(badCheckDescriptions))
+                    .build();
+            }
+            return CheckResult.builder()
+                .checkName(checkName())
+                .resultType(ResultType.GOOD)
+                .build();
+        }
+
+        private Optional<String> badCheckDescription(boolean expressionResult, String expressionFailsDescription) {
+            if (expressionResult) {
+                return Optional.empty();
+            }
+            return Optional.ofNullable(expressionFailsDescription);
         }
 
         @Override
-        public List<Class<? extends Configurable>> forClasses() {
-            return ImmutableList.of();
+        public String checkName() {
+            return CHECK_NAME;
         }
     }
-
 }

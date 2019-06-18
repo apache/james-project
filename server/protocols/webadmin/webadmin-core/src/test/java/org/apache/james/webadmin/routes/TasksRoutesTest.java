@@ -22,16 +22,15 @@ package org.apache.james.webadmin.routes;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.Matchers.not;
 
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
@@ -40,41 +39,41 @@ import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.restassured.RestAssured;
 
-public class TasksRoutesTest {
+class TasksRoutesTest {
 
     private MemoryTaskManager taskManager;
     private WebAdminServer webAdminServer;
+    private CountDownLatch waitingForResultLatch;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         taskManager = new MemoryTaskManager();
 
-        webAdminServer = WebAdminUtils.createWebAdminServer(
-            new DefaultMetricFactory(),
-            new TasksRoutes(taskManager, new JsonTransformer()));
-
-        webAdminServer.configure(NO_CONFIGURATION);
-        webAdminServer.await();
+        webAdminServer = WebAdminUtils.createWebAdminServer(new TasksRoutes(taskManager, new JsonTransformer()))
+            .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(TasksRoutes.BASE)
             .build();
+
+        waitingForResultLatch = new CountDownLatch(1);
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
+        waitingForResultLatch.countDown();
         taskManager.stop();
         webAdminServer.destroy();
     }
 
     @Test
-    public void listShouldReturnEmptyWhenNoTask() {
+    void listShouldReturnEmptyWhenNoTask() {
         when()
             .get()
         .then()
@@ -82,11 +81,11 @@ public class TasksRoutesTest {
     }
 
     @Test
-    public void listShouldReturnTaskDetailsWhenTaskInProgress() throws Exception {
+    void listShouldReturnTaskDetailsWhenTaskInProgress() throws Exception {
         CountDownLatch taskInProgressLatch = new CountDownLatch(1);
         TaskId taskId = taskManager.submit(() -> {
             taskInProgressLatch.countDown();
-            await();
+            waitForResult();
             return Task.Result.COMPLETED;
         });
 
@@ -98,24 +97,28 @@ public class TasksRoutesTest {
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(1))
             .body("[0].status", is(TaskManager.Status.IN_PROGRESS.getValue()))
-            .body("[0].taskId", is(taskId.getValue().toString()))
+            .body("[0].taskId", is(taskId.asString()))
             .body("[0].class", is(not(empty())));
     }
 
-    private void await() {
+    private void await(CountDownLatch latch) {
         try {
-            new CountDownLatch(1).await();
+            latch.await();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
+    private void waitForResult() {
+        await(waitingForResultLatch);
+    }
+
     @Test
-    public void listShouldListTaskWhenStatusFilter() throws Exception {
+    void listShouldListTaskWhenStatusFilter() throws Exception {
         CountDownLatch inProgressLatch = new CountDownLatch(1);
         TaskId taskId = taskManager.submit(() -> {
             inProgressLatch.countDown();
-            await();
+            waitForResult();
             return Task.Result.COMPLETED;
         });
 
@@ -129,16 +132,16 @@ public class TasksRoutesTest {
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(1))
             .body("[0].status", is(TaskManager.Status.IN_PROGRESS.getValue()))
-            .body("[0].taskId", is(taskId.getValue().toString()))
+            .body("[0].taskId", is(taskId.asString()))
             .body("[0].type", is(Task.UNKNOWN));
     }
 
     @Test
-    public void listShouldReturnEmptyWhenNonMatchingStatusFilter() throws Exception {
+    void listShouldReturnEmptyWhenNonMatchingStatusFilter() throws Exception {
         CountDownLatch inProgressLatch = new CountDownLatch(1);
         taskManager.submit(() -> {
             inProgressLatch.countDown();
-            await();
+            waitForResult();
             return Task.Result.COMPLETED;
         });
 
@@ -154,11 +157,11 @@ public class TasksRoutesTest {
     }
 
     @Test
-    public void getShouldReturnTaskDetails() throws Exception {
+    void getShouldReturnTaskDetails() throws Exception {
         CountDownLatch inProgressLatch = new CountDownLatch(1);
         TaskId taskId = taskManager.submit(() -> {
             inProgressLatch.countDown();
-            await();
+            waitForResult();
             return Task.Result.COMPLETED;
         });
 
@@ -172,7 +175,7 @@ public class TasksRoutesTest {
     }
 
     @Test
-    public void getAwaitShouldAwaitTaskCompletion() {
+    void getAwaitShouldAwaitTaskCompletion() {
         TaskId taskId = taskManager.submit(() -> {
             try {
                 Thread.sleep(100);
@@ -190,9 +193,40 @@ public class TasksRoutesTest {
     }
 
     @Test
-    public void deleteShouldReturnOk() {
+    void getAwaitShouldNotFailUponError() {
         TaskId taskId = taskManager.submit(() -> {
-            await();
+            throw new RuntimeException();
+        });
+
+        when()
+            .get("/" + taskId.getValue() + "/await")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("status", is("failed"));
+    }
+
+    @Test
+    void getAwaitShouldNotFailUponFutureError() {
+        TaskId taskId = taskManager.submit(() -> {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            throw new RuntimeException();
+        });
+
+        when()
+            .get("/" + taskId.getValue() + "/await")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("status", is("failed"));
+    }
+
+    @Test
+    void deleteShouldReturnOk() {
+        TaskId taskId = taskManager.submit(() -> {
+            waitForResult();
             return Task.Result.COMPLETED;
         });
 
@@ -203,9 +237,15 @@ public class TasksRoutesTest {
     }
 
     @Test
-    public void deleteShouldCancelMatchingTask() {
+    void deleteShouldCancelMatchingTask() {
+        CountDownLatch inProgressLatch = new CountDownLatch(1);
+
         TaskId taskId = taskManager.submit(() -> {
-            await();
+            try {
+                inProgressLatch.await();
+            } catch (InterruptedException e) {
+                //ignore
+            }
             return Task.Result.COMPLETED;
         });
 
@@ -216,11 +256,18 @@ public class TasksRoutesTest {
             .get("/" + taskId.getValue())
         .then()
             .statusCode(HttpStatus.OK_200)
+            .body("status", isOneOf("canceledRequested", "canceled"));
+
+        inProgressLatch.countDown();
+        when()
+            .get("/" + taskId.getValue() + "/await")
+            .then()
+            .statusCode(HttpStatus.OK_200)
             .body("status", is("canceled"));
     }
 
     @Test
-    public void getShouldReturnNotFoundWhenIdDoesNotExist() {
+    void getShouldReturnNotFoundWhenIdDoesNotExist() {
         String taskId = UUID.randomUUID().toString();
 
         when()
@@ -233,7 +280,7 @@ public class TasksRoutesTest {
     }
 
     @Test
-    public void getShouldReturnErrorWhenInvalidId() {
+    void getShouldReturnErrorWhenInvalidId() {
         String taskId = "invalid";
 
         when()
@@ -246,7 +293,7 @@ public class TasksRoutesTest {
     }
 
     @Test
-    public void deleteShouldReturnOkWhenNonExistingId() {
+    void deleteShouldReturnOkWhenNonExistingId() {
         String taskId = UUID.randomUUID().toString();
 
         when()
@@ -256,7 +303,7 @@ public class TasksRoutesTest {
     }
 
     @Test
-    public void deleteShouldReturnAnErrorOnInvalidId() {
+    void deleteShouldReturnAnErrorOnInvalidId() {
         String taskId = "invalid";
 
         when()
@@ -269,7 +316,7 @@ public class TasksRoutesTest {
     }
 
     @Test
-    public void listShouldReturnErrorWhenNonExistingStatus() {
+    void listShouldReturnErrorWhenNonExistingStatus() {
         given()
             .param("status", "invalid")
             .get()
@@ -279,5 +326,4 @@ public class TasksRoutesTest {
             .body("type", is("InvalidArgument"))
             .body("message", is("Invalid status query parameter"));
     }
-
 }

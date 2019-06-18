@@ -19,97 +19,84 @@
 
 package org.apache.james.task;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import javax.annotation.PreDestroy;
 
-import org.apache.james.util.MDCBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
-public class MemoryTaskManager implements TaskManager {
-    private static final boolean INTERRUPT_IF_RUNNING = true;
-    private static final Logger LOGGER = LoggerFactory.getLogger(MemoryTaskManager.class);
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.WorkQueueProcessor;
+import reactor.core.scheduler.Schedulers;
 
+public class MemoryTaskManager implements TaskManager {
+    public static final Duration AWAIT_POLLING_DURATION = Duration.ofMillis(500);
+    public static final Duration NOW = Duration.ZERO;
+    private final WorkQueueProcessor<TaskWithId> workQueue;
+    private final TaskManagerWorker worker;
     private final ConcurrentHashMap<TaskId, TaskExecutionDetails> idToExecutionDetails;
-    private final ConcurrentHashMap<TaskId, Future<?>> idToFuture;
-    private final ExecutorService executor;
+    private final ConcurrentHashMap<TaskId, Mono<Task.Result>> tasksResult;
+    private final ExecutorService taskExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService requestTaskExecutor = Executors.newSingleThreadExecutor();
 
     public MemoryTaskManager() {
+        workQueue = WorkQueueProcessor.<TaskWithId>builder()
+            .executor(taskExecutor)
+            .requestTaskExecutor(requestTaskExecutor)
+            .build();
         idToExecutionDetails = new ConcurrentHashMap<>();
-        idToFuture = new ConcurrentHashMap<>();
-        executor = Executors.newSingleThreadExecutor();
+        tasksResult = new ConcurrentHashMap<>();
+        worker = new MemoryTaskManagerWorker();
+        workQueue
+            .subscribeOn(Schedulers.single())
+            .filter(isTaskWaiting().or(isTaskRequestedForCancellation()))
+            .subscribe(this::sendTaskToWorker);
     }
 
-    @Override
+    private void sendTaskToWorker(TaskWithId taskWithId) {
+        if (isTaskWaiting().test(taskWithId)) {
+            treatTask(taskWithId);
+        } else if (isTaskRequestedForCancellation().test(taskWithId)) {
+            updateDetails(taskWithId.getId()).accept(TaskExecutionDetails::cancelEffectively);
+        }
+    }
+
+    private Predicate<TaskWithId> isTaskWaiting() {
+        return task -> listIds(Status.WAITING).contains(task.getId());
+    }
+
+    private Predicate<TaskWithId> isTaskRequestedForCancellation() {
+        return task -> listIds(Status.CANCEL_REQUESTED).contains(task.getId());
+    }
+
+    private void treatTask(TaskWithId task) {
+        Mono<Task.Result> result = worker.executeTask(task, updateDetails(task.getId()));
+        tasksResult.put(task.getId(), result);
+        try {
+            result.block();
+        } catch (CancellationException e) {
+            // Do not throw CancellationException
+        }
+    }
+
     public TaskId submit(Task task) {
-        return submit(task, id -> { });
-    }
-
-    @VisibleForTesting
-    TaskId submit(Task task, Consumer<TaskId> callback) {
         TaskId taskId = TaskId.generateTaskId();
         TaskExecutionDetails executionDetails = TaskExecutionDetails.from(task, taskId);
-
         idToExecutionDetails.put(taskId, executionDetails);
-        idToFuture.put(taskId,
-            executor.submit(() -> runWithMdc(executionDetails, task, callback)));
+        workQueue.onNext(new TaskWithId(taskId, task));
         return taskId;
-    }
-
-    private void runWithMdc(TaskExecutionDetails executionDetails, Task task, Consumer<TaskId> callback) {
-        MDCBuilder.withMdc(
-            MDCBuilder.create()
-                .addContext(Task.TASK_ID, executionDetails.getTaskId())
-                .addContext(Task.TASK_TYPE, executionDetails.getType())
-                .addContext(Task.TASK_DETAILS, executionDetails.getAdditionalInformation()),
-            () -> run(executionDetails, task, callback));
-    }
-
-    private void run(TaskExecutionDetails executionDetails, Task task, Consumer<TaskId> callback) {
-        TaskExecutionDetails started = executionDetails.start();
-        idToExecutionDetails.put(started.getTaskId(), started);
-        try {
-            task.run()
-                .onComplete(() -> success(started))
-                .onFailure(() -> failed(started,
-                    logger -> logger.info("Task was partially performed. Check logs for more details")));
-        } catch (Exception e) {
-            failed(started,
-                logger -> logger.error("Error while running task", executionDetails, e));
-        } finally {
-            idToFuture.remove(executionDetails.getTaskId());
-            callback.accept(executionDetails.getTaskId());
-        }
-    }
-
-    private void success(TaskExecutionDetails started) {
-        if (!wasCancelled(started.getTaskId())) {
-            idToExecutionDetails.put(started.getTaskId(), started.completed());
-            LOGGER.info("Task success");
-        }
-    }
-
-    private void failed(TaskExecutionDetails started, Consumer<Logger> logOperation) {
-        if (!wasCancelled(started.getTaskId())) {
-            idToExecutionDetails.put(started.getTaskId(), started.failed());
-            logOperation.accept(LOGGER);
-        }
-    }
-
-    private boolean wasCancelled(TaskId taskId) {
-        return idToExecutionDetails.get(taskId).getStatus() == Status.CANCELLED;
     }
 
     @Override
@@ -125,32 +112,64 @@ public class MemoryTaskManager implements TaskManager {
 
     @Override
     public List<TaskExecutionDetails> list(Status status) {
-        return idToExecutionDetails.values()
+        return ImmutableList.copyOf(tasksFiltered(status).values());
+    }
+
+    public Set<TaskId> listIds(Status status) {
+        return tasksFiltered(status).keySet();
+    }
+
+    public Map<TaskId, TaskExecutionDetails> tasksFiltered(Status status) {
+        return idToExecutionDetails.entrySet()
             .stream()
-            .filter(details -> details.getStatus().equals(status))
-            .collect(Guavate.toImmutableList());
+            .filter(details -> details.getValue().getStatus().equals(status))
+            .collect(Guavate.entriesToImmutableMap());
     }
 
     @Override
     public void cancel(TaskId id) {
-        Optional.ofNullable(idToFuture.get(id))
-            .ifPresent(future -> {
-                TaskExecutionDetails executionDetails = idToExecutionDetails.get(id);
-                idToExecutionDetails.put(id, executionDetails.cancel());
-                future.cancel(INTERRUPT_IF_RUNNING);
-                idToFuture.remove(id);
-            });
+        Optional.ofNullable(idToExecutionDetails.get(id)).ifPresent(details -> {
+                if (details.getStatus().equals(Status.WAITING)) {
+                    updateDetails(id).accept(TaskExecutionDetails::cancelRequested);
+                }
+                worker.cancelTask(id, updateDetails(id));
+            }
+        );
     }
 
     @Override
     public TaskExecutionDetails await(TaskId id) {
-        Optional.ofNullable(idToFuture.get(id))
-            .ifPresent(Throwing.consumer(Future::get));
-        return getExecutionDetails(id);
+        if (Optional.ofNullable(idToExecutionDetails.get(id)).isPresent()) {
+            return Flux.interval(NOW, AWAIT_POLLING_DURATION, Schedulers.elastic())
+                .filter(ignore -> tasksResult.get(id) != null)
+                .map(ignore -> {
+                    Optional.ofNullable(tasksResult.get(id))
+                        .ifPresent(mono -> {
+                            try {
+                                mono.block();
+                            } catch (CancellationException e) {
+                                // ignore
+                            }
+                        });
+                    return getExecutionDetails(id);
+                })
+                .take(1)
+                .blockFirst();
+        } else {
+            return null;
+        }
     }
 
     @PreDestroy
     public void stop() {
-        executor.shutdownNow();
+        taskExecutor.shutdown();
+        requestTaskExecutor.shutdown();
+    }
+
+    private Consumer<TaskExecutionDetailsUpdater> updateDetails(TaskId taskId) {
+        return updater -> {
+            TaskExecutionDetails newDetails = updater.update(idToExecutionDetails.get(taskId));
+            idToExecutionDetails.replace(taskId, newDetails);
+        };
     }
 }

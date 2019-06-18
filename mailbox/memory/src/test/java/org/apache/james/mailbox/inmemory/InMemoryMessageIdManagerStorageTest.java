@@ -18,9 +18,10 @@
  ****************************************************************/
 package org.apache.james.mailbox.inmemory;
 
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.AbstractMessageIdManagerStorageTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
+import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.junit.Before;
 
 public class InMemoryMessageIdManagerStorageTest extends AbstractMessageIdManagerStorageTest {
@@ -32,8 +33,15 @@ public class InMemoryMessageIdManagerStorageTest extends AbstractMessageIdManage
     }
     
     @Override
-    protected MessageIdManagerTestSystem createTestingData() throws MailboxException {
-        return MessageIdManagerTestSystemProvider.createTestingData();
+    protected MessageIdManagerTestSystem createTestingData() {
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
+
+        StoreMailboxManager mailboxManager = resources.getMailboxManager();
+        return new MessageIdManagerTestSystem(
+            resources.getMessageIdManager(),
+            resources.getMessageIdFactory(),
+            resources.getMailboxManager().getMapperFactory(),
+            mailboxManager);
     }
 
 }

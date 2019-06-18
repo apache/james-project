@@ -21,7 +21,6 @@ package org.apache.james.mailbox.inmemory.mail;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -34,13 +33,12 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.mail.AbstractMessageMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
@@ -71,12 +69,12 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     }
 
     @Override
-    public long countMessagesInMailbox(Mailbox mailbox) throws MailboxException {
+    public long countMessagesInMailbox(Mailbox mailbox) {
         return getMembershipByUidForMailbox(mailbox).size();
     }
 
     @Override
-    public long countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
+    public long countUnseenMessagesInMailbox(Mailbox mailbox) {
         return getMembershipByUidForMailbox(mailbox).values()
             .stream()
             .filter(member -> !member.isSeen())
@@ -84,7 +82,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     }
 
     @Override
-    public void delete(Mailbox mailbox, MailboxMessage message) throws MailboxException {
+    public void delete(Mailbox mailbox, MailboxMessage message) {
         getMembershipByUidForMailbox(mailbox).remove(message.getUid());
     }
 
@@ -98,8 +96,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     }
 
     @Override
-    public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange set, FetchType ftype, int max)
-            throws MailboxException {
+    public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange set, FetchType ftype, int max) {
         List<MailboxMessage> results = new ArrayList<>(getMembershipByUidForMailbox(mailbox).values());
         for (Iterator<MailboxMessage> it = results.iterator(); it.hasNext();) {
             if (!set.includes(it.next().getUid())) {
@@ -116,7 +113,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     }
 
     @Override
-    public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {
+    public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) {
         return getMembershipByUidForMailbox(mailbox).values()
             .stream()
             .filter(MailboxMessage::isRecent)
@@ -126,7 +123,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     }
 
     @Override
-    public MessageUid findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException {
+    public MessageUid findFirstUnseenMessageUid(Mailbox mailbox) {
         List<MailboxMessage> memberships = new ArrayList<>(getMembershipByUidForMailbox(mailbox).values());
         Collections.sort(memberships);
         return memberships.stream()
@@ -137,24 +134,31 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     }
 
     @Override
-    public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange set)
-            throws MailboxException {
-        final Map<MessageUid, MessageMetaData> filteredResult = new HashMap<>();
+    public List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) {
+        List<MessageUid> filteredResult = new ArrayList<>();
 
-        Iterator<MailboxMessage> it = findInMailbox(mailbox, set, FetchType.Metadata, -1);
+        Iterator<MailboxMessage> it = findInMailbox(mailbox, messageRange, FetchType.Metadata, UNLIMITED);
+
         while (it.hasNext()) {
             MailboxMessage member = it.next();
             if (member.isDeleted()) {
-                filteredResult.put(member.getUid(), new SimpleMessageMetaData(member));
-
-                delete(mailbox, member);
+                filteredResult.add(member.getUid());
             }
         }
         return filteredResult;
     }
 
     @Override
-    public Flags getApplicableFlag(Mailbox mailbox) throws MailboxException {
+    public Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) {
+        return getMembershipByUidForMailbox(mailbox).values()
+            .stream()
+            .filter(message -> uids.contains(message.getUid()))
+            .peek(message -> delete(mailbox, message))
+            .collect(Guavate.toImmutableMap(MailboxMessage::getUid, MailboxMessage::metaData));
+    }
+
+    @Override
+    public Flags getApplicableFlag(Mailbox mailbox) {
         return new ApplicableFlagCalculator(getMembershipByUidForId((InMemoryId) mailbox.getMailboxId()).values())
             .computeApplicableFlags();
     }
@@ -189,20 +193,20 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
         copy.setModSeq(message.getModSeq());
         getMembershipByUidForMailbox(mailbox).put(message.getUid(), copy);
 
-        return new SimpleMessageMetaData(message);
+        return message.metaData();
     }
 
     @Override
-    protected void begin() throws MailboxException {
-
-    }
-
-    @Override
-    protected void commit() throws MailboxException {
+    protected void begin() {
 
     }
 
     @Override
-    protected void rollback() throws MailboxException {
+    protected void commit() {
+
+    }
+
+    @Override
+    protected void rollback() {
     }
 }

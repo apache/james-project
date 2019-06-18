@@ -43,6 +43,7 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.MailAddressFixture;
@@ -59,6 +60,7 @@ import org.junit.rules.ExpectedException;
 public class DSNBounceTest {
 
     private static final String MAILET_NAME = "mailetName";
+    private static final Attribute DELIVERY_ERROR_ATTRIBUTE = Attribute.convertToAttribute("delivery-error", "Delivery error");
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -127,10 +129,10 @@ public class DSNBounceTest {
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
         FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
                 .sender(senderMailAddress)
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .setText("My content"))
-                .name(MAILET_NAME)
                 .recipient("recipient@domain.com")
                 .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
                 .build();
@@ -157,11 +159,11 @@ public class DSNBounceTest {
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
         FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
                 .sender(senderMailAddress)
-                .attribute("delivery-error", "Delivery error")
+                .attribute(DELIVERY_ERROR_ATTRIBUTE)
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .setText("My content"))
-                .name(MAILET_NAME)
                 .recipient("recipient@domain.com")
                 .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
                 .build();
@@ -198,11 +200,11 @@ public class DSNBounceTest {
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
         FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
                 .sender(senderMailAddress)
-                .attribute("delivery-error", "Delivery error")
+                .attribute(DELIVERY_ERROR_ATTRIBUTE)
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .setText("My content"))
-                .name(MAILET_NAME)
                 .recipient("recipient@domain.com")
                 .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
                 .build();
@@ -237,11 +239,11 @@ public class DSNBounceTest {
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
         FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
                 .sender(senderMailAddress)
-                .attribute("delivery-error", "Delivery error")
+                .attribute(DELIVERY_ERROR_ATTRIBUTE)
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .setText("My content"))
-                .name(MAILET_NAME)
                 .recipient("recipient@domain.com")
                 .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
                 .remoteAddr("remoteHost")
@@ -277,10 +279,10 @@ public class DSNBounceTest {
         dsnBounce.init(mailetConfig);
 
         FakeMail mail = FakeMail.builder()
-                .attribute("delivery-error", "Delivery error")
+                .name(MAILET_NAME)
+                .attribute(DELIVERY_ERROR_ATTRIBUTE)
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .setText("My content"))
-                .name(MAILET_NAME)
                 .recipient("recipient@domain.com")
                 .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
                 .remoteAddr("remoteHost")
@@ -300,10 +302,10 @@ public class DSNBounceTest {
         dsnBounce.init(mailetConfig);
 
         FakeMail mail = FakeMail.builder()
-                .attribute("delivery-error", "Delivery error")
+                .name(MAILET_NAME)
+                .attribute(DELIVERY_ERROR_ATTRIBUTE)
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .setText("My content"))
-                .name(MAILET_NAME)
                 .recipient("recipient@domain.com")
                 .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
                 .remoteAddr("remoteHost")
@@ -324,10 +326,10 @@ public class DSNBounceTest {
         dsnBounce.init(mailetConfig);
 
         FakeMail mail = FakeMail.builder()
-                .attribute("delivery-error", "Delivery error")
+                .name(MAILET_NAME)
+                .attribute(DELIVERY_ERROR_ATTRIBUTE)
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .setText("My content"))
-                .name(MAILET_NAME)
                 .recipient("recipient@domain.com")
                 .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
                 .remoteAddr("remoteHost")
@@ -349,10 +351,10 @@ public class DSNBounceTest {
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
         FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
                 .sender(senderMailAddress)
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .setText("My content"))
-                .name(MAILET_NAME)
                 .recipient("recipient@domain.com")
                 .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
                 .build();
@@ -383,8 +385,8 @@ public class DSNBounceTest {
             .setText("My content")
             .build();
         FakeMail mail = FakeMail.builder()
-            .sender(senderMailAddress)
             .name(MAILET_NAME)
+            .sender(senderMailAddress)
             .recipient("recipient@domain.com")
             .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
             .mimeMessage(mimeMessage)
@@ -417,12 +419,12 @@ public class DSNBounceTest {
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
         FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
                 .sender(senderMailAddress)
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .setText("My content")
                     .addHeader("myHeader", "myValue")
                     .setSubject("mySubject"))
-                .name(MAILET_NAME)
                 .recipient("recipient@domain.com")
                 .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
                 .build();
@@ -454,10 +456,10 @@ public class DSNBounceTest {
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
         FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
                 .sender(senderMailAddress)
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .setText("My content"))
-                .name(MAILET_NAME)
                 .recipient("recipient@domain.com")
                 .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
                 .build();
@@ -484,11 +486,11 @@ public class DSNBounceTest {
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
         String expectedDate = "Wed, 28 Sep 2016 14:25:52 +0000 (UTC)";
         FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
                 .sender(senderMailAddress)
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .setText("My content")
                     .addHeader(RFC2822Headers.DATE, expectedDate))
-                .name(MAILET_NAME)
                 .recipient("recipient@domain.com")
                 .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
                 .build();

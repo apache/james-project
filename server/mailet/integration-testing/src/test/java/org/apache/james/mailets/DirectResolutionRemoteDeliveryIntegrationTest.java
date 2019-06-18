@@ -46,7 +46,6 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
-import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;

@@ -39,7 +39,6 @@ import org.apache.james.webadmin.routes.DomainsRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -60,8 +59,8 @@ public class JwtFilterIntegrationTest {
         "xtedOK2JnQZn7t9sUzSrcyjWverm7gZkPptkIVoS8TsEeMMME5vFXe_nqkEG69q3kuBUm_33tbR5oNS0ZGZKlG9r41lHBjyf9J1xN4UYV8n866d" +
         "a7RPPCzshIWUtO0q9T2umWTnp-6OnOdBCkndrZmRR6pPxsD5YL0_77Wq8KT_5__fGA";
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    @Rule
+    public DockerCassandraRule cassandra = new DockerCassandraRule();
     
     @Rule
     public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
@@ -76,8 +75,7 @@ public class JwtFilterIntegrationTest {
             Optional.of(ClassLoaderUtils.getSystemResourceAsString("jwt_publickey")));
 
         guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule())
-            .overrideWith(new WebAdminConfigurationModule(),
-                binder -> binder.bind(AuthenticationFilter.class).to(JwtFilter.class),
+            .overrideWith(binder -> binder.bind(AuthenticationFilter.class).to(JwtFilter.class),
                 binder -> binder.bind(JwtConfiguration.class).toInstance(jwtConfiguration));
         guiceJamesServer.start();
         dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);

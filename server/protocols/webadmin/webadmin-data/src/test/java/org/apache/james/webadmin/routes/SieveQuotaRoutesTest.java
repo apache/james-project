@@ -20,12 +20,10 @@
 package org.apache.james.webadmin.routes;
 
 import static io.restassured.RestAssured.given;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaSize;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.memory.InMemorySieveQuotaRepository;
 import org.apache.james.webadmin.WebAdminServer;
@@ -39,7 +37,7 @@ import org.junit.jupiter.api.Test;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
-public class SieveQuotaRoutesTest {
+class SieveQuotaRoutesTest {
 
     private static final User USER_A = User.fromUsername("userA");
 
@@ -47,13 +45,10 @@ public class SieveQuotaRoutesTest {
     private SieveQuotaRepository sieveRepository;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         sieveRepository = new InMemorySieveQuotaRepository();
-        webAdminServer = WebAdminUtils.createWebAdminServer(
-                new DefaultMetricFactory(),
-                new SieveQuotaRoutes(sieveRepository, new JsonTransformer()));
-        webAdminServer.configure(NO_CONFIGURATION);
-        webAdminServer.await();
+        webAdminServer = WebAdminUtils.createWebAdminServer(new SieveQuotaRoutes(sieveRepository, new JsonTransformer()))
+            .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .build();

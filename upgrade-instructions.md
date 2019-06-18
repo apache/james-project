@@ -12,12 +12,189 @@ software documentation. Do not follow this guide blindly!
 
 Note: this section is in progress. It will be updated during all the development process until the release.
 
-Changes to apply between 3.1.x and 3.2.x will be reported here.
+Changes to apply between 3.3.x and 3.4.x will be reported here.
+
+Change list:
+
+ - [Upgrade to ElasticSearch 6.3](#upgrade-to-elasticsearch-6.3)
+
+#### Upgrade to ElasticSearch 6.3
+
+Date: 27/05/2019
+
+SHA-1: bbdf88e56d7a22fe92e1360ef563004f3bc0dd98
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-2766
+
+Concerned products: (experimental) Cassandra-guice products.
+
+In version 3.3.0 indexing for the Cassandra product was handled using ElasticSearch 2.2 released on the 31 march 2016. Some major upgrades had been included in recent ElasticSearch version.
+
+Note that ElasticSearch APIs had been undergoing some major changes, making a smooth migration hard to provide. We proposed 2 migration strategies. A
+simple one leading to major search inconsistencies in the process, and another one mitigating these inconsistencies (but getting rid of them).
+
+#### Configuration changes
+
+ElasticSearch 6 driver is relying on the high-level REST client and no more on the internal transport protocol.
+
+Thus, you need to update your configuration files accordingly:
+
+In `elasticsearch.properties` modify the `elasticsearch.port` properties to reference the HTTP port of your ElasticSearch 
+nodes (**9200** by default instead of the previous default value of **9300**).
+
+##### Simple strategy
+
+Procedure:
+ - From a running James 3.3.0 cluster connected to a running ElacticSearch 2.2 cluster
+ - Start an empty ElasticSearch 6.3 cluster
+ - Shutdown James 3.3.0 cluster and start a James 3.4.0 cluster connected to ElasticSearch 6.3
+ - Search result will then be empty and thus innacurate
+ - Thus trigger a [Full ReIndexing](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails) to restore search consistency.
+
+Keep in mind that full reIndexing needs to process all users email and thus can be slow.
+
+Obviously this approach trades search consistency against ease of migration.
+
+If search consistency during the migration is important for you, consider the next approach
+
+##### Strategy for minimizing search inconsistency during the migration
+
+Procedure:
+ - From a running James 3.3.0 cluster connected to a running ElacticSearch 2.2 cluster
+ - Start an empty ElasticSearch 6.3 cluster
+ - Start a James 3.4.0 cluster connected to ElasticSearch 6.3 cluster as well as the Cassandra source of trust database. Traffic should be directed to the James 3.3.0 cluster.
+ - Trigger an offline [Full ReIndexing](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails) on the James 3.4.0 cluster
+ - Once done, direct the traffic to the James 3.4.0 cluster, and dispose the James 3.3.0 cluster as well as the ElasticSearch 2.2 cluster
+ - Search result will omit changes that took place during the switching process (starting from the reIndexing start)
+ - Thus trigger a [Full ReIndexing](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails) to restore search consistency.
+
+Keep in mind that full reIndexing needs to process all users email and thus can be slow.
+
+## 3.3.0 version
+
+Changes to apply between 3.2.0 and 3.3.0 had been reported here.
+
+Change list:
+
+ - [Changes to the MailboxListener API](#changes-to-the-mailboxlistener-api)
+ - [Changes in WebAdmin reIndexing API](#changes-in-webadmin-reindexing-api)
+ - [Rename KEY column in JAMES_MAILBOX_ANNOTATION table](#james-mailbox-annotation)
+ - [Mailet API changes](#mailet-api-changes)
+
+### Changes to the MailboxListener API
+
+#### Persistent MailboxId for MailDir
+
+Date: 30/11/2018
+
+SHA-1: 7e32da51a29bee1c732b2b13708bb4b986140119
+
+JIRA: https://issues.apache.org/jira/browse/MAILBOX-292
+
+MailboxId are now persisted in a `james-mailboxId` file. This file is created on the fly, so no action is required for users relying on
+the MailDir mailbox.
+
+#### Registration by MailboxId
+
+Date: 30/11/2018
+
+SHA-1: d9bcebc7dd546bd5f11f3d9b496491e7c9042fe2
+
+JIRA: https://issues.apache.org/jira/browse/MAILBOX-354
+
+Only user written components performing MailboxListener registration will be affected.
+
+The MailboxPath is mutable and thus can be changed upon mailbox rename. This leads to significantly complex code with possible inconsistency windows.
+
+Using the mailboxId, which is immutable, solves these issues.
+
+### Changes in WebAdmin reIndexing API
+
+Date: 05/12/2018
+
+SHA-1: 985b9a4a75bfa75c331cba6cbf835c043185dbdb
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-2555
+
+We made this API introduced in James 3.2.0 a bit more REST friendly. If you developed tools using this API, you will need to update them.
+
+For more details please refer to [the latest WebAdmin documentation](https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#ReIndexing).
+
+### Rename KEY column in JAMES_MAILBOX_ANNOTATION table
+
+Date: 19/12/2018
+
+SHA-1: e25967664538be18ec29f47e73e661bdf29da41f
+
+JIRA: https://issues.apache.org/jira/projects/MAILBOX/issues/MAILBOX-356
+
+Required: Yes
+
+Concerned products: all JPA related products
+
+#### Upgrade procedure
+
+Rename `KEY` column in `JAMES_MAILBOX_ANNOTATION` table. The syntax is:
+
+##### In MySQL
+```
+ALTER TABLE JAMES_MAILBOX_ANNOTATION CHANGE KEY ANNOTATION_KEY varchar(200);
+```
+
+##### In MariaDB
+```
+ALTER TABLE JAMES_MAILBOX_ANNOTATION CHANGE COLUMN KEY ANNOTATION_KEY varchar(200);
+```
+
+_or the syntax corresponding to your database._
+
+### Mailet API changes
+In order to allow safe serialization and strong typing `org.apache.mailet.Mail` have changed.
+
+These methods have been deprecated and replaced:
+
+ * `getSender()` in favor of `getMaybeSender()`
+ * `getAttribute(String)` in favor of `getAttribute(AttributeName)`
+ * `setAttribute(String, Serializable)` in favor of `setAttribute(Attribute)`
+ * `removeAttribute(String)` in favor of `removeAttribute(AttributeName)`
+ * `getAttributeNames()` in favor of `attributeNames()` and `attributesMap()`
+
+Some plain-string `AttributeName` have also been replaced:
+
+  * `SMTP_AUTH_USER_ATTRIBUTE_NAME` in favor of `SMTP_AUTH_USER`
+  * `MAILET_ERROR_ATTRIBUTE_NAME` in favor of `MAILET_ERROR`
+  * `SENT_BY_MAILET` in favor of `SENT_BY_MAILET_ATTRIBUTE`'s name, it is recommended to directly set the `Attribute`.
+
+## 3.2.0 version
+
+Changes to apply between 3.1.0 and 3.2.0 had been reported here.
 
 Changelist:
 
  - [JMAPFiltering mailet is required for JMAP capable servers](#jmapfiltering-mailet-is-required-for-jmap-capable-servers)
  - [Cassandra 3.11.3 upgrade](#cassandra-3113-upgrade)
+
+### Noticeable changes in Mail API: Mail::getMaybeSender
+
+Date: 31/10/2018
+
+SHA-1: 485406252d82c2d23a4078c76b26d6fc8973bbd7
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-2557
+
+Required: Yes
+
+Concerned products: User developed extensions - mailet/matcher
+
+As part of the SMTP protocol, a mail can be sent without sender. This was represented implicitly in James by a potentially null MailAddress
+(`null` or `MailAddress.nullSender()`). This means that mailet/matcher implementers needs to be aware, and handle these cases. This implicit
+handling makes nullSender hard to work with, and prooved to be error prone as part of the 3.2.0 development process.
+
+Hence we propose an alternative API returning a `MaybeSender` object, requiring the caller to explicitly handle missing sender.
+
+`Mail::getSender` had then been deprecated. We strongly encourage our users to rely on `Mail::getMaybeSender`.
+
+Note: thanks to java-8 default API methods, this is not a breaking change.
 
 ### JMAPFiltering mailet is required for JMAP capable servers
 
@@ -102,4 +279,3 @@ $ nodetool stop
 ```
 $ nodetool upgradesstables apache_james
 ```
-

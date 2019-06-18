@@ -26,6 +26,7 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
@@ -63,17 +64,17 @@ public class SpamTrapHandlerTest {
         handler.setBlockTime(blockTime);
         handler.setSpamTrapRecipients(rcpts);
 
-        HookReturnCode result = handler.doRcpt(setUpSMTPSession(ip),null,new MailAddress(SPAM_TRAP_RECIP1)).getResult();
+        HookReturnCode result = handler.doRcpt(setUpSMTPSession(ip), MaybeSender.nullSender(), new MailAddress(SPAM_TRAP_RECIP1)).getResult();
     
         assertThat(result).describedAs("Blocked on first connect").isEqualTo(HookReturnCode.deny());
     
 
-        result = handler.doRcpt(setUpSMTPSession(ip),null,new MailAddress(RECIP1)).getResult();
+        result = handler.doRcpt(setUpSMTPSession(ip), MaybeSender.nullSender(), new MailAddress(RECIP1)).getResult();
     
         assertThat(result).describedAs("Blocked on second connect").isEqualTo(HookReturnCode.deny());
     
         
-        result = handler.doRcpt(setUpSMTPSession(ip2),null,new MailAddress(RECIP1)).getResult();
+        result = handler.doRcpt(setUpSMTPSession(ip2), MaybeSender.nullSender(), new MailAddress(RECIP1)).getResult();
     
         assertThat(result).describedAs("Not Blocked").isEqualTo(HookReturnCode.declined());
     
@@ -84,7 +85,7 @@ public class SpamTrapHandlerTest {
             fail("Failed to sleep for " + blockTime + " ms");
         }
     
-        result = handler.doRcpt(setUpSMTPSession(ip),null,new MailAddress(RECIP1)).getResult();
+        result = handler.doRcpt(setUpSMTPSession(ip), MaybeSender.nullSender(), new MailAddress(RECIP1)).getResult();
     
         assertThat(result).describedAs("Not blocked. BlockTime exceeded").isEqualTo(HookReturnCode.declined());
     }

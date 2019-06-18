@@ -29,7 +29,6 @@ import javax.persistence.Persistence;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.backends.jpa.JPAConstants;
 import org.apache.james.utils.PropertiesProvider;
 
 import com.google.common.base.Joiner;
@@ -49,15 +48,19 @@ public class JPAEntityManagerModule extends AbstractModule {
         
         properties.put("openjpa.ConnectionDriverName", jpaConfiguration.getDriverName());
         properties.put("openjpa.ConnectionURL", jpaConfiguration.getDriverURL());
+        jpaConfiguration.getCredential()
+            .ifPresent(credential -> {
+                properties.put("openjpa.ConnectionUserName", credential.getUsername());
+                properties.put("openjpa.ConnectionPassword", credential.getPassword());
+            });
 
         List<String> connectionFactoryProperties = new ArrayList<>();
         connectionFactoryProperties.add("TestOnBorrow=" + jpaConfiguration.isTestOnBorrow());
-        if (jpaConfiguration.getValidationQueryTimeoutSec() > 0) {
-            connectionFactoryProperties.add("ValidationTimeout=" + jpaConfiguration.getValidationQueryTimeoutSec() * 1000);
-        }
-        if (jpaConfiguration.getValidationQuery() != null) {
-            connectionFactoryProperties.add("ValidationSQL='" + jpaConfiguration.getValidationQuery() + "'");
-        }
+        jpaConfiguration.getValidationQueryTimeoutSec()
+            .ifPresent(timeoutSecond -> connectionFactoryProperties.add("ValidationTimeout=" + timeoutSecond * 1000));
+        jpaConfiguration.getValidationQuery()
+            .ifPresent(validationQuery -> connectionFactoryProperties.add("ValidationSQL='" + validationQuery + "'"));
+
         properties.put("openjpa.ConnectionFactoryProperties", Joiner.on(", ").join(connectionFactoryProperties));
 
         return Persistence.createEntityManagerFactory("Global", properties);
@@ -71,8 +74,10 @@ public class JPAEntityManagerModule extends AbstractModule {
                 .driverName(dataSource.getString("database.driverClassName"))
                 .driverURL(dataSource.getString("database.url"))
                 .testOnBorrow(dataSource.getBoolean("datasource.testOnBorrow", false))
-                .validationQueryTimeoutSec(dataSource.getInt("datasource.validationQueryTimeoutSec", JPAConstants.VALIDATION_NO_TIMEOUT))
+                .validationQueryTimeoutSec(dataSource.getInteger("datasource.validationQueryTimeoutSec", null))
                 .validationQuery(dataSource.getString("datasource.validationQuery", null))
+                .username(dataSource.getString("database.username"))
+                .password(dataSource.getString("database.password"))
                 .build();
     }
 }

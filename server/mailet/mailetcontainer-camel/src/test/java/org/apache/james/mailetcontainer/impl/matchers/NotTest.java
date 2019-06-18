@@ -54,7 +54,7 @@ public class NotTest {
         recipient2 = new MailAddress("other@apahe.org");
         recipient3 = new MailAddress("bis@apache.org");
         recipient4 = new MailAddress("yet@apache.org");
-        mail = FakeMail.builder().recipients(recipient1, recipient2, recipient3, recipient4).build();
+        mail = FakeMail.builder().name("name").recipients(recipient1, recipient2, recipient3, recipient4).build();
     }
 
     @Test

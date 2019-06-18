@@ -21,7 +21,7 @@ package org.apache.james.backend.rabbitmq;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
 
 import java.net.URISyntaxException;
-import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -32,33 +32,102 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
-
 public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
 
-    private DockerRabbitMQ rabbitMQ;
-    private RabbitChannelPool rabbitChannelPool;
+    private static final Consumer<DockerRabbitMQ> DO_NOTHING = dockerRabbitMQ -> {};
+
+    public enum DockerRestartPolicy {
+        PER_TEST(DockerRabbitMQ::start, DockerRabbitMQ::start, DockerRabbitMQ::stop, DockerRabbitMQ::stop),
+        PER_CLASS(DockerRabbitMQ::start, DO_NOTHING, DO_NOTHING, DockerRabbitMQ::stop),
+        NEVER(DockerRabbitMQ::start, DO_NOTHING, DO_NOTHING, DO_NOTHING);
+
+        private final Consumer<DockerRabbitMQ> beforeAllCallback;
+        private final Consumer<DockerRabbitMQ> beforeEachCallback;
+        private final Consumer<DockerRabbitMQ> afterEachCallback;
+        private final Consumer<DockerRabbitMQ> afterAllCallback;
+
+        DockerRestartPolicy(Consumer<DockerRabbitMQ> beforeAllCallback,
+                            Consumer<DockerRabbitMQ> beforeEachCallback,
+                            Consumer<DockerRabbitMQ> afterEachCallback,
+                            Consumer<DockerRabbitMQ> afterAllCallback) {
+            this.beforeAllCallback = beforeAllCallback;
+            this.beforeEachCallback = beforeEachCallback;
+            this.afterEachCallback = afterEachCallback;
+            this.afterAllCallback = afterAllCallback;
+        }
+
+        public void beforeAll(DockerRabbitMQ dockerRabbitMQ) {
+            beforeAllCallback.accept(dockerRabbitMQ);
+        }
+
+        public void afterAll(DockerRabbitMQ dockerRabbitMQ) {
+            afterAllCallback.accept(dockerRabbitMQ);
+        }
+
+        public void afterEach(DockerRabbitMQ dockerRabbitMQ) {
+            afterEachCallback.accept(dockerRabbitMQ);
+        }
+
+        public void beforeEach(DockerRabbitMQ dockerRabbitMQ) {
+            beforeEachCallback.accept(dockerRabbitMQ);
+        }
+    }
+
+    @FunctionalInterface
+    public interface RequireRestartPolicy {
+        RabbitMQExtension restartPolicy(DockerRestartPolicy dockerRestartPolicy);
+    }
+
+    public static RabbitMQExtension singletonRabbitMQ() {
+        return new RabbitMQExtension(DockerRabbitMQSingleton.SINGLETON, DockerRestartPolicy.NEVER);
+    }
+
+    public static RequireRestartPolicy defaultRabbitMQ() {
+        return dockerRabbitMQ(DockerRabbitMQ.withoutCookie());
+    }
+
+    public static RequireRestartPolicy dockerRabbitMQ(DockerRabbitMQ dockerRabbitMQ) {
+        return dockerRestartPolicy -> new RabbitMQExtension(dockerRabbitMQ, dockerRestartPolicy);
+    }
+
+    private final DockerRabbitMQ rabbitMQ;
+    private final DockerRestartPolicy dockerRestartPolicy;
+
+    private SimpleChannelPool simpleChannelPool;
+    private RabbitMQConnectionFactory connectionFactory;
+    private SimpleConnectionPool connectionPool;
+
+    public RabbitMQExtension(DockerRabbitMQ rabbitMQ,
+                             DockerRestartPolicy dockerRestartPolicy) {
+        this.rabbitMQ = rabbitMQ;
+        this.dockerRestartPolicy = dockerRestartPolicy;
+    }
 
     @Override
     public void beforeAll(ExtensionContext context) {
-        rabbitMQ = DockerRabbitMQ.withoutCookie();
-        rabbitMQ.start();
+        dockerRestartPolicy.beforeAll(rabbitMQ);
     }
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
-        rabbitChannelPool = createRabbitChannelPool();
+        dockerRestartPolicy.beforeEach(rabbitMQ);
+
+        connectionFactory = createRabbitConnectionFactory();
+        connectionPool = new SimpleConnectionPool(connectionFactory);
+        this.simpleChannelPool = new SimpleChannelPool(connectionPool);
     }
 
     @Override
-    public void afterEach(ExtensionContext context) throws Exception {
-        rabbitChannelPool.close();
-        rabbitMQ.reset();
+    public void afterEach(ExtensionContext context) {
+        simpleChannelPool.close();
+        connectionPool.close();
+
+        dockerRestartPolicy.afterEach(rabbitMQ);
     }
 
     @Override
     public void afterAll(ExtensionContext extensionContext) {
-        rabbitMQ.stop();
+        dockerRestartPolicy.afterAll(rabbitMQ);
     }
 
     @Override
@@ -71,24 +140,27 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
         return rabbitMQ;
     }
 
-    public RabbitChannelPool getRabbitChannelPool() {
-        return rabbitChannelPool;
+    public RabbitMQChannelPool getRabbitChannelPool() {
+        return simpleChannelPool;
+    }
+
+    public SimpleConnectionPool getRabbitConnectionPool() {
+        return connectionPool;
     }
 
     public DockerRabbitMQ getRabbitMQ() {
         return rabbitMQ;
     }
 
-    private RabbitChannelPool createRabbitChannelPool() throws URISyntaxException {
-        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(rabbitMQ.amqpUri())
-            .managementUri(rabbitMQ.managementUri())
-            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
-            .build();
+    public RabbitMQManagementAPI managementAPI() throws Exception {
+        return RabbitMQManagementAPI.from(RabbitMQConfiguration.builder()
+                .amqpUri(rabbitMQ.amqpUri())
+                .managementUri(rabbitMQ.managementUri())
+                .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+                .build());
+    }
 
-        RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(
-            rabbitMQConfiguration,
-            new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor()));
-        return new RabbitChannelPool(rabbitMQConnectionFactory);
+    private RabbitMQConnectionFactory createRabbitConnectionFactory() throws URISyntaxException {
+        return rabbitMQ.createRabbitConnectionFactory();
     }
 }

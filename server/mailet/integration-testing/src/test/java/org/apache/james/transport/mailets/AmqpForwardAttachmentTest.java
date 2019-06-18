@@ -39,9 +39,9 @@ import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.transport.matchers.All;
+import org.apache.james.util.docker.DockerGenericContainer;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
-import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
@@ -64,10 +64,10 @@ public class AmqpForwardAttachmentTest {
     
     private static final byte[] TEST_ATTACHMENT_CONTENT = "Test attachment content".getBytes(StandardCharsets.UTF_8);
 
-    public SwarmGenericContainer rabbitMqContainer = new SwarmGenericContainer(Images.RABBITMQ)
+    public DockerGenericContainer rabbitMqContainer = new DockerGenericContainer(Images.RABBITMQ)
         .withAffinityToContainer()
         .waitingFor(new HostPortWaitStrategy()
-            .withRateLimiter(RateLimiters.DEFAULT));
+            .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
 
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     public AmqpRule amqpRule = new AmqpRule(rabbitMqContainer, EXCHANGE_NAME, ROUTING_KEY);
@@ -132,6 +132,7 @@ public class AmqpForwardAttachmentTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(message)
                 .sender(FROM)
                 .recipient(RECIPIENT));

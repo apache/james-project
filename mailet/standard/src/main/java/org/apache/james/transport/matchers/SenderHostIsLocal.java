@@ -39,15 +39,17 @@ import org.apache.mailet.base.GenericMatcher;
 public class SenderHostIsLocal extends GenericMatcher {
     @Override
     public Collection<MailAddress> match(Mail mail) {
-        if (mail.getSender() != null && isLocalServer(mail)) {
+        if (mail.getMaybeSender().asOptional()
+                .map(this::isLocalServer)
+                .orElse(false)) {
             return mail.getRecipients();
         }
         return null;
         
     }
 
-    private boolean isLocalServer(Mail mail) {
-        return this.getMailetContext().isLocalServer(mail.getSender().getDomain());
+    private boolean isLocalServer(MailAddress sender) {
+        return this.getMailetContext().isLocalServer(sender.getDomain());
     }
 
 }

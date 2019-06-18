@@ -21,23 +21,27 @@ package org.apache.james.server.core;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 
-import java.util.ArrayList;
-
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.mailet.Mail;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
 
     final String content = "Subject: foo\r\nContent-Transfer-Encoding2: plain";
     final String sep = "\r\n\r\n";
     final String body = "bar\r\n.\r\n";
+    final String mimeMessageAsString = content + sep + body;
+
+    @BeforeAll
+    static void setUp() {
+        ContentTypeCleaner.initialize();
+    }
 
     @Override
     protected MimeMessage getMessageFromSources(String sources) throws Exception {
@@ -46,14 +50,16 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
     }
 
     @Test
-    public void testMessageCloning1() throws Exception {
-        ArrayList<MailAddress> r = new ArrayList<>();
-        r.add(new MailAddress("recipient@test.com"));
+    void testMessageCloning1() throws Exception {
         MimeMessageCopyOnWriteProxy messageFromSources = (MimeMessageCopyOnWriteProxy) getMessageFromSources(
-                content + sep + body);
-        MailImpl mail = new MailImpl("test", new MailAddress("test@test.com"), r, messageFromSources);
+                mimeMessageAsString);
+        MailImpl mail = MailImpl.builder()
+            .name("test")
+            .sender("test@test.com")
+            .addRecipient("recipient@test.com")
+            .mimeMessage(messageFromSources)
+            .build();
         MailImpl m2 = MailImpl.duplicate(mail);
-        System.out.println("mail: " + getReferences(mail.getMessage()) + " m2: " + getReferences(m2.getMessage()));
         assertThat(mail).isNotSameAs((m2));
         assertThat(mail.getMessage()).isNotSameAs(m2.getMessage());
         // test that the wrapped message is the same
@@ -72,14 +78,17 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
     }
 
     @Test
-    public void testMessageCloning2() throws Exception {
-        ArrayList<MailAddress> r = new ArrayList<>();
-        r.add(new MailAddress("recipient@test.com"));
+    void testMessageCloning2() throws Exception {
         MimeMessageCopyOnWriteProxy messageFromSources = (MimeMessageCopyOnWriteProxy) getMessageFromSources(
-                content + sep + body);
-        MailImpl mail = new MailImpl("test", new MailAddress("test@test.com"), r, messageFromSources);
+                mimeMessageAsString);
+        MailImpl mail = MailImpl.builder()
+            .name("test")
+            .sender("test@test.com")
+            .addRecipient("recipient@test.com")
+            .mimeMessage(messageFromSources)
+            .build();
+
         MailImpl m2 = MailImpl.duplicate(mail);
-        System.out.println("mail: " + getReferences(mail.getMessage()) + " m2: " + getReferences(m2.getMessage()));
         assertThat(mail).isNotSameAs((m2));
         assertThat(mail.getMessage()).isNotSameAs(m2.getMessage());
         // test that the wrapped message is the same
@@ -96,7 +105,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         assertThat("new Subject").isEqualTo(m2.getMessage().getSubject());
         assertThat("foo").isEqualTo(mail.getMessage().getSubject());
         // cloning again the messages
-        Mail m2clone = m2.duplicate("clone2");
+        Mail m2clone = MailImpl.duplicate(m2);
         assertThat(isSameMimeMessage(m2clone.getMessage(), m2.getMessage())).isTrue();
         MimeMessage mm = getWrappedMessage(m2.getMessage());
         assertThat(m2clone.getMessage()).isNotSameAs(m2.getMessage());
@@ -122,12 +131,15 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
      * change the second, then it should not clone
      */
     @Test
-    public void testMessageAvoidCloning() throws Exception {
-        ArrayList<MailAddress> r = new ArrayList<>();
-        r.add(new MailAddress("recipient@test.com"));
+    void testMessageAvoidCloning() throws Exception {
         MimeMessageCopyOnWriteProxy messageFromSources = (MimeMessageCopyOnWriteProxy) getMessageFromSources(
-                content + sep + body);
-        MailImpl mail = new MailImpl("test", new MailAddress("test@test.com"), r, messageFromSources);
+                mimeMessageAsString);
+        MailImpl mail = MailImpl.builder()
+            .name("test")
+            .sender("test@test.com")
+            .addRecipient("recipient@test.com")
+            .mimeMessage(messageFromSources)
+            .build();
         // cloning the message
         Mail mailClone = MailImpl.duplicate(mail);
         assertThat(isSameMimeMessage(mailClone.getMessage(), mail.getMessage())).isTrue();
@@ -158,14 +170,17 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
      * should clone the message.
      */
     @Test
-    public void testMessageCloning3() throws Exception {
-        ArrayList<MailAddress> r = new ArrayList<>();
-        r.add(new MailAddress("recipient@test.com"));
+    void testMessageCloning3() throws Exception {
         MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
             .setText("CIPS")
             .build();
-        MailImpl mail = new MailImpl("test", new MailAddress("test@test.com"), r,
-            mimeMessage);
+        MailImpl mail = MailImpl.builder()
+            .name("test")
+            .sender("test@test.com")
+            .addRecipient("recipient@test.com")
+            .mimeMessage(mimeMessage)
+            .build();
+
         assertThat(isSameMimeMessage(mimeMessage, mail.getMessage())).isTrue();
         // change the message that should be not referenced by mail that has
         // been disposed, so it should not clone it!
@@ -181,12 +196,15 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
     }
 
     @Test
-    public void testMessageDisposing() throws Exception {
-        ArrayList<MailAddress> r = new ArrayList<>();
-        r.add(new MailAddress("recipient@test.com"));
+    void testMessageDisposing() throws Exception {
         MimeMessageCopyOnWriteProxy messageFromSources = (MimeMessageCopyOnWriteProxy) getMessageFromSources(
-                content + sep + body);
-        MailImpl mail = new MailImpl("test", new MailAddress("test@test.com"), r, messageFromSources);
+                mimeMessageAsString);
+        MailImpl mail = MailImpl.builder()
+            .name("test")
+            .sender("test@test.com")
+            .addRecipient("recipient@test.com")
+            .mimeMessage(messageFromSources)
+            .build();
         // cloning the message
         MailImpl mailClone = MailImpl.duplicate(mail);
         LifecycleUtil.dispose(mail);
@@ -203,9 +221,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
     }
 
     @Test
-    public void testNPE1() throws MessagingException, InterruptedException {
-        ArrayList<MailAddress> recipients = new ArrayList<>();
-        recipients.add(new MailAddress("recipient@test.com"));
+    void testNPE1() throws MessagingException, InterruptedException {
         MimeMessageCopyOnWriteProxy mw = new MimeMessageCopyOnWriteProxy(new MimeMessageInputStreamSource("test",
                 new SharedByteArrayInputStream(("Return-path: return@test.com\r\n" + "Content-Transfer-Encoding: plain\r\n" + "Subject: test\r\n\r\n" + "Body Text testNPE1\r\n")
                         .getBytes())));
@@ -225,7 +241,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
      * created by a MimeMessageInputStreamSource.
      */
     @Test
-    public void testMessageCloningViaCoW3() throws Exception {
+    void testMessageCloningViaCoW3() throws Exception {
         MimeMessage mmorig = getSimpleMessage();
 
         MimeMessage mm = new MimeMessageCopyOnWriteProxy(mmorig);
@@ -245,18 +261,20 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         LifecycleUtil.dispose(mm);
     }
 
-    private static String getReferences(MimeMessage m) {
-        StringBuilder ref = new StringBuilder("/");
-        while (m instanceof MimeMessageCopyOnWriteProxy) {
-            ref.append(((MimeMessageCopyOnWriteProxy) m).refCount.getReferenceCount()).append("/");
-            m = ((MimeMessageCopyOnWriteProxy) m).getWrappedMessage();
-        }
-        if (m instanceof MimeMessageWrapper) {
-            ref.append("W");
-        } else {
-            ref.append("M");
-        }
-        return ref.toString();
+    @Test
+    void testMessageWithWrongContentTypeShouldNotThrow() throws Exception {
+        MimeMessageCopyOnWriteProxy messageFromSources = (MimeMessageCopyOnWriteProxy) getMessageFromSources(
+                mimeMessageAsString);
+        MailImpl mail = MailImpl.builder()
+            .name("test")
+            .sender("test@test.com")
+            .addRecipient("recipient@test.com")
+            .mimeMessage(messageFromSources)
+            .build();
+        mail.getMessage().addHeader("Content-Type", "file;name=\"malformed.pdf\"");
+        mail.getMessage().saveChanges();
+        LifecycleUtil.dispose(mail);
+        LifecycleUtil.dispose(messageFromSources);
     }
 
     private static MimeMessage getWrappedMessage(MimeMessage m) {
@@ -268,6 +286,5 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
 
     private static boolean isSameMimeMessage(MimeMessage first, MimeMessage second) {
         return getWrappedMessage(first) == getWrappedMessage(second);
-
     }
 }

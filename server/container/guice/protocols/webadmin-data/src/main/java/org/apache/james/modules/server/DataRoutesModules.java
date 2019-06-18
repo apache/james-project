@@ -20,11 +20,14 @@
 package org.apache.james.modules.server;
 
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.dto.MappingSourceModule;
+import org.apache.james.webadmin.routes.AliasRoutes;
 import org.apache.james.webadmin.routes.DomainMappingsRoutes;
 import org.apache.james.webadmin.routes.DomainsRoutes;
 import org.apache.james.webadmin.routes.ForwardRoutes;
 import org.apache.james.webadmin.routes.GroupsRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
+import org.apache.james.webadmin.utils.JsonTransformerModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -34,10 +37,14 @@ public class DataRoutesModules extends AbstractModule {
     @Override
     protected void configure() {
         Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
+        routesMultibinder.addBinding().to(AliasRoutes.class);
         routesMultibinder.addBinding().to(DomainsRoutes.class);
         routesMultibinder.addBinding().to(DomainMappingsRoutes.class);
         routesMultibinder.addBinding().to(ForwardRoutes.class);
         routesMultibinder.addBinding().to(GroupsRoutes.class);
         routesMultibinder.addBinding().to(UserRoutes.class);
+
+        Multibinder<JsonTransformerModule> jsonTransformerModuleMultibinder = Multibinder.newSetBinder(binder(), JsonTransformerModule.class);
+        jsonTransformerModuleMultibinder.addBinding().to(MappingSourceModule.class);
     }
 }

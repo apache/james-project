@@ -42,7 +42,7 @@ public class DockerCassandra {
     public DockerCassandra() {
         client = DockerClientFactory.instance().client();
         cassandraContainer = new GenericContainer<>("cassandra:3.11.3")
-            .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig().withTmpFs(ImmutableMap.of("/var/lib/cassandra", "rw,noexec,nosuid,size=200m")))
+            .withTmpFs(ImmutableMap.of("/var/lib/cassandra", "rw,noexec,nosuid,size=200m"))
             .withExposedPorts(CASSANDRA_PORT)
             .withLogConsumer(DockerCassandra::displayDockerLog);
         cassandraContainer
@@ -54,11 +54,15 @@ public class DockerCassandra {
     }
 
     public void start() {
-        cassandraContainer.start();
+        if (!cassandraContainer.isRunning()) {
+            cassandraContainer.start();
+        }
     }
 
     public void stop() {
-        cassandraContainer.stop();
+        if (cassandraContainer.isRunning()) {
+            cassandraContainer.stop();
+        }
     }
 
     public Host getHost() {
@@ -80,11 +84,11 @@ public class DockerCassandra {
     }
 
     public void pause() {
-        client.pauseContainerCmd(cassandraContainer.getContainerId());
+        client.pauseContainerCmd(cassandraContainer.getContainerId()).exec();
     }
 
     public void unpause() {
-        client.unpauseContainerCmd(cassandraContainer.getContainerId());
+        client.unpauseContainerCmd(cassandraContainer.getContainerId()).exec();
     }
 
 }

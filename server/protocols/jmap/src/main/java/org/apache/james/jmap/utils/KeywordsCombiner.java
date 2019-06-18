@@ -37,8 +37,7 @@ public class KeywordsCombiner implements BinaryOperator<Keywords> {
     private Keywords.KeywordsFactory keywordsFactory;
 
     public KeywordsCombiner() {
-        this.keywordsFactory = Keywords.factory()
-            .filterImapNonExposedKeywords();
+        this.keywordsFactory = Keywords.lenientFactory();
     }
 
     @Override

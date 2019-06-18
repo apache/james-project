@@ -35,8 +35,4 @@ public class WebAdminGuiceProbe implements GuiceProbe {
     public Port getWebAdminPort() {
         return webAdminServer.getPort();
     }
-
-    public void await() {
-        webAdminServer.await();
-    }
 }

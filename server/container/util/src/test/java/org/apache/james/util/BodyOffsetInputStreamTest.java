@@ -23,17 +23,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class BodyOffsetInputStreamTest {
     private String mail = "Subject: test\r\n\r\nbody";
     private long expectedOffset = 17;
     private long bytes = mail.length();
-    
+
     @Test
-    public void testRead() throws IOException {
+    void testRead() throws IOException {
         BodyOffsetInputStream in = new BodyOffsetInputStream(new ByteArrayInputStream(mail.getBytes()));
-        
+
         while (in.read() != -1) {
             // consume stream
         }
@@ -41,12 +41,11 @@ public class BodyOffsetInputStreamTest {
         assertThat(in.getReadBytes()).isEqualTo(bytes);
         in.close();
     }
-    
-    
+
     @Test
-    public void testReadWithArray() throws IOException {
+    void testReadWithArray() throws IOException {
         BodyOffsetInputStream in = new BodyOffsetInputStream(new ByteArrayInputStream(mail.getBytes()));
-        
+
         byte[] b = new byte[8];
         while (in.read(b) != -1) {
             // consume stream
@@ -55,12 +54,11 @@ public class BodyOffsetInputStreamTest {
         assertThat(in.getReadBytes()).isEqualTo(bytes);
         in.close();
     }
-    
-    
+
     @Test
-    public void testReadWithArrayBiggerThenStream() throws IOException {
+    void testReadWithArrayBiggerThenStream() throws IOException {
         BodyOffsetInputStream in = new BodyOffsetInputStream(new ByteArrayInputStream(mail.getBytes()));
-        
+
         byte[] b = new byte[4096];
         while (in.read(b) != -1) {
             // consume stream

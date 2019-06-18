@@ -25,18 +25,45 @@ import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
 
 import com.github.fge.lambdas.Throwing;
 
 public class ReprocessingService {
+    public static class MissingKeyException extends RuntimeException {
+        MissingKeyException(MailKey key) {
+            super(key.asString() + " can not be found");
+        }
+    }
+
+    static class Reprocessor {
+        private final MailQueue mailQueue;
+        private final Optional<String> targetProcessor;
+
+        Reprocessor(MailQueue mailQueue, Optional<String> targetProcessor) {
+            this.mailQueue = mailQueue;
+            this.targetProcessor = targetProcessor;
+        }
+
+        private void reprocess(MailRepository repository, Mail mail) {
+            try {
+                targetProcessor.ifPresent(mail::setState);
+                mailQueue.enQueue(mail);
+                repository.remove(mail);
+            } catch (Exception e) {
+                throw new RuntimeException("Error encountered while reprocessing mail " + mail.getName(), e);
+            }
+        }
+    }
 
     private final MailQueueFactory<?> mailQueueFactory;
     private final MailRepositoryStoreService mailRepositoryStoreService;
@@ -49,29 +76,30 @@ public class ReprocessingService {
     }
 
     public void reprocessAll(MailRepositoryPath path, Optional<String> targetProcessor, String targetQueue, Consumer<MailKey> keyListener) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        MailQueue mailQueue = getMailQueue(targetQueue);
+        Reprocessor reprocessor = new Reprocessor(getMailQueue(targetQueue), targetProcessor);
 
         mailRepositoryStoreService
             .getRepositories(path)
             .forEach(Throwing.consumer((MailRepository repository) ->
                 Iterators.toStream(repository.list())
                     .peek(keyListener)
-                    .forEach(Throwing.consumer(key -> reprocess(repository, mailQueue, key, targetProcessor)))).sneakyThrow());
+                    .map(Throwing.function(key -> Optional.ofNullable(repository.retrieve(key))))
+                    .flatMap(OptionalUtils::toStream)
+                    .forEach(mail -> reprocessor.reprocess(repository, mail))));
     }
 
     public void reprocess(MailRepositoryPath path, MailKey key, Optional<String> targetProcessor, String targetQueue) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        MailQueue mailQueue = getMailQueue(targetQueue);
+        Reprocessor reprocessor = new Reprocessor(getMailQueue(targetQueue), targetProcessor);
 
-        mailRepositoryStoreService
+        Pair<MailRepository, Mail> mailPair = mailRepositoryStoreService
             .getRepositories(path)
-            .forEach(Throwing.consumer((MailRepository repository) -> reprocess(repository, mailQueue, key, targetProcessor)).sneakyThrow());
-    }
+            .map(Throwing.function(repository -> Pair.of(repository, Optional.ofNullable(repository.retrieve(key)))))
+            .filter(pair -> pair.getRight().isPresent())
+            .map(pair -> Pair.of(pair.getLeft(), pair.getRight().get()))
+            .findFirst()
+            .orElseThrow(() -> new MissingKeyException(key));
 
-    private void reprocess(MailRepository repository, MailQueue mailQueue, MailKey key, Optional<String> targetProcessor) throws MessagingException {
-        Mail mail = repository.retrieve(key);
-        targetProcessor.ifPresent(mail::setState);
-        mailQueue.enQueue(mail);
-        repository.remove(key);
+        reprocessor.reprocess(mailPair.getKey(), mailPair.getValue());
     }
 
     private MailQueue getMailQueue(String targetQueue) {

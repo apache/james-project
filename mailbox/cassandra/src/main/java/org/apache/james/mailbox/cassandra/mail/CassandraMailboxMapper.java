@@ -21,44 +21,38 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
-import org.apache.james.util.CompletableFutureUtil;
-import org.apache.james.util.FluentFutureStream;
-import org.apache.james.util.OptionalUtils;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class CassandraMailboxMapper implements MailboxMapper {
 
-    public static final String WILDCARD = "%";
+    private static final String WILDCARD = "%";
     public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailboxMapper.class);
 
     private final CassandraMailboxDAO mailboxDAO;
@@ -79,74 +73,64 @@ public class CassandraMailboxMapper implements MailboxMapper {
     @Override
     public void delete(Mailbox mailbox) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        FluentFutureStream.ofFutures(
+        Flux.merge(
                 mailboxPathDAO.delete(mailbox.generateAssociatedPath()),
                 mailboxPathV2DAO.delete(mailbox.generateAssociatedPath()))
-            .map(any -> mailboxDAO.delete(mailboxId), FluentFutureStream::unboxFuture)
-            .join();
+            .thenEmpty(mailboxDAO.delete(mailboxId))
+            .block();
     }
 
     @Override
     public Mailbox findMailboxByPath(MailboxPath path) throws MailboxException {
         return mailboxPathV2DAO.retrieveId(path)
-            .thenCompose(cassandraIdOptional ->
-                cassandraIdOptional
-                    .map(CassandraIdAndPath::getCassandraId)
-                    .map(this::retrieveMailbox)
-                    .orElseGet(Throwing.supplier(() -> fromPreviousTable(path))))
-            .join()
+            .map(CassandraIdAndPath::getCassandraId)
+            .flatMap(this::retrieveMailbox)
+            .switchIfEmpty(fromPreviousTable(path))
+            .blockOptional()
             .orElseThrow(() -> new MailboxNotFoundException(path));
     }
 
-    private CompletableFuture<Optional<SimpleMailbox>> fromPreviousTable(MailboxPath path) {
+    private Mono<Mailbox> fromPreviousTable(MailboxPath path) {
         return mailboxPathDAO.retrieveId(path)
-            .thenCompose(cassandraIdOptional ->
-                cassandraIdOptional
-                    .map(CassandraIdAndPath::getCassandraId)
-                    .map(this::retrieveMailbox)
-                    .orElse(CompletableFuture.completedFuture(Optional.empty())))
-            .thenCompose(maybeMailbox -> maybeMailbox.map(this::migrate)
-                .orElse(CompletableFuture.completedFuture(maybeMailbox)));
+            .map(CassandraIdAndPath::getCassandraId)
+            .flatMap(this::retrieveMailbox)
+            .flatMap(this::migrate);
     }
 
-    private CompletableFuture<Optional<SimpleMailbox>> migrate(SimpleMailbox mailbox) {
+    private Mono<Mailbox> migrate(Mailbox mailbox) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return mailboxPathV2DAO.save(mailbox.generateAssociatedPath(), mailboxId)
-            .thenCompose(success -> deleteIfSuccess(mailbox, success))
-            .thenApply(any -> Optional.of(mailbox));
+            .flatMap(success -> deleteIfSuccess(mailbox, success))
+            .thenReturn(mailbox);
     }
 
-    private CompletionStage<Void> deleteIfSuccess(SimpleMailbox mailbox, boolean success) {
+    private Mono<Void> deleteIfSuccess(Mailbox mailbox, boolean success) {
         if (success) {
             return mailboxPathDAO.delete(mailbox.generateAssociatedPath());
         }
         LOGGER.info("Concurrent execution lead to data race while migrating {} to 'mailboxPathV2DAO'.",
             mailbox.generateAssociatedPath());
-        return CompletableFuture.completedFuture(null);
+        return Mono.empty();
     }
 
     @Override
     public Mailbox findMailboxById(MailboxId id) throws MailboxException {
         CassandraId mailboxId = (CassandraId) id;
         return retrieveMailbox(mailboxId)
-            .join()
+            .blockOptional()
             .orElseThrow(() -> new MailboxNotFoundException(id));
     }
 
-    private CompletableFuture<Optional<SimpleMailbox>> retrieveMailbox(CassandraId mailboxId) {
-        CompletableFuture<MailboxACL> aclCompletableFuture = cassandraACLMapper.getACL(mailboxId);
+    private Mono<Mailbox> retrieveMailbox(CassandraId mailboxId) {
+        Mono<MailboxACL> acl = cassandraACLMapper.getACL(mailboxId);
+        Mono<Mailbox> simpleMailbox = mailboxDAO.retrieveMailbox(mailboxId);
 
-        CompletableFuture<Optional<SimpleMailbox>> simpleMailboxFuture = mailboxDAO.retrieveMailbox(mailboxId);
-
-        return CompletableFutureUtil.combine(
-            aclCompletableFuture,
-            simpleMailboxFuture,
-            this::addAcl);
+        return acl.zipWith(simpleMailbox, this::addAcl);
     }
 
-    private Optional<SimpleMailbox> addAcl(MailboxACL acl, Optional<SimpleMailbox> mailboxOptional) {
-        mailboxOptional.ifPresent(mailbox -> mailbox.setACL(acl));
-        return mailboxOptional;
+    private Mailbox addAcl(MailboxACL acl, Mailbox mailbox) {
+        mailbox.setACL(acl);
+        return mailbox;
     }
 
     @Override
@@ -166,48 +150,43 @@ public class CassandraMailboxMapper implements MailboxMapper {
             .build();
     }
 
-    private List<Mailbox> toMailboxes(MailboxPath path, CompletableFuture<Stream<CassandraIdAndPath>> listUserMailboxes) {
+    private List<Mailbox> toMailboxes(MailboxPath path, Flux<CassandraIdAndPath> listUserMailboxes) {
         Pattern regex = Pattern.compile(constructEscapedRegexForMailboxNameMatching(path));
 
-        return FluentFutureStream.of(listUserMailboxes)
+        return listUserMailboxes
                 .filter(idAndPath -> regex.matcher(idAndPath.getMailboxPath().getName()).matches())
-                .map(this::retrieveMailbox, FluentFutureStream::unboxFutureOptional)
-                .join()
-                .collect(Guavate.toImmutableList());
+                .flatMap(this::retrieveMailbox)
+                .collectList()
+                .block();
     }
 
-    private CompletableFuture<Optional<SimpleMailbox>> retrieveMailbox(CassandraIdAndPath idAndPath) {
+    private Mono<Mailbox> retrieveMailbox(CassandraIdAndPath idAndPath) {
         return retrieveMailbox(idAndPath.getCassandraId())
-            .thenApply(optional -> OptionalUtils.executeIfEmpty(optional,
+            .switchIfEmpty(ReactorUtils.executeAndEmpty(
                 () -> LOGGER.warn("Could not retrieve mailbox {} with path {} in mailbox table.", idAndPath.getCassandraId(), idAndPath.getMailboxPath())));
     }
 
     @Override
     public MailboxId save(Mailbox mailbox) throws MailboxException {
-        Preconditions.checkArgument(mailbox instanceof SimpleMailbox);
-        SimpleMailbox cassandraMailbox = (SimpleMailbox) mailbox;
-
-        CassandraId cassandraId = retrieveId(cassandraMailbox);
-        cassandraMailbox.setMailboxId(cassandraId);
-        boolean applied = trySave(cassandraMailbox, cassandraId).join();
-        if (!applied) {
+        CassandraId cassandraId = retrieveId(mailbox);
+        mailbox.setMailboxId(cassandraId);
+        if (!trySave(mailbox, cassandraId)) {
             throw new MailboxExistsException(mailbox.generateAssociatedPath().asString());
         }
         return cassandraId;
     }
 
-    private CompletableFuture<Boolean> trySave(SimpleMailbox cassandraMailbox, CassandraId cassandraId) {
-        return mailboxPathV2DAO.save(cassandraMailbox.generateAssociatedPath(), cassandraId)
-            .thenCompose(CompletableFutureUtil.composeIfTrue(
-                () -> retrieveMailbox(cassandraId)
-                    .thenCompose(optional -> CompletableFuture
-                        .allOf(optional
-                                .map(storedMailbox -> mailboxPathV2DAO.delete(storedMailbox.generateAssociatedPath()))
-                                .orElse(CompletableFuture.completedFuture(null)),
-                            mailboxDAO.save(cassandraMailbox)))));
+    private boolean trySave(Mailbox cassandraMailbox, CassandraId cassandraId) {
+        boolean isCreated = mailboxPathV2DAO.save(cassandraMailbox.generateAssociatedPath(), cassandraId).block();
+        if (isCreated) {
+            Optional<Mailbox> simpleMailbox = retrieveMailbox(cassandraId).blockOptional();
+            simpleMailbox.ifPresent(mbx -> mailboxPathV2DAO.delete(mbx.generateAssociatedPath()).block());
+            mailboxDAO.save(cassandraMailbox).block();
+        }
+        return isCreated;
     }
 
-    private CassandraId retrieveId(SimpleMailbox cassandraMailbox) {
+    private CassandraId retrieveId(Mailbox cassandraMailbox) {
         if (cassandraMailbox.getMailboxId() == null) {
             return CassandraId.timeBased();
         } else {
@@ -217,21 +196,21 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     @Override
     public boolean hasChildren(Mailbox mailbox, char delimiter) {
-        return ImmutableList.of(
+        return Flux.merge(
                 mailboxPathDAO.listUserMailboxes(mailbox.getNamespace(), mailbox.getUser()),
                 mailboxPathV2DAO.listUserMailboxes(mailbox.getNamespace(), mailbox.getUser()))
-            .stream()
-            .map(CompletableFuture::join)
-            .flatMap(Function.identity())
-            .anyMatch(idAndPath -> idAndPath.getMailboxPath().getName().startsWith(mailbox.getName() + String.valueOf(delimiter)));
+            .filter(idAndPath -> idAndPath.getMailboxPath().getName().startsWith(mailbox.getName() + String.valueOf(delimiter)))
+            .hasElements()
+            .block();
     }
 
     @Override
     public List<Mailbox> list() {
         return mailboxDAO.retrieveAllMailboxes()
-            .map(this::toMailboxWithAclFuture, FluentFutureStream::unboxFuture)
-            .join()
-            .collect(Guavate.toImmutableList());
+            .flatMap(this::toMailboxWithAcl)
+            .map(simpleMailboxes -> (Mailbox) simpleMailboxes)
+            .collectList()
+            .block();
     }
 
     @Override
@@ -272,10 +251,10 @@ public class CassandraMailboxMapper implements MailboxMapper {
         }
     }
 
-    private CompletableFuture<SimpleMailbox> toMailboxWithAclFuture(SimpleMailbox mailbox) {
+    private Mono<Mailbox> toMailboxWithAcl(Mailbox mailbox) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
         return cassandraACLMapper.getACL(cassandraId)
-            .thenApply(acl -> {
+            .map(acl -> {
                 mailbox.setACL(acl);
                 return mailbox;
             });
@@ -283,18 +262,17 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     @Override
     public List<Mailbox> findNonPersonalMailboxes(String userName, Right right) {
-        return FluentFutureStream.of(userMailboxRightsDAO.listRightsForUser(userName)
-            .thenApply(map -> toAuthorizedMailboxIds(map, right)))
-            .map(this::retrieveMailbox, FluentFutureStream::unboxFutureOptional)
-            .join()
-            .collect(Guavate.toImmutableList());
+        return userMailboxRightsDAO.listRightsForUser(userName)
+            .filter(mailboxId -> authorizedMailbox(mailboxId.getRight(), right))
+            .map(Pair::getLeft)
+            .flatMap(this::retrieveMailbox)
+            .map(simpleMailboxes -> (Mailbox) simpleMailboxes)
+            .collectList()
+            .block();
     }
 
-    private Stream<CassandraId> toAuthorizedMailboxIds(Map<CassandraId, MailboxACL.Rfc4314Rights> map, Right right) {
-        return map.entrySet()
-            .stream()
-            .filter(Throwing.predicate(entry -> entry.getValue().contains(right)))
-            .map(Map.Entry::getKey);
+    private boolean authorizedMailbox(MailboxACL.Rfc4314Rights rights, Right right) {
+        return rights.contains(right);
     }
 
 }

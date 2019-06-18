@@ -30,7 +30,6 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.configuration.Configuration;
@@ -38,6 +37,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPReply;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
@@ -594,7 +594,7 @@ public abstract class AbstractSMTPServerTest {
             }
 
             @Override
-            public HookResult doMail(SMTPSession session, MailAddress sender) {
+            public HookResult doMail(SMTPSession session, MaybeSender sender) {
                 return HookResult.DENY;
             }
         };
@@ -644,7 +644,7 @@ public abstract class AbstractSMTPServerTest {
             }
 
             @Override
-            public HookResult doMail(SMTPSession session, MailAddress sender) {
+            public HookResult doMail(SMTPSession session, MaybeSender sender) {
                 return HookResult.DENYSOFT;
             }
         };
@@ -695,7 +695,7 @@ public abstract class AbstractSMTPServerTest {
             }
 
             @Override
-            public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+            public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
                 if (RCPT1.equals(rcpt.toString())) {
                     return HookResult.DENY;
                 } else {
@@ -759,7 +759,7 @@ public abstract class AbstractSMTPServerTest {
             }
 
             @Override
-            public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+            public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
                 if (RCPT1.equals(rcpt.toString())) {
                     return HookResult.DENYSOFT;
                 } else {
@@ -1115,7 +1115,7 @@ public abstract class AbstractSMTPServerTest {
     }
     
     protected static void checkEnvelope(MailEnvelope env, String sender, List<String> recipients, String msg) throws IOException {
-        assertThat(env.getSender().toString()).isEqualTo(sender);
+        assertThat(env.getMaybeSender().asString()).isEqualTo(sender);
 
         List<MailAddress> envRecipients = env.getRecipients();
         assertThat(envRecipients.size()).isEqualTo(recipients.size());

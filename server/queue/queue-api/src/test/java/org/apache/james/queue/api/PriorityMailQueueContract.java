@@ -22,14 +22,16 @@ package org.apache.james.queue.api;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.stream.IntStream;
+import java.util.Iterator;
 
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.Test;
 
-import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
-import com.google.common.collect.ImmutableList;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public interface PriorityMailQueueContract {
 
@@ -39,61 +41,64 @@ public interface PriorityMailQueueContract {
     default void priorityShouldReorderMailsWhenDequeing() throws Exception {
         getMailQueue().enQueue(defaultMail()
             .name("name3")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 3)
+            .attribute(mailPriority(3))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name9")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 9)
+            .attribute(mailPriority(9))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name1")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 1)
+            .attribute(mailPriority(1))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name8")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 8)
+            .attribute(mailPriority(8))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name6")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 6)
+            .attribute(mailPriority(6))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name0")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 0)
+            .attribute(mailPriority(0))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name7")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 7)
+            .attribute(mailPriority(7))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name4")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 4)
+            .attribute(mailPriority(4))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name2")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 2)
+            .attribute(mailPriority(2))
             .build());
 
         getMailQueue().enQueue(defaultMail()
             .name("name5")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 5)
+            .attribute(mailPriority(5))
             .build());
 
-        ImmutableList<MailQueue.MailQueueItem> items = IntStream.range(1, 11).boxed()
-            .map(Throwing.function(i -> {
-                MailQueue.MailQueueItem item = getMailQueue().deQueue();
-                item.done(true);
-                return item;
-            }))
-            .collect(Guavate.toImmutableList());
+        Iterable<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).take(10)
+            .flatMap(item -> {
+                try {
+                    item.done(true);
+                    return Mono.just(item);
+                } catch (MailQueue.MailQueueException e) {
+                    return Mono.error(e);
+                }
+            })
+            .toIterable();
 
         assertThat(items)
             .extracting(MailQueue.MailQueueItem::getMail)
@@ -105,16 +110,17 @@ public interface PriorityMailQueueContract {
     default void negativePriorityShouldDefaultToMinimumPriority() throws Exception {
         getMailQueue().enQueue(defaultMail()
             .name("name0")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, -1)
+            .attribute(mailPriority(-1))
             .build());
         getMailQueue().enQueue(defaultMail()
             .name("name1")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 1)
+            .attribute(mailPriority(1))
             .build());
 
-        MailQueue.MailQueueItem mailQueueItem1 = getMailQueue().deQueue();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        MailQueue.MailQueueItem mailQueueItem1 = mailQueueItems.next();
         mailQueueItem1.done(true);
-        MailQueue.MailQueueItem mailQueueItem2 = getMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem2 = mailQueueItems.next();
         mailQueueItem2.done(true);
         assertThat(mailQueueItem1.getMail().getName()).isEqualTo("name1");
         assertThat(mailQueueItem2.getMail().getName()).isEqualTo("name0");
@@ -124,16 +130,17 @@ public interface PriorityMailQueueContract {
     default void tooBigPriorityShouldDefaultToMaximalPriority() throws Exception {
         getMailQueue().enQueue(defaultMail()
             .name("name0")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 12)
+            .attribute(mailPriority(12))
             .build());
         getMailQueue().enQueue(defaultMail()
             .name("name1")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 8)
+            .attribute(mailPriority(8))
             .build());
 
-        MailQueue.MailQueueItem mailQueueItem1 = getMailQueue().deQueue();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        MailQueue.MailQueueItem mailQueueItem1 = mailQueueItems.next();
         mailQueueItem1.done(true);
-        MailQueue.MailQueueItem mailQueueItem2 = getMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem2 = mailQueueItems.next();
         mailQueueItem2.done(true);
         assertThat(mailQueueItem1.getMail().getName()).isEqualTo("name0");
         assertThat(mailQueueItem2.getMail().getName()).isEqualTo("name1");
@@ -143,22 +150,23 @@ public interface PriorityMailQueueContract {
     default void invalidPriorityShouldDefaultToNormalPriority() throws Exception {
         getMailQueue().enQueue(defaultMail()
             .name("name1")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, "invalid")
+            .attribute(mailPriority("invalid"))
             .build());
         getMailQueue().enQueue(defaultMail()
             .name("name2")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 4)
+            .attribute(mailPriority(4))
             .build());
         getMailQueue().enQueue(defaultMail()
             .name("name3")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 6)
+            .attribute(mailPriority(6))
             .build());
 
-        MailQueue.MailQueueItem mailQueueItem1 = getMailQueue().deQueue();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        MailQueue.MailQueueItem mailQueueItem1 = mailQueueItems.next();
         mailQueueItem1.done(true);
-        MailQueue.MailQueueItem mailQueueItem2 = getMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem2 = mailQueueItems.next();
         mailQueueItem2.done(true);
-        MailQueue.MailQueueItem mailQueueItem3 = getMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem3 = mailQueueItems.next();
         mailQueueItem3.done(true);
         assertThat(mailQueueItem1.getMail().getName()).isEqualTo("name3");
         assertThat(mailQueueItem2.getMail().getName()).isEqualTo("name1");
@@ -172,18 +180,19 @@ public interface PriorityMailQueueContract {
             .build());
         getMailQueue().enQueue(defaultMail()
             .name("name2")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 4)
+            .attribute(mailPriority(4))
             .build());
         getMailQueue().enQueue(defaultMail()
             .name("name3")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, 6)
+            .attribute(mailPriority(6))
             .build());
 
-        MailQueue.MailQueueItem mailQueueItem1 = getMailQueue().deQueue();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        MailQueue.MailQueueItem mailQueueItem1 = mailQueueItems.next();
         mailQueueItem1.done(true);
-        MailQueue.MailQueueItem mailQueueItem2 = getMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem2 = mailQueueItems.next();
         mailQueueItem2.done(true);
-        MailQueue.MailQueueItem mailQueueItem3 = getMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem3 = mailQueueItems.next();
         mailQueueItem3.done(true);
         assertThat(mailQueueItem1.getMail().getName()).isEqualTo("name3");
         assertThat(mailQueueItem2.getMail().getName()).isEqualTo("name1");
@@ -196,7 +205,11 @@ public interface PriorityMailQueueContract {
             .name("name1")
             .build());
 
-        MailQueue.MailQueueItem mailQueueItem = getMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
         assertThat(mailQueueItem.getMail().getName()).isEqualTo("name1");
+    }
+
+    default Attribute mailPriority(Object priority) {
+        return new Attribute(MailPrioritySupport.MAIL_PRIORITY, AttributeValue.ofAny(priority));
     }
 }

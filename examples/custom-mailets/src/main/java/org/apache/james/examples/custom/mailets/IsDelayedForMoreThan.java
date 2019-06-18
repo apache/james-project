@@ -21,13 +21,14 @@ package org.apache.james.examples.custom.mailets;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
 
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.util.TimeConverter;
+import org.apache.james.util.DurationParser;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
@@ -35,7 +36,7 @@ import com.google.common.collect.ImmutableList;
 
 public class IsDelayedForMoreThan extends GenericMatcher {
 
-    public static final TimeConverter.Unit DEFAULT_UNIT = TimeConverter.Unit.HOURS;
+    public static final ChronoUnit DEFAULT_UNIT = ChronoUnit.HOURS;
     private final Clock clock;
     private Duration maxDelay;
 
@@ -60,7 +61,7 @@ public class IsDelayedForMoreThan extends GenericMatcher {
     @Override
     public void init() {
         String condition = getCondition();
-        maxDelay = Duration.ofMillis(TimeConverter.getMilliSeconds(condition, DEFAULT_UNIT));
+        maxDelay = DurationParser.parse(condition, DEFAULT_UNIT);
     }
 
     @Override

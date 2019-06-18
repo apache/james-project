@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.james.util.docker.SwarmGenericContainer;
+import org.apache.james.util.docker.DockerGenericContainer;
 import org.awaitility.Awaitility;
 import org.junit.rules.ExternalResource;
 
@@ -39,7 +39,7 @@ public class AmqpRule extends ExternalResource {
 
     private static final boolean AUTO_ACK = true;
 
-    private final SwarmGenericContainer rabbitMqContainer;
+    private final DockerGenericContainer rabbitMqContainer;
     private final String exchangeName;
     private final String routingKey;
     private Channel channel;
@@ -47,7 +47,7 @@ public class AmqpRule extends ExternalResource {
     private Connection connection;
     private String amqpUri;
 
-    public AmqpRule(SwarmGenericContainer rabbitMqContainer, String exchangeName, String routingKey) {
+    public AmqpRule(DockerGenericContainer rabbitMqContainer, String exchangeName, String routingKey) {
         this.rabbitMqContainer = rabbitMqContainer;
         this.exchangeName = exchangeName;
         this.routingKey = routingKey;

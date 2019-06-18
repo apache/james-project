@@ -29,6 +29,7 @@ import java.util.Collection;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.GenericMatcher;
 import org.apache.mailet.base.test.FakeMail;
@@ -43,26 +44,16 @@ public abstract class AbstractHasMailAttributeTest {
 
     protected Matcher matcher;
 
-    static final String MAIL_ATTRIBUTE_NAME = "org.apache.james.test.junit";
+    static final Attribute MAIL_ATTRIBUTE = Attribute.convertToAttribute("org.apache.james.test.junit", "true");
+    private Attribute mailAttribute = Attribute.convertToAttribute("org.apache.james", "false");
 
-    static final String MAIL_ATTRIBUTE_VALUE = "true";
-
-    private String mailAttributeName = "org.apache.james";
-
-    private String mailAttributeValue = "false";
-
-    void setMailAttributeName(String mailAttributeName) {
-        this.mailAttributeName = mailAttributeName;
-    }
-
-    void setMailAttributeValue(String mailAttributeValue) {
-        this.mailAttributeValue = mailAttributeValue;
+    void setMailAttribute(Attribute mailAttribute) {
+        this.mailAttribute = mailAttribute;
     }
 
     void setupMockedMail() throws MessagingException {
         mockedMail = MailUtil.createMockMail2Recipients();
-        mockedMail.setAttribute(mailAttributeName,
-                mailAttributeValue);
+        mockedMail.setAttribute(mailAttribute);
     }
 
     void setupMatcher() throws MessagingException {
@@ -90,8 +81,7 @@ public abstract class AbstractHasMailAttributeTest {
     }
 
     protected void init() {
-        setMailAttributeName(MAIL_ATTRIBUTE_NAME);
-        setMailAttributeValue(MAIL_ATTRIBUTE_VALUE);
+        setMailAttribute(MAIL_ATTRIBUTE);
     }
 
     void setupAll() throws MessagingException {

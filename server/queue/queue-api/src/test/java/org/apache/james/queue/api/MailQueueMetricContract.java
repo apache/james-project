@@ -19,11 +19,14 @@
 
 package org.apache.james.queue.api;
 
+import static org.apache.james.queue.api.MailQueue.DEQUEUED_METRIC_NAME_PREFIX;
+import static org.apache.james.queue.api.MailQueue.ENQUEUED_METRIC_NAME_PREFIX;
+import static org.apache.james.queue.api.MailQueue.ENQUEUED_TIMER_METRIC_NAME_PREFIX;
 import static org.apache.james.queue.api.Mails.defaultMail;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.util.stream.IntStream;
 
@@ -31,7 +34,6 @@ import javax.mail.MessagingException;
 
 import org.apache.james.metrics.api.Gauge;
 import org.apache.mailet.base.test.FakeMail;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -39,29 +41,36 @@ import org.mockito.Mockito;
 
 import com.github.fge.lambdas.Throwing;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 @ExtendWith(MailQueueMetricExtension.class)
 public interface MailQueueMetricContract extends MailQueueContract {
 
-    default FakeMail fakeMail() throws MessagingException {
+    default FakeMail fakeMail(int i) throws MessagingException {
         return defaultMail()
-            .name("name1")
+            .name("name" + i)
             .build();
     }
 
-    default void enQueueMail(Integer times) throws Exception {
+    default void enQueueMail(Integer times) {
         IntStream
             .rangeClosed(1, times)
-            .forEach(Throwing.intConsumer(time -> enQueue(fakeMail())));
+            .forEach(Throwing.intConsumer(time -> enQueue(fakeMail(time))));
     }
 
-    default void deQueueMail(Integer times) throws Exception {
-        IntStream
-            .rangeClosed(1, times)
-            .forEach(Throwing.intConsumer(time -> getMailQueue().deQueue().done(true)));
+    default void deQueueMail(Integer times) {
+        Flux.from(getMailQueue().deQueue())
+            .take(times)
+            .flatMap(x -> Mono.fromCallable(() -> {
+                x.done(true);
+                return x;
+            }))
+            .blockLast();
     }
 
     @Test
-    default void constructorShouldRegisterGetQueueSizeGauge(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
+    default void constructorShouldRegisterGetQueueSizeGauge(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) {
         enQueueMail(3);
 
         ArgumentCaptor<Gauge<?>> gaugeCaptor = ArgumentCaptor.forClass(Gauge.class);
@@ -69,77 +78,76 @@ public interface MailQueueMetricContract extends MailQueueContract {
         Mockito.verifyNoMoreInteractions(testSystem.getSpyGaugeRegistry());
 
         Gauge<?> registeredGauge = gaugeCaptor.getValue();
-        Assertions.assertThat(registeredGauge.get()).isEqualTo(3L);
+        assertThat(registeredGauge.get()).isEqualTo(3L);
     }
 
     @Test
-    default void enqueueShouldIncreaseEnQueueMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
+    default void enqueueShouldIncreaseEnQueueMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) {
         enQueueMail(2);
 
-        verify(testSystem.getSpyEnqueuedMailsMetric(), times(2)).increment();
-        Mockito.verifyNoMoreInteractions(testSystem.getSpyEnqueuedMailsMetric());
+        assertThat(testSystem.getMetricFactory().countForPrefixName(ENQUEUED_METRIC_NAME_PREFIX))
+            .hasSize(1)
+            .satisfies(values -> {
+                assertThat(values.values()).hasSize(1);
+                assertThat(values.values()).element(0).isEqualTo(2);
+            });
     }
 
     @Test
-    default void enqueueShouldNotTouchDequeueMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
+    default void enqueueShouldNotTouchDequeueMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) {
         enQueueMail(2);
 
-        verify(testSystem.getSpyEnqueuedMailsMetric(), times(2)).increment();
-        Mockito.verifyNoMoreInteractions(testSystem.getSpyDequeuedMailsMetric());
+        assertThat(testSystem.getMetricFactory().countForPrefixName(ENQUEUED_METRIC_NAME_PREFIX))
+            .hasSize(1)
+            .satisfies(values -> {
+                assertThat(values.values()).hasSize(1);
+                assertThat(values.values()).element(0).isEqualTo(2);
+            });
+        assertThat(testSystem.getMetricFactory().countForPrefixName(DEQUEUED_METRIC_NAME_PREFIX))
+            .hasSize(0);
     }
 
     @Test
-    default void dequeueShouldIncreaseDequeueMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
-        enQueueMail(2);
-        deQueueMail(2);
-
-        verify(testSystem.getSpyDequeuedMailsMetric(), times(2)).increment();
-        Mockito.verifyNoMoreInteractions(testSystem.getSpyDequeuedMailsMetric());
-    }
-
-    @Test
-    default void dequeueShouldNotTouchEnqueueMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
-        enQueueMail(2);
-        deQueueMail(2);
-
-        verify(testSystem.getSpyDequeuedMailsMetric(), times(2)).increment();
-        Mockito.verifyNoMoreInteractions(testSystem.getSpyDequeuedMailsMetric());
-
-        verify(testSystem.getSpyEnqueuedMailsMetric(), times(2)).increment();
-        Mockito.verifyNoMoreInteractions(testSystem.getSpyEnqueuedMailsMetric());
-    }
-
-    @Test
-    default void enqueueShouldPublishEnqueueTimeMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
-        enQueueMail(2);
-
-        verify(testSystem.getSpyEnqueuedMailsTimeMetric(), times(2)).stopAndPublish();
-    }
-
-    @Test
-    default void enqueueShouldNotPublishDequeueTimeMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
-        enQueueMail(2);
-
-        verify(testSystem.getSpyEnqueuedMailsTimeMetric(), times(2)).stopAndPublish();
-        verifyNoMoreInteractions(testSystem.getSpyDequeuedMailsTimeMetric());
-    }
-
-    @Test
-    default void dequeueShouldPublishDequeueTimeMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
+    default void dequeueShouldIncreaseDequeueMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) {
         enQueueMail(2);
         deQueueMail(2);
 
-        verify(testSystem.getSpyDequeuedMailsTimeMetric(), times(2)).stopAndPublish();
+        assertThat(testSystem.getMetricFactory().countForPrefixName(DEQUEUED_METRIC_NAME_PREFIX))
+            .hasSize(1)
+            .satisfies(values -> {
+                assertThat(values.values()).hasSize(1);
+                assertThat(values.values()).element(0).isEqualTo(2);
+            });
     }
 
     @Test
-    default void dequeueShouldNotPublishEnqueueTimeMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
+    default void dequeueShouldNotTouchEnqueueMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) {
         enQueueMail(2);
-        verify(testSystem.getSpyEnqueuedMailsTimeMetric(), times(2)).stopAndPublish();
-
         deQueueMail(2);
-        verify(testSystem.getSpyDequeuedMailsTimeMetric(), times(2)).stopAndPublish();
-        verifyNoMoreInteractions(testSystem.getSpyEnqueuedMailsTimeMetric());
+
+        assertThat(testSystem.getMetricFactory().countForPrefixName(DEQUEUED_METRIC_NAME_PREFIX))
+            .hasSize(1)
+            .satisfies(values -> {
+                assertThat(values.values()).hasSize(1);
+                assertThat(values.values()).element(0).isEqualTo(2);
+            });
+        assertThat(testSystem.getMetricFactory().countForPrefixName(ENQUEUED_METRIC_NAME_PREFIX))
+            .hasSize(1)
+            .satisfies(values -> {
+                assertThat(values.values()).hasSize(1);
+                assertThat(values.values()).element(0).isEqualTo(2);
+            });
+    }
+
+    @Test
+    default void enqueueShouldPublishEnqueueTimeMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) {
+        enQueueMail(2);
+
+        assertThat(testSystem.getMetricFactory().executionTimesForPrefixName(ENQUEUED_TIMER_METRIC_NAME_PREFIX))
+            .satisfies(executionMap -> {
+                assertThat(executionMap.keySet()).hasSize(1);
+                assertThat(executionMap.values()).hasSize(2);
+            });
     }
 
 }

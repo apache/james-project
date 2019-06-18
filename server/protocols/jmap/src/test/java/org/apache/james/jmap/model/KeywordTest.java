@@ -46,153 +46,153 @@ public class KeywordTest {
     }
 
     @Test
-    public void keywordShouldThrowWhenFlagNameLengthLessThanMinLength() throws Exception {
+    public void keywordShouldThrowWhenFlagNameLengthLessThanMinLength() {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("");
+        Keyword.of("");
     }
 
     @Test
-    public void keywordShouldThrowWhenFlagNameLengthMoreThanMaxLength() throws Exception {
+    public void keywordShouldThrowWhenFlagNameLengthMoreThanMaxLength() {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword(StringUtils.repeat("a", FLAG_NAME_MAX_LENTH + 1));
+        Keyword.of(StringUtils.repeat("a", FLAG_NAME_MAX_LENTH + 1));
     }
 
     @Test
-    public void keywordShouldCreateNewOneWhenFlagNameLengthEqualsMaxLength() throws Exception {
+    public void keywordShouldCreateNewOneWhenFlagNameLengthEqualsMaxLength() {
         String maxLengthFlagName = StringUtils.repeat("a", FLAG_NAME_MAX_LENTH);
-        Keyword keyword = new Keyword(maxLengthFlagName);
+        Keyword keyword = Keyword.of(maxLengthFlagName);
 
         assertThat(keyword.getFlagName()).isEqualTo(maxLengthFlagName);
     }
 
     @Test
-    public void keywordShouldCreateNewOneWhenFlagNameLengthEqualsMinLength() throws Exception {
+    public void keywordShouldCreateNewOneWhenFlagNameLengthEqualsMinLength() {
         String minLengthFlagName = "a";
-        Keyword keyword = new Keyword(minLengthFlagName);
+        Keyword keyword = Keyword.of(minLengthFlagName);
 
         assertThat(keyword.getFlagName()).isEqualTo(minLengthFlagName);
     }
 
     @Test
-    public void keywordShouldThrowWhenFlagNameContainsPercentageCharacter() throws Exception {
+    public void keywordShouldThrowWhenFlagNameContainsPercentageCharacter() {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a%");
+        Keyword.of("a%");
     }
 
     @Test
-    public void keywordShouldThrowWhenFlagNameContainsLeftBracket() throws Exception {
+    public void keywordShouldThrowWhenFlagNameContainsLeftBracket() {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a[");
+        Keyword.of("a[");
     }
 
     @Test
-    public void keywordShouldThrowWhenFlagNameContainsRightBracket() throws Exception {
+    public void keywordShouldThrowWhenFlagNameContainsRightBracket() {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a]");
+        Keyword.of("a]");
     }
 
     @Test
-    public void keywordShouldThrowWhenFlagNameContainsLeftBrace() throws Exception {
+    public void keywordShouldThrowWhenFlagNameContainsLeftBrace() {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a{");
+        Keyword.of("a{");
     }
 
     @Test
-    public void keywordShouldThrowWhenFlagNameContainsSlash() throws Exception {
+    public void keywordShouldThrowWhenFlagNameContainsSlash() {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a\\");
+        Keyword.of("a\\");
     }
 
     @Test
-    public void keywordShouldThrowWhenFlagNameContainsStar() throws Exception {
+    public void keywordShouldThrowWhenFlagNameContainsStar() {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a*");
+        Keyword.of("a*");
     }
 
     @Test
-    public void keywordShouldThrowWhenFlagNameContainsQuote() throws Exception {
+    public void keywordShouldThrowWhenFlagNameContainsQuote() {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a\"");
+        Keyword.of("a\"");
     }
 
     @Test
-    public void keywordShouldThrowWhenFlagNameContainsOpeningParenthesis() throws Exception {
+    public void keywordShouldThrowWhenFlagNameContainsOpeningParenthesis() {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a(");
+        Keyword.of("a(");
     }
 
     @Test
-    public void keywordShouldThrowWhenFlagNameContainsClosingParenthesis() throws Exception {
+    public void keywordShouldThrowWhenFlagNameContainsClosingParenthesis() {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a)");
+        Keyword.of("a)");
     }
 
     @Test
-    public void keywordShouldThrowWhenFlagNameContainsSpaceCharacter() throws Exception {
+    public void keywordShouldThrowWhenFlagNameContainsSpaceCharacter() {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a b");
+        Keyword.of("a b");
     }
 
     @Test
-    public void isNotNonExposedImapKeywordShouldReturnFalseWhenDeleted() throws Exception {
+    public void isNotNonExposedImapKeywordShouldReturnFalseWhenDeleted() {
         assertThat(Keyword.DELETED.isExposedImapKeyword()).isFalse();
     }
 
     @Test
-    public void isNotNonExposedImapKeywordShouldReturnFalseWhenRecent() throws Exception {
+    public void isNotNonExposedImapKeywordShouldReturnFalseWhenRecent() {
         assertThat(Keyword.RECENT.isExposedImapKeyword()).isFalse();
     }
 
     @Test
-    public void isNotNonExposedImapKeywordShouldReturnTrueWhenOtherSystemFlag() throws Exception {
+    public void isNotNonExposedImapKeywordShouldReturnTrueWhenOtherSystemFlag() {
         assertThat(Keyword.DRAFT.isExposedImapKeyword()).isTrue();
     }
 
     @Test
-    public void isNotNonExposedImapKeywordShouldReturnTrueWhenAnyUserFlag() throws Exception {
-        Keyword keyword = new Keyword(ANY_KEYWORD);
+    public void isNotNonExposedImapKeywordShouldReturnTrueWhenAnyUserFlag() {
+        Keyword keyword = Keyword.of(ANY_KEYWORD);
         assertThat(keyword.isExposedImapKeyword()).isTrue();
     }
 
     @Test
-    public void isDraftShouldReturnTrueWhenDraft() throws Exception {
+    public void isDraftShouldReturnTrueWhenDraft() {
         assertThat(Keyword.DRAFT.isDraft()).isTrue();
     }
 
     @Test
-    public void isDraftShouldReturnFalseWhenNonDraft() throws Exception {
+    public void isDraftShouldReturnFalseWhenNonDraft() {
         assertThat(Keyword.DELETED.isDraft()).isFalse();
     }
 
     @Test
-    public void asSystemFlagShouldReturnSystemFlag() throws Exception {
-        assertThat(new Keyword("$Draft").asSystemFlag())
+    public void asSystemFlagShouldReturnSystemFlag() {
+        assertThat(Keyword.of("$Draft").asSystemFlag())
             .isEqualTo(Optional.of(Flags.Flag.DRAFT));
     }
 
     @Test
-    public void asSystemFlagShouldReturnEmptyWhenNonSystemFlag() throws Exception {
-        assertThat(new Keyword(ANY_KEYWORD).asSystemFlag().isPresent())
+    public void asSystemFlagShouldReturnEmptyWhenNonSystemFlag() {
+        assertThat(Keyword.of(ANY_KEYWORD).asSystemFlag().isPresent())
             .isFalse();
     }
 
     @Test
-    public void asFlagsShouldReturnFlagsWhenSystemFlag() throws Exception {
+    public void asFlagsShouldReturnFlagsWhenSystemFlag() {
         assertThat(Keyword.DELETED.asFlags())
             .isEqualTo(new Flags(Flags.Flag.DELETED));
     }
 
     @Test
-    public void asFlagsShouldReturnFlagsWhenUserFlag() throws Exception {
-        Keyword keyword = new Keyword(ANY_KEYWORD);
+    public void asFlagsShouldReturnFlagsWhenUserFlag() {
+        Keyword keyword = Keyword.of(ANY_KEYWORD);
         assertThat(keyword.asFlags())
             .isEqualTo(new Flags(ANY_KEYWORD));
     }
 
     @Test
-    public void asFlagsShouldReturnFlagsWhenUserFlagContainsUnderscore() throws Exception {
+    public void asFlagsShouldReturnFlagsWhenUserFlagContainsUnderscore() {
         String userFlag = "$has_cal";
-        Keyword keyword = new Keyword(userFlag);
+        Keyword keyword = Keyword.of(userFlag);
         assertThat(keyword.asFlags())
             .isEqualTo(new Flags(userFlag));
     }
@@ -201,7 +201,7 @@ public class KeywordTest {
     public void hyphenMinusShouldBeAllowedInKeyword() {
         String userFlag = "aa-bb";
 
-        assertThatCode(() -> new Keyword(userFlag))
+        assertThatCode(() -> Keyword.of(userFlag))
             .doesNotThrowAnyException();
     }
 }

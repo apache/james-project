@@ -25,7 +25,9 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.jmap.methods.integration.GetMessageListMethodTest;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.Ignore;
 import org.junit.Rule;
+import org.junit.Test;
 
 public class MemoryGetMessageListMethodTest extends GetMessageListMethodTest {
 
@@ -40,5 +42,18 @@ public class MemoryGetMessageListMethodTest extends GetMessageListMethodTest {
     @Override
     protected void await() {
 
+    }
+
+    @Override
+    @Ignore("This feature is not supported by MessageSearchIndex implementation binded in the Memory product")
+    @Test
+    public void getMessageListShouldIncludeMessagesWhenTextFilterMatchesBodyWithStemming() {
+    }
+
+    @Override
+    @Ignore("JAMES-2756 Memory James Server uses the SimpleMessageSearchIndex, " +
+        "it doesn't support to search on the encoded header value's names")
+    @Test
+    public void searchByFromFieldShouldSupportUTF8FromName() {
     }
 }

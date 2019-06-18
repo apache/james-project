@@ -22,7 +22,7 @@ package org.apache.james.quota.search.elasticsearch.json;
 import javax.inject.Inject;
 
 import org.apache.james.core.Domain;
-import org.apache.james.mailbox.MailboxListener.QuotaUsageUpdatedEvent;
+import org.apache.james.mailbox.events.MailboxListener.QuotaUsageUpdatedEvent;
 import org.apache.james.mailbox.model.QuotaRatio;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,9 +39,9 @@ public class QuotaRatioToElasticSearchJson {
         this.mapper.registerModule(new Jdk8Module());
     }
 
-    public String convertToJson(String user, QuotaUsageUpdatedEvent event) throws JsonProcessingException {
+    public String convertToJson(QuotaUsageUpdatedEvent event) throws JsonProcessingException {
         return mapper.writeValueAsString(QuotaRatioAsJson.builder()
-                .user(user)
+                .user(event.getUser().asString())
                 .domain(event.getQuotaRoot().getDomain().map(Domain::asString))
                 .quotaRatio(QuotaRatio.from(event.getSizeQuota(), event.getCountQuota()))
                 .build());

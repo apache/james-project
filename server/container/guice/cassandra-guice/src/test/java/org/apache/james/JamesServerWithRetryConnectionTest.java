@@ -29,70 +29,29 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.modules.mailbox.ElasticSearchConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
-import org.apache.james.util.Host;
-import org.apache.james.util.docker.Images;
-import org.apache.james.util.docker.SwarmGenericContainer;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.google.inject.Module;
-
 class JamesServerWithRetryConnectionTest {
-    private static class DockerElasticSearchRegistrableExtension implements GuiceModuleTestExtension {
-        private final SwarmGenericContainer elasticSearchContainer;
-
-        private DockerElasticSearchRegistrableExtension(SwarmGenericContainer elasticSearchContainer) {
-            this.elasticSearchContainer = elasticSearchContainer;
-        }
-
-        @Override
-        public void beforeEach(ExtensionContext extensionContext) {
-            elasticSearchContainer.start();
-        }
-
-        @Override
-        public void afterEach(ExtensionContext extensionContext) {
-            elasticSearchContainer.stop();
-        }
-
-        @Override
-        public Module getModule() {
-            return binder -> binder.bind(ElasticSearchConfiguration.class)
-                    .toInstance(getElasticSearchConfigurationForDocker());
-        }
-
-        private ElasticSearchConfiguration getElasticSearchConfigurationForDocker() {
-            return ElasticSearchConfiguration.builder()
-                .addHost(Host.from(elasticSearchContainer.getHostIp(), elasticSearchContainer.getMappedPort(ELASTIC_SEARCH_PORT)))
-                .indexAttachment(IndexAttachments.NO)
-                .build();
-        }
-    }
-
     private static final int LIMIT_TO_10_MESSAGES = 10;
     private static final long WAITING_TIME = TimeUnit.MILLISECONDS.convert(10, TimeUnit.SECONDS);
 
-    private static final int ELASTIC_SEARCH_PORT = 9300;
-    private static final int ELASTIC_SEARCH_HTTP_PORT = 9200;
-
-    private static SwarmGenericContainer elasticSearchContainer = new SwarmGenericContainer(Images.ELASTICSEARCH)
-        .withExposedPorts(ELASTIC_SEARCH_HTTP_PORT, ELASTIC_SEARCH_PORT);
     private static final DockerCassandraRule cassandraRule = new DockerCassandraRule();
+    private static final DockerElasticSearchExtension dockerElasticSearch = new DockerElasticSearchExtension();
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
-        .extension(new DockerElasticSearchRegistrableExtension(elasticSearchContainer))
+    static JamesServerExtension testExtension = new JamesServerBuilder()
+        .extension(dockerElasticSearch)
         .extension(new CassandraExtension(cassandraRule))
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
@@ -106,7 +65,8 @@ class JamesServerWithRetryConnectionTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        executorService = Executors.newFixedThreadPool(1);
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        executorService = Executors.newFixedThreadPool(1, threadFactory);
         socketChannel = SocketChannel.open();
     }
 
@@ -132,9 +92,9 @@ class JamesServerWithRetryConnectionTest {
 
     @Test
     void serverShouldRetryToConnectToElasticSearchWhenStartService(GuiceJamesServer server) throws Exception {
-        elasticSearchContainer.pause();
+        dockerElasticSearch.getDockerES().pause();
 
-        waitToStartContainer(WAITING_TIME, elasticSearchContainer::unpause);
+        waitToStartContainer(WAITING_TIME, dockerElasticSearch.getDockerES()::unpause);
 
         assertThatServerStartCorrectly(server);
     }

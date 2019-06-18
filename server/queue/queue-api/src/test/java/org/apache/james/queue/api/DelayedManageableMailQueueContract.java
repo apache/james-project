@@ -22,14 +22,16 @@ package org.apache.james.queue.api;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.junit.ExecutorExtension;
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import reactor.core.publisher.Flux;
 
 @ExtendWith(ExecutorExtension.class)
 public interface DelayedManageableMailQueueContract extends DelayedMailQueueContract, ManageableMailQueueContract {
@@ -47,8 +49,7 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
 
         getManageableMailQueue().flush();
 
-        Future<MailQueue.MailQueueItem> tryDequeue = executorService.submit(() -> getManageableMailQueue().deQueue());
-        assertThat(tryDequeue.get(1, TimeUnit.SECONDS).getMail().getName())
+        assertThat(Flux.from(getManageableMailQueue().deQueue()).blockFirst(Duration.ofSeconds(1)).getMail().getName())
             .isEqualTo("name1");
     }
 

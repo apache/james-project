@@ -52,7 +52,7 @@ public class ActiveMQMailQueueItem extends JMSMailQueueItem implements ActiveMQS
     public void done(boolean success) throws MailQueueException {
         super.done(success);
         if (success) {
-            if (message instanceof ActiveMQBlobMessage && getMail().getAttribute(JAMES_REUSE_BLOB_URL) == null) {
+            if (message instanceof ActiveMQBlobMessage && !getMail().getAttribute(JAMES_REUSE_BLOB_URL).isPresent()) {
 
                 // This should get removed once this jira issue was fixed
                 // https://issues.apache.org/activemq/browse/AMQ-1529

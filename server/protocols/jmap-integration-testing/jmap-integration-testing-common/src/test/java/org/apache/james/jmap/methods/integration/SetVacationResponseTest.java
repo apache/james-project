@@ -38,12 +38,14 @@ import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationPatch;
+import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.util.ValuePatch;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -169,6 +171,7 @@ public abstract class SetVacationResponseTest {
             .body(ARGUMENTS + ".notUpdated.singleton.description", equalTo("There is one VacationResponse object per account, with id set to \\\"singleton\\\" and not to " + id));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void setVacationResponseShouldReturnCorrectAnswerUponValidVacationResponse() {
         String bodyRequest = "[[" +
@@ -208,6 +211,7 @@ public abstract class SetVacationResponseTest {
         assertThat(vacation.getSubject()).contains(SUBJECT);
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void setVacationResponseShouldAllowResets() {
         jmapGuiceProbe.modifyVacation(AccountId.fromString(USER),

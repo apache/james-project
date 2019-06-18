@@ -39,7 +39,6 @@ import org.apache.james.dlp.api.DLPConfigurationItem.Targets;
 import org.apache.james.javax.AddressHelper;
 import org.apache.james.javax.MultipartUtil;
 import org.apache.james.util.OptionalUtils;
-import org.apache.james.util.StreamUtils;
 import org.apache.mailet.Mail;
 
 import com.github.fge.lambdas.Throwing;
@@ -169,7 +168,8 @@ public class DlpDomainRules {
             }
 
             private Stream<String> listEnvelopSender(Mail mail) {
-                return StreamUtils.ofNullables(mail.getSender()).map(MailAddress::asString);
+                return mail.getMaybeSender().asStream()
+                    .map(MailAddress::asString);
             }
 
             private Stream<String> listFromHeaders(Mail mail) throws MessagingException {

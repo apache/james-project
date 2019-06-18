@@ -26,14 +26,16 @@ import spark.Service;
 
 public class ErrorRoutes implements Routes {
 
-    public static final String BASE_URL = "/errors/";
-    public static final String INTERNAL_SERVER_ERROR = "internalServerError";
-    public static final String JSON_EXTRACT_EXCEPTION = "jsonExtractException";
+    static final String BASE_URL = "/errors/";
+    static final String INTERNAL_SERVER_ERROR = "internalServerError";
+    static final String JSON_EXTRACT_EXCEPTION = "jsonExtractException";
+    static final String INVALID_ARGUMENT_EXCEPTION = "illegalArgumentException";
 
     @Override
     public void define(Service service) {
         defineInternalError(service);
         defineJsonExtractException(service);
+        defineIllegalArgumentException(service);
     }
 
     @Override
@@ -51,5 +53,12 @@ public class ErrorRoutes implements Routes {
     private void defineJsonExtractException(Service service) {
         service.get(BASE_URL + JSON_EXTRACT_EXCEPTION,
             (req, res) -> new JsonExtractor<>(Long.class).parse("a non valid JSON"));
+    }
+
+    private void defineIllegalArgumentException(Service service) {
+        service.get(BASE_URL + INVALID_ARGUMENT_EXCEPTION,
+            (req, res) -> {
+                throw new IllegalArgumentException("Argument is non valid");
+            });
     }
 }

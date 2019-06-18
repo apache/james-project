@@ -22,9 +22,13 @@ package org.apache.james.queue.api;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
+
+import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 public interface DelayedPriorityMailQueueContract extends DelayedMailQueueContract, PriorityMailQueueContract {
 
@@ -35,23 +39,24 @@ public interface DelayedPriorityMailQueueContract extends DelayedMailQueueContra
     default void delayedHighPriorityMailShouldBeDeQueuedBeforeLowPriorityNonDelayedMailAfterDelayExpiracy() throws Exception {
         getMailQueue().enQueue(defaultMail()
             .name("name1")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.LOW_PRIORITY)
+            .attribute(MailPrioritySupport.LOW_PRIORITY_ATTRIBUTE)
             .build());
 
         int delay = 1;
         TimeUnit unit = TimeUnit.SECONDS;
         getMailQueue().enQueue(defaultMail()
             .name("name2")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.HIGH_PRIORITY)
+            .attribute(MailPrioritySupport.HIGH_PRIORITY_ATTRIBUTE)
             .build(),
             delay,
             unit);
 
         Thread.sleep(unit.toMillis(2 * delay));
 
-        MailQueue.MailQueueItem item1 = getMailQueue().deQueue();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        MailQueue.MailQueueItem item1 = mailQueueItems.next();
         item1.done(true);
-        MailQueue.MailQueueItem item2 = getMailQueue().deQueue();
+        MailQueue.MailQueueItem item2 = mailQueueItems.next();
         item2.done(true);
 
         assertThat(item1.getMail().getName()).isEqualTo("name2");
@@ -62,21 +67,22 @@ public interface DelayedPriorityMailQueueContract extends DelayedMailQueueContra
     default void delayedHighPriorityMailShouldBeDeQueuedAfterNonDelayedMail() throws Exception {
         getMailQueue().enQueue(defaultMail()
             .name("name1")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.LOW_PRIORITY)
+            .attribute(MailPrioritySupport.LOW_PRIORITY_ATTRIBUTE)
             .build());
 
         int delay = 1;
         TimeUnit unit = TimeUnit.SECONDS;
         getMailQueue().enQueue(defaultMail()
             .name("name2")
-            .attribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.HIGH_PRIORITY)
+            .attribute(MailPrioritySupport.HIGH_PRIORITY_ATTRIBUTE)
             .build(),
             delay,
             unit);
 
-        MailQueue.MailQueueItem item1 = getMailQueue().deQueue();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        MailQueue.MailQueueItem item1 = mailQueueItems.next();
         item1.done(true);
-        MailQueue.MailQueueItem item2 = getMailQueue().deQueue();
+        MailQueue.MailQueueItem item2 = mailQueueItems.next();
         item2.done(true);
 
         assertThat(item1.getMail().getName()).isEqualTo("name1");

@@ -19,40 +19,32 @@
 
 package org.apache.james.backends.es;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
-import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
 
 public class NodeMappingFactoryTest {
-    public static final String MESSAGE = "message";
-    public static final IndexName INDEX_NAME = new IndexName("index");
-    public static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
-    public static final TypeName TYPE_NAME = new TypeName("type");
-
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
+    private static final String MESSAGE = "message";
+    private static final IndexName INDEX_NAME = new IndexName("index");
+    private static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
 
     @Rule
-    public RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
-
+    public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
     private ClientProvider clientProvider;
 
     @Before
     public void setUp() throws Exception {
-        clientProvider = new TestingClientProvider(embeddedElasticSearch.getNode());
-        new IndexCreationFactory()
+        clientProvider = elasticSearch.clientProvider();
+        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(clientProvider.get());
         NodeMappingFactory.applyMapping(clientProvider.get(),
             INDEX_NAME,
-            TYPE_NAME,
             getMappingsSources());
     }
 
@@ -60,33 +52,29 @@ public class NodeMappingFactoryTest {
     public void applyMappingShouldNotThrowWhenCalledSeveralTime() throws Exception {
         NodeMappingFactory.applyMapping(clientProvider.get(),
             INDEX_NAME,
-            TYPE_NAME,
             getMappingsSources());
     }
 
     @Test
-    public void applyMappingShouldNotThrowWhenIndexerChanges() throws Exception {
+    public void applyMappingShouldNotThrowWhenIncrementalChanges() throws Exception {
         NodeMappingFactory.applyMapping(clientProvider.get(),
             INDEX_NAME,
-            TYPE_NAME,
             getMappingsSources());
 
-        embeddedElasticSearch.awaitForElasticSearch();
+        elasticSearch.awaitForElasticSearch();
 
-        NodeMappingFactory.applyMapping(clientProvider.get(),
+        assertThatCode(() -> NodeMappingFactory.applyMapping(clientProvider.get(),
             INDEX_NAME,
-            TYPE_NAME,
-            getOtherMappingsSources());
+            getOtherMappingsSources()))
+        .doesNotThrowAnyException();
     }
 
     private XContentBuilder getMappingsSources() throws Exception {
         return jsonBuilder()
             .startObject()
-                .startObject(TYPE_NAME.getValue())
-                    .startObject(NodeMappingFactory.PROPERTIES)
-                        .startObject(MESSAGE)
-                            .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                        .endObject()
+                .startObject(NodeMappingFactory.PROPERTIES)
+                    .startObject(MESSAGE)
+                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.TEXT)
                     .endObject()
                 .endObject()
             .endObject();
@@ -95,12 +83,10 @@ public class NodeMappingFactoryTest {
     private XContentBuilder getOtherMappingsSources() throws Exception {
         return jsonBuilder()
             .startObject()
-                .startObject(TYPE_NAME.getValue())
-                    .startObject(NodeMappingFactory.PROPERTIES)
-                        .startObject(MESSAGE)
-                            .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
-                            .field(NodeMappingFactory.INDEX, NodeMappingFactory.NOT_ANALYZED)
-                        .endObject()
+                .startObject(NodeMappingFactory.PROPERTIES)
+                    .startObject(MESSAGE)
+                        .field(NodeMappingFactory.TYPE, NodeMappingFactory.TEXT)
+                        .field(NodeMappingFactory.INDEX, false)
                     .endObject()
                 .endObject()
             .endObject();

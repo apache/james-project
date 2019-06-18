@@ -29,12 +29,12 @@ import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -42,7 +42,7 @@ public class QuotaCheckerTest {
 
     public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
     public static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("benwa", "INBOX");
-    public static final SimpleMailbox MAILBOX = new SimpleMailbox(MAILBOX_PATH, 10);
+    public static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, 10);
 
     private QuotaRootResolver mockedQuotaRootResolver;
     private QuotaManager mockedQuotaManager;

@@ -26,7 +26,6 @@ import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -36,6 +35,7 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.core.User;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
@@ -48,12 +48,11 @@ import org.apache.james.jmap.utils.JsoupHtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.BlobId;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
@@ -83,46 +82,14 @@ import com.jayway.jsonpath.JsonPath;
 
 public class GetMessagesMethodTest {
     private static final String FORWARDED = "forwarded";
+    private static final User ROBERT = User.fromUsername("robert");
+
     private MessageIdManager messageIdManager;
     private org.apache.james.mime4j.dom.Message messageContent1;
     private org.apache.james.mime4j.dom.Message messageContent2;
     private org.apache.james.mime4j.dom.Message messageContent3;
-
-    private static class User implements org.apache.james.mailbox.MailboxSession.User {
-        final String username;
-        final String password;
-
-        public User(String username, String password) {
-            this.username = username;
-            this.password = password;
-        }
-        
-        @Override
-        public String getUserName() {
-            return username;
-        }
-
-        @Override
-        public String getPassword() {
-            return password;
-        }
-        
-        @Override
-        public List<Locale> getLocalePreferences() {
-            return ImmutableList.of();
-        }
-
-        @Override
-        public boolean isSameUser(String username) {
-            return this.username.equalsIgnoreCase(username);
-        }
-    }
-    
-    private static final User ROBERT = new User("robert", "secret");
-
     private StoreMailboxManager mailboxManager;
     private GetMessagesMethod testee;
-
     private MailboxSession session;
     private MailboxPath inboxPath;
     private MailboxPath customMailboxPath;
@@ -137,16 +104,15 @@ public class GetMessagesMethodTest {
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
         MessageFactory messageFactory = new MessageFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
-        InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
-        GroupMembershipResolver groupMembershipResolver = inMemoryIntegrationResources.createGroupMembershipResolver();
-        mailboxManager = inMemoryIntegrationResources.createMailboxManager(groupMembershipResolver);
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
+        mailboxManager = resources.getMailboxManager();
 
-        session = new MockMailboxSession(ROBERT.username);
+        session = MailboxSessionUtil.create(ROBERT.asString());
         inboxPath = MailboxPath.inbox(session);
         customMailboxPath = new MailboxPath(inboxPath, "custom");
         mailboxManager.createMailbox(inboxPath, session);
         mailboxManager.createMailbox(customMailboxPath, session);
-        messageIdManager = inMemoryIntegrationResources.createMessageIdManager(mailboxManager);
+        messageIdManager = resources.getMessageIdManager();
         testee = new GetMessagesMethod(messageFactory, messageIdManager, new DefaultMetricFactory());
 
         messageContent1 = org.apache.james.mime4j.dom.Message.Builder.of()

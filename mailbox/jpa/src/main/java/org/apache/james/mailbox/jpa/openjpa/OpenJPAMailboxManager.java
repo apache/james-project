@@ -22,20 +22,20 @@ package org.apache.james.mailbox.jpa.openjpa;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.jpa.JPAMailboxManager;
 import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMessageManager.AdvancedFeature;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.Authenticator;
-import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
 /**
  * OpenJPA implementation of MailboxManager
@@ -45,16 +45,17 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
 
     @Inject
     public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory,
-                                 Authenticator authenticator,
-                                 Authorizator authorizator,
+                                 SessionProvider sessionProvider,
                                  MessageParser messageParser,
                                  MessageId.Factory messageIdFactory,
-                                 DelegatingMailboxListener delegatingMailboxListener,
-                                 MailboxEventDispatcher mailboxEventDispatcher,
+                                 EventBus eventBus,
                                  StoreMailboxAnnotationManager annotationManager,
-                                 StoreRightManager storeRightManager) {
-        super(mapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), messageParser,
-            messageIdFactory, delegatingMailboxListener, mailboxEventDispatcher, annotationManager, storeRightManager);
+                                 StoreRightManager storeRightManager,
+                                 QuotaComponents quotaComponents,
+                                 MessageSearchIndex index) {
+        super(mapperFactory, sessionProvider, new JVMMailboxPathLocker(), messageParser,
+            messageIdFactory, eventBus, annotationManager, storeRightManager,
+            quotaComponents, index);
     }
 
     protected AdvancedFeature getAdvancedFeature() {
@@ -65,16 +66,15 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
     protected StoreMessageManager createMessageManager(Mailbox mailboxRow, MailboxSession session) {
         return new OpenJPAMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
-            getEventDispatcher(),
+            getEventBus(),
             getLocker(),
             mailboxRow,
             getAdvancedFeature(),
-            getQuotaManager(),
-            getQuotaRootResolver(),
+            getQuotaComponents().getQuotaManager(),
+            getQuotaComponents().getQuotaRootResolver(),
             getMessageParser(),
             getMessageIdFactory(),
-            getBatchSizes(),
-            getImmutableMailboxMessageFactory(),
+            configuration.getBatchSizes(),
             getStoreRightManager());
     }
 }

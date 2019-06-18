@@ -20,34 +20,27 @@
 package org.apache.james.queue.rabbitmq;
 
 import static java.time.temporal.ChronoUnit.HOURS;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import javax.mail.internet.MimeMessage;
-
 import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
-import org.apache.james.backend.rabbitmq.RabbitChannelPool;
-import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
-import org.apache.james.backend.rabbitmq.RabbitMQConnectionFactory;
 import org.apache.james.backend.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.api.Store;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
-import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
 import org.apache.james.queue.api.MailQueue;
@@ -55,22 +48,25 @@ import org.apache.james.queue.api.MailQueueMetricContract;
 import org.apache.james.queue.api.MailQueueMetricExtension;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.ManageableMailQueueContract;
+import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewTestFactory;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
 import org.apache.james.util.streams.Iterators;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.mailet.Mail;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.fge.lambdas.Throwing;
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 
-@ExtendWith(RabbitMQExtension.class)
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQueueMetricContract {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
     private static final int THREE_BUCKET_COUNT = 3;
@@ -87,11 +83,16 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
         CassandraBlobModule.MODULE,
         CassandraMailQueueViewModule.MODULE,
-        CassandraEventStoreModule.MODULE));
+        CassandraEventStoreModule.MODULE,
+        CassandraSchemaVersionModule.MODULE));
+
+    @RegisterExtension
+    static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ();
 
     private RabbitMQMailQueueFactory mailQueueFactory;
     private UpdatableTickingClock clock;
     private RabbitMQMailQueue mailQueue;
+    private RabbitMQMailQueueManagement mqManagementApi;
 
     @Override
     public void enQueue(Mail mail) throws MailQueue.MailQueueException {
@@ -102,44 +103,36 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
     @BeforeEach
     void setup(DockerRabbitMQ rabbitMQ, CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, BLOB_ID_FACTORY);
-        Store<MimeMessage, MimeMessagePartsId> mimeMessageStore = MimeMessageStore.factory(blobsDAO).mimeMessageStore();
+        MimeMessageStore.Factory mimeMessageStoreFactory = MimeMessageStore.factory(blobsDAO);
         clock = new UpdatableTickingClock(IN_SLICE_1);
         ThreadLocalRandom random = ThreadLocalRandom.current();
 
-        MailQueueView mailQueueView = CassandraMailQueueViewTestFactory.factory(
-            clock,
-            random,
-            cassandra.getConf(),
-            cassandra.getTypesProvider(),
+        MailQueueView.Factory mailQueueViewFactory = CassandraMailQueueViewTestFactory.factory(clock, random, cassandra.getConf(), cassandra.getTypesProvider(),
             CassandraMailQueueViewConfiguration.builder()
                     .bucketCount(THREE_BUCKET_COUNT)
                     .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
                     .sliceWindow(ONE_HOUR_SLICE_WINDOW)
                     .build(),
-            mimeMessageStore)
-            .create(MailQueueName.fromString(SPOOL));
+            mimeMessageStoreFactory);
 
-        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(rabbitMQ.amqpUri())
-            .managementUri(rabbitMQ.managementUri())
-            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
-            .build();
-
-        RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(rabbitMQConfiguration,
-                new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor()));
-
-        RabbitClient rabbitClient = new RabbitClient(new RabbitChannelPool(rabbitMQConnectionFactory));
+        RabbitClient rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
         RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
-            metricTestSystem.getSpyMetricFactory(),
+            metricTestSystem.getMetricFactory(),
             metricTestSystem.getSpyGaugeRegistry(),
             rabbitClient,
-            mimeMessageStore,
+            mimeMessageStoreFactory,
             BLOB_ID_FACTORY,
-            mailQueueView,
-            clock);
-        RabbitMQManagementApi mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
+            mailQueueViewFactory,
+            clock,
+            new RawMailQueueItemDecoratorFactory());
+        mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
         mailQueue = mailQueueFactory.createQueue(SPOOL);
+    }
+
+    @AfterEach
+    void tearDown() {
+        mqManagementApi.deleteAllQueues();
     }
 
     @Override
@@ -224,22 +217,27 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
         assertThat(initialized).isTrue();
     }
 
-    @Disabled("RabbitMQ Mail Queue do not yet implement getSize()")
-    @Override
-    public void constructorShouldRegisterGetQueueSizeGauge(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) {
+    @Test
+    void enQueueShouldNotThrowOnMailNameWithNegativeHash() {
+        String negativehashedString = "this sting will have a negative hash"; //hash value: -1256871313
+        
+        assertThatCode(() -> getMailQueue().enQueue(defaultMail().name(negativehashedString).build()))
+            .doesNotThrowAnyException();
     }
 
+    @Disabled("JAMES-2614 RabbitMQMailQueueTest::concurrentEnqueueDequeueShouldNotFail is unstable." +
+        "The related test is disabled, and need to be re-enabled after investigation and a fix.")
     @Test
     @Override
-    @Disabled("JAMES-2544 acknowledgement need to be done on the original channel, which is not permitted by the channelPool")
     public void concurrentEnqueueDequeueShouldNotFail() {
 
     }
 
+    @Disabled("JAMES-2733 Deleted elements are still dequeued")
     @Test
     @Override
-    @Disabled("JAMES-2544 acknowledgement need to be done on the original channel, which is not permitted by the channelPool")
-    public void concurrentEnqueueDequeueWithAckNackShouldNotFail() {
+    public void deletedElementsShouldNotBeDequeued() {
+
     }
 
 
@@ -251,8 +249,13 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
     }
 
     private void dequeueMails(int times) {
-        ManageableMailQueue mailQueue = getManageableMailQueue();
-        IntStream.rangeClosed(1, times)
-            .forEach(Throwing.intConsumer(bucketId -> mailQueue.deQueue().done(true)));
+        Flux.from(getManageableMailQueue()
+            .deQueue())
+            .take(times)
+            .flatMap(mailQueueItem -> Mono.fromCallable(() -> {
+                mailQueueItem.done(true);
+                return mailQueueItem;
+            }))
+            .blockLast();
     }
 }

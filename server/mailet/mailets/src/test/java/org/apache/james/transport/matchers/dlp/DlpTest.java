@@ -34,8 +34,12 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.apache.james.core.Domain;
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dlp.api.DLPConfigurationItem.Id;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.Test;
 
@@ -56,7 +60,7 @@ class DlpTest {
     void matchShouldReturnEmptyWhenNoRecipient() throws Exception {
         Dlp dlp = new Dlp(MATCH_ALL_FOR_ALL_DOMAINS);
 
-        FakeMail mail = FakeMail.builder().sender(RECIPIENT1).build();
+        FakeMail mail = FakeMail.builder().name("name").sender(RECIPIENT1).build();
 
         assertThat(dlp.match(mail)).isEmpty();
     }
@@ -65,7 +69,7 @@ class DlpTest {
     void matchShouldReturnEmptyWhenNoSender() throws Exception {
         Dlp dlp = new Dlp(MATCH_ALL_FOR_ALL_DOMAINS);
 
-        FakeMail mail = FakeMail.builder().recipient(RECIPIENT1).build();
+        FakeMail mail = FakeMail.builder().name("name").recipient(RECIPIENT1).build();
 
         assertThat(dlp.match(mail)).isEmpty();
     }
@@ -82,6 +86,7 @@ class DlpTest {
         Dlp dlp = new Dlp(MATCH_NOTHING_FOR_ALL_DOMAINS);
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender(ANY_AT_JAMES)
             .recipient(RECIPIENT1)
             .recipient(RECIPIENT2)
@@ -97,9 +102,21 @@ class DlpTest {
                 JAMES_APACHE_ORG_DOMAIN,
                 DlpDomainRules.builder().senderRule(Id.of("match sender"), Pattern.compile(ANY_AT_JAMES.asString())).build()));
 
-        FakeMail mail = FakeMail.builder().sender(ANY_AT_JAMES).recipient(RECIPIENT1).build();
+        FakeMail mail = FakeMail.builder().name("name").sender(ANY_AT_JAMES).recipient(RECIPIENT1).build();
 
         assertThat(dlp.match(mail)).contains(RECIPIENT1);
+    }
+
+    @Test
+    void nullSenderShouldBeIgnored() throws Exception {
+        Dlp dlp = new Dlp(
+            asRulesLoaderFor(
+                JAMES_APACHE_ORG_DOMAIN,
+                DlpDomainRules.builder().recipientRule(Id.of("match all recipient"), Pattern.compile(".*")).build()));
+
+        FakeMail mail = FakeMail.builder().name("name").sender(MailAddress.nullSender()).recipient(RECIPIENT1).build();
+
+        assertThat(dlp.match(mail)).isEmpty();
     }
 
     @Test
@@ -111,6 +128,7 @@ class DlpTest {
 
         FakeMail mail = FakeMail
             .builder()
+            .name("name")
             .sender(OTHER_AT_JAMES)
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
@@ -129,6 +147,7 @@ class DlpTest {
                 DlpDomainRules.builder().recipientRule(Id.of("match recipient"), Pattern.compile(RECIPIENT1.asString())).build()));
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender(ANY_AT_JAMES)
             .recipient(RECIPIENT1)
             .recipient(RECIPIENT2)
@@ -146,6 +165,7 @@ class DlpTest {
 
         FakeMail mail = FakeMail
             .builder()
+            .name("name")
             .sender(OTHER_AT_JAMES)
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
@@ -165,6 +185,7 @@ class DlpTest {
 
         FakeMail mail = FakeMail
             .builder()
+            .name("name")
             .sender(OTHER_AT_JAMES)
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
@@ -184,6 +205,7 @@ class DlpTest {
 
         FakeMail mail = FakeMail
             .builder()
+            .name("name")
             .sender(OTHER_AT_JAMES)
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
@@ -203,6 +225,7 @@ class DlpTest {
 
         FakeMail mail = FakeMail
             .builder()
+            .name("name")
             .sender(OTHER_AT_JAMES)
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
@@ -222,6 +245,7 @@ class DlpTest {
 
         FakeMail mail = FakeMail
             .builder()
+            .name("name")
             .sender(OTHER_AT_JAMES)
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
@@ -242,6 +266,7 @@ class DlpTest {
 
         FakeMail mail = FakeMail
             .builder()
+            .name("name")
             .sender(OTHER_AT_JAMES)
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
@@ -261,6 +286,7 @@ class DlpTest {
 
         FakeMail mail = FakeMail
             .builder()
+            .name("name")
             .sender(OTHER_AT_JAMES)
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
@@ -285,6 +311,7 @@ class DlpTest {
 
         FakeMail mail = FakeMail
             .builder()
+            .name("name")
             .sender(OTHER_AT_JAMES)
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
@@ -316,6 +343,7 @@ class DlpTest {
 
         FakeMail mail = FakeMail
             .builder()
+            .name("name")
             .sender(OTHER_AT_JAMES)
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
@@ -348,6 +376,7 @@ class DlpTest {
 
         FakeMail mail = FakeMail
             .builder()
+            .name("name")
             .sender(OTHER_AT_JAMES)
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
@@ -380,6 +409,7 @@ class DlpTest {
 
         FakeMail mail = FakeMail
             .builder()
+            .name("name")
             .sender(OTHER_AT_JAMES)
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
@@ -403,6 +433,7 @@ class DlpTest {
 
         FakeMail mail = FakeMail
             .builder()
+            .name("name")
             .sender(OTHER_AT_JAMES)
             .recipient(RECIPIENT1)
             .mimeMessage(MimeMessageBuilder
@@ -432,6 +463,7 @@ class DlpTest {
 
         FakeMail mail = FakeMail
             .builder()
+            .name("name")
             .sender(OTHER_AT_JAMES)
             .recipient(RECIPIENT2)
             .mimeMessage(meaninglessText)
@@ -457,6 +489,7 @@ class DlpTest {
 
         FakeMail mail = FakeMail
             .builder()
+            .name("name")
             .sender(OTHER_AT_JAMES)
             .recipient(RECIPIENT2)
             .mimeMessage(meaninglessText)
@@ -482,6 +515,7 @@ class DlpTest {
 
         FakeMail mail = FakeMail
             .builder()
+            .name("name")
             .sender(OTHER_AT_JAMES)
             .recipient(RECIPIENT2)
             .mimeMessage(meaninglessText)
@@ -492,15 +526,17 @@ class DlpTest {
 
     @Test
     void matchShouldAttachMatchingRuleNameToMail() throws Exception {
+        String attributeValue = "should match sender";
         Dlp dlp = new Dlp(
             asRulesLoaderFor(
                 JAMES_APACHE_ORG_DOMAIN,
                 DlpDomainRules.builder()
                     .recipientRule(Id.of("should not match recipient"), Pattern.compile(RECIPIENT3.asString()))
-                    .senderRule(Id.of("should match sender"), Pattern.compile(JAMES_APACHE_ORG))
+                    .senderRule(Id.of(attributeValue), Pattern.compile(JAMES_APACHE_ORG))
                     .build()));
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .sender(ANY_AT_JAMES)
             .recipient(RECIPIENT1)
             .recipient(RECIPIENT2)
@@ -508,7 +544,8 @@ class DlpTest {
 
         dlp.match(mail);
 
-        assertThat(mail.getAttribute("DlpMatchedRule")).isEqualTo("should match sender");
+        AttributeName name = AttributeName.of("DlpMatchedRule");
+        assertThat(mail.getAttribute(name)).contains(new Attribute(name, AttributeValue.of(attributeValue)));
     }
 
 }

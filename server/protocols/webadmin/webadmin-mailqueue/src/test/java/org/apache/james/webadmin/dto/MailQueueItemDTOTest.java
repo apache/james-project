@@ -52,7 +52,7 @@ public class MailQueueItemDTOTest {
 
     @Test
     public void fromShouldCreateTheRightObject() throws Exception {
-        FakeMail mail = Mails.defaultMail().build();
+        FakeMail mail = Mails.defaultMail().name("name").build();
         ZonedDateTime date = ZonedDateTime.parse("2018-01-02T11:22:02Z");
         MailQueueItemView mailQueueItemView = new MailQueueItemView(mail, date);
         MailQueueItemDTO mailQueueItemDTO = MailQueueItemDTO.from(mailQueueItemView);
@@ -61,7 +61,7 @@ public class MailQueueItemDTOTest {
                 .collect(Guavate.toImmutableList());
 
         softly.assertThat(mailQueueItemDTO.getName()).isEqualTo(mail.getName());
-        softly.assertThat(mailQueueItemDTO.getSender()).isEqualTo(mail.getSender().asString());
+        softly.assertThat(mailQueueItemDTO.getSender()).isEqualTo(mail.getMaybeSender().get().asString());
         softly.assertThat(mailQueueItemDTO.getRecipients()).isEqualTo(expectedRecipients);
         softly.assertThat(mailQueueItemDTO.getNextDelivery()).contains(date);
     }

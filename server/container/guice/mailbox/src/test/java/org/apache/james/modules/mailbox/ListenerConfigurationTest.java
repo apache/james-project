@@ -22,12 +22,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ListenerConfigurationTest {
+class ListenerConfigurationTest {
 
     @Test
-    public void fromShouldThrowWhenClassIsNotInTheConfiguration() {
+    void fromShouldThrowWhenClassIsNotInTheConfiguration() {
         DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
 
         assertThatThrownBy(() -> ListenerConfiguration.from(configuration))
@@ -35,7 +35,7 @@ public class ListenerConfigurationTest {
     }
 
     @Test
-    public void fromShouldThrowWhenClassIsEmpty() {
+    void fromShouldThrowWhenClassIsEmpty() {
         DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
         configuration.addProperty("class", "");
 
@@ -44,7 +44,7 @@ public class ListenerConfigurationTest {
     }
 
     @Test
-    public void getClazzShouldReturnTheClassNameFromTheConfiguration() {
+    void getClazzShouldReturnTheClassNameFromTheConfiguration() {
         DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
         String expectedClazz = "MyClassName";
         configuration.addProperty("class", expectedClazz);
@@ -55,14 +55,35 @@ public class ListenerConfigurationTest {
     }
 
     @Test
-    public void isAsyncShouldReturnConfiguredValue() {
+    void isAsyncShouldReturnConfiguredValue() {
         DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
-        String expectedClazz = "MyClassName";
-        configuration.addProperty("class", expectedClazz);
+        configuration.addProperty("class", "MyClassName");
         configuration.addProperty("async", "false");
 
         ListenerConfiguration listenerConfiguration = ListenerConfiguration.from(configuration);
 
         assertThat(listenerConfiguration.isAsync()).contains(false);
+    }
+
+    @Test
+    void getGroupShouldBeEmptyByDefault() {
+        DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
+        configuration.addProperty("class", "MyClassName");
+
+        ListenerConfiguration listenerConfiguration = ListenerConfiguration.from(configuration);
+
+        assertThat(listenerConfiguration.getGroup()).isEmpty();
+    }
+
+    @Test
+    void getGroupShouldContainsConfiguredValue() {
+        String groupName = "Avengers";
+        DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
+        configuration.addProperty("class", "MyClassName");
+        configuration.addProperty("group", groupName);
+
+        ListenerConfiguration listenerConfiguration = ListenerConfiguration.from(configuration);
+
+        assertThat(listenerConfiguration.getGroup()).contains(groupName);
     }
 }

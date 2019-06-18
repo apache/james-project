@@ -29,11 +29,14 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.util.OptionalUtils;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Strings;
 
 /**
@@ -51,7 +54,7 @@ import com.google.common.base.Strings;
 public class MailAttributesListToMimeHeaders extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailAttributesListToMimeHeaders.class);
 
-    private Map<String, String> attributeNameToHeader;
+    private Map<AttributeName, String> attributeNameToHeader;
 
     @Override
     public void init() throws MessagingException {
@@ -60,7 +63,14 @@ public class MailAttributesListToMimeHeaders extends GenericMailet {
             throw new MessagingException("simplemapping is required");
         }
 
-        attributeNameToHeader = MappingArgument.parse(simpleMappings);
+        attributeNameToHeader = MappingArgument
+            .parse(simpleMappings)
+            .entrySet()
+            .stream()
+            .collect(Guavate.toImmutableMap(
+                    entry -> AttributeName.of(entry.getKey()),
+                    entry -> entry.getValue()
+            ));
     }
 
     @Override
@@ -71,17 +81,18 @@ public class MailAttributesListToMimeHeaders extends GenericMailet {
         message.saveChanges();
     }
 
-    private void addAttributeToHeader(Mail mail, MimeMessage message, Entry<String, String> entry) {
-        Serializable attribute = mail.getAttribute(entry.getKey());
-        if (attribute instanceof Collection) {
-            @SuppressWarnings("unchecked")
-            Optional<Collection<Serializable>> values = Optional.of((Collection<Serializable>) attribute);
-            addCollectionToHeader(message, entry.getValue(), values);
-        } else {
-            if (attribute != null) {
-                LOGGER.warn("Can not add {} to headers. Expecting class Collection but got {}.", attribute, attribute.getClass());
-            }
-        }
+    private void addAttributeToHeader(Mail mail, MimeMessage message, Entry<AttributeName, String> entry) {
+        AttributeUtils
+            .getAttributeValueFromMail(mail, entry.getKey())
+            .ifPresent(attribute -> {
+                if (attribute instanceof Collection) {
+                    @SuppressWarnings("unchecked")
+                    Optional<Collection<Serializable>> values = Optional.of((Collection<Serializable>) attribute);
+                    addCollectionToHeader(message, entry.getValue(), values);
+                } else {
+                    LOGGER.warn("Can not add {} to headers. Expecting class Collection but got {}.", attribute, attribute.getClass());
+                }
+            });
     }
 
     private void addCollectionToHeader(MimeMessage message, String headerName, Optional<Collection<Serializable>> values) {

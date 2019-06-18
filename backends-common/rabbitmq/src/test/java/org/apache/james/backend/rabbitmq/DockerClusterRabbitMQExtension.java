@@ -19,6 +19,7 @@
 package org.apache.james.backend.rabbitmq;
 
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 import org.apache.james.util.Runnables;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -36,14 +37,16 @@ import com.rabbitmq.client.Address;
 
 public class DockerClusterRabbitMQExtension implements BeforeEachCallback, AfterEachCallback, ParameterResolver {
 
-    public static final String RABBIT_1 = "rabbit1";
-    public static final String RABBIT_2 = "rabbit2";
-    public static final String RABBIT_3 = "rabbit3";
+    private static final String RABBIT_1 = "rabbit1";
+    private static final String RABBIT_2 = "rabbit2";
+    private static final String RABBIT_3 = "rabbit3";
     private DockerRabbitMQCluster cluster;
     private Network network;
+    private DockerRabbitMQ rabbitMQ1;
+    private DockerRabbitMQ rabbitMQ2;
+    private DockerRabbitMQ rabbitMQ3;
 
-    @Override
-    public void beforeEach(ExtensionContext context) {
+    public void beforeAll() {
         String cookie = Hashing.sha256().hashString("secret cookie here", StandardCharsets.UTF_8).toString();
 
         network = Network.NetworkImpl.builder()
@@ -51,34 +54,31 @@ public class DockerClusterRabbitMQExtension implements BeforeEachCallback, After
             .createNetworkCmdModifiers(ImmutableList.of())
             .build();
 
-        DockerRabbitMQ rabbitMQ1 = DockerRabbitMQ.withCookieAndNodeName(RABBIT_1, cookie, "rabbit@rabbit1", network);
-        DockerRabbitMQ rabbitMQ2 = DockerRabbitMQ.withCookieAndNodeName(RABBIT_2, cookie, "rabbit@rabbit2", network);
-        DockerRabbitMQ rabbitMQ3 = DockerRabbitMQ.withCookieAndNodeName(RABBIT_3, cookie, "rabbit@rabbit3", network);
+        String clusterIdentity = UUID.randomUUID().toString();
+        rabbitMQ1 = DockerRabbitMQ.withCookieAndHostName(RABBIT_1, clusterIdentity, cookie, network);
+        rabbitMQ2 = DockerRabbitMQ.withCookieAndHostName(RABBIT_2, clusterIdentity, cookie, network);
+        rabbitMQ3 = DockerRabbitMQ.withCookieAndHostName(RABBIT_3, clusterIdentity, cookie, network);
 
-        Runnables.runParallel(
-            rabbitMQ1::start,
-            rabbitMQ2::start,
-            rabbitMQ3::start);
+        startDockerRabbits();
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext context) throws Exception {
+        startDockerRabbits();
 
         Runnables.runParallel(
             Throwing.runnable(() -> rabbitMQ2.join(rabbitMQ1)),
             Throwing.runnable(() -> rabbitMQ3.join(rabbitMQ1)));
 
-        Runnables.runParallel(
-            Throwing.runnable(rabbitMQ1::startApp),
-            Throwing.runnable(rabbitMQ2::startApp),
-            Throwing.runnable(rabbitMQ3::startApp));
-
         cluster = new DockerRabbitMQCluster(rabbitMQ1, rabbitMQ2, rabbitMQ3);
-
-        Runnables.runParallel(
-            rabbitMQ1::waitForReadyness,
-            rabbitMQ2::waitForReadyness,
-            rabbitMQ3::waitForReadyness);
     }
 
     @Override
-    public void afterEach(ExtensionContext context) throws Exception {
+    public void afterEach(ExtensionContext context) {
+        cluster.detach();
+    }
+
+    public void afterAll() throws Exception {
         cluster.stop();
         network.close();
     }
@@ -91,6 +91,13 @@ public class DockerClusterRabbitMQExtension implements BeforeEachCallback, After
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         return cluster;
+    }
+
+    private void startDockerRabbits() {
+        Runnables.runParallel(
+            rabbitMQ1::start,
+            rabbitMQ2::start,
+            rabbitMQ3::start);
     }
 
     public static class DockerRabbitMQCluster {
@@ -127,6 +134,14 @@ public class DockerClusterRabbitMQExtension implements BeforeEachCallback, After
         public ImmutableList<Address> getAddresses() {
             return ImmutableList.of(
                 rabbitMQ1.address(), rabbitMQ2.address(), rabbitMQ3.address());
+        }
+
+        public void detach() {
+            rabbitMQ3.performIfRunning(DockerRabbitMQ::reset);
+            rabbitMQ1.performIfRunning(rabbitMQ -> rabbitMQ.forgetNode(rabbitMQ3.getNodeName()));
+            rabbitMQ2.performIfRunning(DockerRabbitMQ::reset);
+            rabbitMQ1.performIfRunning(rabbitMQ -> rabbitMQ.forgetNode(rabbitMQ2.getNodeName()));
+            rabbitMQ1.performIfRunning(DockerRabbitMQ::reset);
         }
     }
 }

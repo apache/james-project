@@ -20,8 +20,6 @@ package org.apache.james.transport.util;
 
 import java.util.Optional;
 
-import javax.mail.MessagingException;
-
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.Mail;
@@ -42,12 +40,12 @@ public class ReplyToUtils {
         this.replyTo = replyTo;
     }
 
-    public Optional<MailAddress> getReplyTo(Mail originalMail) throws MessagingException {
+    public Optional<MailAddress> getReplyTo(Mail originalMail) {
         if (replyTo.isPresent()) {
             if (replyTo.get().equals(SpecialAddress.UNALTERED)) {
                 return Optional.empty();
             }
-            return Optional.ofNullable(originalMail.getSender());
+            return originalMail.getMaybeSender().asOptional();
         }
         return Optional.empty();
     }

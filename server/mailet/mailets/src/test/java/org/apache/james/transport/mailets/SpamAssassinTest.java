@@ -150,6 +150,7 @@ public class SpamAssassinTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
+            .name("name")
             .recipient("user1@exemple.com")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient("user1@exemple.com")
@@ -170,7 +171,7 @@ public class SpamAssassinTest {
                 .stream()
                 .map(PerRecipientHeaders.Header::getName)
                 .collect(Guavate.toImmutableList()))
-            .contains(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME, SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME);
+            .contains(SpamAssassinResult.FLAG_MAIL.asString(), SpamAssassinResult.STATUS_MAIL.asString());
     }
 
     @Test
@@ -183,6 +184,7 @@ public class SpamAssassinTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
+            .name("name")
             .recipient("user1@exemple.com")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient("user1@exemple.com")
@@ -198,12 +200,12 @@ public class SpamAssassinTest {
             .isEqualTo(new PerRecipientHeaders()
                 .addHeaderForRecipient(
                     PerRecipientHeaders.Header.builder()
-                        .name(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME)
+                        .name(SpamAssassinResult.FLAG_MAIL.asString())
                         .value("NO"),
                     new MailAddress("user1@exemple.com"))
                 .addHeaderForRecipient(
                     PerRecipientHeaders.Header.builder()
-                        .name(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME)
+                        .name(SpamAssassinResult.STATUS_MAIL.asString())
                         .value("No, hits=3 required=5"),
                     new MailAddress("user1@exemple.com")));
     }
@@ -218,6 +220,7 @@ public class SpamAssassinTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
+            .name("name")
             .recipient("user1@exemple.com")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient("user1@exemple.com")
@@ -233,12 +236,12 @@ public class SpamAssassinTest {
             .isEqualTo(new PerRecipientHeaders()
                 .addHeaderForRecipient(
                     PerRecipientHeaders.Header.builder()
-                        .name(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME)
+                        .name(SpamAssassinResult.FLAG_MAIL.asString())
                         .value("YES"),
                     new MailAddress("user1@exemple.com"))
                 .addHeaderForRecipient(
                     PerRecipientHeaders.Header.builder()
-                        .name(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME)
+                        .name(SpamAssassinResult.STATUS_MAIL.asString())
                         .value("Yes, hits=1000 required=5"),
                     new MailAddress("user1@exemple.com")));
     }

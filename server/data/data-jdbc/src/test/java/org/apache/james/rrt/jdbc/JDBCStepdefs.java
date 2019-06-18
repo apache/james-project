@@ -25,6 +25,7 @@ import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
+import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
 
 import cucumber.api.java.Before;
@@ -51,6 +52,7 @@ public class JDBCStepdefs {
         defaultConfiguration.addProperty("[@destinationURL]", "db://maildb/RecipientRewriteTable");
         defaultConfiguration.addProperty("sqlFile", "file://conf/sqlResources.xml");
         localVirtualUserTable.configure(defaultConfiguration);
+        localVirtualUserTable.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
         localVirtualUserTable.init();
         return localVirtualUserTable;
     }

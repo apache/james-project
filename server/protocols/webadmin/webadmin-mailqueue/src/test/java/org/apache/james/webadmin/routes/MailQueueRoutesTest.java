@@ -24,7 +24,7 @@ import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
+import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.Mails;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
@@ -66,7 +65,7 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 
-public class MailQueueRoutesTest {
+class MailQueueRoutesTest {
 
     static final String FIRST_QUEUE = "first one";
     static final String SECOND_QUEUE = "second one";
@@ -85,17 +84,14 @@ public class MailQueueRoutesTest {
     MemoryMailQueueFactory mailQueueFactory;
 
 
-    WebAdminServer createServer(MemoryMailQueueFactory mailQueueFactory) throws Exception {
+    WebAdminServer createServer(MemoryMailQueueFactory mailQueueFactory) {
         TaskManager taskManager = new MemoryTaskManager();
         JsonTransformer jsonTransformer = new JsonTransformer();
 
-        WebAdminServer server = WebAdminUtils.createWebAdminServer(
-            new NoopMetricFactory(),
-            new MailQueueRoutes(mailQueueFactory, jsonTransformer, taskManager),
-            new TasksRoutes(taskManager, jsonTransformer));
-        server.configure(NO_CONFIGURATION);
-        server.await();
-        return server;
+        return WebAdminUtils.createWebAdminServer(
+                new MailQueueRoutes(mailQueueFactory, jsonTransformer, taskManager),
+                new TasksRoutes(taskManager, jsonTransformer))
+            .start();
     }
 
     RequestSpecification buildRequestSpecification(WebAdminServer server) {
@@ -109,7 +105,7 @@ public class MailQueueRoutesTest {
     }
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() {
         mailQueueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
         webAdminServer = createServer(mailQueueFactory);
         RestAssured.requestSpecification = buildRequestSpecification(webAdminServer);
@@ -117,7 +113,7 @@ public class MailQueueRoutesTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         webAdminServer.destroy();
     }
 
@@ -127,7 +123,7 @@ public class MailQueueRoutesTest {
         @Nested
         class DataValidation {
             @Test
-            public void listMailsShouldReturnBadRequestWhenLimitIsLessThanZero() throws Exception {
+            void listMailsShouldReturnBadRequestWhenLimitIsLessThanZero() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 given()
@@ -139,7 +135,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void listMailsShouldReturnBadRequestWhenLimitEqualsToZero() throws Exception {
+            void listMailsShouldReturnBadRequestWhenLimitEqualsToZero() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 given()
@@ -151,7 +147,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void listMailsShouldReturnBadRequestWhenLimitIsInvalid() throws Exception {
+            void listMailsShouldReturnBadRequestWhenLimitIsInvalid() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 given()
@@ -167,7 +163,7 @@ public class MailQueueRoutesTest {
         class HttpBodies {
 
             @Test
-            public void listAllMailQueuesShouldReturnEmptyWhenNone() {
+            void listAllMailQueuesShouldReturnEmptyWhenNone() {
                 List<String> actual = when()
                     .get()
                 .then()
@@ -182,7 +178,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void listAllMailQueuesShouldReturnSingleElementListWhenOnlyOneMailQueue() {
+            void listAllMailQueuesShouldReturnSingleElementListWhenOnlyOneMailQueue() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 List<String> actual = when()
@@ -199,7 +195,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void listAllMailQueuesShouldReturnListWhenSeveralMailQueues() {
+            void listAllMailQueuesShouldReturnListWhenSeveralMailQueues() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
                 mailQueueFactory.createQueue(SECOND_QUEUE);
                 mailQueueFactory.createQueue(THIRD_QUEUE);
@@ -219,7 +215,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void listMailsShouldReturnEmptyListWhenNoMails() {
+            void listMailsShouldReturnEmptyListWhenNoMails() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 when()
@@ -233,8 +229,8 @@ public class MailQueueRoutesTest {
             @Test
             public void listMailsShouldReturnMailsWhenSome() throws Exception {
                 MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
-                queue.enQueue(Mails.defaultMail().build());
-                queue.enQueue(Mails.defaultMail().build());
+                queue.enQueue(Mails.defaultMail().name("name").build());
+                queue.enQueue(Mails.defaultMail().name("name").build());
 
                 when()
                     .get(FIRST_QUEUE + "/mails")
@@ -247,7 +243,7 @@ public class MailQueueRoutesTest {
             @Test
             public void listMailsShouldReturnMailDetailsWhenSome() throws Exception {
                 MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
-                FakeMail mail = Mails.defaultMail().build();
+                FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail);
 
                 String firstMail = "[0]";
@@ -262,14 +258,14 @@ public class MailQueueRoutesTest {
                     .contentType(ContentType.JSON)
                     .body(".", hasSize(1))
                     .body(firstMail + ".name", equalTo(mail.getName()))
-                    .body(firstMail + ".sender", equalTo(mail.getSender().asString()))
+                    .body(firstMail + ".sender", equalTo(SENDER.asString()))
                     .body(firstMail + ".recipients", equalTo(expectedRecipients));
             }
 
             @Test
             public void listMailsShouldReturnEmptyWhenNoDelayedMailsAndAskFor() throws Exception {
                 MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
-                FakeMail mail = Mails.defaultMail().build();
+                FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail);
 
                 given()
@@ -285,7 +281,7 @@ public class MailQueueRoutesTest {
             @Test
             public void listMailsShouldReturnCurrentMailsWhenMailsAndAskForNotDelayed() throws Exception {
                 MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
-                FakeMail mail = Mails.defaultMail().build();
+                FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail);
 
                 given()
@@ -301,7 +297,7 @@ public class MailQueueRoutesTest {
             @Test
             public void listMailsShouldReturnDelayedMailsWhenAskFor() throws Exception {
                 MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
-                FakeMail mail = Mails.defaultMail().build();
+                FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail, 10, TimeUnit.MINUTES);
 
                 given()
@@ -317,7 +313,7 @@ public class MailQueueRoutesTest {
             @Test
             public void listMailsShouldReturnOneMailWhenMailsAndAskForALimitOfOne() throws Exception {
                 MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
-                FakeMail mail = Mails.defaultMail().build();
+                FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail);
                 queue.enQueue(mail);
                 queue.enQueue(mail);
@@ -340,7 +336,7 @@ public class MailQueueRoutesTest {
         @Test
         public void getMailQueueShouldReturnTheMailQueueDataWhenMailQueueExists() throws Exception {
             MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
-            queue.enQueue(Mails.defaultMail().build());
+            queue.enQueue(Mails.defaultMail().name("name").build());
 
             when()
                 .get(FIRST_QUEUE)
@@ -351,7 +347,7 @@ public class MailQueueRoutesTest {
         }
 
         @Test
-        public void getMailQueueShouldReturnNotFoundWhenMailQueueDoesntExist() {
+        void getMailQueueShouldReturnNotFoundWhenMailQueueDoesntExist() {
             when()
                 .get(FIRST_QUEUE)
             .then()
@@ -366,7 +362,7 @@ public class MailQueueRoutesTest {
         class DataValidation {
 
             @Test
-            public void forcingDelayedMailsDeliveryShouldReturnNoContent() throws Exception {
+            void forcingDelayedMailsDeliveryShouldReturnNoContent() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 given()
@@ -379,7 +375,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void forcingDelayedMailsDeliveryForUnknownQueueShouldReturnNotFound() throws Exception {
+            void forcingDelayedMailsDeliveryForUnknownQueueShouldReturnNotFound() {
                 given()
                     .queryParam("delayed", "true")
                     .body("{\"delayed\": \"false\"}")
@@ -390,7 +386,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void forcingDelayedMailsDeliveryRequiresDelayedParameter() throws Exception {
+            void forcingDelayedMailsDeliveryRequiresDelayedParameter() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 given()
@@ -402,7 +398,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void forcingDelayedMailsDeliveryShouldRejectFalseDelayedParam() throws Exception {
+            void forcingDelayedMailsDeliveryShouldRejectFalseDelayedParam() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 given()
@@ -415,7 +411,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void forcingDelayedMailsDeliveryShouldRejectNonBooleanDelayedParam() throws Exception {
+            void forcingDelayedMailsDeliveryShouldRejectNonBooleanDelayedParam() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 given()
@@ -428,7 +424,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void forcingDelayedMailsDeliveryShouldRejectRequestWithoutBody() throws Exception {
+            void forcingDelayedMailsDeliveryShouldRejectRequestWithoutBody() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 given()
@@ -440,7 +436,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void forcingDelayedMailsDeliveryShouldRejectRequestWithoutDelayedParameter() throws Exception {
+            void forcingDelayedMailsDeliveryShouldRejectRequestWithoutDelayedParameter() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 given()
@@ -453,7 +449,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void forcingDelayedMailsDeliveryShouldAcceptRequestWithUnknownFields() throws Exception {
+            void forcingDelayedMailsDeliveryShouldAcceptRequestWithUnknownFields() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 given()
@@ -469,7 +465,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void forcingDelayedMailsDeliveryShouldRejectMalformedJsonPayload() throws Exception {
+            void forcingDelayedMailsDeliveryShouldRejectMalformedJsonPayload() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 given()
@@ -482,7 +478,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void forcingDelayedMailsDeliveryShouldRejectTrueDelayedAttribute() throws Exception {
+            void forcingDelayedMailsDeliveryShouldRejectTrueDelayedAttribute() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 given()
@@ -495,7 +491,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void forcingDelayedMailsDeliveryShouldRejectStringDelayedAttribute() throws Exception {
+            void forcingDelayedMailsDeliveryShouldRejectStringDelayedAttribute() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 given()
@@ -513,7 +509,7 @@ public class MailQueueRoutesTest {
             @Test
             public void forcingDelayedMailsDeliveryShouldActuallyChangePropertyOnMails() throws Exception {
                 MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
-                FakeMail mail = Mails.defaultMail().build();
+                FakeMail mail = Mails.defaultMail().name("name").build();
                 queue.enQueue(mail, 10L, TimeUnit.MINUTES);
                 queue.enQueue(mail, 10L, TimeUnit.MINUTES);
                 queue.enQueue(mail);
@@ -542,7 +538,7 @@ public class MailQueueRoutesTest {
         class DataValidation {
 
             @Test
-            public void deleteMailsShouldReturnNotFoundWhenMailQueueDoesntExist() {
+            void deleteMailsShouldReturnNotFoundWhenMailQueueDoesntExist() {
                 when()
                     .delete(FIRST_QUEUE + "/mails")
                 .then()
@@ -550,7 +546,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void deleteMailsShouldReturnBadRequestWhenSenderIsInvalid() {
+            void deleteMailsShouldReturnBadRequestWhenSenderIsInvalid() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 given()
@@ -562,7 +558,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void deleteMailsShouldReturnBadRequestWhenRecipientIsInvalid() {
+            void deleteMailsShouldReturnBadRequestWhenRecipientIsInvalid() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 given()
@@ -574,7 +570,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void deleteMailsShouldReturnBadRequestWhenAllParametersAreGiven() throws Exception {
+            void deleteMailsShouldReturnBadRequestWhenAllParametersAreGiven() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
                 given()
                     .param("sender", "sender@james.org")
@@ -587,7 +583,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void deleteMailsShouldReturnBadRequestWhenTwoParametersAreGiven() throws Exception {
+            void deleteMailsShouldReturnBadRequestWhenTwoParametersAreGiven() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
                 given()
                     .param("sender", "sender@james.org")
@@ -603,7 +599,7 @@ public class MailQueueRoutesTest {
         class HttpBodies {
 
             @Test
-            public void deleteMailsTasksShouldCompleteWhenSenderIsValid() throws Exception {
+            void deleteMailsTasksShouldCompleteWhenSenderIsValid() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 String taskId = with()
@@ -621,7 +617,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void deleteMailsShouldCompleteWhenNameIsValid() {
+            void deleteMailsShouldCompleteWhenNameIsValid() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 String taskId = with()
@@ -639,7 +635,7 @@ public class MailQueueRoutesTest {
             }
 
             @Test
-            public void deleteMailsShouldCompleteWhenRecipientIsValid() {
+            void deleteMailsShouldCompleteWhenRecipientIsValid() {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 String taskId = with()
@@ -882,10 +878,11 @@ public class MailQueueRoutesTest {
                 MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
                 String recipient = "recipient@james.org";
                 queue.enQueue(Mails.defaultMail()
+                        .name("name")
                         .recipient(recipient)
                         .build());
-                queue.enQueue(Mails.defaultMail().build());
-                queue.enQueue(Mails.defaultMail().build());
+                queue.enQueue(Mails.defaultMail().name("name").build());
+                queue.enQueue(Mails.defaultMail().name("name").build());
 
                 String taskId = with()
                     .param("recipient", recipient)
@@ -914,7 +911,7 @@ public class MailQueueRoutesTest {
     class ClearMail {
 
         @Test
-        public void clearMailQueueShouldReturnNotFoundWhenMailQueueDoesNotExist() throws Exception {
+        void clearMailQueueShouldReturnNotFoundWhenMailQueueDoesNotExist() {
             mailQueueFactory.createQueue(FIRST_QUEUE);
 
             when()
@@ -924,7 +921,7 @@ public class MailQueueRoutesTest {
         }
 
         @Test
-        public void clearMailQueueShouldCompleteWhenNoQueryParameters() {
+        void clearMailQueueShouldCompleteWhenNoQueryParameters() {
             mailQueueFactory.createQueue(FIRST_QUEUE);
 
             String taskId = with()
@@ -978,7 +975,7 @@ public class MailQueueRoutesTest {
         }
 
         @Test
-        public void clearMailQueueShouldDeleteAllMailsInQueueWhenNoQueryParameters() throws Exception {
+        void clearMailQueueShouldDeleteAllMailsInQueueWhenNoQueryParameters() throws Exception {
             MemoryMailQueue queue = mailQueueFactory.createQueue(FIRST_QUEUE);
 
             queue.enQueue(FakeMail.builder()

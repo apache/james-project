@@ -24,13 +24,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.junit.Before;
 import org.junit.Test;
 
 public class ImapSessionUtilsTest {
     private static final String USERNAME = "username";
-    private static final MailboxSession MAILBOX_SESSION = new MockMailboxSession(USERNAME);
+    private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(USERNAME);
     private FakeImapSession fakeImapSession;
 
     @Before

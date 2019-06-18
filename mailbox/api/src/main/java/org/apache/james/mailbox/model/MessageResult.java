@@ -20,12 +20,15 @@
 package org.apache.james.mailbox.model;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.mail.Flags;
 import javax.mail.MessagingException;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 
 
@@ -57,7 +60,20 @@ import org.apache.james.mailbox.exception.MailboxException;
  * </p>
  */
 
-public interface MessageResult extends Comparable<MessageResult>, MessageMetaData {
+public interface MessageResult extends Comparable<MessageResult> {
+    MessageId getMessageId();
+
+    Date getInternalDate();
+
+    Flags getFlags();
+
+    long getSize();
+
+    MessageMetaData messageMetaData();
+
+    MessageUid getUid();
+
+    long getModSeq();
 
     /**
      * Indicates the results fetched.
@@ -264,7 +280,4 @@ public interface MessageResult extends Comparable<MessageResult>, MessageMetaDat
          */
         int[] getPositions();
     }
-
-    @Override
-    MessageId getMessageId();
 }

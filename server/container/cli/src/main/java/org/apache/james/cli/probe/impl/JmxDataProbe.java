@@ -237,48 +237,4 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
             virtualUserTableProxy.addDomainMapping(aliasDomain, deliveryDomain);
         }
     }
-
-    @Override
-    public void addForwardMapping(String user, String domain, String address) throws Exception {
-        try (Closeable closeable =
-                MDCBuilder.create()
-                    .addContext(MDCBuilder.PROTOCOL, JMX)
-                    .addContext(MDCBuilder.ACTION, "addForwardMapping")
-                    .build()) {
-           virtualUserTableProxy.addForwardMapping(user, domain, address);
-        }
-    }
-
-    @Override
-    public void removeForwardMapping(String user, String domain, String address) throws Exception {
-        try (Closeable closeable =
-                MDCBuilder.create()
-                    .addContext(MDCBuilder.PROTOCOL, JMX)
-                    .addContext(MDCBuilder.ACTION, "removeForwardMapping")
-                    .build()) {
-           virtualUserTableProxy.removeForwardMapping(user, domain, address);
-        }
-    }
-
-    @Override
-    public void addGroupMapping(String toUser, String toDomain, String fromAddress) throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "removeForwardMapping")
-                     .build()) {
-            virtualUserTableProxy.addGroupMapping(toUser, toDomain, fromAddress);
-        }
-    }
-
-    @Override
-    public void removeGroupMapping(String toUser, String toDomain, String fromAddress) throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "removeForwardMapping")
-                     .build()) {
-            virtualUserTableProxy.removeGroupMapping(toUser, toDomain, fromAddress);
-        }
-    }
 }

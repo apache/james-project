@@ -27,15 +27,16 @@ import org.apache.james.jmap.api.SimpleTokenManager;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.crypto.AccessTokenManagerImpl;
 import org.apache.james.jmap.crypto.JamesSignatureHandler;
+import org.apache.james.jmap.crypto.SecurityKeyLoader;
 import org.apache.james.jmap.crypto.SignatureHandler;
 import org.apache.james.jmap.crypto.SignedTokenFactory;
 import org.apache.james.jmap.crypto.SignedTokenManager;
 import org.apache.james.jmap.model.MailboxFactory;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
-import org.apache.james.jmap.send.MailFactory;
 import org.apache.james.jmap.send.MailSpool;
 import org.apache.james.jmap.utils.HeadersAuthenticationExtractor;
+import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.util.date.DefaultZonedDateTimeProvider;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.util.mime.MessageContentExtractor;
@@ -46,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 public class JMAPCommonModule extends AbstractModule {
@@ -59,13 +61,13 @@ public class JMAPCommonModule extends AbstractModule {
         bind(SignedTokenManager.class).in(Scopes.SINGLETON);
         bind(AccessTokenManagerImpl.class).in(Scopes.SINGLETON);
         bind(MailSpool.class).in(Scopes.SINGLETON);
-        bind(MailFactory.class).in(Scopes.SINGLETON);
         bind(AutomaticallySentMailDetectorImpl.class).in(Scopes.SINGLETON);
         bind(MailboxFactory.class).in(Scopes.SINGLETON);
         bind(MessageFactory.class).in(Scopes.SINGLETON);
         bind(MessagePreviewGenerator.class).in(Scopes.SINGLETON);
         bind(MessageContentExtractor.class).in(Scopes.SINGLETON);
         bind(HeadersAuthenticationExtractor.class).in(Scopes.SINGLETON);
+        bind(SecurityKeyLoader.class).in(Scopes.SINGLETON);
 
         bind(SignatureHandler.class).to(JamesSignatureHandler.class);
         bind(ZonedDateTimeProvider.class).to(DefaultZonedDateTimeProvider.class);
@@ -75,6 +77,9 @@ public class JMAPCommonModule extends AbstractModule {
 
         bindConstant().annotatedWith(Names.named(AccessTokenRepository.TOKEN_EXPIRATION_IN_MS)).to(DEFAULT_TOKEN_EXPIRATION_IN_MS);
         bind(AccessTokenManager.class).to(AccessTokenManagerImpl.class);
+
+        Multibinder.newSetBinder(binder(), StartUpCheck.class)
+            .addBinding().to(JMAPConfigurationStartUpCheck.class);
     }
 
     @Provides

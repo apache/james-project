@@ -44,7 +44,7 @@
 
       <dl>
           <dt><strong>elasticsearch.hosts</strong></dt>
-          <dd>List of comma separated hosts. An host is composed of an address and a port separated by a ':'. Example : elasticsearch.hosts=host1:9300,host2:9300</dd>
+          <dd>List of comma separated hosts. An host is composed of an address and a port separated by a ':'. Example : elasticsearch.hosts=host1:9200,host2:9200</dd>
       </dl>
 
       Other options includes :
@@ -153,11 +153,14 @@
             A value of <b>0</b> disables the cache<br/>
             Please note that units are supported (K for KB, M for MB, G for GB). Defaults is no units, so in bytes.<br/>
             Default value is <b>100 MB</b>.</dd>
+
+            <dt><strong>tika.contentType.blacklist</strong></dt>
+            <dd>Blacklist of content type is known-to-be-failing with Tika. Specify the list with comma separator.</dd>
         </dl>
 
         Note: You can launch a tika server using this command line:
 
-        <code><pre>docker run --name tika logicalspark/docker-tikaserver:1.15rc2</pre></code>
+        <code><pre>docker run --name tika logicalspark/docker-tikaserver:1.20</pre></code>
 
     </section>
 

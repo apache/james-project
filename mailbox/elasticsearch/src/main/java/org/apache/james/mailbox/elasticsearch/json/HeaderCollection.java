@@ -71,12 +71,13 @@ public class HeaderCollection {
         public Builder add(Field field) {
             Preconditions.checkNotNull(field);
             String headerName = field.getName().toLowerCase(Locale.US);
-            String sanitizedValue = MimeUtil.unscrambleHeaderValue(field.getBody());
+            String rawHeaderValue = field.getBody();
+            String sanitizedValue = MimeUtil.unscrambleHeaderValue(rawHeaderValue);
 
             if (!headerName.contains(".")) {
                 headers.put(headerName, sanitizedValue);
             }
-            handleSpecificHeader(headerName, sanitizedValue);
+            handleSpecificHeader(headerName, sanitizedValue, rawHeaderValue);
             return this;
         }
 
@@ -92,14 +93,14 @@ public class HeaderCollection {
                 sentDate, messageID);
         }
 
-        private void handleSpecificHeader(String headerName, String headerValue) {
+        private void handleSpecificHeader(String headerName, String headerValue, String rawHeaderValue) {
             switch (headerName) {
                 case TO:
                 case FROM:
                 case CC:
                 case BCC:
                 case REPLY_TO:
-                    manageAddressField(headerName, headerValue);
+                    manageAddressField(headerName, rawHeaderValue);
                     break;
                 case SUBJECT:
                     subjectSet.add(headerValue);
@@ -113,9 +114,9 @@ public class HeaderCollection {
             }
         }
 
-        private void manageAddressField(String headerName, String headerValue) {
+        private void manageAddressField(String headerName, String rawHeaderValue) {
             LenientAddressParser.DEFAULT
-                .parseAddressList(headerValue)
+                .parseAddressList(rawHeaderValue)
                 .stream()
                 .flatMap(this::convertAddressToMailboxStream)
                 .map((mailbox) -> new EMailer(SearchUtil.getDisplayAddress(mailbox), mailbox.getAddress()))

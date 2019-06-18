@@ -27,6 +27,7 @@ import java.io.OutputStream;
 import java.util.List;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 
 /**
  * MailEnvelope implementation which stores everything in memory
@@ -37,7 +38,7 @@ public class MailEnvelopeImpl implements MailEnvelope {
 
     private List<MailAddress> recipients;
 
-    private MailAddress sender;
+    private MaybeSender sender;
 
     private ByteArrayOutputStream outputStream;
 
@@ -55,7 +56,7 @@ public class MailEnvelopeImpl implements MailEnvelope {
     }
 
     @Override
-    public MailAddress getSender() {
+    public MaybeSender getMaybeSender() {
         return sender;
     }
 
@@ -73,7 +74,7 @@ public class MailEnvelopeImpl implements MailEnvelope {
      * 
      * @param sender
      */
-    public void setSender(MailAddress sender) {
+    public void setSender(MaybeSender sender) {
         this.sender = sender;
     }
 

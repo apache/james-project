@@ -20,6 +20,7 @@
  -->
 
 <mailrepositorystore>
+    <defaultProtocol>file</defaultProtocol>
     <mailrepositories>
         <!-- File based repositories.  These repositories store all message data -->
         <!-- in the file system. -->

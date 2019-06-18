@@ -31,7 +31,7 @@ public class HasMailAttributeTest extends AbstractHasMailAttributeTest {
 
     @Override
     protected String getHasMailAttribute() {
-        return MAIL_ATTRIBUTE_NAME;
+        return MAIL_ATTRIBUTE.getName().asString();
     }
 
     @Override

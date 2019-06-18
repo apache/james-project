@@ -48,7 +48,7 @@ public class PostmasterAliasTest {
 
     @Test
     public void serviceShouldAcceptMailsWithNoRecipients() throws Exception {
-        Mail mail = FakeMail.builder().build();
+        Mail mail = FakeMail.builder().name("mail").build();
 
         testee.service(mail);
 
@@ -58,6 +58,7 @@ public class PostmasterAliasTest {
     @Test
     public void serviceShouldNotAlterMailsForPostmaster() throws Exception {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipient(postmaster)
             .build();
 
@@ -69,6 +70,7 @@ public class PostmasterAliasTest {
     @Test
     public void serviceShouldNotAlterMailForOtherUsers() throws Exception {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .build();
 
@@ -81,6 +83,7 @@ public class PostmasterAliasTest {
     public void serviceShouldNotAlterPostmasterAliasWhenForOtherDomains() throws Exception {
         MailAddress otherDomainPostmaster = new MailAddress("postmaster@otherDomain");
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipient(otherDomainPostmaster)
             .build();
 
@@ -92,6 +95,7 @@ public class PostmasterAliasTest {
     @Test
     public void serviceShouldRewritePostmasterAlias() throws Exception {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipient(postmasterAlias)
             .build();
 
@@ -103,6 +107,7 @@ public class PostmasterAliasTest {
     @Test
     public void serviceShouldNotAlterOtherRecipientsWhenRewritingPostmaster() throws Exception {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipients(postmasterAlias, MailAddressFixture.ANY_AT_JAMES)
             .build();
 
@@ -114,6 +119,7 @@ public class PostmasterAliasTest {
     @Test
     public void serviceShouldNotDuplicatePostmaster() throws Exception {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipients(postmasterAlias, postmaster)
             .build();
 

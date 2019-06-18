@@ -40,13 +40,10 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.T
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.TEXTUAL_LINE_COUNT;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,7 +55,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -76,9 +72,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
-import org.apache.james.util.CompletableFutureUtil;
-import org.apache.james.util.FluentFutureStream;
-import org.apache.james.util.streams.JamesCollectors;
 import org.apache.james.util.streams.Limit;
 
 import com.datastax.driver.core.BoundStatement;
@@ -96,6 +89,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Bytes;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuple2;
+
 public class CassandraMessageDAO {
     public static final long DEFAULT_LONG_VALUE = 0L;
     private static final byte[] EMPTY_BYTE_ARRAY = {};
@@ -105,7 +103,6 @@ public class CassandraMessageDAO {
     private final BlobStore blobStore;
     private final BlobId.Factory blobIdFactory;
     private final CassandraConfiguration configuration;
-    private final CassandraUtils cassandraUtils;
     private final CassandraMessageId.Factory messageIdFactory;
     private final PreparedStatement insert;
     private final PreparedStatement delete;
@@ -118,14 +115,13 @@ public class CassandraMessageDAO {
 
     @Inject
     public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, BlobStore blobStore,
-                               BlobId.Factory blobIdFactory, CassandraConfiguration cassandraConfiguration,
-            CassandraUtils cassandraUtils, CassandraMessageId.Factory messageIdFactory) {
+            BlobId.Factory blobIdFactory, CassandraConfiguration cassandraConfiguration,
+            CassandraMessageId.Factory messageIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.typesProvider = typesProvider;
         this.blobStore = blobStore;
         this.blobIdFactory = blobIdFactory;
         this.configuration = cassandraConfiguration;
-        this.cassandraUtils = cassandraUtils;
         this.messageIdFactory = messageIdFactory;
 
         this.insert = prepareInsert(session);
@@ -140,8 +136,8 @@ public class CassandraMessageDAO {
 
     @VisibleForTesting
     public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, BlobStore blobStore,
-                               BlobId.Factory blobIdFactory, CassandraUtils cassandraUtils, CassandraMessageId.Factory messageIdFactory) {
-        this(session, typesProvider, blobStore,  blobIdFactory, CassandraConfiguration.DEFAULT_CONFIGURATION, cassandraUtils, messageIdFactory);
+                               BlobId.Factory blobIdFactory, CassandraMessageId.Factory messageIdFactory) {
+        this(session, typesProvider, blobStore,  blobIdFactory, CassandraConfiguration.DEFAULT_CONFIGURATION, messageIdFactory);
     }
 
     private PreparedStatement prepareSelect(Session session, String[] fields) {
@@ -175,25 +171,27 @@ public class CassandraMessageDAO {
             .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
     }
 
-    public CompletableFuture<Void> save(MailboxMessage message) throws MailboxException {
-        return saveContent(message).thenCompose(pair ->
-            cassandraAsyncExecutor.executeVoid(boundWriteStatement(message, pair)));
+    public Mono<Void> save(MailboxMessage message) throws MailboxException {
+        return saveContent(message)
+            .flatMap(pair -> cassandraAsyncExecutor.executeVoid(boundWriteStatement(message, pair)))
+            .then();
     }
 
-    private CompletableFuture<Pair<BlobId, BlobId>> saveContent(MailboxMessage message) throws MailboxException {
+    private Mono<Tuple2<BlobId, BlobId>> saveContent(MailboxMessage message) throws MailboxException {
         try {
             byte[] headerContent = IOUtils.toByteArray(message.getHeaderContent());
             byte[] bodyContent = IOUtils.toByteArray(message.getBodyContent());
-            return CompletableFutureUtil.combine(
-                blobStore.save(headerContent),
-                blobStore.save(bodyContent),
-                Pair::of);
+
+            Mono<BlobId> bodyFuture = blobStore.save(bodyContent);
+            Mono<BlobId> headerFuture = blobStore.save(headerContent);
+
+            return headerFuture.zipWith(bodyFuture);
         } catch (IOException e) {
             throw new MailboxException("Error saving mail content", e);
         }
     }
 
-    private BoundStatement boundWriteStatement(MailboxMessage message, Pair<BlobId, BlobId> pair) {
+    private BoundStatement boundWriteStatement(MailboxMessage message, Tuple2<BlobId, BlobId> pair) {
         CassandraMessageId messageId = (CassandraMessageId) message.getMessageId();
         return insert.bind()
             .setUUID(MESSAGE_ID, messageId.get())
@@ -201,8 +199,8 @@ public class CassandraMessageDAO {
             .setInt(BODY_START_OCTET, (int) (message.getHeaderOctets()))
             .setLong(FULL_CONTENT_OCTETS, message.getFullContentOctets())
             .setLong(BODY_OCTECTS, message.getBodyOctets())
-            .setString(BODY_CONTENT, pair.getRight().asString())
-            .setString(HEADER_CONTENT, pair.getLeft().asString())
+            .setString(BODY_CONTENT, pair.getT2().asString())
+            .setString(HEADER_CONTENT, pair.getT1().asString())
             .setLong(TEXTUAL_LINE_COUNT, Optional.ofNullable(message.getTextualLineCount()).orElse(DEFAULT_LONG_VALUE))
             .setList(PROPERTIES, buildPropertiesUdt(message))
             .setList(ATTACHMENTS, buildAttachmentUdt(message));
@@ -233,23 +231,15 @@ public class CassandraMessageDAO {
             .collect(Guavate.toImmutableList());
     }
 
-    public CompletableFuture<Stream<MessageResult>> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
-        return CompletableFutureUtil.chainAll(
-                limit.applyOnStream(messageIds.stream().distinct())
-                    .collect(JamesCollectors.chunker(configuration.getMessageReadChunkSize())),
-            ids -> rowToMessages(fetchType, ids))
-            .thenApply(stream -> stream.flatMap(Function.identity()));
+    public Flux<MessageResult> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
+        return Flux.fromStream(limit.applyOnStream(messageIds.stream().distinct()))
+            .publishOn(Schedulers.elastic())
+            .limitRate(configuration.getMessageReadChunkSize())
+            .flatMap(id -> retrieveRow(id, fetchType)
+                .flatMap(resultSet -> message(resultSet, id, fetchType)));
     }
 
-    private CompletableFuture<Stream<MessageResult>> rowToMessages(FetchType fetchType, Collection<ComposedMessageIdWithMetaData> ids) {
-        return FluentFutureStream.of(
-            ids.stream()
-                .map(id -> retrieveRow(id, fetchType)
-                    .thenCompose((ResultSet resultSet) -> message(resultSet, id, fetchType))))
-            .completableFuture();
-    }
-
-    private CompletableFuture<ResultSet> retrieveRow(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
+    private Mono<ResultSet> retrieveRow(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId.getComposedMessageId().getMessageId();
 
         return cassandraAsyncExecutor.execute(retrieveSelect(fetchType)
@@ -257,18 +247,16 @@ public class CassandraMessageDAO {
             .setUUID(MESSAGE_ID, cassandraMessageId.get()));
     }
 
-    private CompletableFuture<MessageResult>
+    private Mono<MessageResult>
     message(ResultSet rows,ComposedMessageIdWithMetaData messageIdWithMetaData, FetchType fetchType) {
         ComposedMessageId messageId = messageIdWithMetaData.getComposedMessageId();
 
         if (rows.isExhausted()) {
-            return CompletableFuture.completedFuture(notFound(messageIdWithMetaData));
+            return Mono.just(notFound(messageIdWithMetaData));
         }
 
         Row row = rows.one();
-        CompletableFuture<byte[]> contentFuture = buildContentRetriever(fetchType).apply(row);
-
-        return contentFuture.thenApply(content -> {
+        return buildContentRetriever(fetchType, row).map(content -> {
             MessageWithoutAttachment messageWithoutAttachment =
                 new MessageWithoutAttachment(
                     messageId.getMessageId(),
@@ -335,43 +323,41 @@ public class CassandraMessageDAO {
         }
     }
 
-    public CompletableFuture<Void> delete(CassandraMessageId messageId) {
+    public Mono<Void> delete(CassandraMessageId messageId) {
         return cassandraAsyncExecutor.executeVoid(delete.bind()
             .setUUID(MESSAGE_ID, messageId.get()));
     }
 
-    private Function<Row, CompletableFuture<byte[]>> buildContentRetriever(FetchType fetchType) {
+    private Mono<byte[]> buildContentRetriever(FetchType fetchType, Row row) {
         switch (fetchType) {
             case Full:
-                return this::getFullContent;
+                return getFullContent(row);
             case Headers:
-                return this::getHeaderContent;
+                return getHeaderContent(row);
             case Body:
-                return row -> getBodyContent(row)
-                    .thenApply(data -> Bytes.concat(new byte[row.getInt(BODY_START_OCTET)], data));
+                return getBodyContent(row)
+                    .map(data -> Bytes.concat(new byte[row.getInt(BODY_START_OCTET)], data));
             case Metadata:
-                return row -> CompletableFuture.completedFuture(EMPTY_BYTE_ARRAY);
+                return Mono.just(EMPTY_BYTE_ARRAY);
             default:
                 throw new RuntimeException("Unknown FetchType " + fetchType);
         }
     }
 
-    private CompletableFuture<byte[]> getFullContent(Row row) {
-        return CompletableFutureUtil.combine(
-            getHeaderContent(row),
-            getBodyContent(row),
-            Bytes::concat);
+    private Mono<byte[]> getFullContent(Row row) {
+        return getHeaderContent(row)
+            .zipWith(getBodyContent(row), Bytes::concat);
     }
 
-    private CompletableFuture<byte[]> getBodyContent(Row row) {
+    private Mono<byte[]> getBodyContent(Row row) {
         return getFieldContent(BODY_CONTENT, row);
     }
 
-    private CompletableFuture<byte[]> getHeaderContent(Row row) {
+    private Mono<byte[]> getHeaderContent(Row row) {
         return getFieldContent(HEADER_CONTENT, row);
     }
 
-    private CompletableFuture<byte[]> getFieldContent(String field, Row row) {
+    private Mono<byte[]> getFieldContent(String field, Row row) {
         return blobStore.readBytes(blobIdFactory.from(row.getString(field)));
     }
 
@@ -405,13 +391,12 @@ public class CassandraMessageDAO {
         }
     }
 
-    public CompletableFuture<Stream<MessageIdAttachmentIds>> retrieveAllMessageIdAttachmentIds() {
-        return cassandraAsyncExecutor.execute(
+    public Flux<MessageIdAttachmentIds> retrieveAllMessageIdAttachmentIds() {
+        return cassandraAsyncExecutor.executeRows(
             selectAllMessagesWithAttachment.bind()
                 .setReadTimeoutMillis(configuration.getMessageAttachmentIdsReadTimeout()))
-            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
-                .map(this::fromRow)
-                .filter(MessageIdAttachmentIds::hasAttachment));
+            .map(this::fromRow)
+            .filter(MessageIdAttachmentIds::hasAttachment);
     }
 
     private MessageIdAttachmentIds fromRow(Row row) {

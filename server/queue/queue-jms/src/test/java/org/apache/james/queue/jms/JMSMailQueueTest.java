@@ -49,7 +49,7 @@ public class JMSMailQueueTest implements DelayedManageableMailQueueContract, Pri
     void setUp(BrokerService broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
-        MetricFactory metricFactory = metricTestSystem.getSpyMetricFactory();
+        MetricFactory metricFactory = metricTestSystem.getMetricFactory();
         GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
         String queueName = BrokerExtension.generateRandomQueueName(broker);
         mailQueue = new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, metricFactory, gaugeRegistry);

@@ -22,8 +22,6 @@ package org.apache.james.queue.rabbitmq;
 import static org.apache.james.queue.api.MailQueue.DEQUEUED_METRIC_NAME_PREFIX;
 
 import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -34,14 +32,16 @@ import org.apache.james.queue.rabbitmq.view.api.DeleteCondition;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.mailet.Mail;
 
-import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.consumers.ThrowingConsumer;
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
-import com.rabbitmq.client.GetResponse;
+import com.rabbitmq.client.Delivery;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.rabbitmq.AcknowledgableDelivery;
 
 class Dequeuer {
-    private static class NoMailYetException extends RuntimeException {
-    }
+
+    private static final boolean REQUEUE = true;
+    private final Flux<AcknowledgableDelivery> flux;
 
     private static class RabbitMQMailQueueItem implements MailQueue.MailQueueItem {
         private final Consumer<Boolean> ack;
@@ -63,10 +63,6 @@ class Dequeuer {
         }
     }
 
-    private static final int TEN_MS = 10;
-
-    private final MailQueueName name;
-    private final RabbitClient rabbitClient;
     private final Function<MailReferenceDTO, Mail> mailLoader;
     private final Metric dequeueMetric;
     private final MailReferenceSerializer mailReferenceSerializer;
@@ -75,67 +71,52 @@ class Dequeuer {
     Dequeuer(MailQueueName name, RabbitClient rabbitClient, Function<MailReferenceDTO, Mail> mailLoader,
              MailReferenceSerializer serializer, MetricFactory metricFactory,
              MailQueueView mailQueueView) {
-        this.name = name;
-        this.rabbitClient = rabbitClient;
         this.mailLoader = mailLoader;
         this.mailReferenceSerializer = serializer;
         this.mailQueueView = mailQueueView;
         this.dequeueMetric = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + name.asString());
+        this.flux = rabbitClient
+            .receive(name)
+            .filter(getResponse -> getResponse.getBody() != null);
     }
 
-    MailQueue.MailQueueItem deQueue() {
-        return pollChannel()
-            .thenApply(Throwing.function(this::loadItem).sneakyThrow())
-            .join();
+    Flux<MailQueue.MailQueueItem> deQueue() {
+        return flux.flatMap(this::loadItem);
     }
 
-    private RabbitMQMailQueueItem loadItem(GetResponse response) throws MailQueue.MailQueueException {
-        Mail mail = loadMail(response);
-        ThrowingConsumer<Boolean> ack = ack(response.getEnvelope().getDeliveryTag(), mail);
-        return new RabbitMQMailQueueItem(ack, mail);
+    private Mono<RabbitMQMailQueueItem> loadItem(AcknowledgableDelivery response) {
+        try {
+            Mail mail = loadMail(response);
+            ThrowingConsumer<Boolean> ack = ack(response, response.getEnvelope().getDeliveryTag(), mail);
+            return Mono.just(new RabbitMQMailQueueItem(ack, mail));
+        } catch (MailQueue.MailQueueException e) {
+            return Mono.error(e);
+        }
     }
 
-    private ThrowingConsumer<Boolean> ack(long deliveryTag, Mail mail) {
+    private ThrowingConsumer<Boolean> ack(AcknowledgableDelivery response, long deliveryTag, Mail mail) {
         return success -> {
-            try {
-                if (success) {
-                    dequeueMetric.increment();
-                    rabbitClient.ack(deliveryTag);
-                    mailQueueView.delete(DeleteCondition.withName(mail.getName())).join();
-                } else {
-                    rabbitClient.nack(deliveryTag);
-                }
-            } catch (IOException e) {
-                throw new MailQueue.MailQueueException("Failed to ACK " + mail.getName() + " with delivery tag " + deliveryTag, e);
+            if (success) {
+                dequeueMetric.increment();
+                response.ack();
+                mailQueueView.delete(DeleteCondition.withName(mail.getName()));
+            } else {
+                response.nack(REQUEUE);
             }
         };
     }
 
-    private Mail loadMail(GetResponse response) throws MailQueue.MailQueueException {
+    private Mail loadMail(Delivery response) throws MailQueue.MailQueueException {
         MailReferenceDTO mailDTO = toMailReference(response);
         return mailLoader.apply(mailDTO);
     }
 
-    private MailReferenceDTO toMailReference(GetResponse getResponse) throws MailQueue.MailQueueException {
+    private MailReferenceDTO toMailReference(Delivery getResponse) throws MailQueue.MailQueueException {
         try {
             return mailReferenceSerializer.read(getResponse.getBody());
         } catch (IOException e) {
             throw new MailQueue.MailQueueException("Failed to parse DTO", e);
         }
-    }
-
-    private CompletableFuture<GetResponse> pollChannel() {
-        return new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor())
-            .withFixedRate()
-            .withMinDelay(TEN_MS)
-            .retryOn(NoMailYetException.class)
-            .getWithRetry(this::singleChannelRead);
-    }
-
-    private GetResponse singleChannelRead() throws IOException {
-        return rabbitClient.poll(name)
-            .filter(getResponse -> getResponse.getBody() != null)
-            .orElseThrow(NoMailYetException::new);
     }
 
 }

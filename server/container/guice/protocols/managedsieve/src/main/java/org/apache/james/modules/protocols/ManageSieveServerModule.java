@@ -20,11 +20,12 @@ package org.apache.james.modules.protocols;
 
 import java.util.List;
 
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieveserver.netty.ManageSieveServerFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
+import org.apache.james.util.LoggingLevel;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceProbe;
 
@@ -58,7 +59,7 @@ public class ManageSieveServerModule extends AbstractModule {
         @Override
         public void initModule() {
             try {
-                manageSieveServerFactory.configure(configurationProvider.getConfiguration("managesieveserver"));
+                manageSieveServerFactory.configure(configurationProvider.getConfiguration("managesieveserver", LoggingLevel.INFO));
                 manageSieveServerFactory.init();
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -66,7 +67,7 @@ public class ManageSieveServerModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Configurable>> forClasses() {
+        public List<Class<? extends Startable>> forClasses() {
             return ImmutableList.of(ManageSieveServerFactory.class);
         }
     }

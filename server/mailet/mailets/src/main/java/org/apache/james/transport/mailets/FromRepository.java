@@ -32,6 +32,7 @@ import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -109,7 +110,7 @@ public class FromRepository extends GenericMailet {
                 if (mail != null && mail.getRecipients() != null) {
                     LOGGER.debug("Spooling mail {} from {}", mail.getName(), repositoryPath);
 
-                    mail.setAttribute("FromRepository", Boolean.TRUE);
+                    mail.setAttribute(Attribute.convertToAttribute("FromRepository", Boolean.TRUE));
                     mail.setState(processor);
                     getMailetContext().sendMail(mail);
                     if (delete) {

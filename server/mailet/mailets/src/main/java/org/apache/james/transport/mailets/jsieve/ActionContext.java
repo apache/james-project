@@ -19,10 +19,8 @@
 package org.apache.james.transport.mailets.jsieve;
 
 import java.time.ZonedDateTime;
-import java.util.Collection;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
@@ -60,12 +58,10 @@ public interface ActionContext {
 
     /**
      * Posts the given mail.
-     * @param sender possibly null
-     * @param recipients not null
      * @param mail not null
      * @throws MessagingException when mail cannot be posted
      */
-    public void post(MailAddress sender, Collection<MailAddress> recipients, MimeMessage mail) throws MessagingException;
+    public void post(Mail mail) throws MessagingException;
 
     /**
      * Gets name (including version) of this server.

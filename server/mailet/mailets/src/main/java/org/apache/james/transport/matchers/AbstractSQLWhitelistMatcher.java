@@ -135,10 +135,10 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
     @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         // check if it's a local sender
-        MailAddress senderMailAddress = mail.getSender();
-        if (senderMailAddress == null) {
+        if (!mail.hasSender()) {
             return null;
         }
+        MailAddress senderMailAddress = mail.getMaybeSender().get();
         if (getMailetContext().isLocalEmail(senderMailAddress)) {
             // is a local sender, so return
             return null;

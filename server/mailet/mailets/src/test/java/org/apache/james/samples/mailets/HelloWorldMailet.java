@@ -18,8 +18,7 @@
  ****************************************************************/
 package org.apache.james.samples.mailets;
 
-import javax.mail.MessagingException;
-
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
@@ -49,13 +48,13 @@ public class HelloWorldMailet implements Mailet {
     }
 
     @Override
-    public void init(MailetConfig config) throws MessagingException {
+    public void init(MailetConfig config) {
         this.config = config;
     }
 
     @Override
-    public void service(Mail mail) throws MessagingException {
+    public void service(Mail mail) {
         LOGGER.info("Hello, World!");
-        LOGGER.info("You have mail from {}", mail.getSender().getLocalPart());
+        LOGGER.info("You have mail from {}", mail.getMaybeSender().asOptional().map(MailAddress::getLocalPart));
     }
 }

@@ -30,8 +30,8 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.store.mail.AbstractLockingUidProvider;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public class JPAUidProvider extends AbstractLockingUidProvider {
 

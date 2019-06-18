@@ -345,6 +345,13 @@ public abstract class AbstractSieveRepositoryTest {
         assertThat(sieveRepository.getQuota(USER)).isEqualTo(DEFAULT_QUOTA);
     }
 
+    @Test
+    public void setQuotaShouldOverrideExistingQuota() throws Exception {
+        sieveRepository.setQuota(USER, USER_QUOTA);
+        sieveRepository.setQuota(USER, QuotaSize.size(USER_QUOTA.asLong() - 1));
+        assertThat(sieveRepository.getQuota(USER)).isEqualTo(QuotaSize.size(USER_QUOTA.asLong() - 1));
+    }
+
     protected ScriptContent getScriptContent(InputStream inputStream) throws IOException {
         return new ScriptContent(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
     }

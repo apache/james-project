@@ -421,35 +421,52 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
      */
     private boolean matchesAddress(SearchQuery.AddressOperator operator, String headerName,
                                    MailboxMessage message) throws MailboxException, IOException {
-        String text = operator.getAddress().toUpperCase(Locale.US);
+        String text = operator.getAddress();
         List<Header> headers = ResultUtils.createHeaders(message);
         for (Header header : headers) {
             String name = header.getName();
             if (headerName.equalsIgnoreCase(name)) {
                 String value = header.getValue();
-                AddressList aList = LenientAddressParser.DEFAULT.parseAddressList(value);
-                for (Address address : aList) {
-                    if (address instanceof Mailbox) {
-                        if (AddressFormatter.DEFAULT.encode((Mailbox) address).toUpperCase(Locale.US)
-                            .contains(text)) {
-                            return true;
-                        }
-                    } else if (address instanceof Group) {
-                        MailboxList mList = ((Group) address).getMailboxes();
-                        for (Mailbox mailbox : mList) {
-                            if (AddressFormatter.DEFAULT.encode(mailbox).toUpperCase(Locale.US)
-                                .contains(text)) {
-                                return true;
-                            }
-                        }
-                    }
+                AddressList addressList = LenientAddressParser.DEFAULT.parseAddressList(value);
+                if (matchesAddress(addressList, text)) {
+                    return true;
                 }
 
                 // Also try to match against raw header now
-                return value.toUpperCase(Locale.US).contains(text);
+                return value.toUpperCase(Locale.US).contains(text.toUpperCase(Locale.US));
             }
         }
         return false;
+    }
+
+    private boolean matchesAddress(AddressList addressList, String valueToMatch) {
+        for (Address address : addressList) {
+            if (address instanceof Mailbox) {
+                if (doesMailboxContains((Mailbox) address, valueToMatch)) {
+                    return true;
+                }
+            } else if (address instanceof Group) {
+                MailboxList mList = ((Group) address).getMailboxes();
+                for (Mailbox mailbox : mList) {
+                    if (doesMailboxContains(mailbox, valueToMatch)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private boolean doesMailboxContains(Mailbox mailbox, String searchedText) {
+        String mailboxAsString = encodeAndUnscramble(mailbox);
+        return mailboxAsString.toUpperCase(Locale.US)
+            .contains(searchedText.toUpperCase(Locale.US));
+    }
+
+    private String encodeAndUnscramble(Mailbox mailbox) {
+        return MimeUtil.unscrambleHeaderValue(
+            AddressFormatter.DEFAULT.encode(mailbox));
     }
 
     private boolean exists(String headerName, MailboxMessage message) throws MailboxException, IOException {

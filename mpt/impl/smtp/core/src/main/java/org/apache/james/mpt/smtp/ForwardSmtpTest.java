@@ -20,6 +20,7 @@ package org.apache.james.mpt.smtp;
 
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Duration.ONE_MINUTE;
+import static org.awaitility.Duration.TWO_MINUTES;
 import static org.hamcrest.Matchers.equalTo;
 
 import java.util.Locale;
@@ -75,7 +76,7 @@ public abstract class ForwardSmtpTest {
     public void forwardingAnEmailShouldWork() throws Exception {
         scriptedTest.run("helo");
 
-        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() ->
+        calmlyAwait.atMost(TWO_MINUTES).untilAsserted(() ->
             fakeSmtp.assertEmailReceived(response -> response
                 .body("[0].from", equalTo("matthieu@yopmail.com"))
                 .body("[0].subject", equalTo("test"))

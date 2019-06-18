@@ -19,30 +19,35 @@
 
 package org.apache.james.jmap.cassandra;
 
-import java.io.IOException;
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 
-import org.apache.james.CassandraJmapTestRule;
-import org.apache.james.DockerCassandraRule;
+import org.apache.james.CassandraExtension;
+import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
 import org.apache.james.jmap.methods.integration.SendMDNMethodTest;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.MessageId;
-import org.junit.ClassRule;
-import org.junit.Rule;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CassandraSendMDNMethodTest extends SendMDNMethodTest {
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    private static final long LIMIT_TO_10_MESSAGES = 10;
 
-    @Rule
-    public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
+    @RegisterExtension
+    JamesServerExtension testExtension = new JamesServerBuilder()
+        .extension(new DockerElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
+        .build();
 
-    @Override
-    protected GuiceJamesServer createJmapServer() throws IOException {
-        return rule.jmapServer(cassandra.getModule());
-    }
-    
     @Override
     protected MessageId randomMessageId() {
         return new CassandraMessageId.Factory().generate();

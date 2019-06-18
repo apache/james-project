@@ -44,9 +44,9 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.james.util.docker.DockerGenericContainer;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
-import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
@@ -429,9 +429,9 @@ public class ICSAttachmentWorkflowTest {
             "";
 
     @ClassRule
-    public static SwarmGenericContainer rabbitMqContainer = new SwarmGenericContainer(Images.RABBITMQ)
+    public static DockerGenericContainer rabbitMqContainer = new DockerGenericContainer(Images.RABBITMQ)
         .withAffinityToContainer()
-        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.DEFAULT));;
+        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
@@ -561,6 +561,7 @@ public class ICSAttachmentWorkflowTest {
     public void calendarAttachmentShouldNotBePublishedInMQWhenNoICalAttachment() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(messageWithoutICSAttached)
                 .sender(FROM)
                 .recipient(RECIPIENT));
@@ -577,6 +578,7 @@ public class ICSAttachmentWorkflowTest {
     public void calendarAttachmentShouldBePublishedInMQWhenMatchingWorkflowConfiguration() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(messageWithICSAttached)
                 .sender(FROM)
                 .recipient(RECIPIENT));
@@ -609,6 +611,7 @@ public class ICSAttachmentWorkflowTest {
     public void headersShouldNotBeAddedInMailWhenNoICalAttachment() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(messageWithoutICSAttached)
                 .sender(FROM)
                 .recipient(RECIPIENT));
@@ -630,6 +633,7 @@ public class ICSAttachmentWorkflowTest {
     public void headersShouldBeAddedInMailWhenOneICalAttachment() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(messageWithICSAttached)
                 .sender(FROM)
                 .recipient(RECIPIENT));
@@ -650,6 +654,7 @@ public class ICSAttachmentWorkflowTest {
     public void headersShouldBeAddedInMailWhenOneBase64ICalAttachment() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(messageWithICSBase64Attached)
                 .sender(FROM)
                 .recipient(RECIPIENT));
@@ -670,6 +675,7 @@ public class ICSAttachmentWorkflowTest {
     public void base64CalendarAttachmentShouldBePublishedInMQWhenMatchingWorkflowConfiguration() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(messageWithICSBase64Attached)
                 .sender(FROM)
                 .recipient(RECIPIENT));
@@ -695,6 +701,7 @@ public class ICSAttachmentWorkflowTest {
     public void yahooBase64CalendarAttachmentShouldBePublishedInMQWhenMatchingWorkflowConfiguration() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(yahooInvitationMessage)
                 .sender(FROM)
                 .recipient(RECIPIENT));
@@ -721,6 +728,7 @@ public class ICSAttachmentWorkflowTest {
     public void headersShouldBeFilledOnlyWithOneICalAttachmentWhenMailHasSeveral() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(messageWithThreeICSAttached)
                 .sender(FROM)
                 .recipient(RECIPIENT));
@@ -741,6 +749,7 @@ public class ICSAttachmentWorkflowTest {
     public void pipelineShouldSendSeveralJSONOverRabbitMQWhenSeveralAttachments() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(messageWithThreeICSAttached)
                 .sender(FROM)
                 .recipient(RECIPIENT));
@@ -779,6 +788,7 @@ public class ICSAttachmentWorkflowTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(calendarMessage)
                 .sender(FROM)
                 .recipient(RECIPIENT));

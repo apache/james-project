@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.mail.MessagingException;
 
@@ -49,6 +48,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+import reactor.core.publisher.Mono;
 
 public class VacationMailetTest {
 
@@ -82,6 +82,7 @@ public class VacationMailetTest {
         originalRecipient = new MailAddress(USERNAME);
         recipientId = RecipientId.fromMailAddress(originalSender);
         mail = FakeMail.builder()
+            .name("name")
             .fileName("spamMail.eml")
             .recipient(originalRecipient)
             .sender(originalSender)
@@ -104,7 +105,7 @@ public class VacationMailetTest {
     public void unactivatedVacationShouldNotSendNotification() throws Exception {
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.completedFuture(VacationRepository.DEFAULT_VACATION));
+            .thenReturn(Mono.just(VacationRepository.DEFAULT_VACATION));
         when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenReturn(false);
 
         testee.service(mail);
@@ -115,11 +116,11 @@ public class VacationMailetTest {
     @Test
     public void activateVacationShouldSendNotification() throws Exception {
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.completedFuture(VACATION));
+            .thenReturn(Mono.just(VACATION));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenReturn(false);
         when(notificationRegistry.isRegistered(ACCOUNT_ID, recipientId))
-            .thenReturn(CompletableFuture.completedFuture(false));
+            .thenReturn(Mono.just(false));
 
         testee.service(mail);
 
@@ -132,10 +133,10 @@ public class VacationMailetTest {
     @Test
     public void activateVacationShouldNotSendNotificationIfAlreadySent() throws Exception {
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.completedFuture(VACATION));
+            .thenReturn(Mono.just(VACATION));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         when(notificationRegistry.isRegistered(ACCOUNT_ID, recipientId))
-            .thenReturn(CompletableFuture.completedFuture(true));
+            .thenReturn(Mono.just(true));
 
         testee.service(mail);
 
@@ -145,11 +146,11 @@ public class VacationMailetTest {
     @Test
     public void activateVacationShouldSendNotificationIfErrorUpdatingNotificationRepository() throws Exception {
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.completedFuture(VACATION));
+            .thenReturn(Mono.just(VACATION));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         RecipientId recipientId = RecipientId.fromMailAddress(originalSender);
         when(notificationRegistry.isRegistered(ACCOUNT_ID, recipientId))
-            .thenReturn(CompletableFuture.completedFuture(false));
+            .thenReturn(Mono.just(false));
         when(notificationRegistry.register(ACCOUNT_ID, recipientId, Optional.of(DATE_TIME_2018))).thenThrow(new RuntimeException());
 
         testee.service(mail);
@@ -161,7 +162,7 @@ public class VacationMailetTest {
     @Test
     public void activateVacationShouldSendNotificationIfErrorRetrievingNotificationRepository() throws Exception {
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.completedFuture(VACATION));
+            .thenReturn(Mono.just(VACATION));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         RecipientId recipientId = RecipientId.fromMailAddress(originalSender);
         when(notificationRegistry.isRegistered(ACCOUNT_ID, recipientId))
@@ -189,22 +190,23 @@ public class VacationMailetTest {
         AccountId secondAccountId = AccountId.fromString(secondUserName);
 
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .fileName("spamMail.eml")
             .recipients(originalRecipient, secondRecipient)
             .sender(originalSender)
             .build();
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.completedFuture(VACATION));
+            .thenReturn(Mono.just(VACATION));
         when(vacationRepository.retrieveVacation(secondAccountId))
-            .thenReturn(CompletableFuture.completedFuture(VACATION));
+            .thenReturn(Mono.just(VACATION));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenReturn(false);
         when(notificationRegistry.isRegistered(ACCOUNT_ID, RecipientId.fromMailAddress(originalSender)))
-            .thenReturn(CompletableFuture.completedFuture(false));
+            .thenReturn(Mono.just(false));
         when(notificationRegistry.isRegistered(secondAccountId, RecipientId.fromMailAddress(originalSender)))
-            .thenReturn(CompletableFuture.completedFuture(false));
+            .thenReturn(Mono.just(false));
         when(notificationRegistry.register(any(), any(), any()))
-            .thenReturn(CompletableFuture.completedFuture(null));
+            .thenReturn(Mono.empty());
 
         testee.service(mail);
 
@@ -216,9 +218,7 @@ public class VacationMailetTest {
     @Test
     public void serviceShouldNotSendNotificationUponErrorsRetrievingVacationObject() throws Exception {
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.supplyAsync(() -> {
-                throw new RuntimeException();
-            }));
+            .thenReturn(Mono.error(new RuntimeException()));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenReturn(false);
 
@@ -230,7 +230,7 @@ public class VacationMailetTest {
     @Test
     public void serviceShouldNotSendNotificationUponErrorsDetectingAutomaticallySentMails() throws Exception {
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.completedFuture(VACATION));
+            .thenReturn(Mono.just(VACATION));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenThrow(new MessagingException());
 
@@ -242,11 +242,11 @@ public class VacationMailetTest {
     @Test
     public void serviceShouldNotPropagateExceptionIfSendFails() throws Exception {
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
-            .thenReturn(CompletableFuture.completedFuture(VACATION));
+            .thenReturn(Mono.just(VACATION));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenReturn(false);
         when(notificationRegistry.isRegistered(ACCOUNT_ID, RecipientId.fromMailAddress(originalSender)))
-            .thenReturn(CompletableFuture.completedFuture(false));
+            .thenReturn(Mono.just(false));
 
         doThrow(new MessagingException()).when(mailetContext).sendMail(eq(originalSender), eq(ImmutableList.of(originalRecipient)), any());
 

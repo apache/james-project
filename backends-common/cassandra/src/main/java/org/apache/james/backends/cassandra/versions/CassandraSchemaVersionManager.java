@@ -34,7 +34,7 @@ import com.google.common.base.Preconditions;
 
 public class CassandraSchemaVersionManager {
     public static final SchemaVersion MIN_VERSION = new SchemaVersion(2);
-    public static final SchemaVersion MAX_VERSION = new SchemaVersion(6);
+    public static final SchemaVersion MAX_VERSION = new SchemaVersion(7);
     public static final SchemaVersion DEFAULT_VERSION = MIN_VERSION;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraSchemaVersionManager.class);
@@ -68,7 +68,7 @@ public class CassandraSchemaVersionManager {
     public SchemaVersion computeVersion() {
         return schemaVersionDAO
             .getCurrentSchemaVersion()
-            .join()
+            .block()
             .orElseGet(() -> {
                 LOGGER.warn("No schema version information found on Cassandra, we assume schema is at version {}",
                     CassandraSchemaVersionManager.DEFAULT_VERSION);

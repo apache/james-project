@@ -36,11 +36,9 @@
        subscription manager.</p>
     <p>For example, Apache James Server injects the managers in the POP3, SMTP, IMAP4 servers
        and in the Mailet container.</p>
-     <p>Each implementation (<a href="mailbox-memory.html">Memory</a>, 
+     <p>Each implementation <a href="mailbox-memory.html">Memory</a>,
         <a href="mailbox-maildir.html">Maildir</a>, 
-        <a href="mailbox-jpa.html">JPA</a>, 
-        <a href="mailbox-jcr.html">JCR)</a>,
-        <a href="mailbox-hbase.html">HBase</a>) is responsible
+        <a href="mailbox-jpa.html">JPA</a>) is responsible
         to implement the management interfaces. All "common/util" implementations
         reside in the <a href="mailbox-store.html">Mailbox Store</a> module.</p>
   </section>

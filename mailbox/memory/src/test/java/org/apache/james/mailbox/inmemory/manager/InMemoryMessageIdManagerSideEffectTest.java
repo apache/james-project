@@ -19,25 +19,14 @@
 
 package org.apache.james.mailbox.inmemory.manager;
 
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
+import java.util.Set;
+
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.manager.ManagerTestResources;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.AbstractMessageIdManagerSideEffectTest;
-import org.apache.james.mailbox.store.FakeAuthenticator;
-import org.apache.james.mailbox.store.FakeAuthorizator;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
-import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
-import org.apache.james.mailbox.store.StoreMessageIdManager;
-import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.junit.Before;
 
 public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
@@ -49,34 +38,23 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
     }
 
     @Override
-    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, MailboxEventDispatcher dispatcher) {
-        InMemoryMailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
-
-        FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
-        fakeAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
-        fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
-        FakeAuthorizator fakeAuthorizator = FakeAuthorizator.defaultReject();
-
-        StoreRightManager rightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), dispatcher);
-        JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
+    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, EventBus eventBus, Set<PreDeletionHook> preDeletionHooks) {
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
-        InMemoryMailboxManager mailboxManager = new InMemoryMailboxManager(mapperFactory,
-            fakeAuthenticator,
-            fakeAuthorizator,
-            locker,
-            new MessageParser(),
+
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
+            .preProvisionnedFakeAuthenticator()
+            .fakeAuthorizator()
+            .eventBus(eventBus)
+            .defaultAnnotationLimits()
+            .defaultMessageParser()
+            .scanningSearchIndex()
+            .preDeletionHooks(preDeletionHooks)
+            .quotaManager(quotaManager)
+            .build();
+
+        return new MessageIdManagerTestSystem(resources.getMessageIdManager(),
             messageIdFactory,
-            dispatcher,
-            new DefaultDelegatingMailboxListener(),
-            new StoreMailboxAnnotationManager(mapperFactory, rightManager),
-            rightManager);
-        StoreMessageIdManager messageIdManager = new StoreMessageIdManager(
-            mailboxManager,
-            mapperFactory,
-            dispatcher,
-            messageIdFactory,
-            quotaManager,
-            new DefaultUserQuotaRootResolver(mapperFactory));
-        return new MessageIdManagerTestSystem(messageIdManager, messageIdFactory, mapperFactory, mailboxManager);
+            resources.getMailboxManager().getMapperFactory(),
+            resources.getMailboxManager());
     }
 }

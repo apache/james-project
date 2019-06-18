@@ -27,6 +27,8 @@ import java.util.Collection;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.base.GenericMatcher;
 import org.junit.jupiter.api.Test;
 
@@ -34,7 +36,7 @@ public class HasMailAttributeWithValueTest extends AbstractHasMailAttributeTest 
 
     @Override
     protected String getHasMailAttribute() {
-        return MAIL_ATTRIBUTE_NAME + ", " + MAIL_ATTRIBUTE_VALUE;
+        return MAIL_ATTRIBUTE.getName().asString() + ", " + MAIL_ATTRIBUTE.getValue().value();
     }
 
     @Override
@@ -44,7 +46,7 @@ public class HasMailAttributeWithValueTest extends AbstractHasMailAttributeTest 
 
     @Test
     void testAttributeIsNotMatchedCauseValue() throws MessagingException {
-        setMailAttributeName(MAIL_ATTRIBUTE_NAME);
+        setMailAttribute(new Attribute(MAIL_ATTRIBUTE.getName(), AttributeValue.of("false")));
         setupMockedMail();
         setupMatcher();
 

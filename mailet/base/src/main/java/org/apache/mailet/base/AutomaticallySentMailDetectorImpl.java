@@ -19,15 +19,15 @@
 
 package org.apache.mailet.base;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.mdn.MDNReportParser;
+import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.parser.AbstractContentHandler;
 import org.apache.james.mime4j.parser.MimeStreamParser;
@@ -48,7 +48,7 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
 
     @Override
     public boolean isAutomaticallySent(Mail mail) throws MessagingException {
-        return mail.getSender() == null ||
+        return !mail.hasSender() ||
             isMailingList(mail) ||
             isAutoSubmitted(mail) ||
             isMdnSentAutomatically(mail);
@@ -61,17 +61,15 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
     }
 
     private boolean senderIsMailingList(Mail mail) {
-        MailAddress sender = mail.getSender();
-        if (sender == null) {
-            return false;
-        }
-
-        String localPart = sender.getLocalPart();
-        return localPart.startsWith("owner-")
-            || localPart.endsWith("-request")
-            || localPart.equalsIgnoreCase("MAILER-DAEMON")
-            || localPart.equalsIgnoreCase("LISTSERV")
-            || localPart.equalsIgnoreCase("majordomo");
+        return mail.getMaybeSender()
+            .asOptional()
+            .map(MailAddress::getLocalPart)
+            .map(localPart ->  localPart.startsWith("owner-")
+                || localPart.endsWith("-request")
+                || localPart.equalsIgnoreCase("MAILER-DAEMON")
+                || localPart.equalsIgnoreCase("LISTSERV")
+                || localPart.equalsIgnoreCase("majordomo"))
+            .orElse(false);
     }
 
     private boolean headerIsMailingList(Mail mail) throws MessagingException {
@@ -93,7 +91,13 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
     @Override
     public boolean isMdnSentAutomatically(Mail mail) throws MessagingException {
         ResultCollector resultCollector = new ResultCollector(false);
-        MimeStreamParser parser = new MimeStreamParser(MimeConfig.PERMISSIVE);
+        MimeStreamParser parser = new MimeStreamParser(MimeConfig.custom()
+            .setMaxContentLen(1024 * 1024) // there's no reason for a mdn report to be bigger than 1MiB
+            .setMaxHeaderCount(-1)
+            .setMaxHeaderLen(-1)
+            .setMaxLineLen(-1)
+            .setHeadlessParsing(mail.getMessage().getContentType())
+            .build());
         parser.setContentHandler(createMdnContentHandler(resultCollector));
         try {
             parser.parse(mail.getMessage().getInputStream());
@@ -110,16 +114,10 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
             @Override
             public void body(BodyDescriptor bodyDescriptor, InputStream inputStream) throws MimeException, IOException {
                 if (bodyDescriptor.getMimeType().equalsIgnoreCase("message/disposition-notification")) {
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            if (line.startsWith("Disposition:")) {
-                                if (line.contains("MDN-sent-automatically") || line.contains("automatic-action")) {
-                                    resultCollector.setResult(true);
-                                }
-                            }
-                        }
-                    }
+                    resultCollector.setResult(new MDNReportParser()
+                        .parse(inputStream, bodyDescriptor.getCharset())
+                        .map(report -> report.getDispositionField().getSendingMode() == DispositionSendingMode.Automatic)
+                        .orElse(false));
                 }
             }
         };

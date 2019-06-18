@@ -19,52 +19,42 @@
 
 package org.apache.james.mailbox.cassandra;
 
-import static org.mockito.Mockito.mock;
-
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.store.AbstractCombinationManagerTest;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.Rule;
 
 public class CassandraCombinationManagerTest extends AbstractCombinationManagerTest {
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
 
-    private static CassandraCluster cassandra;
-
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE, cassandraServer.getHost());
-    }
+    private CassandraCluster cassandra;
 
     @Override
     @Before
     public void setUp() throws Exception {
+        cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE, cassandraServer.getHost());
         super.setUp();
     }
 
     @After
     public void tearDown() {
         cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
         cassandra.closeCluster();
     }
     
     @Override
-    public CombinationManagerTestSystem createTestingData() throws Exception {
-        return CassandraCombinationManagerTestSystem.createTestingData(cassandra, new NoQuotaManager(), MailboxEventDispatcher.ofListener(mock(MailboxListener.class)));
+    public CombinationManagerTestSystem createTestingData() {
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
+        return CassandraCombinationManagerTestSystem.createTestingData(cassandra, new NoQuotaManager(), eventBus);
     }
     
 }

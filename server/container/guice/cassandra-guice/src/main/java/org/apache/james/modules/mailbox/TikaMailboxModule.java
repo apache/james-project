@@ -29,6 +29,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.tika.CachingTextExtractor;
+import org.apache.james.mailbox.tika.ContentTypeFilteringTextExtractor;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.mailbox.tika.TikaHttpClient;
 import org.apache.james.mailbox.tika.TikaHttpClientImpl;
@@ -48,7 +49,6 @@ public class TikaMailboxModule extends AbstractModule {
     private static final Logger LOGGER = LoggerFactory.getLogger(TikaMailboxModule.class);
 
     private static final String TIKA_CONFIGURATION_NAME = "tika";
-
 
     @Override
     protected void configure() {
@@ -82,15 +82,16 @@ public class TikaMailboxModule extends AbstractModule {
                                                MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
         if (configuration.isEnabled() && configuration.isCacheEnabled()) {
             LOGGER.info("Tika cache has been enabled.");
-            return new CachingTextExtractor(
-                textExtractor,
-                configuration.getCacheEvictionPeriod(),
-                configuration.getCacheWeightInBytes(),
-                metricFactory,
-                gaugeRegistry);
+            return new ContentTypeFilteringTextExtractor(
+                new CachingTextExtractor(
+                    textExtractor,
+                    configuration.getCacheEvictionPeriod(),
+                    configuration.getCacheWeightInBytes(),
+                    metricFactory,
+                    gaugeRegistry), configuration.getContentTypeBlacklist());
         }
         if (configuration.isEnabled()) {
-            return textExtractor;
+            return new ContentTypeFilteringTextExtractor(textExtractor, configuration.getContentTypeBlacklist());
         }
         LOGGER.info("Tika text extraction has been disabled." +
             " Using DefaultTextExtractor instead. " +

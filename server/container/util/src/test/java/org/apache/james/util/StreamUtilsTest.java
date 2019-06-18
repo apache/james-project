@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.stream.Stream;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableList;
 public class StreamUtilsTest {
 
     @Test
-    public void flattenShouldReturnEmptyWhenEmptyStreams() {
+    void flattenShouldReturnEmptyWhenEmptyStreams() {
         assertThat(
             StreamUtils.<Integer>flatten(ImmutableList.of())
                 .collect(Guavate.toImmutableList()))
@@ -40,7 +40,7 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void flattenShouldPreserveSingleStreams() {
+    void flattenShouldPreserveSingleStreams() {
         assertThat(
             StreamUtils.flatten(ImmutableList.of(
                 Stream.of(1, 2, 3)))
@@ -49,7 +49,7 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void flattenShouldMergeSeveralStreamsTogether() {
+    void flattenShouldMergeSeveralStreamsTogether() {
         assertThat(
             StreamUtils.flatten(ImmutableList.of(
                 Stream.of(1, 2, 3),
@@ -59,7 +59,7 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void flattenShouldAcceptEmptyStreams() {
+    void flattenShouldAcceptEmptyStreams() {
         assertThat(
             StreamUtils.flatten(ImmutableList.of(
                 Stream.of()))
@@ -68,7 +68,7 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void flattenShouldMergeEmptyStreamsWithOtherData() {
+    void flattenShouldMergeEmptyStreamsWithOtherData() {
         assertThat(
             StreamUtils.flatten(ImmutableList.of(
                 Stream.of(1, 2),
@@ -79,7 +79,7 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void flattenShouldAcceptEmptyVarArg() {
+    void flattenShouldAcceptEmptyVarArg() {
         assertThat(
             StreamUtils.flatten()
                 .collect(Guavate.toImmutableList()))
@@ -87,27 +87,27 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void flattenShouldThrowOnNullVarArg() {
+    void flattenShouldThrowOnNullVarArg() {
         Stream<String>[] streams = null;
         assertThatThrownBy(() -> StreamUtils.flatten(streams).collect(Guavate.toImmutableList()))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void flattenShouldFlattenNonEmptyVarArg() {
+    void flattenShouldFlattenNonEmptyVarArg() {
         assertThat(StreamUtils.flatten(Stream.of(1), Stream.of(2)).collect(Guavate.toImmutableList()))
             .containsExactly(1, 2);
     }
 
     @Test
-    public void ofNullableShouldReturnEmptyStreamWhenNull() {
+    void ofNullableShouldReturnEmptyStreamWhenNull() {
         assertThat(StreamUtils.ofNullable(null)
             .collect(Guavate.toImmutableList()))
             .isEmpty();
     }
 
     @Test
-    public void ofNullableShouldReturnAStreamWithElementsOfTheArray() {
+    void ofNullableShouldReturnAStreamWithElementsOfTheArray() {
         assertThat(StreamUtils.ofNullable(ImmutableList.of(1, 2).toArray())
             .collect(Guavate.toImmutableList()))
             .containsExactly(1, 2);

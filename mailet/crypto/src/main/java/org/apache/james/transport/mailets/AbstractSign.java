@@ -24,6 +24,7 @@ package org.apache.james.transport.mailets;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.Enumeration;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -39,6 +40,9 @@ import org.apache.james.transport.KeyHolder;
 import org.apache.james.transport.SMIMEAttributeNames;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
@@ -495,7 +499,7 @@ public abstract class AbstractSign extends GenericMailet {
   
             if (isRebuildFrom()) {
                 // builds a new "mixed" "From:" header
-                InternetAddress modifiedFromIA = new InternetAddress(getKeyHolder().getSignerAddress(), mail.getSender().toString());
+                InternetAddress modifiedFromIA = new InternetAddress(getKeyHolder().getSignerAddress(), mail.getMaybeSender().asString());
                 newMessage.setFrom(modifiedFromIA);
                 
                 // if the original "ReplyTo:" header is missing sets it to the original "From:" header
@@ -512,16 +516,16 @@ public abstract class AbstractSign extends GenericMailet {
             mail.setMessage(newMessage);
             
             // marks this mail as server-signed
-            mail.setAttribute(SMIMEAttributeNames.SMIME_SIGNING_MAILET, this.getClass().getName());
+            mail.setAttribute(new Attribute(SMIMEAttributeNames.SMIME_SIGNING_MAILET, AttributeValue.of(this.getClass().getName())));
             // it is valid for us by definition (signed here by us)
-            mail.setAttribute(SMIMEAttributeNames.SMIME_SIGNATURE_VALIDITY, "valid");
+            mail.setAttribute(new Attribute(SMIMEAttributeNames.SMIME_SIGNATURE_VALIDITY, AttributeValue.of("valid")));
             
             // saves the trusted server signer address
             // warning: should be same as the mail address in the certificate, but it is not guaranteed
-            mail.setAttribute(SMIMEAttributeNames.SMIME_SIGNER_ADDRESS, getKeyHolder().getSignerAddress());
+            mail.setAttribute(new Attribute(SMIMEAttributeNames.SMIME_SIGNER_ADDRESS, AttributeValue.of(getKeyHolder().getSignerAddress())));
             
             if (isDebug()) {
-                LOGGER.debug("Message signed, reverse-path: {}, Id: {}", mail.getSender(), messageId);
+                LOGGER.debug("Message signed, reverse-path: {}, Id: {}", mail.getMaybeSender().asString(), messageId);
             }
             
         } catch (MessagingException me) {
@@ -554,22 +558,23 @@ public abstract class AbstractSign extends GenericMailet {
      * @return True if can be signed.
      */
     protected boolean isOkToSign(Mail mail) throws MessagingException {
-
-        MailAddress reversePath = mail.getSender();
-        
         // Is it a bounce?
-        if (reversePath == null) {
+        if (!mail.hasSender()) {
             LOGGER.info("Can not sign: no sender");
             return false;
         }
-        
-        String authUser = (String) mail.getAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME);
+
+        MailAddress reversePath = mail.getMaybeSender().get();
+
+        Optional<String> fetchedAuthUser = AttributeUtils.getValueAndCastFromMail(mail, Mail.SMTP_AUTH_USER, String.class);
         // was the sender user SMTP authorized?
-        if (authUser == null) {
-            LOGGER.info("Can not sign mail for sender <{}> as he is not a SMTP authenticated user", mail.getSender());
+        if (!fetchedAuthUser.isPresent()) {
+            LOGGER.info("Can not sign mail for sender <{}> as he is not a SMTP authenticated user", mail.getMaybeSender().asString());
             return false;
         }
-        
+
+        String authUser = fetchedAuthUser.get();
+
         // The sender is the postmaster?
         if (Objects.equal(getMailetContext().getPostmaster(), reversePath)) {
             // should not sign postmaster sent messages?
@@ -627,11 +632,10 @@ public abstract class AbstractSign extends GenericMailet {
      */    
     protected final boolean fromAddressSameAsReverse(Mail mail) {
         
-        MailAddress reversePath = mail.getSender();
-        
-        if (reversePath == null) {
+        if (!mail.hasSender()) {
             return false;
         }
+        MailAddress reversePath = mail.getMaybeSender().get();
         
         try {
             InternetAddress[] fromArray = (InternetAddress[]) mail.getMessage().getFrom();

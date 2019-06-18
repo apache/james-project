@@ -31,6 +31,10 @@ import org.apache.james.user.lib.model.DefaultUser;
 /**
  * A Jdbc-backed UserRepository which handles User instances of the
  * <code>DefaultJamesUser</code> class, or any superclass.
+ *
+ * @deprecated JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release, unless it finds a maintainer
+ *
+ * Please migrate to other UsersRepository implementations like JpaUsersRepository
  */
 @Deprecated
 public class JamesUsersJdbcRepository extends AbstractJdbcUsersRepository {

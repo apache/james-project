@@ -113,6 +113,10 @@ public class MailAddress implements java.io.Serializable {
         return NULL_SENDER;
     }
 
+    /**
+     * Prefer using {@link MaybeSender#getMailSender(String)}
+     */
+    @Deprecated
     public static  MailAddress getMailSender(String sender) {
         if (sender == null || sender.trim().length() <= 0) {
             return null;
@@ -381,12 +385,18 @@ public class MailAddress implements java.io.Serializable {
             String theString = (String) obj;
             return toString().equalsIgnoreCase(theString);
         } else if (obj instanceof MailAddress) {
-            MailAddress addr = (MailAddress) obj;
-            if (isNullSender() && addr.isNullSender()) {
+            MailAddress that = (MailAddress) obj;
+            boolean bothNullSender = this.isNullSender() && that.isNullSender();
+            boolean onlyOneIsNullSender = isNullSender() ^ that.isNullSender();
+
+            if (bothNullSender) {
                 return true;
             }
-            return equalsIgnoreCase(getLocalPart(), addr.getLocalPart())
-                && Objects.equals(getDomain(), addr.getDomain());
+            if (onlyOneIsNullSender) {
+                return false;
+            }
+            return equalsIgnoreCase(getLocalPart(), that.getLocalPart())
+                && Objects.equals(getDomain(), that.getDomain());
         }
         return false;
     }
@@ -660,8 +670,9 @@ public class MailAddress implements java.io.Serializable {
     /**
      * Return <code>true</code> if the {@link MailAddress} should represent a null sender (<>)
      *
-     * @return nullsender
+     * @Deprecated You should use an Optional&lt;MailAddress&gt; representation of a MailAddress rather than relying on a NULL object
      */
+    @Deprecated
     public boolean isNullSender() {
         return false;
     }

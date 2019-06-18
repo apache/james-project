@@ -18,8 +18,11 @@
  ****************************************************************/
 package org.apache.james.backend.rabbitmq;
 
+import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
+
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,7 +36,9 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
+import org.testcontainers.containers.wait.strategy.WaitStrategy;
 
+import com.github.fge.lambdas.consumers.ThrowingConsumer;
 import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.Address;
 import com.rabbitmq.client.ConnectionFactory;
@@ -41,20 +46,30 @@ import com.rabbitmq.client.ConnectionFactory;
 public class DockerRabbitMQ {
     private static final Logger LOGGER = LoggerFactory.getLogger(DockerRabbitMQ.class);
 
-    private static final String DEFAULT_RABBIT_NODE = "my-rabbit";
+    private static final int MAX_THREE_RETRIES = 3;
+    private static final int MIN_DELAY_OF_ONE_HUNDRED_MILLISECONDS = 100;
+    private static final int CONNECTION_TIMEOUT_OF_ONE_SECOND = 1000;
+    private static final int CHANNEL_RPC_TIMEOUT_OF_ONE_SECOND = 1000;
+    private static final int HANDSHAKE_TIMEOUT_OF_ONE_SECOND = 1000;
+    private static final int SHUTDOWN_TIMEOUT_OF_ONE_SECOND = 1000;
+    private static final String DEFAULT_RABBIT_HOST_NAME_PREFIX = "my-rabbit";
+    private static final String DEFAULT_RABBIT_NODE_NAME_PREFIX = "rabbit";
     private static final int DEFAULT_RABBITMQ_PORT = 5672;
     private static final int DEFAULT_RABBITMQ_ADMIN_PORT = 15672;
     private static final String DEFAULT_RABBITMQ_USERNAME = "guest";
     private static final String DEFAULT_RABBITMQ_PASSWORD = "guest";
     private static final String RABBITMQ_ERLANG_COOKIE = "RABBITMQ_ERLANG_COOKIE";
     private static final String RABBITMQ_NODENAME = "RABBITMQ_NODENAME";
+    private static final Duration TEN_MINUTES_TIMEOUT = Duration.ofMinutes(10);
 
     private final GenericContainer<?> container;
-    private final Optional<String> nodeName;
+    private final String nodeName;
+    private final String rabbitHostName;
+    private final String hostNameSuffix;
+    private boolean paused;
 
-    public static DockerRabbitMQ withCookieAndNodeName(String hostName, String erlangCookie, String nodeName, Network network) {
-        return new DockerRabbitMQ(Optional.ofNullable(hostName), Optional.ofNullable(erlangCookie), Optional.ofNullable(nodeName),
-            Optional.of(network));
+    public static DockerRabbitMQ withCookieAndHostName(String hostNamePrefix, String clusterIdentity, String erlangCookie, Network network) {
+        return new DockerRabbitMQ(Optional.ofNullable(hostNamePrefix), Optional.ofNullable(clusterIdentity), Optional.ofNullable(erlangCookie), Optional.of(network));
     }
 
     public static DockerRabbitMQ withoutCookie() {
@@ -62,29 +77,34 @@ public class DockerRabbitMQ {
     }
 
     @SuppressWarnings("resource")
-    private DockerRabbitMQ(Optional<String> hostName, Optional<String> erlangCookie, Optional<String> nodeName, Optional<Network> net) {
-        container = new GenericContainer<>(Images.RABBITMQ)
-                .withCreateContainerCmdModifier(cmd -> cmd.withName(hostName.orElse(randomName())))
-                .withCreateContainerCmdModifier(cmd -> cmd.withHostName(hostName.orElse(DEFAULT_RABBIT_NODE)))
-                .withExposedPorts(DEFAULT_RABBITMQ_PORT, DEFAULT_RABBITMQ_ADMIN_PORT)
-                .waitingFor(waitStrategy())
-                .withLogConsumer(frame -> LOGGER.debug(frame.getUtf8String()))
-                .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig()
-                    .withTmpFs(ImmutableMap.of("/var/lib/rabbitmq/mnesia", "rw,noexec,nosuid,size=100m")));
-        net.ifPresent(container::withNetwork);
-        erlangCookie.ifPresent(cookie -> container.withEnv(RABBITMQ_ERLANG_COOKIE, cookie));
-        nodeName.ifPresent(name -> container.withEnv(RABBITMQ_NODENAME, name));
-        this.nodeName = nodeName;
+    private DockerRabbitMQ(Optional<String> hostNamePrefix, Optional<String> clusterIdentity, Optional<String> erlangCookie, Optional<Network> net) {
+        paused = false;
+        this.hostNameSuffix = clusterIdentity.orElse(UUID.randomUUID().toString());
+        this.rabbitHostName = hostName(hostNamePrefix);
+        this.container = new GenericContainer<>(Images.RABBITMQ)
+            .withCreateContainerCmdModifier(cmd -> cmd.withName(this.rabbitHostName))
+            .withCreateContainerCmdModifier(cmd -> cmd.withHostName(this.rabbitHostName))
+            .withExposedPorts(DEFAULT_RABBITMQ_PORT, DEFAULT_RABBITMQ_ADMIN_PORT)
+            .waitingFor(waitStrategy())
+            .withLogConsumer(frame -> LOGGER.debug(frame.getUtf8String()))
+            .withTmpFs(ImmutableMap.of("/var/lib/rabbitmq/mnesia", "rw,noexec,nosuid,size=100m"));
+        net.ifPresent(this.container::withNetwork);
+        erlangCookie.ifPresent(cookie -> this.container.withEnv(RABBITMQ_ERLANG_COOKIE, cookie));
+        this.nodeName = DEFAULT_RABBIT_NODE_NAME_PREFIX + "@" + this.rabbitHostName;
+        this.container.withEnv(RABBITMQ_NODENAME, this.nodeName);
     }
 
-    private WaitAllStrategy waitStrategy() {
+    private WaitStrategy waitStrategy() {
         return new WaitAllStrategy()
-            .withStrategy(Wait.forHttp("").forPort(DEFAULT_RABBITMQ_ADMIN_PORT).withRateLimiter(RateLimiters.DEFAULT))
-            .withStrategy(RabbitMQWaitStrategy.withDefaultTimeout(this));
+            .withStrategy(Wait.forHttp("").forPort(DEFAULT_RABBITMQ_ADMIN_PORT)
+                .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND)
+                .withStartupTimeout(TEN_MINUTES_TIMEOUT))
+            .withStrategy(new RabbitMQWaitStrategy(this, TEN_MINUTES_TIMEOUT))
+            .withStartupTimeout(TEN_MINUTES_TIMEOUT);
     }
 
-    private String randomName() {
-        return UUID.randomUUID().toString();
+    private String hostName(Optional<String> hostNamePrefix) {
+        return hostNamePrefix.orElse(DEFAULT_RABBIT_HOST_NAME_PREFIX) + "-" + hostNameSuffix;
     }
 
     private String getHostIp() {
@@ -117,7 +137,9 @@ public class DockerRabbitMQ {
     }
 
     public void start() {
-        container.start();
+        if (!container.isRunning()) {
+            container.start();
+        }
     }
 
     public void stop() {
@@ -133,13 +155,15 @@ public class DockerRabbitMQ {
         return container;
     }
 
-    public String node() {
-        return nodeName.get();
+    public String getNodeName() {
+        return nodeName;
     }
 
     public void join(DockerRabbitMQ rabbitMQ) throws Exception {
         stopApp();
         joinCluster(rabbitMQ);
+        startApp();
+        waitForReadyness();
     }
 
     public void stopApp() throws java.io.IOException, InterruptedException {
@@ -151,7 +175,7 @@ public class DockerRabbitMQ {
 
     private void joinCluster(DockerRabbitMQ rabbitMQ) throws java.io.IOException, InterruptedException {
         String stdout = container()
-            .execInContainer("rabbitmqctl", "join_cluster", rabbitMQ.node())
+            .execInContainer("rabbitmqctl", "join_cluster", rabbitMQ.getNodeName())
             .getStdout();
         LOGGER.debug("join_cluster: {}", stdout);
     }
@@ -170,6 +194,15 @@ public class DockerRabbitMQ {
             .execInContainer("rabbitmqctl", "reset")
             .getStdout();
         LOGGER.debug("reset: {}", stdout);
+
+        startApp();
+    }
+
+    public void forgetNode(String removalClusterNodeName) throws Exception {
+        String stdout = container()
+            .execInContainer("rabbitmqctl", "-n", this.nodeName, "forget_cluster_node", removalClusterNodeName)
+            .getStdout();
+        LOGGER.debug("forget_cluster_node: {}", stdout);
 
         startApp();
     }
@@ -196,5 +229,41 @@ public class DockerRabbitMQ {
                 .setHost(getHostIp())
                 .setPort(getAdminPort())
                 .build();
+    }
+
+    public void performIfRunning(ThrowingConsumer<DockerRabbitMQ> actionPerform) {
+        if (container.isRunning()) {
+            actionPerform.accept(this);
+        }
+    }
+
+    public void pause() {
+        if (!paused) {
+            DockerClientFactory.instance().client().pauseContainerCmd(container.getContainerId()).exec();
+            paused = true;
+        }
+    }
+
+    public void unpause() {
+        if (paused) {
+            DockerClientFactory.instance().client().unpauseContainerCmd(container.getContainerId()).exec();
+            paused = false;
+        }
+    }
+
+    public RabbitMQConnectionFactory createRabbitConnectionFactory() throws URISyntaxException {
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(amqpUri())
+            .managementUri(managementUri())
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .maxRetries(MAX_THREE_RETRIES)
+            .minDelayInMs(MIN_DELAY_OF_ONE_HUNDRED_MILLISECONDS)
+            .connectionTimeoutInMs(CONNECTION_TIMEOUT_OF_ONE_SECOND)
+            .channelRpcTimeoutInMs(CHANNEL_RPC_TIMEOUT_OF_ONE_SECOND)
+            .handshakeTimeoutInMs(HANDSHAKE_TIMEOUT_OF_ONE_SECOND)
+            .shutdownTimeoutInMs(SHUTDOWN_TIMEOUT_OF_ONE_SECOND)
+            .build();
+
+        return new RabbitMQConnectionFactory(rabbitMQConfiguration);
     }
 }

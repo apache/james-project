@@ -19,22 +19,21 @@
 
 package org.apache.james.transport.mailets.remote.delivery;
 
+import static org.apache.james.transport.mailets.remote.delivery.DeliveryRunnable.OUTGOING_MAILS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.Duration;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.metrics.api.Metric;
-import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
@@ -53,7 +52,7 @@ public class DeliveryRunnableTest {
     public ExpectedException expectedException = ExpectedException.none();
 
     private DeliveryRunnable testee;
-    private Metric outgoingMailsMetric;
+    private RecordingMetricFactory metricFactory;
     private Bouncer bouncer;
     private MailDelivrer mailDelivrer;
     private MailQueue mailQueue;
@@ -61,20 +60,16 @@ public class DeliveryRunnableTest {
     @Before
     public void setUp() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.DEBUG, "true")
             .setProperty(RemoteDeliveryConfiguration.DELAY_TIME, "1000,2000,3000,4000,5000")
             .build();
 
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class));
-        outgoingMailsMetric = mock(Metric.class);
-        MetricFactory mockMetricFactory = mock(MetricFactory.class);
-        when(mockMetricFactory.generate(anyString())).thenReturn(outgoingMailsMetric);
-        when(mockMetricFactory.timer(anyString())).thenReturn(new NoopMetricFactory.NoopTimeMetric());
+        metricFactory = new RecordingMetricFactory();
         bouncer = mock(Bouncer.class);
         mailDelivrer = mock(MailDelivrer.class);
         mailQueue = mock(MailQueue.class);
-        testee = new DeliveryRunnable(mailQueue, configuration, mockMetricFactory, bouncer, mailDelivrer, DeliveryRunnable.DEFAULT_NOT_STARTED, FIXED_DATE_SUPPLIER);
+        testee = new DeliveryRunnable(mailQueue, configuration, metricFactory, bouncer, mailDelivrer, FIXED_DATE_SUPPLIER);
     }
 
     @Test
@@ -84,8 +79,8 @@ public class DeliveryRunnableTest {
 
         testee.attemptDelivery(fakeMail);
 
-        verify(outgoingMailsMetric).increment();
-        verifyNoMoreInteractions(outgoingMailsMetric);
+        assertThat(metricFactory.countFor(OUTGOING_MAILS))
+            .isEqualTo(1);
     }
 
     @Test
@@ -108,18 +103,20 @@ public class DeliveryRunnableTest {
 
         testee.attemptDelivery(fakeMail);
 
-        verifyNoMoreInteractions(outgoingMailsMetric);
+        assertThat(metricFactory.countFor(OUTGOING_MAILS))
+            .isEqualTo(0);
     }
 
     @Test
     public void deliveryTemporaryFailureShouldNotIncrementDeliveryMetric() throws Exception {
-        FakeMail fakeMail = FakeMail.builder().state(Mail.DEFAULT).build();
+        FakeMail fakeMail = FakeMail.builder().name("name").state(Mail.DEFAULT).build();
         Exception exception = new Exception();
         when(mailDelivrer.deliver(fakeMail)).thenReturn(ExecutionResult.temporaryFailure(exception));
 
         testee.attemptDelivery(fakeMail);
 
-        verifyNoMoreInteractions(outgoingMailsMetric);
+        assertThat(metricFactory.countFor(OUTGOING_MAILS))
+            .isEqualTo(0);
     }
 
     @Test
@@ -135,27 +132,28 @@ public class DeliveryRunnableTest {
 
     @Test
     public void deliveryTemporaryFailureShouldRetryDelivery() throws Exception {
-        FakeMail fakeMail = FakeMail.builder().state(Mail.DEFAULT).build();
+        FakeMail fakeMail = FakeMail.builder().name("name").state(Mail.DEFAULT).build();
         Exception exception = new Exception();
         when(mailDelivrer.deliver(fakeMail)).thenReturn(ExecutionResult.temporaryFailure(exception));
 
         testee.attemptDelivery(fakeMail);
 
         verify(mailQueue).enQueue(FakeMail.builder()
-                .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 1)
+                .name("name")
+                .attribute(DeliveryRetriesHelper.makeAttribute(1))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
                 .build(),
-            1000,
-            TimeUnit.MILLISECONDS);
+            Duration.ofSeconds(1));
         verifyNoMoreInteractions(mailQueue);
     }
 
     @Test
     public void deliveryTemporaryFailureShouldRetryDeliveryWithRightDelay() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .state(Mail.ERROR)
-            .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 2)
+            .attribute(DeliveryRetriesHelper.makeAttribute(2))
             .build();
         Exception exception = new Exception();
         when(mailDelivrer.deliver(fakeMail)).thenReturn(ExecutionResult.temporaryFailure(exception));
@@ -163,20 +161,21 @@ public class DeliveryRunnableTest {
         testee.attemptDelivery(fakeMail);
 
         verify(mailQueue).enQueue(FakeMail.builder()
-                .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 3)
+                .name("name")
+                .attribute(DeliveryRetriesHelper.makeAttribute(3))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
                 .build(),
-            3000,
-            TimeUnit.MILLISECONDS);
+            Duration.ofSeconds(3));
         verifyNoMoreInteractions(mailQueue);
     }
 
     @Test
     public void deliveryTemporaryFailureShouldRetryDeliveryOnMaximumRetryNumber() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .state(Mail.ERROR)
-            .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 4)
+            .attribute(DeliveryRetriesHelper.makeAttribute(4))
             .build();
         Exception exception = new Exception();
         when(mailDelivrer.deliver(fakeMail)).thenReturn(ExecutionResult.temporaryFailure(exception));
@@ -184,20 +183,21 @@ public class DeliveryRunnableTest {
         testee.attemptDelivery(fakeMail);
 
         verify(mailQueue).enQueue(FakeMail.builder()
-                .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 5)
+                .name("name")
+                .attribute(DeliveryRetriesHelper.makeAttribute(5))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
                 .build(),
-            5000,
-            TimeUnit.MILLISECONDS);
+            Duration.ofSeconds(5));
         verifyNoMoreInteractions(mailQueue);
     }
 
     @Test
     public void deliveryTemporaryFailureShouldNotRetryDeliveryOverMaximumRetryNumber() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .state(Mail.ERROR)
-            .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 5)
+            .attribute(DeliveryRetriesHelper.makeAttribute(5))
             .build();
         Exception exception = new Exception();
         when(mailDelivrer.deliver(fakeMail)).thenReturn(ExecutionResult.temporaryFailure(exception));
@@ -210,8 +210,9 @@ public class DeliveryRunnableTest {
     @Test
     public void deliveryTemporaryFailureShouldBounceWhenRetryExceeded() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .state(Mail.ERROR)
-            .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 5)
+            .attribute(DeliveryRetriesHelper.makeAttribute(5))
             .build();
         Exception exception = new Exception("");
         when(mailDelivrer.deliver(fakeMail)).thenReturn(ExecutionResult.temporaryFailure(exception));
@@ -225,8 +226,9 @@ public class DeliveryRunnableTest {
     @Test
     public void deliveryTemporaryFailureShouldResetDeliveryCountOnNonErrorState() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .state(Mail.DEFAULT)
-            .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 5)
+            .attribute(DeliveryRetriesHelper.makeAttribute(5))
             .build();
         Exception exception = new Exception();
         when(mailDelivrer.deliver(fakeMail)).thenReturn(ExecutionResult.temporaryFailure(exception));
@@ -234,12 +236,12 @@ public class DeliveryRunnableTest {
         testee.attemptDelivery(fakeMail);
 
         verify(mailQueue).enQueue(FakeMail.builder()
-                .attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, 1)
+                .name("name")
+                .attribute(DeliveryRetriesHelper.makeAttribute(1))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
                 .build(),
-            1000,
-            TimeUnit.MILLISECONDS);
+            Duration.ofSeconds(1));
         verifyNoMoreInteractions(mailQueue);
     }
 }

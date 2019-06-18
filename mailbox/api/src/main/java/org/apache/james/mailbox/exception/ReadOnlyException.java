@@ -23,26 +23,12 @@ import org.apache.james.mailbox.model.MailboxPath;
 
 /**
  * {@link MailboxException} which should get thrown if someone tries to modify a READ-ONLY Mailbox
- * 
- *
  */
 public class ReadOnlyException extends MailboxException {
-
-
-    /**
-     * 
-     */
     private static final long serialVersionUID = 5016914557908202113L;
 
-
-
-    public ReadOnlyException(MailboxPath path, char delimiter) {
-        super(path.getFullName(delimiter));
-    }
-
-
-    public ReadOnlyException(MailboxPath path, char delimiter, Exception e) {
-        super(path.getFullName(delimiter), e);
+    public ReadOnlyException(MailboxPath path) {
+        super(path.asString());
     }
 }
 

@@ -25,15 +25,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.NotAdminException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
-import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -42,11 +45,13 @@ import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.PrefixedRegex;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -67,7 +72,7 @@ public class StoreMailboxManagerTest {
     @Before
     public void setUp() throws MailboxException {
         MailboxSessionMapperFactory mockedMapperFactory = mock(MailboxSessionMapperFactory.class);
-        mockedMailboxSession = new MockMailboxSession(CURRENT_USER);
+        mockedMailboxSession = MailboxSessionUtil.create(CURRENT_USER);
         mockedMailboxMapper = mock(MailboxMapper.class);
         when(mockedMapperFactory.getMailboxMapper(mockedMailboxSession))
             .thenReturn(mockedMailboxMapper);
@@ -76,17 +81,20 @@ public class StoreMailboxManagerTest {
         authenticator.addUser(CURRENT_USER, CURRENT_USER_PASSWORD);
         authenticator.addUser(ADMIN, ADMIN_PASSWORD);
 
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
 
         StoreRightManager storeRightManager = new StoreRightManager(mockedMapperFactory, new UnionMailboxACLResolver(),
-                                                                    new SimpleGroupMembershipResolver(), mailboxEventDispatcher);
+                                                                    new SimpleGroupMembershipResolver(), eventBus);
 
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mockedMapperFactory, storeRightManager);
-        storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, authenticator, FakeAuthorizator.forUserAndAdmin(ADMIN, CURRENT_USER),
+        SessionProvider sessionProvider = new SessionProvider(authenticator, FakeAuthorizator.forUserAndAdmin(ADMIN, CURRENT_USER));
+        QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mockedMapperFactory);
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mockedMapperFactory, mockedMapperFactory, new DefaultTextExtractor());
+
+        storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, sessionProvider,
                 new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
-                annotationManager, mailboxEventDispatcher, delegatingListener, storeRightManager);
-        storeMailboxManager.init();
+                annotationManager, eventBus, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT,
+                PreDeletionHooks.NO_PRE_DELETION_HOOK);
     }
 
     @Test(expected = MailboxNotFoundException.class)
@@ -141,7 +149,7 @@ public class StoreMailboxManagerTest {
     public void loginShouldCreateSessionWhenGoodPassword() throws Exception {
         MailboxSession expected = storeMailboxManager.login(CURRENT_USER, CURRENT_USER_PASSWORD);
 
-        assertThat(expected.getUser().getUserName()).isEqualTo(CURRENT_USER);
+        assertThat(expected.getUser().asString()).isEqualTo(CURRENT_USER);
     }
 
     @Test(expected = BadCredentialsException.class)
@@ -183,13 +191,13 @@ public class StoreMailboxManagerTest {
     public void loginAsOtherUserShouldCreateUserSessionWhenAdminWithGoodPassword() throws Exception {
         MailboxSession expected = storeMailboxManager.loginAsOtherUser(ADMIN, ADMIN_PASSWORD, CURRENT_USER);
 
-        assertThat(expected.getUser().getUserName()).isEqualTo(CURRENT_USER);
+        assertThat(expected.getUser().asString()).isEqualTo(CURRENT_USER);
     }
 
     @Test
     public void getPathLikeShouldReturnUserPathLikeWhenNoPrefixDefined() throws Exception {
         //Given
-        MailboxSession session = new MockMailboxSession("user");
+        MailboxSession session = MailboxSessionUtil.create("user");
         MailboxQuery.Builder testee = MailboxQuery.builder()
             .expression(new PrefixedRegex(EMPTY_PREFIX, "abc", session.getPathDelimiter()));
         //When
@@ -202,7 +210,7 @@ public class StoreMailboxManagerTest {
     @Test
     public void getPathLikeShouldReturnUserPathLikeWhenPrefixDefined() throws Exception {
         //Given
-        MailboxSession session = new MockMailboxSession("user");
+        MailboxSession session = MailboxSessionUtil.create("user");
         MailboxQuery.Builder testee = MailboxQuery.builder()
             .expression(new PrefixedRegex("prefix.", "abc", session.getPathDelimiter()));
 

@@ -22,41 +22,93 @@ package org.apache.james.modules.mailbox;
 import static org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher.DEFAULT_SEARCH_SIZE;
 
 import java.io.FileNotFoundException;
-import java.time.LocalDateTime;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
+import java.io.IOException;
+import java.util.List;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.backends.es.ClientProviderImpl;
+import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.lifecycle.api.StartUpCheck;
+import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.mailbox.elasticsearch.ElasticSearchMailboxConfiguration;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
 import org.apache.james.mailbox.elasticsearch.MailboxIndexCreationUtil;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
+import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
-import org.apache.james.quota.search.elasticsearch.QuotaSearchIndexCreationUtil;
-import org.apache.james.util.retry.RetryExecutorUtil;
+import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.PropertiesProvider;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.client.transport.NoNodeAvailableException;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
+import com.google.inject.multibindings.Multibinder;
 
 public class ElasticSearchMailboxModule extends AbstractModule {
+
+    static class MailboxIndexCreator implements Startable {
+
+        private final ElasticSearchConfiguration configuration;
+        private final ElasticSearchMailboxConfiguration mailboxConfiguration;
+        private final RestHighLevelClient client;
+
+        @Inject
+        MailboxIndexCreator(ElasticSearchConfiguration configuration,
+                            ElasticSearchMailboxConfiguration mailboxConfiguration,
+                            RestHighLevelClient client) {
+            this.configuration = configuration;
+            this.mailboxConfiguration = mailboxConfiguration;
+            this.client = client;
+        }
+
+        void createIndex() throws IOException {
+            MailboxIndexCreationUtil.prepareClient(client,
+                mailboxConfiguration.getReadAliasMailboxName(),
+                mailboxConfiguration.getWriteAliasMailboxName(),
+                mailboxConfiguration.getIndexMailboxName(),
+                configuration);
+        }
+    }
+
+    static class ElasticSearchMailboxIndexCreationPerformer implements ConfigurationPerformer {
+
+        private final MailboxIndexCreator mailboxIndexCreator;
+
+        @Inject
+        ElasticSearchMailboxIndexCreationPerformer(MailboxIndexCreator mailboxIndexCreator) {
+            this.mailboxIndexCreator = mailboxIndexCreator;
+        }
+
+        @Override
+        public void initModule() {
+            try {
+                mailboxIndexCreator.createIndex();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public List<Class<? extends Startable>> forClasses() {
+            return ImmutableList.of(MailboxIndexCreator.class);
+        }
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchMailboxModule.class);
 
     public static final String ELASTICSEARCH_CONFIGURATION_NAME = "elasticsearch";
@@ -68,36 +120,44 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         bind(ElasticSearchListeningMessageSearchIndex.class).in(Scopes.SINGLETON);
         bind(MessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
         bind(ListeningMessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
+
+        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
+            .addBinding()
+            .to(ElasticSearchListeningMessageSearchIndex.class);
+
+        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class)
+            .addBinding()
+            .to(ElasticSearchMailboxIndexCreationPerformer.class);
+
+        Multibinder.newSetBinder(binder(), StartUpCheck.class)
+            .addBinding()
+            .to(ElasticSearchStartUpCheck.class);
     }
 
     @Provides
     @Singleton
     @Named(MailboxElasticSearchConstants.InjectionNames.MAILBOX)
-    private ElasticSearchIndexer createMailboxElasticSearchIndexer(Client client,
-                                               @Named("AsyncExecutor") ExecutorService executor,
-                                               ElasticSearchConfiguration configuration) {
+    private ElasticSearchIndexer createMailboxElasticSearchIndexer(RestHighLevelClient client,
+                                                                   ElasticSearchMailboxConfiguration configuration) {
         return new ElasticSearchIndexer(
             client,
-            executor,
-            configuration.getWriteAliasMailboxName(),
-            MailboxElasticSearchConstants.MESSAGE_TYPE);
+            configuration.getWriteAliasMailboxName());
     }
 
     @Provides
     @Singleton
-    private ElasticSearchSearcher createMailboxElasticSearchSearcher(Client client,
+    private ElasticSearchSearcher createMailboxElasticSearchSearcher(RestHighLevelClient client,
                                                                      QueryConverter queryConverter,
                                                                      MailboxId.Factory mailboxIdFactory,
                                                                      MessageId.Factory messageIdFactory,
-                                                                     ElasticSearchConfiguration configuration) {
+                                                                     ElasticSearchMailboxConfiguration configuration) {
         return new ElasticSearchSearcher(
             client,
             queryConverter,
             DEFAULT_SEARCH_SIZE,
             mailboxIdFactory,
             messageIdFactory,
-            configuration.getReadAliasMailboxName(),
-            MailboxElasticSearchConstants.MESSAGE_TYPE);
+            configuration.getReadAliasMailboxName());
     }
 
     @Provides
@@ -107,42 +167,27 @@ public class ElasticSearchMailboxModule extends AbstractModule {
             Configuration configuration = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
             return ElasticSearchConfiguration.fromProperties(configuration);
         } catch (FileNotFoundException e) {
-            LOGGER.warn("Could not find " + ELASTICSEARCH_CONFIGURATION_NAME + " configuration file. Using 127.0.0.1:9300 as contact point");
+            LOGGER.warn("Could not find " + ELASTICSEARCH_CONFIGURATION_NAME + " configuration file. Using {}:{} as contact point",
+                ElasticSearchConfiguration.LOCALHOST, ElasticSearchConfiguration.DEFAULT_PORT);
             return ElasticSearchConfiguration.DEFAULT_CONFIGURATION;
         }
     }
 
     @Provides
     @Singleton
-    protected Client provideClient(ElasticSearchConfiguration configuration,
-                                   AsyncRetryExecutor executor) throws ExecutionException, InterruptedException {
-
-        return RetryExecutorUtil.retryOnExceptions(executor, configuration.getMaxRetries(), configuration.getMinDelay(), NoNodeAvailableException.class)
-            .getWithRetry(context -> connectToCluster(configuration))
-            .get();
-    }
-
-    private Client connectToCluster(ElasticSearchConfiguration configuration) {
-        LOGGER.info("Trying to connect to ElasticSearch service at {}", LocalDateTime.now());
-
-        Client client = ClientProviderImpl.fromHosts(configuration.getHosts()).get();
-
-        MailboxIndexCreationUtil.prepareClient(client,
-            configuration.getReadAliasMailboxName(),
-            configuration.getWriteAliasMailboxName(),
-            configuration.getIndexMailboxName());
-
-        QuotaSearchIndexCreationUtil.prepareClient(client,
-            configuration.getReadAliasQuotaRatioName(),
-            configuration.getWriteAliasMailboxName(),
-            configuration.getIndexQuotaRatioName());
-
-        return client;
+    private ElasticSearchMailboxConfiguration getElasticSearchMailboxConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+        try {
+            Configuration configuration = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
+            return ElasticSearchMailboxConfiguration.fromProperties(configuration);
+        } catch (FileNotFoundException e) {
+            LOGGER.warn("Could not find " + ELASTICSEARCH_CONFIGURATION_NAME + " configuration file. Providing a default ElasticSearchMailboxConfiguration");
+            return ElasticSearchMailboxConfiguration.DEFAULT_CONFIGURATION;
+        }
     }
 
     @Provides
     @Singleton
-    public IndexAttachments provideIndexAttachments(ElasticSearchConfiguration configuration) {
+    public IndexAttachments provideIndexAttachments(ElasticSearchMailboxConfiguration configuration) {
         return configuration.getIndexAttachment();
     }
 

@@ -63,15 +63,15 @@ public class MailboxMergingTaskRunner {
         return moveMessages(oldMailboxId, newMailboxId, mailboxSession, context)
             .onComplete(
                 () -> mergeRights(oldMailboxId, newMailboxId),
-                () -> mailboxDAO.delete(oldMailboxId).join());
+                () -> mailboxDAO.delete(oldMailboxId).block());
     }
 
     private Task.Result moveMessages(CassandraId oldMailboxId, CassandraId newMailboxId, MailboxSession session, MailboxMergingTask.Context context) {
         return cassandraMessageIdDAO.retrieveMessages(oldMailboxId, MessageRange.all())
-            .join()
             .map(ComposedMessageIdWithMetaData::getComposedMessageId)
             .map(messageId -> moveMessage(newMailboxId, messageId, session, context))
-            .reduce(Task.Result.COMPLETED, Task::combine);
+            .reduce(Task.Result.COMPLETED, Task::combine)
+            .block();
     }
 
     private Task.Result moveMessage(CassandraId newMailboxId, ComposedMessageId composedMessageId, MailboxSession session, MailboxMergingTask.Context context) {
@@ -88,12 +88,12 @@ public class MailboxMergingTaskRunner {
 
     private void mergeRights(CassandraId oldMailboxId, CassandraId newMailboxId) {
         try {
-            MailboxACL oldAcl = cassandraACLMapper.getACL(oldMailboxId).join();
-            MailboxACL newAcl = cassandraACLMapper.getACL(newMailboxId).join();
+            MailboxACL oldAcl = cassandraACLMapper.getACL(oldMailboxId).block();
+            MailboxACL newAcl = cassandraACLMapper.getACL(newMailboxId).block();
             MailboxACL finalAcl = newAcl.union(oldAcl);
 
             cassandraACLMapper.setACL(newMailboxId, finalAcl);
-            rightsDAO.update(oldMailboxId, ACLDiff.computeDiff(oldAcl, MailboxACL.EMPTY)).join();
+            rightsDAO.update(oldMailboxId, ACLDiff.computeDiff(oldAcl, MailboxACL.EMPTY)).block();
         } catch (MailboxException e) {
             throw new RuntimeException(e);
         }

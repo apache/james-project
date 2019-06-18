@@ -27,15 +27,14 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.jmap.VacationRelayIntegrationTest;
-import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraVacationRelayIntegrationTest extends VacationRelayIntegrationTest {
 
     private final InMemoryDNSService inMemoryDNSService = new InMemoryDNSService();
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    @Rule
+    public DockerCassandraRule cassandra = new DockerCassandraRule();
 
     @Rule
     public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();

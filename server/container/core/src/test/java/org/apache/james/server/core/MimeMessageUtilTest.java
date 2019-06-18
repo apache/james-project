@@ -28,7 +28,7 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MimeMessageUtilTest {
 

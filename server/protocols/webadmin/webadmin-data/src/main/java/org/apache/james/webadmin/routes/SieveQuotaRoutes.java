@@ -19,7 +19,6 @@
 
 package org.apache.james.webadmin.routes;
 
-import static org.apache.james.webadmin.Constants.EMPTY_BODY;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
 import javax.inject.Inject;
@@ -33,12 +32,12 @@ import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
-import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,8 +106,7 @@ public class SieveQuotaRoutes implements Routes {
                 response.status(HttpStatus.OK_200);
                 return sieveQuota.asLong();
             } catch (QuotaNotFoundException e) {
-                response.status(HttpStatus.NO_CONTENT_204);
-                return EMPTY_BODY;
+                return Responses.returnNoContent(response);
             }
         }, jsonTransformer);
     }
@@ -128,8 +126,7 @@ public class SieveQuotaRoutes implements Routes {
             try {
                 QuotaSize requestedSize = extractRequestedQuotaSizeFromRequest(request);
                 sieveQuotaRepository.setDefaultQuota(requestedSize);
-                response.status(HttpStatus.NO_CONTENT_204);
-                return Constants.EMPTY_BODY;
+                return Responses.returnNoContent(response);
             } catch (JsonExtractException e) {
                 LOGGER.info("Malformed JSON", e);
                 throw ErrorResponder.builder()
@@ -155,8 +152,7 @@ public class SieveQuotaRoutes implements Routes {
             } catch (QuotaNotFoundException e) {
                 // Do nothing
             }
-            response.status(HttpStatus.NO_CONTENT_204);
-            return Constants.EMPTY_BODY;
+            return Responses.returnNoContent(response);
         });
     }
 
@@ -178,8 +174,7 @@ public class SieveQuotaRoutes implements Routes {
                 response.status(HttpStatus.OK_200);
                 return userQuota.asLong();
             } catch (QuotaNotFoundException e) {
-                response.status(HttpStatus.NO_CONTENT_204);
-                return EMPTY_BODY;
+                return Responses.returnNoContent(response);
             }
         }, jsonTransformer);
     }
@@ -201,7 +196,7 @@ public class SieveQuotaRoutes implements Routes {
             try {
                 QuotaSize requestedSize = extractRequestedQuotaSizeFromRequest(request);
                 sieveQuotaRepository.setQuota(userId, requestedSize);
-                response.status(HttpStatus.NO_CONTENT_204);
+                return Responses.returnNoContent(response);
             } catch (JsonExtractException e) {
                 LOGGER.info("Malformed JSON", e);
                 throw ErrorResponder.builder()
@@ -211,7 +206,6 @@ public class SieveQuotaRoutes implements Routes {
                     .cause(e)
                     .haltError();
             }
-            return Constants.EMPTY_BODY;
         }, jsonTransformer);
     }
 
@@ -232,8 +226,7 @@ public class SieveQuotaRoutes implements Routes {
             } catch (QuotaNotFoundException e) {
                 // Do nothing
             }
-            response.status(HttpStatus.NO_CONTENT_204);
-            return Constants.EMPTY_BODY;
+            return Responses.returnNoContent(response);
         });
     }
 

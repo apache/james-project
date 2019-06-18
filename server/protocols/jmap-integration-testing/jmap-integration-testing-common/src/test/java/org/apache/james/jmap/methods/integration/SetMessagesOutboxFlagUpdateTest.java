@@ -33,10 +33,9 @@ import static org.apache.james.jmap.TestingConstants.DOMAIN;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.GuiceJamesServer;
@@ -59,6 +58,7 @@ import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.parsing.Parser;
+import reactor.core.publisher.Flux;
 
 public abstract class SetMessagesOutboxFlagUpdateTest {
     private static final String USERNAME = "username@" + DOMAIN;
@@ -84,8 +84,7 @@ public abstract class SetMessagesOutboxFlagUpdateTest {
                 }
 
                 @Override
-                public void enQueue(Mail mail, long delay, TimeUnit unit) {
-
+                public void enQueue(Mail mail, Duration delay) {
                 }
 
                 @Override
@@ -94,14 +93,8 @@ public abstract class SetMessagesOutboxFlagUpdateTest {
                 }
 
                 @Override
-                public MailQueueItem deQueue() {
-                    CountDownLatch blockingLatch = new CountDownLatch(1);
-                    try {
-                        blockingLatch.await();
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    return null;
+                public Flux<MailQueueItem> deQueue() {
+                    return Flux.never();
                 }
             };
         }

@@ -20,6 +20,7 @@
  -->
 
 <mailrepositorystore>
+    <defaultProtocol>cassandra</defaultProtocol>
     <mailrepositories>
         <mailrepository class="org.apache.james.mailrepository.cassandra.CassandraMailRepository">
             <protocols>

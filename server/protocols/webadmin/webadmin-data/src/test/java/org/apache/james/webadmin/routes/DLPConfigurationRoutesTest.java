@@ -27,7 +27,6 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_FIELDS;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,7 +41,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -67,12 +65,10 @@ class DLPConfigurationRoutesTest {
     private WebAdminServer webAdminServer;
     private EventSourcingDLPConfigurationStore dlpStore;
 
-    private void createServer(DLPConfigurationStore dlpConfigurationStore, DomainList domainList) throws Exception {
+    private void createServer(DLPConfigurationStore dlpConfigurationStore, DomainList domainList) {
         webAdminServer = WebAdminUtils.createWebAdminServer(
-            new DefaultMetricFactory(),
-            new DLPConfigurationRoutes(dlpConfigurationStore, domainList, new JsonTransformer()));
-        webAdminServer.configure(NO_CONFIGURATION);
-        webAdminServer.await();
+                new DLPConfigurationRoutes(dlpConfigurationStore, domainList, new JsonTransformer()))
+            .start();
 
         requestSpecification = buildRequestSpecification(webAdminServer);
     }

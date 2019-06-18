@@ -20,10 +20,13 @@
 package org.apache.james.transport.matchers;
 
 import java.util.Collection;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
@@ -67,13 +70,15 @@ public class HasException extends GenericMatcher {
      */
     @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        Object exceptionValue = mail.getAttribute(Mail.MAILET_ERROR_ATTRIBUTE_NAME);
+        Optional<Attribute> exceptionValue = mail.getAttribute(Mail.MAILET_ERROR);
 
-        if (exceptionValue != null && exceptionClass.isAssignableFrom(exceptionValue.getClass())) {
-            return mail.getRecipients();
-        } else {
-            return ImmutableList.of();
-        }
+        return exceptionValue
+            .map(Attribute::getValue)
+            .map(AttributeValue::value)
+            .map(Object::getClass)
+            .filter(exceptionClass::isAssignableFrom)
+            .map(ignored -> mail.getRecipients())
+            .orElse(ImmutableList.of());
     }
 
     @Override

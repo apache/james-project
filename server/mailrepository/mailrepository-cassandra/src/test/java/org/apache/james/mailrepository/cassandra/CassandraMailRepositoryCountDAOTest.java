@@ -23,11 +23,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@ExtendWith(CassandraRestartExtension.class)
 class CassandraMailRepositoryCountDAOTest {
     static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
     static final MailRepositoryUrl URL2 = MailRepositoryUrl.from("proto://url2");
@@ -44,52 +47,52 @@ class CassandraMailRepositoryCountDAOTest {
 
     @Test
     void getCountShouldReturnZeroWhenEmpty() {
-        assertThat(testee.getCount(URL).join())
+        assertThat(testee.getCount(URL).block())
             .isEqualTo(0L);
     }
 
     @Test
     void getCountShouldReturnOneWhenIncrementedOneTime() {
-        testee.increment(URL).join();
+        testee.increment(URL).block();
 
-        assertThat(testee.getCount(URL).join())
+        assertThat(testee.getCount(URL).block())
             .isEqualTo(1L);
     }
 
     @Test
     void incrementShouldNotAffectOtherUrls() {
-        testee.increment(URL).join();
+        testee.increment(URL).block();
 
-        assertThat(testee.getCount(URL2).join())
+        assertThat(testee.getCount(URL2).block())
             .isEqualTo(0L);
     }
 
     @Test
     void incrementCanBeAppliedSeveralTime() {
-        testee.increment(URL).join();
-        testee.increment(URL).join();
+        testee.increment(URL).block();
+        testee.increment(URL).block();
 
-        assertThat(testee.getCount(URL).join())
+        assertThat(testee.getCount(URL).block())
             .isEqualTo(2L);
     }
 
     @Test
     void decrementShouldDecreaseCount() {
-        testee.increment(URL).join();
-        testee.increment(URL).join();
-        testee.increment(URL).join();
+        testee.increment(URL).block();
+        testee.increment(URL).block();
+        testee.increment(URL).block();
 
-        testee.decrement(URL).join();
+        testee.decrement(URL).block();
 
-        assertThat(testee.getCount(URL).join())
+        assertThat(testee.getCount(URL).block())
             .isEqualTo(2L);
     }
 
     @Test
     void decrementCanLeadToNegativeCount() {
-        testee.decrement(URL).join();
+        testee.decrement(URL).block();
 
-        assertThat(testee.getCount(URL).join())
+        assertThat(testee.getCount(URL).block())
             .isEqualTo(-1L);
     }
 }

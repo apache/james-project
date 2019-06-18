@@ -44,7 +44,7 @@ public class AddDeliveredToHeaderTest {
 
     @Test
     public void serviceShouldHandleMailWithoutRecipient() throws Exception {
-        FakeMail mail = FakeMail.builder().build();
+        FakeMail mail = FakeMail.builder().name("mail").build();
 
         testee.service(mail);
 
@@ -55,6 +55,7 @@ public class AddDeliveredToHeaderTest {
     @Test
     public void serviceShouldAddPerRecipientDeliveredToSpecificHeader() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES)
             .build();
 

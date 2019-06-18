@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.queue.activemq;
 
-import java.util.concurrent.ExecutorService;
-
 import javax.jms.ConnectionFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -52,17 +50,17 @@ public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract
     ActiveMQMailQueue mailQueue;
 
     @BeforeEach
-    public void setUp(BrokerService broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
+    public void setUp(BrokerService broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
-        MetricFactory metricFactory = metricTestSystem.getSpyMetricFactory();
+        MetricFactory metricFactory = metricTestSystem.getMetricFactory();
         GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
         String queueName = BrokerExtension.generateRandomQueueName(broker);
         mailQueue = new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, !USE_BLOB, metricFactory, gaugeRegistry);
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    public void tearDown() {
         mailQueue.dispose();
     }
 
@@ -115,7 +113,7 @@ public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract
     @Test
     @Override
     @Disabled("JAMES-2309 Long overflow in JMS delays")
-    public void enqueueWithVeryLongDelayShouldDelayMail(ExecutorService executorService) {
+    public void enqueueWithVeryLongDelayShouldDelayMail() {
 
     }
 

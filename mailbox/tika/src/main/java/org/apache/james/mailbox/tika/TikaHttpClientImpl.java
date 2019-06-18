@@ -62,7 +62,7 @@ public class TikaHttpClientImpl implements TikaHttpClient {
                         .returnContent()
                         .asStream());
         } catch (IOException e) {
-            LOGGER.warn("Failing to call Tika", e);
+            LOGGER.warn("Failing to call Tika for content type {}", contentType, e);
             return Optional.empty();
         }
     }

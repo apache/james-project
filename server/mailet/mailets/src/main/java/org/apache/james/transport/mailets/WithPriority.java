@@ -24,6 +24,8 @@ import java.util.Optional;
 import javax.mail.MessagingException;
 
 import org.apache.james.queue.api.MailPrioritySupport;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
@@ -38,7 +40,7 @@ import org.apache.mailet.base.GenericMailet;
  */
 public class WithPriority extends GenericMailet {
 
-    private int priority;
+    private Attribute priority;
 
     @Override
     public String getMailetInfo() {
@@ -47,17 +49,18 @@ public class WithPriority extends GenericMailet {
 
     @Override
     public void init() throws MessagingException {
-        priority = Optional.ofNullable(getInitParameter("priority", null))
+        Integer priorityRaw = Optional.ofNullable(getInitParameter("priority", null))
                 .map(Integer::valueOf)
                 .orElseThrow(() -> new IllegalArgumentException("'priority' init parameter is compulsory"));
 
-        if (priority < 0 || priority > 9) {
+        if (priorityRaw < 0 || priorityRaw > 9) {
             throw new IllegalArgumentException("Invalid priority: Priority should be from 0 to 9");
+            }
+            priority = new Attribute(MailPrioritySupport.MAIL_PRIORITY, AttributeValue.of(priorityRaw));
+        }
+
+        @Override
+        public void service(Mail mail) throws MessagingException {
+            mail.setAttribute(priority);
         }
     }
-
-    @Override
-    public void service(Mail mail) throws MessagingException {
-        mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, priority);
-    }
-}

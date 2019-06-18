@@ -33,8 +33,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -42,7 +43,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,7 +70,7 @@ public class StoreMailboxManagerAnnotationTest {
     @Mock private MailboxPath mailboxPath;
     @Mock private Mailbox mailbox;
     @Mock private MailboxId mailboxId;
-    private MockMailboxSession session;
+    private MailboxSession session;
 
     private StoreMailboxAnnotationManager annotationManager;
 
@@ -80,7 +80,7 @@ public class StoreMailboxManagerAnnotationTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        session = new MockMailboxSession("userName");
+        session = MailboxSessionUtil.create("userName");
 
         when(mailboxSessionMapperFactory.getMailboxMapper(eq(session))).thenReturn(mailboxMapper);
         when(mailboxSessionMapperFactory.getAnnotationMapper(eq(session))).thenReturn(annotationMapper);

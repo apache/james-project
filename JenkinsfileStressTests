@@ -1,0 +1,88 @@
+// This file should respect the Jenkinsfile format describe here: 
+// https://jenkins.io/doc/book/pipeline/jenkinsfile/
+// 
+// It may be used by any Jenkins instance you own.
+//
+// In order to work properly, it requires the following parameters:
+// - SENARIO: the Gatling scenrio you want to play (ex. com.linagora.gatling.imap.scenario.ImapSimpleScenario)
+
+// Method in order to retry a command.
+// It may be used to wait for a service to be available.
+def maxRetries = 120
+def waitForCommandSuccess(command, maxRetries) {
+    def tries = 0;
+    while (tries++ < maxRetries) {
+        try {
+            sh command
+            return true
+        } catch (Exception e) {
+            if (tries >= maxRetries) {
+                throw new Exception("${maxRetries} tries exceeded. ${command} failed.", e)
+            }
+            sleep 1 SECONDS
+        }
+    }
+}
+
+pipeline {
+    agent { label 'my-slave' }
+
+    tools {
+        maven 'maven'
+    }
+
+    stages {
+        stage('Compile') {
+            steps {
+                sh "mvn clean install -T1C -DskipTests"
+            }
+        }
+        stage('Build image') {
+            steps {
+                script {
+                    docker.withTool('docker') {
+                        sh "cp server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.jar dockerfiles/run/guice/cassandra-rabbitmq/destination"
+                        sh "cp -r server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.lib dockerfiles/run/guice/cassandra-rabbitmq/destination"
+                        sh "cp server/container/cli/target/james-server-cli.jar dockerfiles/run/guice/cassandra-rabbitmq/destination"
+                        sh "cp -r server/container/cli/target/james-server-cli.lib dockerfiles/run/guice/cassandra-rabbitmq/destination"
+                        sh "docker build -t james_run dockerfiles/run/guice/cassandra-rabbitmq"
+                    }
+                }
+            }
+        }
+        stage('Start James') {
+            steps {
+                script {
+                    docker.withTool('docker') {
+                        sh "docker run -d --name=cassandra cassandra:3.11.3"
+                        sh "docker run -d --name=rabbitmq rabbitmq:3.7.7-management"
+                        sh "docker run -d --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:6.3.2"
+
+                        sh "docker run -d --hostname HOSTNAME -p 25:25 -p 8081:80 -p 110:110 -p 143:143 -p 465:465 -p 587:587 -p 993:993 --link cassandra:cassandra --link rabbitmq:rabbitmq --link elasticsearch:elasticsearch --name james_run -t james_run"
+                        try {
+                            def jamesCliWithOptions = 'java -jar /root/james-cli.jar -h 127.0.0.1'
+                            waitForCommandSuccess("docker exec james_run ${jamesCliWithOptions} listusers", maxRetries)
+                        } catch (Exception e) {
+                            sh "docker logs james_run"
+                        }
+                    }
+                }
+            }
+        }
+        stage('Run Gatling test') {
+            steps {
+                build job: 'Gatling job', parameters: [[$class: 'StringParameterValue', name: 'SBT_ACTION', value: "gatling:testOnly  ${params.SCENARIO}"]]
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                docker.withTool('docker') {
+                    sh "docker rm -f cassandra rabbitmq elasticsearch james_run"
+                }
+            }
+        }
+    }
+}

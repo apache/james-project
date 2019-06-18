@@ -56,7 +56,16 @@
        <!-- Important check to avoid looping -->
        <mailet match="RelayLimit=30" class="Null"/>
 
-       <!-- Check attachment extensions for possible viruses -->
+        <mailet matcher="All" class="WithPriority">
+            <value>8</value>
+        </mailet>
+
+        <mailet matcher="HasPriority=8" class="Null"/>
+        <mailet matcher="AtLeastPriority=8" class="Null"/>
+        <mailet matcher="AtMostPriority=8" class="Null"/>
+
+
+        <!-- Check attachment extensions for possible viruses -->
        <!-- The "-z" option requests the check to be non-recursively applied -->
        <!-- to the contents of any attached '*.zip' file. -->
        <!-- 

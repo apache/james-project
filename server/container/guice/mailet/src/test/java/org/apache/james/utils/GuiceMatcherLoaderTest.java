@@ -19,9 +19,9 @@
 
 package org.apache.james.utils;
 
-import static org.apache.james.utils.FileSystemFixture.CLASSPATH_FILE_SYSTEM;
-import static org.apache.james.utils.FileSystemFixture.RECURSIVE_CLASSPATH_FILE_SYSTEM;
-import static org.apache.james.utils.FileSystemFixture.THROWING_FILE_SYSTEM;
+import static org.apache.james.filesystem.api.FileSystemFixture.CLASSPATH_FILE_SYSTEM;
+import static org.apache.james.filesystem.api.FileSystemFixture.RECURSIVE_CLASSPATH_FILE_SYSTEM;
+import static org.apache.james.filesystem.api.FileSystemFixture.THROWING_FILE_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.MessagingException;

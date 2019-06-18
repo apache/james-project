@@ -19,6 +19,7 @@
 package org.apache.james.queue.activemq;
 
 import org.apache.james.queue.jms.JMSSupport;
+import org.apache.mailet.AttributeName;
 
 /**
  * Interface which should get implemented by ActiveMQ depending implementions
@@ -28,16 +29,16 @@ public interface ActiveMQSupport extends JMSSupport {
     /**
      * The name of the Queue the mail is stored in
      */
-    String JAMES_QUEUE_NAME = "JAMES_QUEUE_NAME";
+    AttributeName JAMES_QUEUE_NAME = AttributeName.of("JAMES_QUEUE_NAME");
 
     /**
      * The URL of the Blobmessage content
      */
-    String JAMES_BLOB_URL = "JAMES_BLOB_URL";
+    AttributeName JAMES_BLOB_URL = AttributeName.of("JAMES_BLOB_URL");
 
     /**
      * Indicate that the Blobmessage content is reused for a new message
      */
-    String JAMES_REUSE_BLOB_URL = " JAMES_REUSE_BLOB_URL";
+    AttributeName JAMES_REUSE_BLOB_URL = AttributeName.of(" JAMES_REUSE_BLOB_URL");
 
 }

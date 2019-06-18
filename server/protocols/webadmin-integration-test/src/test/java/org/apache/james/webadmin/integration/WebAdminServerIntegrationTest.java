@@ -25,6 +25,7 @@ import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
@@ -40,38 +41,49 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.routes.AliasRoutes;
+import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.DomainsRoutes;
+import org.apache.james.webadmin.routes.ForwardRoutes;
+import org.apache.james.webadmin.routes.GroupsRoutes;
 import org.apache.james.webadmin.routes.HealthCheckRoutes;
 import org.apache.james.webadmin.routes.MailQueueRoutes;
 import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
+import org.apache.james.webadmin.routes.TasksRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
 import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 
 public class WebAdminServerIntegrationTest {
 
-    public static final String DOMAIN = "domain";
-    public static final String USERNAME = "username@" + DOMAIN;
-    public static final String SPECIFIC_DOMAIN = DomainsRoutes.DOMAINS + SEPARATOR + DOMAIN;
-    public static final String SPECIFIC_USER = UserRoutes.USERS + SEPARATOR + USERNAME;
-    public static final String MAILBOX = "mailbox";
-    public static final String SPECIFIC_MAILBOX = SPECIFIC_USER + SEPARATOR + UserMailboxesRoutes.MAILBOXES + SEPARATOR + MAILBOX;
-    public static final String VERSION = "/cassandra/version";
-    public static final String VERSION_LATEST = VERSION + "/latest";
-    public static final String UPGRADE_VERSION = VERSION + "/upgrade";
-    public static final String UPGRADE_TO_LATEST_VERSION = UPGRADE_VERSION + "/latest";
+    private static final String DOMAIN = "domain";
+    private static final String USERNAME = "username@" + DOMAIN;
+    private static final String USERNAME_2 = "username2@" + DOMAIN;
+    private static final String ALIAS_1 = "alias1@" + DOMAIN;
+    private static final String ALIAS_2 = "alias2@" + DOMAIN;
+    private static final String GROUP = "group@" + DOMAIN;
+    private static final String SPECIFIC_DOMAIN = DomainsRoutes.DOMAINS + SEPARATOR + DOMAIN;
+    private static final String SPECIFIC_USER = UserRoutes.USERS + SEPARATOR + USERNAME;
+    private static final String MAILBOX = "mailbox";
+    private static final String SPECIFIC_MAILBOX = SPECIFIC_USER + SEPARATOR + UserMailboxesRoutes.MAILBOXES + SEPARATOR + MAILBOX;
+    private static final String VERSION = "/cassandra/version";
+    private static final String VERSION_LATEST = VERSION + "/latest";
+    private static final String UPGRADE_VERSION = VERSION + "/upgrade";
+    private static final String UPGRADE_TO_LATEST_VERSION = UPGRADE_VERSION + "/latest";
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
-    
+    @Rule
+    public DockerCassandraRule cassandra = new DockerCassandraRule();
+
     @Rule
     public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
 
@@ -80,10 +92,10 @@ public class WebAdminServerIntegrationTest {
 
     @Before
     public void setUp() throws Exception {
-        guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule())
-                .overrideWith(new WebAdminConfigurationModule());
+        guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule());
         guiceJamesServer.start();
         dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DOMAIN);
         WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort())
@@ -120,30 +132,28 @@ public class WebAdminServerIntegrationTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("repository", containsInAnyOrder(
-                "var/mail/error/",
-                "var/mail/relay-denied/",
-                "var/mail/address-error/"));
+                "var/mail/error",
+                "var/mail/relay-denied",
+                "var/mail/address-error"));
     }
 
     @Test
     public void gettingANonExistingMailRepositoryShouldNotCreateIt() {
         given()
-            .get(MailRepositoriesRoutes.MAIL_REPOSITORIES + "file%3A%2F%2Fvar%2Fmail%2Fcustom%2F");
+            .get(MailRepositoriesRoutes.MAIL_REPOSITORIES + "file%3A%2F%2Fvar%2Fmail%2Fcustom");
 
         when()
             .get(MailRepositoriesRoutes.MAIL_REPOSITORIES)
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("repository", containsInAnyOrder(
-                "var/mail/error/",
-                "var/mail/relay-denied/",
-                "var/mail/address-error/"));
+                "var/mail/error",
+                "var/mail/relay-denied",
+                "var/mail/address-error"));
     }
 
     @Test
     public void deleteShouldRemoveTheGivenDomain() throws Exception {
-        dataProbe.addDomain(DOMAIN);
-
         when()
             .delete(SPECIFIC_DOMAIN)
         .then()
@@ -154,8 +164,6 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void postShouldAddTheUser() throws Exception {
-        dataProbe.addDomain(DOMAIN);
-
         given()
             .body("{\"password\":\"password\"}")
         .when()
@@ -168,7 +176,6 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void deleteShouldRemoveTheUser() throws Exception {
-        dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(USERNAME, "anyPassword");
 
         given()
@@ -183,7 +190,6 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void getUsersShouldDisplayUsers() throws Exception {
-        dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(USERNAME, "anyPassword");
 
         when()
@@ -196,7 +202,6 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void putMailboxShouldAddAMailbox() throws Exception {
-        dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(USERNAME, "anyPassword");
 
         when()
@@ -209,7 +214,6 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void deleteMailboxShouldRemoveAMailbox() throws Exception {
-        dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(USERNAME, "anyPassword");
         guiceJamesServer.getProbe(MailboxProbeImpl.class).createMailbox("#private", USERNAME, MAILBOX);
 
@@ -250,14 +254,20 @@ public class WebAdminServerIntegrationTest {
             .get("taskId");
 
         with()
-            .get("/task/" + taskId + "/await");
-
-        when()
-            .get(VERSION)
+            .get("/tasks/" + taskId + "/await")
         .then()
-            .statusCode(HttpStatus.OK_200)
-            .contentType(JSON_CONTENT_TYPE)
-            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION.getValue() + "}"));
+            .body("status", is("completed"));
+
+        Awaitility.await()
+            .atMost(Duration.TEN_SECONDS)
+            .await()
+            .untilAsserted(() ->
+                when()
+                    .get(VERSION)
+                .then()
+                    .statusCode(HttpStatus.OK_200)
+                    .contentType(JSON_CONTENT_TYPE)
+                    .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION.getValue() + "}")));
     }
 
     @Test
@@ -267,7 +277,9 @@ public class WebAdminServerIntegrationTest {
             .get("taskId");
 
         with()
-            .get("/task/" + taskId + "/await");
+            .get("/tasks/" + taskId + "/await")
+        .then()
+            .body("status", is("completed"));
 
         when()
             .get(VERSION)
@@ -279,34 +291,59 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void addressGroupsEndpointShouldHandleRequests() throws Exception {
-        dataProbe.addGroupMapping("group", "domain.com", "user1@domain.com");
-        dataProbe.addGroupMapping("group", "domain.com", "user2@domain.com");
+        with()
+            .put(GroupsRoutes.ROOT_PATH + SEPARATOR + GROUP + SEPARATOR + USERNAME);
+        with()
+            .put(GroupsRoutes.ROOT_PATH + SEPARATOR + GROUP + SEPARATOR + USERNAME_2);
 
         List<String> members = when()
-            .get("/address/groups/group@domain.com")
+            .get(GroupsRoutes.ROOT_PATH + SEPARATOR + GROUP)
         .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
             .extract()
             .jsonPath()
             .getList(".");
-        assertThat(members).containsOnly("user1@domain.com", "user2@domain.com");
+        assertThat(members).containsOnly(USERNAME, USERNAME_2);
     }
 
     @Test
     public void addressForwardsEndpointShouldListForwardAddresses() throws Exception {
-        dataProbe.addForwardMapping("from1", "domain.com", "user1@domain.com");
-        dataProbe.addForwardMapping("from2", "domain.com", "user2@domain.com");
+        dataProbe.addUser(USERNAME, "anyPassword");
+        dataProbe.addUser(USERNAME_2, "anyPassword");
+
+        with()
+            .put(ForwardRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/targets/to1@domain.com");
+        with()
+            .put(ForwardRoutes.ROOT_PATH + SEPARATOR + USERNAME_2 + "/targets/to2@domain.com");
 
         List<String> members = when()
-            .get("/address/forwards")
+            .get(ForwardRoutes.ROOT_PATH)
         .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
             .extract()
             .jsonPath()
             .getList(".");
-        assertThat(members).containsOnly("from1@domain.com", "from2@domain.com");
+        assertThat(members).containsOnly(USERNAME, USERNAME_2);
+    }
+
+    @Test
+    public void addressAliasesEndpointShouldListAliasesAddresses() {
+        with()
+            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/" + ALIAS_1);
+        with()
+            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME_2 + "/sources/" + ALIAS_2);
+
+        List<String> members = when()
+            .get(AliasRoutes.ROOT_PATH)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .contentType(JSON_CONTENT_TYPE)
+            .extract()
+            .jsonPath()
+            .getList(".");
+        assertThat(members).containsOnly(USERNAME, USERNAME_2);
     }
 
     @Test
@@ -326,14 +363,46 @@ public class WebAdminServerIntegrationTest {
             .body(containsString("\"tags\":[\"MailRepositories\"]"))
             .body(containsString("\"tags\":[\"MailQueues\"]"))
             .body(containsString("\"tags\":[\"Address Forwards\"]"))
-            .body(containsString("\"tags\":[\"Address Groups\"]"));
+            .body(containsString("\"tags\":[\"Address Aliases\"]"))
+            .body(containsString("\"tags\":[\"Address Groups\"]"))
+            .body(containsString("\"tags\":[\"Cassandra Mappings Operations\"]"))
+            .body(containsString("{\"name\":\"ReIndexing (mailboxes)\"}"))
+            .body(containsString("{\"name\":\"MessageIdReIndexing\"}"));
     }
 
     @Test
-    public void validateHealthChecksShouldReturnOk() throws Exception {
+    public void validateHealthChecksShouldReturnOk() {
         when()
             .get(HealthCheckRoutes.HEALTHCHECK)
         .then()
             .statusCode(HttpStatus.OK_200);
+    }
+
+    @Test
+    public void cassandraMappingsEndpointShouldKeepDataConsistencyWhenDataValid() {
+        with()
+            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/" + ALIAS_1);
+        with()
+            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/" + ALIAS_2);
+
+        String taskId = with()
+            .queryParam("action", "SolveInconsistencies")
+            .post(CassandraMappingsRoutes.ROOT_PATH)
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"));
+
+        when()
+            .get(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME)
+        .then()
+            .contentType(ContentType.JSON)
+        .statusCode(HttpStatus.OK_200)
+            .body("source", hasItems(ALIAS_1, ALIAS_2));
     }
 }

@@ -24,10 +24,9 @@ import java.time.Duration;
 
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.metrics.api.NoopMetricFactory;
@@ -48,10 +47,9 @@ public class DefaultMailboxesProvisioningFilterTest {
 
     @Before
     public void before() throws Exception {
-        session = new MockMailboxSession(USERNAME);
+        session = MailboxSessionUtil.create(USERNAME);
 
-        InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
-        mailboxManager = inMemoryIntegrationResources.createMailboxManager(new SimpleGroupMembershipResolver());
+        mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         subscriptionManager = new StoreSubscriptionManager(mailboxManager.getMapperFactory());
         testee = new DefaultMailboxesProvisioningFilter(mailboxManager, subscriptionManager, new NoopMetricFactory());
     }

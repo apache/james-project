@@ -20,6 +20,9 @@
 package org.apache.james.backends.cassandra;
 
 public class DockerCassandraSingleton {
+    private static final int MAX_TEST_PLAYED = 100;
+
+    private static int testsPlayedCount = 0;
 
     public static final DockerCassandra singleton = new DockerCassandra();
 
@@ -27,7 +30,19 @@ public class DockerCassandraSingleton {
         singleton.start();
     }
 
-    public static void restart() {
+    public static void incrementTestsPlayed() {
+        testsPlayedCount += 1;
+    }
+
+    // Call this method to ensure that cassandra is restarted every MAX_TEST_PLAYED tests
+    public static void restartAfterMaxTestsPlayed() {
+        if (testsPlayedCount > MAX_TEST_PLAYED) {
+            testsPlayedCount = 0;
+            restart();
+        }
+    }
+
+    private static void restart() {
         singleton.stop();
         singleton.start();
     }

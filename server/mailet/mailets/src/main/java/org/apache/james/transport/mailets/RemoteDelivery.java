@@ -22,9 +22,6 @@ package org.apache.james.transport.mailets;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -65,7 +62,6 @@ import com.google.common.collect.HashMultimap;
  * <p>These are the parameters that control the operation of the RemoteDelivery mailet:
  * <p/>
  * <ul>
- * <li><b>deliveryThreads</b> (required) - an Integer for the number of threads this mailet will use to deliver mail.</li>
  * <li><b>outgoing</b> (required) - a String containing the name of the queue that will hold messages being processed by this mailet.</li>
  * <li><b>bind</b> (optional) - a String describing the local IP address to which the mailet should be bound while delivering
  * emails. This tag is useful for multihomed machines. Default is to bind to the default local address of the machine.<br>
@@ -121,6 +117,7 @@ import com.google.common.collect.HashMultimap;
  */
 public class RemoteDelivery extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(RemoteDelivery.class);
+    private DeliveryRunnable deliveryRunnable;
 
     public enum ThreadState {
         START_THREADS,
@@ -133,12 +130,10 @@ public class RemoteDelivery extends GenericMailet {
     private final DomainList domainList;
     private final MailQueueFactory<?> queueFactory;
     private final MetricFactory metricFactory;
-    private final AtomicBoolean isDestroyed;
     private final ThreadState startThreads;
 
     private MailQueue queue;
     private RemoteDeliveryConfiguration configuration;
-    private ExecutorService executor;
 
     @Inject
     public RemoteDelivery(DNSService dnsServer, DomainList domainList, MailQueueFactory<?> queueFactory, MetricFactory metricFactory) {
@@ -150,7 +145,6 @@ public class RemoteDelivery extends GenericMailet {
         this.domainList = domainList;
         this.queueFactory = queueFactory;
         this.metricFactory = metricFactory;
-        this.isDestroyed = new AtomicBoolean(false);
         this.startThreads = startThreads;
     }
 
@@ -165,22 +159,14 @@ public class RemoteDelivery extends GenericMailet {
         } catch (UnknownHostException e) {
             LOGGER.error("Invalid bind setting ({}): ", configuration.getBindAddress(), e);
         }
+        deliveryRunnable = new DeliveryRunnable(queue,
+            configuration,
+            dnsServer,
+            metricFactory,
+            getMailetContext(),
+            new Bouncer(configuration, getMailetContext()));
         if (startThreads == ThreadState.START_THREADS) {
-            initDeliveryThreads();
-        }
-    }
-
-    private void initDeliveryThreads() {
-        executor = Executors.newFixedThreadPool(configuration.getWorkersThreadCount());
-        for (int a = 0; a < configuration.getWorkersThreadCount(); a++) {
-            executor.execute(
-                new DeliveryRunnable(queue,
-                    configuration,
-                    dnsServer,
-                    metricFactory,
-                    getMailetContext(),
-                    new Bouncer(configuration, getMailetContext()),
-                    isDestroyed));
+            deliveryRunnable.start();
         }
     }
 
@@ -195,7 +181,7 @@ public class RemoteDelivery extends GenericMailet {
             LOGGER.debug("Remotely delivering mail {}", mail.getName());
         }
         if (configuration.isUsePriority()) {
-            mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.HIGH_PRIORITY);
+            mail.setAttribute(MailPrioritySupport.HIGH_PRIORITY_ATTRIBUTE);
         }
         if (!mail.getRecipients().isEmpty()) {
             if (configuration.getGatewayServer().isEmpty()) {
@@ -204,7 +190,7 @@ public class RemoteDelivery extends GenericMailet {
                 serviceWithGateway(mail);
             }
         } else {
-            LOGGER.debug("Mail {} from {} has no recipients and can not be remotely delivered", mail.getName(), mail.getSender());
+            LOGGER.debug("Mail {} from {} has no recipients and can not be remotely delivered", mail.getName(), mail.getMaybeSender());
         }
         mail.setState(Mail.GHOST);
     }
@@ -258,9 +244,7 @@ public class RemoteDelivery extends GenericMailet {
     @Override
     public synchronized void destroy() {
         if (startThreads == ThreadState.START_THREADS) {
-            isDestroyed.set(true);
-            executor.shutdownNow();
-            notifyAll();
+            deliveryRunnable.dispose();
         }
     }
 

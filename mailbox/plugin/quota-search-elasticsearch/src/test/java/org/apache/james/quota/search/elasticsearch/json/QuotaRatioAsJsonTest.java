@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class QuotaRatioAsJsonTest {
+class QuotaRatioAsJsonTest {
 
     private static final Quota<QuotaSize> QUOTA_SIZE = Quota.<QuotaSize>builder()
             .used(QuotaSize.size(15))
@@ -43,20 +43,20 @@ public class QuotaRatioAsJsonTest {
             .build();
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(QuotaRatioAsJson.class)
             .verify();
     }
 
     @Test
-    public void buildShouldThrownWhenUserIsNull() {
+    void buildShouldThrownWhenUserIsNull() {
         assertThatThrownBy(() -> QuotaRatioAsJson.builder()
                 .build())
             .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void buildShouldThrownWhenUserIsEmpty() {
+    void buildShouldThrownWhenUserIsEmpty() {
         assertThatThrownBy(() -> QuotaRatioAsJson.builder()
                 .user("")
                 .build())
@@ -64,7 +64,7 @@ public class QuotaRatioAsJsonTest {
     }
 
     @Test
-    public void buildShouldThrownWhenQuotaRatioIsNull() {
+    void buildShouldThrownWhenQuotaRatioIsNull() {
         assertThatThrownBy(() -> QuotaRatioAsJson.builder()
                 .user("user")
                 .build())
@@ -72,7 +72,7 @@ public class QuotaRatioAsJsonTest {
     }
 
     @Test
-    public void getDomainShouldReturnEmptyWhenNone() {
+    void getDomainShouldReturnEmptyWhenNone() {
         QuotaRatioAsJson quotaRatioAsJson = QuotaRatioAsJson.builder()
             .user("user")
             .quotaRatio(QuotaRatio.from(QUOTA_SIZE, QUOTA_COUNT))
@@ -82,7 +82,7 @@ public class QuotaRatioAsJsonTest {
     }
 
     @Test
-    public void getDomainShouldReturnTheDomainWhenGiven() {
+    void getDomainShouldReturnTheDomainWhenGiven() {
         String domain = "domain";
         QuotaRatioAsJson quotaRatioAsJson = QuotaRatioAsJson.builder()
             .user("user")
@@ -94,7 +94,7 @@ public class QuotaRatioAsJsonTest {
     }
 
     @Test
-    public void getMaxQuotaRatioShouldReturnTheMaxQuotaRatio() {
+    void getMaxQuotaRatioShouldReturnTheMaxQuotaRatio() {
         String domain = "domain";
         QuotaRatioAsJson quotaRatioAsJson = QuotaRatioAsJson.builder()
             .user("user")

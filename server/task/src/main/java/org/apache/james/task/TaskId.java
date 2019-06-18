@@ -23,11 +23,22 @@ import java.util.Objects;
 import java.util.UUID;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 
 public class TaskId {
 
     public static TaskId generateTaskId() {
-        return new TaskId(UUID.randomUUID());
+        return fromUUID(UUID.randomUUID());
+    }
+
+    public static TaskId fromUUID(UUID uuid) {
+        Preconditions.checkNotNull(uuid, "'uuid' should not be null");
+        return new TaskId(uuid);
+    }
+
+    public static TaskId fromString(String uuid) {
+        Preconditions.checkNotNull(uuid, "'uuid' should not be null");
+        return fromUUID(UUID.fromString(uuid));
     }
 
     private final UUID value;
@@ -38,6 +49,10 @@ public class TaskId {
 
     public UUID getValue() {
         return value;
+    }
+
+    public String asString() {
+        return value.toString();
     }
 
     @Override

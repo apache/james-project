@@ -24,6 +24,8 @@ import javax.inject.Inject;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -38,8 +40,8 @@ public class MailSpool {
     }
 
     public void send(Mail mail, MailMetadata metadata) throws MailQueueException {
-        mail.setAttribute(MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE, metadata.getMessageId().serialize());
-        mail.setAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, metadata.getUsername());
+        mail.setAttribute(new Attribute(MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE, AttributeValue.of(metadata.getMessageId().serialize())));
+        mail.setAttribute(new Attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of(metadata.getUsername())));
         queue.enQueue(mail);
     }
 }

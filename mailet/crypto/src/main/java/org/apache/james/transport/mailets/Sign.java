@@ -192,7 +192,7 @@ public class Sign extends AbstractSign {
             signatureReason.setText(getReplacedExplanationText(getExplanationText(),
                                                                getSignerName(),
                                                                getKeyHolder().getSignerAddress(),
-                                                               mail.getSender().toString(),
+                                                               mail.getMaybeSender().asString(),
                                                                headers));
             
             signatureReason.setFileName("SignatureExplanation.txt");

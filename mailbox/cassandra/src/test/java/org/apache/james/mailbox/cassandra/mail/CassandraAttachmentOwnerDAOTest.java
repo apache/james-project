@@ -21,20 +21,20 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.stream.IntStream;
-
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Username;
-import org.apache.james.util.FluentFutureStream;
-import org.apache.james.util.streams.JamesCollectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import reactor.core.publisher.Flux;
+
+@ExtendWith(CassandraRestartExtension.class)
 class CassandraAttachmentOwnerDAOTest {
     private static final AttachmentId ATTACHMENT_ID = AttachmentId.from("id1");
     private static final Username OWNER_1 = Username.fromRawValue("owner1");
@@ -47,30 +47,30 @@ class CassandraAttachmentOwnerDAOTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        testee = new CassandraAttachmentOwnerDAO(cassandra.getConf(),
-            CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        testee = new CassandraAttachmentOwnerDAO(cassandra.getConf()
+        );
     }
 
     @Test
     void retrieveOwnersShouldReturnEmptyByDefault() {
-        assertThat(testee.retrieveOwners(ATTACHMENT_ID).join())
+        assertThat(testee.retrieveOwners(ATTACHMENT_ID).toIterable())
             .isEmpty();
     }
 
     @Test
     void retrieveOwnersShouldReturnAddedOwner() {
-        testee.addOwner(ATTACHMENT_ID, OWNER_1).join();
+        testee.addOwner(ATTACHMENT_ID, OWNER_1).block();
 
-        assertThat(testee.retrieveOwners(ATTACHMENT_ID).join())
+        assertThat(testee.retrieveOwners(ATTACHMENT_ID).toIterable())
             .containsOnly(OWNER_1);
     }
 
     @Test
     void retrieveOwnersShouldReturnAddedOwners() {
-        testee.addOwner(ATTACHMENT_ID, OWNER_1).join();
-        testee.addOwner(ATTACHMENT_ID, OWNER_2).join();
+        testee.addOwner(ATTACHMENT_ID, OWNER_1).block();
+        testee.addOwner(ATTACHMENT_ID, OWNER_2).block();
 
-        assertThat(testee.retrieveOwners(ATTACHMENT_ID).join())
+        assertThat(testee.retrieveOwners(ATTACHMENT_ID).toIterable())
             .containsOnly(OWNER_1, OWNER_2);
     }
 
@@ -78,15 +78,12 @@ class CassandraAttachmentOwnerDAOTest {
     void retrieveOwnersShouldNotThrowWhenMoreReferencesThanPaging() {
         int referenceCountExceedingPaging = 5050;
 
-        IntStream.range(0, referenceCountExceedingPaging)
-            .boxed()
-            .collect(JamesCollectors.chunker(128))
-            .forEach(chunk -> FluentFutureStream.of(
-                chunk.stream()
-                    .map(i -> testee.addOwner(ATTACHMENT_ID, Username.fromRawValue("owner" + i))))
-                .join());
+        Flux.range(0, referenceCountExceedingPaging)
+            .limitRate(128)
+            .flatMap(i -> testee.addOwner(ATTACHMENT_ID, Username.fromRawValue("owner" + i)))
+            .blockLast();
 
-        assertThat(testee.retrieveOwners(ATTACHMENT_ID).join())
+        assertThat(testee.retrieveOwners(ATTACHMENT_ID).toIterable())
             .hasSize(referenceCountExceedingPaging);
     }
 }

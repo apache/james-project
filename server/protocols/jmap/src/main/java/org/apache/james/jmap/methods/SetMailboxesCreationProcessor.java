@@ -178,10 +178,10 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
 
             assertBelongsToUser(parentPath, mailboxSession);
 
-            return MailboxPath.forUser(mailboxSession.getUser().getUserName(),
+            return MailboxPath.forUser(mailboxSession.getUser().asString(),
                 parentPath.getName() + mailboxSession.getPathDelimiter() + mailboxRequest.getName());
         }
-        return MailboxPath.forUser(mailboxSession.getUser().getUserName(), mailboxRequest.getName());
+        return MailboxPath.forUser(mailboxSession.getUser().asString(), mailboxRequest.getName());
     }
 
     private void assertBelongsToUser(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxNotOwnedException {

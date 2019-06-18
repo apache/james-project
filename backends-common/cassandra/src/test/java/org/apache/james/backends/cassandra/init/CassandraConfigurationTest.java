@@ -88,20 +88,6 @@ public class CassandraConfigurationTest {
     }
 
     @Test
-    public void flagsUpdateChunkSizeShouldThrowOnNegativeValue() {
-        assertThatThrownBy(() -> CassandraConfiguration.builder()
-                .flagsUpdateChunkSize(-1))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    public void flagsUpdateChunkSizeShouldThrowOnZero() {
-        assertThatThrownBy(() -> CassandraConfiguration.builder()
-                .flagsUpdateChunkSize(0))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
     public void flagsUpdateMessageIdMaxRetryShouldThrowOnNegativeValue() {
         assertThatThrownBy(() -> CassandraConfiguration.builder()
                 .flagsUpdateMessageIdMaxRetry(-1))
@@ -207,7 +193,6 @@ public class CassandraConfigurationTest {
         int fetchNextPageInAdvanceRow = 4;
         int flagsUpdateMessageMaxRetry = 5;
         int flagsUpdateMessageIdMaxRetry = 6;
-        int flagsUpdateChunkSize = 7;
         int messageReadChunkSize = 8;
         int expungeChunkSize = 9;
         int blobPartSize = 10;
@@ -221,7 +206,6 @@ public class CassandraConfigurationTest {
             .fetchNextPageInAdvanceRow(fetchNextPageInAdvanceRow)
             .flagsUpdateMessageMaxRetry(flagsUpdateMessageMaxRetry)
             .flagsUpdateMessageIdMaxRetry(flagsUpdateMessageIdMaxRetry)
-            .flagsUpdateChunkSize(flagsUpdateChunkSize)
             .messageReadChunkSize(messageReadChunkSize)
             .expungeChunkSize(expungeChunkSize)
             .blobPartSize(blobPartSize)
@@ -235,7 +219,6 @@ public class CassandraConfigurationTest {
         softly.assertThat(configuration.getFetchNextPageInAdvanceRow()).isEqualTo(fetchNextPageInAdvanceRow);
         softly.assertThat(configuration.getFlagsUpdateMessageMaxRetry()).isEqualTo(flagsUpdateMessageMaxRetry);
         softly.assertThat(configuration.getFlagsUpdateMessageIdMaxRetry()).isEqualTo(flagsUpdateMessageIdMaxRetry);
-        softly.assertThat(configuration.getFlagsUpdateChunkSize()).isEqualTo(flagsUpdateChunkSize);
         softly.assertThat(configuration.getMessageReadChunkSize()).isEqualTo(messageReadChunkSize);
         softly.assertThat(configuration.getExpungeChunkSize()).isEqualTo(expungeChunkSize);
         softly.assertThat(configuration.getBlobPartSize()).isEqualTo(blobPartSize);

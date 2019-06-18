@@ -53,6 +53,7 @@ import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.ParametersExtractor;
+import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.github.fge.lambdas.Throwing;
@@ -382,15 +383,14 @@ public class MailQueueRoutes implements Routes {
             jsonTransformer);
     }
 
-    private Response forceDelayedMailsDelivery(Request request, Response response) throws JsonExtractException, MailQueueException {
+    private String forceDelayedMailsDelivery(Request request, Response response) throws JsonExtractException, MailQueueException {
         assertDelayedParamIsTrue(request);
         assertPayloadContainsDelayedEntry(request);
         ManageableMailQueue mailQueue = assertMailQueueExists(request);
 
         mailQueue.flush();
 
-        response.status(HttpStatus.NO_CONTENT_204);
-        return response;
+        return Responses.returnNoContent(response);
     }
 
     private ManageableMailQueue assertMailQueueExists(Request request) {

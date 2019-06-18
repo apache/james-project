@@ -124,6 +124,7 @@ public interface MailetContext {
      *
      * @return an Iterator (of Strings) over all attribute names
      */
+    @Deprecated
     Iterator<String> getAttributeNames();
 
     /**
@@ -133,6 +134,7 @@ public interface MailetContext {
      * @param name the attribute name
      * @return the attribute value, or null if the attribute does not exist
      */
+    @Deprecated
     Object getAttribute(String name);
 
     /**
@@ -160,6 +162,7 @@ public interface MailetContext {
      * @param name  the attribute name
      * @param value the attribute value
      */
+    @Deprecated
     void setAttribute(String name, Object value);
 
     /**
@@ -168,6 +171,7 @@ public interface MailetContext {
      * @param name the name of the attribute to be removed
      * @since Mailet API v2.1
      */
+    @Deprecated
     void removeAttribute(String name);
 
     /**

@@ -21,9 +21,13 @@ package org.apache.james;
 
 import java.util.Set;
 
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
 import org.apache.james.task.Task;
+import org.apache.james.util.Runnables;
+
+import reactor.core.publisher.Flux;
 
 public class CleanupTasksPerformer {
 
@@ -38,8 +42,12 @@ public class CleanupTasksPerformer {
         this.cleanupTasks = cleanupTasks;
     }
 
+    @PreDestroy
     public void clean() {
-        cleanupTasks.forEach(Task::run);
+        Runnables
+            .runParallel(
+                Flux.fromIterable(cleanupTasks)
+                    .map(cleanupTask -> cleanupTask::run));
     }
 
 }

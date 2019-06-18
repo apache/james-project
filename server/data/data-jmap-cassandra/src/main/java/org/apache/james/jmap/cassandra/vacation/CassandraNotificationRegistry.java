@@ -22,7 +22,6 @@ package org.apache.james.jmap.cassandra.vacation;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
@@ -34,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.primitives.Ints;
+import reactor.core.publisher.Mono;
 
 public class CassandraNotificationRegistry implements NotificationRegistry {
 
@@ -49,23 +49,23 @@ public class CassandraNotificationRegistry implements NotificationRegistry {
     }
 
     @Override
-    public CompletableFuture<Void> register(AccountId accountId, RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
+    public Mono<Void> register(AccountId accountId, RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
         Optional<Integer> waitDelay = expiryDate.map(expiry -> Ints.checkedCast(zonedDateTimeProvider.get().until(expiry, ChronoUnit.SECONDS)));
         if (isValid(waitDelay)) {
             return cassandraNotificationRegistryDAO.register(accountId, recipientId, waitDelay);
         } else {
             LOGGER.warn("Invalid wait delay for {} {} : {}", accountId, recipientId, waitDelay);
-            return CompletableFuture.completedFuture(null);
+            return Mono.empty();
         }
     }
 
     @Override
-    public CompletableFuture<Boolean> isRegistered(AccountId accountId, RecipientId recipientId) {
+    public Mono<Boolean> isRegistered(AccountId accountId, RecipientId recipientId) {
         return cassandraNotificationRegistryDAO.isRegistered(accountId, recipientId);
     }
 
     @Override
-    public CompletableFuture<Void> flush(AccountId accountId) {
+    public Mono<Void> flush(AccountId accountId) {
         return cassandraNotificationRegistryDAO.flush(accountId);
     }
 

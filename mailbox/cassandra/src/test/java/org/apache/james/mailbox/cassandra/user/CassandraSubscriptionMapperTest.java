@@ -25,19 +25,20 @@ import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapperTest;
 import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.Before;
+import org.junit.Rule;
 
 public class CassandraSubscriptionMapperTest extends SubscriptionMapperTest {
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
 
-    private static CassandraCluster cassandra;
+    private CassandraCluster cassandra;
 
-    @BeforeClass
-    public static void setUpClass() {
+    @Override
+    @Before
+    public void setUp() {
         cassandra = CassandraCluster.create(CassandraSubscriptionModule.MODULE, cassandraServer.getHost());
+        super.setUp();
     }
 
     @Override
@@ -48,10 +49,6 @@ public class CassandraSubscriptionMapperTest extends SubscriptionMapperTest {
     @After
     public void tearDown() {
         cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
         cassandra.closeCluster();
     }
 

@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -24,16 +24,18 @@ class GuiceJamesServerTest {
 
     private static final int LIMIT_TO_10_MESSAGES = 10;
 
+    private static JamesServerBuilder extensionBuilder() {
+        return new JamesServerBuilder()
+            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
+            .disableAutoStart();
+    }
+
     @Nested
     class NormalBehaviour {
         @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class)))
-            .disableAutoStart()
-            .build();
+        JamesServerExtension jamesServerExtension = extensionBuilder().build();
 
         @Test
         void serverShouldBeStartedAfterCallingStart(GuiceJamesServer server) throws Exception {
@@ -59,28 +61,23 @@ class GuiceJamesServerTest {
 
     @Nested
     class InitFailed {
-        private final ConfigurationPerformer THROWING_CONFIGURATION_PERFORMER = new ConfigurationPerformer() {
+        private final ConfigurationPerformer throwingConfigurationPerformer = new ConfigurationPerformer() {
             @Override
             public void initModule() {
                 throw new RuntimeException();
             }
 
             @Override
-            public List<Class<? extends Configurable>> forClasses() {
+            public List<Class<? extends Startable>> forClasses() {
                 return ImmutableList.of();
             }
         };
 
         @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(binder -> Multibinder.newSetBinder(binder, ConfigurationPerformer.class)
-                    .addBinding()
-                    .toInstance(THROWING_CONFIGURATION_PERFORMER)))
-            .disableAutoStart()
+        JamesServerExtension jamesServerExtension = extensionBuilder()
+            .overrideServerModule(binder -> Multibinder.newSetBinder(binder, ConfigurationPerformer.class)
+                .addBinding()
+                .toInstance(throwingConfigurationPerformer))
             .build();
 
         @Test

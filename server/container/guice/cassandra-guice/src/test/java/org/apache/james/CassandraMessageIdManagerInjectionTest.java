@@ -26,7 +26,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
@@ -42,8 +42,8 @@ class CassandraMessageIdManagerInjectionTest {
     private static final int LIMIT_TO_10_MESSAGES = 10;
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
-        .extension(new EmbeddedElasticSearchExtension())
+    static JamesServerExtension testExtension = new JamesServerBuilder()
+        .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
@@ -71,7 +71,7 @@ class CassandraMessageIdManagerInjectionTest {
         }
 
         @Override
-        public List<Class<? extends Configurable>> forClasses() {
+        public List<Class<? extends Startable>> forClasses() {
             return ImmutableList.of();
         }
     }

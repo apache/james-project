@@ -31,7 +31,7 @@ public class Username {
         Preconditions.checkNotNull(mailboxSession);
         Preconditions.checkNotNull(mailboxSession.getUser());
 
-        return fromRawValue(mailboxSession.getUser().getUserName());
+        return fromRawValue(mailboxSession.getUser().asString());
     }
 
     public static Username fromRawValue(String value) {

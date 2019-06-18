@@ -27,12 +27,10 @@ import java.util.Optional;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.http.jetty.Configuration;
 import org.apache.james.http.jetty.Configuration.Builder;
 import org.apache.james.http.jetty.JettyHttpServer;
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zalando.logbook.DefaultHttpLogWriter;
@@ -42,7 +40,7 @@ import org.zalando.logbook.servlet.LogbookFilter;
 
 import com.github.fge.lambdas.Throwing;
 
-public class JMAPServer implements Configurable {
+public class JMAPServer implements Startable {
 
     private static final Logger HTTP_JMAP_LOGGER = LoggerFactory.getLogger("http.jmap");
     private final Optional<JettyHttpServer> server;
@@ -104,8 +102,7 @@ public class JMAPServer implements Configurable {
                 .build();
     }
 
-    @Override
-    public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+    public void start() {
         server.ifPresent(Throwing.consumer(JettyHttpServer::start).sneakyThrow());
     }
 

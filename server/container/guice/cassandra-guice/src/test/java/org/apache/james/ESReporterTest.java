@@ -37,14 +37,16 @@ import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
-import org.apache.james.modules.TestESMetricReporterModule;
+import org.apache.james.modules.TestDockerESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.awaitility.Duration;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,18 +62,17 @@ class ESReporterTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ESReporterTest.class);
     private static final int LIMIT_TO_10_MESSAGES = 10;
 
-
-    static final EmbeddedElasticSearchExtension embeddedElasticSearchExtension = new EmbeddedElasticSearchExtension();
+    static final DockerElasticSearchExtension elasticSearchExtension = new DockerElasticSearchExtension();
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
-        .extension(embeddedElasticSearchExtension)
+    static JamesServerExtension testExtension = new JamesServerBuilder()
+        .extension(elasticSearchExtension)
         .extension(new CassandraExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-            .overrideWith(new TestESMetricReporterModule()))
+            .overrideWith(new TestDockerESMetricReporterModule(elasticSearchExtension.getDockerES().getHttpHost())))
         .build();
 
     private static final int DELAY_IN_MS = 100;
@@ -152,11 +153,15 @@ class ESReporterTest {
     }
 
     private boolean checkMetricRecordedInElasticSearch() {
-        try (Client client = embeddedElasticSearchExtension.getEmbeddedElasticSearch().getNode().client()) {
-            return !Arrays.stream(client.prepareSearch()
-                    .setQuery(QueryBuilders.matchAllQuery())
-                    .get().getHits().getHits())
-                .filter(searchHit -> searchHit.getIndex().startsWith(TestESMetricReporterModule.METRICS_INDEX))
+        try (RestHighLevelClient client = elasticSearchExtension.getDockerES().clientProvider().get()) {
+            SearchRequest searchRequest = new SearchRequest()
+                .source(new SearchSourceBuilder()
+                    .query(QueryBuilders.matchAllQuery()));
+            return !Arrays.stream(client
+                    .search(searchRequest)
+                    .getHits()
+                    .getHits())
+                .filter(searchHit -> searchHit.getIndex().startsWith(TestDockerESMetricReporterModule.METRICS_INDEX))
                 .collect(Collectors.toList())
                 .isEmpty();
         } catch (Exception e) {

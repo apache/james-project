@@ -23,13 +23,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@ExtendWith(CassandraRestartExtension.class)
 class CassandraFirstUnseenDAOTest {
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     private static final MessageUid UID_1 = MessageUid.of(1);
@@ -47,85 +50,85 @@ class CassandraFirstUnseenDAOTest {
 
     @Test
     void retrieveFirstUnreadShouldReturnEmptyByDefault() {
-        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join().isPresent())
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).hasElement().block())
             .isFalse();
     }
 
     @Test
     void addUnreadShouldThenBeReportedAsFirstUnseen() {
-        testee.addUnread(MAILBOX_ID, UID_1).join();
+        testee.addUnread(MAILBOX_ID, UID_1).block();
 
-        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
-            .contains(UID_1);
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).block())
+            .isEqualByComparingTo(UID_1);
     }
 
     @Test
     void retrieveFirstUnreadShouldReturnLowestUnreadUid() {
-        testee.addUnread(MAILBOX_ID, UID_1).join();
+        testee.addUnread(MAILBOX_ID, UID_1).block();
 
-        testee.addUnread(MAILBOX_ID, UID_2).join();
+        testee.addUnread(MAILBOX_ID, UID_2).block();
 
-        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
-            .contains(UID_1);
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).block())
+            .isEqualByComparingTo(UID_1);
     }
 
     @Test
     void retrieveFirstUnreadShouldBeOrderIndependent() {
-        testee.addUnread(MAILBOX_ID, UID_2).join();
+        testee.addUnread(MAILBOX_ID, UID_2).block();
 
-        testee.addUnread(MAILBOX_ID, UID_1).join();
+        testee.addUnread(MAILBOX_ID, UID_1).block();
 
-        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
-            .contains(UID_1);
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).block())
+            .isEqualByComparingTo(UID_1);
     }
 
     @Test
     void addUnreadShouldBeIdempotent() {
-        testee.addUnread(MAILBOX_ID, UID_1).join();
+        testee.addUnread(MAILBOX_ID, UID_1).block();
 
-        testee.addUnread(MAILBOX_ID, UID_1).join();
+        testee.addUnread(MAILBOX_ID, UID_1).block();
 
-        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
-            .contains(UID_1);
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).block())
+            .isEqualByComparingTo(UID_1);
     }
 
     @Test
     void removeUnreadShouldReturnWhenNoData() {
-        testee.removeUnread(MAILBOX_ID, UID_1).join();
+        testee.removeUnread(MAILBOX_ID, UID_1).block();
 
-        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
-            .isEmpty();
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).hasElement().block())
+            .isFalse();
     }
 
     @Test
     void removeUnreadShouldRemoveOnlyUnread() {
-        testee.addUnread(MAILBOX_ID, UID_1).join();
+        testee.addUnread(MAILBOX_ID, UID_1).block();
 
-        testee.removeUnread(MAILBOX_ID, UID_1).join();
+        testee.removeUnread(MAILBOX_ID, UID_1).block();
 
-        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
-            .isEmpty();
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).hasElement().block())
+            .isFalse();
     }
 
     @Test
     void removeUnreadShouldRemoveLastUnread() {
-        testee.addUnread(MAILBOX_ID, UID_1).join();
-        testee.addUnread(MAILBOX_ID, UID_2).join();
+        testee.addUnread(MAILBOX_ID, UID_1).block();
+        testee.addUnread(MAILBOX_ID, UID_2).block();
 
-        testee.removeUnread(MAILBOX_ID, UID_2).join();
+        testee.removeUnread(MAILBOX_ID, UID_2).block();
 
-        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
-            .contains(UID_1);
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).block())
+            .isEqualByComparingTo(UID_1);
     }
 
     @Test
     void removeUnreadShouldHaveNoEffectWhenNotLast() {
-        testee.addUnread(MAILBOX_ID, UID_1).join();
-        testee.addUnread(MAILBOX_ID, UID_2).join();
+        testee.addUnread(MAILBOX_ID, UID_1).block();
+        testee.addUnread(MAILBOX_ID, UID_2).block();
 
-        testee.removeUnread(MAILBOX_ID, UID_1).join();
+        testee.removeUnread(MAILBOX_ID, UID_1).block();
 
-        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
-            .contains(UID_2);
+        assertThat(testee.retrieveFirstUnread(MAILBOX_ID).block())
+            .isEqualByComparingTo(UID_2);
     }
 }

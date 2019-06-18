@@ -23,6 +23,7 @@ import javax.inject.Inject;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.jspf.core.DNSService;
 import org.apache.james.jspf.core.exceptions.SPFErrorConstants;
 import org.apache.james.jspf.executor.SPFResult;
@@ -38,6 +39,9 @@ import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailHook;
 import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.apache.james.smtpserver.JamesMessageHook;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,15 +59,15 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
      */
     private final Logger serviceLog = FALLBACK_LOG;
 
-    public static final String SPF_BLOCKLISTED = "SPF_BLOCKLISTED";
+    private static final String SPF_BLOCKLISTED = "SPF_BLOCKLISTED";
 
-    public static final String SPF_DETAIL = "SPF_DETAIL";
+    private static final String SPF_DETAIL = "SPF_DETAIL";
 
-    public static final String SPF_TEMPBLOCKLISTED = "SPF_TEMPBLOCKLISTED";
+    private static final String SPF_TEMPBLOCKLISTED = "SPF_TEMPBLOCKLISTED";
 
-    public static final String SPF_HEADER = "SPF_HEADER";
+    private static final String SPF_HEADER = "SPF_HEADER";
 
-    public static final String SPF_HEADER_MAIL_ATTRIBUTE_NAME = "org.apache.james.spf.header";
+    private static final AttributeName SPF_HEADER_MAIL_ATTRIBUTE_NAME = AttributeName.of("org.apache.james.spf.header");
 
     /** If set to true the mail will also be rejected on a softfail */
     private boolean blockSoftFail = false;
@@ -109,17 +113,17 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
      * @param session
      *            SMTP session object
      */
-    private void doSPFCheck(SMTPSession session, MailAddress sender) {
+    private void doSPFCheck(SMTPSession session, MaybeSender sender) {
         String heloEhlo = (String) session.getAttachment(SMTPSession.CURRENT_HELO_NAME, State.Transaction);
 
         // We have no Sender or HELO/EHLO yet return false
-        if (sender == null || heloEhlo == null) {
+        if (sender.isNullSender() || heloEhlo == null) {
             LOGGER.info("No Sender or HELO/EHLO present");
         } else {
 
             String ip = session.getRemoteAddress().getAddress().getHostAddress();
 
-            SPFResult result = spf.checkSPF(ip, sender.toString(), heloEhlo);
+            SPFResult result = spf.checkSPF(ip, sender.asString(), heloEhlo);
 
             String spfResult = result.getResult();
 
@@ -128,7 +132,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
             // Store the header
             session.setAttachment(SPF_HEADER, result.getHeaderText(), State.Transaction);
 
-            LOGGER.info("Result for {} - {} - {} = {}", ip, sender, heloEhlo, spfResult);
+            LOGGER.info("Result for {} - {} - {} = {}", ip, sender.asString(), heloEhlo, spfResult);
 
             // Check if we should block!
             if ((spfResult.equals(SPFErrorConstants.FAIL_CONV)) || (spfResult.equals(SPFErrorConstants.SOFTFAIL_CONV) && blockSoftFail) || (spfResult.equals(SPFErrorConstants.PERM_ERROR_CONV) && blockPermError)) {
@@ -148,7 +152,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
     }
 
     @Override
-    public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
         if (!session.isRelayingAllowed()) {
             // Check if session is blocklisted
             if (session.getAttachment(SPF_BLOCKLISTED, State.Transaction) != null) {
@@ -169,7 +173,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
     }
 
     @Override
-    public HookResult doMail(SMTPSession session, MailAddress sender) {
+    public HookResult doMail(SMTPSession session, MaybeSender sender) {
         doSPFCheck(session, sender);
         return HookResult.DECLINED;
     }
@@ -273,7 +277,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
     @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
         // Store the spf header as attribute for later using
-        mail.setAttribute(SPF_HEADER_MAIL_ATTRIBUTE_NAME, (String) session.getAttachment(SPF_HEADER, State.Transaction));
+        mail.setAttribute(new Attribute(SPF_HEADER_MAIL_ATTRIBUTE_NAME, AttributeValue.of((String) session.getAttachment(SPF_HEADER, State.Transaction))));
 
         return null;
     }

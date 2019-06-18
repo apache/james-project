@@ -133,6 +133,16 @@
         <td><a href="config-webadmin.html">WebAdmin Configuration</a></td>
         <td></td>
       </tr>
+      <tr>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/deletedMessageVault.properties">deletedMessageVault.properties</a></td>
+        <td><a href="config-vault.html">Deleted Messages Vault Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties">blob.properties</a></td>
+        <td><a href="config-blob-export.html">Blob Export Configuration</a></td>
+        <td></td>
+      </tr>
 
     </table>
     
@@ -177,11 +187,6 @@
         <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/sqlResources.xml">sqlResources.xml</a></td>
         <td><a href="config-system.html">System Configuration</a></td>
         <td>Deprecated</td>
-      </tr>
-      <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/jcr-repository.xml">jcr-repository.xml</a></td>
-        <td><a href="config-system.html">System Configuration</a></td>
-        <td></td>
       </tr>
       
     </table>

@@ -27,15 +27,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
-import javax.persistence.EntityManagerFactory;
-
-import org.apache.james.backends.jpa.JpaTestCluster;
-import org.apache.james.domainlist.jpa.model.JPADomain;
-import org.apache.james.mailrepository.jpa.JPAUrl;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
-import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.server.core.configuration.Configuration;
-import org.apache.james.user.jpa.model.JPAUser;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -74,11 +67,7 @@ public class JPAJamesServerTest {
 
         return GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE, JPAJamesServerMain.PROTOCOLS)
-                .overrideWith(
-                        new TestJPAConfigurationModule(mariaDBUrl),
-                        (binder) -> binder.bind(EntityManagerFactory.class)
-                            .toInstance(JpaTestCluster.create(JPAUser.class, JPADomain.class, JPARecipientRewrite.class, JPAUrl.class)
-                                    .getEntityManagerFactory()));
+                .overrideWith(new TestJPAConfigurationModule(mariaDBUrl));
     }
 
     @After
@@ -88,7 +77,7 @@ public class JPAJamesServerTest {
 
     @Test
     public void connectSMTPServerShouldSendShabangOnConnect() throws Exception {
-        socketChannel.connect(new InetSocketAddress("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort()));
+        socketChannel.connect(new InetSocketAddress("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue()));
         assertThat(getServerConnectionResponse(socketChannel)).startsWith("220 JAMES Linagora's SMTP awesome Server");
     }
     

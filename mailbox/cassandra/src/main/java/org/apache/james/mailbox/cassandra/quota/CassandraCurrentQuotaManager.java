@@ -30,7 +30,6 @@ import javax.inject.Inject;
 
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -66,11 +65,6 @@ public class CassandraCurrentQuotaManager implements StoreCurrentQuotaManager {
         this.getCurrentStorageStatement = session.prepare(select(CassandraCurrentQuota.STORAGE)
             .from(CassandraCurrentQuota.TABLE_NAME)
             .where(eq(CassandraCurrentQuota.QUOTA_ROOT, bindMarker())));
-    }
-
-    @Override
-    public MailboxListener.ListenerType getAssociatedListenerType() {
-        return MailboxListener.ListenerType.ONCE;
     }
 
     @Override

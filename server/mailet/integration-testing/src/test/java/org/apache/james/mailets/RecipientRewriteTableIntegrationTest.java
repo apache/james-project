@@ -25,17 +25,23 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.WebAdminGuiceProbe;
+import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.routes.ForwardRoutes;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+
+import io.restassured.specification.RequestSpecification;
 
 public class RecipientRewriteTableIntegrationTest {
     private static final String JAMES_ANOTHER_DOMAIN = "james.com";
@@ -60,6 +66,7 @@ public class RecipientRewriteTableIntegrationTest {
 
     private TemporaryJamesServer jamesServer;
     private DataProbe dataProbe;
+    private RequestSpecification webAdminApi;
 
     @Before
     public void setup() throws Exception {
@@ -72,6 +79,8 @@ public class RecipientRewriteTableIntegrationTest {
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(ANY_AT_JAMES, PASSWORD);
         dataProbe.addUser(OTHER_AT_JAMES, PASSWORD);
+
+        webAdminApi = WebAdminUtils.spec(jamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
     }
 
     @After
@@ -168,7 +177,6 @@ public class RecipientRewriteTableIntegrationTest {
     @Test
     public void messageShouldNotSendToRecipientWhenDomainMapping() throws Exception {
         dataProbe.addDomainAliasMapping(DEFAULT_DOMAIN, JAMES_ANOTHER_DOMAIN);
-        dataProbe.addUser(ANY_AT_ANOTHER_DOMAIN, PASSWORD);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, ANY_AT_JAMES);
@@ -182,8 +190,8 @@ public class RecipientRewriteTableIntegrationTest {
 
     @Test
     public void rrtServiceShouldDeliverEmailToForwardRecipients() throws Exception {
-        dataProbe.addForwardMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, ANY_AT_JAMES);
-        dataProbe.addForwardMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
+        webAdminApi.put(ForwardRoutes.ROOT_PATH + "/" + RECIPIENT + "/targets/" + ANY_AT_JAMES);
+        webAdminApi.put(ForwardRoutes.ROOT_PATH + "/" + RECIPIENT + "/targets/" + OTHER_AT_JAMES);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
@@ -203,7 +211,7 @@ public class RecipientRewriteTableIntegrationTest {
     public void rrtServiceShouldFollowForwardWhenSendingToAGroup() throws Exception {
         dataProbe.addAddressMapping(GROUP_LOCAL_PART, DEFAULT_DOMAIN, ANY_AT_JAMES);
 
-        dataProbe.addForwardMapping(ANY_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
+        webAdminApi.put(ForwardRoutes.ROOT_PATH + "/" + ANY_AT_JAMES + "/targets/" + OTHER_AT_JAMES);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, GROUP);
@@ -213,5 +221,33 @@ public class RecipientRewriteTableIntegrationTest {
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
         assertThat(imapMessageReader.readFirstMessage()).isNotNull();
+    }
+
+    @Test
+    public void domainAliasMappingShouldNotCreateNonExistedUserWhenReRouting() throws Exception {
+        dataProbe.addDomain("domain1.com");
+        dataProbe.addDomain("domain2.com");
+
+        // domain2 as the source, domain1 as the destination
+        dataProbe.addDomainAliasMapping("domain2.com", "domain1.com");
+
+        dataProbe.addUser("user@domain1.com", PASSWORD);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, "user@domain2.com");
+
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login("user@domain1.com", PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+
+        // assert user  non existence
+        assertThat(dataProbe.listUsers())
+            .doesNotContain("user@domain2.com");
+
+        // assert alias address has no mailbox
+        assertThat(jamesServer.getProbe(MailboxProbeImpl.class)
+            .listUserMailboxes("user@doamin2.com"))
+            .isEmpty();
     }
 }

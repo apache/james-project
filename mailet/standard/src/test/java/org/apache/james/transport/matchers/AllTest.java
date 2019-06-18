@@ -50,6 +50,7 @@ public class AllTest {
     @Test
     public void testAllRecipientsReturned() throws MessagingException {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipients(ANY_AT_JAMES, OTHER_AT_JAMES)
             .build();
 

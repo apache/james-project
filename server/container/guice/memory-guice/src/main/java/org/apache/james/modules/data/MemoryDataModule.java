@@ -22,14 +22,21 @@ package org.apache.james.modules.data;
 import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.dlp.api.DLPConfigurationStore;
 import org.apache.james.dlp.eventsourcing.EventSourcingDLPConfigurationStore;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.mailrepository.api.MailRepositoryProvider;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
+import org.apache.james.mailrepository.api.Protocol;
+import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
+import org.apache.james.mailrepository.memory.MemoryMailRepository;
+import org.apache.james.mailrepository.memory.MemoryMailRepositoryProvider;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
+import org.apache.james.modules.server.MailStoreRepositoryModule;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
@@ -46,6 +53,10 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class MemoryDataModule extends AbstractModule {
+    private static final MailRepositoryStoreConfiguration.Item MEMORY_MAILREPOSITORY_DEFAULT_DECLARATION = new MailRepositoryStoreConfiguration.Item(
+        ImmutableList.of(new Protocol("memory")),
+        MemoryMailRepository.class.getName(),
+        new HierarchicalConfiguration());
 
     @Override
     protected void configure() {
@@ -70,6 +81,11 @@ public class MemoryDataModule extends AbstractModule {
         bind(DLPConfigurationStore.class).to(EventSourcingDLPConfigurationStore.class);
 
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MemoryDataConfigurationPerformer.class);
+
+        bind(MailStoreRepositoryModule.DefaultItemSupplier.class).toInstance(() -> MEMORY_MAILREPOSITORY_DEFAULT_DECLARATION);
+
+        Multibinder<MailRepositoryProvider> multibinder = Multibinder.newSetBinder(binder(), MailRepositoryProvider.class);
+        multibinder.addBinding().to(MemoryMailRepositoryProvider.class);
     }
 
     @Provides
@@ -109,7 +125,7 @@ public class MemoryDataModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Configurable>> forClasses() {
+        public List<Class<? extends Startable>> forClasses() {
             return ImmutableList.of(MemoryDomainList.class, MemoryRecipientRewriteTable.class);
         }
     }

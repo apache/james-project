@@ -19,6 +19,7 @@
 package org.apache.james.server.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -36,11 +37,9 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.base.RFC2822Headers;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test the subject folding issue.
@@ -88,21 +87,18 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     final String sep = "\r\n\r\n";
     final String body = "bar\r\n";
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Override
     protected MimeMessage getMessageFromSources(String sources) throws Exception {
         MimeMessageInputStreamSource mmis = new MimeMessageInputStreamSource("test", new SharedByteArrayInputStream(sources.getBytes()));
         return new TestableMimeMessageWrapper(mmis);
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         mw = (TestableMimeMessageWrapper) getMessageFromSources(content + sep + body);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         LifecycleUtil.dispose(mw);
     }
@@ -131,9 +127,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     public void testDeferredHeaderLoading() throws MessagingException, IOException {
         mw.setHeadersLoadable(false);
 
-        expectedException.expect(IllegalStateException.class);
-
-        mw.getSubject();
+        assertThatThrownBy(() -> mw.getSubject()).isInstanceOf(IllegalStateException.class);
     }
 
     /**

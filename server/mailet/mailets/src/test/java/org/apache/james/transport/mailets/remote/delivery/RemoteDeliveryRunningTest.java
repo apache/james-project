@@ -37,9 +37,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class RemoteDeliveryRunningTest {
+import reactor.core.publisher.Flux;
 
-    public static final String QUEUE_NAME = "queueName";
+public class RemoteDeliveryRunningTest {
+    private static final String QUEUE_NAME = "queueName";
+
     private RemoteDelivery remoteDelivery;
     private MailQueue mailQueue;
     private CountDownLatch countDownLatch;
@@ -60,11 +62,10 @@ public class RemoteDeliveryRunningTest {
     public void remoteDeliveryShouldStart() throws Exception {
         when(mailQueue.deQueue()).thenAnswer(invocation -> {
             countDownLatch.countDown();
-            Thread.sleep(TimeUnit.SECONDS.toMillis(20));
-            return null;
+            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+            return Flux.never();
         });
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.OUTGOING, QUEUE_NAME)
             .setProperty(RemoteDeliveryConfiguration.HELO_NAME, "Hello_name")
             .build());
@@ -74,7 +75,7 @@ public class RemoteDeliveryRunningTest {
     }
 
     @After
-    public void tearDown() throws InterruptedException {
+    public void tearDown() {
         remoteDelivery.destroy();
     }
 

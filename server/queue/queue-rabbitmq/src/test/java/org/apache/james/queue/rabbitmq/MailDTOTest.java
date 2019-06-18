@@ -31,6 +31,9 @@ import javax.mail.MessagingException;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.server.core.MailImpl;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -83,9 +86,10 @@ class MailDTOTest {
     private MailReferenceDTO mailDTO1() throws MessagingException {
         return MailReferenceDTO.fromMail(
             FakeMail.builder()
+                .name("mail-name-558")
                 .recipients(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2)
                 .sender(MailAddressFixture.SENDER)
-                .attribute("att1", "value")
+                .attribute(new Attribute(AttributeName.of("att1"), AttributeValue.of("value")))
                 .errorMessage("an error")
                 .lastUpdated(LAST_UPDATED)
                 .remoteHost("toto.com")
@@ -99,7 +103,6 @@ class MailDTOTest {
                     .value("uedcgukrcg")
                     .build(), MailAddressFixture.RECIPIENT2)
                 .state("state")
-                .name("mail-name-558")
                 .build(),
             MimeMessagePartsId.builder()
                 .headerBlobId(BLOB_ID_FACTORY.from("210e7136-ede3-44eb-9495-3ed816d6e23b"))
@@ -108,9 +111,10 @@ class MailDTOTest {
     }
 
     private MailReferenceDTO mailDTOMin() throws MessagingException {
-        MailImpl mail = new MailImpl();
+        MailImpl mail = MailImpl.builder()
+            .name("mail-name-558")
+            .build();
         mail.setState(null);
-        mail.setName("mail-name-558");
         mail.setLastUpdated(null);
         return MailReferenceDTO.fromMail(
             mail,

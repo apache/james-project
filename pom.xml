@@ -32,7 +32,7 @@
 
     <groupId>org.apache.james</groupId>
     <artifactId>james-project</artifactId>
-    <version>3.2.0-SNAPSHOT</version>
+    <version>3.4.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Apache James Project</name>
@@ -586,12 +586,11 @@
         <james.groupId>org.apache.james</james.groupId>
         <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
         <activemq.version>5.15.5</activemq.version>
-        <apache-mime4j.version>0.8.2</apache-mime4j.version>
+        <apache-mime4j.version>0.8.3</apache-mime4j.version>
         <apache.openjpa.version>3.0.0</apache.openjpa.version>
-        <camel.version>2.22.0</camel.version>
+        <camel.version>2.22.1</camel.version>
         <derby.version>10.14.2.0</derby.version>
         <hadoop.version>1.1.1</hadoop.version>
-        <hbase.version>0.94.27</hbase.version>
         <javax.inject.version>1</javax.inject.version>
         <javax.activation.groupId>javax.activation</javax.activation.groupId>
         <javax.activation.artifactId>activation</javax.activation.artifactId>
@@ -612,10 +611,9 @@
         <dnsjava.version>2.1.8</dnsjava.version>
         <junit.version>4.12</junit.version>
         <junit.jupiter.version>5.2.0</junit.jupiter.version>
-        <junit.plateform.version>1.2.0</junit.plateform.version>
+        <junit.plateform.version>1.4.1</junit.plateform.version>
         <junit.vintage.version>5.2.0</junit.vintage.version>
         <concurrent.version>1.3.4</concurrent.version>
-        <jcr.version>2.0</jcr.version>
         <xbean-spring.version>4.9</xbean-spring.version>
         <netty.version>3.10.6.Final</netty.version>
         <geronimo-annotation-spec.version>1.0.1</geronimo-annotation-spec.version>
@@ -631,12 +629,14 @@
         <karaf.tooling.exam.container.version>2.3.0</karaf.tooling.exam.container.version>
         <pax-logging-api.version>1.6.4</pax-logging-api.version>
         <jackson.version>2.9.6</jackson.version>
+        <feign.version>10.2.0</feign.version>
+        <feign-form.version>3.8.0</feign-form.version>
         <jetty.version>9.4.7.v20170914</jetty.version>
         <metrics.version>3.2.6</metrics.version>
-        <testcontainers.version>1.9.0</testcontainers.version>
+        <testcontainers.version>1.11.1</testcontainers.version>
         <assertj.version>3.3.0</assertj.version>
         <es.version>2.2.1</es.version>
-        <es-reporter.version>2.2.0</es-reporter.version>
+        <es-reporter.version>6.0.0-RC2</es-reporter.version>
         <guava.version>25.1-jre</guava.version>
 
         <jutf7.version>1.0.0</jutf7.version>
@@ -668,6 +668,13 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>io.projectreactor</groupId>
+                <artifactId>reactor-bom</artifactId>
+                <version>Californium-SR9</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-backends-cassandra</artifactId>
                 <version>${project.version}</version>
@@ -713,6 +720,17 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>apache-james-linshare</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>apache-james-linshare</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-spamassassin</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -746,6 +764,17 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>apache-james-mailbox-deleted-messages-vault</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>apache-james-mailbox-deleted-messages-vault</artifactId>
+                <type>test-jar</type>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mailbox-elasticsearch</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -757,18 +786,17 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mailbox-hbase</artifactId>
+                <artifactId>apache-james-mailbox-event-json</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mailbox-hbase</artifactId>
+                <artifactId>apache-james-mailbox-event-memory</artifactId>
                 <version>${project.version}</version>
-                <classifier>tests</classifier>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mailbox-jcr</artifactId>
+                <artifactId>apache-james-mailbox-event-rabbitmq</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -951,6 +979,12 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>apache-mailet-api</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-mailet-base</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1023,6 +1057,17 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>backup</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>backup</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1050,12 +1095,82 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>blob-api-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>blob-api-guice</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>blob-cassandra</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>blob-export-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>blob-export-file</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>blob-export-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>blob-export-guice</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>blob-memory</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>blob-memory-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>blob-objectstorage</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>blob-objectstorage</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>blob-objectstorage-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>blob-objectstorage-guice</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>blob-memory</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>blob-union</artifactId>
                 <version>${project.version}</version>
             </dependency>
              <dependency>
@@ -1120,6 +1235,17 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-blob</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-blob</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-cassandra-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1133,6 +1259,17 @@
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-cassandra-ldap-guice</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-cassandra-rabbitmq-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-cassandra-rabbitmq-guice</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
@@ -1173,16 +1310,6 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-data-hbase</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-data-jcr</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-data-jdbc</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1214,11 +1341,6 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-data-ldap-integration-testing</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-data-library</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1231,6 +1353,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-data-memory</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-deleted-messages-vault</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -1377,6 +1504,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-mailbox-jmx</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-mailbox-plugin-deleted-messages-vault-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -1577,6 +1709,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-webadmin-cassandra-data</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-webadmin-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1594,6 +1731,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-webadmin-mailbox</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-webadmin-mailbox-deleted-message-vault</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -1635,6 +1777,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>metrics-logger</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>metrics-tests</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -1790,6 +1937,11 @@
                 <version>2.4.0</version>
             </dependency>
             <dependency>
+                <groupId>com.linagora</groupId>
+                <artifactId>metrics-elasticsearch-reporter</artifactId>
+                <version>${es-reporter.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>io.rest-assured</groupId>
                 <artifactId>rest-assured</artifactId>
                 <version>3.1.0</version>
@@ -1801,19 +1953,14 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>com.nurkiewicz.asyncretry</groupId>
-                <artifactId>asyncretry</artifactId>
-                <version>0.0.7</version>
-            </dependency>
-            <dependency>
                 <groupId>com.rabbitmq</groupId>
                 <artifactId>amqp-client</artifactId>
-                <version>5.3.0</version>
+                <version>5.6.0</version>
             </dependency>
             <dependency>
                 <groupId>com.sparkjava</groupId>
                 <artifactId>spark-core</artifactId>
-                <version>2.6.0</version>
+                <version>2.8.0</version>
             </dependency>
             <dependency>
                 <groupId>com.sun.mail</groupId>
@@ -1966,9 +2113,34 @@
                 <version>0.9.1</version>
             </dependency>
             <dependency>
+                <groupId>io.github.openfeign</groupId>
+                <artifactId>feign-core</artifactId>
+                <version>${feign.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.openfeign</groupId>
+                <artifactId>feign-jackson</artifactId>
+                <version>${feign.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.openfeign</groupId>
+                <artifactId>feign-slf4j</artifactId>
+                <version>${feign.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.openfeign.form</groupId>
+                <artifactId>feign-form</artifactId>
+                <version>${feign-form.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty</artifactId>
                 <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.projectreactor.rabbitmq</groupId>
+                <artifactId>reactor-rabbitmq</artifactId>
+                <version>1.2.0.RELEASE</version>
             </dependency>
             <dependency>
                 <groupId>javax.activation</groupId>
@@ -1979,11 +2151,6 @@
                 <groupId>javax.inject</groupId>
                 <artifactId>javax.inject</artifactId>
                 <version>${javax.inject.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.jcr</groupId>
-                <artifactId>jcr</artifactId>
-                <version>${jcr.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.servlet</groupId>
@@ -2075,6 +2242,11 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>1.18</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>3.7</version>
             </dependency>
@@ -2129,29 +2301,6 @@
                 <version>${hadoop.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.hbase</groupId>
-                <artifactId>hbase</artifactId>
-                <version>${hbase.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>commons-logging</groupId>
-                        <artifactId>commons-logging</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.hbase</groupId>
-                <artifactId>hbase</artifactId>
-                <version>${hbase.version}</version>
-                <type>test-jar</type>
-                <exclusions>
-                    <exclusion>
-                        <groupId>commons-logging</groupId>
-                        <artifactId>commons-logging</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient-osgi</artifactId>
                 <version>${apache.httpcomponents.version}</version>
@@ -2176,16 +2325,6 @@
                         <artifactId>netcdf</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.jackrabbit</groupId>
-                <artifactId>jackrabbit-jcr-commons</artifactId>
-                <version>${jackrabbit.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.jackrabbit</groupId>
-                <artifactId>jackrabbit-jcr-rmi</artifactId>
-                <version>${jackrabbit.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.james.jspf</groupId>
@@ -2303,7 +2442,7 @@
             <dependency>
                 <groupId>org.apache.pdfbox</groupId>
                 <artifactId>pdfbox</artifactId>
-                <version>2.0.11</version>
+                <version>2.0.12</version>
                 <exclusions>
                     <exclusion>
                         <groupId>commons-logging</groupId>
@@ -2390,11 +2529,6 @@
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-servlet</artifactId>
                 <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.elasticsearch</groupId>
-                <artifactId>metrics-elasticsearch-reporter</artifactId>
-                <version>2.2.0</version>
             </dependency>
             <dependency>
                 <groupId>org.hamcrest</groupId>
@@ -3092,6 +3226,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
+                    <skip>false</skip>
                     <archive>
                         <manifest>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
@@ -3184,7 +3319,7 @@
                     <dependency>
                         <groupId>com.puppycrawl.tools</groupId>
                         <artifactId>checkstyle</artifactId>
-                        <version>8.5</version>
+                        <version>8.18</version>
                     </dependency>
                 </dependencies>
                 <executions>

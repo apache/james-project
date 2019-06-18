@@ -25,7 +25,6 @@ import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -38,12 +37,12 @@ class CassandraSchemaVersionDAOTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        testee = new CassandraSchemaVersionDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        testee = new CassandraSchemaVersionDAO(cassandra.getConf());
     }
 
     @Test
     void getCurrentSchemaVersionShouldReturnEmptyWhenTableIsEmpty() {
-        assertThat(testee.getCurrentSchemaVersion().join())
+        assertThat(testee.getCurrentSchemaVersion().block())
             .isEqualTo(Optional.empty());
     }
 
@@ -51,18 +50,18 @@ class CassandraSchemaVersionDAOTest {
     void getCurrentSchemaVersionShouldReturnVersionPresentInTheTable() {
         SchemaVersion version = new SchemaVersion(42);
 
-        testee.updateVersion(version).join();
+        testee.updateVersion(version).block();
 
-        assertThat(testee.getCurrentSchemaVersion().join()).contains(version);
+        assertThat(testee.getCurrentSchemaVersion().block()).contains(version);
     }
 
     @Test
     void getCurrentSchemaVersionShouldBeIdempotent() {
         SchemaVersion version = new SchemaVersion(42);
 
-        testee.updateVersion(version.next()).join();
-        testee.updateVersion(version).join();
+        testee.updateVersion(version.next()).block();
+        testee.updateVersion(version).block();
 
-        assertThat(testee.getCurrentSchemaVersion().join()).contains(version.next());
+        assertThat(testee.getCurrentSchemaVersion().block()).contains(version.next());
     }
 }

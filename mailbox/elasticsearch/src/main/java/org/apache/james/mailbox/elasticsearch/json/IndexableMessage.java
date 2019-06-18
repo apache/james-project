@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.james.mailbox.MailboxSession.User;
+import org.apache.james.core.User;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormater;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -119,7 +119,7 @@ public class IndexableMessage {
             MimePart parsingResult = new MimePartParser(message, textExtractor).parse();
 
             List<String> stringifiedUsers = users.stream()
-                    .map(User::getUserName)
+                    .map(User::asString)
                     .collect(Guavate.toImmutableList());
 
             Optional<String> bodyText = parsingResult.locateFirstTextBody();

@@ -4,24 +4,29 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 /**
  * A MessageMapper implementation that uses a MailboxMetadataCache to cache the information
  * from the underlying MessageMapper
- * 
+ *
+ * @deprecated JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release, unless it finds a maintainer
+ *
+ * This module lacks tests and is not used in James products hence the choice to deprecate it.
  */
+@Deprecated
 public class CachingMessageMapper implements MessageMapper {
 
     private final MessageMapper underlying;
@@ -56,10 +61,14 @@ public class CachingMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(
-            Mailbox mailbox, MessageRange set) throws MailboxException {
+    public List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) throws MailboxException {
+        return underlying.retrieveMessagesMarkedForDeletion(mailbox, messageRange);
+    }
+
+    @Override
+    public Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) throws MailboxException {
         invalidateMetadata(mailbox);
-        return underlying.expungeMarkedForDeletionInMailbox(mailbox, set);
+        return underlying.deleteMessages(mailbox, uids);
     }
 
     @Override
@@ -140,7 +149,6 @@ public class CachingMessageMapper implements MessageMapper {
 
     private void invalidateMetadata(Mailbox mailbox) {
         cache.invalidate(mailbox);
-
     }
 
     @Override

@@ -24,28 +24,40 @@ import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+
+import javax.annotation.PreDestroy;
+import javax.inject.Inject;
 
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.task.Task;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminConfiguration;
+import org.apache.james.webadmin.WebAdminServer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.google.inject.multibindings.Multibinder;
-
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.MonoProcessor;
+import reactor.core.scheduler.Schedulers;
 
 class GuiceLifecycleHeathCheckTest {
     private static final int LIMIT_TO_10_MESSAGES = 10;
+
+    private static JamesServerBuilder extensionBuilder() {
+        return new JamesServerBuilder()
+            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                .overrideWith(binder -> binder.bind(WebAdminConfiguration.class)
+                    .toInstance(WebAdminConfiguration.TEST_CONFIGURATION)));
+    }
 
     private static void configureRequestSpecification(GuiceJamesServer server) {
         WebAdminGuiceProbe webAdminGuiceProbe = server.getProbe(WebAdminGuiceProbe.class);
@@ -61,13 +73,7 @@ class GuiceLifecycleHeathCheckTest {
     @Nested
     class Healthy {
         @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION)))
-            .build();
+        JamesServerExtension jamesServerExtension = extensionBuilder().build();
 
         @Test
         void startedJamesServerShouldBeHealthy(GuiceJamesServer server) {
@@ -80,38 +86,46 @@ class GuiceLifecycleHeathCheckTest {
         }
     }
 
-    @Nested
-    class Unhealthy {
-        CountDownLatch latch = new CountDownLatch(1);
-        CleanupTasksPerformer.CleanupTask awaitCleanupTask = () -> {
+    static class DestroyedBeforeWebAdmin {
+        WebAdminServer webAdminServer;
+        CountDownLatch latch;
+
+        @Inject
+        DestroyedBeforeWebAdmin(WebAdminServer webAdminServer, CountDownLatch latch) {
+            this.webAdminServer = webAdminServer;
+            this.latch = latch;
+        }
+
+        @PreDestroy
+        void cleanup() {
             try {
                 latch.await();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            return Task.Result.COMPLETED;
-        };
+        }
+    }
+
+    @Nested
+    class Unhealthy {
+        CountDownLatch latch = new CountDownLatch(1);
 
         @RegisterExtension
-        JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION))
-                .overrideWith(binder -> Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class)
-                    .addBinding()
-                    .toInstance(awaitCleanupTask)))
+        JamesServerExtension jamesServerExtension = extensionBuilder()
+            .overrideServerModule(binder -> binder.bind(CountDownLatch.class).toInstance(latch))
+            .overrideServerModule(binder -> binder.bind(DestroyedBeforeWebAdmin.class).asEagerSingleton())
             .build();
 
         @Test
         void stoppingJamesServerShouldBeUnhealthy(GuiceJamesServer server) {
-            CompletableFuture<Void> stopCompletedFuture = CompletableFuture.completedFuture(null);
-
+            Mono<Void> stopMono = Mono.fromRunnable(() -> { });
             try {
                 configureRequestSpecification(server);
 
-                stopCompletedFuture = CompletableFuture.runAsync(server::stop);
+                stopMono = Mono.fromRunnable(server::stop);
+                stopMono
+                    .publishOn(Schedulers.elastic())
+                    .subscribeWith(MonoProcessor.create());
 
                 when()
                     .get("/healthcheck")
@@ -119,7 +133,7 @@ class GuiceLifecycleHeathCheckTest {
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
             } finally {
                 latch.countDown();
-                stopCompletedFuture.join();
+                stopMono.block();
             }
         }
     }

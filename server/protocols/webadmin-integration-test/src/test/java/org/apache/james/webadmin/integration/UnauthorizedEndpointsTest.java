@@ -21,14 +21,16 @@ package org.apache.james.webadmin.integration;
 
 import static io.restassured.RestAssured.when;
 
-import org.apache.james.GuiceJamesServer;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.routes.AliasRoutes;
+import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.CassandraMigrationRoutes;
 import org.apache.james.webadmin.routes.DLPConfigurationRoutes;
 import org.apache.james.webadmin.routes.DomainMappingsRoutes;
 import org.apache.james.webadmin.routes.DomainQuotaRoutes;
 import org.apache.james.webadmin.routes.DomainsRoutes;
+import org.apache.james.webadmin.routes.EventDeadLettersRoutes;
 import org.apache.james.webadmin.routes.ForwardRoutes;
 import org.apache.james.webadmin.routes.GlobalQuotaRoutes;
 import org.apache.james.webadmin.routes.GroupsRoutes;
@@ -39,20 +41,22 @@ import org.apache.james.webadmin.routes.TasksRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserQuotaRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
+import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import io.restassured.RestAssured;
 
-@ExtendWith(CassandraJmapExtension.class)
 class UnauthorizedEndpointsTest {
+    @RegisterExtension
+    static CassandraJmapExtension cassandraJmapExtension = new CassandraJmapExtension(CassandraJmapExtension.JamesLifeCyclePolicy.COMMON_TO_ALL_TESTS);
 
     @BeforeEach
-    void setup(GuiceJamesServer james) {
-        WebAdminGuiceProbe webAdminGuiceProbe = james.getProbe(WebAdminGuiceProbe.class);
+    void setup() {
+        WebAdminGuiceProbe webAdminGuiceProbe = cassandraJmapExtension.getJames().getProbe(WebAdminGuiceProbe.class);
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort())
             .build();
@@ -78,6 +82,8 @@ class UnauthorizedEndpointsTest {
             UserRoutes.USERS,
             ForwardRoutes.ROOT_PATH,
             ForwardRoutes.ROOT_PATH + "/alice@james.org",
+            AliasRoutes.ROOT_PATH,
+            AliasRoutes.ROOT_PATH + "/bob@james.org",
             GlobalQuotaRoutes.QUOTA_ENDPOINT,
             GlobalQuotaRoutes.QUOTA_ENDPOINT + "/count",
             GlobalQuotaRoutes.QUOTA_ENDPOINT + "/size",
@@ -92,7 +98,10 @@ class UnauthorizedEndpointsTest {
             SieveQuotaRoutes.ROOT_PATH + "/users/user@james.org",
             TasksRoutes.BASE,
             TasksRoutes.BASE + "/taskId",
-            TasksRoutes.BASE + "/taskId/await"
+            TasksRoutes.BASE + "/taskId/await",
+            EventDeadLettersRoutes.BASE_PATH + "/groups",
+            EventDeadLettersRoutes.BASE_PATH + "/groups/group@james.org",
+            EventDeadLettersRoutes.BASE_PATH + "/groups/group@james.org/1"
     })
     void checkUrlProtectionOnGet(String url) {
         when()
@@ -104,7 +113,12 @@ class UnauthorizedEndpointsTest {
     @ParameterizedTest
     @ValueSource(strings = {
             CassandraMigrationRoutes.VERSION_BASE + "/upgrade",
-            CassandraMigrationRoutes.VERSION_BASE + "/upgrade/latest"
+            CassandraMigrationRoutes.VERSION_BASE + "/upgrade/latest",
+            DeletedMessagesVaultRoutes.ROOT_PATH + "/joe@perdu.com",
+            CassandraMappingsRoutes.ROOT_PATH,
+            EventDeadLettersRoutes.BASE_PATH,
+            EventDeadLettersRoutes.BASE_PATH + "/groups/group@james.org",
+            EventDeadLettersRoutes.BASE_PATH + "/groups/group@james.org/1"
     })
     void checkUrlProtectionOnPost(String url) {
         when()
@@ -127,6 +141,7 @@ class UnauthorizedEndpointsTest {
             UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/size",
             UserRoutes.USERS + "/user@james.org",
             ForwardRoutes.ROOT_PATH + "/alice@james.org/bob@james.org",
+            AliasRoutes.ROOT_PATH + "/bob@james.org/sources/bob-alias@james.org",
             GlobalQuotaRoutes.QUOTA_ENDPOINT + "/count",
             GlobalQuotaRoutes.QUOTA_ENDPOINT + "/size",
             GlobalQuotaRoutes.QUOTA_ENDPOINT,
@@ -155,6 +170,7 @@ class UnauthorizedEndpointsTest {
             UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/size",
             UserRoutes.USERS + "/user@james.org",
             ForwardRoutes.ROOT_PATH + "/alice@james.org/bob@james.org",
+            AliasRoutes.ROOT_PATH + "/bob@james.org/sources/bob-alias@james.org",
             GlobalQuotaRoutes.QUOTA_ENDPOINT + "/count",
             GlobalQuotaRoutes.QUOTA_ENDPOINT + "/size",
             GroupsRoutes.ROOT_PATH + "/group@james.org/user@james.org",
@@ -165,7 +181,8 @@ class UnauthorizedEndpointsTest {
             MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo/mails",
             SieveQuotaRoutes.DEFAULT_QUOTA_PATH,
             SieveQuotaRoutes.ROOT_PATH + "/users/user@james.org",
-            TasksRoutes.BASE + "/taskId"
+            TasksRoutes.BASE + "/taskId",
+            EventDeadLettersRoutes.BASE_PATH + "/groups/group@james.org/1"
     })
     void checkUrlProtectionOnDelete(String url) {
         when()

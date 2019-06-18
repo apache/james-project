@@ -41,8 +41,6 @@ import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SE
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.TABLE_NAME;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
@@ -64,6 +62,8 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class CassandraMessageIdToImapUidDAO {
 
@@ -148,13 +148,13 @@ public class CassandraMessageIdToImapUidDAO {
                 .and(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
     }
 
-    public CompletableFuture<Void> delete(CassandraMessageId messageId, CassandraId mailboxId) {
+    public Mono<Void> delete(CassandraMessageId messageId, CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeVoid(delete.bind()
                 .setUUID(MESSAGE_ID, messageId.get())
                 .setUUID(MAILBOX_ID, mailboxId.asUuid()));
     }
 
-    public CompletableFuture<Void> insert(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
+    public Mono<Void> insert(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
         ComposedMessageId composedMessageId = composedMessageIdWithMetaData.getComposedMessageId();
         Flags flags = composedMessageIdWithMetaData.getFlags();
         return cassandraAsyncExecutor.executeVoid(insert.bind()
@@ -172,7 +172,7 @@ public class CassandraMessageIdToImapUidDAO {
                 .setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags())));
     }
 
-    public CompletableFuture<Boolean> updateMetadata(ComposedMessageIdWithMetaData composedMessageIdWithMetaData, long oldModSeq) {
+    public Mono<Boolean> updateMetadata(ComposedMessageIdWithMetaData composedMessageIdWithMetaData, long oldModSeq) {
         ComposedMessageId composedMessageId = composedMessageIdWithMetaData.getComposedMessageId();
         Flags flags = composedMessageIdWithMetaData.getFlags();
         return cassandraAsyncExecutor.executeReturnApplied(update.bind()
@@ -191,10 +191,10 @@ public class CassandraMessageIdToImapUidDAO {
                 .setLong(MOD_SEQ_CONDITION, oldModSeq));
     }
 
-    public CompletableFuture<Stream<ComposedMessageIdWithMetaData>> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
+    public Flux<ComposedMessageIdWithMetaData> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
         return selectStatement(messageId, mailboxId)
-                .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
-                        .map(this::toComposedMessageIdWithMetadata));
+                .flatMapMany(cassandraUtils::convertToFlux)
+                .map(this::toComposedMessageIdWithMetadata);
     }
 
     private ComposedMessageIdWithMetaData toComposedMessageIdWithMetadata(Row row) {
@@ -208,7 +208,7 @@ public class CassandraMessageIdToImapUidDAO {
                 .build();
     }
 
-    private CompletableFuture<ResultSet> selectStatement(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
+    private Mono<ResultSet> selectStatement(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
         return mailboxId
             .map(cassandraId -> cassandraAsyncExecutor.execute(select.bind()
                 .setUUID(MESSAGE_ID, messageId.get())

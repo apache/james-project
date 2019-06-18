@@ -23,12 +23,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -41,6 +43,8 @@ import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.MailAddressFixture;
+import org.apache.mailet.base.test.FakeMail;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
 import org.junit.Rule;
@@ -76,13 +80,12 @@ public class JamesMailetContextTest {
 
         usersRepository = MemoryUsersRepository.withVirtualHosting();
         usersRepository.setDomainList(domainList);
-        testee = new JamesMailetContext();
         MailQueueFactory<MailQueue> mailQueueFactory = mock(MailQueueFactory.class);
         spoolMailQueue = mock(MailQueue.class);
         when(mailQueueFactory.createQueue(MailQueueFactory.SPOOL)).thenReturn(spoolMailQueue);
-        testee.retrieveRootMailQueue(mailQueueFactory);
-        testee.setDomainList(domainList);
-        testee.setUsersRepository(usersRepository);
+        DNSService dnsService = null;
+        testee = new JamesMailetContext(dnsService, usersRepository, domainList, mailQueueFactory);
+        testee.configure(new HierarchicalConfiguration());
         mailAddress = new MailAddress(USERMAIL);
     }
 
@@ -170,19 +173,51 @@ public class JamesMailetContextTest {
 
     @Test
     public void bounceShouldNotFailWhenNonConfiguredPostmaster() throws Exception {
-        MailImpl mail = new MailImpl();
-        mail.setSender(mailAddress);
-        mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+        MailImpl mail = MailImpl.builder()
+            .name("mail1")
+            .sender(mailAddress)
+            .addRecipient(mailAddress)
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
         testee.bounce(mail, "message");
     }
 
     @Test
+    public void bouncingToNullSenderShouldBeANoop() throws Exception {
+        MailImpl mail = MailImpl.builder()
+            .name("mail1")
+            .sender(MailAddress.nullSender())
+            .addRecipient(mailAddress)
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
+
+        testee.bounce(mail, "message");
+
+        verifyZeroInteractions(spoolMailQueue);
+    }
+
+    @Test
+    public void bouncingToNoSenderShouldBeANoop() throws Exception {
+        MailImpl mail = MailImpl.builder()
+            .name("mail1")
+            .addRecipient(mailAddress)
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
+
+        testee.bounce(mail, "message");
+
+        verifyZeroInteractions(spoolMailQueue);
+    }
+
+    @Test
     public void bounceShouldEnqueueEmailWithRootState() throws Exception {
-        MailImpl mail = new MailImpl();
-        mail.setSender(mailAddress);
-        mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+        MailImpl mail = MailImpl.builder()
+            .name("mail1")
+            .sender(mailAddress)
+            .addRecipient(mailAddress)
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
+
         testee.bounce(mail, "message");
 
         ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
@@ -194,10 +229,12 @@ public class JamesMailetContextTest {
 
     @Test
     public void sendMailShouldEnqueueEmailWithRootState() throws Exception {
-        MailImpl mail = new MailImpl();
-        mail.setSender(mailAddress);
-        mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+        MailImpl mail = MailImpl.builder()
+            .name("mail1")
+            .sender(mailAddress)
+            .addRecipient(mailAddress)
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
         testee.sendMail(mail);
 
         ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
@@ -209,10 +246,12 @@ public class JamesMailetContextTest {
 
     @Test
     public void sendMailShouldEnqueueEmailWithOtherStateWhenSpecified() throws Exception {
-        MailImpl mail = new MailImpl();
-        mail.setSender(mailAddress);
-        mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+        MailImpl mail = MailImpl.builder()
+            .name("mail1")
+            .sender(mailAddress)
+            .addRecipient(mailAddress)
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
         String other = "other";
         testee.sendMail(mail, other);
 
@@ -225,10 +264,12 @@ public class JamesMailetContextTest {
 
     @Test
     public void sendMailShouldEnqueueEmailWithRootStateAndDelayWhenSpecified() throws Exception {
-        MailImpl mail = new MailImpl();
-        mail.setSender(mailAddress);
-        mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+        MailImpl mail = MailImpl.builder()
+            .name("mail1")
+            .sender(mailAddress)
+            .addRecipient(mailAddress)
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
         testee.sendMail(mail, 5, TimeUnit.MINUTES);
 
         ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
@@ -244,10 +285,12 @@ public class JamesMailetContextTest {
 
     @Test
     public void sendMailShouldEnqueueEmailWithOtherStateAndDelayWhenSpecified() throws Exception {
-        MailImpl mail = new MailImpl();
-        mail.setSender(mailAddress);
-        mail.setRecipients(ImmutableList.of(mailAddress));
-        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+        MailImpl mail = MailImpl.builder()
+            .name("mail1")
+            .sender(mailAddress)
+            .addRecipient(mailAddress)
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
         String other = "other";
         testee.sendMail(mail, other, 5, TimeUnit.MINUTES);
 
@@ -316,5 +359,51 @@ public class JamesMailetContextTest {
         verifyNoMoreInteractions(spoolMailQueue);
 
         assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(otherState);
+    }
+
+    @Test
+    public void sendMailForMailShouldEnqueueEmailWithOtherStateWhenSpecified() throws Exception {
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .addFrom(mailAddress.asString())
+            .addToRecipient(mailAddress.asString())
+            .setText("Simple text")
+            .build();
+
+        String otherState = "other";
+        testee.sendMail(FakeMail.builder()
+            .name("name")
+            .sender(MailAddressFixture.SENDER)
+            .recipient(MailAddressFixture.RECIPIENT1)
+            .mimeMessage(message)
+            .state(otherState)
+            .build());
+
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture());
+        verifyNoMoreInteractions(spoolMailQueue);
+
+        assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(otherState);
+    }
+
+    @Test
+    public void sendMailForMailShouldEnqueueEmailWithDefaults() throws Exception {
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .addFrom(mailAddress.asString())
+            .addToRecipient(mailAddress.asString())
+            .setText("Simple text")
+            .build();
+
+        testee.sendMail(FakeMail.builder()
+            .name("name")
+            .sender(MailAddressFixture.SENDER)
+            .recipient(MailAddressFixture.RECIPIENT1)
+            .mimeMessage(message)
+            .build());
+
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture());
+        verifyNoMoreInteractions(spoolMailQueue);
+
+        assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(Mail.DEFAULT);
     }
 }

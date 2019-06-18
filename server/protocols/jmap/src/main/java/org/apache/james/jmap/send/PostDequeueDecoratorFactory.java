@@ -21,9 +21,9 @@ package org.apache.james.jmap.send;
 
 import javax.inject.Inject;
 
-import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.SystemMailboxesProvider;
 import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;

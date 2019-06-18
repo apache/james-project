@@ -26,12 +26,13 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
-import org.elasticsearch.metrics.ElasticsearchReporter;
+import org.apache.james.lifecycle.api.Startable;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
+import com.linagora.elasticsearch.metrics.ElasticsearchReporter;
 
-public class ESMetricReporter {
+public class ESMetricReporter implements Startable {
 
     private final Optional<ElasticsearchReporter> reporter;
     private final ESReporterConfiguration esReporterConfiguration;

@@ -26,8 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import javax.mail.Flags;
+import java.util.stream.Collectors;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -174,15 +173,16 @@ public class MailboxAdapter implements Mailbox {
             .map(uid -> MessageUid.of(Long.valueOf(uid)))
             .collect(Guavate.toImmutableList());
 
-        List<MessageRange> ranges = MessageRange.toRanges(uidList);
         try {
             mailboxManager.startProcessingRequest(session);
-            for (MessageRange range : ranges) {
-                manager.setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.ADD, range, session);
-                manager.expunge(range, session);
-            }
+            manager.delete(uidList, session);
         } catch (MailboxException e) {
-            throw new IOException("Unable to remove messages for ranges " + ranges);
+            String serializedUids = uidList
+                .stream()
+                .map(uid -> uid.toString())
+                .collect(Collectors.joining(",", "[", "]"));
+
+            throw new IOException("Unable to remove messages: " + serializedUids, e);
         } finally {
             mailboxManager.endProcessingRequest(session);
         }

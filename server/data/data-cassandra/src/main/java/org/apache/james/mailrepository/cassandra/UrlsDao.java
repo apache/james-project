@@ -27,30 +27,27 @@ import static org.apache.james.mailrepository.cassandra.UrlsTable.TABLE_NAME;
 import static org.apache.james.mailrepository.cassandra.UrlsTable.URL;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class UrlsDao {
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement insert;
     private final PreparedStatement selectAll;
     private final PreparedStatement select;
-    private final CassandraUtils cassandraUtils;
 
     @Inject
-    public UrlsDao(Session session, CassandraUtils cassandraUtils) {
+    public UrlsDao(Session session) {
         this.executor = new CassandraAsyncExecutor(session);
-        this.cassandraUtils = cassandraUtils;
 
         this.insert = prepareInsert(session);
         this.selectAll = prepareSelectAll(session);
@@ -73,23 +70,22 @@ public class UrlsDao {
             .value(URL, bindMarker(URL)));
     }
 
-    public CompletableFuture<Void> addUrl(MailRepositoryUrl url) {
+    public Mono<Void> addUrl(MailRepositoryUrl url) {
         return executor.executeVoid(
             insert.bind()
                 .setString(URL, url.asString()));
     }
 
-    public CompletableFuture<Optional<MailRepositoryUrl>> retrieve(MailRepositoryUrl url) {
-        return executor.executeSingleRow(
-            select.bind()
-                .setString(URL, url.asString()))
-            .thenApply(optional -> optional.map(this::toUrl));
+    public Mono<Optional<MailRepositoryUrl>> retrieve(MailRepositoryUrl url) {
+        return executor.executeSingleRowOptional(
+                select.bind()
+                    .setString(URL, url.asString()))
+            .map(optional -> optional.map(this::toUrl));
     }
 
-    public CompletableFuture<Stream<MailRepositoryUrl>> retrieveUsedUrls() {
-        return executor.execute(selectAll.bind())
-            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
-                .map(this::toUrl));
+    public Flux<MailRepositoryUrl> retrieveUsedUrls() {
+        return executor.executeRows(selectAll.bind())
+            .map(this::toUrl);
     }
 
     private MailRepositoryUrl toUrl(Row row) {

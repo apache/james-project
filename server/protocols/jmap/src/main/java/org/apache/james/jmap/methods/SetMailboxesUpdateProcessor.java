@@ -284,7 +284,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
         Optional<MailboxId> parentId = updateRequest.getParentId();
         if (parentId == null) {
             return MailboxPath.forUser(
-                mailboxSession.getUser().getUserName(),
+                mailboxSession.getUser().asString(),
                 updateRequest.getName().orElse(mailbox.getName()));
         }
 

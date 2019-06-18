@@ -21,7 +21,6 @@ package org.apache.james.jmap.memory.vacation;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
@@ -33,6 +32,7 @@ import org.apache.james.util.date.ZonedDateTimeProvider;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import reactor.core.publisher.Mono;
 
 public class MemoryNotificationRegistry implements NotificationRegistry {
 
@@ -64,15 +64,15 @@ public class MemoryNotificationRegistry implements NotificationRegistry {
 }
 
     @Override
-    public CompletableFuture<Void> register(AccountId accountId, RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
+    public Mono<Void> register(AccountId accountId, RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
         registrations.put(accountId, new Entry(recipientId, expiryDate));
-        return CompletableFuture.completedFuture(null);
+        return Mono.empty();
     }
 
     @Override
-    public CompletableFuture<Boolean> isRegistered(AccountId accountId, RecipientId recipientId) {
+    public Mono<Boolean> isRegistered(AccountId accountId, RecipientId recipientId) {
         ZonedDateTime currentTime = zonedDateTimeProvider.get();
-        return CompletableFuture.completedFuture(
+        return Mono.just(
             registrations.get(accountId)
                 .stream()
                 .filter(entry -> entry.getRecipientId().equals(recipientId))
@@ -87,8 +87,8 @@ public class MemoryNotificationRegistry implements NotificationRegistry {
     }
 
     @Override
-    public CompletableFuture<Void> flush(AccountId accountId) {
+    public Mono<Void> flush(AccountId accountId) {
         registrations.removeAll(accountId);
-        return CompletableFuture.completedFuture(null);
+        return Mono.empty();
     }
 }

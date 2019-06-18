@@ -20,13 +20,11 @@
 package org.apache.james.webadmin.routes;
 
 import static io.restassured.RestAssured.given;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
-import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -40,6 +38,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import com.google.common.collect.ImmutableSet;
+
 import io.restassured.RestAssured;
 
 class DomainQuotaRoutesNoVirtualHostingTest {
@@ -60,11 +59,8 @@ class DomainQuotaRoutesNoVirtualHostingTest {
         QuotaModule quotaModule = new QuotaModule();
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
         DomainQuotaRoutes domainQuotaRoutes = new DomainQuotaRoutes(memoryDomainList, domainQuotaService, usersRepository, new JsonTransformer(quotaModule), ImmutableSet.of(quotaModule));
-        webAdminServer = WebAdminUtils.createWebAdminServer(
-            new NoopMetricFactory(),
-            domainQuotaRoutes);
-        webAdminServer.configure(NO_CONFIGURATION);
-        webAdminServer.await();
+        webAdminServer = WebAdminUtils.createWebAdminServer(domainQuotaRoutes)
+            .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .build();

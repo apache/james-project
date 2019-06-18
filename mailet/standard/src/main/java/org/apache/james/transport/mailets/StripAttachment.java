@@ -24,16 +24,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.mail.BodyPart;
 import javax.mail.Message;
@@ -48,15 +48,21 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.javax.MultipartUtil;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.DecoderUtil;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * <p>
@@ -85,7 +91,11 @@ import com.google.common.collect.ImmutableList;
  */
 public class StripAttachment extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(StripAttachment.class);
+    @SuppressWarnings("unchecked")
+    private static final Class<Map<String, byte[]>> MAP_STRING_BYTES_CLASS = (Class<Map<String, byte[]>>) (Object) Map.class;
 
+    @SuppressWarnings("unchecked")
+    private static final Class<List<AttributeValue<String>>> LIST_OF_STRINGS = (Class<List<AttributeValue<String>>>)(Object) List.class;
     private static final String MULTIPART_MIME_TYPE = "multipart/*";
     public static final String PATTERN_PARAMETER_NAME = "pattern";
     public static final String NOTPATTERN_PARAMETER_NAME = "notpattern";
@@ -100,14 +110,14 @@ public class StripAttachment extends GenericMailet {
     public static final String REMOVE_NONE = "no";
     public static final String REMOVE_ALL = "all";
     public static final String REMOVE_MATCHED = "matched";
-    public static final String REMOVED_ATTACHMENTS_ATTRIBUTE_KEY = "org.apache.james.mailet.standard.mailets.StripAttachment.removed";
-    public static final String SAVED_ATTACHMENTS_ATTRIBUTE_KEY = "org.apache.james.mailet.standard.mailets.StripAttachment.saved";
+    public static final AttributeName REMOVED_ATTACHMENTS = AttributeName.of("org.apache.james.mailet.standard.mailets.StripAttachment.removed");
+    public static final AttributeName SAVED_ATTACHMENTS = AttributeName.of("org.apache.james.mailet.standard.mailets.StripAttachment.saved");
 
     public static final boolean DECODE_FILENAME_DEFAULT_VALUE = false;
 
     @VisibleForTesting String removeAttachments;
     private String directoryName;
-    private String attributeName;
+    private Optional<AttributeName> attributeName;
     private Pattern regExPattern;
     private Pattern notRegExPattern;
     private String mimeType;
@@ -132,7 +142,7 @@ public class StripAttachment extends GenericMailet {
         }
 
         directoryName = getInitParameter(DIRECTORY_PARAMETER_NAME);
-        attributeName = getInitParameter(ATTRIBUTE_PARAMETER_NAME);
+        attributeName = getInitParameterAsOptional(ATTRIBUTE_PARAMETER_NAME).map(AttributeName::of);
 
         removeAttachments = getInitParameter(REMOVE_ATTACHMENT_PARAMETER_NAME, REMOVE_NONE).toLowerCase(Locale.US);
         if (!removeAttachments.equals(REMOVE_MATCHED) && !removeAttachments.equals(REMOVE_ALL) && !removeAttachments.equals(REMOVE_NONE)) {
@@ -193,11 +203,11 @@ public class StripAttachment extends GenericMailet {
                 logMessage.append(directoryName);
                 logMessage.append(']');
             }
-            if (attributeName != null) {
+            attributeName.ifPresent(attributeName -> {
                 logMessage.append(" and will store attachments to attribute [");
-                logMessage.append(attributeName);
+                logMessage.append(attributeName.asString());
                 logMessage.append(']');
-            }
+            });
             LOGGER.debug(logMessage.toString());
         }
     }
@@ -314,7 +324,7 @@ public class StripAttachment extends GenericMailet {
                 shouldRemove = true;
             }
         }
-        storeFileNameAsAttribute(mail, fileName, shouldRemove);
+        storeFileNameAsAttribute(mail, AttributeValue.of(fileName), shouldRemove);
         return shouldRemove;
     }
 
@@ -324,44 +334,45 @@ public class StripAttachment extends GenericMailet {
 
     private void storeBodyPartAsFile(BodyPart bodyPart, Mail mail, String fileName) throws Exception {
         if (directoryName != null) {
-            Optional<String> filename = saveAttachmentToFile(bodyPart, Optional.of(fileName));
-            if (filename.isPresent()) {
-                addFilenameToAttribute(mail, filename.get(), SAVED_ATTACHMENTS_ATTRIBUTE_KEY);
-            }
+            saveAttachmentToFile(bodyPart, Optional.of(fileName)).ifPresent(filename ->
+                    addFilenameToAttribute(mail, AttributeValue.of(filename), SAVED_ATTACHMENTS)
+            );
         }
     }
 
-    private void addFilenameToAttribute(Mail mail, String filename, String attributeName) {
-        @SuppressWarnings("unchecked")
-        List<String> attributeValues = (List<String>) mail.getAttribute(attributeName);
-        if (attributeValues == null) {
-            attributeValues = new ArrayList<>();
-            mail.setAttribute(attributeName, (Serializable) attributeValues);
-        }
-        attributeValues.add(filename);
+    private void addFilenameToAttribute(Mail mail, AttributeValue<String> attributeValue, AttributeName attributeName) {
+        Function<List<AttributeValue<String>>, List<AttributeValue<?>>> typeWeakner = values ->
+                values.stream().map(value -> (AttributeValue<?>) value).collect(Collectors.toList());
+
+        ImmutableList.Builder<AttributeValue<?>> attributeValues = ImmutableList.<AttributeValue<?>>builder()
+                .addAll(AttributeUtils
+                    .getValueAndCastFromMail(mail, attributeName, LIST_OF_STRINGS)
+                    .map(typeWeakner)
+                    .orElse(new ArrayList<>()));
+        attributeValues.add(attributeValue);
+        mail.setAttribute(new Attribute(attributeName, AttributeValue.of(attributeValues.build())));
     }
 
     private void storeBodyPartAsMailAttribute(BodyPart bodyPart, Mail mail, String fileName) throws IOException, MessagingException {
-        if (attributeName != null) {
-            addPartContent(bodyPart, mail, fileName);
-        }
+        attributeName.ifPresent(Throwing.<AttributeName>consumer(attributeName ->
+            addPartContent(bodyPart, mail, fileName, attributeName)).sneakyThrow());
     }
 
-    private void addPartContent(BodyPart bodyPart, Mail mail, String fileName) throws IOException, MessagingException {
-        @SuppressWarnings("unchecked")
-        Map<String, byte[]> fileNamesToPartContent = (Map<String, byte[]>) mail.getAttribute(attributeName);
-        if (fileNamesToPartContent == null) {
-            fileNamesToPartContent = new LinkedHashMap<>();
-            mail.setAttribute(attributeName, (Serializable) fileNamesToPartContent);
-        }
+    private void addPartContent(BodyPart bodyPart, Mail mail, String fileName, AttributeName attributeName) throws IOException, MessagingException {
+        ImmutableMap.Builder<String, byte[]> fileNamesToPartContent = AttributeUtils
+            .getValueAndCastFromMail(mail, attributeName, MAP_STRING_BYTES_CLASS)
+            .map(ImmutableMap.<String, byte[]>builder()::putAll)
+            .orElse(ImmutableMap.builder());
+
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         bodyPart.writeTo(new BufferedOutputStream(byteArrayOutputStream));
         fileNamesToPartContent.put(fileName, byteArrayOutputStream.toByteArray());
+        mail.setAttribute(new Attribute(attributeName, AttributeValue.ofAny(fileNamesToPartContent.build())));
     }
 
-    private void storeFileNameAsAttribute(Mail mail, String fileName, boolean hasToBeStored) {
+    private void storeFileNameAsAttribute(Mail mail, AttributeValue<String> fileName, boolean hasToBeStored) {
         if (hasToBeStored) {
-            addFilenameToAttribute(mail, fileName, REMOVED_ATTACHMENTS_ATTRIBUTE_KEY);
+            addFilenameToAttribute(mail, fileName, REMOVED_ATTACHMENTS);
         }
     }
 

@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.time.Duration;
 import java.util.Properties;
 
 import org.apache.james.core.Domain;
@@ -41,7 +42,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isDebugShouldBeFalseByDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).isDebug()).isFalse();
@@ -50,7 +50,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isDebugShouldBeTrueIfSpecified() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.DEBUG, "true")
             .build();
 
@@ -60,7 +59,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isDebugShouldBeFalseIfSpecified() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.DEBUG, "false")
             .build();
 
@@ -70,7 +68,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isDebugShouldBeFalseIfParsingException() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.DEBUG, "invalid")
             .build();
 
@@ -80,7 +77,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getSmtpTimeoutShouldReturnDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getSmtpTimeout())
@@ -91,7 +87,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getSmtpTimeoutShouldReturnProvidedValue() {
         int value = 150000;
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.TIMEOUT, String.valueOf(value))
             .build();
 
@@ -102,7 +97,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getSmtpTimeoutShouldReturnDefaultIfParsingException() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.TIMEOUT, "invalid")
             .build();
 
@@ -113,7 +107,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getSmtpTimeoutShouldReturnProvidedValueWhenZero() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.TIMEOUT, "0")
             .build();
 
@@ -124,7 +117,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getSmtpTimeoutShouldReturnProvidedValueWhenNegativeNumber() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.TIMEOUT, "-1")
             .build();
 
@@ -135,7 +127,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getOutGoingQueueNameShouldReturnDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getOutGoingQueueName())
@@ -146,7 +137,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getOutGoingQueueNameShouldReturnProvidedValue() {
         String value = "value";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.OUTGOING, value)
             .build();
 
@@ -157,7 +147,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getConnectionTimeoutShouldReturnDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getConnectionTimeout())
@@ -168,7 +157,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getConnectionTimeoutShouldReturnProvidedValue() {
         int value = 150000;
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.CONNECTIONTIMEOUT, String.valueOf(value))
             .build();
 
@@ -179,7 +167,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getConnectionTimeoutShouldReturnDefaultIfParsingException() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.CONNECTIONTIMEOUT, "invalid")
             .build();
 
@@ -190,7 +177,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getConnectionTimeoutShouldReturnProvidedValueWhenZero() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.CONNECTIONTIMEOUT, "0")
             .build();
 
@@ -201,7 +187,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getConnectionTimeoutShouldReturnProvidedValueWhenNegativeNumber() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.CONNECTIONTIMEOUT, "-1")
             .build();
 
@@ -212,7 +197,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isSendPartialShouldBeFalseByDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).isSendPartial()).isFalse();
@@ -221,7 +205,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isSendPartialShouldBeTrueIfSpecified() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.SENDPARTIAL, "true")
             .build();
 
@@ -231,7 +214,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isSendPartialShouldBeFalseIfSpecified() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.SENDPARTIAL, "false")
             .build();
 
@@ -241,7 +223,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isSendPartialShouldBeFalseIfParsingException() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.SENDPARTIAL, "invalid")
             .build();
 
@@ -251,7 +232,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getBounceProcessorShouldReturnNullByDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getBounceProcessor())
@@ -262,7 +242,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getBounceProcessorShouldReturnProvidedValue() {
         String value = "value";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.BOUNCE_PROCESSOR, value)
             .build();
 
@@ -273,7 +252,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isStartTLSShouldBeFalseByDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).isStartTLS()).isFalse();
@@ -282,7 +260,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isStartTLSShouldBeTrueIfSpecified() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.START_TLS, "true")
             .build();
 
@@ -292,7 +269,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isStartTLSShouldBeFalseIfSpecified() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.START_TLS, "false")
             .build();
 
@@ -302,7 +278,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isStartTLSShouldBeFalseIfParsingException() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.START_TLS, "invalid")
             .build();
 
@@ -312,7 +287,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isSSLEnableShouldBeFalseByDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).isSSLEnable()).isFalse();
@@ -321,7 +295,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isSSLEnableShouldBeTrueIfSpecified() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.SSL_ENABLE, "true")
             .build();
 
@@ -331,7 +304,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isSSLEnableShouldBeFalseIfSpecified() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.SSL_ENABLE, "false")
             .build();
 
@@ -341,7 +313,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isSSLEnableShouldBeFalseIfParsingException() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.SSL_ENABLE, "invalid")
             .build();
 
@@ -351,7 +322,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isBindUsedShouldBeFalseByDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.BIND, "127.0.0.1:25")
             .build();
 
@@ -361,7 +331,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getBindAddressShouldBeNullByDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getBindAddress()).isNull();
@@ -371,7 +340,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getBindAddressShouldReturnProvidedValue() {
         String value = "127.0.0.1:25";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.BIND, value)
             .build();
 
@@ -381,7 +349,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getDnsProblemRetryShouldReturnDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getDnsProblemRetry())
@@ -392,7 +359,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getDnsProblemRetryShouldReturnProvidedValue() {
         int value = 4;
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.MAX_DNS_PROBLEM_RETRIES, String.valueOf(value))
             .build();
 
@@ -403,7 +369,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void constructorShouldThrowOnInvalidDnsRetries() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.MAX_DNS_PROBLEM_RETRIES, "invalid")
             .build();
 
@@ -415,7 +380,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getDnsProblemRetryShouldReturnProvidedValueWhenZero() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.MAX_DNS_PROBLEM_RETRIES, "0")
             .build();
 
@@ -426,7 +390,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getDnsProblemRetryShouldReturnProvidedValueWhenEmpty() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.MAX_DNS_PROBLEM_RETRIES, "")
             .build();
 
@@ -437,7 +400,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getDnsProblemRetryShouldReturnProvidedValueWhenNegativeNumber() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.MAX_DNS_PROBLEM_RETRIES, "-1")
             .build();
 
@@ -446,41 +408,8 @@ public class RemoteDeliveryConfigurationTest {
     }
 
     @Test
-    public void constructorShouldThrowOnNonSpecifiedThreadCount() {
-        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .build();
-
-        expectedException.expect(NumberFormatException.class);
-
-        new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getWorkersThreadCount();
-    }
-
-    @Test
-    public void getWorkersThreadCountShouldReturnProvidedValue() {
-        int value = 36;
-        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, String.valueOf(value))
-            .build();
-
-        assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getWorkersThreadCount())
-            .isEqualTo(value);
-    }
-
-    @Test
-    public void constructorShouldThrowOnInvalidThreadCount() {
-        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "invalid")
-            .build();
-
-        expectedException.expect(NumberFormatException.class);
-
-        new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getWorkersThreadCount();
-    }
-
-    @Test
     public void isUsePriorityShouldBeFalseByDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).isUsePriority()).isFalse();
@@ -489,7 +418,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isUsePriorityShouldBeTrueIfSpecified() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.USE_PRIORITY, "true")
             .build();
 
@@ -499,7 +427,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isUsePriorityShouldBeFalseIfSpecified() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.USE_PRIORITY, "false")
             .build();
 
@@ -509,7 +436,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void isUsePriorityShouldBeFalseIfParsingException() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.USE_PRIORITY, "invalid")
             .build();
 
@@ -522,7 +448,6 @@ public class RemoteDeliveryConfigurationTest {
         String value = "value";
         when(domainList.getDefaultDomain()).thenReturn(Domain.of(value));
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, domainList).getHeloNameProvider().getHeloName())
@@ -533,7 +458,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getHeloNameProviderShouldTakeCareOfProvidedValue() {
         String value = "value";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.HELO_NAME, value)
             .build();
 
@@ -544,7 +468,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getJavaxAdditionalPropertiesShouldBeEmptyByDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getJavaxAdditionalProperties())
@@ -556,7 +479,6 @@ public class RemoteDeliveryConfigurationTest {
         String key1 = RemoteDeliveryConfiguration.JAVAX_PREFIX + "property1";
         String value1 = "value1";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(key1, value1)
             .build();
 
@@ -571,7 +493,6 @@ public class RemoteDeliveryConfigurationTest {
         String key2 = RemoteDeliveryConfiguration.JAVAX_PREFIX + "property2";
         String value2 = "value2";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(key1, value1)
             .setProperty(key2, value2)
             .build();
@@ -586,7 +507,6 @@ public class RemoteDeliveryConfigurationTest {
 
         String key1 = RemoteDeliveryConfiguration.JAVAX_PREFIX + "property1";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(key1, null)
             .build();
 
@@ -597,7 +517,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getJavaxAdditionalPropertiesShouldTakeOneEmptyEntryIntoAccount() {
         String key1 = RemoteDeliveryConfiguration.JAVAX_PREFIX + "property1";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(key1, "")
             .build();
 
@@ -608,7 +527,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getGatewayServerShouldBeNullByDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getGatewayServer()).isEmpty();
@@ -618,7 +536,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getGatewayServerShouldReturnProvidedValue() {
         String value = "127.0.0.1";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, value)
             .build();
 
@@ -631,7 +548,6 @@ public class RemoteDeliveryConfigurationTest {
         String value1 = "127.0.0.1";
         String value2 = "domain";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, value1 + ',' + value2)
             .build();
 
@@ -644,7 +560,6 @@ public class RemoteDeliveryConfigurationTest {
         String server = "127.0.0.1";
         String port = "2525";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, server)
             .setProperty(RemoteDeliveryConfiguration.GATEWAY_PORT, port)
             .build();
@@ -659,7 +574,6 @@ public class RemoteDeliveryConfigurationTest {
         String server2 = "domain";
         String port = "2525";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, server1 + ',' + server2)
             .setProperty(RemoteDeliveryConfiguration.GATEWAY_PORT, port)
             .build();
@@ -671,7 +585,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getAuthUserShouldBeNullByDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getAuthUser()).isNull();
@@ -680,7 +593,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getAuthUserShouldBeNullWhenGatewayIsNotSpecified() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY_USERNAME, "name")
             .build();
 
@@ -691,7 +603,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getAuthUserShouldReturnSpecifiedValueWhenGatewaySpecified() {
         String value = "name";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY_USERNAME, value)
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, "127.0.0.1")
             .build();
@@ -703,7 +614,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getAuthUserShouldReturnSpecifiedEmptyValueWhenGatewaySpecified() {
         String value = "";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY_USERNAME, value)
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, "127.0.0.1")
             .build();
@@ -715,7 +625,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getAuthUserShouldReturnSpecifiedCompatibilityValueWhenGatewaySpecified() {
         String value = "name";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY_USERNAME_COMPATIBILITY, value)
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, "127.0.0.1")
             .build();
@@ -727,7 +636,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getAuthUserShouldReturnSpecifiedEmptyCompatibilityValueWhenGatewaySpecified() {
         String value = "";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY_USERNAME_COMPATIBILITY, value)
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, "127.0.0.1")
             .build();
@@ -740,7 +648,6 @@ public class RemoteDeliveryConfigurationTest {
         String value = "name";
         String compatibilityValue = "compatibilityValue";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY_USERNAME, value)
             .setProperty(RemoteDeliveryConfiguration.GATEWAY_USERNAME_COMPATIBILITY, compatibilityValue)
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, "127.0.0.1")
@@ -752,7 +659,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getAuthPassShouldBeNullByDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getAuthPass()).isNull();
@@ -761,7 +667,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getAuthPassShouldBeNullWhenGatewayIsNotSpecified() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY_PASSWORD, "name")
             .build();
 
@@ -772,7 +677,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getAuthPassShouldReturnSpecifiedValueWhenGatewaySpecified() {
         String value = "name";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY_PASSWORD, value)
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, "127.0.0.1")
             .build();
@@ -784,7 +688,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getAuthPassShouldReturnSpecifiedEmptyValueWhenGatewaySpecified() {
         String value = "";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY_PASSWORD, value)
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, "127.0.0.1")
             .build();
@@ -796,7 +699,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getMaxRetriesShouldReturnProvidedValue() {
         int value = 36;
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.MAX_RETRIES, String.valueOf(value))
             .build();
 
@@ -807,7 +709,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getMaxRetriesShouldReturnOneWhenZero() {
         int value = 0;
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.MAX_RETRIES, String.valueOf(value))
             .build();
 
@@ -818,7 +719,6 @@ public class RemoteDeliveryConfigurationTest {
     public void getMaxRetriesShouldReturnOneWhenNegativeNumber() {
         int value = -1;
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.MAX_RETRIES, String.valueOf(value))
             .build();
 
@@ -828,7 +728,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getMaxRetriesShouldReturnDefaultWhenNoySpecified() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getMaxRetries())
@@ -838,7 +737,6 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getDelayTimesShouldReturnDefault() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getDelayTimes())
@@ -848,19 +746,17 @@ public class RemoteDeliveryConfigurationTest {
     @Test
     public void getDelayTimesShouldWorkWithDefaultConfiguration() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.DELAY_TIME, "5000, 100000, 500000")
             .build();
 
         assertThat(new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class)).getDelayTimes())
-            .containsOnly(5000L, 100000L, 500000L);
+            .containsOnly(Duration.ofSeconds(5), Duration.ofSeconds(100), Duration.ofSeconds(500));
     }
 
     @Test
     public void createFinalJavaxPropertiesShouldProvidePropertiesWithMinimalConfiguration() {
         String helo = "domain.com";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.HELO_NAME, helo)
             .build();
 
@@ -884,7 +780,6 @@ public class RemoteDeliveryConfigurationTest {
         String helo = "domain.com";
         int connectionTimeout = 1856;
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.SSL_ENABLE, "true")
             .setProperty(RemoteDeliveryConfiguration.SENDPARTIAL, "true")
             .setProperty(RemoteDeliveryConfiguration.CONNECTIONTIMEOUT, String.valueOf(connectionTimeout))
@@ -912,7 +807,6 @@ public class RemoteDeliveryConfigurationTest {
         String helo = "domain.com";
         int connectionTimeout = 1856;
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.SSL_ENABLE, "true")
             .setProperty(RemoteDeliveryConfiguration.SENDPARTIAL, "true")
             .setProperty(RemoteDeliveryConfiguration.CONNECTIONTIMEOUT, String.valueOf(connectionTimeout))

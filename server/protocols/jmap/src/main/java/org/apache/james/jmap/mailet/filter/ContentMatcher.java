@@ -28,6 +28,7 @@ import javax.mail.internet.InternetAddress;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.jmap.api.filtering.Rule;
+import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,18 +46,49 @@ public interface ContentMatcher {
         private AddressHeader(String fullAddress) {
             this.fullAddress = fullAddress;
             Optional<InternetAddress> internetAddress = parseFullAddress();
-            this.personal = internetAddress.map(InternetAddress::getPersonal);
             this.address = internetAddress.map(InternetAddress::getAddress);
+            this.personal = OptionalUtils.or(
+                internetAddress.map(InternetAddress::getPersonal),
+                address,
+                Optional.of(fullAddress));
         }
 
         private Optional<InternetAddress> parseFullAddress() {
             try {
                 return Optional.of(new InternetAddress(fullAddress));
             } catch (AddressException e) {
-                LOGGER.error("error while parsing full address {}", fullAddress, e);
+                LOGGER.info("error while parsing full address {}", fullAddress, e);
                 return Optional.empty();
             }
         }
+
+        boolean matchesIgnoreCase(AddressHeader other) {
+            boolean sameAddress = OptionalUtils.matches(address, other.address, String::equalsIgnoreCase);
+            boolean samePersonal = OptionalUtils.matches(personal, other.personal, String::equalsIgnoreCase);
+            boolean personalMatchesAddress = OptionalUtils.matches(personal, other.address, String::equalsIgnoreCase);
+            boolean addressMatchesPersonal = OptionalUtils.matches(address, other.personal, String::equalsIgnoreCase);
+
+            return fullAddress.equalsIgnoreCase(other.fullAddress)
+                || (sameAddress && samePersonal)
+                || (sameAddress && !personal.isPresent())
+                || (samePersonal && !address.isPresent())
+                || (personalMatchesAddress && sameAddress)
+                || (addressMatchesPersonal && samePersonal);
+        }
+    }
+
+    class ExactAddressContentMatcher implements ContentMatcher {
+        @Override
+        public boolean match(Stream<String> contents, String valueToMatch) {
+            AddressHeader addressHeaderToMatch =  HeaderExtractor.toAddressContents(new String[] {valueToMatch})
+                .map(AddressHeader::new)
+                .findAny()
+                .orElse(new AddressHeader(valueToMatch));
+
+            return contents.map(ContentMatcher::asAddressHeader)
+                .anyMatch(addressHeaderToMatch::matchesIgnoreCase);
+        }
+
     }
 
     ContentMatcher STRING_CONTAINS_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> StringUtils.contains(content, valueToMatch));
@@ -68,18 +100,12 @@ public interface ContentMatcher {
         .map(ContentMatcher::asAddressHeader)
         .anyMatch(addressHeader -> StringUtils.containsIgnoreCase(addressHeader.fullAddress, valueToMatch));
     ContentMatcher ADDRESS_NOT_CONTAINS_MATCHER = negate(ADDRESS_CONTAINS_MATCHER);
-    ContentMatcher ADDRESS_EXACTLY_EQUALS_MATCHER = (contents, valueToMatch) -> contents
-        .map(ContentMatcher::asAddressHeader)
-        .anyMatch(addressHeader ->
-            valueToMatch.equalsIgnoreCase(addressHeader.fullAddress)
-                || addressHeader.address.map(valueToMatch::equalsIgnoreCase).orElse(false)
-                || addressHeader.personal.map(valueToMatch::equalsIgnoreCase).orElse(false));
-    ContentMatcher ADDRESS_NOT_EXACTLY_EQUALS_MATCHER = negate(ADDRESS_EXACTLY_EQUALS_MATCHER);
+    ContentMatcher ADDRESS_NOT_EXACTLY_EQUALS_MATCHER = negate(new ExactAddressContentMatcher());
 
     Map<Rule.Condition.Comparator, ContentMatcher> HEADER_ADDRESS_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Comparator, ContentMatcher>builder()
         .put(Rule.Condition.Comparator.CONTAINS, ADDRESS_CONTAINS_MATCHER)
         .put(Rule.Condition.Comparator.NOT_CONTAINS, ADDRESS_NOT_CONTAINS_MATCHER)
-        .put(Rule.Condition.Comparator.EXACTLY_EQUALS, ADDRESS_EXACTLY_EQUALS_MATCHER)
+        .put(Rule.Condition.Comparator.EXACTLY_EQUALS, new ExactAddressContentMatcher())
         .put(Rule.Condition.Comparator.NOT_EXACTLY_EQUALS, ADDRESS_NOT_EXACTLY_EQUALS_MATCHER)
         .build();
 

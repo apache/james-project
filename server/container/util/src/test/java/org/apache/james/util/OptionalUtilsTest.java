@@ -23,24 +23,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 public class OptionalUtilsTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
-    public void ifEmptyShouldPreserveValueOfEmptyOptionals() {
+    void ifEmptyShouldPreserveValueOfEmptyOptionals() {
         Optional<Object> expected = OptionalUtils.executeIfEmpty(Optional.empty(), () -> { });
 
         assertThat(expected).isEmpty();
     }
 
     @Test
-    public void ifEmptyShouldPreserveValueOfPresentOptionals() {
+    void ifEmptyShouldPreserveValueOfPresentOptionals() {
         String value = "value";
         Optional<String> expected = OptionalUtils.executeIfEmpty(Optional.of(value), () -> { });
 
@@ -48,7 +43,7 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void ifEmptyShouldPerformOperationIfEmpty() {
+    void ifEmptyShouldPerformOperationIfEmpty() {
         AtomicInteger operationCounter = new AtomicInteger(0);
 
         OptionalUtils.executeIfEmpty(Optional.empty(), operationCounter::incrementAndGet);
@@ -57,7 +52,7 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void ifEmptyShouldNotPerformOperationIfPresent() {
+    void ifEmptyShouldNotPerformOperationIfPresent() {
         AtomicInteger operationCounter = new AtomicInteger(0);
 
         OptionalUtils.executeIfEmpty(Optional.of("value"), operationCounter::incrementAndGet);
@@ -66,26 +61,26 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void toStreamShouldConvertEmptyOptionalToEmptyStream() {
+    void toStreamShouldConvertEmptyOptionalToEmptyStream() {
         assertThat(OptionalUtils.toStream(Optional.empty()))
             .isEmpty();
     }
 
     @Test
-    public void toStreamShouldConvertFullOptionalToStream() {
+    void toStreamShouldConvertFullOptionalToStream() {
         long value = 18L;
         assertThat(OptionalUtils.toStream(Optional.of(value)))
             .containsExactly(value);
     }
 
     @Test
-    public void orShouldReturnEmptyWhenNoParameter() {
+    void orShouldReturnEmptyWhenNoParameter() {
         assertThat(OptionalUtils.or())
             .isEmpty();
     }
 
     @Test
-    public void orShouldReturnEmptyWhenEmpty() {
+    void orShouldReturnEmptyWhenEmpty() {
         assertThat(
             OptionalUtils.or(
                 Optional.empty()))
@@ -93,7 +88,7 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void orShouldReturnValueWhenValue() {
+    void orShouldReturnValueWhenValue() {
         assertThat(
             OptionalUtils.or(
                 Optional.of(1)))
@@ -101,7 +96,7 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void orShouldReturnEmptyWhenBothEmpty() {
+    void orShouldReturnEmptyWhenBothEmpty() {
         assertThat(
             OptionalUtils.or(
                 Optional.empty(),
@@ -110,7 +105,7 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void orShouldReturnFirstValueWhenOnlyFirstValue() {
+    void orShouldReturnFirstValueWhenOnlyFirstValue() {
         assertThat(
             OptionalUtils.or(
                 Optional.of(18),
@@ -119,7 +114,7 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void orShouldReturnSecondValueWhenOnlySecondValue() {
+    void orShouldReturnSecondValueWhenOnlySecondValue() {
         assertThat(
             OptionalUtils.or(
                 Optional.empty(),
@@ -128,7 +123,7 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void orShouldReturnFirstValueWhenBothValues() {
+    void orShouldReturnFirstValueWhenBothValues() {
         assertThat(
             OptionalUtils.or(
                 Optional.of(1),
@@ -137,7 +132,7 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void orShouldReturnThirdValueWhenOnlyThirdValue() {
+    void orShouldReturnThirdValueWhenOnlyThirdValue() {
         assertThat(
             OptionalUtils.or(
                 Optional.empty(),
@@ -147,13 +142,13 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void orSuppliersShouldReturnEmptyWhenNoParameter() {
+    void orSuppliersShouldReturnEmptyWhenNoParameter() {
         assertThat(OptionalUtils.or())
             .isEmpty();
     }
 
     @Test
-    public void orSuppliersShouldReturnEmptyWhenEmpty() {
+    void orSuppliersShouldReturnEmptyWhenEmpty() {
         assertThat(
             OptionalUtils.orSuppliers(
                 Optional::empty))
@@ -161,7 +156,7 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void orSuppliersShouldReturnValueWhenValue() {
+    void orSuppliersShouldReturnValueWhenValue() {
         assertThat(
             OptionalUtils.orSuppliers(
                 () -> Optional.of(1)))
@@ -169,7 +164,7 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void orSuppliersShouldReturnEmptyWhenBothEmpty() {
+    void orSuppliersShouldReturnEmptyWhenBothEmpty() {
         assertThat(
             OptionalUtils.orSuppliers(
                 () -> Optional.empty(),
@@ -178,7 +173,7 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void orSuppliersShouldReturnFirstValueWhenOnlyFirstValue() {
+    void orSuppliersShouldReturnFirstValueWhenOnlyFirstValue() {
         assertThat(
             OptionalUtils.orSuppliers(
                 () -> Optional.of(18),
@@ -187,7 +182,7 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void orSuppliersShouldReturnSecondValueWhenOnlySecondValue() {
+    void orSuppliersShouldReturnSecondValueWhenOnlySecondValue() {
         assertThat(
             OptionalUtils.orSuppliers(
                 Optional::empty,
@@ -196,7 +191,7 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void orSuppliersShouldReturnFirstValueWhenBothValues() {
+    void orSuppliersShouldReturnFirstValueWhenBothValues() {
         assertThat(
             OptionalUtils.orSuppliers(
                 () -> Optional.of(1),
@@ -205,7 +200,7 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void orSuppliersShouldReturnThirdValueWhenOnlyThirdValue() {
+    void orSuppliersShouldReturnThirdValueWhenOnlyThirdValue() {
         assertThat(
             OptionalUtils.orSuppliers(
                 Optional::empty,
@@ -215,23 +210,73 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void containsDifferentShouldReturnTrueWhenNullStoreValue() throws Exception {
+    void containsDifferentShouldReturnTrueWhenNullStoreValue() throws Exception {
         assertThat(OptionalUtils.containsDifferent(Optional.of("any"), null)).isTrue();
     }
 
     @Test
-    public void containsDifferentShouldReturnFalseWhenEmpty() throws Exception {
+    void containsDifferentShouldReturnFalseWhenEmpty() throws Exception {
         assertThat(OptionalUtils.containsDifferent(Optional.empty(), "any")).isFalse();
     }
 
     @Test
-    public void containsDifferentShouldReturnFalseWhenSameValue() throws Exception {
+    void containsDifferentShouldReturnFalseWhenSameValue() throws Exception {
         assertThat(OptionalUtils.containsDifferent(Optional.of("any"), "any")).isFalse();
     }
 
     @Test
-    public void containsDifferentShouldReturnTrueWhenDifferentValue() throws Exception {
+    void containsDifferentShouldReturnTrueWhenDifferentValue() throws Exception {
         assertThat(OptionalUtils.containsDifferent(Optional.of("any"), "other")).isTrue();
+    }
+
+    @Test
+    void matchesShouldReturnFalseWhenFirstOptionalIsEmpty() {
+        assertThat(
+            OptionalUtils.matches(
+                Optional.empty(),
+                Optional.of(42),
+                Integer::equals))
+            .isFalse();
+    }
+
+    @Test
+    void matchesShouldReturnFalseWhenSecondOptionalIsEmpty() {
+        assertThat(
+            OptionalUtils.matches(
+                Optional.of(42),
+                Optional.empty(),
+                Integer::equals))
+            .isFalse();
+    }
+
+    @Test
+    void matchesShouldReturnFalseWhenBothOptionalsAreEmpty() {
+        assertThat(
+            OptionalUtils.matches(
+                Optional.empty(),
+                Optional.empty(),
+                Integer::equals))
+            .isFalse();
+    }
+
+    @Test
+    void matchesShouldReturnFalseWhenConditionIsNotMatching() {
+        assertThat(
+            OptionalUtils.matches(
+                Optional.of(42),
+                Optional.of(43),
+                Integer::equals))
+            .isFalse();
+    }
+
+    @Test
+    void matchesShouldReturnTrueWhenConditionIsMatching() {
+        assertThat(
+            OptionalUtils.matches(
+                Optional.of(42),
+                Optional.of(42),
+                Integer::equals))
+            .isTrue();
     }
 
 }

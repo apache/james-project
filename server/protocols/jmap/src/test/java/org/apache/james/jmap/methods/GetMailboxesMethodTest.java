@@ -37,17 +37,14 @@ import org.apache.james.jmap.model.MailboxFactory;
 import org.apache.james.jmap.model.Number;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.SortOrder;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.Role;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -69,18 +66,18 @@ public class GetMailboxesMethodTest {
     private ClientId clientId;
     private MailboxFactory mailboxFactory;
 
+    private QuotaRootResolver quotaRootResolver;
+    private QuotaManager quotaManager;
+
     @Before
     public void setup() throws Exception {
         clientId = ClientId.of("#0");
-        InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
-        GroupMembershipResolver groupMembershipResolver = inMemoryIntegrationResources.createGroupMembershipResolver();
-        mailboxManager = inMemoryIntegrationResources.createMailboxManager(groupMembershipResolver);
-        MaxQuotaManager maxQuotaManager = inMemoryIntegrationResources.createMaxQuotaManager();
-        QuotaRootResolver quotaRootResolver = inMemoryIntegrationResources.createQuotaRootResolver(mailboxManager);
-        QuotaManager quotaManager = inMemoryIntegrationResources.createQuotaManager(maxQuotaManager, mailboxManager);
+        mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
+        quotaRootResolver = mailboxManager.getQuotaComponents().getQuotaRootResolver();
+        quotaManager = mailboxManager.getQuotaComponents().getQuotaManager();
         mailboxFactory = new MailboxFactory(mailboxManager, quotaManager, quotaRootResolver);
 
-        getMailboxesMethod = new GetMailboxesMethod(mailboxManager, mailboxFactory, new DefaultMetricFactory());
+        getMailboxesMethod = new GetMailboxesMethod(mailboxManager, quotaRootResolver, quotaManager,  mailboxFactory, new DefaultMetricFactory());
     }
 
     @Test
@@ -89,9 +86,9 @@ public class GetMailboxesMethodTest {
                 .build();
 
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
-        
+
         List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, clientId, mailboxSession).collect(Collectors.toList());
-        
+
         assertThat(getMailboxesResponse)
                 .hasSize(1)
                 .extracting(JmapResponse::getResponse)
@@ -100,22 +97,22 @@ public class GetMailboxesMethodTest {
                 .flatExtracting(GetMailboxesResponse::getList)
                 .isEmpty();
     }
-    
+
     @Test
     public void getMailboxesShouldNotFailWhenMailboxManagerErrors() throws Exception {
-        MailboxManager mockedMailboxManager = mock(MailboxManager.class);
+        StoreMailboxManager mockedMailboxManager = mock(StoreMailboxManager.class);
         when(mockedMailboxManager.list(any()))
             .thenReturn(ImmutableList.of(new MailboxPath("namespace", "user", "name")));
         when(mockedMailboxManager.getMailbox(any(MailboxPath.class), any()))
             .thenThrow(new MailboxException());
-        GetMailboxesMethod testee = new GetMailboxesMethod(mockedMailboxManager, mailboxFactory, new DefaultMetricFactory());
-        
+        GetMailboxesMethod testee = new GetMailboxesMethod(mockedMailboxManager, quotaRootResolver, quotaManager, mailboxFactory, new DefaultMetricFactory());
+
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
-        MailboxSession session = new MockMailboxSession(USERNAME);
-        
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+
         List<JmapResponse> getMailboxesResponse = testee.process(getMailboxesRequest, clientId, session).collect(Collectors.toList());
-        
+
         assertThat(getMailboxesResponse)
                 .hasSize(1)
                 .extracting(JmapResponse::getResponse)
@@ -145,7 +142,7 @@ public class GetMailboxesMethodTest {
                 .build();
 
         List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, clientId, mailboxSession).collect(Collectors.toList());
-        
+
         assertThat(getMailboxesResponse)
                 .hasSize(1)
                 .extracting(JmapResponse::getResponse)
@@ -170,7 +167,7 @@ public class GetMailboxesMethodTest {
                 .build();
 
         List<JmapResponse> getMailboxesResponse = getMailboxesMethod.process(getMailboxesRequest, clientId, userSession).collect(Collectors.toList());
-        
+
         assertThat(getMailboxesResponse)
                 .hasSize(1)
                 .extracting(JmapResponse::getResponse)
@@ -384,7 +381,7 @@ public class GetMailboxesMethodTest {
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Spam"), mailboxSession);
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Templates"), mailboxSession);
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "WITHOUT ROLE"), mailboxSession);
-        
+
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 

@@ -95,7 +95,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
     @Override
     public Mappings getUserDomainMappings(String user, String domain) throws RecipientRewriteTableException {
         MappingSource source = MappingSource.fromUser(user, domain);
-        return rrt.getUserDomainMappings(source);
+        return rrt.getStoredMappings(source);
     }
 
     @Override
@@ -119,29 +119,5 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
                 Guavate.toImmutableMap(
                     entry -> entry.getKey().asString(),
                     entry -> entry.getValue()));
-    }
-
-    @Override
-    public void addForwardMapping(String user, String domain, String address) throws RecipientRewriteTableException {
-        MappingSource source = MappingSource.fromUser(user, domain);
-        rrt.addForwardMapping(source, address);
-    }
-
-    @Override
-    public void removeForwardMapping(String user, String domain, String address) throws RecipientRewriteTableException {
-        MappingSource source = MappingSource.fromUser(user, domain);
-        rrt.removeForwardMapping(source, address);
-    }
-
-    @Override
-    public void addGroupMapping(String toUser, String toDomain, String fromAddress) throws RecipientRewriteTableException {
-        MappingSource source = MappingSource.fromUser(toUser, toDomain);
-        rrt.addGroupMapping(source, fromAddress);
-    }
-
-    @Override
-    public void removeGroupMapping(String toUser, String toDomain, String fromAddress) throws RecipientRewriteTableException {
-        MappingSource source = MappingSource.fromUser(toUser, toDomain);
-        rrt.removeForwardMapping(source, fromAddress);
     }
 }

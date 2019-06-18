@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.ManageableMailQueue;
 
 import com.github.steveash.guavate.Guavate;
@@ -38,10 +37,10 @@ public class MailQueueItemDTO {
         return new Builder();
     }
 
-    public static MailQueueItemDTO from(ManageableMailQueue.MailQueueItemView mailQueueItemView) throws MailQueueException {
+    public static MailQueueItemDTO from(ManageableMailQueue.MailQueueItemView mailQueueItemView) {
         return builder()
                 .name(mailQueueItemView.getMail().getName())
-                .sender(mailQueueItemView.getMail().getSender())
+                .sender(mailQueueItemView.getMail().getMaybeSender().asOptional())
                 .recipients(mailQueueItemView.getMail().getRecipients())
                 .nextDelivery(mailQueueItemView.getNextDelivery())
                 .build();
@@ -64,6 +63,11 @@ public class MailQueueItemDTO {
 
         public Builder sender(MailAddress sender) {
             this.sender = sender.asString();
+            return this;
+        }
+
+        public Builder sender(Optional<MailAddress> sender) {
+            sender.ifPresent(this::sender);
             return this;
         }
 

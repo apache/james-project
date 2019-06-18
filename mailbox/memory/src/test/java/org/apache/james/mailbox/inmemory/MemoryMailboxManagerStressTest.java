@@ -19,12 +19,12 @@
 
 package org.apache.james.mailbox.inmemory;
 
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerStressTest;
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.junit.Before;
 
-public class MemoryMailboxManagerStressTest extends MailboxManagerStressTest {
+public class MemoryMailboxManagerStressTest extends MailboxManagerStressTest<InMemoryMailboxManager> {
     
     @Override
     @Before
@@ -33,7 +33,12 @@ public class MemoryMailboxManagerStressTest extends MailboxManagerStressTest {
     }
     
     @Override
-    protected MailboxManager provideManager() throws MailboxException {
-        return MemoryMailboxManagerProvider.provideMailboxManager();
+    protected InMemoryMailboxManager provideManager() {
+        return MemoryMailboxManagerProvider.provideMailboxManager(PreDeletionHook.NO_PRE_DELETION_HOOK);
+    }
+
+    @Override
+    protected EventBus retrieveEventBus(InMemoryMailboxManager mailboxManager) {
+        return mailboxManager.getEventBus();
     }
 }

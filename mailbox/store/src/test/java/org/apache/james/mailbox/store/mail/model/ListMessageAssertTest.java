@@ -32,13 +32,13 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.Before;
 import org.junit.Test;
@@ -230,8 +230,8 @@ public class ListMessageAssertTest {
         };
     }
 
-    private SimpleMailbox createMailbox(MailboxPath mailboxPath) {
-        SimpleMailbox mailbox = new SimpleMailbox(mailboxPath, UID_VALIDITY);
+    private Mailbox createMailbox(MailboxPath mailboxPath) {
+        Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
         mailbox.setMailboxId(MAILBOX_ID);
 
         return mailbox;

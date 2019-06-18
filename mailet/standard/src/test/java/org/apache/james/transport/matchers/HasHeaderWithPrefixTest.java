@@ -56,6 +56,7 @@ class HasHeaderWithPrefixTest {
         matcher.init(matcherConfig);
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addHeader(HEADER_NAME_PREFIX_1, "true"))
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES2)
@@ -74,6 +75,7 @@ class HasHeaderWithPrefixTest {
         matcher.init(matcherConfig);
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addHeader(PREFIX, "true"))
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES2)
@@ -92,6 +94,7 @@ class HasHeaderWithPrefixTest {
         matcher.init(matcherConfig);
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addHeader(HEADER_NAME_NO_PREFIX, "true"))
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES2)
@@ -110,6 +113,7 @@ class HasHeaderWithPrefixTest {
         matcher.init(matcherConfig);
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addHeader(HEADER_NAME_PREFIX_1, "true")
                 .addHeader(HEADER_NAME_NO_PREFIX, "true"))

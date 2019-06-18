@@ -21,9 +21,7 @@ package org.apache.james.modules.server;
 
 import java.util.List;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.dropwizard.DropWizardGaugeRegistry;
@@ -56,8 +54,6 @@ public class DropWizardMetricsModule extends AbstractModule {
 
     @Singleton
     public static class DropWizardConfigurationPerformer implements ConfigurationPerformer {
-        public static final HierarchicalConfiguration NO_CONFIGURATION = null;
-
         private final DropWizardInitializer dropWizardInitializer;
 
         @Inject
@@ -67,20 +63,16 @@ public class DropWizardMetricsModule extends AbstractModule {
 
         @Override
         public void initModule() {
-            try {
-                dropWizardInitializer.configure(NO_CONFIGURATION);
-            } catch (ConfigurationException e) {
-                throw new RuntimeException(e);
-            }
+            dropWizardInitializer.start();
         }
 
         @Override
-        public List<Class<? extends Configurable>> forClasses() {
+        public List<Class<? extends Startable>> forClasses() {
             return ImmutableList.of(DropWizardInitializer.class);
         }
     }
 
-    public static class DropWizardInitializer implements Configurable {
+    public static class DropWizardInitializer implements Startable {
         private final DropWizardMetricFactory dropWizardMetricFactory;
         private final DropWizardJVMMetrics dropWizardJVMMetrics;
 
@@ -90,8 +82,7 @@ public class DropWizardMetricsModule extends AbstractModule {
             this.dropWizardJVMMetrics = dropWizardJVMMetrics;
         }
 
-        @Override
-        public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+        public void start() {
             dropWizardMetricFactory.start();
             dropWizardJVMMetrics.start();
         }

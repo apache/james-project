@@ -19,55 +19,62 @@
 
 package org.apache.james.backends.es;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.util.docker.SwarmGenericContainer;
+import org.apache.james.util.docker.DockerGenericContainer;
+import org.apache.james.util.docker.Images;
 import org.awaitility.Awaitility;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.junit.Ignore;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Ignore("JAMES-1952")
 public class ClientProviderImplConnectionTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProviderImplConnectionTest.class);
-    private static final String DOCKER_ES_IMAGE = "elasticsearch:2.2.1";
-    private static final int ES_APPLICATIVE_PORT = 9300;
+    private static final int ES_APPLICATIVE_PORT = 9200;
 
-    @Rule
-    public SwarmGenericContainer es1 = new SwarmGenericContainer(DOCKER_ES_IMAGE)
+    @ClassRule
+    public static DockerGenericContainer es1 = new DockerGenericContainer(Images.ELASTICSEARCH_6)
+        .withEnv("discovery.type", "single-node")
         .withAffinityToContainer()
         .withExposedPorts(ES_APPLICATIVE_PORT);
 
     @Rule
-    public SwarmGenericContainer es2 = new SwarmGenericContainer(DOCKER_ES_IMAGE)
+    public DockerGenericContainer es2 = new DockerGenericContainer(Images.ELASTICSEARCH_6)
+        .withEnv("discovery.type", "single-node")
         .withAffinityToContainer()
         .withExposedPorts(ES_APPLICATIVE_PORT);
 
     @Test
-    public void connectingASingleServerShouldWork() throws Exception {
+    public void connectingASingleServerShouldWork() {
         Awaitility.await()
             .atMost(1, TimeUnit.MINUTES)
             .pollInterval(5, TimeUnit.SECONDS)
-            .until(() -> isConnected(ClientProviderImpl.forHost(es1.getContainerIp(), 9300)));
+            .until(() -> isConnected(ClientProviderImpl.forHost(es1.getContainerIp(), ES_APPLICATIVE_PORT, Optional.empty())));
     }
 
     @Test
-    public void connectingAClusterShouldWork() throws Exception {
+    public void connectingAClusterShouldWork() {
         Awaitility.await()
             .atMost(1, TimeUnit.MINUTES)
             .pollInterval(5, TimeUnit.SECONDS)
             .until(() -> isConnected(
                 ClientProviderImpl.fromHostsString(
                     es1.getContainerIp() + ":" + ES_APPLICATIVE_PORT + ","
-                    + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT)));
+                        + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT,
+                    Optional.empty())));
     }
 
     @Test
-    public void connectingAClusterWithAFailedNodeShouldWork() throws Exception {
+    public void connectingAClusterWithAFailedNodeShouldWork() {
+        String es1Ip = es1.getContainerIp();
+        String es2Ip = es2.getContainerIp();
         es2.stop();
 
         Awaitility.await()
@@ -75,15 +82,16 @@ public class ClientProviderImplConnectionTest {
             .pollInterval(5, TimeUnit.SECONDS)
             .until(() -> isConnected(
                 ClientProviderImpl.fromHostsString(
-                    es1.getContainerIp() + ":" + ES_APPLICATIVE_PORT + ","
-                    + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT)));
+                    es1Ip + ":" + ES_APPLICATIVE_PORT + ","
+                        + es2Ip + ":" + ES_APPLICATIVE_PORT,
+                    Optional.empty())));
     }
 
     private boolean isConnected(ClientProvider clientProvider) {
-        try (Client client = clientProvider.get()) {
-            client.prepareSearch()
-                .setQuery(QueryBuilders.existsQuery("any"))
-                .get();
+        try (RestHighLevelClient client = clientProvider.get()) {
+            client.search(
+                new SearchRequest()
+                    .source(new SearchSourceBuilder().query(QueryBuilders.existsQuery("any"))));
             return true;
         } catch (Exception e) {
             LOGGER.info("Caught exception while trying to connect", e);

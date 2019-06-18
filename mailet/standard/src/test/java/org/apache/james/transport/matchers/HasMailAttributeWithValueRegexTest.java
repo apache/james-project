@@ -43,7 +43,7 @@ public class HasMailAttributeWithValueRegexTest extends AbstractHasMailAttribute
 
     @Override
     protected String getHasMailAttribute() {
-        return MAIL_ATTRIBUTE_NAME + ", " + regex;
+        return MAIL_ATTRIBUTE.getName().asString() + ", " + regex;
     }
 
     @Override

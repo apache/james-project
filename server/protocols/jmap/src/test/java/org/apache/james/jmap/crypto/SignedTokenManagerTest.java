@@ -44,7 +44,8 @@ public class SignedTokenManagerTest {
 
     @Before
     public void setUp() throws Exception {
-        JamesSignatureHandler signatureHandler = new JamesSignatureHandlerProvider().provide();
+        JamesSignatureHandler signatureHandler = JamesSignatureHandlerFixture.defaultSignatureHandler();
+        signatureHandler.init();
         zonedDateTimeProvider = new FixedDateZonedDateTimeProvider();
         tokenManager = new SignedTokenManager(signatureHandler, zonedDateTimeProvider);
         tokenFactory = new SignedTokenFactory(signatureHandler, zonedDateTimeProvider);

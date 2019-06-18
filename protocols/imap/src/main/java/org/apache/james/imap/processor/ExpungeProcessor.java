@@ -103,7 +103,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
             LOGGER.debug("Expunge failed", e);
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            LOGGER.error("Expunge failed for mailbox {}", session.getSelected().getPath(), e);
+            LOGGER.error("Expunge failed for mailbox {}", session.getSelected().getMailboxId(), e);
             no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

@@ -23,11 +23,13 @@ import java.util.Collection;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.dlp.api.DLPConfigurationItem;
 import org.apache.james.dlp.api.DLPConfigurationStore;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
@@ -36,7 +38,7 @@ import com.google.common.collect.ImmutableList;
 
 public class Dlp extends GenericMatcher {
 
-    public static final String DLP_MATCHED_RULE = "DlpMatchedRule";
+    private static final AttributeName DLP_MATCHED_RULE = AttributeName.of("DlpMatchedRule");
 
     private final DlpRulesLoader rulesLoader;
 
@@ -51,7 +53,7 @@ public class Dlp extends GenericMatcher {
     }
 
     @Override
-    public Collection<MailAddress> match(Mail mail) throws MessagingException {
+    public Collection<MailAddress> match(Mail mail) {
         Optional<DLPConfigurationItem.Id> firstMatchingRuleId = findFirstMatchingRule(mail);
 
         if (firstMatchingRuleId.isPresent()) {
@@ -63,12 +65,12 @@ public class Dlp extends GenericMatcher {
     }
 
     private void setRuleIdAsMailAttribute(Mail mail, DLPConfigurationItem.Id ruleId) {
-        mail.setAttribute(DLP_MATCHED_RULE, ruleId.asString());
+        mail.setAttribute(new Attribute(DLP_MATCHED_RULE, AttributeValue.of(ruleId.asString())));
     }
 
     private Optional<DLPConfigurationItem.Id> findFirstMatchingRule(Mail mail) {
-        return Optional
-                .ofNullable(mail.getSender())
+        return mail.getMaybeSender()
+                .asOptional()
                 .flatMap(sender -> matchingRule(sender, mail));
     }
 

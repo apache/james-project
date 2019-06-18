@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -33,8 +34,10 @@ import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@ExtendWith(CassandraRestartExtension.class)
 class CassandraUserMailboxRightsDAOTest {
     private static final String USER_NAME = "userName";
     private static final EntryKey ENTRY_KEY = EntryKey.createUserEntryKey(USER_NAME);
@@ -57,9 +60,9 @@ class CassandraUserMailboxRightsDAOTest {
         testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS))))
-            .join();
+            .block();
 
-        assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).join())
+        assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).block())
             .contains(RIGHTS);
     }
 
@@ -68,20 +71,20 @@ class CassandraUserMailboxRightsDAOTest {
         testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS))))
-            .join();
+            .block();
 
         testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS)),
             new MailboxACL(new Entry(ENTRY_KEY, OTHER_RIGHTS))))
-            .join();
+            .block();
 
-        assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).join())
+        assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).block())
             .contains(OTHER_RIGHTS);
     }
 
     @Test
     void listRightsForUserShouldReturnEmptyWhenEmptyData() {
-        assertThat(testee.listRightsForUser(USER_NAME).join())
+        assertThat(testee.listRightsForUser(USER_NAME).collectList().block())
             .isEmpty();
     }
 
@@ -90,15 +93,15 @@ class CassandraUserMailboxRightsDAOTest {
         testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS))))
-            .join();
+            .block();
 
 
         testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS)),
             MailboxACL.EMPTY))
-            .join();
+            .block();
 
-        assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).join())
+        assertThat(testee.retrieve(USER_NAME, MAILBOX_ID).block())
             .isEmpty();
     }
 }

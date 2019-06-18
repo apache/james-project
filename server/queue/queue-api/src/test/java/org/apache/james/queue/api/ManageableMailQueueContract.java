@@ -30,14 +30,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
+import java.time.Duration;
+
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
+
+import reactor.core.publisher.Flux;
 
 public interface ManageableMailQueueContract extends MailQueueContract {
 
@@ -52,7 +58,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void getSizeShouldReturnMessageCount() throws Exception {
-        enQueue(defaultMail().build());
+        enQueue(defaultMail().name("name").build());
 
         long size = getManageableMailQueue().getSize();
 
@@ -71,9 +77,9 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void dequeueShouldDecreaseQueueSize() throws Exception {
-        enQueue(defaultMail().build());
+        enQueue(defaultMail().name("name").build());
 
-        getManageableMailQueue().deQueue().done(true);
+        Flux.from(getManageableMailQueue().deQueue()).blockFirst().done(true);
 
         long size = getManageableMailQueue().getSize();
 
@@ -82,9 +88,9 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void noAckShouldNotDecreaseSize() throws Exception {
-        enQueue(defaultMail().build());
+        enQueue(defaultMail().name("name").build());
 
-        getManageableMailQueue().deQueue().done(false);
+        Flux.from(getManageableMailQueue().deQueue()).blockFirst().done(false);
 
         long size = getManageableMailQueue().getSize();
 
@@ -93,9 +99,9 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void processedMailsShouldNotDecreaseSize() throws Exception {
-        enQueue(defaultMail().build());
+        enQueue(defaultMail().name("name").build());
 
-        getManageableMailQueue().deQueue();
+        Flux.from(getManageableMailQueue().deQueue());
 
         long size = getManageableMailQueue().getSize();
 
@@ -156,7 +162,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         getManageableMailQueue().browse();
 
-        assertThatCode(() -> getManageableMailQueue().deQueue()).doesNotThrowAnyException();
+        assertThatCode(() -> Flux.from(getManageableMailQueue().deQueue())).doesNotThrowAnyException();
 
     }
 
@@ -174,7 +180,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
 
-        getManageableMailQueue().deQueue();
+        Flux.from(getManageableMailQueue().deQueue());
 
         assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
     }
@@ -194,8 +200,18 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
         items.next();
 
-        assertThatCode(() -> getManageableMailQueue().deQueue()).doesNotThrowAnyException();
+        assertThatCode(() -> Flux.from(getManageableMailQueue().deQueue())).doesNotThrowAnyException();
 
+    }
+
+    @Test
+    default void dequeueShouldReturnDecoratedMailItem() throws Exception {
+        enQueue(defaultMail()
+            .name("name1")
+            .build());
+
+        assertThat(Flux.from(getManageableMailQueue().deQueue()).blockFirst(Duration.ofMinutes(1)))
+            .isInstanceOf(MailQueueItemDecoratorFactory.MailQueueItemDecorator.class);
     }
 
     @Test
@@ -213,7 +229,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
         items.next();
 
-        getManageableMailQueue().deQueue();
+        Flux.from(getManageableMailQueue().deQueue());
 
         assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
     }
@@ -444,6 +460,27 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             softly.assertThat(content).isEqualTo("mail body");
         });
     }
+
+    @Test
+    default void browseShouldReturnMailsWithAttributes() throws Exception {
+        Attribute attribute1 = Attribute.convertToAttribute("Attribute Name 1", "Attribute Value 1");
+        Attribute attribute2 = Attribute.convertToAttribute("Attribute Name 2", "Attribute Value 2");
+
+        ManageableMailQueue mailQueue = getManageableMailQueue();
+        mailQueue.enQueue(defaultMail()
+            .name("mail with blob")
+            .attributes(ImmutableList.of(attribute1, attribute2))
+            .build());
+
+        Mail mail = mailQueue.browse().next().getMail();
+        assertSoftly(softly -> {
+            softly.assertThat(mail.getAttribute(attribute1.getName()))
+                .contains(attribute1);
+            softly.assertThat(mail.getAttribute(attribute2.getName()))
+                .contains(attribute2);
+        });
+    }
+
     @Test
     default void browsingShouldNotAffectDequeue() throws Exception {
         enQueue(defaultMail()
@@ -459,7 +496,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
         items.next();
 
-        MailQueue.MailQueueItem mailQueueItem = getManageableMailQueue().deQueue();
+        MailQueue.MailQueueItem mailQueueItem = Flux.from(getManageableMailQueue().deQueue()).blockFirst();
 
         assertThat(mailQueueItem.getMail().getName()).isEqualTo("name1");
     }
@@ -484,12 +521,12 @@ public interface ManageableMailQueueContract extends MailQueueContract {
     @Test
     default void removeBySenderShouldRemoveSpecificEmail() throws Exception {
         enQueue(defaultMail()
-            .sender(OTHER_AT_LOCAL)
             .name("name1")
+            .sender(OTHER_AT_LOCAL)
             .build());
         enQueue(defaultMail()
-            .sender(SENDER)
             .name("name2")
+            .sender(SENDER)
             .build());
 
         getManageableMailQueue().remove(ManageableMailQueue.Type.Sender, OTHER_AT_LOCAL.asString());
@@ -575,6 +612,21 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         getManageableMailQueue().clear();
 
         assertThat(getManageableMailQueue().browse()).isEmpty();
+    }
+
+    @Test
+    default void deletedElementsShouldNotBeDequeued() throws Exception {
+        enQueue(defaultMail()
+            .name("name1")
+            .build());
+        enQueue(defaultMail()
+            .name("name2")
+            .build());
+
+        getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "name1");
+
+        assertThat(Flux.from(getManageableMailQueue().deQueue()).blockFirst().getMail().getName())
+            .isEqualTo("name2");
     }
 
 }

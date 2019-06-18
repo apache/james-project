@@ -19,10 +19,8 @@
 
 package org.apache.james.mailbox.store.search;
 
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.junit.Ignore;
 
 public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
@@ -32,24 +30,24 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
     }
 
     @Override
-    protected void initializeMailboxManager() throws Exception {
-        storeMailboxManager = new InMemoryIntegrationResources()
-            .createMailboxManager(new SimpleGroupMembershipResolver());
+    protected void initializeMailboxManager() {
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
+            .preProvisionnedFakeAuthenticator()
+            .fakeAuthorizator()
+            .inVmEventBus()
+            .defaultAnnotationLimits()
+            .defaultMessageParser()
+            .searchIndex(preInstanciationStage -> new SimpleMessageSearchIndex(
+                preInstanciationStage.getMapperFactory(),
+                preInstanciationStage.getMapperFactory(),
+                new PDFTextExtractor()))
+            .noPreDeletionHooks()
+            .storeQuotaManager()
+            .build();
 
-        messageSearchIndex = new SimpleMessageSearchIndex(
-            storeMailboxManager.getMapperFactory(),
-            storeMailboxManager.getMapperFactory(),
-            new PDFTextExtractor());
-
-        messageIdManager = new StoreMessageIdManager(
-            storeMailboxManager,
-            storeMailboxManager.getMapperFactory(),
-            storeMailboxManager.getEventDispatcher(),
-            storeMailboxManager.getMessageIdFactory(),
-            storeMailboxManager.getQuotaManager(),
-            storeMailboxManager.getQuotaRootResolver());
-
-        storeMailboxManager.setMessageSearchIndex(messageSearchIndex);
+        storeMailboxManager = resources.getMailboxManager();
+        messageIdManager = resources.getMessageIdManager();
+        messageSearchIndex = resources.getSearchIndex();
     }
 
     /**

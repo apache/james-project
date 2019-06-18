@@ -39,7 +39,6 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
@@ -49,7 +48,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
@@ -60,7 +58,6 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraUsersRepository.class);
 
     private final CassandraAsyncExecutor executor;
-    private final CassandraUtils cassandraUtils;
     private final PreparedStatement getUserStatement;
     private final PreparedStatement updateUserStatement;
     private final PreparedStatement removeUserStatement;
@@ -69,9 +66,8 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     private final PreparedStatement insertStatement;
 
     @Inject
-    public CassandraUsersRepository(Session session, CassandraUtils cassandraUtils) {
+    public CassandraUsersRepository(Session session) {
         this.executor = new CassandraAsyncExecutor(session);
-        this.cassandraUtils = cassandraUtils;
         this.getUserStatement = prepareGetUserStatement(session);
         this.updateUserStatement = prepareUpdateUserStatement(session);
         this.removeUserStatement = prepareRemoveUserStatement(session);
@@ -118,12 +114,12 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
 
     @Override
     public User getUserByName(String name) {
-        ResultSet result = executor.execute(getUserStatement.bind()
-            .setString(NAME, name.toLowerCase(Locale.US)))
-            .join();
-        return Optional.ofNullable(result.one())
+        return executor.executeSingleRow(
+                getUserStatement.bind()
+                    .setString(NAME, name.toLowerCase(Locale.US)))
             .map(row -> new DefaultUser(row.getString(REALNAME), row.getString(PASSWORD), row.getString(ALGORITHM)))
             .filter(user -> user.hasUsername(name))
+            .blockOptional()
             .orElse(null);
     }
 
@@ -137,7 +133,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
                     .setString(PASSWORD, defaultUser.getHashedPassword())
                     .setString(ALGORITHM, defaultUser.getHashAlgorithm())
                     .setString(NAME, defaultUser.getUserName().toLowerCase(Locale.US)))
-            .join();
+            .block();
 
         if (!executed) {
             throw new UsersRepositoryException("Unable to update user");
@@ -149,7 +145,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
         boolean executed = executor.executeReturnApplied(
             removeUserStatement.bind()
                 .setString(NAME, name))
-            .join();
+            .block();
 
         if (!executed) {
             throw new UsersRepositoryException("unable to remove unknown user " + name);
@@ -172,17 +168,17 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     }
 
     @Override
-    public int countUsers() throws UsersRepositoryException {
-        ResultSet result = executor.execute(countUserStatement.bind()).join();
-        return Ints.checkedCast(result.one().getLong(0));
+    public int countUsers() {
+        return executor.executeSingleRow(countUserStatement.bind())
+            .map(row -> Ints.checkedCast(row.getLong(0)))
+            .block();
     }
 
     @Override
     public Iterator<String> list() throws UsersRepositoryException {
-        ResultSet result = executor.execute(listStatement.bind())
-            .join();
-        return cassandraUtils.convertToStream(result)
+        return executor.executeRows(listStatement.bind())
             .map(row -> row.getString(REALNAME))
+            .toIterable()
             .iterator();
     }
 
@@ -202,7 +198,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
                 .setString(REALNAME, user.getUserName())
                 .setString(PASSWORD, user.getHashedPassword())
                 .setString(ALGORITHM, user.getHashAlgorithm()))
-            .join();
+            .block();
 
         if (!executed) {
             throw new AlreadyExistInUsersRepositoryException("User with username " + username + " already exist!");

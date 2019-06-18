@@ -107,6 +107,7 @@ public class TosUtilsTest {
         MailAddress toMailAddress = new MailAddress("to", "james.org");
         MailAddress toMailAddress2 = new MailAddress("to2", "james.org");
         FakeMail fakeMail = FakeMail.builder()
+                .name("name")
                 .sender(from)
                 .recipients(toMailAddress, toMailAddress2)
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()

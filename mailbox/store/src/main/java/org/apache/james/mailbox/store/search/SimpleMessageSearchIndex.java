@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.search;
 
+import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
+
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -34,6 +36,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
@@ -47,7 +50,6 @@ import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.github.fge.lambdas.Throwing;
@@ -104,13 +106,12 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     }
     
     @Override
-    public Iterator<MessageUid> search(MailboxSession session, final Mailbox mailbox, SearchQuery query) throws MailboxException {
+    public Stream<MessageUid> search(MailboxSession session, final Mailbox mailbox, SearchQuery query) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         return searchResults(session, ImmutableList.of(mailbox).stream(), query)
             .stream()
             .filter(searchResult -> searchResult.getMailboxId().equals(mailbox.getMailboxId()))
-            .map(SearchResult::getMessageUid)
-            .iterator();
+            .map(SearchResult::getMessageUid);
     }
 
     private List<SearchResult> searchResults(MailboxSession session, Mailbox mailbox, SearchQuery query) throws MailboxException {
@@ -124,14 +125,14 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
             // only fetching this uid range
             UidRange[] ranges = uidCrit.getOperator().getRange();
             for (UidRange r : ranges) {
-                Iterator<MailboxMessage> it = mapper.findInMailbox(mailbox, MessageRange.range(r.getLowValue(), r.getHighValue()), FetchType.Metadata, -1);
+                Iterator<MailboxMessage> it = mapper.findInMailbox(mailbox, MessageRange.range(r.getLowValue(), r.getHighValue()), FetchType.Metadata, UNLIMITED);
                 while (it.hasNext()) {
                     hitSet.add(it.next());
                 }
             }
         } else {
             // we have to fetch all messages
-            Iterator<MailboxMessage> messages = mapper.findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
+            Iterator<MailboxMessage> messages = mapper.findInMailbox(mailbox, MessageRange.all(), FetchType.Full, UNLIMITED);
             while (messages.hasNext()) {
                 MailboxMessage m = messages.next();
                 hitSet.add(m);

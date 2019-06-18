@@ -25,9 +25,13 @@ import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO.MessageIdAttachmentIds;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class AttachmentMessageIdCreation implements Migration {
     private static final Logger LOGGER = LoggerFactory.getLogger(AttachmentMessageIdCreation.class);
@@ -43,27 +47,23 @@ public class AttachmentMessageIdCreation implements Migration {
 
     @Override
     public Result run() {
-        try {
-            return cassandraMessageDAO.retrieveAllMessageIdAttachmentIds()
-                .join()
-                .map(this::createIndex)
-                .reduce(Result.COMPLETED, Task::combine);
-        } catch (Exception e) {
-            LOGGER.error("Error while creation attachmentId -> messageIds index", e);
-            return Result.PARTIAL;
-        }
+        return cassandraMessageDAO.retrieveAllMessageIdAttachmentIds()
+            .flatMap(this::createIndex)
+            .reduce(Result.COMPLETED, Task::combine)
+            .onErrorResume(this::errorHandling)
+            .block();
     }
 
-    private Result createIndex(MessageIdAttachmentIds message) {
-        try {
-            message.getAttachmentId()
-                .forEach(attachmentId -> attachmentMessageIdDAO
-                    .storeAttachmentForMessageId(attachmentId, message.getMessageId())
-                    .join());
-            return Result.COMPLETED;
-        } catch (Exception e) {
-            LOGGER.error("Error while creation attachmentId -> messageIds index", e);
-            return Result.PARTIAL;
-        }
+    private Mono<Result> createIndex(MessageIdAttachmentIds message) {
+        MessageId messageId = message.getMessageId();
+        return Flux.fromIterable(message.getAttachmentId())
+            .flatMap(attachmentId -> attachmentMessageIdDAO.storeAttachmentForMessageId(attachmentId, messageId))
+            .then()
+            .thenReturn(Result.COMPLETED);
+    }
+
+    private Mono<Result> errorHandling(Throwable e) {
+        LOGGER.error("Error while creation attachmentId -> messageIds index", e);
+        return Mono.just(Result.PARTIAL);
     }
 }

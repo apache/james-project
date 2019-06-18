@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.apache.mailet.base.MailAddressFixture.JAMES_LOCAL_DOMAIN;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT2;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
@@ -27,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Collection;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
@@ -40,14 +42,18 @@ public class IsSenderInRRTLoopTest {
     private IsSenderInRRTLoop testee;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         recipientRewriteTable = new MemoryRecipientRewriteTable();
+        SimpleDomainList domainList = new SimpleDomainList();
+        domainList.addDomain(JAMES_LOCAL_DOMAIN);
+        ((MemoryRecipientRewriteTable) recipientRewriteTable).setDomainList(domainList);
         testee = new IsSenderInRRTLoop(recipientRewriteTable);
     }
 
     @Test
     public void matchShouldReturnEmptyWhenSenderHasNoRRT() throws Exception {
         Collection<MailAddress> result = testee.match(FakeMail.builder()
+            .name("name")
             .sender(SENDER)
             .recipient(RECIPIENT1)
             .build());
@@ -58,6 +64,7 @@ public class IsSenderInRRTLoopTest {
     @Test
     public void matchShouldNotFailWhenNoSender() throws Exception {
         Collection<MailAddress> result = testee.match(FakeMail.builder()
+            .name("name")
             .recipient(RECIPIENT1)
             .build());
 
@@ -69,6 +76,7 @@ public class IsSenderInRRTLoopTest {
         recipientRewriteTable.addAddressMapping(MappingSource.fromUser(SENDER.getLocalPart(), SENDER.getDomain()), RECIPIENT1.asString());
 
         Collection<MailAddress> result = testee.match(FakeMail.builder()
+            .name("name")
             .sender(SENDER)
             .recipient(RECIPIENT1)
             .build());
@@ -82,6 +90,7 @@ public class IsSenderInRRTLoopTest {
         recipientRewriteTable.addAddressMapping(MappingSource.fromUser(RECIPIENT1.getLocalPart(), RECIPIENT1.getDomain()), SENDER.asString());
 
         Collection<MailAddress> result = testee.match(FakeMail.builder()
+            .name("name")
             .sender(SENDER)
             .recipient(RECIPIENT2)
             .build());
@@ -95,6 +104,7 @@ public class IsSenderInRRTLoopTest {
         recipientRewriteTable.addAddressMapping(MappingSource.fromUser(RECIPIENT1.getLocalPart(), RECIPIENT1.getDomain()), SENDER.asString());
 
         Collection<MailAddress> result = testee.match(FakeMail.builder()
+            .name("name")
             .sender(SENDER)
             .build());
 

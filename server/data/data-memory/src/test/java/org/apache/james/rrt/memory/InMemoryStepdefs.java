@@ -21,6 +21,7 @@ package org.apache.james.rrt.memory;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
+import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
 
 import cucumber.api.java.Before;
@@ -41,6 +42,7 @@ public class InMemoryStepdefs {
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         MemoryRecipientRewriteTable rrt = new MemoryRecipientRewriteTable();
         rrt.configure(new DefaultConfigurationBuilder());
+        rrt.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
         return rrt;
     }
 }

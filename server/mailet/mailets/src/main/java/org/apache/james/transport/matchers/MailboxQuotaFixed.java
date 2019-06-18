@@ -29,8 +29,13 @@ import org.apache.mailet.Matcher;
  * Matcher which can be used to set a quota for users Mailbox. This
  * {@link Matcher} need to recalculate the used space of users mailbox on every
  * call. So use it with caution!
+ *
+ * @deprecated JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release
+ *
+ * Please use IsOverQuota which relies on mailbox quota apis and avoids scanning
  */
 @Experimental
+@Deprecated
 public class MailboxQuotaFixed extends AbstractStorageQuota {
 
     @Override

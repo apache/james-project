@@ -48,12 +48,11 @@ public class CassandraConfigurationReadingTest {
                 .flagsUpdateMessageMaxRetry(4)
                 .flagsUpdateMessageIdMaxRetry(5)
                 .fetchNextPageInAdvanceRow(6)
-                .flagsUpdateChunkSize(7)
-                .messageReadChunkSize(8)
-                .expungeChunkSize(9)
-                .blobPartSize(10)
-                .attachmentV2MigrationReadTimeout(11)
-                .messageAttachmentIdsReadTimeout(12)
+                .messageReadChunkSize(7)
+                .expungeChunkSize(8)
+                .blobPartSize(9)
+                .attachmentV2MigrationReadTimeout(10)
+                .messageAttachmentIdsReadTimeout(11)
                 .build());
     }
 

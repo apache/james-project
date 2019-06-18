@@ -20,16 +20,17 @@
 package org.apache.james.mailbox.jpa.mail;
 
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.persistence.EntityManagerFactory;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
-import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
@@ -39,7 +40,6 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 
 import com.google.common.collect.ImmutableList;
@@ -62,7 +62,7 @@ public class JPAMapperProvider implements MapperProvider {
         EntityManagerFactory entityManagerFactory = jpaTestCluster.getEntityManagerFactory();
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
 
-        JPAMessageMapper messageMapper = new JPAMessageMapper(new MockMailboxSession("benwa"), 
+        JPAMessageMapper messageMapper = new JPAMessageMapper(MailboxSessionUtil.create("benwa"),
             new JPAUidProvider(locker, entityManagerFactory), 
             new JPAModSeqProvider(locker, entityManagerFactory), 
             entityManagerFactory);
@@ -82,7 +82,7 @@ public class JPAMapperProvider implements MapperProvider {
 
     @Override
     public MailboxId generateId() {
-        return JPAId.of(Math.abs(new Random().nextInt()));
+        return JPAId.of(Math.abs(ThreadLocalRandom.current().nextInt()));
     }
 
     @Override
@@ -97,7 +97,7 @@ public class JPAMapperProvider implements MapperProvider {
 
     @Override
     public List<Capabilities> getSupportedCapabilities() {
-        return ImmutableList.of(Capabilities.ANNOTATION, Capabilities.MAILBOX, Capabilities.MESSAGE);
+        return ImmutableList.of(Capabilities.ANNOTATION, Capabilities.MAILBOX, Capabilities.MESSAGE, Capabilities.MOVE);
     }
 
     @Override

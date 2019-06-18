@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 
 import javax.mail.Header;
 import javax.mail.MessagingException;
@@ -41,7 +40,6 @@ import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.james.util.mime.MessageContentExtractor.MessageContent;
-import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 
@@ -54,7 +52,7 @@ public class MailDto {
     public static MailDto fromMail(Mail mail, Set<AdditionalField> additionalFields) throws MessagingException, InaccessibleFieldException {
         Optional<MessageContent> messageContent = fetchMessage(additionalFields, mail);
         return new MailDto(mail.getName(),
-            Optional.ofNullable(mail.getSender()).map(MailAddress::asString),
+            mail.getMaybeSender().asOptional().map(MailAddress::asString),
             mail.getRecipients().stream().map(MailAddress::asString).collect(Guavate.toImmutableList()),
             Optional.ofNullable(mail.getErrorMessage()),
             Optional.ofNullable(mail.getState()),
@@ -172,8 +170,10 @@ public class MailDto {
             return Optional.empty();
         }
 
-        return Optional.of(Iterators.toStream(mail.getAttributeNames())
-            .collect(Guavate.toImmutableMap(Function.identity(), attributeName -> mail.getAttribute(attributeName).toString())));
+        return Optional.of(mail.attributes()
+            .collect(Guavate.toImmutableMap(
+                attribute -> attribute.getName().asString(),
+                attribute -> attribute.getValue().value().toString())));
     }
 
     private final String name;

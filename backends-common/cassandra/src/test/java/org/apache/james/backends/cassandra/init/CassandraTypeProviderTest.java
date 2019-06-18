@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -59,7 +60,9 @@ class CassandraTypeProviderTest {
     void initializeTypesShouldCreateTheTypes() {
         cassandra.getConf().execute(SchemaBuilder.dropType(TYPE_NAME));
 
-        new CassandraTypesCreator(MODULE, cassandra.getConf()).initializeTypes();
+        assertThat(new CassandraTypesCreator(MODULE, cassandra.getConf()).initializeTypes())
+            .isEqualByComparingTo(CassandraType.InitializationStatus.FULL);
+
         CassandraTypesProvider cassandraTypesProviderTest = new CassandraTypesProvider(MODULE, cassandra.getConf());
         assertThat(cassandraTypesProviderTest.getDefinedUserType(TYPE_NAME))
             .isNotNull();

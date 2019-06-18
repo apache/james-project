@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -32,25 +32,25 @@ public class OffsetTest {
     public static final int VALUE = 18;
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(Offset.class)
             .verify();
     }
 
     @Test
-    public void fromZeroShouldBeEquivalentToNone() {
+    void fromZeroShouldBeEquivalentToNone() {
         assertThat(Offset.from(0))
             .isEqualTo(Offset.none());
     }
 
     @Test
-    public void getOffsetShouldReturnContainedValue() {
+    void getOffsetShouldReturnContainedValue() {
         assertThat(Offset.from(VALUE).getOffset())
             .isEqualTo(VALUE);
     }
 
     @Test
-    public void fromOptionalShouldBeEquivalentToFromValueWhenPresent() {
+    void fromOptionalShouldBeEquivalentToFromValueWhenPresent() {
         assertThat(Offset.from(Optional.of(VALUE)))
             .isEqualTo(Offset.from(VALUE));
     }

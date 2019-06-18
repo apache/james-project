@@ -111,4 +111,11 @@ public class FileMailQueueTest implements DelayedManageableMailQueueContract {
     public void concurrentEnqueueDequeueWithAckNackShouldNotFail() {
 
     }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2544 Not supported yet")
+    public void deletedElementsShouldNotBeDequeued() {
+
+    }
 }

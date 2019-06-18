@@ -54,6 +54,7 @@ import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
 import org.apache.james.webadmin.utils.ParametersExtractor;
+import org.apache.james.webadmin.utils.Responses;
 import org.apache.james.webadmin.validation.Quotas;
 import org.eclipse.jetty.http.HttpStatus;
 
@@ -134,8 +135,7 @@ public class UserQuotaRoutes implements Routes {
             User user = checkUserExist(request);
             QuotaDTO quotaDTO = parseQuotaDTO(request);
             userQuotaService.defineQuota(user, quotaDTO);
-            response.status(HttpStatus.NO_CONTENT_204);
-            return response;
+            return Responses.returnNoContent(response);
         }));
     }
 
@@ -250,8 +250,7 @@ public class UserQuotaRoutes implements Routes {
         service.delete(SIZE_ENDPOINT, (request, response) -> {
             User user = checkUserExist(request);
             userQuotaService.deleteMaxSizeQuota(user);
-            response.status(HttpStatus.NO_CONTENT_204);
-            return response;
+            return Responses.returnNoContent(response);
         });
     }
 
@@ -273,8 +272,7 @@ public class UserQuotaRoutes implements Routes {
             User user = checkUserExist(request);
             QuotaSize quotaSize = Quotas.quotaSize(request.body());
             userQuotaService.defineMaxSizeQuota(user, quotaSize);
-            response.status(HttpStatus.NO_CONTENT_204);
-            return response;
+            return Responses.returnNoContent(response);
         });
     }
 
@@ -294,8 +292,7 @@ public class UserQuotaRoutes implements Routes {
             if (maxSizeQuota.isPresent()) {
                 return maxSizeQuota;
             }
-            response.status(HttpStatus.NO_CONTENT_204);
-            return null;
+            return Responses.returnNoContent(response);
         }, jsonTransformer);
     }
 
@@ -311,8 +308,7 @@ public class UserQuotaRoutes implements Routes {
         service.delete(COUNT_ENDPOINT, (request, response) -> {
             User user = checkUserExist(request);
             userQuotaService.deleteMaxCountQuota(user);
-            response.status(HttpStatus.NO_CONTENT_204);
-            return response;
+            return Responses.returnNoContent(response);
         });
     }
 
@@ -334,8 +330,7 @@ public class UserQuotaRoutes implements Routes {
             User user = checkUserExist(request);
             QuotaCount quotaCount = Quotas.quotaCount(request.body());
             userQuotaService.defineMaxCountQuota(user, quotaCount);
-            response.status(HttpStatus.NO_CONTENT_204);
-            return response;
+            return Responses.returnNoContent(response);
         });
     }
 
@@ -355,8 +350,7 @@ public class UserQuotaRoutes implements Routes {
             if (maxCountQuota.isPresent()) {
                 return maxCountQuota;
             }
-            response.status(HttpStatus.NO_CONTENT_204);
-            return null;
+            return Responses.returnNoContent(response);
         }, jsonTransformer);
     }
 

@@ -73,6 +73,7 @@ Feature: Move message and sharing
     Then the mailbox "sharedBis" has 0 messages
     And the mailbox "sharedBis" has 0 unseen messages
 
+  @BasicFeature
   Scenario: Move message should update the total and the unread counts when asked by sharee / sharee view
     Given "bob@domain.tld" has a message "m1" in "bobMailbox" mailbox
     And "bob@domain.tld" moves "m1" to mailbox "shared" of user "alice@domain.tld"

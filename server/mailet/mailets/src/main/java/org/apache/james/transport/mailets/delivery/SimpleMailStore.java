@@ -26,6 +26,8 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +68,7 @@ public class SimpleMailStore implements MailStore {
             return this;
         }
 
-        public SimpleMailStore build() throws MessagingException {
+        public SimpleMailStore build() {
             Preconditions.checkNotNull(usersRepos);
             Preconditions.checkNotNull(folder);
             Preconditions.checkNotNull(mailboxAppender);
@@ -96,22 +98,21 @@ public class SimpleMailStore implements MailStore {
 
         metric.increment();
         LOGGER.info("Local delivered mail {} successfully from {} to {} in folder {} with composedMessageId {}", mail.getName(),
-            DeliveryUtils.prettyPrint(mail.getSender()), DeliveryUtils.prettyPrint(recipient), locatedFolder, composedMessageId);
+            mail.getMaybeSender().asString(), recipient.asPrettyString(), locatedFolder, composedMessageId);
     }
 
     private String locateFolder(String username, Mail mail) {
-        if (mail.getAttribute(DELIVERY_PATH_PREFIX + username) instanceof String) {
-            return (String) mail.getAttribute(DELIVERY_PATH_PREFIX + username);
-        }
-        return folder;
+        return AttributeUtils
+            .getValueAndCastFromMail(mail, AttributeName.of(DELIVERY_PATH_PREFIX + username), String.class)
+            .orElse(folder);
     }
 
-    private String computeUsername(MailAddress recipient) throws MessagingException {
+    private String computeUsername(MailAddress recipient) {
         try {
             return usersRepository.getUser(recipient);
         } catch (UsersRepositoryException e) {
             LOGGER.warn("Unable to retrieve username for {}", recipient.asPrettyString(), e);
-            return recipient.toString();
+            return recipient.asString();
         }
     }
 }

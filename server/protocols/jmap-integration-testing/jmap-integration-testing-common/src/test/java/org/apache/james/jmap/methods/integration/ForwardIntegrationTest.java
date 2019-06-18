@@ -44,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
@@ -55,6 +56,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import io.restassured.RestAssured;
 import io.restassured.specification.RequestSpecification;
@@ -84,10 +86,7 @@ public abstract class ForwardIntegrationTest {
                 .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
                 .build();
 
-        WebAdminGuiceProbe webAdminGuiceProbe = jmapServer.getProbe(WebAdminGuiceProbe.class);
-        webAdminGuiceProbe.await();
-        webAdminApi = given()
-            .spec(WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort()).build());
+        webAdminApi = WebAdminUtils.spec(jmapServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
     }
 
     @After
@@ -95,6 +94,7 @@ public abstract class ForwardIntegrationTest {
         jmapServer.stop();
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void messageShouldBeForwardedWhenDefinedInRESTAPI() {
         webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE, BOB));

@@ -19,17 +19,30 @@
 
 package org.apache.james.modules.data;
 
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
+import org.apache.james.mailrepository.api.Protocol;
+import org.apache.james.mailrepository.file.FileMailRepository;
 import org.apache.james.mailrepository.jpa.JPAMailRepositoryUrlStore;
+import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
+import org.apache.james.modules.server.MailStoreRepositoryModule;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 
 public class JPAMailRepositoryModule extends AbstractModule {
+    private static final MailRepositoryStoreConfiguration.Item FILE_MAILREPOSITORY_DEFAULT_DECLARATION = new MailRepositoryStoreConfiguration.Item(
+        ImmutableList.of(new Protocol("file")),
+        FileMailRepository.class.getName(),
+        new HierarchicalConfiguration());
+
     @Override
     protected void configure() {
         bind(JPAMailRepositoryUrlStore.class).in(Scopes.SINGLETON);
 
         bind(MailRepositoryUrlStore.class).to(JPAMailRepositoryUrlStore.class);
+
+        bind(MailStoreRepositoryModule.DefaultItemSupplier.class).toInstance(() -> FILE_MAILREPOSITORY_DEFAULT_DECLARATION);
     }
 }

@@ -24,6 +24,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
+
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -52,7 +54,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData;
-import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
@@ -201,12 +202,10 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     }
     
     private void addFlagsResponses(ImapSession session, SelectedMailbox selected, ImapProcessor.Responder responder, boolean useUid) {
-       
         try {
-  
             // To be lazily initialized only if needed, which is in minority of cases.
             MessageManager messageManager = null;
-
+            MetaData metaData = null;
             final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
 
             // Check if we need to send a FLAGS and PERMANENTFLAGS response before the FETCH response
@@ -215,47 +214,54 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             if (selected.hasNewApplicableFlags()) {
                 messageManager = getMailbox(session, selected);
                 flags(responder, selected);
-                permanentFlags(responder, messageManager.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_COUNT), selected);
+                metaData = messageManager.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_COUNT);
+
+                permanentFlags(responder, metaData, selected);
                 selected.resetNewApplicableFlags();
             }
             
             final Collection<MessageUid> flagUpdateUids = selected.flagUpdateUids();
             if (!flagUpdateUids.isEmpty()) {
                 Iterator<MessageRange> ranges = MessageRange.toRanges(flagUpdateUids).iterator();
-                while (ranges.hasNext()) {
-                 if (messageManager == null) {
-                     messageManager = getMailbox(session, selected);
-                 }
-                    addFlagsResponses(session, selected, responder, useUid, ranges.next(), messageManager, mailboxSession);
+                if (messageManager == null) {
+                    messageManager = getMailbox(session, selected);
                 }
-
+                if (metaData == null) {
+                    metaData = messageManager.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_COUNT);
+                }
+                boolean isModSeqPermanent = metaData.isModSeqPermanent();
+                while (ranges.hasNext()) {
+                    addFlagsResponses(session, selected, responder, useUid, ranges.next(), messageManager, isModSeqPermanent, mailboxSession);
+                }
             }
-            
+
         } catch (MailboxException e) {
             handleResponseException(responder, e, HumanReadableText.FAILURE_TO_LOAD_FLAGS, session);
         }
 
     }
     
-    protected void addFlagsResponses(ImapSession session, SelectedMailbox selected, ImapProcessor.Responder responder, boolean useUid, MessageRange messageSet, MessageManager mailbox, MailboxSession mailboxSession) throws MailboxException {
-
+    private void addFlagsResponses(ImapSession session,
+                                   SelectedMailbox selected,
+                                   ImapProcessor.Responder responder,
+                                   boolean useUid,
+                                   MessageRange messageSet, MessageManager mailbox,
+                                   boolean isModSeqPermanent,
+                                   MailboxSession mailboxSession) throws MailboxException {
         final MessageResultIterator it = mailbox.getMessages(messageSet, FetchGroupImpl.MINIMAL,  mailboxSession);
+        final boolean qresyncEnabled = EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC);
+        final boolean condstoreEnabled = EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_CONDSTORE);
         while (it.hasNext()) {
             MessageResult mr = it.next();
             final MessageUid uid = mr.getUid();
             int msn = selected.msn(uid);
             if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
-                LOGGER.debug("No message found with uid {} in the uid<->msn mapping for mailbox {}. This may be because it was deleted by a concurrent session. So skip it..", uid, selected.getPath().getFullName(mailboxSession.getPathDelimiter()));
-                    
-
+                LOGGER.debug("No message found with uid {} in the uid<->msn mapping for mailbox {}. This may be because it was deleted by a concurrent session. So skip it..", uid, selected.getPath().asString());
                 // skip this as it was not found in the mapping
                 // 
                 // See IMAP-346
                 continue;
             }
-
-            boolean qresyncEnabled = EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC);
-            boolean condstoreEnabled = EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_CONDSTORE);
 
             final Flags flags = mr.getFlags();
             final MessageUid uidOut;
@@ -273,7 +279,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             
             // Check if we also need to return the MODSEQ in the response. This is true if CONDSTORE or
             // if QRESYNC was enabled, and the mailbox supports the permant storage of mod-sequences
-            if ((condstoreEnabled || qresyncEnabled) && mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT).isModSeqPermanent()) {
+            if ((condstoreEnabled || qresyncEnabled) && isModSeqPermanent) {
                 response = new FetchResponse(msn, flags, uidOut, mr.getModSeq(), null, null, null, null, null, null);
             } else {
                 response = new FetchResponse(msn, flags, uidOut, null, null, null, null, null, null, null);
@@ -302,7 +308,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     
     private MessageManager getMailbox(ImapSession session, SelectedMailbox selected) throws MailboxException {
         final MailboxManager mailboxManager = getMailboxManager();
-        return mailboxManager.getMailbox(selected.getPath(), ImapSessionUtils.getMailboxSession(session));
+        return mailboxManager.getMailbox(selected.getMailboxId(), ImapSessionUtils.getMailboxSession(session));
     }
 
     private void addRecentResponses(SelectedMailbox selected, ImapProcessor.Responder responder) {
@@ -411,7 +417,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             result = null;
         } else {
             final MailboxManager mailboxManager = getMailboxManager();
-            result = mailboxManager.getMailbox(selectedMailbox.getPath(), ImapSessionUtils.getMailboxSession(session));
+            result = mailboxManager.getMailbox(selectedMailbox.getMailboxId(), ImapSessionUtils.getMailboxSession(session));
         }
         return result;
     }
@@ -579,9 +585,8 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             }
             searchQuery.andCriteria(SearchQuery.uid(nRanges));
             searchQuery.andCriteria(SearchQuery.modSeqGreaterThan(changedSince));
-            Iterator<MessageUid> uids = mailbox.search(searchQuery, session);
-            while (uids.hasNext()) {
-                vanishedUids.remove(uids.next());
+            try (Stream<MessageUid> uids = mailbox.search(searchQuery, session)) {
+                uids.forEach(vanishedUids::remove);
             }
             UidRange[] vanishedIdRanges = uidRanges(MessageRange.toRanges(vanishedUids));
             responder.respond(new VanishedResponse(vanishedIdRanges, true));

@@ -37,19 +37,19 @@ public class CassandraMailRepositoryUrlStore implements MailRepositoryUrlStore {
 
     @Override
     public void add(MailRepositoryUrl url) {
-        urlsDao.addUrl(url).join();
+        urlsDao.addUrl(url).block();
     }
 
     @Override
     public Stream<MailRepositoryUrl> listDistinct() {
         return urlsDao.retrieveUsedUrls()
-            .join();
+            .toStream();
     }
 
     @Override
     public boolean contains(MailRepositoryUrl url) {
         return urlsDao.retrieve(url)
-            .join()
+            .block()
             .isPresent();
     }
 }

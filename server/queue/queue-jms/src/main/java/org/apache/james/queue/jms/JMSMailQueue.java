@@ -20,6 +20,9 @@ package org.apache.james.queue.jms;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
+import java.time.DateTimeException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -33,6 +36,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
@@ -51,6 +55,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.collections.iterators.EnumerationIterator;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.metrics.api.Gauge;
 import org.apache.james.metrics.api.GaugeRegistry;
@@ -64,16 +69,23 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.util.SerializationUtil;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.threeten.extra.Temporals;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * <p>
@@ -87,6 +99,8 @@ import com.google.common.collect.Iterators;
  * </p>
  */
 public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPrioritySupport, Disposable {
+
+    private final Flux<MailQueueItem> flux;
 
     protected static void closeSession(Session session) {
         if (session != null) {
@@ -186,6 +200,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         } catch (JMSException e) {
             throw new RuntimeException(e);
         }
+        flux = Mono.defer(this::deQueueOneItem).repeat();
     }
 
     @Override
@@ -206,52 +221,48 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
      * </p>
      */
     @Override
-    public MailQueueItem deQueue() throws MailQueueException {
+    public Flux<MailQueueItem> deQueue() {
+        return flux;
+    }
+
+    private Mono<MailQueueItem> deQueueOneItem() {
         Session session = null;
         MessageConsumer consumer = null;
+        try {
+            session = connection.createSession(true, Session.SESSION_TRANSACTED);
+            Queue queue = session.createQueue(queueName);
+            consumer = session.createConsumer(queue, getMessageSelector());
 
-        while (true) {
-            TimeMetric timeMetric = metricFactory.timer(DEQUEUED_TIMER_METRIC_NAME_PREFIX + queueName);
-            try {
-                session = connection.createSession(true, Session.SESSION_TRANSACTED);
-                Queue queue = session.createQueue(queueName);
-                consumer = session.createConsumer(queue, getMessageSelector());
+            Message message = consumer.receive(10000);
 
-                Message message = consumer.receive(10000);
-
-                if (message != null) {
-                    dequeuedMailsMetric.increment();
-                    return createMailQueueItem(session, consumer, message);
-                } else {
-                    session.commit();
-                    closeConsumer(consumer);
-                    closeSession(session);
-                }
-
-            } catch (Exception e) {
-                rollback(session);
+            if (message != null) {
+                dequeuedMailsMetric.increment();
+                return Mono.just(createMailQueueItem(session, consumer, message));
+            } else {
+                session.commit();
                 closeConsumer(consumer);
                 closeSession(session);
-                throw new MailQueueException("Unable to dequeue next message", e);
-            } finally {
-                timeMetric.stopAndPublish();
             }
+
+        } catch (Exception e) {
+            rollback(session);
+            closeConsumer(consumer);
+            closeSession(session);
+            return Mono.error(new MailQueueException("Unable to dequeue next message", e));
         }
+        return Mono.empty();
     }
 
     @Override
-    public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
+    public void enQueue(Mail mail, Duration delay) throws MailQueueException {
         TimeMetric timeMetric = metricFactory.timer(ENQUEUED_TIMER_METRIC_NAME_PREFIX + queueName);
 
-        long nextDeliveryTimestamp = computeNextDeliveryTimestamp(delay, unit);
+        long nextDeliveryTimestamp = computeNextDeliveryTimestamp(delay);
 
         try {
 
-            int msgPrio = NORMAL_PRIORITY;
-            Object prio = mail.getAttribute(MAIL_PRIORITY);
-            if (prio instanceof Integer) {
-                msgPrio = (Integer) prio;
-            }
+            int msgPrio = AttributeUtils.getValueAndCastFromMail(mail, MAIL_PRIORITY, Integer.class)
+                .orElse(NORMAL_PRIORITY);
 
             Map<String, Object> props = getJMSProperties(mail, nextDeliveryTimestamp);
             produceMail(props, msgPrio, mail);
@@ -264,16 +275,16 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         }
     }
 
-    public long computeNextDeliveryTimestamp(long delay, TimeUnit unit) {
-        if (delay > 0) {
+    public long computeNextDeliveryTimestamp(Duration delay) {
+        if (!delay.isNegative()) {
             try {
                 return ZonedDateTime.now()
-                    .plus(delay, Temporals.chronoUnit(unit))
+                    .plus(delay)
                     .toInstant()
                     .toEpochMilli();
-            } catch (ArithmeticException e) {
-                LOGGER.warn("The {} was caused by conversation {}({}) followed by addition to current timestamp. Falling back to Long.MAX_VALUE.",
-                        e.getMessage(), delay, unit.name());
+            } catch (DateTimeException | ArithmeticException e) {
+                LOGGER.warn("The {} was caused by conversation {} followed by addition to current timestamp. Falling back to Long.MAX_VALUE.",
+                        e.getMessage(), delay);
 
                 return Long.MAX_VALUE;
             }
@@ -333,12 +344,18 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         props.put(JAMES_MAIL_REMOTEADDR, mail.getRemoteAddr());
         props.put(JAMES_MAIL_REMOTEHOST, mail.getRemoteHost());
 
-        String sender = Optional.ofNullable(mail.getSender()).map(MailAddress::asString).orElse("");
+        String sender = mail.getMaybeSender().asString("");
 
-        org.apache.james.util.streams.Iterators.toStream(mail.getAttributeNames())
-                .forEach(attrName -> props.put(attrName, SerializationUtil.serialize(mail.getAttribute(attrName))));
+        props.putAll(mail.attributes()
+            .collect(Guavate.toImmutableMap(
+                attribute -> attribute.getName().asString(),
+                attribute -> SerializationUtil.serialize((Serializable) attribute.getValue().value()))));
 
-        props.put(JAMES_MAIL_ATTRIBUTE_NAMES, joiner.join(mail.getAttributeNames()));
+        ImmutableList<String> attributeNames = mail.attributeNames()
+            .map(AttributeName::asString)
+            .collect(Guavate.toImmutableList());
+
+        props.put(JAMES_MAIL_ATTRIBUTE_NAMES, joiner.join(attributeNames));
         props.put(JAMES_MAIL_SENDER, sender);
         props.put(JAMES_MAIL_STATE, mail.getState());
 
@@ -355,25 +372,20 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
      * @throws JMSException
      */
     protected final Mail createMail(Message message) throws MessagingException, JMSException {
-        MailImpl mail = new MailImpl();
-        populateMail(message, mail);
-        populateMailMimeMessage(message, mail);
-
-        return mail;
+        return populateMail(message).mimeMessage(mimeMessage(message)).build();
     }
 
     /**
-     * Populat the given {@link Mail} instance with a {@link MimeMessage}. The
+     * Return a MimeMessage extracted from the input Message. The
      * {@link MimeMessage} is read from the JMS Message. This implementation use
      * a {@link BytesMessage}
      *
      * @param message
-     * @param mail
      * @throws MessagingException
      */
-    protected void populateMailMimeMessage(Message message, Mail mail) throws MessagingException, JMSException {
+    protected MimeMessage mimeMessage(Message message) throws MessagingException, JMSException {
         if (message instanceof ObjectMessage) {
-            mail.setMessage(new MimeMessageCopyOnWriteProxy(new MimeMessageObjectMessageSource((ObjectMessage) message)));
+            return new MimeMessageCopyOnWriteProxy(new MimeMessageObjectMessageSource((ObjectMessage) message));
         } else {
             throw new MailQueueException("Not supported JMS Message received " + message);
         }
@@ -385,61 +397,57 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
      * {@link MimeMessage}
      *
      * @param message
-     * @param mail
      * @throws JMSException
      */
-    protected void populateMail(Message message, MailImpl mail) throws JMSException {
-        mail.setErrorMessage(message.getStringProperty(JAMES_MAIL_ERROR_MESSAGE));
-        mail.setLastUpdated(new Date(message.getLongProperty(JAMES_MAIL_LAST_UPDATED)));
-        mail.setName(message.getStringProperty(JAMES_MAIL_NAME));
+    protected MailImpl.Builder populateMail(Message message) throws JMSException {
+        String name = message.getStringProperty(JAMES_MAIL_NAME);
+        MailImpl.Builder builder = MailImpl.builder().name(name);
+        builder.errorMessage(message.getStringProperty(JAMES_MAIL_ERROR_MESSAGE));
+        builder.lastUpdated(new Date(message.getLongProperty(JAMES_MAIL_LAST_UPDATED)));
 
         Optional.ofNullable(SerializationUtil.<PerRecipientHeaders>deserialize(message.getStringProperty(JAMES_MAIL_PER_RECIPIENT_HEADERS)))
-                .ifPresent(mail::addAllSpecificHeaderForRecipient);
+                .ifPresent(builder::addAllHeadersForRecipients);
 
-        List<MailAddress> rcpts = new ArrayList<>();
         String recipients = message.getStringProperty(JAMES_MAIL_RECIPIENTS);
         StringTokenizer recipientTokenizer = new StringTokenizer(recipients, JAMES_MAIL_SEPARATOR);
         while (recipientTokenizer.hasMoreTokens()) {
             String token = recipientTokenizer.nextToken();
             try {
                 MailAddress rcpt = new MailAddress(token);
-                rcpts.add(rcpt);
+                builder.addRecipient(rcpt);
             } catch (AddressException e) {
                 // Should never happen as long as the user does not modify the
                 // the header by himself
-                LOGGER.error("Unable to parse the recipient address {} for mail {}, so we ignore it", token, mail.getName(), e);
+                LOGGER.error("Unable to parse the recipient address {} for builder {}, so we ignore it", token, name, e);
             }
         }
-        mail.setRecipients(rcpts);
-        mail.setRemoteAddr(message.getStringProperty(JAMES_MAIL_REMOTEADDR));
-        mail.setRemoteHost(message.getStringProperty(JAMES_MAIL_REMOTEHOST));
+        builder.remoteAddr(message.getStringProperty(JAMES_MAIL_REMOTEADDR));
+        builder.remoteHost(message.getStringProperty(JAMES_MAIL_REMOTEHOST));
 
         String attributeNames = message.getStringProperty(JAMES_MAIL_ATTRIBUTE_NAMES);
 
-        splitter.split(attributeNames)
-                .forEach(name -> setMailAttribute(message, mail, name));
+        builder.addAttributes(
+            splitter.splitToList(attributeNames)
+            .stream()
+            .flatMap(attributeName -> mailAttribute(message, attributeName))
+            .collect(Guavate.toImmutableList()));
 
-        mail.setSender(MailAddress.getMailSender(message.getStringProperty(JAMES_MAIL_SENDER)));
-        mail.setState(message.getStringProperty(JAMES_MAIL_STATE));
+        builder.sender(MaybeSender.getMailSender(message.getStringProperty(JAMES_MAIL_SENDER)).asOptional());
+        builder.state(message.getStringProperty(JAMES_MAIL_STATE));
+        return builder;
     }
 
-    /**
-     * Retrieves the attribute by {@code name} form {@code message} and tries to add it on {@code mail}.
-     *
-     * @param message The attribute source.
-     * @param mail    The mail on which attribute should be set.
-     * @param name    The attribute name.
-     */
-    private void setMailAttribute(Message message, Mail mail, String name) {
+    private Stream<Attribute> mailAttribute(Message message, String name) {
         // Now cast the property back to Serializable and set it as attribute.
         // See JAMES-1241
         Object attrValue = Throwing.function(message::getObjectProperty).apply(name);
 
         if (attrValue instanceof String) {
-            mail.setAttribute(name, SerializationUtil.deserialize((String) attrValue));
+            return Stream.of(new Attribute(AttributeName.of(name), AttributeValue.ofAny(SerializationUtil.deserialize((String) attrValue))));
         } else {
-            LOGGER.error("Not supported mail attribute {} of type {} for mail {}", name, attrValue, mail.getName());
+            LOGGER.error("Not supported mail attribute {} of type {} for mail {}", name, attrValue, name);
         }
+        return Stream.empty();
     }
 
     private Gauge<Long> queueSizeGauge() {

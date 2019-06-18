@@ -26,12 +26,15 @@ import javax.inject.Inject;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.server.core.configuration.Configuration;
 
 public class FailingPropertiesProvider extends PropertiesProvider {
 
     @Inject
-    public FailingPropertiesProvider(FileSystem fileSystem) {
-        super(fileSystem);
+    public FailingPropertiesProvider(FileSystem fileSystem) throws FileNotFoundException {
+        super(fileSystem, Configuration.builder()
+            .workingDirectory(fileSystem.getBasedir().getAbsolutePath())
+            .build());
     }
 
     @Override

@@ -20,7 +20,7 @@
 package org.apache.james.jmap.memory;
 
 import java.io.IOException;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
@@ -34,8 +34,6 @@ public class MemorySetMessagesMethodTest extends SetMessagesMethodTest {
     @Rule
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 
-    private Random random = new Random();
-    
     @Override
     protected GuiceJamesServer createJmapServer() throws IOException {
         return memoryJmap.jmapServer();
@@ -47,7 +45,7 @@ public class MemorySetMessagesMethodTest extends SetMessagesMethodTest {
     
     @Override
     protected MessageId randomMessageId() {
-        return new InMemoryMessageId.Factory().fromString(String.valueOf(random.nextInt(100000) + 100));
+        return new InMemoryMessageId.Factory().fromString(String.valueOf(ThreadLocalRandom.current().nextInt(100000) + 100));
     }
 
 }

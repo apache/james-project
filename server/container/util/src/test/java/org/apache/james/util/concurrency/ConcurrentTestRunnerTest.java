@@ -23,18 +23,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ConcurrentTestRunnerTest {
     public static final ConcurrentTestRunner.ConcurrentOperation NOOP = (threadNumber, step) -> { };
     public static final Duration DEFAULT_AWAIT_TIME = Duration.ofMillis(100);
 
     @Test
-    public void constructorShouldThrowOnNegativeThreadCount() {
+    void constructorShouldThrowOnNegativeThreadCount() {
         assertThatThrownBy(() ->
             ConcurrentTestRunner.builder()
                 .operation(NOOP)
@@ -44,7 +47,7 @@ public class ConcurrentTestRunnerTest {
     }
 
     @Test
-    public void constructorShouldThrowOnNegativeOperationCount() {
+    void constructorShouldThrowOnNegativeOperationCount() {
         assertThatThrownBy(() ->
             ConcurrentTestRunner.builder()
                 .operation(NOOP)
@@ -54,7 +57,7 @@ public class ConcurrentTestRunnerTest {
     }
 
     @Test
-    public void constructorShouldThrowOnZeroThreadCount() {
+    void constructorShouldThrowOnZeroThreadCount() {
         assertThatThrownBy(() ->
             ConcurrentTestRunner.builder()
                 .operation(NOOP)
@@ -64,7 +67,7 @@ public class ConcurrentTestRunnerTest {
     }
 
     @Test
-    public void constructorShouldThrowOnZeroOperationCount() {
+    void constructorShouldThrowOnZeroOperationCount() {
         assertThatThrownBy(() ->
             ConcurrentTestRunner.builder()
                 .operation(NOOP)
@@ -74,7 +77,7 @@ public class ConcurrentTestRunnerTest {
     }
 
     @Test
-    public void constructorShouldThrowOnNullBiConsumer() {
+    void constructorShouldThrowOnNullBiConsumer() {
         assertThatThrownBy(() ->
             ConcurrentTestRunner.builder()
                 .operation(null)
@@ -84,7 +87,7 @@ public class ConcurrentTestRunnerTest {
     }
 
     @Test
-    public void awaitTerminationShouldNotThrowWhenFinished() {
+    void awaitTerminationShouldNotThrowWhenFinished() {
         assertThatCode(() ->  ConcurrentTestRunner.builder()
                 .operation(NOOP)
                 .threadCount(1)
@@ -93,7 +96,7 @@ public class ConcurrentTestRunnerTest {
     }
 
     @Test
-    public void awaitTerminationShouldThrowWhenNotFinished() {
+    void awaitTerminationShouldThrowWhenNotFinished() {
         assertThatThrownBy(() -> ConcurrentTestRunner.builder()
                 .operation((threadNumber, step) -> Thread.sleep(50))
                 .threadCount(1)
@@ -102,7 +105,40 @@ public class ConcurrentTestRunnerTest {
     }
 
     @Test
-    public void runShouldPerformAllOperations() {
+    void runShouldPerformAllOperations() {
+        ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
+
+        assertThatCode(() -> ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> queue.add(threadNumber + ":" + step))
+            .threadCount(2)
+            .operationCount(2)
+            .run()
+            .awaitTermination(Duration.ofSeconds(1)))
+            .doesNotThrowAnyException();
+
+        assertThat(queue).containsOnly("0:0", "0:1", "1:0", "1:1");
+    }
+
+    @Test
+    void closeShouldPreventPerformAllOperations() throws IOException, InterruptedException {
+        ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
+
+        int maxItems = 200000;
+        Closeable closeable = ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> queue.add(threadNumber + ":" + step))
+            .threadCount(2)
+            .operationCount(maxItems)
+            .run();
+        closeable.close();
+        TimeUnit.SECONDS.sleep(1);
+        int stabilizedItemCount = queue.size();
+        assertThat(stabilizedItemCount).isLessThanOrEqualTo(maxItems * 2);
+        TimeUnit.SECONDS.sleep(1);
+        assertThat(queue).hasSize(stabilizedItemCount);
+    }
+
+    @Test
+    void runSuccessfullyWithinShouldPerformAllOperations() {
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
 
         assertThatCode(() -> ConcurrentTestRunner.builder()
@@ -116,7 +152,7 @@ public class ConcurrentTestRunnerTest {
     }
 
     @Test
-    public void operationCountShouldDefaultToOne() {
+    void operationCountShouldDefaultToOne() {
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
 
         assertThatCode(() -> ConcurrentTestRunner.builder()
@@ -127,7 +163,7 @@ public class ConcurrentTestRunnerTest {
     }
 
     @Test
-    public void runShouldNotThrowOnExceptions() {
+    void runShouldNotThrowOnExceptions() {
         assertThatCode(() -> ConcurrentTestRunner.builder()
                 .operation((threadNumber, step) -> {
                     throw new RuntimeException();
@@ -139,7 +175,7 @@ public class ConcurrentTestRunnerTest {
     }
 
     @Test
-    public void noExceptionsShouldNotThrowWhenNoExceptionGenerated() throws Exception {
+    void noExceptionsShouldNotThrowWhenNoExceptionGenerated() throws Exception {
         ConcurrentTestRunner.builder()
             .operation(NOOP)
             .threadCount(2)
@@ -149,7 +185,7 @@ public class ConcurrentTestRunnerTest {
     }
 
     @Test
-    public void assertNoExceptionShouldThrowOnExceptions() throws Exception {
+    void assertNoExceptionShouldThrowOnExceptions() throws Exception {
         assertThatThrownBy(() ->
                 ConcurrentTestRunner.builder()
                     .operation((threadNumber, step) -> {
@@ -163,7 +199,7 @@ public class ConcurrentTestRunnerTest {
     }
 
     @Test
-    public void runShouldPerformAllOperationsEvenOnExceptions() throws Exception {
+    void runShouldPerformAllOperationsEvenOnExceptions() throws Exception {
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
 
         ConcurrentTestRunner.builder()
@@ -179,7 +215,7 @@ public class ConcurrentTestRunnerTest {
     }
 
     @Test
-    public void runShouldPerformAllOperationsEvenOnOccasionalExceptions() throws Exception {
+    void runShouldPerformAllOperationsEvenOnOccasionalExceptions() throws Exception {
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
 
         ConcurrentTestRunner.builder()

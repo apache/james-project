@@ -26,17 +26,17 @@ import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.steveash.guavate.Guavate;
-
+@ExtendWith(CassandraRestartExtension.class)
 class CassandraAttachmentDAOTest {
     private static final AttachmentId ATTACHMENT_ID = AttachmentId.from("id1");
     private static final AttachmentId ATTACHMENT_ID_2 = AttachmentId.from("id2");
@@ -49,13 +49,12 @@ class CassandraAttachmentDAOTest {
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
         testee = new CassandraAttachmentDAO(cassandra.getConf(),
-            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @Test
     void getAttachmentShouldReturnEmptyWhenAbsent() {
-        Optional<Attachment> attachment = testee.getAttachment(ATTACHMENT_ID).join();
+        Optional<Attachment> attachment = testee.getAttachment(ATTACHMENT_ID).blockOptional();
 
         assertThat(attachment).isEmpty();
     }
@@ -64,7 +63,8 @@ class CassandraAttachmentDAOTest {
     void retrieveAllShouldReturnEmptyByDefault() {
         assertThat(
             testee.retrieveAll()
-                .collect(Guavate.toImmutableList()))
+                .collectList()
+                .block())
             .isEmpty();
     }
 
@@ -80,12 +80,13 @@ class CassandraAttachmentDAOTest {
             .type("application/json")
             .bytes("{\"property\":`\"value2\"}".getBytes(StandardCharsets.UTF_8))
             .build();
-        testee.storeAttachment(attachment1).join();
-        testee.storeAttachment(attachment2).join();
+        testee.storeAttachment(attachment1).block();
+        testee.storeAttachment(attachment2).block();
 
         assertThat(
             testee.retrieveAll()
-                .collect(Guavate.toImmutableList()))
+                .collectList()
+                .block())
             .containsOnly(attachment1, attachment2);
     }
 
@@ -96,9 +97,9 @@ class CassandraAttachmentDAOTest {
             .type("application/json")
             .bytes("{\"property\":`\"value\"}".getBytes(StandardCharsets.UTF_8))
             .build();
-        testee.storeAttachment(attachment).join();
+        testee.storeAttachment(attachment).block();
 
-        Optional<Attachment> actual = testee.getAttachment(ATTACHMENT_ID).join();
+        Optional<Attachment> actual = testee.getAttachment(ATTACHMENT_ID).blockOptional();
 
         assertThat(actual).contains(attachment);
     }
@@ -110,11 +111,11 @@ class CassandraAttachmentDAOTest {
             .type("application/json")
             .bytes("{\"property\":`\"value\"}".getBytes(StandardCharsets.UTF_8))
             .build();
-        testee.storeAttachment(attachment).join();
+        testee.storeAttachment(attachment).block();
 
-        testee.deleteAttachment(attachment.getAttachmentId()).join();
+        testee.deleteAttachment(attachment.getAttachmentId()).block();
 
-        assertThat(testee.getAttachment(attachment.getAttachmentId()).join())
+        assertThat(testee.getAttachment(attachment.getAttachmentId()).blockOptional())
             .isEmpty();
     }
 }

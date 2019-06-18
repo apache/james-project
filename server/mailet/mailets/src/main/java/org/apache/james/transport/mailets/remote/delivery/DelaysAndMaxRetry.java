@@ -19,10 +19,12 @@
 
 package org.apache.james.transport.mailets.remote.delivery;
 
+import java.time.Duration;
 import java.util.List;
 
 import javax.mail.MessagingException;
 
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,12 +65,15 @@ public class DelaysAndMaxRetry {
     private static DelaysAndMaxRetry addExtraAttemptToLastDelay(int intendedMaxRetries, int extra, List<Delay> delayTimesList) throws MessagingException {
         if (delayTimesList.size() != 0) {
             Delay lastDelay = delayTimesList.get(delayTimesList.size() - 1);
-            LOGGER.warn("Delay of {} msecs is now attempted: {} times", lastDelay.getDelayTimeInMs(), lastDelay.getAttempts());
+            Duration lastDelayTime = lastDelay.getDelayTime();
+            LOGGER.warn("Delay of {} is now attempted: {} times",
+                DurationFormatUtils.formatDurationWords(lastDelayTime.toMillis(), true, true),
+                lastDelay.getAttempts());
             return new DelaysAndMaxRetry(intendedMaxRetries,
                 ImmutableList.copyOf(
                     Iterables.concat(
                         Iterables.limit(delayTimesList, delayTimesList.size() - 1),
-                        ImmutableList.of(new Delay(lastDelay.getAttempts() + extra, lastDelay.getDelayTimeInMs())))));
+                        ImmutableList.of(new Delay(lastDelay.getAttempts() + extra, lastDelayTime)))));
         } else {
             throw new MessagingException("No delaytimes, cannot continue");
         }
@@ -135,8 +140,8 @@ public class DelaysAndMaxRetry {
      * @param list the list to expand
      * @return the expanded list
      */
-    public List<Long> getExpandedDelays() {
-        ImmutableList.Builder<Long> builder = ImmutableList.builder();
+    public ImmutableList<Duration> getExpandedDelays() {
+        ImmutableList.Builder<Duration> builder = ImmutableList.builder();
         for (Delay delay: delays) {
             builder.addAll(delay.getExpendendDelays());
         }

@@ -24,9 +24,7 @@ import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.es.ESMetricReporter;
 import org.apache.james.metrics.es.ESReporterConfiguration;
 import org.apache.james.utils.ConfigurationPerformer;
@@ -87,7 +85,7 @@ public class ElasticSearchMetricReporterModule extends AbstractModule {
     }
 
     @Singleton
-    public static class ESMetricReporterStarter implements ConfigurationPerformer, Configurable {
+    public static class ESMetricReporterStarter implements ConfigurationPerformer {
 
         private final ESMetricReporter esMetricReporter;
 
@@ -102,13 +100,8 @@ public class ElasticSearchMetricReporterModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Configurable>> forClasses() {
-            return ImmutableList.of(ESMetricReporterStarter.class);
-        }
-
-        @Override
-        public void configure(HierarchicalConfiguration config) throws ConfigurationException {
-            throw new NotImplementedException();
+        public List<Class<? extends Startable>> forClasses() {
+            return ImmutableList.of(ESMetricReporter.class);
         }
     }
 

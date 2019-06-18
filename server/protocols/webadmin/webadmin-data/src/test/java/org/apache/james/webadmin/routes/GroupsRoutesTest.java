@@ -23,13 +23,14 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 import java.util.List;
 import java.util.Map;
@@ -39,8 +40,6 @@ import org.apache.james.core.User;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
-import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -50,6 +49,7 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.dto.MappingSourceModule;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
@@ -65,6 +65,7 @@ import io.restassured.http.ContentType;
 class GroupsRoutesTest {
 
     private static final Domain DOMAIN = Domain.of("b.com");
+    private static final Domain ALIAS_DOMAIN = Domain.of("alias");
     private static final String GROUP1 = "group1" + "@" + DOMAIN.name();
     private static final String GROUP2 = "group2" + "@" + DOMAIN.name();
     private static final String GROUP_WITH_SLASH = "group10/10" + "@" + DOMAIN.name();
@@ -76,12 +77,9 @@ class GroupsRoutesTest {
 
     private WebAdminServer webAdminServer;
 
-    private void createServer(GroupsRoutes groupsRoutes) throws Exception {
-        webAdminServer = WebAdminUtils.createWebAdminServer(
-            new DefaultMetricFactory(),
-            groupsRoutes);
-        webAdminServer.configure(NO_CONFIGURATION);
-        webAdminServer.await();
+    private void createServer(GroupsRoutes groupsRoutes) {
+        webAdminServer = WebAdminUtils.createWebAdminServer(groupsRoutes)
+            .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath("address/groups")
@@ -107,9 +105,12 @@ class GroupsRoutesTest {
             DNSService dnsService = mock(DNSService.class);
             domainList = new MemoryDomainList(dnsService);
             domainList.addDomain(DOMAIN);
+            domainList.addDomain(ALIAS_DOMAIN);
+            memoryRecipientRewriteTable.setDomainList(domainList);
             usersRepository = MemoryUsersRepository.withVirtualHosting();
             usersRepository.setDomainList(domainList);
-            createServer(new GroupsRoutes(memoryRecipientRewriteTable, usersRepository, domainList, new JsonTransformer()));
+            MappingSourceModule mappingSourceModule = new MappingSourceModule();
+            createServer(new GroupsRoutes(memoryRecipientRewriteTable, usersRepository, new JsonTransformer(mappingSourceModule)));
         }
 
         @Test
@@ -353,24 +354,6 @@ class GroupsRoutesTest {
         }
 
         @Test
-        void putUserInGroupShouldNotAllowGroupOnUnregisteredDomain() {
-            Map<String, Object> errors = when()
-                .put("group@unregisteredDomain" + SEPARATOR + USER_A)
-            .then()
-                .statusCode(HttpStatus.FORBIDDEN_403)
-                .contentType(ContentType.JSON)
-                .extract()
-                .body()
-                .jsonPath()
-                .getMap(".");
-
-            assertThat(errors)
-                .containsEntry("statusCode", HttpStatus.FORBIDDEN_403)
-                .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "Server doesn't own the domain: unregisteredDomain");
-        }
-
-        @Test
         void putUserInGroupShouldNotAllowUserShadowing() throws UsersRepositoryException {
             usersRepository.addUser(USER_A, "whatever");
 
@@ -445,7 +428,7 @@ class GroupsRoutesTest {
             super.setUp();
             memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser("error", DOMAIN), "disabled");
             memoryRecipientRewriteTable.addRegexMapping(MappingSource.fromUser("regex", DOMAIN), ".*@b\\.com");
-            memoryRecipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(Domain.of("alias")), DOMAIN);
+            memoryRecipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(ALIAS_DOMAIN), DOMAIN);
 
         }
 
@@ -454,15 +437,17 @@ class GroupsRoutesTest {
     @Nested
     class ExceptionHandling {
 
-        private RecipientRewriteTable memoryRecipientRewriteTable;
+        private MemoryRecipientRewriteTable memoryRecipientRewriteTable;
+        private DomainList domainList;
 
         @BeforeEach
         void setUp() throws Exception {
-            memoryRecipientRewriteTable = mock(RecipientRewriteTable.class);
+            memoryRecipientRewriteTable = spy(new MemoryRecipientRewriteTable());
             UsersRepository userRepository = mock(UsersRepository.class);
-            DomainList domainList = mock(DomainList.class);
+            domainList = mock(DomainList.class);
+            memoryRecipientRewriteTable.setDomainList(domainList);
             Mockito.when(domainList.containsDomain(any())).thenReturn(true);
-            createServer(new GroupsRoutes(memoryRecipientRewriteTable, userRepository, domainList, new JsonTransformer()));
+            createServer(new GroupsRoutes(memoryRecipientRewriteTable, userRepository, new JsonTransformer()));
         }
 
         @Test
@@ -501,6 +486,27 @@ class GroupsRoutesTest {
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
                 .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
+        }
+
+        @Test
+        void putASourceContainingANotManagedDomainShouldReturnBadRequest() throws Exception {
+            doReturn(false)
+                .when(domainList).containsDomain(any());
+
+            Map<String, Object> errors = when()
+                .put("userA@not-managed-domain.tld" + SEPARATOR + USER_A)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "Source domain 'not-managed-domain.tld' is not managed by the domainList");
         }
 
         @Test
@@ -622,7 +628,7 @@ class GroupsRoutesTest {
         void getAllShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .getAllMappings();
+                .getSourcesForType(any());
 
             when()
                 .get()
@@ -634,7 +640,7 @@ class GroupsRoutesTest {
         void getAllShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .getAllMappings();
+                .getSourcesForType(any());
 
             when()
                 .get()
@@ -667,22 +673,10 @@ class GroupsRoutesTest {
         }
 
         @Test
-        void getShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
-            doThrow(RecipientRewriteTableException.class)
-                .when(memoryRecipientRewriteTable)
-                .getUserDomainMappings(any());
-
-            when()
-                .get(GROUP1)
-            .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
-        }
-
-        @Test
-        void getShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
+        void getShouldReturnErrorWhenRuntimeExceptionIsThrown() {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .getUserDomainMappings(any());
+                .getStoredMappings(any());
 
             when()
                 .get(GROUP1)

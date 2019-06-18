@@ -24,6 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.MessagingException;
 
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -60,7 +62,7 @@ public class ICALToHeadersTest {
             .mailetName("ICALToHeader")
             .build());
 
-        assertThat(testee.getAttribute()).isEqualTo(ICALToHeader.ATTRIBUTE_DEFAULT_NAME);
+        assertThat(testee.getAttribute().asString()).isEqualTo(ICALToHeader.ATTRIBUTE_DEFAULT_NAME);
     }
 
     @Test
@@ -71,7 +73,7 @@ public class ICALToHeadersTest {
             .setProperty(ICALToHeader.ATTRIBUTE_PROPERTY, attribute)
             .build());
 
-        assertThat(testee.getAttribute()).isEqualTo(attribute);
+        assertThat(testee.getAttribute().asString()).isEqualTo(attribute);
     }
 
     @Test
@@ -88,6 +90,7 @@ public class ICALToHeadersTest {
     public void serviceShouldNotModifyMailsWithoutIcalAttribute() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
         Mail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
             .build();
 
@@ -100,8 +103,9 @@ public class ICALToHeadersTest {
     public void serviceShouldNotFailOnMailsWithWrongAttributeType() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
         Mail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
-            .attribute(ICALToHeader.ATTRIBUTE_DEFAULT_NAME, "This is the wrong type")
+            .attribute(makeAttribute("This is the wrong type"))
             .build();
 
         testee.service(mail);
@@ -117,8 +121,9 @@ public class ICALToHeadersTest {
 
         testee.init(FakeMailetConfig.builder().build());
         Mail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
-            .attribute(ICALToHeader.ATTRIBUTE_DEFAULT_NAME, wrongParametrizedMap)
+            .attribute(makeAttribute(wrongParametrizedMap))
             .build();
 
         testee.service(mail);
@@ -135,8 +140,9 @@ public class ICALToHeadersTest {
 
         testee.init(FakeMailetConfig.builder().build());
         Mail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
-            .attribute(ICALToHeader.ATTRIBUTE_DEFAULT_NAME, icals)
+            .attribute(makeAttribute(icals))
             .build();
 
         testee.service(mail);
@@ -158,8 +164,9 @@ public class ICALToHeadersTest {
 
         testee.init(FakeMailetConfig.builder().build());
         Mail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
-            .attribute(ICALToHeader.ATTRIBUTE_DEFAULT_NAME, icals)
+            .attribute(makeAttribute(icals))
             .build();
 
         testee.service(mail);
@@ -183,8 +190,9 @@ public class ICALToHeadersTest {
 
         testee.init(FakeMailetConfig.builder().build());
         Mail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
-            .attribute(ICALToHeader.ATTRIBUTE_DEFAULT_NAME, icals)
+            .attribute(makeAttribute(icals))
             .build();
 
         testee.service(mail);
@@ -199,12 +207,17 @@ public class ICALToHeadersTest {
 
         testee.init(FakeMailetConfig.builder().build());
         Mail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
-            .attribute(ICALToHeader.ATTRIBUTE_DEFAULT_NAME, icals)
+            .attribute(makeAttribute(icals))
             .build();
 
         testee.service(mail);
 
         assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_UID_HEADER)).isNull();
+    }
+
+    private Attribute makeAttribute(Object icals) {
+        return new Attribute(ICALToHeader.ATTRIBUTE_DEFAULT, AttributeValue.ofAny(icals));
     }
 }

@@ -142,7 +142,7 @@ public class JmapMDN {
 
     public Message generateMDNMessage(Message originalMessage, MailboxSession mailboxSession) throws ParseException, IOException, InvalidOriginMessageForMDNException {
 
-        User user = mailboxSession.getUser().getCoreUser();
+        User user = mailboxSession.getUser();
 
         return MDN.builder()
             .report(generateReport(originalMessage, mailboxSession))
@@ -183,9 +183,9 @@ public class JmapMDN {
         }
         return MDNReport.builder()
             .dispositionField(generateDisposition())
-            .originalRecipientField(mailboxSession.getUser().getUserName())
+            .originalRecipientField(mailboxSession.getUser().asString())
             .originalMessageIdField(originalMessage.getMessageId())
-            .finalRecipientField(mailboxSession.getUser().getUserName())
+            .finalRecipientField(mailboxSession.getUser().asString())
             .reportingUserAgentField(getReportingUA())
             .build();
     }

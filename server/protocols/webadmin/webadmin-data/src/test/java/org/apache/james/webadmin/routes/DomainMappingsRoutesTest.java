@@ -24,12 +24,14 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.put;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
+import static org.apache.james.webadmin.routes.DomainMappingsRoutes.DOMAIN_MAPPINGS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -38,8 +40,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.apache.james.core.Domain;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
-import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -51,11 +52,13 @@ import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -67,36 +70,32 @@ import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
 class DomainMappingsRoutesTest {
-    private RecipientRewriteTable recipientRewriteTable;
+    private MemoryRecipientRewriteTable recipientRewriteTable;
     private WebAdminServer webAdminServer;
+    private DomainList domainList;
 
-    private void createServer(DomainMappingsRoutes domainMappingsRoutes) throws Exception {
-        webAdminServer = WebAdminUtils.createWebAdminServer(
-                new DefaultMetricFactory(),
-                domainMappingsRoutes);
-        webAdminServer.configure(NO_CONFIGURATION);
-        webAdminServer.await();
+    private void createServer(DomainMappingsRoutes domainMappingsRoutes) {
+        webAdminServer = WebAdminUtils.createWebAdminServer(domainMappingsRoutes)
+            .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
-                .setBasePath("/domainMappings")
-                .log(LogDetail.METHOD)
-                .build();
+            .setBasePath(DOMAIN_MAPPINGS)
+            .log(LogDetail.METHOD)
+            .build();
     }
 
     @BeforeEach
     void setUp() throws Exception {
         recipientRewriteTable = spy(new MemoryRecipientRewriteTable());
-
+        domainList = mock(DomainList.class);
+        recipientRewriteTable.setDomainList(domainList);
+        Mockito.when(domainList.containsDomain(any())).thenReturn(true);
         createServer(new DomainMappingsRoutes(recipientRewriteTable, new JsonTransformer()));
     }
 
     @AfterEach
     void tearDown() {
         webAdminServer.destroy();
-    }
-
-    @Nested
-    class Authentication {
     }
 
     @Nested
@@ -142,18 +141,18 @@ class DomainMappingsRoutesTest {
             recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(alias3));
 
             Map<String, List<String>> map =
-                    when()
-                        .get()
-                    .then()
-                        .contentType(ContentType.JSON)
-                        .statusCode(HttpStatus.OK_200)
-                    .extract()
-                        .body()
-                        .jsonPath()
-                        .getMap(".");
+                when()
+                    .get()
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                .extract()
+                    .body()
+                    .jsonPath()
+                    .getMap(".");
 
             assertThat(map)
-                    .containsOnly(entry(expectedDomain.name(), ImmutableList.of(alias1, alias2, alias3)));
+                .containsOnly(entry(expectedDomain.name(), ImmutableList.of(alias1, alias2, alias3)));
         }
 
         @Test
@@ -162,26 +161,26 @@ class DomainMappingsRoutesTest {
             MappingSource emptyMapping = MappingSource.fromDomain(Domain.of("def.com"));
 
             Map<MappingSource, Mappings> mappings = ImmutableMap.of(
-                    nonEmptyMapping, MappingsImpl.fromRawString("domain:a.com"),
-                    emptyMapping, MappingsImpl.empty()
+                nonEmptyMapping, MappingsImpl.fromRawString("domain:a.com"),
+                emptyMapping, MappingsImpl.empty()
             );
 
             when(recipientRewriteTable.getAllMappings()).thenReturn(mappings);
 
             Map<String, List<String>> map =
-                    when()
-                        .get()
-                    .then()
-                        .contentType(ContentType.JSON)
-                        .statusCode(HttpStatus.OK_200)
-                    .extract()
-                        .body()
-                        .jsonPath()
-                        .getMap(".");
+                when()
+                    .get()
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                .extract()
+                    .body()
+                    .jsonPath()
+                    .getMap(".");
 
             assertThat(map)
-                    .containsKey(nonEmptyMapping.asString())
-                    .doesNotContainKey(emptyMapping.asString());
+                .containsKey(nonEmptyMapping.asString())
+                .doesNotContainKey(emptyMapping.asString());
         }
 
         @Test
@@ -231,7 +230,7 @@ class DomainMappingsRoutesTest {
 
             recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(alias));
 
-            Assumptions.assumeTrue(recipientRewriteTable.getUserDomainMappings(mappingSource) != null);
+            Assumptions.assumeTrue(recipientRewriteTable.getStoredMappings(mappingSource) != null);
 
             given()
                 .body("to.com")
@@ -247,7 +246,7 @@ class DomainMappingsRoutesTest {
         void getSpecificDomainMappingShouldRespondWithNotFoundWhenHasNoAliases() throws RecipientRewriteTableException {
             String domain = "from.com";
 
-            when(recipientRewriteTable.getUserDomainMappings(any())).thenReturn(MappingsImpl.empty());
+            when(recipientRewriteTable.getStoredMappings(any())).thenReturn(MappingsImpl.empty());
 
             when()
                 .get(domain)
@@ -263,7 +262,7 @@ class DomainMappingsRoutesTest {
         void getSpecificDomainMappingShouldRespondWithNotFoundWhenHasEmptyAliases() throws RecipientRewriteTableException {
             String domain = "from.com";
 
-            when(recipientRewriteTable.getUserDomainMappings(any())).thenReturn(MappingsImpl.empty());
+            when(recipientRewriteTable.getStoredMappings(any())).thenReturn(MappingsImpl.empty());
 
             when()
                 .get(domain)
@@ -288,14 +287,14 @@ class DomainMappingsRoutesTest {
             recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(aliasDomain));
 
             List<String> body =
-                    when()
-                        .get(domain)
-                    .then()
-                        .contentType(ContentType.JSON)
-                        .statusCode(HttpStatus.OK_200)
-                    .extract()
-                        .jsonPath()
-                        .getList(".");
+                when()
+                    .get(domain)
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                .extract()
+                    .jsonPath()
+                    .getList(".");
 
             assertThat(body).containsOnly(aliasDomain);
         }
@@ -306,7 +305,7 @@ class DomainMappingsRoutesTest {
             String aliasDomain = "a.com";
             Mappings mappings = MappingsImpl.fromMappings(Mapping.domain(Domain.of(aliasDomain)));
 
-            when(recipientRewriteTable.getUserDomainMappings(any())).thenReturn(mappings);
+            when(recipientRewriteTable.getStoredMappings(any())).thenReturn(mappings);
 
             List<String> body =
             when()
@@ -324,6 +323,23 @@ class DomainMappingsRoutesTest {
 
     @Nested
     class IllegalInputs {
+
+        @Test
+        void addMappingContainingSourceDomainNotInDomainListShouldReturnBadRequest() throws Exception {
+            doReturn(false)
+                .when(domainList).containsDomain(any());
+
+            given()
+                .body("destination.tld")
+            .when()
+                .put("not-managed-domain.tld")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", Matchers.is(400))
+                .body("type", Matchers.is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Source domain 'not-managed-domain.tld' is not managed by the domainList"));
+        }
+
         @Test
         void addDomainMappingShouldRespondWithNotFound() {
             when()
@@ -385,25 +401,25 @@ class DomainMappingsRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                    .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
-                    .containsEntry("type", "InvalidArgument")
-                    .hasEntrySatisfying("message", o -> assertThat((String) o).matches("^The domain .* is invalid\\.$"));
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+                .containsEntry("type", "InvalidArgument")
+                .hasEntrySatisfying("message", o -> assertThat((String) o).matches("^The domain .* is invalid\\.$"));
         }
 
-        private void assertBadRequest(String toDomain, Function<RequestSpecification, Response> op) {
-            Map<String, Object> errors = op.apply(given().body(toDomain).when())
-                    .then()
-                        .statusCode(HttpStatus.BAD_REQUEST_400)
-                        .contentType(ContentType.JSON)
-                    .extract()
-                        .body()
-                        .jsonPath()
-                        .getMap(".");
+        private void assertBadRequest(String toDomain, Function<RequestSpecification, Response> requestingFunction) {
+            Map<String, Object> errors = requestingFunction.apply(given().body(toDomain).when())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .contentType(ContentType.JSON)
+                .extract()
+                    .body()
+                    .jsonPath()
+                    .getMap(".");
 
             assertThat(errors)
-                    .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
-                    .containsEntry("type", "InvalidArgument")
-                    .hasEntrySatisfying("message", o -> assertThat((String) o).matches("^The domain .* is invalid\\.$"));
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+                .containsEntry("type", "InvalidArgument")
+                .hasEntrySatisfying("message", o -> assertThat((String) o).matches("^The domain .* is invalid\\.$"));
         }
     }
 }

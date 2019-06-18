@@ -26,36 +26,48 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class LimitTest {
+class LimitTest {
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(Limit.class)
             .verify();
     }
 
     @Test
-    public void getValueShouldReturnEmptyWhenUnlimited() {
+    void getValueShouldReturnEmptyWhenUnlimited() {
         assertThat(Limit.unlimited()
             .getValue())
             .isEmpty();
     }
 
     @Test
-    public void getValueShouldReturnZeroWhenZero() {
+    void getValueShouldReturnZeroWhenZero() {
         assertThat(Limit.of(0)
             .getValue())
             .contains(0);
     }
 
     @Test
-    public void getValueShouldReturnSuppliedValue() {
+    void getValueShouldReturnSuppliedValue() {
         assertThat(Limit.of(3)
             .getValue())
             .contains(3);
     }
 
     @Test
-    public void ofShouldThrowOnNegativeValue() {
+    void isLimitedShouldBeTrueWhenAValueIsSpecified() {
+        assertThat(Limit.of(3).isLimited())
+            .isTrue();
+    }
+
+    @Test
+    void isLimitedShouldBeFalseWhenUnlimited() {
+        assertThat(Limit.unlimited().isLimited())
+            .isFalse();
+    }
+
+    @Test
+    void ofShouldThrowOnNegativeValue() {
         assertThatThrownBy(() -> Limit.of(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }

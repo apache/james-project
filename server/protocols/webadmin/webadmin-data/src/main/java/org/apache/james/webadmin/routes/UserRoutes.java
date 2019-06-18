@@ -29,7 +29,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.AddUserRequest;
 import org.apache.james.webadmin.dto.UserResponse;
@@ -39,6 +38,7 @@ import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -142,8 +142,7 @@ public class UserRoutes implements Routes {
         String username = request.params(USER_NAME);
         try {
             userService.removeUser(username);
-            response.status(HttpStatus.NO_CONTENT_204);
-            return Constants.EMPTY_BODY;
+            return Responses.returnNoContent(response);
         } catch (UsersRepositoryException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NO_CONTENT_204)

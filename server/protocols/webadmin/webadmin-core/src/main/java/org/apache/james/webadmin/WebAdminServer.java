@@ -31,9 +31,7 @@ import java.util.Set;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
@@ -49,14 +47,11 @@ import org.apache.james.webadmin.utils.JsonExtractException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-
 import spark.Service;
 
-public class WebAdminServer implements Configurable {
-
+public class WebAdminServer implements Startable {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebAdminServer.class);
-    public static final HierarchicalConfiguration NO_CONFIGURATION = null;
+
     public static final int DEFAULT_PORT = 8080;
 
     private final WebAdminConfiguration configuration;
@@ -65,9 +60,7 @@ public class WebAdminServer implements Configurable {
     private final Service service;
     private final AuthenticationFilter authenticationFilter;
     private final MetricFactory metricFactory;
-    private Port port;
 
-    // Spark do not allow to retrieve allocated port when using a random port. Thus we generate the port.
     @Inject
     protected WebAdminServer(WebAdminConfiguration configuration, Set<Routes> routesList, Set<PublicRoutes> publicRoutes, AuthenticationFilter authenticationFilter,
                            MetricFactory metricFactory) {
@@ -79,8 +72,7 @@ public class WebAdminServer implements Configurable {
         this.service = Service.ignite();
     }
 
-    @Override
-    public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+    public WebAdminServer start() {
         if (configuration.isEnabled()) {
             service.port(configuration.getPort().get().getValue());
             configureExceptionHanding();
@@ -96,9 +88,9 @@ public class WebAdminServer implements Configurable {
             });
             publicRoutes.forEach(routes -> routes.define(service));
             service.awaitInitialization();
-            port = new Port(service.port());
             LOGGER.info("Web admin server started");
         }
+        return this;
     }
 
     private void configureMDC() {
@@ -154,22 +146,29 @@ public class WebAdminServer implements Configurable {
                 .cause(ex)
                 .asString());
         });
+
+        service.exception(IllegalArgumentException.class, (ex, req, res) -> {
+            LOGGER.info("Invalid arguments supplied in the user request", ex);
+            res.status(BAD_REQUEST_400);
+            res.body(ErrorResponder.builder()
+                .statusCode(BAD_REQUEST_400)
+                .type(INVALID_ARGUMENT)
+                .message("Invalid arguments supplied in the user request")
+                .cause(ex)
+                .asString());
+        });
     }
 
     @PreDestroy
     public void destroy() {
         if (configuration.isEnabled()) {
             service.stop();
+            service.awaitStop();
             LOGGER.info("Web admin server stopped");
         }
     }
 
-    public void await() {
-        service.awaitInitialization();
-    }
-
     public Port getPort() {
-        Preconditions.checkState(port != null, "WebAdminServer should be configured.");
-        return port;
+        return new Port(service.port());
     }
 }

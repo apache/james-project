@@ -20,7 +20,6 @@
 package org.apache.james.mailrepository.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -61,7 +60,6 @@ public class CassandraMailRepositoryUrlStoreExtension implements ParameterResolv
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         return new CassandraMailRepositoryUrlStore(
             new UrlsDao(
-                cassandraCluster.getCassandraCluster().getConf(),
-                CassandraUtils.WITH_DEFAULT_CONFIGURATION));
+                cassandraCluster.getCassandraCluster().getConf()));
     }
 }

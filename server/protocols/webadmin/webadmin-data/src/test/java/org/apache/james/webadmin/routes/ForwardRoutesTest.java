@@ -23,15 +23,15 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 import java.util.List;
 import java.util.Map;
@@ -42,8 +42,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
-import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -52,6 +50,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.dto.MappingSourceModule;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
@@ -67,6 +66,7 @@ import io.restassured.http.ContentType;
 class ForwardRoutesTest {
 
     private static final Domain DOMAIN = Domain.of("b.com");
+    private static final Domain ALIAS_DOMAIN = Domain.of("alias");
     public static final String CEDRIC = "cedric@" + DOMAIN.name();
     public static final String ALICE = "alice@" + DOMAIN.name();
     public static final String ALICE_WITH_SLASH = "alice/@" + DOMAIN.name();
@@ -79,12 +79,9 @@ class ForwardRoutesTest {
 
     private WebAdminServer webAdminServer;
 
-    private void createServer(ForwardRoutes forwardRoutes) throws Exception {
-        webAdminServer = WebAdminUtils.createWebAdminServer(
-            new DefaultMetricFactory(),
-            forwardRoutes);
-        webAdminServer.configure(NO_CONFIGURATION);
-        webAdminServer.await();
+    private void createServer(ForwardRoutes forwardRoutes) {
+        webAdminServer = WebAdminUtils.createWebAdminServer(forwardRoutes)
+            .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath("address/forwards")
@@ -113,6 +110,9 @@ class ForwardRoutesTest {
                 .autoDetect(false)
                 .autoDetectIp(false));
             domainList.addDomain(DOMAIN);
+            domainList.addDomain(ALIAS_DOMAIN);
+            memoryRecipientRewriteTable.setDomainList(domainList);
+            MappingSourceModule mappingSourceModule = new MappingSourceModule();
 
             usersRepository = MemoryUsersRepository.withVirtualHosting();
             usersRepository.setDomainList(domainList);
@@ -123,7 +123,7 @@ class ForwardRoutesTest {
             usersRepository.addUser(ALICE_WITH_SLASH, ALICE_SLASH_PASSWORD);
             usersRepository.addUser(CEDRIC, CEDRIC_PASSWORD);
 
-            createServer(new ForwardRoutes(memoryRecipientRewriteTable, usersRepository, new JsonTransformer()));
+            createServer(new ForwardRoutes(memoryRecipientRewriteTable, usersRepository, new JsonTransformer(mappingSourceModule)));
         }
 
         @Test
@@ -436,7 +436,7 @@ class ForwardRoutesTest {
             super.setUp();
             memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser("error", DOMAIN), "disabled");
             memoryRecipientRewriteTable.addRegexMapping(MappingSource.fromUser("regex", DOMAIN), ".*@b\\.com");
-            memoryRecipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(Domain.of("alias")), DOMAIN);
+            memoryRecipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(ALIAS_DOMAIN), DOMAIN);
         }
 
     }
@@ -444,14 +444,18 @@ class ForwardRoutesTest {
     @Nested
     class ExceptionHandling {
 
-        private RecipientRewriteTable memoryRecipientRewriteTable;
+        private MemoryRecipientRewriteTable memoryRecipientRewriteTable;
+        private DomainList domainList;
 
         @BeforeEach
         void setUp() throws Exception {
-            memoryRecipientRewriteTable = mock(RecipientRewriteTable.class);
+            memoryRecipientRewriteTable = spy(new MemoryRecipientRewriteTable());
             UsersRepository userRepository = mock(UsersRepository.class);
-            Mockito.when(userRepository.contains(eq(ALICE))).thenReturn(true);
-            DomainList domainList = mock(DomainList.class);
+            doReturn(true)
+                .when(userRepository).contains(any());
+
+            domainList = mock(DomainList.class);
+            memoryRecipientRewriteTable.setDomainList(domainList);
             Mockito.when(domainList.containsDomain(any())).thenReturn(true);
             createServer(new ForwardRoutes(memoryRecipientRewriteTable, userRepository, new JsonTransformer()));
         }
@@ -492,6 +496,27 @@ class ForwardRoutesTest {
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The forward is not an email address")
                 .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
+        }
+
+        @Test
+        void putWithSourceDomainNotInDomainListShouldReturnBadRequest() throws Exception {
+            doReturn(false)
+                .when(domainList).containsDomain(any());
+
+            Map<String, Object> errors = when()
+                .put("bob@not-managed-domain.tld" + SEPARATOR + "targets" + SEPARATOR + BOB)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "Source domain 'not-managed-domain.tld' is not managed by the domainList");
         }
 
         @Test
@@ -617,7 +642,7 @@ class ForwardRoutesTest {
         void getAllShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .getAllMappings();
+                .getSourcesForType(any());
 
             when()
                 .get()
@@ -629,7 +654,7 @@ class ForwardRoutesTest {
         void getAllShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .getAllMappings();
+                .getSourcesForType(any());
 
             when()
                 .get()
@@ -662,22 +687,10 @@ class ForwardRoutesTest {
         }
 
         @Test
-        void getShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
-            doThrow(RecipientRewriteTableException.class)
-                .when(memoryRecipientRewriteTable)
-                .getUserDomainMappings(any());
-
-            when()
-                .get(ALICE)
-            .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
-        }
-
-        @Test
         void getShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .getUserDomainMappings(any());
+                .getStoredMappings(any());
 
             when()
                 .get(ALICE)

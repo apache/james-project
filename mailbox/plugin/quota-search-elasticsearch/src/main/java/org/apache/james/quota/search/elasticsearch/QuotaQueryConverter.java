@@ -43,10 +43,10 @@ import org.elasticsearch.index.query.TermQueryBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
-public class QuotaQueryConverter {
+class QuotaQueryConverter {
     private final Map<Class<? extends QuotaClause>, Function<QuotaClause, QueryBuilder>> clauseConverter;
 
-    public QuotaQueryConverter() {
+    QuotaQueryConverter() {
         Builder<Class<? extends QuotaClause>, Function<QuotaClause, QueryBuilder>> builder = ImmutableMap.builder();
         
         builder.put(HasDomain.class, this::convertHasDomain);
@@ -57,7 +57,7 @@ public class QuotaQueryConverter {
         clauseConverter = builder.build();
     }
 
-    public QueryBuilder from(QuotaQuery query) {
+    QueryBuilder from(QuotaQuery query) {
         List<QuotaClause> clauses = query.getClause().getClauses();
         if (clauses.isEmpty()) {
             return matchAllQuery();

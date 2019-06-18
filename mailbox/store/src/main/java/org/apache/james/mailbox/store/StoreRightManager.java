@@ -32,9 +32,12 @@ import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.DifferentDomainException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.ACLCommand;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
@@ -43,9 +46,8 @@ import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
@@ -54,7 +56,7 @@ import com.google.common.collect.ImmutableMap;
 public class StoreRightManager implements RightManager {
     public static final boolean GROUP_FOLDER = true;
 
-    private final MailboxEventDispatcher dispatcher;
+    private final EventBus eventBus;
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final MailboxACLResolver aclResolver;
     private final GroupMembershipResolver groupMembershipResolver;
@@ -63,11 +65,11 @@ public class StoreRightManager implements RightManager {
     public StoreRightManager(MailboxSessionMapperFactory mailboxSessionMapperFactory,
                              MailboxACLResolver aclResolver,
                              GroupMembershipResolver groupMembershipResolver,
-                             MailboxEventDispatcher dispatcher) {
+                             EventBus eventBus) {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.aclResolver = aclResolver;
         this.groupMembershipResolver = groupMembershipResolver;
-        this.dispatcher = dispatcher;
+        this.eventBus = eventBus;
     }
 
     @Override
@@ -99,12 +101,12 @@ public class StoreRightManager implements RightManager {
     }
 
     public Rfc4314Rights myRights(Mailbox mailbox, MailboxSession session) throws UnsupportedRightException {
-        MailboxSession.User user = session.getUser();
+        User user = session.getUser();
 
         return Optional.ofNullable(user)
             .map(Throwing.function(value ->
                 aclResolver.resolveRights(
-                    user.getUserName(),
+                    user.asString(),
                     groupMembershipResolver,
                     mailbox.getACL(),
                     mailbox.getUser(),
@@ -138,7 +140,14 @@ public class StoreRightManager implements RightManager {
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
         ACLDiff aclDiff = mapper.updateACL(mailbox, mailboxACLCommand);
 
-        dispatcher.aclUpdated(session, mailboxPath, aclDiff);
+        eventBus.dispatch(EventFactory.aclUpdated()
+            .randomEventId()
+            .mailboxSession(session)
+            .mailbox(mailbox)
+            .aclDiff(aclDiff)
+            .build(),
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+            .block();
     }
 
     private void assertSharesBelongsToUserDomain(String user, ACLCommand mailboxACLCommand) throws DifferentDomainException {
@@ -216,7 +225,14 @@ public class StoreRightManager implements RightManager {
     private void setRights(MailboxACL mailboxACL, MailboxMapper mapper, Mailbox mailbox, MailboxSession session) throws MailboxException {
         ACLDiff aclDiff = mapper.setACL(mailbox, mailboxACL);
 
-        dispatcher.aclUpdated(session, mailbox.generateAssociatedPath(), aclDiff);
+        eventBus.dispatch(EventFactory.aclUpdated()
+            .randomEventId()
+            .mailboxSession(session)
+            .mailbox(mailbox)
+            .aclDiff(aclDiff)
+            .build(),
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+            .block();
     }
 
     /**
@@ -246,7 +262,7 @@ public class StoreRightManager implements RightManager {
             return acl;
         }
 
-        MailboxACL.EntryKey userAsKey = MailboxACL.EntryKey.createUserEntryKey(mailboxSession.getUser().getUserName());
+        MailboxACL.EntryKey userAsKey = MailboxACL.EntryKey.createUserEntryKey(mailboxSession.getUser().asString());
         Rfc4314Rights rights = acl.getEntries().getOrDefault(userAsKey, new Rfc4314Rights());
         if (rights.contains(MailboxACL.Right.Administer)) {
             return acl;

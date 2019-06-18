@@ -34,6 +34,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
@@ -42,7 +43,6 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -61,7 +61,7 @@ public abstract class MessageWithAttachmentMapperTest {
     private MessageMapper messageMapper;
     private AttachmentMapper attachmentMapper;
 
-    private SimpleMailbox attachmentsMailbox;
+    private Mailbox attachmentsMailbox;
     
     private SimpleMailboxMessage messageWithoutAttachment;
     private SimpleMailboxMessage messageWith1Attachment;
@@ -185,8 +185,8 @@ public abstract class MessageWithAttachmentMapperTest {
         assertThat(retrievedMessageIterator).isEmpty();
     }
 
-    private SimpleMailbox createMailbox(MailboxPath mailboxPath) {
-        SimpleMailbox mailbox = new SimpleMailbox(mailboxPath, UID_VALIDITY);
+    private Mailbox createMailbox(MailboxPath mailboxPath) {
+        Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
         MailboxId id = mapperProvider.generateId();
         mailbox.setMailboxId(id);
         return mailbox;

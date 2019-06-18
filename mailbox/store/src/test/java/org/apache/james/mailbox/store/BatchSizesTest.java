@@ -43,8 +43,8 @@ public class BatchSizesTest {
         assertThat(batchSizes.getFetchHeaders()).isEqualTo(BatchSizes.DEFAULT_BATCH_SIZE);
         assertThat(batchSizes.getFetchBody()).isEqualTo(BatchSizes.DEFAULT_BATCH_SIZE);
         assertThat(batchSizes.getFetchFull()).isEqualTo(BatchSizes.DEFAULT_BATCH_SIZE);
-        assertThat(batchSizes.getCopyBatchSize()).isEqualTo(BatchSizes.DEFAULT_BATCH_SIZE);
-        assertThat(batchSizes.getMoveBatchSize()).isEqualTo(BatchSizes.DEFAULT_BATCH_SIZE);
+        assertThat(batchSizes.getCopyBatchSize()).isEmpty();
+        assertThat(batchSizes.getMoveBatchSize()).isEmpty();
     }
 
     @Test
@@ -55,8 +55,8 @@ public class BatchSizesTest {
         assertThat(batchSizes.getFetchHeaders()).isEqualTo(batchSize);
         assertThat(batchSizes.getFetchBody()).isEqualTo(batchSize);
         assertThat(batchSizes.getFetchFull()).isEqualTo(batchSize);
-        assertThat(batchSizes.getCopyBatchSize()).isEqualTo(batchSize);
-        assertThat(batchSizes.getMoveBatchSize()).isEqualTo(batchSize);
+        assertThat(batchSizes.getCopyBatchSize()).contains(batchSize);
+        assertThat(batchSizes.getMoveBatchSize()).contains(batchSize);
     }
 
     @Test
@@ -223,7 +223,7 @@ public class BatchSizesTest {
     public void buildShouldSetDefaultValueToCopyBatchSizeWhenNotGiven() {
         BatchSizes batchSizes = BatchSizes.builder()
                 .build();
-        assertThat(batchSizes.getCopyBatchSize()).isEqualTo(BatchSizes.DEFAULT_BATCH_SIZE);
+        assertThat(batchSizes.getCopyBatchSize()).isEmpty();
     }
 
     @Test
@@ -232,14 +232,14 @@ public class BatchSizesTest {
         BatchSizes batchSizes = BatchSizes.builder()
                 .copyBatchSize(expected)
                 .build();
-        assertThat(batchSizes.getCopyBatchSize()).isEqualTo(expected);
+        assertThat(batchSizes.getCopyBatchSize()).contains(expected);
     }
 
     @Test
     public void buildShouldSetDefaultValueToMoveBatchSizeWhenNotGiven() {
         BatchSizes batchSizes = BatchSizes.builder()
                 .build();
-        assertThat(batchSizes.getMoveBatchSize()).isEqualTo(BatchSizes.DEFAULT_BATCH_SIZE);
+        assertThat(batchSizes.getMoveBatchSize()).isEmpty();
     }
 
     @Test
@@ -248,6 +248,6 @@ public class BatchSizesTest {
         BatchSizes batchSizes = BatchSizes.builder()
                 .moveBatchSize(expected)
                 .build();
-        assertThat(batchSizes.getMoveBatchSize()).isEqualTo(expected);
+        assertThat(batchSizes.getMoveBatchSize()).contains(expected);
     }
 }

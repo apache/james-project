@@ -77,7 +77,7 @@ public class ServerCmd {
     private static final String DEFAULT_HOST = "127.0.0.1";
     private static final int DEFAULT_PORT = 9999;
     private static final Logger LOG = LoggerFactory.getLogger(ServerCmd.class);
-    
+
     private static Options createOptions() {
         return new Options()
                 .addOption(HOST_OPT_SHORT, HOST_OPT_LONG, true, "node hostname or ip address")
@@ -109,7 +109,7 @@ public class ServerCmd {
         PrintStream printStream = System.out;
         executeAndOutputToStream(args, printStream);
     }
-
+    
     public static void executeAndOutputToStream(String[] args, PrintStream printStream) throws Exception {
         Stopwatch stopWatch = Stopwatch.createStarted();
         CommandLine cmd = parseCommandLine(args);
@@ -130,7 +130,7 @@ public class ServerCmd {
     private final MailboxProbe mailboxProbe;
     private final QuotaProbe quotaProbe;
     private final SieveProbe sieveProbe;
-    
+
     public ServerCmd(DataProbe probe, MailboxProbe mailboxProbe, QuotaProbe quotaProbe, SieveProbe sieveProbe) {
         this.probe = probe;
         this.mailboxProbe = mailboxProbe;
@@ -178,6 +178,7 @@ public class ServerCmd {
         System.exit(1);
     }
 
+
     @VisibleForTesting
     private CmdType executeCommandLine(CommandLine commandLine, PrintStream printStream) throws Exception {
         String[] arguments = commandLine.getArgs();
@@ -192,7 +193,6 @@ public class ServerCmd {
         executeCommand(arguments, cmdType, printStream);
         return cmdType;
     }
-
 
     @VisibleForTesting
     CmdType executeCommandLine(CommandLine commandLine) throws Exception {
@@ -331,6 +331,9 @@ public class ServerCmd {
         case REMOVESIEVEUSERQUOTA:
             sieveProbe.removeSieveQuota(arguments[1]);
             break;
+        case ADDACTIVESIEVESCRIPT:
+            sieveProbe.addActiveSieveScriptFromFile(arguments[1], arguments[2], arguments[3]);
+            break;
         default:
             throw new UnrecognizedCommandException(cmdType.getCommand());
         }
@@ -363,11 +366,23 @@ public class ServerCmd {
     private static void print(String[] data, PrintStream out) {
         print(Arrays.asList(data), out);
     }
-    
+
     private static void print(Iterable<String> data, PrintStream out) {
         if (data != null) {
             out.println(Joiner.on('\n').join(data));
         }
+    }
+
+    private static void printUsage() {
+        StringBuilder footerBuilder = new StringBuilder();
+        for (CmdType cmdType : CmdType.values()) {
+            footerBuilder.append(cmdType.getUsage()).append("\n");
+        }
+        new HelpFormatter().printHelp(
+                String.format("java %s --host <arg> <command>%n", ServerCmd.class.getName()),
+                "",
+                createOptions(),
+                footerBuilder.toString());
     }
 
     private void printStorageQuota(String quotaRootString, SerializableQuota<QuotaSize> quota, PrintStream printStream) {
@@ -433,18 +448,6 @@ public class ServerCmd {
             }
             out.println();
         }
-    }
-
-    private static void printUsage() {
-        StringBuilder footerBuilder = new StringBuilder();
-        for (CmdType cmdType : CmdType.values()) {
-            footerBuilder.append(cmdType.getUsage()).append("\n");
-        }
-        new HelpFormatter().printHelp(
-            String.format("java %s --host <arg> <command>%n", ServerCmd.class.getName()),
-            "",
-            createOptions(),
-            footerBuilder.toString());
     }
 
 }

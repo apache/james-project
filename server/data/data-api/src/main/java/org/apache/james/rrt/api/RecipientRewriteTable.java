@@ -18,38 +18,42 @@
  ****************************************************************/
 package org.apache.james.rrt.api;
 
+import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.rrt.lib.MappingsImpl;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Interface which should be implemented of classes which map recipients.
  */
 public interface RecipientRewriteTable {
-
-    interface Domains {
-
-        Domain WILDCARD = new Domain(RecipientRewriteTable.WILDCARD) {
-
-            @Override
-            public String name() {
-                throw new IllegalStateException();
-            }
-
-            @Override
-            public String toString() {
-                return "Domain : * (Wildcard)";
-            }
-        };
+    class ErrorMappingException extends Exception {
+        public ErrorMappingException(String string) {
+            super(string);
+        }
     }
 
-    /**
-     * The wildcard used for alias domain mappings
-     */
-    String WILDCARD = "*";
+    class TooManyMappingException extends ErrorMappingException {
+        public TooManyMappingException(String string) {
+            super(string);
+        }
+    }
+
+    EnumSet<Mapping.Type> listSourcesSupportedType = EnumSet.of(
+        Mapping.Type.Group,
+        Mapping.Type.Forward,
+        Mapping.Type.Address,
+        Mapping.Type.Alias,
+        Mapping.Type.Domain);
 
     void addMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException;
 
@@ -79,23 +83,27 @@ public interface RecipientRewriteTable {
 
     void removeGroupMapping(MappingSource source, String address) throws RecipientRewriteTableException;
 
+    void addAliasMapping(MappingSource source, String address) throws RecipientRewriteTableException;
+
+    void removeAliasMapping(MappingSource source, String address) throws RecipientRewriteTableException;
+
     /**
-     * Return the Mappings for the given source. Return null if no
+     * Return the Mappings for the given source. Return empty object if no
      * matched mapping was found
      *
      * @throws ErrorMappingException
      *             get thrown if an error mapping was found
      */
-    Mappings getMappings(String user, Domain domain) throws ErrorMappingException, RecipientRewriteTableException;
+    Mappings getResolvedMappings(String user, Domain domain) throws ErrorMappingException, RecipientRewriteTableException;
 
     /**
-     * Return the explicit mapping stored for the given user and domain. Return
-     * null if no mapping was found
+     * Return the explicit mapping stored for the given user and domain. Return empty object
+     * if no matched mapping was found
      * 
      * @return the collection which holds the mappings.
      * @throws RecipientRewriteTableException
      */
-    Mappings getUserDomainMappings(MappingSource source) throws RecipientRewriteTableException;
+    Mappings getStoredMappings(MappingSource source) throws RecipientRewriteTableException;
 
     /**
      * Return a Map which holds all mappings. The key is the user@domain and the
@@ -106,21 +114,31 @@ public interface RecipientRewriteTable {
      */
     Map<MappingSource, Mappings> getAllMappings() throws RecipientRewriteTableException;
 
-    class ErrorMappingException extends Exception {
+    default Stream<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException {
+        Preconditions.checkArgument(listSourcesSupportedType.contains(mapping.getType()),
+            String.format("Not supported mapping of type %s", mapping.getType()));
 
-        private static final long serialVersionUID = 2348752938798L;
-
-        public ErrorMappingException(String string) {
-            super(string);
-        }
-
+        return getAllMappings()
+            .entrySet().stream()
+            .filter(entry -> entry.getValue().contains(mapping))
+            .map(Map.Entry::getKey);
     }
 
-    class TooManyMappingException extends ErrorMappingException {
-        
-        public TooManyMappingException(String string) {
-            super(string);
-        }
-
+    default Stream<MappingSource> getSourcesForType(Mapping.Type type) throws RecipientRewriteTableException {
+        return getAllMappings()
+            .entrySet().stream()
+            .filter(e -> e.getValue().contains(type))
+            .map(Map.Entry::getKey)
+            .sorted(Comparator.comparing(MappingSource::asMailAddressString));
     }
+
+    default Stream<Mapping> getMappingsForType(Mapping.Type type) throws RecipientRewriteTableException {
+        return ImmutableSet.copyOf(getAllMappings()
+            .values().stream()
+            .map(mappings -> mappings.select(type))
+            .reduce(Mappings::union)
+            .orElse(MappingsImpl.empty()))
+            .stream();
+    }
+
 }

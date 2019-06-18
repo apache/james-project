@@ -111,7 +111,7 @@
    "2.1.20"
   ],
   "to": [
-   "General Discussion about Arch Linux <arch-general@archlinux.org>"
+   "General Discussion about Arch Linux <arch-general@archlinux.org>, Üsteliğhan Maşrapa <ustelighanmasrapa@domain.tld>"
   ],
   "x-content-filtered-by": [
    "Mailman/MimeDel 2.1.20"
@@ -130,6 +130,10 @@
   {
    "name": "General Discussion about Arch Linux",
    "address": "arch-general@archlinux.org"
+  },
+  {
+   "name": "Üsteliğhan Maşrapa",
+   "address": "ustelighanmasrapa@domain.tld"
   }
  ],
  "cc": [],

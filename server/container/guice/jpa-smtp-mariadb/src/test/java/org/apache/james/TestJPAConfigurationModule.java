@@ -19,17 +19,17 @@
 
 package org.apache.james;
 
-import java.io.FileNotFoundException;
-
 import javax.inject.Singleton;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.modules.data.JPAConfiguration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 
 public class TestJPAConfigurationModule extends AbstractModule {
 
+    private static final String MARIA_USERNAME = "test";
+    private static final String MARIA_PASSWORD = "test";
     private static final String JDBC_EMBEDDED_DRIVER = org.mariadb.jdbc.Driver.class.getName();
     private final String mariaDBUrl;
 
@@ -43,10 +43,12 @@ public class TestJPAConfigurationModule extends AbstractModule {
 
     @Provides
     @Singleton
-    JPAConfiguration provideConfiguration() throws FileNotFoundException, ConfigurationException {
+    JPAConfiguration provideConfiguration() {
         return JPAConfiguration.builder()
                 .driverName(JDBC_EMBEDDED_DRIVER)
                 .driverURL(mariaDBUrl)
+                .username(MARIA_USERNAME)
+                .password(MARIA_PASSWORD)
                 .build();
     }
 }

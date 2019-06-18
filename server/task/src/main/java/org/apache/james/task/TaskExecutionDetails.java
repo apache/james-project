@@ -140,9 +140,23 @@ public class TaskExecutionDetails {
             Optional.of(ZonedDateTime.now()));
     }
 
-    public TaskExecutionDetails cancel() {
+    public TaskExecutionDetails cancelRequested() {
         Preconditions.checkState(status == TaskManager.Status.IN_PROGRESS
             || status == TaskManager.Status.WAITING);
+        return new TaskExecutionDetails(
+            taskId,
+            task,
+            TaskManager.Status.CANCEL_REQUESTED,
+            submitDate,
+            startedDate,
+            Optional.empty(),
+            Optional.of(ZonedDateTime.now()),
+            Optional.empty());
+    }
+
+    public TaskExecutionDetails cancelEffectively() {
+        Preconditions.checkState(status == TaskManager.Status.IN_PROGRESS
+            || status == TaskManager.Status.WAITING || status == TaskManager.Status.CANCEL_REQUESTED);
         return new TaskExecutionDetails(
             taskId,
             task,

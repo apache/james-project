@@ -22,14 +22,13 @@ package org.apache.james.mailbox.jpa;
 import java.util.Optional;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerStressTest;
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.junit.After;
 import org.junit.Before;
 
-public class JpaMailboxManagerStressTest extends MailboxManagerStressTest {
+public class JpaMailboxManagerStressTest extends MailboxManagerStressTest<OpenJPAMailboxManager> {
 
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
     private Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();
@@ -41,15 +40,20 @@ public class JpaMailboxManagerStressTest extends MailboxManagerStressTest {
     }
     
     @Override
-    protected MailboxManager provideManager() {
+    protected OpenJPAMailboxManager provideManager() {
         if (!openJPAMailboxManager.isPresent()) {
             openJPAMailboxManager = Optional.of(JpaMailboxManagerProvider.provideMailboxManager(JPA_TEST_CLUSTER));
         }
         return openJPAMailboxManager.get();
     }
 
+    @Override
+    protected EventBus retrieveEventBus(OpenJPAMailboxManager mailboxManager) {
+        return mailboxManager.getEventBus();
+    }
+
     @After
-    public void tearDown() throws MailboxException {
+    public void tearDown() {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
     }
 }

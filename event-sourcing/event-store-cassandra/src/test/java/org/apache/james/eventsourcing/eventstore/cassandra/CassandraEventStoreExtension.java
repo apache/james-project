@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.Set;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -38,11 +37,12 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 import com.google.common.collect.ImmutableSet;
 
 public class CassandraEventStoreExtension implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback, ParameterResolver {
+    @SuppressWarnings("rawtypes")
     private final Set<EventDTOModule> modules;
     private CassandraClusterExtension cassandra;
     private EventStoreDao eventStoreDao;
 
-    public CassandraEventStoreExtension(EventDTOModule... modules) {
+    public CassandraEventStoreExtension(@SuppressWarnings("rawtypes") EventDTOModule... modules) {
         this.modules = Arrays.stream(modules).collect(ImmutableSet.toImmutableSet());
         this.cassandra = new CassandraClusterExtension(CassandraEventStoreModule.MODULE);
     }
@@ -61,8 +61,7 @@ public class CassandraEventStoreExtension implements BeforeAllCallback, AfterAll
     public void beforeEach(ExtensionContext context) {
         JsonEventSerializer jsonEventSerializer = new JsonEventSerializer(modules);
 
-        eventStoreDao = new EventStoreDao(cassandra.getCassandraCluster().getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION,
-            jsonEventSerializer);
+        eventStoreDao = new EventStoreDao(cassandra.getCassandraCluster().getConf(), jsonEventSerializer);
     }
 
     @Override

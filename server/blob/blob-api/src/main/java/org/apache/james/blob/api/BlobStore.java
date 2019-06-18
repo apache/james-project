@@ -19,15 +19,21 @@
 package org.apache.james.blob.api;
 
 import java.io.InputStream;
-import java.util.concurrent.CompletableFuture;
+import java.nio.charset.StandardCharsets;
+
+import reactor.core.publisher.Mono;
 
 public interface BlobStore {
 
-    CompletableFuture<BlobId> save(byte[] data);
+    Mono<BlobId> save(byte[] data);
 
-    CompletableFuture<BlobId> save(InputStream data);
+    Mono<BlobId> save(InputStream data);
 
-    CompletableFuture<byte[]> readBytes(BlobId blobId);
+    Mono<byte[]> readBytes(BlobId blobId);
 
     InputStream read(BlobId blobId);
+
+    default Mono<BlobId> save(String data) {
+        return save(data.getBytes(StandardCharsets.UTF_8));
+    }
 }

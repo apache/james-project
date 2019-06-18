@@ -19,10 +19,21 @@
 
 package org.apache.james.mpt.imapmailbox.external.james;
 
+import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Duration.TEN_SECONDS;
+
+import java.io.IOException;
 import java.util.Locale;
 
+import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.external.james.host.SmtpHostSystem;
+import org.apache.james.mpt.imapmailbox.external.james.host.external.ExternalJamesConfiguration;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.apache.james.utils.SMTPMessageSender;
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
+import org.awaitility.core.ConditionFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -30,24 +41,58 @@ public abstract class DeploymentValidation {
 
     public static final String DOMAIN = "domain";
     public static final String USER = "imapuser";
+    public static final String USER_ADDRESS = USER + "@" + DOMAIN;
     public static final String PASSWORD = "password";
+    private static final String INBOX = "INBOX";
+    private static final String ONE_MAIL = "* 1 EXISTS";
 
     protected abstract ImapHostSystem createImapHostSystem();
-    
+
+    protected abstract SmtpHostSystem createSmtpHostSystem();
+
+    protected abstract ExternalJamesConfiguration getConfiguration();
+
     private ImapHostSystem system;
+    private SmtpHostSystem smtpSystem;
     private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+    private IMAPClient imapClient = new IMAPClient();
+
+    protected static final Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
+    protected static final ConditionFactory calmlyAwait = Awaitility.with()
+        .pollInterval(slowPacedPollInterval)
+        .and()
+        .with()
+        .pollDelay(slowPacedPollInterval)
+        .await();
+    protected static final ConditionFactory awaitAtMostTenSeconds = calmlyAwait.atMost(TEN_SECONDS);
 
     @Before
     public void setUp() throws Exception {
         system = createImapHostSystem();
+        smtpSystem = createSmtpHostSystem();
+
         simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
-                .withUser(USER + "@" + DOMAIN, PASSWORD)
-                .withLocale(Locale.US);
+            .withUser(USER_ADDRESS, PASSWORD)
+            .withLocale(Locale.US);
     }
-    
+
     @Test
     public void validateDeployment() throws Exception {
         simpleScriptedTestProtocol.run("ValidateDeployment");
     }
 
+    @Test
+    public void validateDeploymentWithMailsFromSmtp() throws Exception {
+        SMTPMessageSender smtpMessageSender = new SMTPMessageSender("another-domain");
+        smtpSystem.connect(smtpMessageSender).sendMessage("test@" + DOMAIN, USER_ADDRESS);
+        imapClient.connect(getConfiguration().getAddress(), getConfiguration().getImapPort().getValue());
+        imapClient.login(USER_ADDRESS, PASSWORD);
+        awaitAtMostTenSeconds.until(this::checkMailDelivery);
+    }
+
+    private Boolean checkMailDelivery() throws IOException {
+        imapClient.select(INBOX);
+        String replyString = imapClient.getReplyString();
+        return replyString.contains(ONE_MAIL);
+    }
 }

@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-james-mpt</artifactId>
-        <version>3.2.0-SNAPSHOT</version>
+        <version>3.4.0-SNAPSHOT</version>
         <relativePath>../..</relativePath>
     </parent>
 
@@ -38,12 +38,11 @@
         <module>cyrus</module>
         <module>elasticsearch</module>
         <module>external-james</module>
-        <module>hbase</module>
         <module>inmemory</module>
-        <module>jcr</module>
         <module>jpa</module>
         <module>lucenesearch</module>
         <module>maildir</module>
+        <module>rabbitmq</module>
     </modules>
 
     <dependencyManagement>
@@ -74,19 +73,7 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mpt-imapmailbox-hbase</artifactId>
-                <version>${project.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mpt-imapmailbox-inmemory</artifactId>
-                <version>${project.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mpt-imapmailbox-jcr</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>

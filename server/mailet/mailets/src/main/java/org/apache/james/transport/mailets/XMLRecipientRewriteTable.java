@@ -73,7 +73,8 @@ import org.apache.mailet.Experimental;
  * </p>
  * 
  * @deprecated use the definitions in virtualusertable-store.xml instead
- * 
+ *
+ * JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release
  */
 @Experimental
 @Deprecated

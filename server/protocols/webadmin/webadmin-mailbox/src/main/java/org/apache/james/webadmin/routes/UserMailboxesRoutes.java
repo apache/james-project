@@ -33,6 +33,7 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.MailboxHaveChildrenException;
+import org.apache.james.webadmin.utils.Responses;
 import org.apache.james.webadmin.validation.MailboxName;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
@@ -136,7 +137,7 @@ public class UserMailboxesRoutes implements Routes {
         service.delete(SPECIFIC_MAILBOX, (request, response) -> {
             try {
                 userMailboxesService.deleteMailbox(request.params(USER_NAME), new MailboxName(request.params(MAILBOX_NAME)));
-                response.status(HttpStatus.NO_CONTENT_204);
+                return Responses.returnNoContent(response);
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid delete on user mailbox", e);
                 throw ErrorResponder.builder()
@@ -162,7 +163,6 @@ public class UserMailboxesRoutes implements Routes {
                     .cause(e)
                     .haltError();
             }
-            return Constants.EMPTY_BODY;
         });
     }
 
@@ -181,7 +181,7 @@ public class UserMailboxesRoutes implements Routes {
         service.delete(USER_MAILBOXES_BASE, (request, response) -> {
             try {
                 userMailboxesService.deleteMailboxes(request.params(USER_NAME));
-                response.status(HttpStatus.NO_CONTENT_204);
+                return Responses.returnNoContent(response);
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid delete on user mailboxes", e);
                 throw ErrorResponder.builder()
@@ -191,7 +191,6 @@ public class UserMailboxesRoutes implements Routes {
                     .cause(e)
                     .haltError();
             }
-            return Constants.EMPTY_BODY;
         });
     }
 
@@ -213,7 +212,7 @@ public class UserMailboxesRoutes implements Routes {
         service.get(SPECIFIC_MAILBOX, (request, response) -> {
             try {
                 if (userMailboxesService.testMailboxExists(request.params(USER_NAME), new MailboxName(request.params(MAILBOX_NAME)))) {
-                    response.status(HttpStatus.NO_CONTENT_204);
+                    return Responses.returnNoContent(response);
                 } else {
                     throw ErrorResponder.builder()
                         .statusCode(HttpStatus.NOT_FOUND_404)
@@ -238,7 +237,6 @@ public class UserMailboxesRoutes implements Routes {
                     .cause(e)
                     .haltError();
             }
-            return Constants.EMPTY_BODY;
         });
     }
 
@@ -260,7 +258,7 @@ public class UserMailboxesRoutes implements Routes {
         service.put(SPECIFIC_MAILBOX, (request, response) -> {
             try {
                 userMailboxesService.createMailbox(request.params(USER_NAME), new MailboxName(request.params(MAILBOX_NAME)));
-                response.status(HttpStatus.NO_CONTENT_204);
+                return Responses.returnNoContent(response);
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid put on user mailbox", e);
                 throw ErrorResponder.builder()
@@ -278,7 +276,6 @@ public class UserMailboxesRoutes implements Routes {
                     .cause(e)
                     .haltError();
             }
-            return Constants.EMPTY_BODY;
         });
     }
 }

@@ -55,6 +55,8 @@ import com.google.common.collect.ImmutableMap;
  * access.
  * 
  * @deprecated use JPARecipientRewriteTable
+ *
+ * JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release, unless it finds a maintainer
  */
 @Deprecated
 public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
@@ -189,8 +191,8 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     @Override
     public void addMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
-        Mappings map = getUserDomainMappings(source);
-        if (map != null && map.size() != 0) {
+        Mappings map = getStoredMappings(source);
+        if (!map.isEmpty()) {
             Mappings updatedMappings = MappingsImpl.from(map).add(mapping).build();
             doUpdateMapping(source, updatedMappings.serialize());
         }
@@ -228,7 +230,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    public Mappings getUserDomainMappings(MappingSource source) throws RecipientRewriteTableException {
+    public Mappings getStoredMappings(MappingSource source) throws RecipientRewriteTableException {
         Connection conn = null;
         PreparedStatement mappingStmt = null;
         try {
@@ -252,7 +254,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             theJDBCUtil.closeJDBCStatement(mappingStmt);
             theJDBCUtil.closeJDBCConnection(conn);
         }
-        return null;
+        return MappingsImpl.empty();
     }
 
     @Override
@@ -291,8 +293,8 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     @Override
     public void removeMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
-        Mappings map = getUserDomainMappings(source);
-        if (map != null && map.size() > 1) {
+        Mappings map = getStoredMappings(source);
+        if (map.size() > 1) {
             Mappings updatedMappings = map.remove(mapping);
             doUpdateMapping(source, updatedMappings.serialize());
         } else {

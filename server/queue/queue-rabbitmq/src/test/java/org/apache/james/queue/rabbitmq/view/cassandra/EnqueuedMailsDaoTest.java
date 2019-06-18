@@ -19,22 +19,21 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra;
 
-import static org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.BucketId;
-import static org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 import java.time.Instant;
-import java.util.stream.Stream;
+import java.util.List;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
+import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.BucketId;
+import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.MailKey;
 import org.apache.mailet.base.test.FakeMail;
@@ -69,7 +68,6 @@ class EnqueuedMailsDaoTest {
         BlobId.Factory blobFactory = new HashBlobId.Factory();
         testee = new EnqueuedMailsDAO(
             cassandra.getConf(),
-            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             cassandra.getTypesProvider(), blobFactory);
     }
 
@@ -86,11 +84,11 @@ class EnqueuedMailsDaoTest {
                     .build())
                 .slicingContext(EnqueuedItemWithSlicingContext.SlicingContext.of(BucketId.of(BUCKET_ID_VALUE), NOW))
                 .build())
-            .join();
+            .block();
 
-        Stream<EnqueuedItemWithSlicingContext> selectedEnqueuedMails = testee
+        List<EnqueuedItemWithSlicingContext> selectedEnqueuedMails = testee
             .selectEnqueuedMails(OUT_GOING_1, SLICE_OF_NOW, BUCKET_ID)
-            .join();
+            .collectList().block();
 
         assertThat(selectedEnqueuedMails).hasSize(1);
     }
@@ -108,7 +106,7 @@ class EnqueuedMailsDaoTest {
                     .build())
                 .slicingContext(EnqueuedItemWithSlicingContext.SlicingContext.of(BucketId.of(BUCKET_ID_VALUE), NOW))
                 .build())
-            .join();
+            .block();
 
         testee.insert(EnqueuedItemWithSlicingContext.builder()
                 .enqueuedItem(EnqueuedItem.builder()
@@ -121,10 +119,10 @@ class EnqueuedMailsDaoTest {
                     .build())
                 .slicingContext(EnqueuedItemWithSlicingContext.SlicingContext.of(BucketId.of(BUCKET_ID_VALUE + 1), NOW))
                 .build())
-            .join();
+            .block();
 
-        Stream<EnqueuedItemWithSlicingContext> selectedEnqueuedMails = testee.selectEnqueuedMails(OUT_GOING_1, SLICE_OF_NOW, BUCKET_ID)
-            .join();
+        List<EnqueuedItemWithSlicingContext> selectedEnqueuedMails = testee.selectEnqueuedMails(OUT_GOING_1, SLICE_OF_NOW, BUCKET_ID)
+            .collectList().block();
 
         assertThat(selectedEnqueuedMails)
             .hasSize(1)

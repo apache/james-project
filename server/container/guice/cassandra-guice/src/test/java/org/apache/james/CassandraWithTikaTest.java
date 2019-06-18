@@ -29,10 +29,10 @@ class CassandraWithTikaTest implements JamesServerContract {
 
     @RegisterExtension
     static JamesServerExtension testExtension =
-        new JamesServerExtensionBuilder()
+        new JamesServerBuilder()
             .extension(new CassandraExtension())
             .extension(new  TikaExtension())
-            .extension(new EmbeddedElasticSearchExtension())
+            .extension(new DockerElasticSearchExtension())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
                 .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))

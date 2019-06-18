@@ -31,17 +31,16 @@ import javax.mail.MessagingException;
 
 import org.apache.james.jmap.exceptions.InvalidOriginMessageForMDNException;
 import org.apache.james.jmap.exceptions.MessageNotFoundException;
-import org.apache.james.jmap.model.Envelope;
 import org.apache.james.jmap.model.JmapMDN;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
-import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.Role;
+import org.apache.james.mailbox.SystemMailboxesProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.Attachment;
@@ -57,6 +56,7 @@ import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.field.ParseException;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.stream.MimeConfig;
+import org.apache.james.server.core.Envelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -189,7 +189,7 @@ public class SendMDNProcessor implements SetMessagesProcessor {
 
 
     private MessageManager getOutbox(MailboxSession mailboxSession) throws MailboxException {
-        return systemMailboxesProvider.getMailboxByRole(Role.OUTBOX, mailboxSession)
+        return systemMailboxesProvider.getMailboxByRole(Role.OUTBOX, mailboxSession.getUser())
             .findAny()
             .orElseThrow(() -> new IllegalStateException("User don't have an Outbox"));
     }

@@ -29,11 +29,11 @@ import org.junit.Test;
 
 public class ConfigurablesTest {
 
-    private Configurables sut;
+    private Startables sut;
 
     @Before
     public void setup() {
-        sut = new Configurables();
+        sut = new Startables();
     }
 
     @Test

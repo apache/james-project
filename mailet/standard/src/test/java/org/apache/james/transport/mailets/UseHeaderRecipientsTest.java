@@ -58,6 +58,7 @@ class UseHeaderRecipientsTest {
     @Test
     void serviceShouldSetMimeMessageRecipients() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient(RECIPIENT1, RECIPIENT2))
@@ -72,6 +73,7 @@ class UseHeaderRecipientsTest {
     @Test
     void serviceShouldSetToCcAndBccSpecifiedInTheMimeMessage() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient(RECIPIENT1)
@@ -89,6 +91,7 @@ class UseHeaderRecipientsTest {
     void serviceShouldSetEmptyRecipientWhenNoRecipientsInTheMimeMessage() throws Exception {
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
             .build();
@@ -102,6 +105,7 @@ class UseHeaderRecipientsTest {
     @Test
     void serviceShouldGhostEmail() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
             .build();
@@ -115,6 +119,7 @@ class UseHeaderRecipientsTest {
     @Test
     void serviceShouldResendTheEmail() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient(RECIPIENT1)
@@ -134,6 +139,7 @@ class UseHeaderRecipientsTest {
     @Test
     void serviceShouldThrowOnInvalidMailAddress() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients(mailAddress1)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient("invalid"))
@@ -145,6 +151,7 @@ class UseHeaderRecipientsTest {
     @Test
     void serviceShouldSupportAddressList() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients()
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient(RECIPIENT1, RECIPIENT2))
@@ -159,6 +166,7 @@ class UseHeaderRecipientsTest {
     @Test
     void serviceShouldSupportMailboxes() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("mail")
             .recipients()
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient("APACHE" + "<" + UseHeaderRecipientsTest.RECIPIENT1 + ">"))

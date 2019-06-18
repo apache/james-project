@@ -19,20 +19,19 @@
 
 package org.apache.james.backends.cassandra.init;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
+import org.apache.james.backends.cassandra.components.CassandraTable.InitializationStatus;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.util.FluentFutureStream;
 
 import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class CassandraTableManager {
 
@@ -45,42 +44,35 @@ public class CassandraTableManager {
         this.module = module;
     }
 
-    public CassandraTableManager ensureAllTables() {
+    public InitializationStatus initializeTables() {
         KeyspaceMetadata keyspaceMetadata = session.getCluster()
             .getMetadata()
             .getKeyspace(session.getLoggedKeyspace());
 
-        module.moduleTables()
-            .stream()
-            .filter(table -> keyspaceMetadata.getTable(table.getName()) == null)
-            .forEach(table -> session.execute(table.getCreateStatement()));
-
-        return this;
+        return module.moduleTables()
+                .stream()
+                .map(table -> table.initialize(keyspaceMetadata, session))
+                .reduce((left, right) -> left.reduce(right))
+                .orElse(InitializationStatus.ALREADY_DONE);
     }
 
     public void clearAllTables() {
         CassandraAsyncExecutor executor = new CassandraAsyncExecutor(session);
-        FluentFutureStream.of(
-            module.moduleTables()
-                .stream()
+        Flux.fromIterable(module.moduleTables())
+                .publishOn(Schedulers.elastic())
                 .map(CassandraTable::getName)
-                .map(name -> truncate(executor, name)))
-            .join();
+                .flatMap(name -> truncate(executor, name))
+                .then()
+                .block();
     }
 
-    private CompletableFuture<?> truncate(CassandraAsyncExecutor executor, String name) {
+    private Mono<Void> truncate(CassandraAsyncExecutor executor, String name) {
         return executor.execute(
-            QueryBuilder.select()
-                .from(name)
-                .limit(1)
-                .setFetchSize(1))
-            .thenCompose(resultSet -> truncateIfNeeded(executor, name, resultSet));
-    }
-
-    private CompletionStage<ResultSet> truncateIfNeeded(CassandraAsyncExecutor executor, String name, ResultSet resultSet) {
-        if (resultSet.isExhausted()) {
-            return CompletableFuture.completedFuture(null);
-        }
-        return executor.execute(QueryBuilder.truncate(name));
+                QueryBuilder.select()
+                        .from(name)
+                        .limit(1)
+                        .setFetchSize(1))
+                .filter(resultSet -> !resultSet.isExhausted())
+                .flatMap(ignored -> executor.executeVoid(QueryBuilder.truncate(name)));
     }
 }

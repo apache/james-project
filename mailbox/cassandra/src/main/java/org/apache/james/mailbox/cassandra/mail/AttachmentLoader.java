@@ -19,24 +19,20 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.model.Attachment;
-import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.apache.james.util.FluentFutureStream;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class AttachmentLoader {
 
@@ -46,33 +42,26 @@ public class AttachmentLoader {
         this.attachmentMapper = attachmentMapper;
     }
 
-    public CompletableFuture<Stream<SimpleMailboxMessage>> addAttachmentToMessages(Stream<Pair<MessageWithoutAttachment,
-            Stream<MessageAttachmentRepresentation>>> messageRepresentations, MessageMapper.FetchType fetchType) {
+    public Mono<MailboxMessage> addAttachmentToMessage(Pair<MessageWithoutAttachment, Stream<MessageAttachmentRepresentation>> messageRepresentation, MessageMapper.FetchType fetchType) {
+        return loadAttachments(messageRepresentation.getRight(), fetchType)
+            .map(attachments -> messageRepresentation.getLeft().toMailboxMessage(attachments));
+    }
 
+    private Mono<List<MessageAttachment>> loadAttachments(Stream<MessageAttachmentRepresentation> messageAttachmentRepresentations, MessageMapper.FetchType fetchType) {
         if (fetchType == MessageMapper.FetchType.Body || fetchType == MessageMapper.FetchType.Full) {
-            return FluentFutureStream.<SimpleMailboxMessage>of(
-                messageRepresentations
-                    .map(pair -> getAttachments(pair.getRight().collect(Guavate.toImmutableList()))
-                        .thenApply(attachments -> pair.getLeft().toMailboxMessage(attachments))))
-                .completableFuture();
+            return getAttachments(messageAttachmentRepresentations.collect(Guavate.toImmutableList()));
         } else {
-            return CompletableFuture.completedFuture(messageRepresentations
-                .map(pair -> pair.getLeft()
-                    .toMailboxMessage(ImmutableList.of())));
+            return Mono.just(ImmutableList.of());
         }
     }
 
     @VisibleForTesting
-    CompletableFuture<List<MessageAttachment>> getAttachments(List<MessageAttachmentRepresentation> attachmentRepresentations) {
-        CompletableFuture<Map<AttachmentId, Attachment>> attachmentsByIdFuture =
-            attachmentsById(attachmentRepresentations.stream()
-                .map(MessageAttachmentRepresentation::getAttachmentId)
-                .collect(Guavate.toImmutableSet()));
-
-        return attachmentsByIdFuture.thenApply(attachmentsById ->
-            attachmentRepresentations.stream()
-                .map(representation -> constructMessageAttachment(attachmentsById.get(representation.getAttachmentId()), representation))
-                .collect(Guavate.toImmutableList()));
+    Mono<List<MessageAttachment>> getAttachments(List<MessageAttachmentRepresentation> attachmentRepresentations) {
+        return Flux.fromIterable(attachmentRepresentations)
+                .flatMapSequential(attachmentRepresentation ->
+                        attachmentMapper.getAttachmentsAsMono(attachmentRepresentation.getAttachmentId())
+                            .map(attachment -> constructMessageAttachment(attachment, attachmentRepresentation)))
+                .collect(Guavate.toImmutableList());
     }
 
     private MessageAttachment constructMessageAttachment(Attachment attachment, MessageAttachmentRepresentation messageAttachmentRepresentation) {
@@ -82,17 +71,6 @@ public class AttachmentLoader {
                 .cid(messageAttachmentRepresentation.getCid())
                 .isInline(messageAttachmentRepresentation.isInline())
                 .build();
-    }
-
-    @VisibleForTesting
-    CompletableFuture<Map<AttachmentId, Attachment>> attachmentsById(Set<AttachmentId> attachmentIds) {
-        if (attachmentIds.isEmpty()) {
-            return CompletableFuture.completedFuture(ImmutableMap.of());
-        }
-        return attachmentMapper.getAttachmentsAsFuture(attachmentIds)
-            .thenApply(attachments -> attachments
-                .stream()
-                .collect(Guavate.toImmutableMap(Attachment::getAttachmentId, Function.identity())));
     }
 
 }

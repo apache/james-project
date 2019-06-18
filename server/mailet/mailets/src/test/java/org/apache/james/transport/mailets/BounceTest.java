@@ -107,8 +107,8 @@ public class BounceTest {
 
         MailAddress senderMailAddress = new MailAddress("sender@domain.com");
         FakeMail mail = FakeMail.builder()
-            .sender(senderMailAddress)
             .name(MAILET_NAME)
+            .sender(senderMailAddress)
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setText("My content"))
@@ -176,8 +176,8 @@ public class BounceTest {
 
         String initialState = "initial";
         FakeMail mail = FakeMail.builder()
-            .state(initialState)
             .name(MAILET_NAME)
+            .state(initialState)
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setText("My content"))

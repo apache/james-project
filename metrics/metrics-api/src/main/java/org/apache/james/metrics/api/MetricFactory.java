@@ -21,6 +21,8 @@ package org.apache.james.metrics.api;
 
 import java.util.function.Supplier;
 
+import reactor.core.publisher.Mono;
+
 public interface MetricFactory {
 
     Metric generate(String name);
@@ -36,10 +38,16 @@ public interface MetricFactory {
         }
     }
 
+    default <T> Mono<T> runPublishingTimerMetric(String name, Mono<T> mono) {
+        TimeMetric timer = timer(name);
+        return mono.doOnSuccess(success -> timer.stopAndPublish());
+    }
+
     default void runPublishingTimerMetric(String name, Runnable runnable) {
         runPublishingTimerMetric(name, () -> {
             runnable.run();
             return null;
         });
     }
+
 }

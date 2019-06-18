@@ -18,49 +18,48 @@
  ****************************************************************/
 package org.apache.james.backend.rabbitmq;
 
-import java.util.concurrent.ExecutionException;
+import java.time.Duration;
 
 import javax.inject.Inject;
 
-import org.apache.james.util.retry.RetryExecutorUtil;
-
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class RabbitMQConnectionFactory {
 
-    private final AsyncRetryExecutor executor;
     private final ConnectionFactory connectionFactory;
 
-    private final int maxRetries;
-    private final int minDelay;
+    private final RabbitMQConfiguration configuration;
 
     @Inject
-    public RabbitMQConnectionFactory(RabbitMQConfiguration rabbitMQConfiguration, AsyncRetryExecutor executor) {
-        this.executor = executor;
+    public RabbitMQConnectionFactory(RabbitMQConfiguration rabbitMQConfiguration) {
         this.connectionFactory = from(rabbitMQConfiguration);
-        this.maxRetries = rabbitMQConfiguration.getMaxRetries();
-        this.minDelay = rabbitMQConfiguration.getMinDelay();
+        this.configuration = rabbitMQConfiguration;
     }
 
     private ConnectionFactory from(RabbitMQConfiguration rabbitMQConfiguration) {
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
             connectionFactory.setUri(rabbitMQConfiguration.getUri());
+            connectionFactory.setHandshakeTimeout(rabbitMQConfiguration.getHandshakeTimeoutInMs());
+            connectionFactory.setShutdownTimeout(rabbitMQConfiguration.getShutdownTimeoutInMs());
+            connectionFactory.setChannelRpcTimeout(rabbitMQConfiguration.getChannelRpcTimeoutInMs());
+            connectionFactory.setConnectionTimeout(rabbitMQConfiguration.getConnectionTimeoutInMs());
             return connectionFactory;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public Connection create() {
-        try {
-            return RetryExecutorUtil.retryOnExceptions(executor, maxRetries, minDelay, Exception.class)
-                    .getWithRetry(context -> connectionFactory.newConnection())
-                    .get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+    Connection create() {
+        return connectionMono().block();
+    }
+
+    Mono<Connection> connectionMono() {
+        return Mono.fromCallable(connectionFactory::newConnection)
+            .retryBackoff(configuration.getMaxRetries(), Duration.ofMillis(configuration.getMinDelayInMs()))
+            .publishOn(Schedulers.elastic());
     }
 }

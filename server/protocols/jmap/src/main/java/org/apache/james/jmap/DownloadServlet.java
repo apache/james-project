@@ -90,7 +90,7 @@ public class DownloadServlet extends HttpServlet {
                 return;
             }
             resp.setContentType(TEXT_PLAIN_CONTENT_TYPE);
-            resp.getOutputStream().print(simpleTokenFactory.generateAttachmentAccessToken(mailboxSession.getUser().getUserName(), blobId).serialize());
+            resp.getOutputStream().print(simpleTokenFactory.generateAttachmentAccessToken(mailboxSession.getUser().asString(), blobId).serialize());
             resp.setStatus(SC_OK);
         } catch (MailboxException | IOException e) {
             LOGGER.error("Error while asking attachment access token", e);
@@ -127,6 +127,7 @@ public class DownloadServlet extends HttpServlet {
 
             addContentDispositionHeader(downloadPath.getName(), resp);
             resp.setHeader("Content-Length", String.valueOf(blob.getSize()));
+            resp.setHeader("Content-Type", blob.getContentType());
             resp.setStatus(SC_OK);
             IOUtils.copy(blob.getStream(), resp.getOutputStream());
         } catch (BlobNotFoundException e) {

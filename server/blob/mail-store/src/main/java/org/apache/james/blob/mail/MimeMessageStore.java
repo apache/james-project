@@ -73,14 +73,16 @@ public class MimeMessageStore {
             try {
                 byte[] messageAsArray = messageToArray(message);
                 int bodyStartOctet = computeBodyStartOctet(messageAsArray);
+                byte[] headerBytes = getHeaderBytes(messageAsArray, bodyStartOctet);
+                byte[] bodyBytes = getBodyBytes(messageAsArray, bodyStartOctet);
                 return Stream.of(
-                    Pair.of(HEADER_BLOB_TYPE, new ByteArrayInputStream(getHeaderBytes(messageAsArray, bodyStartOctet))),
-                    Pair.of(BODY_BLOB_TYPE, new ByteArrayInputStream(getBodyBytes(messageAsArray, bodyStartOctet))));
+                    Pair.of(HEADER_BLOB_TYPE, new ByteArrayInputStream(headerBytes)),
+                    Pair.of(BODY_BLOB_TYPE, new ByteArrayInputStream(bodyBytes)));
             } catch (MessagingException | IOException e) {
                 throw new RuntimeException(e);
             }
         }
-
+        
         private static byte[] messageToArray(MimeMessage message) throws IOException, MessagingException {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             message.writeTo(byteArrayOutputStream);

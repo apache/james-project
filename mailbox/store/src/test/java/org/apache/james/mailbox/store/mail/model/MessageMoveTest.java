@@ -27,15 +27,16 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -51,11 +52,12 @@ public abstract class MessageMoveTest {
 
     private MapperProvider mapperProvider;
     private MessageMapper messageMapper;
+    private MailboxMapper mailboxMapper;
 
-    private SimpleMailbox benwaInboxMailbox;
-    private SimpleMailbox benwaWorkMailbox;
+    private Mailbox benwaInboxMailbox;
+    private Mailbox benwaWorkMailbox;
 
-    private SimpleMailboxMessage message1;
+    private MailboxMessage message1;
 
     protected abstract MapperProvider createMapperProvider();
 
@@ -67,6 +69,8 @@ public abstract class MessageMoveTest {
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.MOVE));
         this.messageMapper = mapperProvider.createMessageMapper();
         Assume.assumeNotNull(messageMapper);
+        this.mailboxMapper = mapperProvider.createMailboxMapper();
+        Assume.assumeNotNull(mailboxMapper);
 
         benwaInboxMailbox = createMailbox(MailboxPath.forUser("benwa", "INBOX"));
         benwaWorkMailbox = createMailbox(MailboxPath.forUser("benwa", "INBOX" + DELIMITER + "work"));
@@ -79,8 +83,8 @@ public abstract class MessageMoveTest {
         message1.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
 
         messageMapper.move(benwaWorkMailbox, message1);
-
-        assertThat(retrieveMessageFromStorage(benwaWorkMailbox, message1)).isEqualTo(message1);
+        
+        assertThat(retrieveMessageFromStorage(benwaWorkMailbox, message1).getUid()).isEqualTo(message1.getUid());
     }
 
     @Test
@@ -131,10 +135,12 @@ public abstract class MessageMoveTest {
         assertThat(messageMapper.countUnseenMessagesInMailbox(benwaWorkMailbox)).isEqualTo(0);
     }
 
-    private SimpleMailbox createMailbox(MailboxPath mailboxPath) {
-        SimpleMailbox mailbox = new SimpleMailbox(mailboxPath, UID_VALIDITY);
+    private Mailbox createMailbox(MailboxPath mailboxPath) throws MailboxException {
+        Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
         MailboxId id = mapperProvider.generateId();
         mailbox.setMailboxId(id);
+        mailboxMapper.save(mailbox);
+        
         return mailbox;
     }
 
@@ -142,7 +148,7 @@ public abstract class MessageMoveTest {
         return messageMapper.findInMailbox(mailbox, MessageRange.one(message.getUid()), FetchType.Metadata, LIMIT).next();
     }
     
-    private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder) {
+    private MailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder) throws MailboxException {
         return new SimpleMailboxMessage(messageId, new Date(), content.length(), bodyStart, new SharedByteArrayInputStream(content.getBytes()), new Flags(), propertyBuilder, mailbox.getMailboxId());
     }
 }

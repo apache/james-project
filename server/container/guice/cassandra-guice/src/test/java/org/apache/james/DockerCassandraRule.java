@@ -32,7 +32,7 @@ import com.google.inject.util.Modules;
 
 public class DockerCassandraRule implements GuiceModuleTestRule {
 
-    private org.apache.james.backends.cassandra.DockerCassandraRule cassandraContainer = new org.apache.james.backends.cassandra.DockerCassandraRule();
+    private org.apache.james.backends.cassandra.DockerCassandraRule cassandraContainer = new org.apache.james.backends.cassandra.DockerCassandraRule().allowRestart();
 
     @Override
     public Statement apply(Statement base, Description description) {

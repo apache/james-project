@@ -24,6 +24,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -105,7 +106,7 @@ public class StoreAttachmentManager implements AttachmentManager {
         Collection<Username> explicitOwners = attachmentMapperFactory.getAttachmentMapper(mailboxSession)
             .getOwners(attachmentId);
         return explicitOwners.stream()
-            .anyMatch(username -> mailboxSession.getUser().isSameUser(username.getValue()));
+            .anyMatch(username -> mailboxSession.getUser().equals(User.fromUsername(username.getValue())));
     }
 
     private Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {

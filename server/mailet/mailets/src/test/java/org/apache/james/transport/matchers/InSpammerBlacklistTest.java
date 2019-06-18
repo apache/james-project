@@ -56,6 +56,7 @@ public class InSpammerBlacklistTest {
 
     private Mail createMail(String remoteAddr) throws MessagingException {
         return FakeMail.builder()
+                .name("name")
                 .remoteAddr(remoteAddr)
                 .recipient("test@email")
                 .build();

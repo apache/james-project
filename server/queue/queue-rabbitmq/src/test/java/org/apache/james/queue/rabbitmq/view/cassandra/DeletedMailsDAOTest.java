@@ -50,58 +50,58 @@ class DeletedMailsDAOTest {
     void markAsDeletedShouldWork() {
         Boolean isDeletedBeforeMark = testee
                 .isDeleted(OUT_GOING_1, MAIL_KEY_1)
-                .join();
+                .block();
         assertThat(isDeletedBeforeMark).isFalse();
 
-        testee.markAsDeleted(OUT_GOING_1, MAIL_KEY_1).join();
+        testee.markAsDeleted(OUT_GOING_1, MAIL_KEY_1).block();
 
         Boolean isDeletedAfterMark = testee
             .isDeleted(OUT_GOING_1, MAIL_KEY_1)
-            .join();
+            .block();
 
         assertThat(isDeletedAfterMark).isTrue();
     }
 
     @Test
     void checkDeletedShouldReturnFalseWhenTableDoesntContainBothMailQueueAndMailKey() {
-        testee.markAsDeleted(OUT_GOING_2, MAIL_KEY_2).join();
+        testee.markAsDeleted(OUT_GOING_2, MAIL_KEY_2).block();
 
         Boolean isDeleted = testee
             .isDeleted(OUT_GOING_1, MAIL_KEY_1)
-            .join();
+            .block();
 
         assertThat(isDeleted).isFalse();
     }
 
     @Test
     void checkDeletedShouldReturnFalseWhenTableContainsMailQueueButNotMailKey() {
-        testee.markAsDeleted(OUT_GOING_1, MAIL_KEY_2).join();
+        testee.markAsDeleted(OUT_GOING_1, MAIL_KEY_2).block();
 
         Boolean isDeleted = testee
             .isDeleted(OUT_GOING_1, MAIL_KEY_1)
-            .join();
+            .block();
 
         assertThat(isDeleted).isFalse();
     }
 
     @Test
     void checkDeletedShouldReturnFalseWhenTableContainsMailKeyButNotMailQueue() {
-        testee.markAsDeleted(OUT_GOING_2, MAIL_KEY_1).join();
+        testee.markAsDeleted(OUT_GOING_2, MAIL_KEY_1).block();
 
         Boolean isDeleted = testee
             .isDeleted(OUT_GOING_1, MAIL_KEY_1)
-            .join();
+            .block();
 
         assertThat(isDeleted).isFalse();
     }
 
     @Test
     void checkDeletedShouldReturnTrueWhenTableContainsMailItem() {
-        testee.markAsDeleted(OUT_GOING_1, MAIL_KEY_1).join();
+        testee.markAsDeleted(OUT_GOING_1, MAIL_KEY_1).block();
 
         Boolean isDeleted = testee
             .isDeleted(OUT_GOING_1, MAIL_KEY_1)
-            .join();
+            .block();
 
         assertThat(isDeleted).isTrue();
     }

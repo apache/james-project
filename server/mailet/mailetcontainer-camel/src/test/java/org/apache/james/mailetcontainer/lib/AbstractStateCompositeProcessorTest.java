@@ -65,16 +65,10 @@ public abstract class AbstractStateCompositeProcessorTest {
         processor.init();
 
         try {
-            Mail mail1 = new MailImpl();
-            mail1.setState(Mail.DEFAULT);
-            Mail mail2 = new MailImpl();
-            mail2.setState(Mail.ERROR);
-
-            Mail mail3 = new MailImpl();
-            mail3.setState("test");
-
-            Mail mail4 = new MailImpl();
-            mail4.setState("invalid");
+            Mail mail1 = MailImpl.builder().name("mail1").state(Mail.DEFAULT).build();
+            Mail mail2 = MailImpl.builder().name("mail2").state(Mail.ERROR).build();
+            Mail mail3 = MailImpl.builder().name("mail3").state("test").build();
+            Mail mail4 = MailImpl.builder().name("mail4").state("invalid").build();
 
             processor.service(mail1);
             processor.service(mail2);

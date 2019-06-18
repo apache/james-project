@@ -33,17 +33,30 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
  - [Administrating quotas by users](#Administrating_quotas_by_users)
  - [Administrating quotas by domains](#Administrating_quotas_by_domains)
  - [Administrating global quotas](#Administrating_global_quotas)
- - [Cassandra Schema upgrades](#Cassandra_schema_upgrades)
+ - [Cassandra Schema upgrades](#Cassandra_Schema_upgrades)
  - [Correcting ghost mailbox](#Correcting_ghost_mailbox)
  - [Creating address group](#Creating_address_group)
  - [Creating address forwards](#Creating_address_forwards)
+ - [Creating address aliases](#Creating_address_aliases)
+ - [Creating address domain](#Creating_address_domain)
  - [Administrating mail repositories](#Administrating_mail_repositories)
  - [Administrating mail queues](#Administrating_mail_queues)
- - [Administrating DLP Configuration](#Administrating_dlp_configuration)
+ - [Administrating DLP Configuration](#Administrating_DLP_Configuration)
  - [Administrating Sieve quotas](#Administrating_Sieve_quotas)
+ - [ReIndexing](#ReIndexing)
+ - [Event Dead Letter](#Event_Dead_Letter)
+ - [Deleted Messages Vault](#Deleted_Messages_Vault)
  - [Task management](#Task_management)
+ - [Cassandra extra operations](#Cassandra_extra_operations)
 
 ## HealthCheck
+
+   - [Check all components](#Check_all_components)
+   - [Check single component](#Check_single_component)
+   - [List all health checks](#List_all_health_checks)
+   
+
+### Check all components
 
 This endpoint is simple for now and is just returning the http status code corresponding to the state of checks (see below).
 The user has to check in the logs in order to have more information about failing checks.
@@ -57,6 +70,53 @@ Response codes:
  - 200: All checks have answered with a Healthy status
  - 500: At least one check have answered with a Unhealthy or Degraded status
 
+### Check single component
+
+Performs a health check for the given component. The component is referenced by its URL encoded name.
+
+```
+curl -XGET http://ip:port/healthcheck/checks/Cassandra%20Backend
+```
+
+Will return the component's name, the component's escaped name, the health status and a cause.
+
+```
+{
+  "componentName": "Cassandra Backend",
+  "escapedComponentName": "Cassandra%20Backend",
+  "status": "HEALTHY"
+  "cause": null
+}
+```
+
+Response codes:
+
+ - 200: The check has answered with a Healthy status.
+ - 404: A component with the given name was not found.
+ - 500: The check has anwered with a Unhealthy or Degraded status.
+ 
+### List all health checks
+ 
+This endpoint lists all the available health checks.
+ 
+```
+curl -XGET http://ip:port/healthcheck/checks
+```
+ 
+Will return the list of all available health checks.
+ 
+```
+[
+    {
+        "componentName": "Cassandra Backend",
+        "escapedComponentName": "Cassandra%20Backend"
+    }
+]
+```
+ 
+Response codes:
+ 
+  - 200: List of available health checks
 
 ## Administrating domains
 
@@ -64,6 +124,9 @@ Response codes:
    - [Delete a domain](#Delete_a_domain)
    - [Test if a domain exists](#Test_if_a_domain_exists)
    - [Get the list of domains](#Get_the_list_of_domains)
+   - [Get the list of aliases for a domain](#Get_the_list_of_aliases_for_a_domain)
+   - [Create an alias for a domain](#Create_an_alias_for_a_domain)
+   - [Delete an alias for a domain](#Delete_an_alias_for_a_domain)
 
 ### Create a domain
 
@@ -119,6 +182,69 @@ Possible response:
 Response codes:
 
  - 200: The domain list was successfully retrieved
+
+### Get the list of aliases for a domain
+
+```
+curl -XGET http://ip:port/domains/destination.domain.tld/aliases
+```
+
+Possible response:
+
+```
+[
+  {"source": "source1.domain.tld"},
+  {"source": "source2.domain.tld"}
+]
+```
+
+When sending an email to an email address having source1.domain.tld or source2.domain.tld as a domain part (exemple: benwa@source1.domain.tld), then
+the domain part will be rewritten into destination.domain.tld (so into benwa@destination.domain.tld).
+
+Response codes:
+
+ - 200: The domain aliases was successfully retrieved
+ - 400: destination.domain.tld has an invalid syntax
+ - 404: destination.domain.tld is not part of handled domains and does not have local domains as aliases.
+
+### Create an alias for a domain
+
+To create a domain alias execute the following query:
+
+```
+curl -XPUT http://ip:port/domains/destination.domain.tld/aliases/source.domain.tld
+```
+
+When sending an email to an email address having source.domain.tld as a domain part (exemple: benwa@source.domain.tld), then
+the domain part will be rewritten into destination.domain.tld (so into benwa@destination.domain.tld).
+
+
+Response codes:
+
+ - 204: The redirection now exists
+ - 400: source.domain.tld or destination.domain.tld have an invalid syntax
+ - 400: source domain and destination domain are the same
+ - 404: source.domain.tld are not part of handled domains.
+
+### Delete an alias for a domain
+
+
+To delete a domain alias execute the following query:
+
+```
+curl -XDELETE http://ip:port/domains/destination.domain.tld/aliases/source.domain.tld
+```
+
+When sending an email to an email address having source.domain.tld as a domain part (exemple: benwa@source.domain.tld), then
+the domain part will be rewritten into destination.domain.tld (so into benwa@destination.domain.tld).
+
+
+Response codes:
+
+ - 204: The redirection now exists
+ - 400: source.domain.tld or destination.domain.tld have an invalid syntax
+ - 400: source domain and destination domain are the same
+ - 404: source.domain.tld are not part of handled domains.
 
 ## Administrating users
 
@@ -1141,7 +1267,7 @@ Response codes:
 
  - 204: Success
  - 400: Group structure or member is not valid
- - 403: Server does not own the requested domain
+ - 400: Domain in the source is not managed by the DomainList
  - 409: Requested group address is already used for another purpose
 
 ### Removing a group member
@@ -1228,7 +1354,7 @@ Response codes:
 
  - 204: Success
  - 400: Forward structure or member is not valid
- - 403: Server does not own the requested domain
+ - 400: Domain in the source is not managed by the DomainList
  - 404: Requested forward address does not match an existing user
 
 ### Removing a destination of a forward
@@ -1243,6 +1369,181 @@ Response codes:
 
  - 204: Success
  - 400: Forward structure or member is not valid
+
+## Creating address aliases
+
+You can use **webadmin** to define aliases for an user.
+
+When a specific email is sent to the alias address, the destination address of the alias will receive it.
+
+Aliases can be defined for existing users.
+
+This feature uses [Recipients rewrite table](/server/config-recipientrewritetable.html) and requires
+the [RecipientRewriteTable mailet](https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java)
+to be configured.
+
+Note that email addresses are restricted to ASCII character set. Mail addresses not matching this criteria will be rejected.
+
+ - [Listing users with aliases](#Listing_users_with_aliases)
+ - [Listing alias sources of an user](#Listing_alias_sources_of_an_user)
+ - [Adding a new alias to an user](#Adding_a_new_alias_to_an_user)
+ - [Removing an alias of an user](#Removing_an_alias_of_an_user)
+
+### Listing users with aliases
+
+```
+curl -XGET http://ip:port/address/aliases
+```
+
+Will return the users having aliases configured as a list of JSON Strings representing mail addresses. For instance:
+
+```
+["user1@domain.com", "user2@domain.com"]
+```
+
+Response codes:
+
+ - 200: Success
+
+### Listing alias sources of an user
+
+```
+curl -XGET http://ip:port/address/aliases/user@domain.com
+```
+
+Will return the aliases of this user as a list of JSON Strings representing mail addresses. For instance:
+
+```
+[
+  {"source":"alias1@domain.com"},
+  {"source":"alias2@domain.com"}
+]
+```
+
+Response codes:
+
+ - 200: Success
+ - 400: Alias structure is not valid
+
+### Adding a new alias to an user
+
+```
+curl -XPUT http://ip:port/address/aliases/user@domain.com/sources/alias@domain.com
+```
+
+Will add alias@domain.com to user@domain.com, creating the alias if needed
+
+Response codes:
+
+ - 204: OK
+ - 400: Alias structure or member is not valid
+ - 400: The alias source exists as an user already
+ - 400: Source and destination can't be the same!
+ - 400: Domain in the source is not managed by the DomainList
+
+### Removing an alias of an user
+
+```
+curl -XDELETE http://ip:port/address/aliases/user@domain.com/sources/alias@domain.com
+```
+
+Will remove alias@domain.com from user@domain.com, removing the alias if needed
+
+Response codes:
+
+ - 204: OK
+ - 400: Alias structure or member is not valid
+
+## Creating address domain
+
+You can use **webadmin** to define domain mappings.
+
+Given a configured source (from) domain and a destination (to) domain, when an email is sent to an address belonging to the source domain, then the domain part of this address is overwritten, the destination domain is then used.
+A source (from) domain can have many destination (to) domains. 
+
+For example: with a source domain `james.apache.org` maps to two destination domains `james.org` and `apache-james.org`, when a mail is sent to `admin@james.apache.org`, then it will be routed to `admin@james.org` and `admin@apache-james.org`
+
+This feature uses [Recipients rewrite table](/server/config-recipientrewritetable.html) and requires
+the [RecipientRewriteTable mailet](https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java)
+to be configured.
+
+Note that email addresses are restricted to ASCII character set. Mail addresses not matching this criteria will be rejected.
+
+ - [Listing all domain mappings](#Listing_all_domain_mappings)
+ - [Listing all destination domains for a source domain](#Listing_all_destination_domains_for_a_source_domain)
+ - [Adding a domain mapping](#Adding_a_domain_mapping)
+ - [Removing a domain mapping](#Removing_a_domain_mapping)
+
+### Listing all domain mappings
+```
+curl -XGET http://ip:port/domainMappings
+```
+
+Will return all configured domain mappings
+```
+{
+  "firstSource.org" : ["firstDestination.com", "secondDestination.net"],
+  "secondSource.com" : ["thirdDestination.com", "fourthDestination.net"],
+}
+```
+
+Response codes:
+
+ - 200: OK
+
+### Listing all destination domains for a source domain
+```
+curl -XGET http://ip:port/domainMappings/sourceDomain.tld
+```
+
+With `sourceDomain.tld` as the value passed to `fromDomain` resource name, the API will return all destination domains configured to that domain
+
+```
+["firstDestination.com", "secondDestination.com"]
+```
+
+Response codes:
+
+ - 200: OK
+ - 400: The `fromDomain` resource name is invalid
+ - 400: The `fromDomain` is not managed by the DomainList
+ - 404: The `fromDomain` resource name is not found
+
+### Adding a domain mapping
+```
+curl -XPUT http://ip:port/domainMappings/sourceDomain.tld
+```
+
+Body:
+```
+destination.tld
+```
+
+With `sourceDomain.tld` as the value passed to `fromDomain` resource name, the API will add a destination domain specified in the body to that domain
+
+Response codes:
+
+ - 204: OK
+ - 400: The `fromDomain` resource name is invalid
+ - 400: The destination domain specified in the body is invalid
+
+### Removing a domain mapping
+```
+curl -XDELETE http://ip:port/domainMappings/sourceDomain.tld
+```
+
+Body:
+```
+destination.tld
+```
+
+With `sourceDomain.tld` as the value passed to `fromDomain` resource name, the API will remove a destination domain specified in the body mapped to that domain
+
+Response codes:
+
+ - 204: OK
+ - 400: The `fromDomain` resource name is invalid
+ - 400: The destination domain specified in the body is invalid
 
 ## Administrating mail repositories
 
@@ -2041,6 +2342,661 @@ curl -XDELETE http://ip:port/sieve/quota/users/user@domain.com
 Response codes:
  - 204: Operation succeeded
 
+
+## ReIndexing
+
+ - [ReIndexing all mails](#ReIndexing_all_mails)
+ - [ReIndexing a user mails](#ReIndexing_a_user_mails)
+ - [ReIndexing a mailbox mails](#ReIndexing_a_mailbox_mails)
+ - [ReIndexing a single mail](#ReIndexing_a_single_mail)
+ - [ReIndexing a single mail by messageId](#ReIndexing_a_single_mail_by_messageId)
+
+Be also aware of the limits of these APIs:
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
+concurrent changes done during the reIndexing might be ignored.
+
+### ReIndexing all mails
+
+```
+curl -XPOST http://ip:port/mailboxes?task=reIndex
+```
+
+Will schedule a task for reIndexing all the mails stored on this James server.
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `FullReIndexing` and the following `additionalInformation`:
+
+```
+{
+  "successfullyReprocessedMailCount":18,
+  "failedReprocessedMailCount": 3,
+  "failures": {
+    "mbx1": [{"uid": 35}, {"uid": 45}],
+    "mbx2": [{"uid": 38}]
+  }
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
+concurrent changes done during the reIndexing might be ignored.
+
+### ReIndexing a user mails
+
+```
+curl -XPOST http://ip:port/mailboxes?task=reIndex,user=bob%40domain.com
+```
+
+Will schedule a task for reIndexing all the mails in "bob@domain.com" mailboxes (encoded above).
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `userReIndexing` and the following `additionalInformation`:
+
+```
+{
+  "user":"bob@domain.com",
+  "successfullyReprocessedMailCount":18,
+  "failedReprocessedMailCount": 3,
+  "failures": {
+    "mbx1": [{"uid": 35}, {"uid": 45}],
+    "mbx2": [{"uid": 38}]
+  }
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
+concurrent changes done during the reIndexing might be ignored.
+
+### ReIndexing a mailbox mails
+
+```
+curl -XPOST http://ip:port/mailboxes/{mailboxId}?task=reIndex
+```
+
+Will schedule a task for reIndexing all the mails in one mailbox.
+
+Note that 'mailboxId' path parameter needs to be a (implementation dependent) valid mailboxId.
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `mailboxReIndexing` and the following `additionalInformation`:
+
+```
+{
+  "mailboxId":"{mailboxId}",
+  "successfullyReprocessedMailCount":18,
+  "failedReprocessedMailCount": 3,
+  "failures": {
+    "mbx1": [{"uid": 35}, {"uid": 45}],
+    "mbx2": [{"uid": 38}]
+  }
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
+concurrent changes done during the reIndexing might be ignored.
+
+### Fixing previously failed ReIndexing
+
+Given `bbdb69c9-082a-44b0-a85a-6e33e74287a5` being a taskId generated for a reIndexing tasks
+
+```
+curl -XPOST http://ip:port/mailboxes?task=reIndex&reIndexFailedMessagesOf=bbdb69c9-082a-44b0-a85a-6e33e74287a5
+```
+
+Will schedule a task for reIndexing all the mails that this task failed to reIndex.
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positioned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `ReIndexPreviousFailures` and the following `additionalInformation`:
+
+```
+{
+  "successfullyReprocessedMailCount":18,
+  "failedReprocessedMailCount": 3,
+  "failures": {
+    "mbx1": [{"uid": 35}, {"uid": 45}],
+    "mbx2": [{"uid": 38}]
+  }
+}
+```
+
+### ReIndexing a single mail
+
+```
+curl -XPOST http://ip:port/mailboxes/{mailboxId}/uid/36?task=reIndex
+```
+
+Will schedule a task for reIndexing a single email.
+
+Note that 'mailboxId' path parameter needs to be a (implementation dependent) valid mailboxId.
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `messageReIndexing` and the following `additionalInformation`:
+
+```
+{
+  "mailboxId":"{mailboxId}",
+  "uid":18
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+### ReIndexing a single mail by messageId
+
+```
+curl -XPOST http://ip:port/messages/{messageId}?task=reIndex
+```
+
+Will schedule a task for reIndexing a single email in all the mailboxes containing it.
+
+Note that 'messageId' path parameter needs to be a (implementation dependent) valid messageId.
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `MessageIdReIndexingTask` and the following `additionalInformation`:
+
+```
+{
+  "messageId":"18"
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+## Event Dead Letter
+
+The EventBus allows to register 'group listeners' that are called in a (potentially) distributed fashion. These group
+listeners enable the implementation of some advanced mailbox manager feature like indexing, spam reporting, quota management
+and the like.
+
+Upon exceptions, a bounded number of retries are performed (with exponential backoff delays). If after those retries the listener is still
+failing, then the event will be stored in the "Event Dead Letter". This API allows diagnosing issues, as well as performing event replay (not implemented yet).
+
+ - [Listing groups](#Listing_groups)
+ - [Listing failed events](#Listing_failed_events)
+ - [Getting event details](#Getting_event_details)
+ - [Deleting an event](#Deleting_an_event)
+ - [Redeliver all events](#Redeliver_all_events)
+ - [Redeliver group events](#Redeliver_group_events)
+ - [Redeliver a single event](#Redeliver_a_single_event)
+ - [Rescheduling group execution](#Rescheduling_group_execution)
+
+### Listing groups
+
+This endpoint allows discovering the list of groups.
+
+```
+curl -XGET http://ip:port/events/deadLetter/groups
+```
+
+Will return a list of group names that can be further used to interact with the dead letter API:
+
+```
+["org.apache.james.mailbox.events.EventBusTestFixture$GroupA", "org.apache.james.mailbox.events.GenericGroup-abc"]
+```
+
+Response codes:
+
+ - 200: Success. A list of group names is returned.
+
+### Listing failed events
+
+This endpoint allows listing failed events for a given group:
+
+```
+curl -XGET http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA
+```
+
+Will return a list of insertionIds:
+
+```
+["6e0dd59d-660e-4d9b-b22f-0354479f47b4", "58a8f59d-660e-4d9b-b22f-0354486322a2"]
+```
+
+Response codes:
+
+ - 200: Success. A list of insertion ids is returned.
+ - 400: Invalid group name
+
+### Getting event details
+
+```
+curl -XGET http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA/6e0dd59d-660e-4d9b-b22f-0354479f47b4
+```
+
+Will return the full JSON associated with this event.
+
+Response codes:
+
+ - 200: Success. A JSON representing this event is returned.
+ - 400: Invalid group name or insertionId
+
+### Deleting an event
+
+```
+curl -XDELETE http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA/6e0dd59d-660e-4d9b-b22f-0354479f47b4
+```
+
+Will delete this event.
+
+Response codes:
+
+ - 204: Success
+ - 400: Invalid group name or insertionId
+
+### Redeliver all events
+
+```
+curl -XPOST http://ip:port/events/deadLetter
+```
+
+Will create a task that will attempt to redeliver all events stored in "Event Dead Letter".
+If successful, redelivered events will then be removed from "Dead Letter".
+
+Response codes:
+
+ - 201: the taskId of the created task
+ - 400: Invalid action argument
+
+### Redeliver group events
+
+```
+curl -XPOST http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA
+```
+
+Will create a task that will attempt to redeliver all events of a particular group stored in "Event Dead Letter".
+If successful, redelivered events will then be removed from "Dead Letter".
+
+Response codes:
+
+ - 201: the taskId of the created task
+ - 400: Invalid group name or action argument
+
+### Redeliver a single event
+
+```
+curl -XPOST http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.events.EventBusTestFixture$GroupA/6e0dd59d-660e-4d9b-b22f-0354479f47b4
+```
+
+Will create a task that will attempt to redeliver a single event of a particular group stored in "Event Dead Letter".
+If successful, redelivered event will then be removed from "Dead Letter".
+
+Response codes:
+
+ - 201: the taskId of the created task
+ - 400: Invalid group name, insertion id or action argument
+ - 404: No event with this insertionId
+
+### Rescheduling group execution
+
+Not implemented yet.
+
+## Deleted Messages Vault
+
+The 'Deleted Message Vault plugin' allows you to keep users deleted messages during a given retention time. This set of routes allow you to *restore* users deleted messages or export them in an archive (not implemented yet).
+
+To move deleted messages in the vault, you need to specifically configure the DeletedMessageVault PreDeletionHook.
+
+Here are the following actions available on the 'Deleted Messages Vault'
+
+ - [Restore Deleted Messages](#Restore_Deleted_Messages)
+ - [Export Deleted Messages](#Export_Deleted_Messages)
+ - [Purge Deleted Messages](#Purge_Deleted_Messages)
+ - [Permanently Remove Deleted Message](#Permanently_Remove_Deleted_Message)
+
+ Note that the 'Deleted Messages Vault' feature is only supported on top of Cassandra-Guice.
+
+### Restore Deleted Messages
+
+Deleted messages of a specific user can be restored by calling the following endpoint:
+
+```
+curl -XPOST http://ip:port/deletedMessages/users/userToRestore@domain.ext?action=restore
+
+{"
+  "combinator": "and",
+  "criteria": [
+    {
+      "fieldName": "subject",
+      "operator": "containsIgnoreCase",
+      "value": "Apache James"
+    },
+    {
+      "fieldName": "deliveryDate",
+      "operator": "beforeOrEquals",
+      "value": "2014-10-30T14:12:00Z"
+    },
+    {
+      "fieldName": "deletionDate",
+      "operator": "afterOrEquals",
+      "value": "2015-10-20T09:08:00Z"
+    },
+    {
+      "fieldName": "recipients","
+      "operator": "contains","
+      "value": "recipient@james.org"
+    },
+    {
+      "fieldName": "hasAttachment",
+      "operator": "equals",
+      "value": "false"
+    },
+    {
+      "fieldName": "sender",
+      "operator": "equals",
+      "value": "sender@apache.org"
+    },
+    {
+      "fieldName": "originMailboxes",
+      "operator": "contains",
+      "value":  "02874f7c-d10e-102f-acda-0015176f7922"
+    }
+  ]
+};
+```
+
+The requested Json body is made from list of criterion objects which have following structure:
+
+```
+{
+  "fieldName": "supportedFieldName",
+  "operator": "supportedOperator",
+  "value": "A plain string represents for the matching value of the corresponding field"
+}
+```
+
+Deleted Messages which are matched with **all** criterions in the query body will be restored. Here are list of supported fieldName for the restoring:
+
+ - subject: represents for deleted message `subject` field matching. Supports below string operators:
+   - contains
+   - containsIgnoreCase
+   - equals
+   - equalsIgnoreCase
+ - deliveryDate: represents for deleted message `deliveryDate` field matching. Tested value should follow the right date time with zone offset format (ISO-8601) like
+   `2008-09-15T15:53:00+05:00` or `2008-09-15T15:53:00Z` 
+   Supports below date time operators:
+   - beforeOrEquals: is the deleted message's `deliveryDate` before or equals the time of tested value.
+   - afterOrEquals: is the deleted message's `deliveryDate` after or equals the time of tested value
+ - deletionDate: represents for deleted message `deletionDate` field matching. Tested value & Supports operators: similar to `deliveryDate`
+ - sender: represents for deleted message `sender` field matching. Tested value should be a valid mail address. Supports mail address operator:
+   - equals: does the tested sender equal to the sender of the tested deleted message ?   
+ - recipients: represents for deleted message `recipients` field matching. Tested value should be a valid mail address. Supports list mail address operator:
+   - contains: does the tested deleted message's recipients contain tested recipient ?
+ - hasAttachment: represents for deleted message `hasAttachment` field matching. Tested value could be `false` or `true`. Supports boolean operator:
+   - equals: does the tested deleted message's hasAttachment property equal to the tested hasAttachment value?
+ - originMailboxes: represents for deleted message `originMailboxes` field matching. Tested value is a string serialized of mailbox id. Supports list mailbox id operators:
+   - contains: does the tested deleted message's originMailbox ids contain tested mailbox id ?
+   
+Messages in the Deleted Messages Vault of an specified user that are matched with Query Json Object in the body will be appended to his 'Restored-Messages' mailbox, which will be created if needed.
+
+**Note**:
+
+ - Query parameter `action` is required and should have value `restore` to represent for restoring feature. Otherwise, a bad request response will be returned
+ - Query parameter `action` is case sensitive
+ - fieldName & operator for passing to the routes are case sensitive
+ - Currently, we only support query combinator `and` value, otherwise, requests will be rejected 
+ - If you only want to restore by only one criterion, the json body could be simplified to a single criterion:
+
+```
+{
+  "fieldName": "subject", 
+  "operator": "containsIgnoreCase", 
+  "value": "Apache James"
+}
+```
+
+ - For restoring all deleted messages, passing a query json with empty criterion list to represent `matching all deleted messages`: 
+
+```
+{
+  "combinator": "and",
+  "criteria": []
+}
+```
+
+**Warning**: Current web-admin uses `US` locale as the default. Therefore, there might be some conflicts when using String `containsIgnoreCase` comparators to apply 
+on the String data of other special locales stored in the Vault. More details at [JIRA](https://issues.apache.org/jira/browse/MAILBOX-384) 
+
+Response code:
+
+ - 201: Task for restoring deleted has been created
+ - 400: Bad request: 
+   - action query param is not present
+   - action query param is not a valid action
+   - user parameter is invalid
+   - can not parse the JSON body
+   - Json query object contains unsupported operator, fieldName
+   - Json query object values violate parsing rules 
+ - 404: User not found
+
+The scheduled task will have the following type `deletedMessages/restore` and the following `additionalInformation`:
+
+```
+{
+  "successfulRestoreCount": 47,
+  "errorRestoreCount": 0,
+  "user": "userToRestore@domain.ext"
+}
+```
+
+while:
+ - successfulRestoreCount: number of restored messages
+ - errorRestoreCount: number of messages that failed to restore
+ - user: owner of deleted messages need to restore
+
+### Export Deleted Messages
+
+Retrieve deleted messages matched with requested query from an user then share the content to a targeted mail address (exportTo)
+
+```
+curl -XPOST http://ip:port/deletedMessages/users/userExportFrom@domain.ext?action=export&exportTo=userReceiving@domain.ext
+
+BODY: is the json query has the same structure with Restore Deleted Messages section
+```
+**Note**: Json query passing into the body follows the same rules & restrictions like in [Restore Deleted Messages](#Restore_deleted_messages)
+
+Response code:
+
+ - 201: Task for exporting has been created
+ - 400: Bad request: 
+   - exportTo query param is not present
+   - exportTo query param is not a valid mail address
+   - action query param is not present
+   - action query param is not a valid action
+   - user parameter is invalid
+   - can not parse the JSON body
+   - Json query object contains unsupported operator, fieldName
+   - Json query object values violate parsing rules 
+ - 404: User not found
+
+The scheduled task will have the following type `deletedMessages/export` and the following `additionalInformation`:
+
+```
+{
+  "userExportFrom": "userToRestore@domain.ext",
+  "exportTo": "userReceiving@domain.ext",
+  "totalExportedMessages": 1432
+}
+```
+
+while:
+ - userExportFrom: export deleted messages from this user
+ - exportTo: content of deleted messages have been shared to this mail address
+ - totalExportedMessages: number of deleted messages match with json query, then being shared to sharee
+ 
+### Purge Deleted Messages
+ 
+You can overwrite 'retentionPeriod' configuration in 'deletedMessageVault' configuration file or use default value is 1 year.
+
+Purge all deleted messages older than configured 'retentionPeriod'
+
+```
+curl -XDEL http://ip:port/deletedMessages?scope=expired
+```
+
+Response code:
+
+ - 201: Task for purging has been created
+ - 400: Bad request: 
+   - action query param is not present
+   - action query param is not a valid action
+
+You may want to call this endpoint on a regular basis.
+
+### Permanently Remove Deleted Message
+
+Delete a Deleted Message with MessageId
+
+```
+curl -XDEL http://ip:port/deletedMessages/users/user@domain.ext/messages/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response code:
+
+ - 201: Task for deleting message has been created
+ - 400: Bad request: 
+   - user parameter is invalid
+   - messageId parameter is invalid
+ - 404: User not found
+ 
+ The scheduled task will have the following type `deletedMessages/delete` and the following `additionalInformation`:
+ 
+ ```
+ {
+   "user": "user@domain.ext",
+   "deleteMessageId": "3294a976-ce63-491e-bd52-1b6f465ed7a2"
+ }
+ ```
+ 
+while:
+ - user: delete deleted messages from this user
+ - deleteMessageId: messageId of deleted messages will be delete
+
 ## Task management
 
 Some webadmin features schedules tasks. The task management API allow to monitor and manage the execution of the following tasks.
@@ -2144,3 +3100,36 @@ Response codes:
 
  - 200: A list of corresponding tasks is returned
  - 400: Invalid status value
+
+## Cassandra extra operations
+
+Some webadmin features to manage some extra operations on Cassandra tables, like solving inconsistencies on projection tables.
+Such inconsistencies can be for example created by a fail of the DAO to add a mapping into 'mappings_sources`, while it was successful
+regarding the `rrt` table.
+
+ - [Operations on mappings sources](#Operations_on_mappings_sources)
+
+### Operations on mappings sources
+
+You can do a series of action on `mappings_sources` projection table :
+
+```
+curl -XPOST /cassandra/mappings?action=[ACTION]
+```
+
+Will return the taskId corresponding to the related task. Actions supported so far are :
+
+ - SolveInconsistencies : cleans up first all the mappings in `mappings_sources` index and then repopulate it correctly. In the meantime,
+listing sources of a mapping might create temporary inconsistencies during the process.
+
+For example :
+
+```
+curl -XPOST /cassandra/mappings?action=SolveInconsistencies
+```
+
+Response codes :
+
+ - 201: the taskId of the created task
+ - 400: Invalid action argument for performing operation on mappings data
+

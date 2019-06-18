@@ -41,13 +41,10 @@ public class MailboxConfigurationBeanFactoryPostProcessor implements BeanFactory
 
     private static final String JPA_MAILBOXMANAGER = "jpa-mailboxmanager";
     private static final String MEMORY_MAILBOX_MANAGER = "memory-mailboxManager";
-    private static final String JCR_MAILBOXMANAGER = "jcr-mailboxmanager";
     private static final String MAILDIR_MAILBOXMANAGER = "maildir-mailboxmanager";
-    private static final String HBASE_MAILBOXMANAGER = "hbase-mailboxmanager";
     private static final String CASSANDRA_MAILBOXMANAGER = "cassandra-mailboxmanager";
     private static final ImmutableSet<String> MAILBOX_MANAGER_IDS = ImmutableSet.of(JPA_MAILBOXMANAGER, MEMORY_MAILBOX_MANAGER,
-            JCR_MAILBOXMANAGER, MAILDIR_MAILBOXMANAGER,
-            HBASE_MAILBOXMANAGER, CASSANDRA_MAILBOXMANAGER);
+            MAILDIR_MAILBOXMANAGER, CASSANDRA_MAILBOXMANAGER);
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
@@ -74,22 +71,12 @@ public class MailboxConfigurationBeanFactoryPostProcessor implements BeanFactory
                 messageMapperFactory = "memory-sessionMapperFactory";
                 mailboxIdDeserializer = "memory-mailbox-id-deserializer";
                 mailboxIdFactory = "memory-mailboxIdFactory";
-            } else if (provider.equalsIgnoreCase("jcr")) {
-                mailbox = JCR_MAILBOXMANAGER;
-                subscription = "jcr-subscriptionManager";
-                messageMapperFactory = "jcr-sessionMapperFactory";
-                mailboxIdDeserializer = "jcr-mailbox-id-deserializer";
             } else if (provider.equalsIgnoreCase("maildir")) {
                 mailbox = MAILDIR_MAILBOXMANAGER;
                 subscription = "maildir-subscriptionManager";
                 messageMapperFactory = "maildir-sessionMapperFactory";
                 mailboxIdDeserializer = "maildir-mailbox-id-deserializer";
                 mailboxIdFactory = "maildir-mailboxIdFactory";
-            } else if (provider.equalsIgnoreCase("hbase")) {
-                mailbox = HBASE_MAILBOXMANAGER;
-                subscription = "hbase-subscriptionManager";
-                messageMapperFactory = "hbase-sessionMapperFactory";
-                mailboxIdDeserializer = "hbase-mailbox-id-deserializer";
             } else if (provider.equalsIgnoreCase("cassandra")) {
                 mailbox = CASSANDRA_MAILBOXMANAGER;
                 subscription = "cassandra-subscriptionManager";

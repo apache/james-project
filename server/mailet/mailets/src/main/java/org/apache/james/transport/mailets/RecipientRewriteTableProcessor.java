@@ -19,12 +19,15 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -35,6 +38,7 @@ import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.MemoizedSupplier;
 import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.Mail;
@@ -43,56 +47,56 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class RecipientRewriteTableProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecipientRewriteTableProcessor.class);
 
     private static class RrtExecutionResult {
         private static RrtExecutionResult empty() {
-            return new RrtExecutionResult(ImmutableList.of(), ImmutableList.of());
+            return new RrtExecutionResult(ImmutableSet.of(), ImmutableSet.of());
         }
 
         private static RrtExecutionResult error(MailAddress mailAddress) {
-            return new RrtExecutionResult(ImmutableList.of(), ImmutableList.of(mailAddress));
+            return new RrtExecutionResult(ImmutableSet.of(), ImmutableSet.of(mailAddress));
         }
 
         private static RrtExecutionResult success(MailAddress mailAddress) {
-            return new RrtExecutionResult(ImmutableList.of(mailAddress), ImmutableList.of());
+            return new RrtExecutionResult(ImmutableSet.of(mailAddress), ImmutableSet.of());
         }
 
         private static RrtExecutionResult success(List<MailAddress> mailAddresses) {
-            return new RrtExecutionResult(ImmutableList.copyOf(mailAddresses), ImmutableList.of());
+            return new RrtExecutionResult(ImmutableSet.copyOf(mailAddresses), ImmutableSet.of());
         }
 
         private static RrtExecutionResult merge(RrtExecutionResult result1, RrtExecutionResult result2) {
             return new RrtExecutionResult(
-                ImmutableList.<MailAddress>builder()
+                ImmutableSet.<MailAddress>builder()
                     .addAll(result1.getNewRecipients())
                     .addAll(result2.getNewRecipients())
                     .build(),
-                ImmutableList.<MailAddress>builder()
+                ImmutableSet.<MailAddress>builder()
                     .addAll(result1.getRecipientWithError())
                     .addAll(result2.getRecipientWithError())
                     .build());
         }
 
-        private final ImmutableList<MailAddress> newRecipients;
-        private final ImmutableList<MailAddress> recipientWithError;
+        private final ImmutableSet<MailAddress> newRecipients;
+        private final ImmutableSet<MailAddress> recipientWithError;
 
-        public RrtExecutionResult(ImmutableList<MailAddress> newRecipients, ImmutableList<MailAddress> recipientWithError) {
+        public RrtExecutionResult(ImmutableSet<MailAddress> newRecipients, ImmutableSet<MailAddress> recipientWithError) {
             this.newRecipients = newRecipients;
             this.recipientWithError = recipientWithError;
         }
 
-        public List<MailAddress> getNewRecipients() {
+        public Set<MailAddress> getNewRecipients() {
             return newRecipients;
         }
 
-        public List<MailAddress> getRecipientWithError() {
+        public Set<MailAddress> getRecipientWithError() {
             return recipientWithError;
         }
 
@@ -127,7 +131,14 @@ public class RecipientRewriteTableProcessor {
         RrtExecutionResult executionResults = executeRrtFor(mail);
 
         if (!executionResults.recipientWithError.isEmpty()) {
-            mailetContext.sendMail(mail.getSender(), executionResults.recipientWithError, mail.getMessage(), errorProcessor);
+            MailImpl newMail = MailImpl.builder()
+                .name(mail.getName())
+                .sender(mail.getMaybeSender())
+                .addRecipients(executionResults.recipientWithError)
+                .mimeMessage(mail.getMessage())
+                .state(errorProcessor)
+                .build();
+            mailetContext.sendMail(newMail);
         }
 
         if (executionResults.newRecipients.isEmpty()) {
@@ -152,49 +163,46 @@ public class RecipientRewriteTableProcessor {
 
     private RrtExecutionResult executeRrtForRecipient(Mail mail, MailAddress recipient) {
         try {
-            Mappings mappings = virtualTableStore.getMappings(recipient.getLocalPart(), recipient.getDomain());
+            Mappings mappings = virtualTableStore.getResolvedMappings(recipient.getLocalPart(), recipient.getDomain());
 
             if (mappings != null && !mappings.isEmpty()) {
-                List<MailAddress> newMailAddresses = handleMappings(mappings, mail.getSender(), recipient, mail.getMessage());
+                List<MailAddress> newMailAddresses = handleMappings(mappings, mail, recipient);
                 return RrtExecutionResult.success(newMailAddresses);
             }
             return RrtExecutionResult.success(recipient);
-        } catch (ErrorMappingException | RecipientRewriteTableException | MessagingException e) {
+        } catch (ErrorMappingException | RecipientRewriteTableException e) {
             LOGGER.warn("Could not rewrite recipient {}", recipient, e);
             return RrtExecutionResult.error(recipient);
         }
     }
 
     @VisibleForTesting
-    List<MailAddress> handleMappings(Mappings mappings, MailAddress sender, MailAddress recipient, MimeMessage message) throws MessagingException {
-        ImmutableList<MailAddress> mailAddresses = mappings.asStream()
+    List<MailAddress> handleMappings(Mappings mappings, Mail mail, MailAddress recipient) {
+        boolean isLocal = true;
+        Map<Boolean, List<MailAddress>> mailAddressSplit = mappings.asStream()
             .map(mapping -> mapping.appendDomainIfNone(defaultDomainSupplier))
             .map(Mapping::asMailAddress)
             .flatMap(OptionalUtils::toStream)
-            .collect(Guavate.toImmutableList());
+            .collect(Collectors.partitioningBy(mailAddress -> mailetContext.isLocalServer(mailAddress.getDomain())));
 
-        forwardToRemoteAddress(sender, recipient, message, mailAddresses);
+        forwardToRemoteAddress(mail, recipient, mailAddressSplit.get(!isLocal));
 
-        return getLocalAddresses(mailAddresses);
+        return mailAddressSplit.get(isLocal);
     }
 
-    private ImmutableList<MailAddress> getLocalAddresses(ImmutableList<MailAddress> mailAddresses) {
-        return mailAddresses.stream()
-            .filter(mailAddress -> mailetContext.isLocalServer(mailAddress.getDomain()))
-            .collect(Guavate.toImmutableList());
-    }
-
-    private void forwardToRemoteAddress(MailAddress sender, MailAddress recipient, MimeMessage message, ImmutableList<MailAddress> mailAddresses) {
-        ImmutableList<MailAddress> remoteAddresses = mailAddresses.stream()
-            .filter(mailAddress -> !mailetContext.isLocalServer(mailAddress.getDomain()))
-            .collect(Guavate.toImmutableList());
-
-        if (!remoteAddresses.isEmpty()) {
+    private void forwardToRemoteAddress(Mail mail, MailAddress recipient, Collection<MailAddress> remoteRecipients) {
+        if (!remoteRecipients.isEmpty()) {
             try {
-                mailetContext.sendMail(sender, remoteAddresses, message);
-                LOGGER.info("Mail for {} forwarded to {}", recipient, remoteAddresses);
+                mailetContext.sendMail(
+                    MailImpl.builder()
+                        .name(mail.getName())
+                        .sender(mail.getMaybeSender())
+                        .addRecipients(ImmutableList.copyOf(remoteRecipients))
+                        .mimeMessage(mail.getMessage())
+                        .build());
+                LOGGER.info("Mail for {} forwarded to {}", recipient, remoteRecipients);
             } catch (MessagingException ex) {
-                LOGGER.warn("Error forwarding mail to {}", remoteAddresses);
+                LOGGER.warn("Error forwarding mail to {}", remoteRecipients);
             }
         }
     }

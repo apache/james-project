@@ -29,12 +29,14 @@ import static org.hamcrest.Matchers.not;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.model.MailboxId;
 
 import io.restassured.builder.ResponseSpecBuilder;
+import io.restassured.path.json.JsonPath;
 import io.restassured.specification.ResponseSpecification;
 
 public class JmapCommonRequests {
@@ -130,6 +132,41 @@ public class JmapCommonRequests {
                 .path(ARGUMENTS + ".messageIds[0]");
     }
 
+    public static String getLatestMessageId(AccessToken accessToken, Role mailbox) {
+        String inboxId = getMailboxId(accessToken, mailbox);
+        return with()
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}, \"sort\":[\"date desc\"]}, \"#0\"]]")
+                .post("/jmap")
+            .then()
+                .extract()
+                .path(ARGUMENTS + ".messageIds[0]");
+    }
+
+    public static String bodyOfMessage(AccessToken accessToken, String messageId) {
+        return getMessageContent(accessToken, messageId)
+                .get(ARGUMENTS + ".list[0].textBody");
+    }
+
+    public static List<String> receiversOfMessage(AccessToken accessToken, String messageId) {
+        return getMessageContent(accessToken, messageId)
+                .getList(ARGUMENTS + ".list[0].to.email");
+    }
+
+    private static JsonPath getMessageContent(AccessToken accessToken, String messageId) {
+        return with()
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
+            .when()
+                .post("/jmap")
+            .then()
+                .statusCode(200)
+                .body(NAME, equalTo("messages"))
+                .body(ARGUMENTS + ".list", hasSize(1))
+            .extract()
+                .jsonPath();
+    }
+
     public static List<String> listMessageIdsInMailbox(AccessToken accessToken, String mailboxId) {
         return with()
                 .header("Authorization", accessToken.serialize())
@@ -150,5 +187,20 @@ public class JmapCommonRequests {
             .expectBody(ARGUMENTS + ".error", isEmptyOrNullString())
             .expectBody(NOT_UPDATED, not(hasKey(messageId)));
         return builder.build();
+    }
+
+    public static void deleteMessages(AccessToken accessToken, List<String> idsToDestroy) {
+        String idString = concatMessageIds(idsToDestroy);
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"setMessages\", {\"destroy\": [" + idString + "]}, \"#0\"]]")
+            .post("/jmap");
+    }
+
+    public static String concatMessageIds(List<String> ids) {
+        return ids.stream()
+            .map(id -> "\"" + id + "\"")
+            .collect(Collectors.joining(","));
     }
 }

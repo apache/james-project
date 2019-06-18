@@ -33,9 +33,11 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
+import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.mailet.Mail;
 
@@ -52,28 +54,32 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
         private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
         private final MailReferenceSerializer mailReferenceSerializer;
         private final Function<MailReferenceDTO, Mail> mailLoader;
-        private final MailQueueView mailQueueView;
+        private final MailQueueView.Factory mailQueueViewFactory;
         private final Clock clock;
+        private final MailQueueItemDecoratorFactory decoratorFactory;
 
         @Inject
         @VisibleForTesting PrivateFactory(MetricFactory metricFactory,
                                           GaugeRegistry gaugeRegistry,
                                           RabbitClient rabbitClient,
-                                          Store<MimeMessage, MimeMessagePartsId> mimeMessageStore,
+                                          MimeMessageStore.Factory mimeMessageStoreFactory,
                                           BlobId.Factory blobIdFactory,
-                                          MailQueueView mailQueueView,
-                                          Clock clock) {
+                                          MailQueueView.Factory mailQueueViewFactory,
+                                          Clock clock,
+                                          MailQueueItemDecoratorFactory decoratorFactory) {
             this.metricFactory = metricFactory;
             this.gaugeRegistry = gaugeRegistry;
             this.rabbitClient = rabbitClient;
-            this.mimeMessageStore = mimeMessageStore;
-            this.mailQueueView = mailQueueView;
+            this.mimeMessageStore = mimeMessageStoreFactory.mimeMessageStore();
+            this.mailQueueViewFactory = mailQueueViewFactory;
             this.clock = clock;
+            this.decoratorFactory = decoratorFactory;
             this.mailReferenceSerializer = new MailReferenceSerializer();
             this.mailLoader = Throwing.function(new MailLoader(mimeMessageStore, blobIdFactory)::load).sneakyThrow();
         }
 
         RabbitMQMailQueue create(MailQueueName mailQueueName) {
+            MailQueueView mailQueueView = mailQueueViewFactory.create(mailQueueName);
             mailQueueView.initialize(mailQueueName);
 
             RabbitMQMailQueue rabbitMQMailQueue = new RabbitMQMailQueue(
@@ -83,7 +89,8 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
                     metricFactory, mailQueueView, clock),
                 new Dequeuer(mailQueueName, rabbitClient, mailLoader, mailReferenceSerializer,
                     metricFactory, mailQueueView),
-                mailQueueView);
+                mailQueueView,
+                decoratorFactory);
 
             registerGaugeFor(rabbitMQMailQueue);
             return rabbitMQMailQueue;
@@ -112,14 +119,14 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
     }
 
     private final RabbitClient rabbitClient;
-    private final RabbitMQManagementApi mqManagementApi;
+    private final RabbitMQMailQueueManagement mqManagementApi;
     private final PrivateFactory privateFactory;
     private final RabbitMQMailQueueObjectPool mailQueueObjectPool;
 
     @VisibleForTesting
     @Inject
     RabbitMQMailQueueFactory(RabbitClient rabbitClient,
-                             RabbitMQManagementApi mqManagementApi,
+                             RabbitMQMailQueueManagement mqManagementApi,
                              PrivateFactory privateFactory) {
         this.rabbitClient = rabbitClient;
         this.mqManagementApi = mqManagementApi;

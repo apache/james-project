@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -61,6 +62,7 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 public class JamesMailetContext implements MailetContext, Configurable {
@@ -70,34 +72,20 @@ public class JamesMailetContext implements MailetContext, Configurable {
      * A hash table of server attributes These are the MailetContext attributes
      */
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
-    protected DNSService dns;
 
-    private UsersRepository localusers;
-
+    protected final DNSService dns;
+    private final UsersRepository localusers;
+    private final DomainList domains;
+    private final MailQueueFactory<?> mailQueueFactory;
     private MailQueue rootMailQueue;
-
-    private DomainList domains;
-
     private MailAddress postmaster;
 
     @Inject
-    public void retrieveRootMailQueue(MailQueueFactory<?> mailQueueFactory) {
-        this.rootMailQueue = mailQueueFactory.createQueue(MailQueueFactory.SPOOL);
-    }
-
-    @Inject
-    public void setDNSService(DNSService dns) {
+    public JamesMailetContext(DNSService dns, UsersRepository localusers, DomainList domains, MailQueueFactory<?> mailQueueFactory) {
         this.dns = dns;
-    }
-
-    @Inject
-    public void setUsersRepository(UsersRepository localusers) {
         this.localusers = localusers;
-    }
-
-    @Inject
-    public void setDomainList(DomainList domains) {
         this.domains = domains;
+        this.mailQueueFactory = mailQueueFactory;
     }
 
     @Override
@@ -172,13 +160,13 @@ public class JamesMailetContext implements MailetContext, Configurable {
      */
     @Override
     public void bounce(Mail mail, String message, MailAddress bouncer) throws MessagingException {
-        if (mail.getSender() == null) {
+        if (!mail.hasSender()) {
             LOGGER.info("Mail to be bounced contains a null (<>) reverse path.  No bounce will be sent.");
             return;
         } else {
             // Bounce message goes to the reverse path, not to the Reply-To
             // address
-            LOGGER.info("Processing a bounce request for a message with a reverse path of {}", mail.getSender());
+            LOGGER.info("Processing a bounce request for a message with a reverse path of {}", mail.getMaybeSender());
         }
 
         MailImpl reply = rawBounce(mail, message);
@@ -209,20 +197,25 @@ public class JamesMailetContext implements MailetContext, Configurable {
      * @throws MessagingException if the bounce mail could not be created
      */
     private MailImpl rawBounce(Mail mail, String bounceText) throws MessagingException {
-        // This sends a message to the james component that is a bounce of the
-        // sent message
+        Preconditions.checkArgument(mail.hasSender(), "Mail should have a sender");
+        // This sends a message to the james component that is a bounce of the sent message
         MimeMessage original = mail.getMessage();
         MimeMessage reply = (MimeMessage) original.reply(false);
         reply.setSubject("Re: " + original.getSubject());
         reply.setSentDate(new Date());
-        Collection<MailAddress> recipients = new HashSet<>();
-        recipients.add(mail.getSender());
-        InternetAddress[] addr = {new InternetAddress(mail.getSender().toString())};
-        reply.setRecipients(Message.RecipientType.TO, addr);
+        Collection<MailAddress> recipients = mail.getMaybeSender().asList();
+        MailAddress sender = mail.getMaybeSender().get();
+
+        reply.setRecipient(Message.RecipientType.TO, new InternetAddress(mail.getMaybeSender().asString()));
         reply.setFrom(new InternetAddress(mail.getRecipients().iterator().next().toString()));
         reply.setText(bounceText);
         reply.setHeader(RFC2822Headers.MESSAGE_ID, "replyTo-" + mail.getName());
-        return new MailImpl("replyTo-" + mail.getName(), new MailAddress(mail.getRecipients().iterator().next().toString()), recipients, reply);
+        return MailImpl.builder()
+            .name("replyTo-" + mail.getName())
+            .sender(sender)
+            .addRecipients(recipients)
+            .mimeMessage(reply)
+            .build();
     }
 
     @Override
@@ -396,7 +389,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
 
     @Override
     public void sendMail(Mail mail) throws MessagingException {
-        sendMail(mail, Mail.DEFAULT);
+        sendMail(mail, Optional.ofNullable(mail.getState()).orElse(Mail.DEFAULT));
     }
 
     @Override
@@ -406,21 +399,26 @@ public class JamesMailetContext implements MailetContext, Configurable {
 
     @Override
     public void sendMail(Mail mail, String state) throws MessagingException {
-        mail.setAttribute(Mail.SENT_BY_MAILET, "true");
+        mail.setAttribute(Mail.SENT_BY_MAILET_ATTRIBUTE);
         mail.setState(state);
         rootMailQueue.enQueue(mail);
     }
     
     @Override
     public void sendMail(Mail mail, String state, long delay, TimeUnit unit) throws MessagingException {
-        mail.setAttribute(Mail.SENT_BY_MAILET, "true");
+        mail.setAttribute(Mail.SENT_BY_MAILET_ATTRIBUTE);
         mail.setState(state);
         rootMailQueue.enQueue(mail, delay, unit);
     }
 
     @Override
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage message, String state) throws MessagingException {
-        MailImpl mail = new MailImpl(MailImpl.getId(), sender, recipients, message);
+        MailImpl mail = MailImpl.builder()
+            .name(MailImpl.getId())
+            .sender(sender)
+            .addRecipients(recipients)
+            .mimeMessage(message)
+            .build();
         try {
             sendMail(mail, state);
         } finally {
@@ -448,6 +446,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
 
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+        this.rootMailQueue = mailQueueFactory.createQueue(MailQueueFactory.SPOOL);
         try {
 
             // Get postmaster

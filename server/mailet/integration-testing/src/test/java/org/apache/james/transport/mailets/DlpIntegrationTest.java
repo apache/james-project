@@ -102,9 +102,7 @@ public class DlpIntegrationTest {
             .addUser(FROM, PASSWORD)
             .addUser(RECIPIENT, PASSWORD)
             .addUser(RECIPIENT2, PASSWORD);
-        WebAdminGuiceProbe webAdminGuiceProbe = jamesServer.getProbe(WebAdminGuiceProbe.class);
-        webAdminGuiceProbe.await();
-        specification = WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort()).build();
+        specification = WebAdminUtils.spec(jamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
     }
 
     @After
@@ -133,6 +131,7 @@ public class DlpIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .addToRecipient(RECIPIENT)
                     .setSender(FROM)
@@ -165,6 +164,7 @@ public class DlpIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .addToRecipient(RECIPIENT)
                     .setSender(FROM)
@@ -203,6 +203,7 @@ public class DlpIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .addToRecipient(RECIPIENT)
                     .setSender(FROM)
@@ -241,6 +242,7 @@ public class DlpIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
+                .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                     .addToRecipient(RECIPIENT)
                     .setSender(FROM)

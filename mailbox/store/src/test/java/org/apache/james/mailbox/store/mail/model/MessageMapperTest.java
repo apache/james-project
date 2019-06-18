@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -39,6 +40,7 @@ import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -50,7 +52,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MapperProvider.Capabilities;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.Assume;
@@ -58,6 +59,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public abstract class MessageMapperTest {
@@ -66,16 +68,16 @@ public abstract class MessageMapperTest {
     private static final int LIMIT = 10;
     private static final int BODY_START = 16;
     public static final int UID_VALIDITY = 42;
-    public static final String USER_FLAG = "userFlag";
+    private static final String USER_FLAG = "userFlag";
 
-    public static final String CUSTOMS_USER_FLAGS_VALUE = "CustomsFlags";
+    private static final String CUSTOMS_USER_FLAGS_VALUE = "CustomsFlags";
 
     private MapperProvider mapperProvider;
     private MessageMapper messageMapper;
     private MailboxMapper mailboxMapper;
 
-    private SimpleMailbox benwaInboxMailbox;
-    private SimpleMailbox benwaWorkMailbox;
+    private Mailbox benwaInboxMailbox;
+    private Mailbox benwaWorkMailbox;
     
     private MailboxMessage message1;
     private MailboxMessage message2;
@@ -367,31 +369,49 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    public void expungeMarkedForDeletionInMailboxShouldReturnEmptyResultOnEmptyMailbox() throws MailboxException, IOException {
-        assertThat(messageMapper.expungeMarkedForDeletionInMailbox(benwaInboxMailbox, MessageRange.all())).isEmpty();
+    public void retrieveMessagesMarkedForDeletionInMailboxShouldReturnEmptyResultOnEmptyMailbox() throws MailboxException {
+        assertThat(messageMapper.retrieveMessagesMarkedForDeletion(benwaInboxMailbox, MessageRange.all())).isEmpty();
     }
 
     @Test
-    public void expungeMarkedForDeletionInMailboxShouldReturnEmptyResultWhenNoMessageInMailboxIsDeleted() throws MailboxException, IOException {
+    public void deleteMessagesInMailboxShouldReturnEmptyResultOnEmptyMailbox() throws MailboxException {
+        assertThat(messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of())).isEmpty();
+    }
+
+    @Test
+    public void retrieveMessagesMarkedForDeletionInMailboxShouldReturnEmptyResultWhenNoMessageInMailboxIsMarkedAsDeleted() throws MailboxException, IOException {
         saveMessages();
-        assertThat(messageMapper.expungeMarkedForDeletionInMailbox(benwaInboxMailbox, MessageRange.all())).isEmpty();
+        assertThat(messageMapper.retrieveMessagesMarkedForDeletion(benwaInboxMailbox, MessageRange.all())).isEmpty();
+    }
+
+    @Test
+    public void deleteMessagesInMailboxShouldReturnEmptyResultWhenNoMessageInMailboxIsDeleted() throws MailboxException, IOException {
+        saveMessages();
+        assertThat(messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of())).isEmpty();
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Full, LIMIT);
 
         assertMessages(Lists.newArrayList(retrievedMessageIterator)).containOnly(message1, message2, message3, message4, message5);
     }
 
     @Test
-    public void expungeShouldReturnCorrectMetadataWithRangeAll() throws MailboxException, IOException {
+    public void retrieveMessagesMarkedForDeletionShouldReturnCorrectUidsWithRangeAll() throws MailboxException {
         saveMessages();
-        MetadataMapAssert.assertThat(markThenPerformExpunge(MessageRange.all()))
+        assertThat(markThenPerformRetrieveMessagesMarkedForDeletion(MessageRange.all()))
+            .containsOnly(message1.getUid(), message4.getUid());
+    }
+
+    @Test
+    public void deleteMessagesShouldReturnCorrectMetadataWithRangeAll() throws MailboxException {
+        saveMessages();
+        MetadataMapAssert.assertThat(markThenPerformDeleteMessages(MessageRange.all()))
             .hasSize(2)
             .containsMetadataForMessages(message1, message4);
     }
 
     @Test
-    public void expungeShouldModifyUnderlyingStorageWithRangeAll() throws MailboxException, IOException {
+    public void deleteMessagesShouldModifyUnderlyingStorageWithRangeAll() throws MailboxException, IOException {
         saveMessages();
-        markThenPerformExpunge(MessageRange.all());
+        markThenPerformDeleteMessages(MessageRange.all());
 
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Full, LIMIT);
 
@@ -399,17 +419,24 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    public void expungeShouldReturnCorrectMetadataWithRangeOne() throws MailboxException, IOException {
+    public void retrieveMessagesMarkedForDeletionShouldReturnCorrectMetadataWithRangeOne() throws MailboxException {
         saveMessages();
-        MetadataMapAssert.assertThat(markThenPerformExpunge(MessageRange.one(message1.getUid())))
+        assertThat(markThenPerformRetrieveMessagesMarkedForDeletion(MessageRange.one(message1.getUid())))
+            .containsOnly(message1.getUid());
+    }
+
+    @Test
+    public void deleteMessagesShouldReturnCorrectMetadataWithRangeOne() throws MailboxException {
+        saveMessages();
+        MetadataMapAssert.assertThat(markThenPerformDeleteMessages(MessageRange.one(message1.getUid())))
             .hasSize(1)
             .containsMetadataForMessages(message1);
     }
 
     @Test
-    public void expungeShouldModifyUnderlyingStorageWithRangeOne() throws MailboxException, IOException {
+    public void deleteMessagesShouldModifyUnderlyingStorageWithRangeOne() throws MailboxException, IOException {
         saveMessages();
-        markThenPerformExpunge(MessageRange.one(message1.getUid()));
+        markThenPerformDeleteMessages(MessageRange.one(message1.getUid()));
 
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Full, LIMIT);
 
@@ -417,17 +444,24 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    public void expungeShouldReturnCorrectMetadataWithRangeFrom() throws MailboxException, IOException {
+    public void retrieveMessagesMarkedForDeletionShouldReturnCorrectMetadataWithRangeFrom() throws MailboxException {
         saveMessages();
-        MetadataMapAssert.assertThat(markThenPerformExpunge(MessageRange.from(message3.getUid())))
+        assertThat(markThenPerformRetrieveMessagesMarkedForDeletion(MessageRange.from(message3.getUid())))
+            .containsOnly(message4.getUid());
+    }
+
+    @Test
+    public void deleteMessagesShouldReturnCorrectMetadataWithRangeFrom() throws MailboxException {
+        saveMessages();
+        MetadataMapAssert.assertThat(markThenPerformDeleteMessages(MessageRange.from(message3.getUid())))
             .hasSize(1)
             .containsMetadataForMessages(message4);
     }
 
     @Test
-    public void expungeShouldModifyUnderlyingStorageWithRangeFrom() throws MailboxException, IOException {
+    public void deleteMessagesShouldModifyUnderlyingStorageWithRangeFrom() throws MailboxException, IOException {
         saveMessages();
-        markThenPerformExpunge(MessageRange.from(message3.getUid()));
+        markThenPerformDeleteMessages(MessageRange.from(message3.getUid()));
 
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Full, LIMIT);
 
@@ -435,17 +469,24 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    public void expungeShouldReturnCorrectMetadataWithRange() throws MailboxException, IOException {
+    public void retrieveMessagesMarkedForDeletionShouldReturnCorrectMetadataWithRange() throws MailboxException {
         saveMessages();
-        MetadataMapAssert.assertThat(markThenPerformExpunge(MessageRange.range(message3.getUid(), message5.getUid())))
+        assertThat(markThenPerformRetrieveMessagesMarkedForDeletion(MessageRange.range(message3.getUid(), message5.getUid())))
+            .containsOnly(message4.getUid());
+    }
+
+    @Test
+    public void deleteMessagesShouldReturnCorrectMetadataWithRange() throws MailboxException {
+        saveMessages();
+        MetadataMapAssert.assertThat(markThenPerformDeleteMessages(MessageRange.range(message3.getUid(), message5.getUid())))
             .hasSize(1)
             .containsMetadataForMessages(message4);
     }
 
     @Test
-    public void expungeShouldModifyUnderlyingStorageWithRange() throws MailboxException, IOException {
+    public void deleteMessagesShouldModifyUnderlyingStorageWithRange() throws MailboxException, IOException {
         saveMessages();
-        markThenPerformExpunge(MessageRange.range(message3.getUid(), message5.getUid()));
+        markThenPerformDeleteMessages(MessageRange.range(message3.getUid(), message5.getUid()));
 
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Full, LIMIT);
 
@@ -481,7 +522,7 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    public void copyShouldIncrementUid() throws MailboxException, IOException {
+    public void copyShouldIncrementUid() throws MailboxException {
         saveMessages();
         MessageUid uid = messageMapper.getLastUid(benwaInboxMailbox).get();
         messageMapper.copy(benwaInboxMailbox, SimpleMailboxMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
@@ -489,14 +530,14 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    public void copyShouldIncrementMessageCount() throws MailboxException, IOException {
+    public void copyShouldIncrementMessageCount() throws MailboxException {
         saveMessages();
         messageMapper.copy(benwaInboxMailbox, SimpleMailboxMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
         assertThat(messageMapper.countMessagesInMailbox(benwaInboxMailbox)).isEqualTo(6);
     }
 
     @Test
-    public void copyOfUnSeenMessageShouldIncrementUnSeenMessageCount() throws MailboxException, IOException {
+    public void copyOfUnSeenMessageShouldIncrementUnSeenMessageCount() throws MailboxException {
         saveMessages();
         messageMapper.copy(benwaInboxMailbox, SimpleMailboxMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
         assertThat(messageMapper.countUnseenMessagesInMailbox(benwaInboxMailbox)).isEqualTo(6);
@@ -1039,7 +1080,7 @@ public abstract class MessageMapperTest {
 
     @Test
     public void getApplicableFlagShouldReturnDefaultApplicableFlagsWhenMailboxEmpty() throws Exception {
-        SimpleMailbox emptyMailbox = createMailbox(MailboxPath.forUser("benwa", "EMPTY"));
+        Mailbox emptyMailbox = createMailbox(MailboxPath.forUser("benwa", "EMPTY"));
 
         assertThat(messageMapper.getApplicableFlag(emptyMailbox))
             .isEqualTo(new FlagsBuilder()
@@ -1078,26 +1119,32 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    public void getUidsShouldNotReturnUidsOfExpungedMessages() throws Exception {
+    public void getUidsShouldNotReturnUidsOfDeletedMessages() throws Exception {
         saveMessages();
 
         messageMapper.updateFlags(benwaInboxMailbox,
             new FlagsUpdateCalculator(new Flags(Flag.DELETED), FlagsUpdateMode.ADD),
             MessageRange.range(message2.getUid(), message4.getUid()));
-        messageMapper.expungeMarkedForDeletionInMailbox(benwaInboxMailbox, MessageRange.all());
+        List<MessageUid> uids = messageMapper.retrieveMessagesMarkedForDeletion(benwaInboxMailbox, MessageRange.all());
+        messageMapper.deleteMessages(benwaInboxMailbox, uids);
 
         assertThat(messageMapper.listAllMessageUids(benwaInboxMailbox))
             .containsOnly(message1.getUid(), message5.getUid());
     }
 
-    private Map<MessageUid, MessageMetaData> markThenPerformExpunge(MessageRange range) throws MailboxException {
+    private List<MessageUid> markThenPerformRetrieveMessagesMarkedForDeletion(MessageRange range) throws MailboxException {
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.REPLACE), MessageRange.one(message4.getUid()));
-        return messageMapper.expungeMarkedForDeletionInMailbox(benwaInboxMailbox, range);
+        return messageMapper.retrieveMessagesMarkedForDeletion(benwaInboxMailbox, range);
     }
 
-    private SimpleMailbox createMailbox(MailboxPath mailboxPath) throws MailboxException {
-        SimpleMailbox mailbox = new SimpleMailbox(mailboxPath, UID_VALIDITY);
+    private Map<MessageUid, MessageMetaData> markThenPerformDeleteMessages(MessageRange range) throws MailboxException {
+        List<MessageUid> uids = markThenPerformRetrieveMessagesMarkedForDeletion(range);
+        return messageMapper.deleteMessages(benwaInboxMailbox, uids);
+    }
+
+    private Mailbox createMailbox(MailboxPath mailboxPath) throws MailboxException {
+        Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
         mailbox.setMailboxId(mapperProvider.generateId());
         
         mailboxMapper.save(mailbox);

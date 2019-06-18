@@ -22,10 +22,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 
 import org.apache.james.util.ClassLoaderUtils;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -43,12 +48,16 @@ public class ICalendarParserTest {
     private static final String SOURCE_ATTRIBUTE = "sourceAttribute";
 
     private static final String DESTINATION_CUSTOM_ATTRIBUTE = "ics.dest.attribute";
+    private static final AttributeName DESTINATION_CUSTOM_ATTRIBUTE_NAME = AttributeName.of(DESTINATION_CUSTOM_ATTRIBUTE);
     private static final String SOURCE_CUSTOM_ATTRIBUTE = "ics.source.attribute";
+    private static final AttributeName SOURCE_CUSTOM_ATTRIBUTE_NAME = AttributeName.of(SOURCE_CUSTOM_ATTRIBUTE);
 
     private static final String RIGHT_ICAL_VALUE = "BEGIN:VCALENDAR\n" +
         "END:VCALENDAR";
 
     private static final String WRONG_ICAL_VALUE = "anyValue";
+    @SuppressWarnings("unchecked")
+    public static final Class<Map<String, Calendar>> MAP_STRING_CALENDAR_CLASS = (Class<Map<String, Calendar>>) (Object) Map.class;
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -61,7 +70,7 @@ public class ICalendarParserTest {
             .mailetName("ICalendarParser")
             .build());
 
-        assertThat(mailet.getSourceAttributeName()).isEqualTo(ICalendarParser.SOURCE_ATTRIBUTE_PARAMETER_DEFAULT_VALUE);
+        assertThat(mailet.getSourceAttributeName().asString()).isEqualTo(ICalendarParser.SOURCE_ATTRIBUTE_PARAMETER_DEFAULT_VALUE);
     }
 
     @Test
@@ -70,7 +79,7 @@ public class ICalendarParserTest {
             .mailetName("ICalendarParser")
             .build());
 
-        assertThat(mailet.getDestinationAttributeName()).isEqualTo(ICalendarParser.DESTINATION_ATTRIBUTE_PARAMETER_DEFAULT_VALUE);
+        assertThat(mailet.getDestinationAttributeName().asString()).isEqualTo(ICalendarParser.DESTINATION_ATTRIBUTE_PARAMETER_DEFAULT_VALUE);
     }
 
     @Test
@@ -81,7 +90,7 @@ public class ICalendarParserTest {
             .setProperty(ICalendarParser.SOURCE_ATTRIBUTE_PARAMETER_NAME, sourceAttribute)
             .build());
 
-        assertThat(mailet.getSourceAttributeName()).isEqualTo(sourceAttribute);
+        assertThat(mailet.getSourceAttributeName().asString()).isEqualTo(sourceAttribute);
     }
 
     @Test
@@ -92,7 +101,7 @@ public class ICalendarParserTest {
             .setProperty(ICalendarParser.DESTINATION_ATTRIBUTE_PARAMETER_NAME, destinationAttribute)
             .build());
 
-        assertThat(mailet.getDestinationAttributeName()).isEqualTo(destinationAttribute);
+        assertThat(mailet.getDestinationAttributeName().asString()).isEqualTo(destinationAttribute);
     }
 
     @Test
@@ -124,11 +133,12 @@ public class ICalendarParserTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
+            .name("mail")
             .build();
 
         mailet.service(mail);
 
-        assertThat(mail.getAttributeNames()).isEmpty();
+        assertThat(mail.attributes()).isEmpty();
     }
 
     @Test
@@ -141,13 +151,15 @@ public class ICalendarParserTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
-            .attribute(SOURCE_CUSTOM_ATTRIBUTE, ImmutableMap.of())
+            .name("mail")
+            .attribute(new Attribute(SOURCE_CUSTOM_ATTRIBUTE_NAME, AttributeValue.of(ImmutableMap.of())))
             .build();
 
         mailet.service(mail);
 
-        assertThat((Map<?, ?>)mail.getAttribute(DESTINATION_CUSTOM_ATTRIBUTE))
-            .isEmpty();
+        assertThat(mail.getAttribute(DESTINATION_CUSTOM_ATTRIBUTE_NAME))
+            .isPresent()
+            .hasValueSatisfying(attribute -> assertThat((Map<?, ?>) attribute.getValue().value()).isEmpty());
     }
 
     @Test
@@ -160,12 +172,13 @@ public class ICalendarParserTest {
         mailet.init(mailetConfiguration);
 
         Mail mail = FakeMail.builder()
-            .attribute(SOURCE_CUSTOM_ATTRIBUTE, "anyValue")
+            .name("mail")
+            .attribute(new Attribute(SOURCE_CUSTOM_ATTRIBUTE_NAME, AttributeValue.of("anyValue")))
             .build();
 
         mailet.service(mail);
 
-        assertThat(mail.getAttribute(DESTINATION_CUSTOM_ATTRIBUTE)).isNull();
+        assertThat(mail.getAttribute(DESTINATION_CUSTOM_ATTRIBUTE_NAME)).isEmpty();
     }
 
     @Test
@@ -183,17 +196,21 @@ public class ICalendarParserTest {
             .build();
 
         Mail mail = FakeMail.builder()
-            .attribute(SOURCE_CUSTOM_ATTRIBUTE, (Serializable) attachments)
+            .name("mail")
+            .attribute(makeCustomSourceAttribute((Serializable) attachments))
             .build();
 
         mailet.service(mail);
 
-        Map<String, Calendar> expectedCalendars = (Map<String, Calendar>)mail.getAttribute(DESTINATION_CUSTOM_ATTRIBUTE);
-        assertThat(expectedCalendars).hasSize(1);
+        Optional<Map<String, Calendar>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, (Class<Map<String, Calendar>>)(Object) Map.class);
+        assertThat(expectedCalendars)
+            .isPresent()
+            .hasValueSatisfying(calendars ->
+                    assertThat(calendars)
+                        .hasSize(1));
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void serviceShouldFilterResultWhenErrorParsing() throws Exception {
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("ICalendarParser")
@@ -207,16 +224,19 @@ public class ICalendarParserTest {
             .put("key2", RIGHT_ICAL_VALUE.getBytes())
             .build();
         Mail mail = FakeMail.builder()
-            .attribute(SOURCE_CUSTOM_ATTRIBUTE, (Serializable) attachments)
+            .name("mail")
+            .attribute(makeCustomSourceAttribute((Serializable) attachments))
             .build();
 
         mailet.service(mail);
 
-        Map<String, Calendar> expectedCalendars = (Map<String, Calendar>)mail.getAttribute(DESTINATION_CUSTOM_ATTRIBUTE);
+        Optional<Map<String, Calendar>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, MAP_STRING_CALENDAR_CLASS);
         Map.Entry<String, Calendar> expectedCalendar = Maps.immutableEntry("key2", new Calendar());
 
-        assertThat(expectedCalendars).hasSize(1)
-            .containsExactly(expectedCalendar);
+        assertThat(expectedCalendars).hasValueSatisfying(calendars ->
+            assertThat(calendars)
+                .hasSize(1)
+                .containsExactly(expectedCalendar));
     }
 
     @Test
@@ -225,7 +245,6 @@ public class ICalendarParserTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void parsingShouldBeLenient() throws Exception {
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("ICalendarParser")
@@ -239,12 +258,19 @@ public class ICalendarParserTest {
             .build();
 
         Mail mail = FakeMail.builder()
-            .attribute(SOURCE_CUSTOM_ATTRIBUTE, (Serializable) attachments)
+            .name("mail")
+            .attribute(makeCustomSourceAttribute((Serializable) attachments))
             .build();
 
         mailet.service(mail);
 
-        Map<String, Calendar> expectedCalendars = (Map<String, Calendar>)mail.getAttribute(DESTINATION_CUSTOM_ATTRIBUTE);
-        assertThat(expectedCalendars).hasSize(1);
+        Optional<Map<String, Calendar>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, MAP_STRING_CALENDAR_CLASS);
+        assertThat(expectedCalendars).hasValueSatisfying(calendars ->
+                assertThat(calendars)
+                        .hasSize(1));
+    }
+
+    private Attribute makeCustomSourceAttribute(Serializable attachments) {
+        return new Attribute(SOURCE_CUSTOM_ATTRIBUTE_NAME, AttributeValue.ofSerializable(attachments));
     }
 }

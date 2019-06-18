@@ -21,7 +21,6 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
@@ -32,7 +31,9 @@ import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Bucke
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
 import org.apache.mailet.Mail;
 
-class CassandraMailQueueMailStore {
+import reactor.core.publisher.Mono;
+
+public class CassandraMailQueueMailStore {
 
     private final EnqueuedMailsDAO enqueuedMailsDao;
     private final BrowseStartDAO browseStartDao;
@@ -50,13 +51,13 @@ class CassandraMailQueueMailStore {
         this.clock = clock;
     }
 
-    CompletableFuture<Void> storeMail(EnqueuedItem enqueuedItem) {
+    Mono<Void> storeMail(EnqueuedItem enqueuedItem) {
         EnqueuedItemWithSlicingContext enqueuedItemAndSlicing = addSliceContext(enqueuedItem);
 
         return enqueuedMailsDao.insert(enqueuedItemAndSlicing);
     }
 
-    CompletableFuture<Void> initializeBrowseStart(MailQueueName mailQueueName) {
+    Mono<Void> initializeBrowseStart(MailQueueName mailQueueName) {
         return browseStartDao
             .insertInitialBrowseStart(mailQueueName, currentSliceStartInstant());
     }
@@ -79,7 +80,7 @@ class CassandraMailQueueMailStore {
 
     private BucketId computedBucketId(Mail mail) {
         int mailKeyHashCode = mail.getName().hashCode();
-        int bucketIdValue = mailKeyHashCode % configuration.getBucketCount();
+        int bucketIdValue = Math.abs(mailKeyHashCode) % configuration.getBucketCount();
         return BucketId.of(bucketIdValue);
     }
 }

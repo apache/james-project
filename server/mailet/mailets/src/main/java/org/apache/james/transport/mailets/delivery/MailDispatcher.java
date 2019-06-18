@@ -28,6 +28,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.PerRecipientHeaders.Header;
@@ -68,7 +69,7 @@ public class MailDispatcher {
             return this;
         }
 
-        public MailDispatcher build() throws MessagingException {
+        public MailDispatcher build() {
             Preconditions.checkNotNull(mailStore);
             Preconditions.checkNotNull(mailetContext);
             return new MailDispatcher(mailStore, consume.orElse(CONSUME), mailetContext);
@@ -87,7 +88,7 @@ public class MailDispatcher {
     }
 
     public void dispatch(Mail mail) throws MessagingException {
-        Collection<MailAddress> errors =  customizeHeadersAndDeliver(mail);
+        List<MailAddress> errors =  customizeHeadersAndDeliver(mail);
         if (!errors.isEmpty()) {
             // If there were errors, we redirect the email to the ERROR
             // processor.
@@ -96,7 +97,14 @@ public class MailDispatcher {
             // the sender. Note that this email doesn't include any details
             // regarding the details of the failure(s).
             // In the future we may wish to address this.
-            mailetContext.sendMail(mail.getSender(), errors, mail.getMessage(), Mail.ERROR);
+            Mail newMail = MailImpl.builder()
+                .name("error-" + mail.getName())
+                .sender(mail.getMaybeSender())
+                .addRecipients(errors)
+                .mimeMessage(mail.getMessage())
+                .state(Mail.ERROR)
+                .build();
+            mailetContext.sendMail(newMail);
         }
         if (consume) {
             // Consume this message
@@ -104,19 +112,19 @@ public class MailDispatcher {
         }
     }
 
-    private Collection<MailAddress> customizeHeadersAndDeliver(Mail mail) throws MessagingException {
+    private List<MailAddress> customizeHeadersAndDeliver(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
         // Set Return-Path and remove all other Return-Path headers from the message
         // This only works because there is a placeholder inserted by MimeMessageWrapper
-        message.setHeader(RFC2822Headers.RETURN_PATH, DeliveryUtils.prettyPrint(mail.getSender()));
+        message.setHeader(RFC2822Headers.RETURN_PATH, mail.getMaybeSender().asPrettyString());
 
-        Collection<MailAddress> errors = deliver(mail, message);
+        List<MailAddress> errors = deliver(mail, message);
 
         return errors;
     }
 
-    private Collection<MailAddress> deliver(Mail mail, MimeMessage message) {
-        Collection<MailAddress> errors = new ArrayList<>();
+    private List<MailAddress> deliver(Mail mail, MimeMessage message) {
+        List<MailAddress> errors = new ArrayList<>();
         for (MailAddress recipient : mail.getRecipients()) {
             try {
                 Map<String, List<String>> savedHeaders = saveHeaders(mail, recipient);

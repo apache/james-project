@@ -26,7 +26,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-project</artifactId>
-        <version>3.2.0-SNAPSHOT</version>
+        <version>3.4.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>james-server</artifactId>
@@ -58,14 +58,11 @@
         <module>data/data-api</module>
         <module>data/data-cassandra</module>
         <module>data/data-file</module>
-        <module>data/data-hbase</module>
-        <module>data/data-jcr</module>
         <module>data/data-jdbc</module>
         <module>data/data-jmap</module>
         <module>data/data-jmap-cassandra</module>
         <module>data/data-jpa</module>
         <module>data/data-ldap</module>
-        <module>data/data-ldap-integration-testing</module>
         <module>data/data-library</module>
         <module>data/data-memory</module>
 
@@ -75,14 +72,14 @@
         <module>dns-service/dnsservice-test</module>
 
         <module>mailet/integration-testing</module>
-
         <module>mailet/mailetcontainer-api</module>
         <module>mailet/mailetcontainer-camel</module>
         <module>mailet/mailets</module>
 
+        <module>mailrepository/deleted-messages-vault-repository</module>
         <module>mailrepository/mailrepository-api</module>
-        <module>mailrepository/mailrepository-memory</module>
         <module>mailrepository/mailrepository-cassandra</module>
+        <module>mailrepository/mailrepository-memory</module>
 
         <module>protocols/fetchmail</module>
         <module>protocols/jmap</module>
@@ -94,8 +91,8 @@
         <module>protocols/protocols-managesieve</module>
         <module>protocols/protocols-pop3</module>
         <module>protocols/protocols-smtp</module>
-        <module>protocols/webadmin-integration-test</module>
         <module>protocols/webadmin</module>
+        <module>protocols/webadmin-integration-test</module>
 
         <module>queue/queue-activemq</module>
         <module>queue/queue-api</module>

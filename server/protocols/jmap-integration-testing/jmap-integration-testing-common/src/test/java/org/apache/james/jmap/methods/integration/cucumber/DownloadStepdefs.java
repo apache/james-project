@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -49,6 +50,7 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mime4j.codec.DecoderUtil;
+import org.apache.james.util.InputStreamUtils;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
@@ -122,6 +124,20 @@ public class DownloadStepdefs {
 
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
             AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml")));
+
+        retrieveAndSaveAttachmentDetails(user, messageId, attachmentId, composedMessageId);
+    }
+
+    @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\" with an attachment \"([^\"]*)\" having \"([^\"]*)\" contentType$")
+    public void appendMessageWithAttachmentToMailbox(String user, String mailbox, String messageId, String attachmentId, String contentType) throws Throwable {
+        MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
+
+        InputStream message = InputStreamUtils.concat(
+            ClassLoader.getSystemResourceAsStream("eml/oneAttachment-part1.eml"),
+            new ByteArrayInputStream(contentType.getBytes(StandardCharsets.UTF_8)),
+            ClassLoader.getSystemResourceAsStream("eml/oneAttachment-part2.eml"));
+
+        ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath, AppendCommand.from(message));
 
         retrieveAndSaveAttachmentDetails(user, messageId, attachmentId, composedMessageId);
     }
@@ -454,6 +470,11 @@ public class DownloadStepdefs {
     @Then("^the blob size is (\\d+)$")
     public void assertContentLength(int size) {
         assertThat(response.getFirstHeader("Content-Length").getValue()).isEqualTo(String.valueOf(size));
+    }
+
+    @Then("^the Content-Type is \"([^\"]*)\"$")
+    public void assertContentType(String contentType) {
+        assertThat(response.getFirstHeader("Content-Type").getValue()).isEqualTo(contentType);
     }
 
     private void assertEncodedFilenameMatches(String name) {

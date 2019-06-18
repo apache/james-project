@@ -21,10 +21,10 @@ package org.apache.james.transport.mailets.remote.delivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
+
 import javax.mail.MessagingException;
 
-import org.apache.james.transport.mailets.remote.delivery.Delay;
-import org.apache.james.transport.mailets.remote.delivery.DelaysAndMaxRetry;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -40,7 +40,7 @@ public class DelaysAndMaxRetryTest {
     public void fromShouldParseSingleDelay() throws Exception {
         DelaysAndMaxRetry actual = DelaysAndMaxRetry.from(1, "1s");
 
-        DelaysAndMaxRetry expected = new DelaysAndMaxRetry(1, ImmutableList.of(new Delay(1, 1000)));
+        DelaysAndMaxRetry expected = new DelaysAndMaxRetry(1, ImmutableList.of(new Delay(1, Duration.ofSeconds(1))));
 
         assertThat(actual).isEqualTo(expected);
     }
@@ -49,7 +49,7 @@ public class DelaysAndMaxRetryTest {
     public void fromShouldParseTwoDelays() throws Exception {
         DelaysAndMaxRetry actual = DelaysAndMaxRetry.from(2, "1s,2s");
 
-        DelaysAndMaxRetry expected = new DelaysAndMaxRetry(2, ImmutableList.of(new Delay(1, 1000), new Delay(1, 2000)));
+        DelaysAndMaxRetry expected = new DelaysAndMaxRetry(2, ImmutableList.of(new Delay(1, Duration.ofSeconds(1)), new Delay(1, Duration.ofSeconds(2))));
 
         assertThat(actual).isEqualTo(expected);
     }
@@ -58,7 +58,7 @@ public class DelaysAndMaxRetryTest {
     public void fromShouldAdaptMaxRetriesWhenUnderAttempts() throws Exception {
         DelaysAndMaxRetry actual = DelaysAndMaxRetry.from(1, "1s,2*2s");
 
-        DelaysAndMaxRetry expected = new DelaysAndMaxRetry(3, ImmutableList.of(new Delay(1, 1000), new Delay(2, 2000)));
+        DelaysAndMaxRetry expected = new DelaysAndMaxRetry(3, ImmutableList.of(new Delay(1, Duration.ofSeconds(1)), new Delay(2, Duration.ofSeconds(2))));
 
         assertThat(actual).isEqualTo(expected);
     }
@@ -67,7 +67,7 @@ public class DelaysAndMaxRetryTest {
     public void fromShouldAdaptDelaysWhenUnderMaxRetries() throws Exception {
         DelaysAndMaxRetry actual = DelaysAndMaxRetry.from(4, "1s,2*2s");
 
-        DelaysAndMaxRetry expected = new DelaysAndMaxRetry(4, ImmutableList.of(new Delay(1, 1000), new Delay(3, 2000)));
+        DelaysAndMaxRetry expected = new DelaysAndMaxRetry(4, ImmutableList.of(new Delay(1, Duration.ofSeconds(1)), new Delay(3, Duration.ofSeconds(2))));
 
         assertThat(actual).isEqualTo(expected);
     }
@@ -85,7 +85,7 @@ public class DelaysAndMaxRetryTest {
     public void fromShouldIgnoreEmptyDelay() throws Exception {
         DelaysAndMaxRetry actual = DelaysAndMaxRetry.from(1, "1s,,2s");
 
-        DelaysAndMaxRetry expected = new DelaysAndMaxRetry(2, ImmutableList.of(new Delay(1, 1000), new Delay(1, 2000)));
+        DelaysAndMaxRetry expected = new DelaysAndMaxRetry(2, ImmutableList.of(new Delay(1, Duration.ofSeconds(1)), new Delay(1, Duration.ofSeconds(2))));
 
         assertThat(actual).isEqualTo(expected);
     }
@@ -94,7 +94,7 @@ public class DelaysAndMaxRetryTest {
     public void fromShouldHandleParsingFailures() throws Exception {
         DelaysAndMaxRetry actual = DelaysAndMaxRetry.from(3, "1s,invalid,2s");
 
-        DelaysAndMaxRetry expected = new DelaysAndMaxRetry(3, ImmutableList.of(new Delay(3, 1000)));
+        DelaysAndMaxRetry expected = new DelaysAndMaxRetry(3, ImmutableList.of(new Delay(3, Duration.ofSeconds(1))));
 
         assertThat(actual).isEqualTo(expected);
     }
@@ -126,20 +126,22 @@ public class DelaysAndMaxRetryTest {
     public void getExpandedDelaysShouldExpandSingleDelays() throws Exception {
         DelaysAndMaxRetry testee = DelaysAndMaxRetry.from(3, "1*1S,1*2S,1*5S");
 
-        assertThat(testee.getExpandedDelays()).containsExactly(1000L, 2000L, 5000L);
+        assertThat(testee.getExpandedDelays()).containsExactly(Duration.ofSeconds(1), Duration.ofSeconds(2), Duration.ofSeconds(5));
     }
 
     @Test
     public void getExpandedDelaysShouldExpandMultipleDelays() throws Exception {
         DelaysAndMaxRetry testee = DelaysAndMaxRetry.from(3, "1*1S,2*2S,2*5S");
 
-        assertThat(testee.getExpandedDelays()).containsExactly(1000L, 2000L, 2000L, 5000L, 5000L);
+        assertThat(testee.getExpandedDelays())
+            .containsExactly(Duration.ofSeconds(1), Duration.ofSeconds(2), Duration.ofSeconds(2), Duration.ofSeconds(5), Duration.ofSeconds(5));
     }
     
     @Test
     public void getExpandedDelaysShouldExpandMultipleDelaysWithSpaces() throws Exception {
         DelaysAndMaxRetry testee = DelaysAndMaxRetry.from(3, "1 * 1 S, 2 * 2 S , 2 * 5 S");
 
-        assertThat(testee.getExpandedDelays()).containsExactly(1000L, 2000L, 2000L, 5000L, 5000L);
+        assertThat(testee.getExpandedDelays())
+            .containsExactly(Duration.ofSeconds(1), Duration.ofSeconds(2), Duration.ofSeconds(2), Duration.ofSeconds(5), Duration.ofSeconds(5));
     }
 }

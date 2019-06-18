@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import org.apache.james.mailbox.backup.zip.MailboxIdExtraField;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 

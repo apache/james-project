@@ -47,6 +47,7 @@ public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallba
     private final RegistrableExtension registrableExtension;
     private final boolean autoStart;
     private final AwaitCondition awaitCondition;
+
     private GuiceJamesServer guiceJamesServer;
 
     JamesServerExtension(RegistrableExtension registrableExtension, ThrowingFunction<File, GuiceJamesServer> serverSupplier,
@@ -56,6 +57,10 @@ public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallba
         this.folderRegistrableExtension = new TemporaryFolderRegistrableExtension();
         this.autoStart = autoStart;
         this.awaitCondition = awaitCondition;
+    }
+
+    public GuiceJamesServer getGuiceJamesServer() {
+        return guiceJamesServer;
     }
 
     @Override
@@ -87,11 +92,15 @@ public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallba
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return (parameterContext.getParameter().getType() == GuiceJamesServer.class);
+        return (parameterContext.getParameter().getType() == GuiceJamesServer.class)
+            || registrableExtension.supportsParameter(parameterContext, extensionContext);
     }
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        if (registrableExtension.supportsParameter(parameterContext, extensionContext)) {
+            return registrableExtension.resolveParameter(parameterContext, extensionContext);
+        }
         return guiceJamesServer;
     }
 

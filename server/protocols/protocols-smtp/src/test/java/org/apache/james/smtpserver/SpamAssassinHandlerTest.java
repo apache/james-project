@@ -18,14 +18,17 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import static org.apache.james.spamassassin.SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME;
+import static org.apache.james.spamassassin.SpamAssassinResult.STATUS_MAIL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -36,6 +39,8 @@ import org.apache.james.smtpserver.fastfail.SpamAssassinHandler;
 import org.apache.james.spamassassin.SpamAssassinResult;
 import org.apache.james.spamassassin.mock.MockSpamd;
 import org.apache.james.spamassassin.mock.MockSpamdTestRule;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Rule;
@@ -43,8 +48,11 @@ import org.junit.Test;
 
 public class SpamAssassinHandlerTest {
 
+    private static final String SPAMD_HOST = "localhost";
+    private static final Attribute FLAG_MAIL_ATTRIBUTE_NO = new Attribute(SpamAssassinResult.FLAG_MAIL, AttributeValue.of("NO"));
+    private static final Attribute FLAG_MAIL_ATTRIBUTE_YES = new Attribute(SpamAssassinResult.FLAG_MAIL, AttributeValue.of("YES"));
+
     private Mail mockedMail;
-    public static final String SPAMD_HOST = "localhost";
 
     private SMTPSession setupMockedSMTPSession(Mail mail) {
         mockedMail = mail;
@@ -72,7 +80,11 @@ public class SpamAssassinHandlerTest {
 
             @Override
             public Object getAttachment(String key, State state) {
-                sstate.put(SMTPSession.SENDER, "sender@james.apache.org");
+                try {
+                    sstate.put(SMTPSession.SENDER, MaybeSender.of(new MailAddress("sender@james.apache.org")));
+                } catch (AddressException e) {
+                    throw new RuntimeException(e);
+                }
                 if (state == State.Connection) {
                     return connectionState.get(key);
                 } else {
@@ -98,6 +110,7 @@ public class SpamAssassinHandlerTest {
 
     private Mail setupMockedMail(MimeMessage message) throws MessagingException {
         return FakeMail.builder()
+            .name("name")
             .mimeMessage(message)
             .build();
     }
@@ -120,8 +133,8 @@ public class SpamAssassinHandlerTest {
         HookResult response = handler.onMessage(session, mockedMail);
 
         assertThat(HookReturnCode.declined()).describedAs("Email was not rejected").isEqualTo(response.getResult());
-        assertThat("NO").describedAs("email was not spam").isEqualTo(mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME));
-        assertThat(mockedMail.getAttribute(STATUS_MAIL_ATTRIBUTE_NAME)).withFailMessage("spam hits").isNotNull();
+        assertThat(mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL)).describedAs("email was not spam").contains(FLAG_MAIL_ATTRIBUTE_NO);
+        assertThat(mockedMail.getAttribute(STATUS_MAIL)).withFailMessage("spam hits").isPresent();
 
     }
 
@@ -137,8 +150,8 @@ public class SpamAssassinHandlerTest {
         HookResult response = handler.onMessage(session, mockedMail);
 
         assertThat(HookReturnCode.declined()).describedAs("Email was not rejected").isEqualTo(response.getResult());
-        assertThat("YES").describedAs("email was spam").isEqualTo(mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME));
-        assertThat(mockedMail.getAttribute(STATUS_MAIL_ATTRIBUTE_NAME)).withFailMessage("spam hits").isNotNull();
+        assertThat(mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL)).describedAs("email was spam").contains(FLAG_MAIL_ATTRIBUTE_YES);
+        assertThat(mockedMail.getAttribute(STATUS_MAIL)).withFailMessage("spam hits").isPresent();
     }
 
     @Test
@@ -153,7 +166,7 @@ public class SpamAssassinHandlerTest {
         HookResult response = handler.onMessage(session, mockedMail);
 
         assertThat(HookReturnCode.deny()).describedAs("Email was rejected").isEqualTo(response.getResult());
-        assertThat("YES").describedAs("email was spam").isEqualTo(mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME));
-        assertThat(mockedMail.getAttribute(STATUS_MAIL_ATTRIBUTE_NAME)).withFailMessage("spam hits").isNotNull();
+        assertThat(mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL)).describedAs("email was spam").contains(FLAG_MAIL_ATTRIBUTE_YES);
+        assertThat(mockedMail.getAttribute(STATUS_MAIL)).withFailMessage("spam hits").isPresent();
     }
 }

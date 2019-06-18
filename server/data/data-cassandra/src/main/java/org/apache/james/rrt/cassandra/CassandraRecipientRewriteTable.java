@@ -18,25 +18,16 @@
  ****************************************************************/
 package org.apache.james.rrt.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable.DOMAIN;
-import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable.MAPPING;
-import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable.TABLE_NAME;
-import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable.USER;
-
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Domain;
+import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -44,135 +35,77 @@ import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.util.OptionalUtils;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Preconditions;
 
 public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTable {
+    private static final SchemaVersion MAPPINGS_SOURCES_SUPPORTED_VERSION = new SchemaVersion(7);
 
-    private final CassandraAsyncExecutor executor;
-    private final CassandraUtils cassandraUtils;
-    private final PreparedStatement insertStatement;
-    private final PreparedStatement deleteStatement;
-    private final PreparedStatement retrieveMappingStatement;
-    private final PreparedStatement retrieveAllMappingsStatement;
+    private final CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO;
+    private final CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO;
+    private final CassandraSchemaVersionDAO cassandraSchemaVersionDAO;
 
     @Inject
-    public CassandraRecipientRewriteTable(Session session, CassandraUtils cassandraUtils) {
-        this.executor = new CassandraAsyncExecutor(session);
-        this.cassandraUtils = cassandraUtils;
-        this.insertStatement = prepareInsertStatement(session);
-        this.deleteStatement = prepareDelete(session);
-        this.retrieveMappingStatement = prepareRetrieveMappingStatement(session);
-        this.retrieveAllMappingsStatement = prepareRetrieveAllMappingStatement(session);
-    }
-
-    private PreparedStatement prepareRetrieveAllMappingStatement(Session session) {
-        return session.prepare(select(USER, DOMAIN, MAPPING)
-            .from(TABLE_NAME));
-    }
-
-    private PreparedStatement prepareRetrieveMappingStatement(Session session) {
-        return session.prepare(select(MAPPING)
-            .from(TABLE_NAME)
-            .where(eq(USER, bindMarker(USER)))
-            .and(eq(DOMAIN, bindMarker(DOMAIN))));
-    }
-
-    private PreparedStatement prepareDelete(Session session) {
-        return session.prepare(delete()
-            .from(TABLE_NAME)
-            .where(eq(USER, bindMarker(USER)))
-            .and(eq(DOMAIN, bindMarker(DOMAIN)))
-            .and(eq(MAPPING, bindMarker(MAPPING))));
-    }
-
-    private PreparedStatement prepareInsertStatement(Session session) {
-        return session.prepare(insertInto(TABLE_NAME)
-            .value(USER, bindMarker(USER))
-            .value(DOMAIN, bindMarker(DOMAIN))
-            .value(MAPPING, bindMarker(MAPPING)));
+    public CassandraRecipientRewriteTable(CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO,
+                                          CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO,
+                                          CassandraSchemaVersionDAO cassandraSchemaVersionDAO) {
+        this.cassandraRecipientRewriteTableDAO = cassandraRecipientRewriteTableDAO;
+        this.cassandraMappingsSourcesDAO = cassandraMappingsSourcesDAO;
+        this.cassandraSchemaVersionDAO = cassandraSchemaVersionDAO;
     }
 
     @Override
     public void addMapping(MappingSource source, Mapping mapping) {
-        executor.executeVoid(insertStatement.bind()
-            .setString(USER, source.getFixedUser())
-            .setString(DOMAIN, source.getFixedDomain())
-            .setString(MAPPING, mapping.asString()))
-            .join();
+        cassandraRecipientRewriteTableDAO.addMapping(source, mapping)
+            .then(cassandraMappingsSourcesDAO.addMapping(mapping, source))
+            .block();
     }
 
     @Override
     public void removeMapping(MappingSource source, Mapping mapping) {
-        executor.executeVoid(deleteStatement.bind()
-                .setString(USER, source.getFixedUser())
-                .setString(DOMAIN, source.getFixedDomain())
-                .setString(MAPPING, mapping.asString()))
-            .join();
+        cassandraRecipientRewriteTableDAO.removeMapping(source, mapping)
+            .then(cassandraMappingsSourcesDAO.removeMapping(mapping, source))
+            .block();
     }
 
     @Override
-    public Mappings getUserDomainMappings(MappingSource source) {
-        return retrieveMappings(source)
-            .orElse(null);
-    }
-
-    private Optional<Mappings> retrieveMappings(MappingSource source) {
-        List<String> mappings = executor.execute(retrieveMappingStatement.bind()
-            .setString(USER, source.getFixedUser())
-            .setString(DOMAIN, source.getFixedDomain()))
-            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
-                .map(row -> row.getString(MAPPING))
-                .collect(Guavate.toImmutableList()))
-            .join();
-
-        return MappingsImpl.fromCollection(mappings).toOptional();
+    public Mappings getStoredMappings(MappingSource source) {
+        return cassandraRecipientRewriteTableDAO.retrieveMappings(source)
+            .blockOptional()
+            .orElse(MappingsImpl.empty());
     }
 
     @Override
     public Map<MappingSource, Mappings> getAllMappings() {
-        return executor.execute(retrieveAllMappingsStatement.bind())
-            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
-                .map(row -> new UserMapping(MappingSource.fromUser(row.getString(USER), row.getString(DOMAIN)), row.getString(MAPPING)))
-                .collect(Guavate.toImmutableMap(
-                    UserMapping::getSource,
-                    UserMapping::toMapping,
-                    Mappings::union)))
-            .join();
-    }
-
-    private static class UserMapping {
-
-        private final MappingSource source;
-        private final String mapping;
-
-        public UserMapping(MappingSource source, String mapping) {
-            this.source = source;
-            this.mapping = mapping;
-        }
-
-
-        public MappingSource getSource() {
-            return source;
-        }
-
-        public String getMapping() {
-            return mapping;
-        }
-
-        public Mappings toMapping() {
-            return MappingsImpl.fromRawString(getMapping());
-        }
-
+        return cassandraRecipientRewriteTableDAO.getAllMappings()
+            .collect(Guavate.toImmutableMap(
+                pair -> pair.getLeft(),
+                pair -> MappingsImpl.fromMappings(pair.getRight()),
+                Mappings::union))
+            .block();
     }
 
     @Override
     protected Mappings mapAddress(String user, Domain domain) {
         return OptionalUtils.orSuppliers(
-            () -> retrieveMappings(MappingSource.fromUser(user, domain)),
-            () -> retrieveMappings(MappingSource.fromDomain(domain)))
+            () -> cassandraRecipientRewriteTableDAO.retrieveMappings(MappingSource.fromUser(user, domain)).blockOptional(),
+            () -> cassandraRecipientRewriteTableDAO.retrieveMappings(MappingSource.fromDomain(domain)).blockOptional())
                 .orElse(MappingsImpl.empty());
     }
 
+    @Override
+    public Stream<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException {
+        Preconditions.checkArgument(listSourcesSupportedType.contains(mapping.getType()),
+            String.format("Not supported mapping of type %s", mapping.getType()));
+
+        SchemaVersion schemaVersion = cassandraSchemaVersionDAO.getCurrentSchemaVersion()
+            .block()
+            .orElse(CassandraSchemaVersionManager.MIN_VERSION);
+
+        if (schemaVersion.isBefore(MAPPINGS_SOURCES_SUPPORTED_VERSION)) {
+            return super.listSources(mapping);
+        }
+
+        return cassandraMappingsSourcesDAO.retrieveSources(mapping).toStream();
+    }
 }

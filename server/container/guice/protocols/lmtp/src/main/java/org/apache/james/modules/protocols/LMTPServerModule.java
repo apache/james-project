@@ -21,10 +21,11 @@ package org.apache.james.modules.protocols;
 
 import java.util.List;
 
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.lmtpserver.netty.LMTPServerFactory;
 import org.apache.james.lmtpserver.netty.OioLMTPServerFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
+import org.apache.james.util.LoggingLevel;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceProbe;
 
@@ -61,7 +62,7 @@ public class LMTPServerModule extends AbstractModule {
         @Override
         public void initModule() {
             try {
-                lmtpServerFactory.configure(configurationProvider.getConfiguration("lmtpserver"));
+                lmtpServerFactory.configure(configurationProvider.getConfiguration("lmtpserver", LoggingLevel.INFO));
                 lmtpServerFactory.init();
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -69,7 +70,7 @@ public class LMTPServerModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Configurable>> forClasses() {
+        public List<Class<? extends Startable>> forClasses() {
             return ImmutableList.of(LMTPServerFactory.class);
         }
     }

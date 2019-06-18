@@ -100,7 +100,7 @@ public class DataProvisioner {
     private static void createSubSubMailboxes(MailboxManager mailboxManager,MailboxSession mailboxSession, String subFolderName) {
         IntStream.range(0, SUB_SUB_MAILBOXES_COUNT)
             .mapToObj(i -> subFolderName + ".SUBSUB_FOLDER_" + i)
-            .forEach(name -> createMailbox(mailboxManager, mailboxSession, MailboxPath.forUser(mailboxSession.getUser().getUserName(), name)));
+            .forEach(name -> createMailbox(mailboxManager, mailboxSession, MailboxPath.forUser(mailboxSession.getUser().asString(), name)));
 
     }
 

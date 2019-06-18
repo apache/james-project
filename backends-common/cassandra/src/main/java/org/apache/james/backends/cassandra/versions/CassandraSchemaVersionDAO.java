@@ -27,30 +27,27 @@ import static org.apache.james.backends.cassandra.versions.table.CassandraSchema
 import static org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable.VALUE;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.utils.UUIDs;
+import reactor.core.publisher.Mono;
 
 public class CassandraSchemaVersionDAO {
     private final PreparedStatement readVersionStatement;
     private final PreparedStatement writeVersionStatement;
-    private CassandraUtils cassandraUtils;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
 
     @Inject
-    public CassandraSchemaVersionDAO(Session session, CassandraUtils cassandraUtils) {
+    public CassandraSchemaVersionDAO(Session session) {
         cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         readVersionStatement = prepareReadVersionStatement(session);
         writeVersionStatement = prepareWriteVersionStatement(session);
-        this.cassandraUtils = cassandraUtils;
     }
 
     private PreparedStatement prepareReadVersionStatement(Session session) {
@@ -66,15 +63,16 @@ public class CassandraSchemaVersionDAO {
                 .value(VALUE, bindMarker(VALUE)));
     }
 
-    public CompletableFuture<Optional<SchemaVersion>> getCurrentSchemaVersion() {
-        return cassandraAsyncExecutor.execute(readVersionStatement.bind())
-            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
-                .map(row -> row.getInt(VALUE))
-                .reduce(Math::max))
-            .thenApply(i -> i.map(SchemaVersion::new));
+    public Mono<Optional<SchemaVersion>> getCurrentSchemaVersion() {
+        return cassandraAsyncExecutor.executeRows(readVersionStatement.bind())
+            .map(row -> row.getInt(VALUE))
+            .reduce(Math::max)
+            .map(SchemaVersion::new)
+            .map(Optional::of)
+            .switchIfEmpty(Mono.just(Optional.empty()));
     }
 
-    public CompletableFuture<Void> updateVersion(SchemaVersion newVersion) {
+    public Mono<Void> updateVersion(SchemaVersion newVersion) {
         return cassandraAsyncExecutor.executeVoid(
             writeVersionStatement.bind()
                 .setUUID(KEY, UUIDs.timeBased())

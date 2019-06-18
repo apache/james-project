@@ -42,17 +42,19 @@ import org.apache.james.mailbox.maildir.MaildirFolder;
 import org.apache.james.mailbox.maildir.MaildirMessageName;
 import org.apache.james.mailbox.maildir.MaildirStore;
 import org.apache.james.mailbox.maildir.mail.model.MaildirMailboxMessage;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
-import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.mail.AbstractMessageMapper;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
+
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 
 public class MaildirMessageMapper extends AbstractMessageMapper {
 
@@ -151,7 +153,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         final List<UpdatedFlags> updatedFlags = new ArrayList<>();
         final MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
 
-        Iterator<MailboxMessage> it = findInMailbox(mailbox, set, FetchType.Metadata, -1);
+        Iterator<MailboxMessage> it = findInMailbox(mailbox, set, FetchType.Metadata, UNLIMITED);
         while (it.hasNext()) {
             final MailboxMessage member = it.next();
             Flags originalFlags = member.createFlags();
@@ -208,37 +210,52 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
     }
 
     @Override
-    public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(Mailbox mailbox, MessageRange set)
-            throws MailboxException {
-        List<MailboxMessage> results = new ArrayList<>();
-        final MessageUid from = set.getUidFrom();
-        final MessageUid to = set.getUidTo();
-        final Type type = set.getType();
-        switch (type) {
-        default:
-        case ALL:
-            results = findMessagesInMailbox(mailbox, MaildirMessageName.FILTER_DELETED_MESSAGES, -1);
-            break;
-        case FROM:
-            results = findMessagesInMailboxBetweenUIDs(mailbox, MaildirMessageName.FILTER_DELETED_MESSAGES, from, null,
-                    -1);
-            break;
-        case ONE:
-            results = findDeletedMessageInMailboxWithUID(mailbox, from);
-            break;
-        case RANGE:
-            results = findMessagesInMailboxBetweenUIDs(mailbox, MaildirMessageName.FILTER_DELETED_MESSAGES, from, to,
-                    -1);
-            break;
-        }
-        Map<MessageUid, MessageMetaData> uids = new HashMap<>();
-        for (MailboxMessage m : results) {
-            MessageUid uid = m.getUid();
-            uids.put(uid, new SimpleMessageMetaData(m));
-            delete(mailbox, m);
+    public List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) throws MailboxException {
+        List<MailboxMessage> messages = findDeletedMessages(mailbox, messageRange);
+        return getUidList(messages);
+    }
+
+    @Override
+    public Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) throws MailboxException {
+        Map<MessageUid, MessageMetaData> data = new HashMap<>();
+        List<MessageRange> ranges = MessageRange.toRanges(uids);
+
+        for (MessageRange range : ranges) {
+            List<MailboxMessage> messages = findDeletedMessages(mailbox, range);
+            data.putAll(deleteDeletedMessages(mailbox, messages));
         }
 
-        return uids;
+        return data;
+    }
+
+    private List<MailboxMessage> findDeletedMessages(Mailbox mailbox, MessageRange messageRange) throws MailboxException {
+        MessageUid from = messageRange.getUidFrom();
+        MessageUid to = messageRange.getUidTo();
+
+        switch (messageRange.getType()) {
+            case ONE:
+                return findDeletedMessageInMailboxWithUID(mailbox, from);
+            case RANGE:
+                return findMessagesInMailboxBetweenUIDs(mailbox, MaildirMessageName.FILTER_DELETED_MESSAGES, from, to, -1);
+            case FROM:
+                return findMessagesInMailboxBetweenUIDs(mailbox, MaildirMessageName.FILTER_DELETED_MESSAGES, from, null, -1);
+            case ALL:
+                return findMessagesInMailbox(mailbox, MaildirMessageName.FILTER_DELETED_MESSAGES, -1);
+            default:
+                throw new RuntimeException("Cannot find deleted messages, range type " + messageRange.getType() + " doesn't exist");
+        }
+    }
+
+    private Map<MessageUid, MessageMetaData> deleteDeletedMessages(Mailbox mailbox, List<MailboxMessage> messages) throws MailboxException {
+        return messages.stream()
+            .peek(Throwing.<MailboxMessage>consumer(message -> delete(mailbox, message)).sneakyThrow())
+            .collect(Guavate.toImmutableMap(MailboxMessage::getUid, MailboxMessage::metaData));
+    }
+
+    private List<MessageUid> getUidList(List<MailboxMessage> messages) {
+        return messages.stream()
+            .map(MailboxMessage::getUid)
+            .collect(Guavate.toImmutableList());
     }
 
     @Override
@@ -312,7 +329,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
             uid = folder.appendMessage(mailboxSession, newMessageFile.getName());
             message.setUid(uid);
             message.setModSeq(newMessageFile.lastModified());
-            return new SimpleMessageMetaData(message);
+            return message.metaData();
         } catch (MailboxException e) {
             throw new MailboxException("Failure while save MailboxMessage " + message + " in Mailbox " + mailbox, e);
         }

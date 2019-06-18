@@ -28,16 +28,12 @@ import java.util.Collection;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.StoreMailboxManager;
-import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
-import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -54,18 +50,14 @@ public class IsOverQuotaTest {
 
     @Before
     public void setUp() throws Exception {
-        mailboxManager = new InMemoryIntegrationResources().createMailboxManager(new SimpleGroupMembershipResolver());
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
+        mailboxManager = resources.getMailboxManager();
 
-        quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxManager.getMapperFactory());
-        maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
-        CurrentQuotaCalculator quotaCalculator = new CurrentQuotaCalculator(mailboxManager.getMapperFactory(), quotaRootResolver);
-        InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(quotaCalculator, mailboxManager);
-        StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
+        quotaRootResolver = resources.getDefaultUserQuotaRootResolver();
+        maxQuotaManager = resources.getMaxQuotaManager();
+
         usersRepository = mock(UsersRepository.class);
-        testee = new IsOverQuota(quotaRootResolver, quotaManager, mailboxManager, usersRepository);
-
-        mailboxManager.setQuotaRootResolver(quotaRootResolver);
-        mailboxManager.setQuotaManager(quotaManager);
+        testee = new IsOverQuota(quotaRootResolver, resources.getMailboxManager().getQuotaComponents().getQuotaManager(), mailboxManager, usersRepository);
 
         testee.init(FakeMatcherConfig.builder().matcherName("IsOverQuota").build());
 
@@ -76,6 +68,7 @@ public class IsOverQuotaTest {
     @Test
     public void matchShouldAcceptMailWhenNoQuota() throws Exception {
         FakeMail mail = FakeMail.builder()
+            .name("name")
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .size(1000)
             .build();
@@ -89,6 +82,7 @@ public class IsOverQuotaTest {
         maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(100));
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .size(1000)
             .build();
@@ -102,6 +96,7 @@ public class IsOverQuotaTest {
         maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1000));
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .size(1000)
             .build();
@@ -115,6 +110,7 @@ public class IsOverQuotaTest {
         maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(0));
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .build();
         Collection<MailAddress> result = testee.match(fakeMail);
@@ -127,6 +123,7 @@ public class IsOverQuotaTest {
         maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(1));
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .build();
         Collection<MailAddress> result = testee.match(fakeMail);
@@ -141,6 +138,7 @@ public class IsOverQuotaTest {
         maxQuotaManager.setMaxStorage(quotaRoot, QuotaSize.size(100));
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .recipient(MailAddressFixture.OTHER_AT_JAMES)
             .size(150)
@@ -159,6 +157,7 @@ public class IsOverQuotaTest {
         maxQuotaManager.setMaxStorage(quotaRoot, QuotaSize.size(100));
 
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipient(MailAddressFixture.ANY_AT_JAMES)
             .recipient(MailAddressFixture.OTHER_AT_JAMES)
             .size(150)

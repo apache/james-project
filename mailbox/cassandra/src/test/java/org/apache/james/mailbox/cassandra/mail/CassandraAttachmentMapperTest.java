@@ -31,38 +31,29 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.model.AttachmentMapperTest;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.Rule;
 
 public class CassandraAttachmentMapperTest extends AttachmentMapperTest {
-    
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private static CassandraCluster cassandra;
 
-    @BeforeClass
-    public static void setUpClass() {
-        CassandraModule modules = CassandraModule.aggregateModules(
-            CassandraAttachmentModule.MODULE,
-            CassandraBlobModule.MODULE);
-        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
-    }
+    private static final CassandraModule MODULES = CassandraModule.aggregateModules(
+        CassandraAttachmentModule.MODULE,
+        CassandraBlobModule.MODULE);
+
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
+
+    private CassandraCluster cassandra;
 
     @Override
     @Before
     public void setUp() throws MailboxException {
+        cassandra = CassandraCluster.create(MODULES, cassandraServer.getHost());
         super.setUp();
     }
     
     @After
     public void tearDown() {
         cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
         cassandra.closeCluster();
     }
 

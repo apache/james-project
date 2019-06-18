@@ -19,36 +19,29 @@
 
 package org.apache.james.backend.rabbitmq;
 
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.concurrent.Executors;
-
 import org.apache.james.core.healthcheck.Result;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
-
-@ExtendWith(RabbitMQExtension.class)
 class RabbitMQHealthCheckTest {
+
+    @RegisterExtension
+    static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ();
+
     private RabbitMQHealthCheck healthCheck;
 
     @BeforeEach
-    void setUp(DockerRabbitMQ rabbitMQ) throws Exception {
+    void setUp() throws Exception {
+        healthCheck = new RabbitMQHealthCheck(rabbitMQExtension.getRabbitChannelPool());
+    }
 
-        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(rabbitMQ.amqpUri())
-            .managementUri(rabbitMQ.managementUri())
-            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
-            .build();
-
-        RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(rabbitMQConfiguration,
-                new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor()));
-
-        healthCheck = new RabbitMQHealthCheck(
-            new RabbitChannelPool(rabbitMQConnectionFactory));
+    @AfterEach
+    void tearDown(DockerRabbitMQ rabbitMQ) throws Exception {
+        rabbitMQ.reset();
     }
 
     @Test

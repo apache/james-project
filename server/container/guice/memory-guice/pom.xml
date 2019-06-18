@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-server-guice</artifactId>
-        <version>3.2.0-SNAPSHOT</version>
+        <version>3.4.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -37,6 +37,12 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-linshare</artifactId>
+            <scope>test</scope>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-memory</artifactId>
         </dependency>
         <dependency>
@@ -47,6 +53,7 @@
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-scanning-search</artifactId>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -60,6 +67,25 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>apache-mailet-icalendar</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>blob-export-guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>blob-export-guice</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>blob-memory-guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>event-sourcing-event-store-memory</artifactId>
         </dependency>
         <dependency>
@@ -69,6 +95,10 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-activemq</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-mailbox-plugin-deleted-messages-vault-guice</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -144,7 +174,16 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-mailrepository-memory</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-queue-memory</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-testing</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -176,6 +215,11 @@
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -199,7 +243,7 @@
                         <configuration>
                             <includeScope>compile</includeScope>
                             <includeScope>runtime</includeScope>
-                            <outputDirectory>${project.build.directory}/${project.build.finalName}.lib</outputDirectory>
+                            <outputDirectory>${project.build.directory}/${project.artifactId}.lib</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -214,10 +258,11 @@
                             <goal>jar</goal>
                         </goals>
                         <configuration>
+                            <finalName>${project.artifactId}</finalName>
                             <archive>
                                 <manifest>
                                     <addClasspath>true</addClasspath>
-                                    <classpathPrefix>${project.build.finalName}.lib/</classpathPrefix>
+                                    <classpathPrefix>${project.artifactId}.lib/</classpathPrefix>
                                     <mainClass>org.apache.james.MemoryJamesServerMain</mainClass>
                                     <useUniqueVersions>false</useUniqueVersions>
                                 </manifest>

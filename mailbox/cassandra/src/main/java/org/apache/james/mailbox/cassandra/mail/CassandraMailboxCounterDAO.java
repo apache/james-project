@@ -26,22 +26,20 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.incr;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxCountersTable;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Assignment;
+import reactor.core.publisher.Mono;
 
 public class CassandraMailboxCounterDAO {
 
@@ -76,47 +74,47 @@ public class CassandraMailboxCounterDAO {
                 .where(eq(CassandraMailboxCountersTable.MAILBOX_ID, bindMarker(CassandraMailboxCountersTable.MAILBOX_ID))));
     }
 
-    public CompletableFuture<Optional<MailboxCounters>> retrieveMailboxCounters(Mailbox mailbox) throws MailboxException {
+    public Mono<MailboxCounters> retrieveMailboxCounters(Mailbox mailbox) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         return cassandraAsyncExecutor.executeSingleRow(bindWithMailbox(mailboxId, readStatement))
-            .thenApply(optional -> optional.map(row ->  MailboxCounters.builder()
+            .map(row ->  MailboxCounters.builder()
                 .count(row.getLong(CassandraMailboxCountersTable.COUNT))
                 .unseen(row.getLong(CassandraMailboxCountersTable.UNSEEN))
-                .build()));
+                .build());
     }
 
-    public CompletableFuture<Optional<Long>> countMessagesInMailbox(Mailbox mailbox) throws MailboxException {
+    public Mono<Long> countMessagesInMailbox(Mailbox mailbox) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         return countMessagesInMailbox(mailboxId);
     }
 
-    public CompletableFuture<Optional<Long>> countMessagesInMailbox(CassandraId cassandraId) {
+    public Mono<Long> countMessagesInMailbox(CassandraId cassandraId) {
         return cassandraAsyncExecutor.executeSingleRow(bindWithMailbox(cassandraId, readStatement))
-            .thenApply(optional -> optional.map(row -> row.getLong(CassandraMailboxCountersTable.COUNT)));
+            .map(row -> row.getLong(CassandraMailboxCountersTable.COUNT));
     }
 
-    public CompletableFuture<Optional<Long>> countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
+    public Mono<Long> countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         return cassandraAsyncExecutor.executeSingleRow(bindWithMailbox(mailboxId, readStatement))
-            .thenApply(optional -> optional.map(row -> row.getLong(CassandraMailboxCountersTable.UNSEEN)));
+            .map(row -> row.getLong(CassandraMailboxCountersTable.UNSEEN));
     }
 
-    public CompletableFuture<Void> decrementCount(CassandraId mailboxId) {
+    public Mono<Void> decrementCount(CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeVoid(bindWithMailbox(mailboxId, decrementMessageCountStatement));
     }
 
-    public CompletableFuture<Void> incrementCount(CassandraId mailboxId) {
+    public Mono<Void> incrementCount(CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeVoid(bindWithMailbox(mailboxId, incrementMessageCountStatement));
     }
 
-    public CompletableFuture<Void> decrementUnseen(CassandraId mailboxId) {
+    public Mono<Void> decrementUnseen(CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeVoid(bindWithMailbox(mailboxId, decrementUnseenCountStatement));
     }
 
-    public CompletableFuture<Void> incrementUnseen(CassandraId mailboxId) {
+    public Mono<Void> incrementUnseen(CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeVoid(bindWithMailbox(mailboxId, incrementUnseenCountStatement));
     }
 

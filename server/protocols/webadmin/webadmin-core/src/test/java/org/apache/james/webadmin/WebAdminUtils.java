@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin;
 
+import static io.restassured.RestAssured.given;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 
@@ -26,23 +27,25 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Set;
 
-import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 
 import com.github.steveash.guavate.Guavate;
 
 import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.config.RestAssuredConfig;
 import io.restassured.http.ContentType;
+import io.restassured.specification.RequestSpecification;
 
 public class WebAdminUtils {
 
-    public static WebAdminServer createWebAdminServer(MetricFactory metricFactory, Routes... routes) {
+    public static WebAdminServer createWebAdminServer(Routes... routes) {
         return new WebAdminServer(WebAdminConfiguration.TEST_CONFIGURATION,
             privateRoutes(routes),
             publicRoutes(routes),
             new NoAuthenticationFilter(),
-            metricFactory);
+            new NoopMetricFactory());
     }
 
     private static Set<Routes> privateRoutes(Routes[] routes) {
@@ -66,7 +69,15 @@ public class WebAdminUtils {
         return new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
+            .setConfig(defaultConfig())
             .setPort(port.getValue());
+    }
+
+    public static RestAssuredConfig defaultConfig() {
+        return newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8));
+    }
+
+    public static RequestSpecification spec(Port port) {
+        return given().spec(buildRequestSpecification(port).build());
     }
 }

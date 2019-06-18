@@ -24,7 +24,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.TimeUnit;
+import java.time.temporal.ChronoUnit;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -71,7 +71,7 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
         connectionFactory.setBlobTransferPolicy(policy);
 
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
-        MetricFactory metricFactory = metricTestSystem.getSpyMetricFactory();
+        MetricFactory metricFactory = metricTestSystem.getMetricFactory();
         GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
         String queueName = BrokerExtension.generateRandomQueueName(broker);
         mailQueue = new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, USE_BLOB, metricFactory, gaugeRegistry);
@@ -132,7 +132,7 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
 
     @Test
     void computeNextDeliveryTimestampShouldReturnLongMaxWhenOverflow() {
-        long deliveryTimestamp = mailQueue.computeNextDeliveryTimestamp(Long.MAX_VALUE, TimeUnit.DAYS);
+        long deliveryTimestamp = mailQueue.computeNextDeliveryTimestamp(ChronoUnit.FOREVER.getDuration());
 
         assertThat(deliveryTimestamp).isEqualTo(Long.MAX_VALUE);
     }

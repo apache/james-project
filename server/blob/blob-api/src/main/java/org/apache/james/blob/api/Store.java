@@ -20,20 +20,21 @@
 package org.apache.james.blob.api;
 
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.util.FluentFutureStream;
 
-import com.google.common.collect.ImmutableMap;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 public interface Store<T, I> {
 
-    CompletableFuture<I> save(T t);
+    Mono<I> save(T t);
 
-    CompletableFuture<T> read(I blobIds);
+    Mono<T> read(I blobIds);
 
     class BlobType {
         private final String name;
@@ -85,30 +86,28 @@ public interface Store<T, I> {
         }
 
         @Override
-        public CompletableFuture<I> save(T t) {
-            return FluentFutureStream.of(
-                encoder.encode(t)
-                    .map(this::saveEntry))
-                .completableFuture()
-                .thenApply(pairStream -> pairStream.collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)))
-                .thenApply(idFactory::generate);
+        public Mono<I> save(T t) {
+            return Flux.fromStream(encoder.encode(t))
+                .flatMapSequential(this::saveEntry)
+                .collectMap(Tuple2::getT1, Tuple2::getT2)
+                .map(idFactory::generate);
         }
 
-        private CompletableFuture<Pair<BlobType, BlobId>> saveEntry(Pair<BlobType, InputStream> entry) {
-            return blobStore.save(entry.getRight())
-                .thenApply(blobId -> Pair.of(entry.getLeft(), blobId));
+        private Mono<Tuple2<BlobType, BlobId>> saveEntry(Pair<BlobType, InputStream> entry) {
+            return Mono.just(entry.getLeft())
+                .zipWith(blobStore.save(entry.getRight()));
         }
 
         @Override
-        public CompletableFuture<T> read(I blobIds) {
-            CompletableFuture<Stream<Pair<BlobType, byte[]>>> binaries = FluentFutureStream.of(blobIds.asMap()
-                .entrySet()
-                .stream()
-                .map(entry -> blobStore.readBytes(entry.getValue())
-                    .thenApply(bytes -> Pair.of(entry.getKey(), bytes))))
-                .completableFuture();
-
-            return binaries.thenApply(decoder::decode);
+        public Mono<T> read(I blobIds) {
+            return Flux.fromIterable(blobIds.asMap().entrySet())
+                .flatMapSequential(
+                    entry -> blobStore.readBytes(entry.getValue())
+                        .zipWith(Mono.just(entry.getKey())))
+                .map(entry -> Pair.of(entry.getT2(), entry.getT1()))
+                .collectList()
+                .map(Collection::stream)
+                .map(decoder::decode);
         }
     }
 }

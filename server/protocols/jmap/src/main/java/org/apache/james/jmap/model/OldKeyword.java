@@ -173,7 +173,7 @@ public class OldKeyword {
     }
 
     public Keywords asKeywords() {
-        return Keywords.factory()
+        return Keywords.strictFactory()
             .fromSet(StreamUtils
                 .flatten(
                     OptionalUtils.toStream(isAnswered.filter(b -> b).map(b -> Keyword.ANSWERED)),

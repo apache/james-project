@@ -97,15 +97,15 @@ public class SetVacationResponseMethod implements Method {
         }
 
         return process(clientId,
-            AccountId.fromString(mailboxSession.getUser().getUserName()),
+            AccountId.fromString(mailboxSession.getUser().asString()),
             setVacationRequest.getUpdate().get(Vacation.ID));
     }
 
 
     private Stream<JmapResponse> process(ClientId clientId, AccountId accountId, VacationResponse vacationResponse) {
         if (vacationResponse.isValid()) {
-            vacationRepository.modifyVacation(accountId, vacationResponse.getPatch()).join();
-            notificationRegistry.flush(accountId).join();
+            vacationRepository.modifyVacation(accountId, vacationResponse.getPatch()).block();
+            notificationRegistry.flush(accountId).block();
             return Stream.of(JmapResponse.builder()
                 .clientId(clientId)
                 .responseName(RESPONSE_NAME)

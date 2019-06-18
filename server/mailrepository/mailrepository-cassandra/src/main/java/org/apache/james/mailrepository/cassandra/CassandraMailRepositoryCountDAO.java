@@ -30,7 +30,6 @@ import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.COUN
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.REPOSITORY_NAME;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
@@ -40,6 +39,7 @@ import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import reactor.core.publisher.Mono;
 
 public class CassandraMailRepositoryCountDAO {
 
@@ -75,20 +75,20 @@ public class CassandraMailRepositoryCountDAO {
             .where(eq(REPOSITORY_NAME, bindMarker(REPOSITORY_NAME))));
     }
 
-    public CompletableFuture<Void> increment(MailRepositoryUrl url) {
+    public Mono<Void> increment(MailRepositoryUrl url) {
         return executor.executeVoid(increment.bind()
             .setString(REPOSITORY_NAME, url.asString()));
     }
 
-    public CompletableFuture<Void> decrement(MailRepositoryUrl url) {
+    public Mono<Void> decrement(MailRepositoryUrl url) {
         return executor.executeVoid(decrement.bind()
             .setString(REPOSITORY_NAME, url.asString()));
     }
 
-    public CompletableFuture<Long> getCount(MailRepositoryUrl url) {
-        return executor.executeSingleRow(select.bind()
+    public Mono<Long> getCount(MailRepositoryUrl url) {
+        return executor.executeSingleRowOptional(select.bind()
                 .setString(REPOSITORY_NAME, url.asString()))
-            .thenApply(this::toCount);
+            .map(this::toCount);
     }
 
     private Long toCount(Optional<Row> rowOptional) {

@@ -81,7 +81,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
         LOGGER.debug("Unknown user {} check if it's an alias", username);
 
         try {
-            Mappings targetString = recipientRewriteTable.getMappings(recipient.getLocalPart(), recipient.getDomain());
+            Mappings targetString = recipientRewriteTable.getResolvedMappings(recipient.getLocalPart(), recipient.getDomain());
 
             if (!targetString.isEmpty()) {
                 return true;

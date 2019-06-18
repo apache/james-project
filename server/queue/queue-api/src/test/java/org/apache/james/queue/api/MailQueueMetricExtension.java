@@ -19,20 +19,9 @@
 
 package org.apache.james.queue.api;
 
-import static org.apache.james.queue.api.MailQueue.DEQUEUED_METRIC_NAME_PREFIX;
-import static org.apache.james.queue.api.MailQueue.DEQUEUED_TIMER_METRIC_NAME_PREFIX;
-import static org.apache.james.queue.api.MailQueue.ENQUEUED_METRIC_NAME_PREFIX;
-import static org.apache.james.queue.api.MailQueue.ENQUEUED_TIMER_METRIC_NAME_PREFIX;
-import static org.mockito.ArgumentMatchers.startsWith;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
-
 import org.apache.james.metrics.api.GaugeRegistry;
-import org.apache.james.metrics.api.Metric;
-import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
-import org.apache.james.metrics.api.NoopMetricFactory;
-import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
@@ -43,62 +32,28 @@ import org.mockito.Mockito;
 public class MailQueueMetricExtension implements BeforeEachCallback, ParameterResolver {
 
     public class MailQueueMetricTestSystem {
-        private final Metric spyEnqueuedMailsMetric;
-        private final Metric spyDequeuedMailsMetric;
-        private final TimeMetric spyEnqueuedMailsTimeMetric;
-        private final TimeMetric spyDequeuedMailsTimeMetric;
         private final GaugeRegistry spyGaugeRegistry;
-        private final MetricFactory spyMetricFactory;
+        private final RecordingMetricFactory metricFactory;
 
         public MailQueueMetricTestSystem() {
-            spyEnqueuedMailsMetric = spy(new NoopMetricFactory.NoopMetric());
-            spyDequeuedMailsMetric = spy(new NoopMetricFactory.NoopMetric());
-            spyEnqueuedMailsTimeMetric = spy(new NoopMetricFactory.NoopTimeMetric());
-            spyDequeuedMailsTimeMetric = spy(new NoopMetricFactory.NoopTimeMetric());
             spyGaugeRegistry = Mockito.spy(new NoopGaugeRegistry());
-            spyMetricFactory = Mockito.spy(new NoopMetricFactory());
-        }
-
-        public Metric getSpyEnqueuedMailsMetric() {
-            return spyEnqueuedMailsMetric;
-        }
-
-        public Metric getSpyDequeuedMailsMetric() {
-            return spyDequeuedMailsMetric;
+            metricFactory = new RecordingMetricFactory();
         }
 
         public GaugeRegistry getSpyGaugeRegistry() {
             return spyGaugeRegistry;
         }
 
-        public MetricFactory getSpyMetricFactory() {
-            return spyMetricFactory;
-        }
-
-        public TimeMetric getSpyEnqueuedMailsTimeMetric() {
-            return spyEnqueuedMailsTimeMetric;
-        }
-
-        public TimeMetric getSpyDequeuedMailsTimeMetric() {
-            return spyDequeuedMailsTimeMetric;
+        public RecordingMetricFactory getMetricFactory() {
+            return metricFactory;
         }
     }
 
     private MailQueueMetricTestSystem testSystem;
 
     @Override
-    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+    public void beforeEach(ExtensionContext extensionContext) {
         testSystem = new MailQueueMetricTestSystem();
-
-        when(testSystem.spyMetricFactory.generate(startsWith(ENQUEUED_METRIC_NAME_PREFIX)))
-            .thenReturn(testSystem.spyEnqueuedMailsMetric);
-        when(testSystem.spyMetricFactory.generate(startsWith(DEQUEUED_METRIC_NAME_PREFIX)))
-            .thenReturn(testSystem.spyDequeuedMailsMetric);
-
-        when(testSystem.spyMetricFactory.timer(startsWith(ENQUEUED_TIMER_METRIC_NAME_PREFIX)))
-            .thenReturn(testSystem.spyEnqueuedMailsTimeMetric);
-        when(testSystem.spyMetricFactory.timer(startsWith(DEQUEUED_TIMER_METRIC_NAME_PREFIX)))
-            .thenReturn(testSystem.spyDequeuedMailsTimeMetric);
     }
 
     @Override

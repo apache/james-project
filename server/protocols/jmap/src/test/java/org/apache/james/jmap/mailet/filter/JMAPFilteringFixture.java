@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.mailet.filter;
 
+import org.apache.mailet.AttributeValue;
+
 public interface JMAPFilteringFixture {
     String GA_BOU_ZO_MEU_FULL_ADDRESS = "GA BOU ZO MEU <GA.BOU.ZO.MEU@james.org>";
     String BOU = "BOU";
@@ -45,7 +47,7 @@ public interface JMAPFilteringFixture {
 
     String RECIPIENT_1 = "recipient1@james.org";
     String RECIPIENT_1_USERNAME = "recipient1";
-    String RECIPIENT_1_MAILBOX_1 = "recipient1_maibox1";
+    AttributeValue<String> RECIPIENT_1_MAILBOX_1 = AttributeValue.of("recipient1_maibox1");
 
     String FRED_MARTIN_FULLNAME = "Frédéric MARTIN";
     String FRED_MARTIN_FULL_SCRAMBLED_ADDRESS = "=?UTF-8?B?RnLDqWTDqXJpYyBNQVJUSU4=?= <fred.martin@linagora.com>";

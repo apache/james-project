@@ -20,10 +20,7 @@
 package org.apache.james.mailbox.manager;
 
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MessageIdManager;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
@@ -33,27 +30,12 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
  */
 public interface IntegrationResources<T extends MailboxManager> {
 
-    T createMailboxManager(GroupMembershipResolver groupMembershipResolver) throws MailboxException;
+    T getMailboxManager() throws MailboxException;
 
-    QuotaManager createQuotaManager(MaxQuotaManager maxQuotaManager, T mailboxManager) throws Exception;
+    QuotaManager getQuotaManager();
 
-    MaxQuotaManager createMaxQuotaManager() throws Exception;
+    MaxQuotaManager getMaxQuotaManager();
 
-    CurrentQuotaManager createCurrentQuotaManager(T mailboxManager) throws Exception;
-
-    QuotaRootResolver createQuotaRootResolver(T mailboxManager) throws Exception;
-
-    GroupMembershipResolver createGroupMembershipResolver() throws Exception;
-
-    MessageIdManager createMessageIdManager(T mailboxManager);
-    
-    /**
-     * Init you will want to perform before tests
-     *
-     * @throws Exception
-     */
-    void init() throws Exception;
-
-    void clean() throws Exception;
+    QuotaRootResolver getQuotaRootResolver();
 
 }

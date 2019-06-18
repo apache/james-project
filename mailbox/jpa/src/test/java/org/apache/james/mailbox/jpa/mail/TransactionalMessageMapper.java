@@ -29,13 +29,13 @@ import javax.mail.Flags;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
@@ -76,11 +76,15 @@ public class TransactionalMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Map<MessageUid, MessageMetaData> expungeMarkedForDeletionInMailbox(final Mailbox mailbox, final MessageRange set)
-            throws MailboxException {
-        Map<MessageUid, MessageMetaData> data = messageMapper.execute(
-            () -> messageMapper.expungeMarkedForDeletionInMailbox(mailbox, set));
-        return data;
+    public List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) throws MailboxException {
+        return messageMapper.execute(
+            () -> messageMapper.retrieveMessagesMarkedForDeletion(mailbox, messageRange));
+    }
+
+    @Override
+    public Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) throws MailboxException {
+        return messageMapper.execute(
+            () -> messageMapper.deleteMessages(mailbox, uids));
     }
 
     @Override
@@ -110,29 +114,27 @@ public class TransactionalMessageMapper implements MessageMapper {
 
     @Override
     public MessageMetaData add(final Mailbox mailbox, final MailboxMessage message) throws MailboxException {
-        MessageMetaData data = messageMapper.execute(
+        return messageMapper.execute(
             () -> messageMapper.add(mailbox, message));
-        return data;
     }
 
     @Override
     public Iterator<UpdatedFlags> updateFlags(final Mailbox mailbox, final FlagsUpdateCalculator flagsUpdateCalculator,
             final MessageRange set) throws MailboxException {
-        Iterator<UpdatedFlags> data = messageMapper.execute(
+        return messageMapper.execute(
             () -> messageMapper.updateFlags(mailbox, flagsUpdateCalculator, set));
-        return data;
     }
 
     @Override
     public MessageMetaData copy(final Mailbox mailbox, final MailboxMessage original) throws MailboxException {
-        MessageMetaData data = messageMapper.execute(
+        return messageMapper.execute(
             () -> messageMapper.copy(mailbox, original));
-        return data;
     }
 
     @Override
     public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
-        return messageMapper.move(mailbox, original);
+       return messageMapper.execute(
+                () -> messageMapper.move(mailbox, original));
     }
 
     @Override

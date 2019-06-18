@@ -44,7 +44,6 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
@@ -79,8 +78,7 @@ public class GetMessagesMethod implements Method {
         this.messageFactory = messageFactory;
         this.messageIdManager = messageIdManager;
         this.metricFactory = metricFactory;
-        this.keywordsFactory = Keywords.factory()
-            .filterImapNonExposedKeywords();
+        this.keywordsFactory = Keywords.lenientFactory();
     }
     
     @Override
@@ -171,7 +169,7 @@ public class GetMessagesMethod implements Method {
                 .collect(Guavate.toImmutableList());
             try {
                 Keywords keywords = messageResults.stream()
-                    .map(MessageMetaData::getFlags)
+                    .map(MessageResult::getFlags)
                     .map(keywordsFactory::fromFlags)
                     .reduce(ACCUMULATOR)
                     .get();

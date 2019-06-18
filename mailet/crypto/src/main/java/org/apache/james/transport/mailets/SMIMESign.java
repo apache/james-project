@@ -202,7 +202,7 @@ public class SMIMESign extends Sign {
             signatureReason.setText(getReplacedExplanationText(getExplanationText(),
                                                                getSignerName(),
                                                                getKeyHolder().getSignerAddress(),
-                                                               mail.getSender().toString(),
+                                                               mail.getMaybeSender().asString(),
                                                                headers));
             
             signatureReason.setFileName("SignatureExplanation.txt");

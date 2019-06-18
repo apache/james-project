@@ -30,8 +30,8 @@ class CassandraJmapJamesServerTest implements JmapJamesServerContract {
     private static final int LIMIT_TO_10_MESSAGES = 10;
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
-        .extension(new EmbeddedElasticSearchExtension())
+    static JamesServerExtension testExtension = new JamesServerBuilder()
+        .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)

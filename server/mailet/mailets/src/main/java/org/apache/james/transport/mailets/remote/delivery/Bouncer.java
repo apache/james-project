@@ -29,6 +29,9 @@ import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
@@ -37,7 +40,7 @@ import org.slf4j.LoggerFactory;
 public class Bouncer {
     private static final Logger LOGGER = LoggerFactory.getLogger(Bouncer.class);
 
-    public static final String DELIVERY_ERROR = "delivery-error";
+    public static final AttributeName DELIVERY_ERROR = AttributeName.of("delivery-error");
     private final RemoteDeliveryConfiguration configuration;
     private final MailetContext mailetContext;
 
@@ -47,11 +50,11 @@ public class Bouncer {
     }
 
     public void bounce(Mail mail, Exception ex) {
-        if (mail.getSender() == null) {
+        if (!mail.hasSender()) {
             LOGGER.debug("Null Sender: no bounce will be generated for {}", mail.getName());
         } else {
             if (configuration.getBounceProcessor() != null) {
-                mail.setAttribute(DELIVERY_ERROR, getErrorMsg(ex));
+                mail.setAttribute(new Attribute(DELIVERY_ERROR, AttributeValue.of(getErrorMsg(ex))));
                 try {
                     mailetContext.sendMail(mail, configuration.getBounceProcessor());
                 } catch (MessagingException e) {

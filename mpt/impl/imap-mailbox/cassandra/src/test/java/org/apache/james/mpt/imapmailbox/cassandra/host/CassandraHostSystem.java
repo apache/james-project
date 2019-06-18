@@ -38,18 +38,25 @@ import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.MailboxManagerConfiguration;
+import org.apache.james.mailbox.store.PreDeletionHooks;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
@@ -85,38 +92,36 @@ public class CassandraHostSystem extends JamesImapHostSystem {
             cassandra.getTypesProvider(),
             messageIdFactory);
 
-        DefaultDelegatingMailboxListener delegatingMailboxListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingMailboxListener);
-        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), mailboxEventDispatcher);
+
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
+        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), eventBus);
 
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager);
-        mailboxManager = new CassandraMailboxManager(mapperFactory, authenticator, authorizator,
-            new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
-            mailboxEventDispatcher, delegatingMailboxListener, annotationManager, storeRightManager);
-        QuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(mapperFactory);
+        SessionProvider sessionProvider = new SessionProvider(authenticator, authorizator);
+        QuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory);
 
         perUserMaxQuotaManager = new CassandraPerUserMaxQuotaManager(
             new CassandraPerUserMaxQuotaDao(session),
             new CassandraPerDomainMaxQuotaDao(cassandra.getConf()),
             new CassandraGlobalMaxQuotaDao(session));
-
         CassandraCurrentQuotaManager currentQuotaManager = new CassandraCurrentQuotaManager(session);
-
         StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, perUserMaxQuotaManager);
+        ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, eventBus, quotaManager);
+        QuotaComponents quotaComponents = new QuotaComponents(perUserMaxQuotaManager, quotaManager, quotaRootResolver, quotaUpdater);
 
-        ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, mailboxEventDispatcher, quotaManager);
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor());
 
-        mailboxManager.setQuotaRootResolver(quotaRootResolver);
-        mailboxManager.setQuotaManager(quotaManager);
-        mailboxManager.setQuotaUpdater(quotaUpdater);
+        mailboxManager = new CassandraMailboxManager(mapperFactory, sessionProvider,
+            new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
+            eventBus, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK);
 
-        mailboxManager.init();
+        eventBus.register(quotaUpdater);
 
         SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mapperFactory);
 
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
                 new DefaultImapEncoderFactory().buildImapEncoder(),
-                DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager, subscriptionManager, quotaManager, quotaRootResolver, new DefaultMetricFactory()));
+                DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager, eventBus, subscriptionManager, quotaManager, quotaRootResolver, new DefaultMetricFactory()));
     }
 
     @Override
@@ -131,7 +136,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
     }
 
     @Override
-    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) throws MailboxException {
+    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) {
         perUserMaxQuotaManager.setGlobalMaxMessage(maxMessageQuota);
         perUserMaxQuotaManager.setGlobalMaxStorage(maxStorageQuota);
     }
@@ -139,5 +144,10 @@ public class CassandraHostSystem extends JamesImapHostSystem {
     @Override
     public MailboxManager getMailboxManager() {
         return mailboxManager;
+    }
+
+    @Override
+    protected void await() {
+
     }
 }

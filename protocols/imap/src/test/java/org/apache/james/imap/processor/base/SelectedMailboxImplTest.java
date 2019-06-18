@@ -28,37 +28,39 @@ import static org.mockito.Mockito.when;
 
 import java.util.Date;
 import java.util.Iterator;
-import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
+import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.mailbox.store.SimpleMessageMetaData;
+import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 
 public class SelectedMailboxImplTest {
@@ -74,15 +76,22 @@ public class SelectedMailboxImplTest {
     private MailboxPath mailboxPath;
     private ImapSession imapSession;
     private Mailbox mailbox;
+    private TestId mailboxId;
+    private EventBus eventBus;
+    private MailboxIdRegistrationKey mailboxIdRegistrationKey;
 
     @Before
     public void setUp() throws Exception {
-        executorService = Executors.newFixedThreadPool(1);
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        executorService = Executors.newFixedThreadPool(1, threadFactory);
         mailboxPath = MailboxPath.forUser("tellier@linagora.com", MailboxConstants.INBOX);
         mailboxManager = mock(MailboxManager.class);
         messageManager = mock(MessageManager.class);
         imapSession = mock(ImapSession.class);
         mailbox = mock(Mailbox.class);
+        mailboxId = TestId.of(42);
+        mailboxIdRegistrationKey = new MailboxIdRegistrationKey(mailboxId);
+        eventBus = mock(EventBus.class);
 
         when(mailboxManager.getMailbox(eq(mailboxPath), any(MailboxSession.class)))
             .thenReturn(messageManager);
@@ -90,11 +99,12 @@ public class SelectedMailboxImplTest {
             .thenReturn(new Flags());
         when(messageManager.search(any(SearchQuery.class), any(MailboxSession.class)))
             .then(delayedSearchAnswer());
+        when(messageManager.getId()).thenReturn(mailboxId);
 
         when(imapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mock(MailboxSession.class));
 
-        when(mailbox.generateAssociatedPath())
-            .thenReturn(mailboxPath);
+        when(mailbox.generateAssociatedPath()).thenReturn(mailboxPath);
+        when(mailbox.getMailboxId()).thenReturn(mailboxId);
     }
 
     @After
@@ -104,13 +114,13 @@ public class SelectedMailboxImplTest {
 
     @Test
     public void concurrentEventShouldNotSkipAddedEventsEmittedDuringInitialisation() throws Exception {
-        final AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitEventAnswer(successCount))
-            .when(mailboxManager)
-            .addListener(eq(mailboxPath), any(MailboxListener.class), any(MailboxSession.class));
-
+            .when(eventBus)
+            .register(any(MailboxListener.class), eq(mailboxIdRegistrationKey));
         SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(
             mailboxManager,
+            eventBus,
             imapSession,
             mailboxPath);
 
@@ -119,13 +129,14 @@ public class SelectedMailboxImplTest {
 
     @Test
     public void concurrentEventShouldBeProcessedSuccessfullyDuringInitialisation() throws Exception {
-        final AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitEventAnswer(successCount))
-            .when(mailboxManager)
-            .addListener(eq(mailboxPath), any(MailboxListener.class), any(MailboxSession.class));
+            .when(eventBus)
+            .register(any(MailboxListener.class), eq(mailboxIdRegistrationKey));
 
         new SelectedMailboxImpl(
             mailboxManager,
+            eventBus,
             imapSession,
             mailboxPath);
 
@@ -134,17 +145,17 @@ public class SelectedMailboxImplTest {
             .isEqualTo(1);
     }
 
-    private Answer<Iterator<MessageUid>> delayedSearchAnswer() {
+    private Answer<Stream<MessageUid>> delayedSearchAnswer() {
         return invocation -> {
             Thread.sleep(1000);
-            return ImmutableList.of(MessageUid.of(1), MessageUid.of(3)).iterator();
+            return Stream.of(MessageUid.of(1), MessageUid.of(3));
         };
     }
 
-    private Answer<Iterator<MessageUid>> generateEmitEventAnswer(final AtomicInteger success) {
+    private Answer<Iterator<MessageUid>> generateEmitEventAnswer(AtomicInteger success) {
         return invocation -> {
             Object[] args = invocation.getArguments();
-            final MailboxListener mailboxListener = (MailboxListener) args[1];
+            MailboxListener mailboxListener = (MailboxListener) args[0];
             executorService.submit(() -> {
                 try {
                     emitEvent(mailboxListener);
@@ -157,9 +168,12 @@ public class SelectedMailboxImplTest {
         };
     }
 
-    private void emitEvent(MailboxListener mailboxListener) {
-        TreeMap<MessageUid, MessageMetaData> result = new TreeMap<>();
-        result.put(EMITTED_EVENT_UID, new SimpleMessageMetaData(EMITTED_EVENT_UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()));
-        mailboxListener.event(new EventFactory().added(mock(MailboxSession.class), result, mailbox, ImmutableMap.of()));
+    private void emitEvent(MailboxListener mailboxListener) throws Exception {
+        mailboxListener.event(EventFactory.added()
+            .randomEventId()
+            .mailboxSession(MailboxSessionUtil.create("user"))
+            .mailbox(mailbox)
+            .addMetaData(new MessageMetaData(EMITTED_EVENT_UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()))
+            .build());
     }
 }

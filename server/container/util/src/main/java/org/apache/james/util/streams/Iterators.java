@@ -23,10 +23,16 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import reactor.core.publisher.Flux;
+
 public class Iterators {
 
     public static <T> Stream<T> toStream(Iterator<T> iterator) {
         Iterable<T> iterable = () -> iterator;
         return StreamSupport.stream(iterable.spliterator(), false);
+    }
+
+    public static <T> Flux<T> toFlux(Iterator<T> iterator) {
+        return Flux.fromStream(toStream(iterator));
     }
 }

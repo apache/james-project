@@ -27,6 +27,7 @@ import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.model.Quota.Scope;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.util.OptionalUtils;
 
@@ -114,7 +115,17 @@ public interface MaxQuotaManager {
      * @param quotaRoot Quota root argument from RFC 2087 ( correspond to the user owning this mailbox )
      * @return The maximum storage in bytes if any
      */
-    Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) throws MailboxException;
+    default Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) throws MailboxException {
+        Map<Scope, QuotaSize> maxStorageDetails = listMaxStorageDetails(quotaRoot);
+        return getMaxStorage(maxStorageDetails);
+    }
+
+    default Optional<QuotaSize> getMaxStorage(Map<Quota.Scope, QuotaSize> maxStorageDetails) {
+        return OptionalUtils.or(
+            Optional.ofNullable(maxStorageDetails.get(Quota.Scope.User)),
+            Optional.ofNullable(maxStorageDetails.get(Quota.Scope.Domain)),
+            Optional.ofNullable(maxStorageDetails.get(Quota.Scope.Global)));
+    }
 
     /**
      * Return the maximum message count which is allowed for the given {@link QuotaRoot} (in fact the user which the session is bound to)
@@ -122,7 +133,17 @@ public interface MaxQuotaManager {
      * @param quotaRoot Quota root argument from RFC 2087 ( correspond to the user owning this mailbox )
      * @return maximum of allowed message count
      */
-    Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) throws MailboxException;
+    default Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) throws MailboxException {
+        Map<Scope, QuotaCount> maxMessagesDetails = listMaxMessagesDetails(quotaRoot);
+        return getMaxMessage(maxMessagesDetails);
+    }
+
+    default Optional<QuotaCount> getMaxMessage(Map<Quota.Scope, QuotaCount> maxMessagesDetails) {
+        return OptionalUtils.or(
+            Optional.ofNullable(maxMessagesDetails.get(Quota.Scope.User)),
+            Optional.ofNullable(maxMessagesDetails.get(Quota.Scope.Domain)),
+            Optional.ofNullable(maxMessagesDetails.get(Quota.Scope.Global)));
+    }
 
     Map<Quota.Scope, QuotaCount> listMaxMessagesDetails(QuotaRoot quotaRoot);
 

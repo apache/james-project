@@ -48,7 +48,12 @@ public class MessageBuilder {
     public MailboxMessage build(MessageId messageId) throws Exception {
         return new SimpleMailboxMembership(messageId, mailboxId, uid, -1,  internalDate, size, flags, body, headers);
     }
-    
+
+    public MessageBuilder size(int size) {
+        this.size = size;
+        return this;
+    }
+
     public void header(String field, String value) {
         headers.put(field, value);
     }

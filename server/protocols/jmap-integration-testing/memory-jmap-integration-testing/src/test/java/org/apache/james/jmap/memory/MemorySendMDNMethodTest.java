@@ -19,30 +19,40 @@
 
 package org.apache.james.jmap.memory;
 
-import java.io.IOException;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.MemoryJmapTestRule;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.methods.integration.SendMDNMethodTest;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MessageId;
-import org.junit.Rule;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class MemorySendMDNMethodTest extends SendMDNMethodTest {
 
-    @Rule
-    public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
+    private static final long LIMIT_TO_10_MESSAGES = 10;
 
-    private Random random = new Random();
-    
-    @Override
-    protected GuiceJamesServer createJmapServer() throws IOException {
-        return memoryJmap.jmapServer();
-    }
-    
+    @RegisterExtension
+    JamesServerExtension testExtension = new JamesServerBuilder()
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(binder -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+            .overrideWith(binder -> binder.bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class)))
+        .build();
+
     @Override
     protected MessageId randomMessageId() {
-        return new InMemoryMessageId.Factory().fromString(String.valueOf(random.nextInt(100000) + 100));
+        return new InMemoryMessageId.Factory().fromString(String.valueOf(ThreadLocalRandom.current().nextInt(100000) + 100));
     }
 }

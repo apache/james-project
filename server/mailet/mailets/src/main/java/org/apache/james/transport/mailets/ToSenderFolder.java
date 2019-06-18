@@ -79,12 +79,14 @@ public class ToSenderFolder extends GenericMailet {
     }
 
     private void doService(Mail mail) throws MessagingException {
-        MailAddress sender = mail.getSender();
-        String username = retrieveUser(sender);
+        if (mail.hasSender()) {
+            MailAddress sender = mail.getMaybeSender().get();
+            String username = retrieveUser(sender);
 
-        mailboxAppender.append(mail.getMessage(), username, folder);
+            mailboxAppender.append(mail.getMessage(), username, folder);
 
-        LOGGER.error("Local delivery with ToSenderFolder mailet for mail {} with sender {} in folder {}", mail.getName(), sender, folder);
+            LOGGER.error("Local delivery with ToSenderFolder mailet for mail {} with sender {} in folder {}", mail.getName(), sender, folder);
+        }
     }
 
     private String retrieveUser(MailAddress sender) throws MessagingException {

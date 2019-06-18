@@ -21,6 +21,8 @@
 
 package org.apache.james.transport;
 
+import org.apache.mailet.AttributeName;
+
 /**
  * Contains some SMIME related mail attribute names of general use.
  *
@@ -32,23 +34,18 @@ public interface SMIMEAttributeNames {
     /**
      * The attribute contains the server-side signing mailet name as a String.
      */
-    String SMIME_SIGNING_MAILET = "org.apache.james.smime.signing.mailetname";
+    AttributeName SMIME_SIGNING_MAILET = AttributeName.of("org.apache.james.smime.signing.mailetname");
     
     /**
      * The attribute contains the string "valid" or the reason of non-validity of the signature.
      * The status could be non valid either because the signature does not verify
      * or because the certificate could be not valid when the signature was done.
      */
-    String SMIME_SIGNATURE_VALIDITY = "org.apache.james.smime.signature.validity";
+    AttributeName SMIME_SIGNATURE_VALIDITY = AttributeName.of("org.apache.james.smime.signature.validity");
     
     /**
      * The attribute contains the signer's mail address as a String.
      */
-    String SMIME_SIGNER_ADDRESS = "org.apache.james.smime.signer.address";
-    
-    /**
-     * The attribute contains the signature timestamp as a Date object.
-     */
-    String SMIME_SIGNING_TIME = "org.apache.james.smime.signing.time";
-    
+    AttributeName SMIME_SIGNER_ADDRESS = AttributeName.of("org.apache.james.smime.signer.address");
+
 }

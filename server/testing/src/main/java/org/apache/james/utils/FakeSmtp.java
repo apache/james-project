@@ -26,9 +26,9 @@ import static io.restassured.config.RestAssuredConfig.newConfig;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 
+import org.apache.james.util.docker.DockerGenericContainer;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
-import org.apache.james.util.docker.SwarmGenericContainer;
 import org.awaitility.core.ConditionFactory;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -43,31 +43,42 @@ import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 
 public class FakeSmtp implements TestRule {
+    public static void clean(RequestSpecification requestSpecification) {
+        given(requestSpecification, RESPONSE_SPECIFICATION)
+            .get("/api/email")
+            .jsonPath()
+            .getList("id", String.class)
+            .stream()
+            .mapToInt(Integer::valueOf)
+            .max()
+            .ifPresent(id -> given(requestSpecification, RESPONSE_SPECIFICATION)
+                .get("/api/email/purge/" + id));
+    }
 
     public static FakeSmtp withSmtpPort(Integer smtpPort) {
-        SwarmGenericContainer container = fakeSmtpContainer()
+        DockerGenericContainer container = fakeSmtpContainer()
             .withCommands("node", "cli", "--listen", "80", "--smtp", smtpPort.toString());
 
         return new FakeSmtp(container, smtpPort);
     }
 
-    private static SwarmGenericContainer fakeSmtpContainer() {
-        return new SwarmGenericContainer(Images.FAKE_SMTP)
+    private static DockerGenericContainer fakeSmtpContainer() {
+        return new DockerGenericContainer(Images.FAKE_SMTP)
             .withAffinityToContainer()
             .waitingFor(new HostPortWaitStrategy()
-            .withRateLimiter(RateLimiters.DEFAULT));
+            .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     }
 
     private static final int SMTP_PORT = 25;
-    private static final ResponseSpecification RESPONSE_SPECIFICATION = new ResponseSpecBuilder().build();
-    private final SwarmGenericContainer container;
+    public static final ResponseSpecification RESPONSE_SPECIFICATION = new ResponseSpecBuilder().build();
+    private final DockerGenericContainer container;
     private final Integer smtpPort;
 
     public FakeSmtp() {
         this(fakeSmtpContainer().withExposedPorts(SMTP_PORT), SMTP_PORT);
     }
 
-    private FakeSmtp(SwarmGenericContainer container, Integer smtpPort) {
+    private FakeSmtp(DockerGenericContainer container, Integer smtpPort) {
         this.smtpPort = smtpPort;
         this.container = container;
     }
@@ -99,19 +110,11 @@ public class FakeSmtp implements TestRule {
             .build();
     }
 
-    public SwarmGenericContainer getContainer() {
+    public DockerGenericContainer getContainer() {
         return container;
     }
 
     public void clean() {
-        given(requestSpecification(), RESPONSE_SPECIFICATION)
-            .get("/api/email")
-            .jsonPath()
-            .getList("id", String.class)
-            .stream()
-            .mapToInt(Integer::valueOf)
-            .max()
-            .ifPresent(id -> given(requestSpecification(), RESPONSE_SPECIFICATION)
-                .get("/api/email/purge/" + id));
+        clean(requestSpecification());
     }
 }

@@ -27,6 +27,7 @@ Feature: SetMessages method
 
 # Flags update
 
+  @BasicFeature
   Scenario: A user can update the flags on a message
     Given "bob@domain.tld" sets flags "$Flagged,$Seen" on message "mBob"
     When "bob@domain.tld" sets flags "$Flagged,$Forwarded" on message "mBob"
@@ -53,6 +54,7 @@ Feature: SetMessages method
     When "bob@domain.tld" marks the message "mDraft" as flagged
     Then "bob@domain.tld" should see message "mDraft" with keywords "$Draft,$Flagged"
 
+  @BasicFeature
   Scenario: A user can destroy a draft
     Given "bob@domain.tld" has a mailbox "Drafts"
     And "bob@domain.tld" tries to create a draft message "mDraft" in mailbox "Drafts"

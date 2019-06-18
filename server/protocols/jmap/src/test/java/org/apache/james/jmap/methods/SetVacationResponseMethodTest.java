@@ -27,12 +27,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+import org.apache.james.core.User;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.Vacation;
@@ -50,34 +48,14 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
+import reactor.core.publisher.Mono;
 
 public class SetVacationResponseMethodTest {
-
-    public static final String WRONG_ID = "WrongId";
-    public static final String TEXT_BODY = "Text body";
-    public static final String USERNAME = "username";
-    public static final MailboxSession.User USER = new MailboxSession.User() {
-        @Override
-        public String getUserName() {
-            return USERNAME;
-        }
-
-        @Override
-        public String getPassword() {
-            return null;
-        }
-
-        @Override
-        public List<Locale> getLocalePreferences() {
-            return null;
-        }
-
-        @Override
-        public boolean isSameUser(String username) {
-            return USERNAME.equalsIgnoreCase(username);
-        }
-    };
-    public static final String SUBJECT = "subject";
+    private static final String WRONG_ID = "WrongId";
+    private static final String TEXT_BODY = "Text body";
+    private static final String USERNAME = "username";
+    private static final User USER = User.fromUsername(USERNAME);
+    private static final String SUBJECT = "subject";
 
     private SetVacationResponseMethod testee;
     private VacationRepository vacationRepository;
@@ -197,9 +175,9 @@ public class SetVacationResponseMethodTest {
         AccountId accountId = AccountId.fromString(USERNAME);
 
         when(mailboxSession.getUser()).thenReturn(USER);
-        when(vacationRepository.modifyVacation(eq(accountId), any())).thenReturn(CompletableFuture.completedFuture(null));
+        when(vacationRepository.modifyVacation(eq(accountId), any())).thenReturn(Mono.empty());
         when(notificationRegistry.flush(any()))
-            .thenReturn(CompletableFuture.completedFuture(null));
+            .thenReturn(Mono.empty());
 
         Stream<JmapResponse> result = testee.process(setVacationRequest, clientId, mailboxSession);
 

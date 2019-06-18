@@ -27,13 +27,11 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.mock.DataProvisioner;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -91,13 +89,6 @@ public class MailboxCopierTest {
      */
     @Test
     public void testMailboxCopy() throws MailboxException, IOException {
-         if (srcMemMailboxManager instanceof StoreMailboxManager) {
-             ((StoreMailboxManager) srcMemMailboxManager).init();
-         }
-         if (dstMemMailboxManager instanceof StoreMailboxManager) {
-             ((StoreMailboxManager) dstMemMailboxManager).init();
-         }
-
         DataProvisioner.feedMailboxManager(srcMemMailboxManager);
        
         assertMailboxManagerSize(srcMemMailboxManager, 1);
@@ -144,9 +135,8 @@ public class MailboxCopierTest {
      * 
      * @return a new InMemoryMailboxManager
      */
-    private MailboxManager newInMemoryMailboxManager() throws MailboxException {
-        return new InMemoryIntegrationResources()
-            .createMailboxManager(new SimpleGroupMembershipResolver());
+    private MailboxManager newInMemoryMailboxManager() {
+        return InMemoryIntegrationResources.defaultResources().getMailboxManager();
     }
 
 }

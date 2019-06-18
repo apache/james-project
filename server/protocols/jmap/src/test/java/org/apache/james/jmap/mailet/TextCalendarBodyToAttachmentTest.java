@@ -91,6 +91,7 @@ public class TextCalendarBodyToAttachmentTest {
         MimeMessage message = MimeMessageUtil.mimeMessageFromString(messageContent);
 
         Mail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(message)
             .build();
 
@@ -109,6 +110,7 @@ public class TextCalendarBodyToAttachmentTest {
         MimeMessage message = MimeMessageUtil.mimeMessageFromString(messageContent);
 
         Mail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(message)
             .build();
 
@@ -128,6 +130,7 @@ public class TextCalendarBodyToAttachmentTest {
         MimeMessage message = MimeMessageUtil.mimeMessageFromString(messageContent);
 
         Mail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(message)
             .build();
 
@@ -143,6 +146,7 @@ public class TextCalendarBodyToAttachmentTest {
     @Test
     public void contentTypeOfAttachmentShouldBeTakenFromOriginalMessage() throws Exception {
         Mail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(calendarMessage)
             .build();
 
@@ -158,6 +162,7 @@ public class TextCalendarBodyToAttachmentTest {
     @Test
     public void contentTransferEncodingOfAttachmentShouldBeTakenFromOriginalMessage() throws Exception {
         Mail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(calendarMessage)
             .build();
 
@@ -173,6 +178,7 @@ public class TextCalendarBodyToAttachmentTest {
     @Test
     public void contentClassOfAttachmentShouldBeTakenFromOriginalMessage() throws Exception {
         Mail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(calendarMessage)
             .build();
 
@@ -188,6 +194,7 @@ public class TextCalendarBodyToAttachmentTest {
     @Test
     public void contentClassHeaderShouldBeRemoveFromOriginalMessage() throws Exception {
         Mail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(calendarMessage)
             .build();
 
@@ -207,6 +214,7 @@ public class TextCalendarBodyToAttachmentTest {
         MimeMessage message = MimeMessageUtil.mimeMessageFromString(messageContent);
 
         Mail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(message)
             .build();
 
@@ -226,6 +234,7 @@ public class TextCalendarBodyToAttachmentTest {
         MimeMessage message = MimeMessageUtil.mimeMessageFromString(messageContent);
 
         Mail mail = FakeMail.builder()
+            .name("name")
             .mimeMessage(message)
             .build();
 

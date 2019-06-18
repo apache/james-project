@@ -29,14 +29,13 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.NameType;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
@@ -66,7 +65,7 @@ public class InMemoryMailboxMapper implements MailboxMapper {
         if (result == null) {
             throw new MailboxNotFoundException(path);
         } else {
-            return new SimpleMailbox(result);
+            return new Mailbox(result);
         }
     }
 
@@ -75,7 +74,7 @@ public class InMemoryMailboxMapper implements MailboxMapper {
         InMemoryId mailboxId = (InMemoryId)id;
         for (Mailbox mailbox: mailboxesByPath.values()) {
             if (mailbox.getMailboxId().equals(mailboxId)) {
-                return new SimpleMailbox(mailbox);
+                return new Mailbox(mailbox);
             }
         }
         throw new MailboxNotFoundException(mailboxId);
@@ -87,7 +86,7 @@ public class InMemoryMailboxMapper implements MailboxMapper {
         return mailboxesByPath.values()
             .stream()
             .filter(mailbox -> mailboxMatchesRegex(mailbox, path, regex))
-            .map(SimpleMailbox::new)
+            .map(Mailbox::new)
             .collect(Guavate.toImmutableList());
     }
 

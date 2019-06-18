@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
@@ -183,7 +184,7 @@ public class DNSRBLHandlerTest {
 
         rbl.setBlacklist(new String[] { "bl.spamcop.net." });
         rbl.setGetDetail(true);
-        rbl.doRcpt(mockedSMTPSession, null, new MailAddress("test@localhost"));
+        rbl.doRcpt(mockedSMTPSession, MaybeSender.nullSender(), new MailAddress("test@localhost"));
         assertThat(mockedSMTPSession.getAttachment(RBL_DETAIL_MAIL_ATTRIBUTE_NAME, State.Connection)).describedAs("Details").isEqualTo("Blocked - see http://www.spamcop.net/bl.shtml?127.0.0.2");
         assertThat(mockedSMTPSession.getAttachment(RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME, Connection)).withFailMessage("Blocked").isNotNull();
     }
@@ -196,7 +197,7 @@ public class DNSRBLHandlerTest {
 
         rbl.setBlacklist(new String[] { "bl.spamcop.net." });
         rbl.setGetDetail(false);
-        rbl.doRcpt(mockedSMTPSession, null, new MailAddress("test@localhost"));
+        rbl.doRcpt(mockedSMTPSession, MaybeSender.nullSender(), new MailAddress("test@localhost"));
         assertThat(mockedSMTPSession.getAttachment(RBL_DETAIL_MAIL_ATTRIBUTE_NAME, Connection)).withFailMessage("No details").isNull();
         assertThat(mockedSMTPSession.getAttachment(RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME, Connection)).withFailMessage("Blocked").isNotNull();
     }
@@ -210,7 +211,7 @@ public class DNSRBLHandlerTest {
 
         rbl.setBlacklist(new String[] { "bl.spamcop.net." });
         rbl.setGetDetail(true);
-        rbl.doRcpt(mockedSMTPSession, null, new MailAddress("test@localhost"));
+        rbl.doRcpt(mockedSMTPSession, MaybeSender.nullSender(), new MailAddress("test@localhost"));
         assertThat(mockedSMTPSession.getAttachment(RBL_DETAIL_MAIL_ATTRIBUTE_NAME, Connection)).withFailMessage("No details").isNull();
         assertThat(mockedSMTPSession.getAttachment(RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME, Connection)).withFailMessage("Not blocked").isNull();
     }
@@ -225,7 +226,7 @@ public class DNSRBLHandlerTest {
 
         rbl.setBlacklist(new String[] { "bl.spamcop.net." });
         rbl.setGetDetail(true);
-        rbl.doRcpt(mockedSMTPSession, null, new MailAddress("test@localhost"));
+        rbl.doRcpt(mockedSMTPSession, MaybeSender.nullSender(), new MailAddress("test@localhost"));
         assertThat(mockedSMTPSession.getAttachment(RBL_DETAIL_MAIL_ATTRIBUTE_NAME, Connection)).withFailMessage("No details").isNull();
         assertThat(mockedSMTPSession.getAttachment(RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME, Connection)).withFailMessage("Not blocked").isNull();
     }
@@ -240,7 +241,7 @@ public class DNSRBLHandlerTest {
 
         rbl.setBlacklist(new String[] { "bl.spamcop.net." });
         rbl.setGetDetail(true);
-        rbl.doRcpt(mockedSMTPSession, null, new MailAddress("test@localhost"));
+        rbl.doRcpt(mockedSMTPSession, MaybeSender.nullSender(), new MailAddress("test@localhost"));
         assertThat(mockedSMTPSession.getAttachment(RBL_DETAIL_MAIL_ATTRIBUTE_NAME, Connection)).isNull();
         assertThat(mockedSMTPSession.getAttachment(RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME, Connection)).withFailMessage("Blocked").isNotNull();
     }
@@ -255,7 +256,7 @@ public class DNSRBLHandlerTest {
 
         rbl.setWhitelist(new String[] { "bl.spamcop.net." });
         rbl.setGetDetail(true);
-        rbl.doRcpt(mockedSMTPSession, null, new MailAddress("test@localhost"));
+        rbl.doRcpt(mockedSMTPSession, MaybeSender.nullSender(), new MailAddress("test@localhost"));
         assertThat(mockedSMTPSession.getAttachment(RBL_DETAIL_MAIL_ATTRIBUTE_NAME, Connection)).isNull();
         assertThat(mockedSMTPSession.getAttachment(RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME, Connection)).withFailMessage("Not blocked").isNull();
     }

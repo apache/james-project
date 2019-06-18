@@ -31,39 +31,42 @@ import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.TestCassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.store.AbstractMailboxManagerAttachmentTest;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
+import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
+import org.apache.james.mailbox.store.PreDeletionHooks;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.Rule;
 
 public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    private static CassandraCluster cassandra;
+    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
+
+    private CassandraCluster cassandra;
 
     private CassandraMailboxSessionMapperFactory mailboxSessionMapperFactory;
     private CassandraMailboxManager mailboxManager;
     private CassandraMailboxManager parseFailingMailboxManager;
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE, cassandraServer.getHost());
-    }
-
     @Before
     public void init() throws Exception {
+        cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE, cassandraServer.getHost());
         initSystemUnderTest();
         super.setUp();
     }
@@ -71,10 +74,6 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
     @After
     public void tearDown() {
         cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
         cassandra.closeCluster();
     }
 
@@ -87,22 +86,23 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
             messageIdFactory);
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
-        DefaultDelegatingMailboxListener delegatingMailboxListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingMailboxListener);
-        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), mailboxEventDispatcher);
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
+        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), eventBus);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
 
-        mailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory,
-            noAuthenticator, noAuthorizator, new NoMailboxPathLocker(), new MessageParser(),
-            messageIdFactory, mailboxEventDispatcher, delegatingMailboxListener, annotationManager, storeRightManager);
-        mailboxManager.init();
+        SessionProvider sessionProvider = new SessionProvider(noAuthenticator, noAuthorizator);
+        QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mailboxSessionMapperFactory);
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
+
+        mailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(), new MessageParser(),
+            messageIdFactory, eventBus, annotationManager, storeRightManager, quotaComponents,
+            index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK);
         MessageParser failingMessageParser = mock(MessageParser.class);
         when(failingMessageParser.retrieveAttachments(any()))
             .thenThrow(new RuntimeException("Message parser set to fail"));
-        parseFailingMailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, noAuthenticator, noAuthorizator,
+        parseFailingMailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, sessionProvider,
             new NoMailboxPathLocker(), failingMessageParser, messageIdFactory,
-            mailboxEventDispatcher, delegatingMailboxListener, annotationManager, storeRightManager);
-        parseFailingMailboxManager.init();
+            eventBus, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK);
     }
 
     @Override

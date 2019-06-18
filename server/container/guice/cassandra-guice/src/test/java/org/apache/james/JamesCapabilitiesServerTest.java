@@ -19,12 +19,15 @@
 package org.apache.james;
 
 import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.EnumSet;
 
+import org.apache.james.jmap.JMAPModule;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
@@ -38,8 +41,8 @@ class JamesCapabilitiesServerTest {
     private static final int LIMIT_MAX_MESSAGES = 10;
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
-        .extension(new EmbeddedElasticSearchExtension())
+    static JamesServerExtension testExtension = new JamesServerBuilder()
+        .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
@@ -58,7 +61,11 @@ class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedSearchCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
         
-        assertThatThrownBy(server::start).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(server::start)
+            .isInstanceOfSatisfying(
+                StartUpChecksPerformer.StartUpChecksException.class,
+                exception -> assertThat(exception.badCheckNames())
+                    .containsOnly(JMAPModule.RequiredCapabilitiesStartUpCheck.CHECK_NAME));
     }
     
     @Test
@@ -70,7 +77,11 @@ class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedSearchCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
         
-        assertThatThrownBy(server::start).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(server::start)
+            .isInstanceOfSatisfying(
+                StartUpChecksPerformer.StartUpChecksException.class,
+                exception -> assertThat(exception.badCheckNames())
+                    .containsOnly(JMAPModule.RequiredCapabilitiesStartUpCheck.CHECK_NAME));
     }
     
     @Test
@@ -82,7 +93,11 @@ class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedSearchCapabilities())
             .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.SearchCapabilities.Attachment)));
 
-        assertThatThrownBy(server::start).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(server::start)
+            .isInstanceOfSatisfying(
+                StartUpChecksPerformer.StartUpChecksException.class,
+                exception -> assertThat(exception.badCheckNames())
+                    .containsOnly(JMAPModule.RequiredCapabilitiesStartUpCheck.CHECK_NAME));
     }
 
     @Test
@@ -94,7 +109,11 @@ class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedSearchCapabilities())
             .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.SearchCapabilities.AttachmentFileName)));
 
-        assertThatThrownBy(server::start).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(server::start)
+            .isInstanceOfSatisfying(
+                StartUpChecksPerformer.StartUpChecksException.class,
+                exception -> assertThat(exception.badCheckNames())
+                    .containsOnly(JMAPModule.RequiredCapabilitiesStartUpCheck.CHECK_NAME));
     }
     
     @Test
@@ -106,7 +125,11 @@ class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedSearchCapabilities())
             .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.SearchCapabilities.MultimailboxSearch)));
 
-        assertThatThrownBy(server::start).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(server::start)
+            .isInstanceOfSatisfying(
+                StartUpChecksPerformer.StartUpChecksException.class,
+                exception -> assertThat(exception.badCheckNames())
+                    .containsOnly(JMAPModule.RequiredCapabilitiesStartUpCheck.CHECK_NAME));
     }
 
     @Test
@@ -118,7 +141,11 @@ class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedSearchCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
 
-        assertThatThrownBy(server::start).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(server::start)
+            .isInstanceOfSatisfying(
+                StartUpChecksPerformer.StartUpChecksException.class,
+                exception -> assertThat(exception.badCheckNames())
+                    .containsOnly(JMAPModule.RequiredCapabilitiesStartUpCheck.CHECK_NAME));
     }
 
     @Test
@@ -130,7 +157,11 @@ class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedSearchCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
 
-        server.start();
+        assertThatCode(server::start)
+            .doesNotThrowAnyException();
+
+        assertThat(server.isStarted())
+            .isTrue();
     }
 
 }

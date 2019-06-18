@@ -18,51 +18,63 @@
  ****************************************************************/
 package org.apache.james.backends.es;
 
-import java.net.InetAddress;
+import java.util.Optional;
 
+import org.apache.http.HttpHost;
 import org.apache.james.util.Host;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.settings.Settings;
 
-import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.consumers.ConsumerChainer;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class ClientProviderImpl implements ClientProvider {
 
-    public static ClientProviderImpl forHost(String address, Integer port) {
-        return new ClientProviderImpl(ImmutableList.of(Host.from(address, port)));
+    public static ClientProviderImpl forHost(String address, Integer port, Optional<String> clusterName) {
+        return new ClientProviderImpl(ImmutableList.of(Host.from(address, port)), clusterName);
     }
 
-    public static ClientProviderImpl fromHostsString(String hostsString) {
+    public static ClientProviderImpl fromHostsString(String hostsString, Optional<String> clusterName) {
         Preconditions.checkNotNull(hostsString, "HostString should not be null");
-        return new ClientProviderImpl(Host.parseHosts(hostsString));
+        return new ClientProviderImpl(Host.parseHosts(hostsString), clusterName);
     }
 
-    public static ClientProviderImpl fromHosts(ImmutableList<Host> hosts) {
+    public static ClientProviderImpl fromHosts(ImmutableList<Host> hosts, Optional<String> clusterName) {
         Preconditions.checkNotNull(hosts, "Hosts should not be null");
-        return new ClientProviderImpl(hosts);
+        return new ClientProviderImpl(hosts, clusterName);
     }
+
+    private static final String CLUSTER_NAME_SETTING = "cluster.name";
+    private static final String HTTP_HOST_SCHEME = "http";
 
     private final ImmutableList<Host> hosts;
+    private final Optional<String> clusterName;
 
-    private ClientProviderImpl(ImmutableList<Host> hosts) {
+    private ClientProviderImpl(ImmutableList<Host> hosts, Optional<String> clusterName) {
         Preconditions.checkArgument(!hosts.isEmpty(), "You should provide at least one host");
         this.hosts = hosts;
+        this.clusterName = clusterName;
     }
 
+    private HttpHost[] hostsToHttpHosts() {
+        return hosts.stream()
+            .map(host -> new HttpHost(host.getHostName(), host.getPort(), HTTP_HOST_SCHEME))
+            .toArray(HttpHost[]::new);
+    }
 
     @Override
-    public Client get() {
-        TransportClient transportClient = TransportClient.builder().build();
-        ConsumerChainer<Host> consumer = Throwing.consumer(host -> transportClient
-            .addTransportAddress(
-                new InetSocketTransportAddress(
-                    InetAddress.getByName(host.getHostName()),
-                    host.getPort())));
-        hosts.forEach(consumer.sneakyThrow());
-        return transportClient;
+    public RestHighLevelClient get() {
+        return new RestHighLevelClient(RestClient.builder(hostsToHttpHosts()));
+    }
+
+    @VisibleForTesting Settings settings() {
+        if (clusterName.isPresent()) {
+            return Settings.builder()
+                    .put(CLUSTER_NAME_SETTING, clusterName.get())
+                    .build();
+        }
+        return Settings.EMPTY;
     }
 }

@@ -26,16 +26,16 @@ import javax.mail.Flags;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.fixture.MailboxFixture;
-import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -73,7 +73,7 @@ public abstract class AbstractMessageIdManagerQuotaTest {
         CurrentQuotaManager currentQuotaManager = createCurrentQuotaManager();
         QuotaManager quotaManager = createQuotaManager(maxQuotaManager, currentQuotaManager);
 
-        session = new MockMailboxSession(ALICE);
+        session = MailboxSessionUtil.create(ALICE);
         testingData = createTestSystem(quotaManager, currentQuotaManager);
         messageIdManager = testingData.getMessageIdManager();
 

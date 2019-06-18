@@ -22,7 +22,6 @@ package org.apache.james.webadmin.routes;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -34,7 +33,6 @@ import java.util.Map;
 
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
@@ -60,12 +58,9 @@ class UsersRoutesTest {
     private static final String USERNAME = "username@" + DOMAIN.name();
     private WebAdminServer webAdminServer;
 
-    private void createServer(UsersRepository usersRepository) throws Exception {
-        webAdminServer = WebAdminUtils.createWebAdminServer(
-            new DefaultMetricFactory(),
-            new UserRoutes(new UserService(usersRepository), new JsonTransformer()));
-        webAdminServer.configure(NO_CONFIGURATION);
-        webAdminServer.await();
+    private void createServer(UsersRepository usersRepository) {
+        webAdminServer = WebAdminUtils.createWebAdminServer(new UserRoutes(new UserService(usersRepository), new JsonTransformer()))
+            .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(UserRoutes.USERS)

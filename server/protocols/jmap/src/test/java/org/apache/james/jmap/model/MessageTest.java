@@ -161,7 +161,7 @@ public class MessageTest {
                 .build();
         ImmutableMap<BlobId, SubMessage> attachedMessages = ImmutableMap.of(BlobId.of("blobId"), simpleMessage);
 
-        Keywords keywords = Keywords.factory()
+        Keywords keywords = Keywords.strictFactory()
             .from(Keyword.DRAFT, Keyword.ANSWERED, Keyword.FLAGGED);
 
         Number messageSize = Number.fromLong(123);

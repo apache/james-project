@@ -19,6 +19,7 @@
 package org.apache.james.rrt.lib;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -37,7 +38,10 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.api.SameSourceAndDestinationException;
+import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.apache.james.rrt.lib.Mapping.Type;
+import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,7 +99,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     }
 
     @Override
-    public Mappings getMappings(String user, Domain domain) throws ErrorMappingException, RecipientRewriteTableException {
+    public Mappings getResolvedMappings(String user, Domain domain) throws ErrorMappingException, RecipientRewriteTableException {
         return getMappings(User.fromLocalPartWithDomain(user, domain), mappingLimit);
     }
 
@@ -133,7 +137,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     }
 
     private Stream<Mapping> convertAndRecurseMapping(Mapping mapping, User originalUser, User rewrittenUser, int remainingLoops) throws ErrorMappingException, RecipientRewriteTableException {
-        LOGGER.debug("Valid virtual user mapping {} to {}", originalUser, rewrittenUser);
+        LOGGER.debug("Valid virtual user mapping {} to {}", originalUser.asString(), rewrittenUser.asString());
 
         Stream<Mapping> nonRecursiveResult = Stream.of(toMapping(rewrittenUser, mapping.getType()));
         if (!recursive) {
@@ -162,6 +166,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         switch (type) {
             case Forward:
             case Group:
+            case Alias:
                 return Mapping.of(type, rewrittenUser.asString());
             case Regex:
             case Domain:
@@ -182,6 +187,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
         Mapping mapping = Mapping.regex(regex);
         checkDuplicateMapping(source, mapping);
+        checkDomainMappingSourceIsManaged(source);
         LOGGER.info("Add regex mapping => {} for source {}", regex, source.asString());
         addMapping(source, mapping);
     }
@@ -199,8 +205,9 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
         checkHasValidAddress(mapping);
         checkDuplicateMapping(source, mapping);
+        checkDomainMappingSourceIsManaged(source);
 
-        LOGGER.info("Add address mapping => {} for source: {}", mapping, source.asString());
+        LOGGER.info("Add address mapping => {} for source: {}", mapping.asString(), source.asString());
         addMapping(source, mapping);
     }
 
@@ -214,7 +221,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     private void checkHasValidAddress(Mapping mapping) throws RecipientRewriteTableException {
         if (!mapping.asMailAddress().isPresent()) {
-            throw new RecipientRewriteTableException("Invalid emailAddress: " + mapping);
+            throw new RecipientRewriteTableException("Invalid emailAddress: " + mapping.asString());
         }
     }
 
@@ -223,7 +230,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         Mapping mapping = Mapping.address(address)
             .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
-        LOGGER.info("Remove address mapping => {} for source: {}", mapping, source.asString());
+        LOGGER.info("Remove address mapping => {} for source: {}", mapping.asString(), source.asString());
         removeMapping(source, mapping);
     }
 
@@ -232,6 +239,8 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         Mapping mapping = Mapping.error(error);
 
         checkDuplicateMapping(source, mapping);
+        checkDomainMappingSourceIsManaged(source);
+
         LOGGER.info("Add error mapping => {} for source: {}", error, source.asString());
         addMapping(source, mapping);
 
@@ -245,6 +254,8 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     @Override
     public void addAliasDomainMapping(MappingSource source, Domain realDomain) throws RecipientRewriteTableException {
+        checkDomainMappingSourceIsManaged(source);
+
         LOGGER.info("Add domain mapping: {} => {}", source.asDomain().map(Domain::asString).orElse("null"), realDomain);
         addMapping(source, Mapping.domain(realDomain));
     }
@@ -262,8 +273,9 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
         checkHasValidAddress(mapping);
         checkDuplicateMapping(source, mapping);
+        checkDomainMappingSourceIsManaged(source);
 
-        LOGGER.info("Add forward mapping => {} for source: {}", mapping, source.asString());
+        LOGGER.info("Add forward mapping => {} for source: {}", mapping.asString(), source.asString());
         addMapping(source, mapping);
     }
 
@@ -272,7 +284,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         Mapping mapping = Mapping.forward(address)
             .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
-        LOGGER.info("Remove forward mapping => {} for source: {}", mapping, source.asString());
+        LOGGER.info("Remove forward mapping => {} for source: {}", mapping.asString(), source.asString());
         removeMapping(source, mapping);
     }
 
@@ -283,8 +295,9 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
         checkHasValidAddress(mapping);
         checkDuplicateMapping(source, mapping);
+        checkDomainMappingSourceIsManaged(source);
 
-        LOGGER.info("Add group mapping => {} for source: {}", mapping, source.asString());
+        LOGGER.info("Add group mapping => {} for source: {}", mapping.asString(), source.asString());
         addMapping(source, mapping);
     }
 
@@ -293,7 +306,30 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         Mapping mapping = Mapping.group(address)
             .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
-        LOGGER.info("Remove group mapping => {} for source: {}", mapping, source.asString());
+        LOGGER.info("Remove group mapping => {} for source: {}", mapping.asString(), source.asString());
+        removeMapping(source, mapping);
+    }
+
+    @Override
+    public void addAliasMapping(MappingSource source, String address) throws RecipientRewriteTableException {
+        Mapping mapping = Mapping.alias(address)
+            .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
+
+        checkHasValidAddress(mapping);
+        checkDuplicateMapping(source, mapping);
+        checkNotSameSourceAndDestination(source, address);
+        checkDomainMappingSourceIsManaged(source);
+
+        LOGGER.info("Add alias source => {} for destination mapping: {}", source.asString(), mapping.asString());
+        addMapping(source, mapping);
+    }
+
+    @Override
+    public void removeAliasMapping(MappingSource source, String address) throws RecipientRewriteTableException {
+        Mapping mapping = Mapping.alias(address)
+            .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
+
+        LOGGER.info("Remove alias source => {} for destination mapping: {}", source.asString(), mapping.asString());
         removeMapping(source, mapping);
     }
 
@@ -311,11 +347,34 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      */
     protected abstract Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException;
 
-    private void checkDuplicateMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
-        Mappings mappings = getUserDomainMappings(source);
-        if (mappings != null && mappings.contains(mapping)) {
-            throw new MappingAlreadyExistsException("Mapping " + mapping + " for " + source.asString() + " already exist!");
+    private void checkDomainMappingSourceIsManaged(MappingSource source) throws RecipientRewriteTableException {
+        Optional<Domain> notManagedSourceDomain = OptionalUtils.toStream(source.availableDomain())
+            .filter(Throwing.<Domain>predicate(domain -> !isManagedByDomainList(domain)).sneakyThrow())
+            .findFirst();
+
+        if (notManagedSourceDomain.isPresent()) {
+            throw new SourceDomainIsNotInDomainListException("Source domain '" + notManagedSourceDomain.get().asString() + "' is not managed by the domainList");
         }
     }
 
+    private boolean isManagedByDomainList(Domain domain) throws RecipientRewriteTableException {
+        try {
+            return domainList.containsDomain(domain);
+        } catch (DomainListException e) {
+            throw new RecipientRewriteTableException("Cannot verify domainList contains the available domain in source");
+        }
+    }
+
+    private void checkDuplicateMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
+        Mappings mappings = getStoredMappings(source);
+        if (mappings.contains(mapping)) {
+            throw new MappingAlreadyExistsException("Mapping " + mapping.asString() + " for " + source.asString() + " already exist!");
+        }
+    }
+
+    private void checkNotSameSourceAndDestination(MappingSource source, String address) throws RecipientRewriteTableException {
+        if (source.asMailAddress().map(mailAddress -> mailAddress.asString().equals(address)).orElse(false)) {
+            throw new SameSourceAndDestinationException("Source and destination can't be the same!");
+        }
+    }
 }

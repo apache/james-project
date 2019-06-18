@@ -19,9 +19,12 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Iterator;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
@@ -40,14 +43,9 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractGreylistHandler implements RcptHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractGreylistHandler.class);
 
-    /** 1 hour */
-    private long tempBlockTime = 3600000;
-
-    /** 36 days */
-    private long autoWhiteListLifeTime = 3110400000L;
-
-    /** 4 hours */
-    private long unseenLifeTime = 14400000;
+    private Duration tempBlockTime = Duration.ofHours(1);
+    private Duration autoWhiteListLifeTime = Duration.ofDays(36);
+    private Duration unseenLifeTime = Duration.ofHours(4);
 
 
     private static final HookResult TO_FAST = HookResult.builder()
@@ -63,31 +61,28 @@ public abstract class AbstractGreylistHandler implements RcptHook {
             + " Temporary rejected: Please try again later")
         .build();
 
-    public void setUnseenLifeTime(long unseenLifeTime) {
+    public void setUnseenLifeTime(Duration unseenLifeTime) {
         this.unseenLifeTime = unseenLifeTime;
     }
     
-    public void setAutoWhiteListLifeTime(long autoWhiteListLifeTime) {
+    public void setAutoWhiteListLifeTime(Duration autoWhiteListLifeTime) {
         this.autoWhiteListLifeTime = autoWhiteListLifeTime;
     }
     
-    public void setTempBlockTime(long tempBlockTime) {
+    public void setTempBlockTime(Duration tempBlockTime) {
         this.tempBlockTime = tempBlockTime;
     }
 
 
-    private HookResult doGreyListCheck(SMTPSession session, MailAddress senderAddress, MailAddress recipAddress) {
+    private HookResult doGreyListCheck(SMTPSession session, MaybeSender senderAddress, MailAddress recipAddress) {
         String recip = "";
-        String sender = "";
+        String sender = senderAddress.asString("");
 
         if (recipAddress != null) {
             recip = recipAddress.toString();
         }
-        if (senderAddress != null) {
-            sender = senderAddress.toString();
-        }
     
-        long time = System.currentTimeMillis();
+        Instant time = Instant.now();
         String ipAddress = session.getRemoteAddress().getAddress().getHostAddress();
         
         try {
@@ -107,9 +102,9 @@ public abstract class AbstractGreylistHandler implements RcptHook {
 
             // if the timestamp is bigger as 0 we have allready a triplet stored
             if (createTimeStamp > 0) {
-                long acceptTime = createTimeStamp + tempBlockTime;
+                Instant acceptTime = Instant.ofEpochMilli(createTimeStamp).plus(tempBlockTime);
         
-                if ((time < acceptTime) && (count == 0)) {
+                if ((time.isBefore(acceptTime)) && (count == 0)) {
                     return TO_FAST;
                 } else {
                     
@@ -135,8 +130,8 @@ public abstract class AbstractGreylistHandler implements RcptHook {
             
                 LOGGER.debug("Delete old entries");
             
-                cleanupAutoWhiteListGreyList(time - autoWhiteListLifeTime);
-                cleanupGreyList(time - unseenLifeTime);
+                cleanupAutoWhiteListGreyList(time.minus(autoWhiteListLifeTime));
+                cleanupGreyList(time.minus(unseenLifeTime));
             }
 
         } catch (Exception e) {
@@ -174,9 +169,8 @@ public abstract class AbstractGreylistHandler implements RcptHook {
      *            The count
      * @param createTime
      *            The createTime
-     * @throws SQLException
      */
-    protected abstract void insertTriplet(String ipAddress, String sender, String recip, int count, long createTime)
+    protected abstract void insertTriplet(String ipAddress, String sender, String recip, int count, Instant createTime)
         throws Exception;
 
     /**
@@ -195,7 +189,7 @@ public abstract class AbstractGreylistHandler implements RcptHook {
      *            the current time in ms
      * @throws Exception
      */
-    protected abstract void updateTriplet(String ipAddress, String sender, String recip, int count, long time) throws Exception;
+    protected abstract void updateTriplet(String ipAddress, String sender, String recip, int count, Instant time) throws Exception;
        
 
     /**
@@ -205,7 +199,7 @@ public abstract class AbstractGreylistHandler implements RcptHook {
      *            The time which must be reached before delete the records
      * @throws Exception
      */
-    protected abstract void cleanupAutoWhiteListGreyList(long time)throws Exception;     
+    protected abstract void cleanupAutoWhiteListGreyList(Instant time)throws Exception;
 
     /**
      * Delete old entries from the Greylist datarecord 
@@ -214,12 +208,12 @@ public abstract class AbstractGreylistHandler implements RcptHook {
      *            The time which must be reached before delete the records
      * @throws Exception
      */
-    protected abstract void cleanupGreyList(long time) throws Exception;
+    protected abstract void cleanupGreyList(Instant time) throws Exception;
 
   
 
     @Override
-    public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
         if (!session.isRelayingAllowed()) {
             return doGreyListCheck(session, sender,rcpt);
         } else {

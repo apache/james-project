@@ -62,6 +62,7 @@ public class SenderHostIsTest {
         matcher.init(mci);
 
         Mail mail = FakeMail.builder()
+                .name("mail")
                 .sender(ANY_AT_JAMES2)
                 .recipient(ANY_AT_JAMES2)
                 .build();
@@ -81,6 +82,7 @@ public class SenderHostIsTest {
                 .build());
 
         Mail mail = FakeMail.builder()
+                .name("mail")
                 .sender(ANY_AT_JAMES2)
                 .recipient(ANY_AT_JAMES2)
                 .build();
@@ -101,6 +103,7 @@ public class SenderHostIsTest {
                 .build());
 
         Mail mail = FakeMail.builder()
+                .name("mail")
                 .sender(ANY_AT_JAMES2)
                 .recipient(ANY_AT_JAMES2)
                 .build();
@@ -116,10 +119,31 @@ public class SenderHostIsTest {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderHostIs")
                 .mailetContext(mailContext)
+                .condition("domain.tld")
+                .build());
+
+        Mail mail = FakeMail.builder()
+                .name("mail")
+                .sender(ANY_AT_JAMES2)
+                .recipient(ANY_AT_JAMES2)
+                .build();
+        //When
+        Collection<MailAddress> actual = matcher.match(mail);
+        //Then
+        assertThat(actual).isNull();
+    }
+
+    @Test
+    void shouldNotMatchWhenNoSender() throws MessagingException {
+        //Given
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderHostIs")
+                .mailetContext(mailContext)
                 .condition("")
                 .build());
 
         Mail mail = FakeMail.builder()
+                .name("mail")
                 .recipient(ANY_AT_JAMES2)
                 .build();
         //When

@@ -45,6 +45,15 @@ public class TestJMAPServerModule extends AbstractModule {
         + "kwIDAQAB\n"
         + "-----END PUBLIC KEY-----";
 
+    public static JMAPConfiguration.Builder jmapConfigurationBuilder() {
+        return JMAPConfiguration.builder()
+                .enable()
+                .keystore("keystore")
+                .secret("james72laBalle")
+                .jwtPublicKeyPem(Optional.of(PUBLIC_PEM_KEY))
+                .randomPort();
+    }
+
     private final long maximumLimit;
 
     public TestJMAPServerModule(long maximumLimit) {
@@ -59,12 +68,6 @@ public class TestJMAPServerModule extends AbstractModule {
     @Provides
     @Singleton
     JMAPConfiguration provideConfiguration() throws FileNotFoundException, ConfigurationException {
-        return JMAPConfiguration.builder()
-                .enable()
-                .keystore("keystore")
-                .secret("james72laBalle")
-                .jwtPublicKeyPem(Optional.of(PUBLIC_PEM_KEY))
-                .randomPort()
-                .build();
+        return jmapConfigurationBuilder().build();
     }
 }

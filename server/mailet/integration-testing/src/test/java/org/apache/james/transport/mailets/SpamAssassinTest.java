@@ -40,9 +40,9 @@ import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.spamassassin.SpamAssassinResult;
 import org.apache.james.transport.matchers.All;
+import org.apache.james.util.docker.DockerGenericContainer;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
-import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
@@ -59,10 +59,10 @@ public class SpamAssassinTest {
     private static final String SPAM_CONTENT = "XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X";
 
     @ClassRule
-    public static SwarmGenericContainer spamAssassinContainer = new SwarmGenericContainer(Images.SPAMASSASSIN)
+    public static DockerGenericContainer spamAssassinContainer = new DockerGenericContainer(Images.SPAMASSASSIN)
         .withExposedPorts(783)
         .withAffinityToContainer()
-        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.DEFAULT));
+        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
@@ -113,8 +113,8 @@ public class SpamAssassinTest {
 
         assertThat(messageReader.readFirstMessageHeaders())
             .contains(
-                SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME,
-                SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME);
+                SpamAssassinResult.FLAG_MAIL.asString(),
+                SpamAssassinResult.STATUS_MAIL.asString());
     }
 
     @Test
@@ -128,8 +128,8 @@ public class SpamAssassinTest {
             .awaitMessage(awaitAtMostOneMinute);
 
         String receivedHeaders = messageReader.readFirstMessageHeaders();
-        assertThat(receivedHeaders).contains(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME + ": YES");
-        assertThat(receivedHeaders).contains(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME + ": Yes");
+        assertThat(receivedHeaders).contains(SpamAssassinResult.FLAG_MAIL.asString() + ": YES");
+        assertThat(receivedHeaders).contains(SpamAssassinResult.STATUS_MAIL.asString() + ": Yes");
     }
 
     @Test
@@ -143,8 +143,8 @@ public class SpamAssassinTest {
             .awaitMessage(awaitAtMostOneMinute);
 
         String receivedHeaders = messageReader.readFirstMessageHeaders();
-        assertThat(receivedHeaders).contains(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME + ": NO");
-        assertThat(receivedHeaders).contains(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME + ": No");
+        assertThat(receivedHeaders).contains(SpamAssassinResult.FLAG_MAIL.asString() + ": NO");
+        assertThat(receivedHeaders).contains(SpamAssassinResult.STATUS_MAIL.asString() + ": No");
     }
 
     @Test
@@ -159,8 +159,8 @@ public class SpamAssassinTest {
 
         assertThat(messageReader.readFirstMessageHeaders())
             .contains(
-                SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME,
-                SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME);
+                SpamAssassinResult.FLAG_MAIL.asString(),
+                SpamAssassinResult.STATUS_MAIL.asString());
 
         messageReader.disconnect()
             .connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
@@ -170,12 +170,13 @@ public class SpamAssassinTest {
 
         assertThat(messageReader.readFirstMessageHeaders())
             .contains(
-                SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME,
-                SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME);
+                SpamAssassinResult.FLAG_MAIL.asString(),
+                SpamAssassinResult.STATUS_MAIL.asString());
     }
 
     private FakeMail.Builder mailWithContent(String textContent, String... recipients) throws MessagingException {
         return FakeMail.builder()
+            .name("name")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setSender(FROM)
                 .addToRecipient(recipients)

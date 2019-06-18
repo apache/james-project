@@ -20,7 +20,6 @@
 package org.apache.james.mailrepository.memory;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -35,6 +34,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryProvider;
@@ -47,9 +47,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
 
-public class MemoryMailRepositoryStore implements MailRepositoryStore, Configurable {
+public class MemoryMailRepositoryStore implements MailRepositoryStore, Startable {
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMailRepositoryStore.class);
 
     private final MailRepositoryUrlStore urlStore;
@@ -57,15 +56,38 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Configura
     private final ConcurrentMap<MailRepositoryUrl, MailRepository> destinationToRepositoryAssociations;
     private final Map<Protocol, MailRepositoryProvider> protocolToRepositoryProvider;
     private final Map<Protocol, HierarchicalConfiguration> perProtocolMailRepositoryDefaultConfiguration;
-    private HierarchicalConfiguration configuration;
+    private final MailRepositoryStoreConfiguration configuration;
 
     @Inject
-    public MemoryMailRepositoryStore(MailRepositoryUrlStore urlStore, Set<MailRepositoryProvider> mailRepositories) {
+    public MemoryMailRepositoryStore(MailRepositoryUrlStore urlStore, Set<MailRepositoryProvider> mailRepositories, MailRepositoryStoreConfiguration configuration) {
         this.urlStore = urlStore;
         this.mailRepositories = mailRepositories;
+        this.configuration = configuration;
         this.destinationToRepositoryAssociations = new ConcurrentHashMap<>();
         this.protocolToRepositoryProvider = new HashMap<>();
         this.perProtocolMailRepositoryDefaultConfiguration = new HashMap<>();
+    }
+
+    public void init() throws Exception {
+        LOGGER.info("JamesMailStore init... {}", this);
+
+        for (MailRepositoryStoreConfiguration.Item item : configuration.getItems()) {
+            initEntry(item);
+        }
+    }
+
+    private void initEntry(MailRepositoryStoreConfiguration.Item item) throws ConfigurationException {
+        String className = item.getClassFqdn();
+
+        MailRepositoryProvider usedMailRepository = mailRepositories.stream()
+            .filter(mailRepositoryProvider -> mailRepositoryProvider.canonicalName().equals(className))
+            .findAny()
+            .orElseThrow(() -> new ConfigurationException("MailRepository " + className + " has not been registered"));
+
+        for (Protocol protocol : item.getProtocols()) {
+            protocolToRepositoryProvider.put(protocol, usedMailRepository);
+            perProtocolMailRepositoryDefaultConfiguration.put(protocol, item.getConfiguration());
+        }
     }
 
     @Override
@@ -74,33 +96,10 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Configura
     }
 
     @Override
-    public void configure(HierarchicalConfiguration configuration) {
-        this.configuration = configuration;
-    }
-
-    public void init() throws Exception {
-        LOGGER.info("JamesMailStore init... {}", this);
-        List<HierarchicalConfiguration> registeredClasses = retrieveRegisteredClassConfiguration();
-        for (HierarchicalConfiguration registeredClass : registeredClasses) {
-            readConfigurationEntry(registeredClass);
-        }
-    }
-
-    private List<HierarchicalConfiguration> retrieveRegisteredClassConfiguration() {
-        try {
-            return configuration.configurationsAt("mailrepositories.mailrepository");
-        } catch (Exception e) {
-            LOGGER.warn("Could not process configuration. Skipping Mail Repository initialization.", e);
-            return ImmutableList.of();
-        }
-    }
-
-    @Override
     public Optional<MailRepository> get(MailRepositoryUrl url) {
-        if (urlStore.contains(url)) {
-            return Optional.of(select(url));
-        }
-        return Optional.empty();
+        return Optional.of(url)
+            .filter(urlStore::contains)
+            .map(this::select);
     }
 
     @Override
@@ -112,56 +111,31 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Configura
 
     @Override
     public MailRepository select(MailRepositoryUrl mailRepositoryUrl) {
-        return Optional.ofNullable(destinationToRepositoryAssociations.get(mailRepositoryUrl))
-            .orElseGet(Throwing.supplier(
-                () -> createNewMailRepository(mailRepositoryUrl))
-                .sneakyThrow());
+        return destinationToRepositoryAssociations.computeIfAbsent(mailRepositoryUrl,
+            Throwing.function(this::createNewMailRepository).sneakyThrow());
     }
 
     private MailRepository createNewMailRepository(MailRepositoryUrl mailRepositoryUrl) throws MailRepositoryStoreException {
         MailRepository newMailRepository = retrieveMailRepository(mailRepositoryUrl);
+        initializeNewRepository(newMailRepository, createRepositoryCombinedConfig(mailRepositoryUrl));
         urlStore.add(mailRepositoryUrl);
-        newMailRepository = initializeNewRepository(newMailRepository, createRepositoryCombinedConfig(mailRepositoryUrl));
-        MailRepository previousRepository = destinationToRepositoryAssociations.putIfAbsent(mailRepositoryUrl, newMailRepository);
-        return Optional.ofNullable(previousRepository)
-            .orElse(newMailRepository);
-    }
 
-    private void readConfigurationEntry(HierarchicalConfiguration repositoryConfiguration) throws ConfigurationException {
-        String className = repositoryConfiguration.getString("[@class]");
-        MailRepositoryProvider usedMailRepository = mailRepositories.stream()
-            .filter(mailRepositoryProvider -> mailRepositoryProvider.canonicalName().equals(className))
-            .findAny()
-            .orElseThrow(() -> new ConfigurationException("MailRepository " + className + " has not been registered"));
-        for (String protocol : repositoryConfiguration.getStringArray("protocols.protocol")) {
-            protocolToRepositoryProvider.put(new Protocol(protocol), usedMailRepository);
-            registerRepositoryDefaultConfiguration(repositoryConfiguration, new Protocol(protocol));
-        }
-    }
-
-    private void registerRepositoryDefaultConfiguration(HierarchicalConfiguration repositoryConfiguration, Protocol protocol) {
-        HierarchicalConfiguration defConf = null;
-        if (repositoryConfiguration.getKeys("config").hasNext()) {
-            defConf = repositoryConfiguration.configurationAt("config");
-        }
-        if (defConf != null) {
-            perProtocolMailRepositoryDefaultConfiguration.put(protocol, defConf);
-        }
+        return newMailRepository;
     }
 
     private CombinedConfiguration createRepositoryCombinedConfig(MailRepositoryUrl mailRepositoryUrl) {
         CombinedConfiguration config = new CombinedConfiguration();
-        HierarchicalConfiguration defaultProtocolConfig = perProtocolMailRepositoryDefaultConfiguration.get(mailRepositoryUrl.getProtocol());
-        if (defaultProtocolConfig != null) {
-            config.addConfiguration(defaultProtocolConfig);
-        }
+
+        Optional.ofNullable(perProtocolMailRepositoryDefaultConfiguration.get(mailRepositoryUrl.getProtocol()))
+            .ifPresent(config::addConfiguration);
+
         DefaultConfigurationBuilder builder = new DefaultConfigurationBuilder();
         builder.addProperty("[@destinationURL]", mailRepositoryUrl.asString());
         config.addConfiguration(builder);
         return config;
     }
 
-    private MailRepository initializeNewRepository(MailRepository mailRepository, CombinedConfiguration config) throws MailRepositoryStoreException {
+    private void initializeNewRepository(MailRepository mailRepository, CombinedConfiguration config) throws MailRepositoryStoreException {
         try {
             if (mailRepository instanceof Configurable) {
                 ((Configurable) mailRepository).configure(config);
@@ -169,7 +143,6 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Configura
             if (mailRepository instanceof Initializable) {
                 ((Initializable) mailRepository).init();
             }
-            return mailRepository;
         } catch (Exception e) {
             throw new MailRepositoryStoreException("Cannot init mail repository", e);
         }
@@ -181,5 +154,4 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Configura
             .orElseThrow(() -> new MailRepositoryStoreException("No Mail Repository associated with " + protocol.getValue()))
             .provide(mailRepositoryUrl);
     }
-
 }

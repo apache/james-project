@@ -35,6 +35,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.javax.MimeMultipartReport;
 import org.apache.james.server.core.MailImpl;
@@ -54,6 +55,8 @@ import org.apache.james.transport.util.ReplyToUtils;
 import org.apache.james.transport.util.SenderUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.james.transport.util.TosUtils;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
@@ -114,6 +117,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private static final Pattern DIAG_PATTERN = Patterns.compilePatternUncheckedException("^\\d{3}\\s.*$");
     private static final String MACHINE_PATTERN = "[machine]";
     private static final String LINE_BREAK = "\n";
+    private static final AttributeName DELIVERY_ERROR = AttributeName.of("delivery-error");
 
     private final DNSService dns;
     private final FastDateFormat dateFormatter;
@@ -250,7 +254,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
        
             if (getInitParameters().isDebug()) {
                 LOGGER.debug("New mail - sender: {}, recipients: {}, name: {}, remoteHost: {}, remoteAddr: {}, state: {}, lastUpdated: {}, errorMessage: {}",
-                        newMail.getSender(), newMail.getRecipients(), newMail.getName(), newMail.getRemoteHost(), newMail.getRemoteAddr(), newMail.getState(), newMail.getLastUpdated(), newMail.getErrorMessage());
+                        newMail.getMaybeSender(), newMail.getRecipients(), newMail.getName(), newMail.getRemoteHost(), newMail.getRemoteAddr(), newMail.getState(), newMail.getLastUpdated(), newMail.getErrorMessage());
             }
        
             newMail.setMessage(createBounceMessage(originalMail));
@@ -279,7 +283,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     }
 
     private boolean hasSender(Mail originalMail) {
-        if (originalMail.getSender() == null) {
+        if (!originalMail.hasSender()) {
             if (getInitParameters().isDebug()) {
                 LOGGER.info("Processing a bounce request for a message with an empty reverse-path.  No bounce will be sent.");
             }
@@ -313,12 +317,12 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     }
 
     private List<MailAddress> getSenderAsList(Mail originalMail) {
-        MailAddress reversePath = originalMail.getSender();
-        if (getInitParameters().isDebug()) {
-            LOGGER.debug("Processing a bounce request for a message with a reverse path.  The bounce will be sent to {}", reversePath);
-        }
+        MaybeSender reversePath = originalMail.getMaybeSender();
 
-        return ImmutableList.of(reversePath);
+        if (getInitParameters().isDebug()) {
+            LOGGER.debug("Processing a bounce request for a message with a reverse path.  The bounce will be sent to {}", reversePath.asString());
+        }
+        return reversePath.asList();
     }
 
     private MimeMessage createBounceMessage(Mail originalMail) throws MessagingException {
@@ -352,7 +356,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         }
         buffer.append(LINE_BREAK).append(LINE_BREAK);
         buffer.append("Error message:").append(LINE_BREAK);
-        buffer.append((String) originalMail.getAttribute("delivery-error")).append(LINE_BREAK);
+        buffer.append(AttributeUtils.getValueAndCastFromMail(originalMail, DELIVERY_ERROR, String.class).orElse("")).append(LINE_BREAK);
         buffer.append(LINE_BREAK);
 
         MimeBodyPart bodyPart = new MimeBodyPart();
@@ -416,11 +420,9 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     }
 
     private String getDeliveryError(Mail originalMail) {
-        String deliveryError = (String) originalMail.getAttribute("delivery-error");
-        if (deliveryError != null) {
-            return deliveryError;
-        }
-        return "unknown";
+        return AttributeUtils
+            .getValueAndCastFromMail(originalMail, DELIVERY_ERROR, String.class)
+            .orElse("unknown");
     }
 
     private String getDiagnosticType(String diagnosticCode) {

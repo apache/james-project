@@ -25,38 +25,29 @@ import org.apache.james.jmap.api.vacation.AbstractNotificationRegistryTest;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.Rule;
 
 public class CassandraNotificationRegistryTest extends AbstractNotificationRegistryTest {
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @Rule
+    public DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
-    private static CassandraCluster cassandra;
-
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraNotificationRegistryModule.MODULE, cassandraServer.getHost());
-    }
+    private CassandraCluster cassandra;
 
     @Override
     @Before
     public void setUp() throws Exception {
+        cassandra = CassandraCluster.create(CassandraNotificationRegistryModule.MODULE, cassandraServer.getHost());
         super.setUp();
     }
 
     @After
     public void tearDown() {
         cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
         cassandra.closeCluster();
     }
-    
+
     @Override
     protected NotificationRegistry createNotificationRegistry(ZonedDateTimeProvider zonedDateTimeProvider) {
         return new CassandraNotificationRegistry(zonedDateTimeProvider, new CassandraNotificationRegistryDAO(cassandra.getConf()));

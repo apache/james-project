@@ -32,8 +32,6 @@ import static org.apache.james.sieve.cassandra.tables.CassandraSieveActiveTable.
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Date;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
@@ -44,6 +42,7 @@ import org.apache.james.sieverepository.api.ScriptName;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import reactor.core.publisher.Mono;
 
 public class CassandraActiveScriptDAO {
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
@@ -66,22 +65,22 @@ public class CassandraActiveScriptDAO {
             .where(eq(USER_NAME, bindMarker(USER_NAME))));
     }
 
-    public CompletableFuture<Optional<ActiveScriptInfo>> getActiveSctiptInfo(User user) {
+    public Mono<ActiveScriptInfo> getActiveSctiptInfo(User user) {
         return cassandraAsyncExecutor.executeSingleRow(
             selectActiveName.bind()
                 .setString(USER_NAME, user.asString()))
-            .thenApply(rowOptional -> rowOptional.map(row -> new ActiveScriptInfo(
+            .map(row -> new ActiveScriptInfo(
                 new ScriptName(row.getString(SCRIPT_NAME)),
-                ZonedDateTime.ofInstant(row.getTimestamp(DATE).toInstant(), ZoneOffset.UTC))));
+                ZonedDateTime.ofInstant(row.getTimestamp(DATE).toInstant(), ZoneOffset.UTC)));
     }
 
-    public CompletableFuture<Void> unactivate(User user) {
+    public Mono<Void> unactivate(User user) {
         return cassandraAsyncExecutor.executeVoid(
             deleteActive.bind()
                 .setString(USER_NAME, user.asString()));
     }
 
-    public CompletableFuture<Void> activate(User user, ScriptName scriptName) {
+    public Mono<Void> activate(User user, ScriptName scriptName) {
         return cassandraAsyncExecutor.executeVoid(
             insertActive.bind()
                 .setString(USER_NAME, user.asString())

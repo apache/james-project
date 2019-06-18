@@ -40,6 +40,7 @@ import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.Responses;
 import org.apache.james.webadmin.validation.Quotas;
 import org.eclipse.jetty.http.HttpStatus;
 
@@ -115,8 +116,7 @@ public class GlobalQuotaRoutes implements Routes {
             try {
                 QuotaDTO quotaDTO = jsonExtractor.parse(request.body());
                 globalQuotaService.defineQuota(quotaDTO);
-                response.status(HttpStatus.NO_CONTENT_204);
-                return response;
+                return Responses.returnNoContent(response);
             } catch (JsonExtractException e) {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
@@ -158,8 +158,7 @@ public class GlobalQuotaRoutes implements Routes {
     public void defineDeleteQuotaSize() {
         service.delete(SIZE_ENDPOINT, (request, response) -> {
             globalQuotaService.deleteMaxSizeQuota();
-            response.status(HttpStatus.NO_CONTENT_204);
-            return response;
+            return Responses.returnNoContent(response);
         });
     }
 
@@ -178,8 +177,7 @@ public class GlobalQuotaRoutes implements Routes {
         service.put(SIZE_ENDPOINT, (request, response) -> {
             QuotaSize quotaSize = Quotas.quotaSize(request.body());
             globalQuotaService.defineMaxSizeQuota(quotaSize);
-            response.status(HttpStatus.NO_CONTENT_204);
-            return response;
+            return Responses.returnNoContent(response);
         });
     }
 
@@ -213,8 +211,7 @@ public class GlobalQuotaRoutes implements Routes {
     public void defineDeleteQuotaCount() {
         service.delete(COUNT_ENDPOINT, (request, response) -> {
             globalQuotaService.deleteMaxCountQuota();
-            response.status(HttpStatus.NO_CONTENT_204);
-            return response;
+            return Responses.returnNoContent(response);
         });
     }
 
@@ -233,8 +230,7 @@ public class GlobalQuotaRoutes implements Routes {
         service.put(COUNT_ENDPOINT, (request, response) -> {
             QuotaCount quotaRequest = Quotas.quotaCount(request.body());
             globalQuotaService.defineMaxCountQuota(quotaRequest);
-            response.status(HttpStatus.NO_CONTENT_204);
-            return response;
+            return Responses.returnNoContent(response);
         });
     }
 

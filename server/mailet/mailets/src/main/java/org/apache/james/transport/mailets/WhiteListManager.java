@@ -55,6 +55,7 @@ import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
+import org.apache.mailet.MailetException;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
@@ -244,10 +245,10 @@ public class WhiteListManager extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
 
         // check if it's a local sender
-        MailAddress senderMailAddress = mail.getSender();
-        if (senderMailAddress == null) {
+        if (!mail.hasSender()) {
             return;
         }
+        MailAddress senderMailAddress = mail.getMaybeSender().get();
         if (!getMailetContext().isLocalEmail(senderMailAddress)) {
             // not a local sender, so return
             return;
@@ -375,7 +376,7 @@ public class WhiteListManager extends GenericMailet {
      * Manages a display request.
      */
     private void manageDisplayRequest(Mail mail) throws MessagingException {
-        MailAddress senderMailAddress = mail.getSender();
+        MailAddress senderMailAddress = mail.getMaybeSender().get();
         String senderUser = senderMailAddress.getLocalPart().toLowerCase(Locale.US);
         Domain senderHost = senderMailAddress.getDomain();
 
@@ -423,7 +424,7 @@ public class WhiteListManager extends GenericMailet {
      * Manages an insert request.
      */
     private void manageInsertRequest(Mail mail) throws MessagingException {
-        MailAddress senderMailAddress = mail.getSender();
+        MailAddress senderMailAddress = mail.getMaybeSender().get();
         String senderUser = senderMailAddress.getLocalPart().toLowerCase(Locale.US);
         Domain senderHost = senderMailAddress.getDomain();
 
@@ -544,7 +545,7 @@ public class WhiteListManager extends GenericMailet {
      * Manages a remove request.
      */
     private void manageRemoveRequest(Mail mail) throws MessagingException {
-        MailAddress senderMailAddress = mail.getSender();
+        MailAddress senderMailAddress = mail.getMaybeSender().get();
         String senderUser = senderMailAddress.getLocalPart().toLowerCase(Locale.US);
         Domain senderHost = senderMailAddress.getDomain();
 
@@ -665,7 +666,7 @@ public class WhiteListManager extends GenericMailet {
         try {
             MailAddress notifier = getMailetContext().getPostmaster();
 
-            MailAddress senderMailAddress = mail.getSender();
+            MailAddress senderMailAddress = mail.getMaybeSender().get();
 
             MimeMessage message = mail.getMessage();
             // Create the reply message
@@ -752,9 +753,12 @@ public class WhiteListManager extends GenericMailet {
             }
 
             /*
-      Holds value of property sqlFile.
-     */
-            File sqlFile = new File((String) mailetContext.getAttribute("confDir"), "sqlResources.xml").getCanonicalFile();
+                Holds value of property sqlFile.
+            */
+            String confDir = getInitParameterAsOptional("confDir")
+                .orElseThrow(() -> new MailetException("WhiteListManager has no 'confDir' configured"));
+
+            File sqlFile = new File(confDir, "sqlResources.xml").getCanonicalFile();
             sqlQueries.init(sqlFile, "WhiteList", conn, getSqlParameters());
 
             checkTables(conn);

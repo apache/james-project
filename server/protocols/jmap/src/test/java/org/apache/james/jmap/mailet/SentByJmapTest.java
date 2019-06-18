@@ -25,6 +25,8 @@ import java.util.Collection;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.send.MailMetadata;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
@@ -48,8 +50,9 @@ public class SentByJmapTest {
     public void matchShouldReturnRecipientsWhenUserAttributeIsPresent() throws Exception {
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipient(recipient)
-            .attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, "true")
+            .attribute(new Attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of("true")))
             .build();
 
         Collection<MailAddress> results =  testee.match(fakeMail);
@@ -60,6 +63,7 @@ public class SentByJmapTest {
     @Test
     public void matchShouldReturnEmptyCollectionWhenUserAttributeIsAbsent() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .build();
 
@@ -71,6 +75,7 @@ public class SentByJmapTest {
     @Test
     public void matchShouldReturnEmptyCollectionWhenUserAttributeIsAbsentAndThereIsNoRecipient() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipients()
             .build();
 
@@ -82,8 +87,9 @@ public class SentByJmapTest {
     @Test
     public void matchShouldReturnEmptyCollectionWhenUserAttributeIsPresentAndThereIsNoRecipient() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
+            .name("name")
             .recipients()
-            .attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, "true")
+            .attribute(new Attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of("true")))
             .build();
 
         Collection<MailAddress> results =  testee.match(fakeMail);

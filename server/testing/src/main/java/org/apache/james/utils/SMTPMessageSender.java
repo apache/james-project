@@ -32,6 +32,7 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.net.smtp.AuthenticatingSMTPClient;
 import org.apache.james.core.MailAddress;
+import org.apache.james.util.Port;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.rules.ExternalResource;
@@ -50,7 +51,7 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
         throws NoSuchAlgorithmException, IOException, InvalidKeySpecException, InvalidKeyException {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient();
         smtpClient.connect(ip, port);
-        if (smtpClient.auth(AuthenticatingSMTPClient.AUTH_METHOD.PLAIN, username, password) == false) {
+        if (!smtpClient.auth(AuthenticatingSMTPClient.AUTH_METHOD.PLAIN, username, password)) {
             throw new RuntimeException("auth failed");
         }
         return new SMTPMessageSender(smtpClient, senderDomain);
@@ -68,13 +69,13 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
         this(new AuthenticatingSMTPClient(), senderDomain);
     }
 
-    public SMTPMessageSender connect(String ip, int port) throws IOException {
-        smtpClient.connect(ip, port);
+    public SMTPMessageSender connect(String ip, Port port) throws IOException {
+        smtpClient.connect(ip, port.getValue());
         return this;
     }
 
     public SMTPMessageSender authenticate(String username, String password) throws IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidKeySpecException {
-        if (smtpClient.auth(AuthenticatingSMTPClient.AUTH_METHOD.PLAIN, username, password) == false) {
+        if (!smtpClient.auth(AuthenticatingSMTPClient.AUTH_METHOD.PLAIN, username, password)) {
             throw new SMTPSendingException(SmtpSendingStep.Authentication, smtpClient.getReplyString());
         }
         return this;
@@ -113,7 +114,7 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
     }
 
     public SMTPMessageSender sendMessage(Mail mail) throws MessagingException, IOException {
-        String from = mail.getSender().asString();
+        String from = mail.getMaybeSender().asString();
         doHelo();
         doSetSender(from);
         mail.getRecipients().stream()

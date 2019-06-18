@@ -28,17 +28,29 @@ import javax.ws.rs.Path;
 
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
+import org.apache.james.core.healthcheck.ResultStatus;
 import org.apache.james.webadmin.PublicRoutes;
+import org.apache.james.webadmin.dto.HealthCheckDto;
+import org.apache.james.webadmin.dto.HealthCheckExecutionResultDto;
+import org.apache.james.webadmin.dto.HeathCheckAggregationExecutionResultDto;
+import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import spark.HaltException;
+import spark.Request;
+import spark.Response;
 import spark.Service;
 
 @Api(tags = "Healthchecks")
@@ -48,14 +60,17 @@ public class HealthCheckRoutes implements PublicRoutes {
     private static final Logger LOGGER = LoggerFactory.getLogger(HealthCheckRoutes.class);
 
     public static final String HEALTHCHECK = "/healthcheck";
+    public static final String CHECKS = "/checks";
+    
+    private static final String PARAM_COMPONENT_NAME = "componentName";
 
-
+    private final JsonTransformer jsonTransformer;
     private final Set<HealthCheck> healthChecks;
-    private Service service;
 
     @Inject
-    public HealthCheckRoutes(Set<HealthCheck> healthChecks) {
+    public HealthCheckRoutes(Set<HealthCheck> healthChecks, JsonTransformer jsonTransformer) {
         this.healthChecks = healthChecks;
+        this.jsonTransformer = jsonTransformer;
     }
 
     @Override
@@ -65,33 +80,69 @@ public class HealthCheckRoutes implements PublicRoutes {
 
     @Override
     public void define(Service service) {
-        this.service = service;
-
-        validateHealthchecks();
+        service.get(HEALTHCHECK, this::validateHealthChecks, jsonTransformer);
+        service.get(HEALTHCHECK + "/checks/:" + PARAM_COMPONENT_NAME, this::performHealthCheckForComponent, jsonTransformer);
+        service.get(HEALTHCHECK + CHECKS, this::getHealthChecks, jsonTransformer);
     }
 
     @GET
     @ApiOperation(value = "Validate all health checks")
     @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.OK_200, message = "OK"),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-                message = "Internal server error - When one check has failed.")
+        @ApiResponse(code = HttpStatus.OK_200, message = "OK"),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+            message = "Internal server error - When one check has failed.")
     })
-    public void validateHealthchecks() {
-        service.get(HEALTHCHECK,
-            (request, response) -> {
-                List<Result> anyUnhealthyOrDegraded = retrieveUnhealthyOrDegradedHealthChecks();
-
-                anyUnhealthyOrDegraded.forEach(this::logFailedCheck);
-                response.status(getCorrespondingStatusCode(anyUnhealthyOrDegraded));
-                return response;
-            });
+    public Object validateHealthChecks(Request request, Response response) {
+        ImmutableList<Result> results = executeHealthChecks();
+        ResultStatus status = retrieveAggregationStatus(results);
+        response.status(getCorrespondingStatusCode(status));
+        return new HeathCheckAggregationExecutionResultDto(status, mapResultToDto(results));
+    }
+    
+    @GET
+    @Path("/checks/{" + PARAM_COMPONENT_NAME + "}")
+    @ApiOperation(value = "Perform the component's health check")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            name = PARAM_COMPONENT_NAME,
+            required = true,
+            paramType = "path",
+            dataType = "String",
+            defaultValue = "None",
+            example = "/checks/Cassandra%20Backend",
+            value = "The URL encoded name of the component to check.")
+    })
+    public Object performHealthCheckForComponent(Request request, Response response) {
+        String componentName = request.params(PARAM_COMPONENT_NAME);
+        HealthCheck healthCheck = healthChecks.stream()
+            .filter(c -> c.componentName().getName().equals(componentName))
+            .findFirst()
+            .orElseThrow(() -> throw404(componentName));
+        
+        Result result = healthCheck.check();
+        logFailedCheck(result);
+        response.status(getCorrespondingStatusCode(result.getStatus()));
+        return new HealthCheckExecutionResultDto(result);
     }
 
-    private int getCorrespondingStatusCode(List<Result> anyUnhealthy) {
-        if (anyUnhealthy.isEmpty()) {
+    @GET
+    @Path(CHECKS)
+    @ApiOperation(value = "List all health checks")
+    @ApiResponse(code = HttpStatus.OK_200, message = "List of all health checks",
+            response = HealthCheckDto.class, responseContainer = "List")
+    public Object getHealthChecks(Request request, Response response) {
+        return healthChecks.stream()
+                .map(healthCheck -> new HealthCheckDto(healthCheck.componentName()))
+                .collect(Guavate.toImmutableList());
+    }
+    
+    private int getCorrespondingStatusCode(ResultStatus resultStatus) {
+        switch (resultStatus) {
+        case HEALTHY:
             return HttpStatus.OK_200;
-        } else {
+        case DEGRADED:
+        case UNHEALTHY:
+        default:
             return HttpStatus.INTERNAL_SERVER_ERROR_500;
         }
     }
@@ -114,10 +165,32 @@ public class HealthCheckRoutes implements PublicRoutes {
         }
     }
 
-    private List<Result> retrieveUnhealthyOrDegradedHealthChecks() {
+    private ImmutableList<Result> executeHealthChecks() {
         return healthChecks.stream()
             .map(HealthCheck::check)
-            .filter(result -> result.isUnHealthy() || result.isDegraded())
-            .collect(Guavate.toImmutableList());
+            .peek(this::logFailedCheck)
+            .collect(ImmutableList.toImmutableList());
     }
+
+    private ResultStatus retrieveAggregationStatus(List<Result> results) {
+        return results.stream()
+            .map(Result::getStatus)
+            .reduce(ResultStatus::merge)
+            .orElse(ResultStatus.HEALTHY);
+    }
+
+    private ImmutableList<HealthCheckExecutionResultDto> mapResultToDto(List<Result> results) {
+        return results.stream()
+            .map(HealthCheckExecutionResultDto::new)
+            .collect(ImmutableList.toImmutableList());
+    }
+    
+    private HaltException throw404(String componentName) {
+        return ErrorResponder.builder()
+            .message(String.format("Component with name %s cannot be found", componentName))
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .type(ErrorResponder.ErrorType.NOT_FOUND)
+            .haltError();
+    }
+        
 }

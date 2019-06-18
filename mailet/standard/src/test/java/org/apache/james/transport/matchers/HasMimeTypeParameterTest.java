@@ -45,6 +45,7 @@ class HasMimeTypeParameterTest {
     void setUp() throws MessagingException {
         matcher = new HasMimeTypeParameter();
         sampleMail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageBuilder
                 .mimeMessageBuilder()
                 .setSubject("Mail read")

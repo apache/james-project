@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -49,6 +50,9 @@ class MailAttributesListToMimeHeadersTest {
     private static final String MAIL_ATTRIBUTE_NAME2 = "org.apache.james.test2";
     private static final String HEADER_NAME1 = "JUNIT";
     private static final String HEADER_NAME2 = "JUNIT2";
+
+    private static final Attribute MAIL_ATTRIBUTE1 = Attribute.convertToAttribute(MAIL_ATTRIBUTE_NAME1, MAIL_ATTRIBUTE_VALUE1);
+    private static final Attribute MAIL_ATTRIBUTE2 = Attribute.convertToAttribute(MAIL_ATTRIBUTE_NAME2, MAIL_ATTRIBUTE_VALUE2);
 
     private Mailet mailet;
 
@@ -91,9 +95,10 @@ class MailAttributesListToMimeHeadersTest {
         mailet.init(mailetConfig);
 
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MailUtil.createMimeMessage())
-            .attribute(MAIL_ATTRIBUTE_NAME1, MAIL_ATTRIBUTE_VALUE1)
-            .attribute(MAIL_ATTRIBUTE_NAME2, MAIL_ATTRIBUTE_VALUE2)
+            .attribute(MAIL_ATTRIBUTE1)
+            .attribute(MAIL_ATTRIBUTE2)
             .build();
 
         mailet.service(mail);
@@ -111,8 +116,9 @@ class MailAttributesListToMimeHeadersTest {
         mailet.init(mailetConfig);
 
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MailUtil.createMimeMessage())
-            .attribute(MAIL_ATTRIBUTE_NAME1, MAIL_ATTRIBUTE_VALUE1)
+            .attribute(MAIL_ATTRIBUTE1)
             .build();
 
         mailet.service(mail);
@@ -136,8 +142,9 @@ class MailAttributesListToMimeHeadersTest {
         listWithNull.add(null);
         listWithNull.add("2");
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MailUtil.createMimeMessage())
-            .attribute(MAIL_ATTRIBUTE_NAME1, listWithNull)
+            .attribute(Attribute.convertToAttribute(MAIL_ATTRIBUTE_NAME1, listWithNull))
             .build();
 
         mailet.service(mail);
@@ -158,10 +165,11 @@ class MailAttributesListToMimeHeadersTest {
         mailet.init(mailetConfig);
 
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MailUtil.createMimeMessage())
-            .attribute(MAIL_ATTRIBUTE_NAME1, MAIL_ATTRIBUTE_VALUE1)
-            .attribute(MAIL_ATTRIBUTE_NAME2, MAIL_ATTRIBUTE_VALUE2)
-            .attribute("unmatched.attribute", "value")
+            .attribute(MAIL_ATTRIBUTE1)
+            .attribute(MAIL_ATTRIBUTE2)
+            .attribute(Attribute.convertToAttribute("unmatched.attribute", "value"))
             .build();
 
         mailet.service(mail);
@@ -183,9 +191,10 @@ class MailAttributesListToMimeHeadersTest {
 
         String firstValue = "first value";
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addHeader(HEADER_NAME1, firstValue))
-            .attribute(MAIL_ATTRIBUTE_NAME1, MAIL_ATTRIBUTE_VALUE1)
+            .attribute(MAIL_ATTRIBUTE1)
             .build();
 
         mailet.service(mail);
@@ -205,9 +214,10 @@ class MailAttributesListToMimeHeadersTest {
         mailet.init(mailetConfig);
 
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
-            .attribute(MAIL_ATTRIBUTE_NAME1, 3L)
-            .attribute(MAIL_ATTRIBUTE_NAME2, MAIL_ATTRIBUTE_VALUE2)
+            .attribute(Attribute.convertToAttribute(MAIL_ATTRIBUTE_NAME1, 3L))
+            .attribute(MAIL_ATTRIBUTE2)
             .build();
 
         mailet.service(mail);
@@ -228,8 +238,9 @@ class MailAttributesListToMimeHeadersTest {
 
         String value = "value";
         FakeMail mail = FakeMail.builder()
+            .name("mail")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
-            .attribute(MAIL_ATTRIBUTE_NAME1, ImmutableList.of(3L, value))
+            .attribute(Attribute.convertToAttribute(MAIL_ATTRIBUTE_NAME1, ImmutableList.of(3L, value)))
             .build();
 
         mailet.service(mail);

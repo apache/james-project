@@ -26,18 +26,21 @@ import java.util.List;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@ExtendWith(CassandraRestartExtension.class)
 class CassandraMailboxMapperConcurrencyTest {
 
     private static final int UID_VALIDITY = 52;
@@ -48,6 +51,7 @@ class CassandraMailboxMapperConcurrencyTest {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
         CassandraModule.aggregateModules(
+            CassandraSchemaVersionModule.MODULE,
             CassandraMailboxModule.MODULE,
             CassandraAclModule.MODULE));
 
@@ -62,7 +66,7 @@ class CassandraMailboxMapperConcurrencyTest {
     @Test
     void saveShouldBeThreadSafe() throws Exception {
         ConcurrentTestRunner.builder()
-            .operation((a, b) -> testee.save(new SimpleMailbox(MAILBOX_PATH, UID_VALIDITY)))
+            .operation((a, b) -> testee.save(new Mailbox(MAILBOX_PATH, UID_VALIDITY)))
             .threadCount(THREAD_COUNT)
             .operationCount(OPERATION_COUNT)
             .runAcceptingErrorsWithin(Duration.ofMinutes(1));
@@ -72,7 +76,7 @@ class CassandraMailboxMapperConcurrencyTest {
 
     @Test
     void saveWithUpdateShouldBeThreadSafe() throws Exception {
-        SimpleMailbox mailbox = new SimpleMailbox(MAILBOX_PATH, UID_VALIDITY);
+        Mailbox mailbox = new Mailbox(MAILBOX_PATH, UID_VALIDITY);
         testee.save(mailbox);
 
         mailbox.setName("newName");

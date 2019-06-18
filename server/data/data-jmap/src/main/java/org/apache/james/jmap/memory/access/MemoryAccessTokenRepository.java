@@ -20,8 +20,6 @@
 package org.apache.james.jmap.memory.access;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -32,6 +30,7 @@ import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
 import com.google.common.base.Preconditions;
+import reactor.core.publisher.Mono;
 
 public class MemoryAccessTokenRepository implements AccessTokenRepository {
 
@@ -43,32 +42,32 @@ public class MemoryAccessTokenRepository implements AccessTokenRepository {
     }
 
     @Override
-    public CompletableFuture<Void> addToken(String username, AccessToken accessToken) {
+    public Mono<Void> addToken(String username, AccessToken accessToken) {
         Preconditions.checkNotNull(username);
         Preconditions.checkArgument(! username.isEmpty(), "Username should not be empty");
         Preconditions.checkNotNull(accessToken);
         synchronized (tokensExpirationDates) {
             tokensExpirationDates.put(accessToken, username);
         }
-        return CompletableFuture.completedFuture(null);
+        return Mono.empty();
     }
 
     @Override
-    public CompletableFuture<Void> removeToken(AccessToken accessToken) {
+    public Mono<Void> removeToken(AccessToken accessToken) {
         Preconditions.checkNotNull(accessToken);
         synchronized (tokensExpirationDates) {
             tokensExpirationDates.remove(accessToken);
         }
-        return CompletableFuture.completedFuture(null);
+        return Mono.empty();
     }
 
     @Override
-    public CompletableFuture<String> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken {
+    public Mono<String> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken {
         Preconditions.checkNotNull(accessToken);
         synchronized (tokensExpirationDates) {
-            return CompletableFuture.completedFuture(
+            return Mono.just(
                 Optional.ofNullable(tokensExpirationDates.get(accessToken))
-                    .<CompletionException>orElseThrow(() -> new CompletionException(new InvalidAccessToken(accessToken))));
+                    .orElseThrow(() -> new InvalidAccessToken(accessToken)));
         }
     }
 

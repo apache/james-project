@@ -28,34 +28,30 @@ import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentOwnerT
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentOwnerTable.OWNER;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentOwnerTable.TABLE_NAME;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Username;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class CassandraAttachmentOwnerDAO {
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement addStatement;
-    private final CassandraUtils cassandraUtils;
     private final PreparedStatement selectStatement;
 
     @Inject
-    public CassandraAttachmentOwnerDAO(Session session, CassandraUtils cassandraUtils) {
+    public CassandraAttachmentOwnerDAO(Session session) {
         this.executor = new CassandraAsyncExecutor(session);
 
         this.selectStatement = prepareSelect(session);
         this.addStatement = prepareAdd(session);
-        this.cassandraUtils = cassandraUtils;
     }
 
     private PreparedStatement prepareAdd(Session session) {
@@ -72,23 +68,21 @@ public class CassandraAttachmentOwnerDAO {
                 .where(eq(ID, bindMarker(ID))));
     }
 
-    public CompletableFuture<Void> addOwner(AttachmentId attachmentId, Username owner) {
+    public Mono<Void> addOwner(AttachmentId attachmentId, Username owner) {
         return executor.executeVoid(
             addStatement.bind()
                 .setUUID(ID, attachmentId.asUUID())
                 .setString(OWNER, owner.getValue()));
     }
 
-    public CompletableFuture<Stream<Username>> retrieveOwners(AttachmentId attachmentId) {
-        return executor.execute(
-            selectStatement.bind()
-                .setUUID(ID, attachmentId.asUUID()))
-            .thenApply(cassandraUtils::convertToStream)
-            .thenApply(this::toOwners);
+    public Flux<Username> retrieveOwners(AttachmentId attachmentId) {
+        return executor.executeRows(
+                selectStatement.bind()
+                    .setUUID(ID, attachmentId.asUUID()))
+            .map(this::toOwner);
     }
 
-    private Stream<Username> toOwners(Stream<Row> stream) {
-        return stream.map(row -> row.getString(OWNER))
-            .map(Username::fromRawValue);
+    private Username toOwner(Row row) {
+        return Username.fromRawValue(row.getString(OWNER));
     }
 }

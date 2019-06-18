@@ -21,7 +21,10 @@ package org.apache.james.mailbox.extractor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+
+import com.google.common.collect.ImmutableMap;
 
 public class ParsedContent {
 
@@ -40,5 +43,24 @@ public class ParsedContent {
     public  Map<String, List<String>> getMetadata() {
         return metadata;
     }
-    
+
+    public static ParsedContent empty() {
+        return new ParsedContent(Optional.empty(), ImmutableMap.of());
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof  ParsedContent) {
+            ParsedContent that = (ParsedContent) o;
+
+            return Objects.equals(this.textualContent, that.textualContent)
+                && Objects.equals(this.metadata, that.metadata);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(textualContent, metadata);
+    }
 }

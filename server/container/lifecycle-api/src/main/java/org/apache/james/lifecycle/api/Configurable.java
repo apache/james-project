@@ -25,7 +25,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 /**
  * Classes which needs to access the configuration should implement this
  */
-public interface Configurable {
+public interface Configurable extends Startable {
 
     /**
      * Configure the object. Be aware that no services are injected when this is

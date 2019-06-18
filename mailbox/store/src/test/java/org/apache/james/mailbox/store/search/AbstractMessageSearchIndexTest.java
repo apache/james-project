@@ -28,6 +28,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.Flags;
 
@@ -37,8 +38,11 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
@@ -47,7 +51,6 @@ import org.apache.james.mailbox.model.SearchQuery.Sort.Order;
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
@@ -59,6 +62,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.Duration;
 
 public abstract class AbstractMessageSearchIndexTest {
 
@@ -814,6 +819,18 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    public void addressShouldReturnTheRightUidOfTheMessageContainingUTF8EncodingToHeaderName() throws Exception {
+        Assume.assumeTrue(storeMailboxManager
+            .getSupportedSearchCapabilities()
+            .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.To, "Üsteliğhan"));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(m8.getUid());
+    }
+
+    @Test
     public void addressShouldReturnUidHavingRightRecipientWhenToIsSpecified() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.To, "root@listes.minet.net"));
 
@@ -1051,11 +1068,11 @@ public abstract class AbstractMessageSearchIndexTest {
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.MailboxFrom)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
-            .containsExactly(m2.getUid(), m3.getUid(), m4.getUid(), m5.getUid());
-        // 2 : jira2@apache.org
-        // 3 : jira1@apache.org
-        // 4 : jira@apache.org
-        // 5 : mailet-api@james.apache.org
+            .containsExactly(m3.getUid(), m2.getUid(), m4.getUid(), m5.getUid());
+        // m3 : jira1@apache.org
+        // m2 : jira2@apache.org
+        // m4 : jira@apache.org
+        // m5 : mailet-api@james.apache.org
     }
 
     @Test
@@ -1065,11 +1082,11 @@ public abstract class AbstractMessageSearchIndexTest {
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.MailboxTo)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
-            .containsExactly(m5.getUid(), m2.getUid(), m3.getUid(), m4.getUid());
-        // 2 : server-dev@james.apache.org
-        // 3 : server-dev@james.apache.org
-        // 4 : server-dev@james.apache.org
-        // 5 : mailet-api@james.apache.org
+            .containsExactly(m5.getUid(), m3.getUid(), m2.getUid(), m4.getUid());
+        // 5 : "zzz" <mailet-api@james.apache.org>
+        // 3 : "aaa" <server-dev@james.apache.org>
+        // 2 : "abc" <server-dev@james.apache.org>
+        // 4 : "server" <server-dev@james.apache.org>
     }
 
     @Test
@@ -1450,6 +1467,27 @@ public abstract class AbstractMessageSearchIndexTest {
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsOnly(m3.getUid());
+    }
+
+    @Test
+    public void copiedMessageShouldAllBeIndexed() throws Exception {
+        MailboxPath newBoxPath = MailboxPath.forUser(USERNAME, "newBox");
+        MailboxId newBoxId = storeMailboxManager.createMailbox(newBoxPath, session).get();
+
+        storeMailboxManager.copyMessages(MessageRange.all(), inboxMessageManager.getId(), newBoxId, session);
+
+        SearchQuery searchQuery = new SearchQuery();
+
+        StoreMessageManager newBox = (StoreMessageManager) storeMailboxManager.getMailbox(newBoxId, session);
+
+        Awaitility.with()
+            .pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
+            .and().with()
+            .pollDelay(new Duration(1, TimeUnit.MILLISECONDS))
+            .await()
+            .atMost(30, TimeUnit.SECONDS)
+            .until(
+                () -> messageSearchIndex.search(session, newBox.getMailboxEntity(), searchQuery).count() == 9);
     }
 
     @Test

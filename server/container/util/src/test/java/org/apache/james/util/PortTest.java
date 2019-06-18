@@ -22,69 +22,69 @@ package org.apache.james.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class PortTest {
     @Test
-    public void assertValidShouldThrowOnNegativePort() {
+    void assertValidShouldThrowOnNegativePort() {
         assertThatThrownBy(() -> Port.assertValid(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void assertValidShouldThrowOnZeroPort() {
+    void assertValidShouldThrowOnZeroPort() {
         assertThatThrownBy(() -> Port.assertValid(0))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void assertValidShouldAcceptOne() {
+    void assertValidShouldAcceptOne() {
         Port.assertValid(1);
     }
 
     @Test
-    public void assertValidShouldAcceptMaxValue() {
+    void assertValidShouldAcceptMaxValue() {
         Port.assertValid(Port.MAX_PORT_VALUE);
     }
 
     @Test
-    public void assertValidShouldThrowOnTooBigValue() {
+    void assertValidShouldThrowOnTooBigValue() {
         assertThatThrownBy(() -> Port.assertValid(Port.MAX_PORT_VALUE + 1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void isValidShouldReturnFalseWhenNegative() {
+    void isValidShouldReturnFalseWhenNegative() {
         assertThat(Port.isValid(-1))
             .isFalse();
     }
 
     @Test
-    public void isValidShouldReturnFalseWhenZero() {
+    void isValidShouldReturnFalseWhenZero() {
         assertThat(Port.isValid(0))
             .isFalse();
     }
 
     @Test
-    public void isValidShouldReturnTrueWhenOne() {
+    void isValidShouldReturnTrueWhenOne() {
         assertThat(Port.isValid(1))
             .isTrue();
     }
 
     @Test
-    public void isValidShouldReturnTrueWhenMaxValue() {
+    void isValidShouldReturnTrueWhenMaxValue() {
         assertThat(Port.isValid(Port.MAX_PORT_VALUE))
             .isTrue();
     }
 
     @Test
-    public void isValidShouldReturnFalseWhenAboveMaxValue() {
+    void isValidShouldReturnFalseWhenAboveMaxValue() {
         assertThat(Port.isValid(Port.MAX_PORT_VALUE + 1))
             .isFalse();
     }
 
     @Test
-    public void generateValidUnprivilegedPortShouldReturnAValidPort() {
+    void generateValidUnprivilegedPortShouldReturnAValidPort() {
         assertThat(Port.generateValidUnprivilegedPort())
             .isBetween(Port.PRIVILEGED_PORT_BOUND, Port.MAX_PORT_VALUE);
     }

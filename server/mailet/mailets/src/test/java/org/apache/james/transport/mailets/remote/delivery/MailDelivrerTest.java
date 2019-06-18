@@ -69,7 +69,6 @@ public class MailDelivrerTest {
         dnsHelper = mock(DnsHelper.class);
         mailDelivrerToHost = mock(MailDelivrerToHost.class);
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.MAX_DNS_PROBLEM_RETRIES, "3")
             .setProperty(RemoteDeliveryConfiguration.DEBUG, "true")
             .build(),
@@ -79,7 +78,7 @@ public class MailDelivrerTest {
 
     @Test
     public void handleSenderFailedExceptionShouldReturnTemporaryFailureByDefault() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         SendFailedException sfe = new SendFailedException();
         ExecutionResult executionResult = testee.handleSenderFailedException(mail, sfe);
@@ -89,7 +88,7 @@ public class MailDelivrerTest {
 
     @Test
     public void handleSenderFailedExceptionShouldReturnTemporaryFailureWhenNotServerException() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         SendFailedException sfe = new SMTPSenderFailedException(new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.asString()), "Comand", 400, "An temporary error");
         ExecutionResult executionResult = testee.handleSenderFailedException(mail, sfe);
@@ -99,7 +98,7 @@ public class MailDelivrerTest {
 
     @Test
     public void handleSenderFailedExceptionShouldReturnPermanentFailureWhenServerException() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         SendFailedException sfe = new SMTPSenderFailedException(new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.asString()), "Comand", 505, "An temporary error");
         ExecutionResult executionResult = testee.handleSenderFailedException(mail, sfe);
@@ -109,7 +108,7 @@ public class MailDelivrerTest {
 
     @Test
     public void handleSenderFailedExceptionShouldReturnPermanentFailureWhenInvalidAndNotValidUnsent() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         Address[] validSent = {};
         Address[] validUnsent = {};
@@ -126,7 +125,7 @@ public class MailDelivrerTest {
 
     @Test
     public void handleSenderFailedExceptionShouldReturnTemporaryFailureWhenValidUnsent() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         Address[] validSent = {};
         Address[] validUnsent = {new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.asString())};
@@ -143,7 +142,7 @@ public class MailDelivrerTest {
 
     @Test
     public void handleSenderFailedExceptionShouldReturnTemporaryFailureWhenInvalidAndValidUnsent() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         Address[] validSent = {};
         Address[] validUnsent = {new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.asString())};
@@ -160,7 +159,7 @@ public class MailDelivrerTest {
 
     @Test
     public void handleSenderFailedExceptionShouldSetRecipientToInvalidWhenOnlyInvalid() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         Address[] validSent = {};
         Address[] validUnsent = {};
@@ -177,7 +176,7 @@ public class MailDelivrerTest {
 
     @Test
     public void handleSenderFailedExceptionShouldSetRecipientToValidUnsentWhenOnlyValidUnsent() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         Address[] validSent = {};
         Address[] validUnsent = {new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.asString())};
@@ -194,7 +193,7 @@ public class MailDelivrerTest {
 
     @Test
     public void handleSenderFailedExceptionShouldSetRecipientToValidUnsentWhenValidUnsentAndInvalid() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         Address[] validSent = {};
         Address[] validUnsent = {new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.asString())};
@@ -211,7 +210,7 @@ public class MailDelivrerTest {
 
     @Test
     public void handleSenderFailedExceptionShouldBounceInvalidAddressesOnBothInvalidAndValidUnsent() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         Address[] validSent = {};
         Address[] validUnsent = {new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.asString())};
@@ -229,7 +228,7 @@ public class MailDelivrerTest {
 
     @Test
     public void deliverShouldReturnTemporaryFailureOnTemporaryResolutionException() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenThrow(new TemporaryResolutionException());
 
@@ -240,7 +239,7 @@ public class MailDelivrerTest {
 
     @Test
     public void deliverShouldReturnTemporaryErrorWhenFirstDNSProblem() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         UnmodifiableIterator<HostAddress> empty = ImmutableList.<HostAddress>of().iterator();
         when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(empty);
@@ -252,7 +251,7 @@ public class MailDelivrerTest {
 
     @Test
     public void deliverShouldReturnTemporaryErrorWhenToleratedDNSProblem() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
         DeliveryRetriesHelper.incrementRetries(mail);
 
         UnmodifiableIterator<HostAddress> empty = ImmutableList.<HostAddress>of().iterator();
@@ -265,7 +264,7 @@ public class MailDelivrerTest {
 
     @Test
     public void deliverShouldReturnPermanentErrorWhenLimitDNSProblemReached() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
         DeliveryRetriesHelper.incrementRetries(mail);
         DeliveryRetriesHelper.incrementRetries(mail);
         DeliveryRetriesHelper.incrementRetries(mail);
@@ -280,7 +279,7 @@ public class MailDelivrerTest {
 
     @Test
     public void deliverShouldReturnPermanentErrorWhenLimitDNSProblemExceeded() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         DeliveryRetriesHelper.incrementRetries(mail);
         DeliveryRetriesHelper.incrementRetries(mail);
@@ -297,7 +296,7 @@ public class MailDelivrerTest {
 
     @Test
     public void deliverShouldWork() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         UnmodifiableIterator<HostAddress> dnsEntries = ImmutableList.of(
             HOST_ADDRESS_1,
@@ -313,7 +312,7 @@ public class MailDelivrerTest {
 
     @Test
     public void deliverShouldAbortWhenServerError() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         UnmodifiableIterator<HostAddress> dnsEntries = ImmutableList.of(
             HOST_ADDRESS_1,
@@ -329,7 +328,7 @@ public class MailDelivrerTest {
 
     @Test
     public void deliverShouldAbortWithTemporaryWhenMessagingExceptionCauseUnknown() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         UnmodifiableIterator<HostAddress> dnsEntries = ImmutableList.of(
             HOST_ADDRESS_1,
@@ -345,7 +344,7 @@ public class MailDelivrerTest {
 
     @Test
     public void deliverShouldTryTwiceOnIOException() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         UnmodifiableIterator<HostAddress> dnsEntries = ImmutableList.of(
             HOST_ADDRESS_1,
@@ -363,7 +362,7 @@ public class MailDelivrerTest {
 
     @Test
     public void deliverShouldAbortWhenServerErrorSFE() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         UnmodifiableIterator<HostAddress> dnsEntries = ImmutableList.of(
             HOST_ADDRESS_1,
@@ -379,7 +378,7 @@ public class MailDelivrerTest {
 
     @Test
     public void deliverShouldAttemptDeliveryOnlyOnceIfNoMoreValidUnsent() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         UnmodifiableIterator<HostAddress> dnsEntries = ImmutableList.of(
             HOST_ADDRESS_1,
@@ -395,7 +394,7 @@ public class MailDelivrerTest {
 
     @Test
     public void deliverShouldAttemptDeliveryOnBothMXIfStillRecipients() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
         Address[] validSent = {};
         Address[] validUnsent = {new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.asString())};
         Address[] invalid = {};
@@ -419,7 +418,7 @@ public class MailDelivrerTest {
 
     @Test
     public void deliverShouldWorkIfOnlyMX2Valid() throws Exception {
-        Mail mail = FakeMail.builder().recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
+        Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
         Address[] validSent = {};
         Address[] validUnsent = {new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.asString())};
         Address[] invalid = {};

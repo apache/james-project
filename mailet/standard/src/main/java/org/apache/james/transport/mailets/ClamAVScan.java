@@ -40,6 +40,9 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -198,7 +201,7 @@ public class ClamAVScan extends GenericMailet {
 
     private static final String FOUND_STRING = "FOUND";
 
-    private static final String MAIL_ATTRIBUTE_NAME = "org.apache.james.infected";
+    private static final AttributeName MAIL_ATTRIBUTE_NAME = AttributeName.of("org.apache.james.infected");
 
     private static final String HEADER_NAME = "X-MessageIsInfected";
 
@@ -588,7 +591,7 @@ public class ClamAVScan extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
 
         // if already checked no action
-        if (mail.getAttribute(MAIL_ATTRIBUTE_NAME) != null) {
+        if (mail.getAttribute(MAIL_ATTRIBUTE_NAME).isPresent()) {
             return;
         }
 
@@ -662,7 +665,7 @@ public class ClamAVScan extends GenericMailet {
                     logMessageInfo(mimeMessage);
 
                     // mark the mail with a mail attribute to check later on by other matchers/mailets
-                    mail.setAttribute(MAIL_ATTRIBUTE_NAME, "true");
+                    mail.setAttribute(makeAttribute(true));
 
                     // sets the error message to be shown in any "notifyXxx" message
                     mail.setErrorMessage(sb.toString());
@@ -674,7 +677,7 @@ public class ClamAVScan extends GenericMailet {
                     if (isDebug()) {
                         LOGGER.debug("OK (by CLAMD on {})", socket.getInetAddress());
                     }
-                    mail.setAttribute(MAIL_ATTRIBUTE_NAME, "false");
+                    mail.setAttribute(makeAttribute(false));
 
                     // mark the message with a header string
                     mimeMessage.setHeader(HEADER_NAME, "false");
@@ -692,6 +695,10 @@ public class ClamAVScan extends GenericMailet {
             throw new MessagingException("Exception caught", ex);
         }
 
+    }
+
+    private Attribute makeAttribute(boolean value) {
+        return new Attribute(MAIL_ATTRIBUTE_NAME, AttributeValue.of(value));
     }
 
     /**
@@ -821,7 +828,7 @@ public class ClamAVScan extends GenericMailet {
             PrintWriter out = new PrintWriter(sout, true);
 
             out.print("Mail details:");
-            out.print(" MAIL FROM: " + mail.getSender());
+            out.print(" MAIL FROM: " + mail.getMaybeSender().asString());
             Iterator<MailAddress> rcptTo = mail.getRecipients().iterator();
             out.print(", RCPT TO: " + rcptTo.next());
             while (rcptTo.hasNext()) {

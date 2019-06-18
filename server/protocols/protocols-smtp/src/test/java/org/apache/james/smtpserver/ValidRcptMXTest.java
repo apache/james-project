@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.HashMap;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -83,7 +84,7 @@ public class ValidRcptMXTest {
         ValidRcptMX handler = new ValidRcptMX();
         handler.setDNSService(dns);
         handler.setBannedNetworks(ImmutableList.of(bannedAddress), dns);
-        HookReturnCode rCode = handler.doRcpt(session, null, mailAddress).getResult();
+        HookReturnCode rCode = handler.doRcpt(session, MaybeSender.nullSender(), mailAddress).getResult();
 
         assertThat(HookReturnCode.deny()).describedAs("Reject").isEqualTo(rCode);
     }

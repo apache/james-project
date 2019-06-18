@@ -21,7 +21,6 @@ package org.apache.james.webadmin.routes;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Supplier;
 
 import javax.inject.Inject;
@@ -34,11 +33,11 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskNotFoundException;
-import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.ExecutionDetailsDto;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
 import io.swagger.annotations.Api;
@@ -166,14 +165,13 @@ public class TasksRoutes implements Routes {
     public Object cancel(Request req, Response response) {
         TaskId taskId = getTaskId(req);
         taskManager.cancel(taskId);
-        response.status(HttpStatus.NO_CONTENT_204);
-        return Constants.EMPTY_BODY;
+        return Responses.returnNoContent(response);
     }
 
     private TaskId getTaskId(Request req) {
         try {
             String id = req.params("id");
-            return new TaskId(UUID.fromString(id));
+            return TaskId.fromString(id);
         } catch (Exception e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)

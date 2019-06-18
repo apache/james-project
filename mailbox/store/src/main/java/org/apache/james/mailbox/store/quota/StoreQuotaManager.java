@@ -19,12 +19,15 @@
 
 package org.apache.james.mailbox.store.quota;
 
+import java.util.Map;
+
 import javax.inject.Inject;
 
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.model.Quota.Scope;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
@@ -47,20 +50,22 @@ public class StoreQuotaManager implements QuotaManager {
 
     @Override
     public Quota<QuotaCount> getMessageQuota(QuotaRoot quotaRoot) throws MailboxException {
+        Map<Scope, QuotaCount> maxMessageDetails = maxQuotaManager.listMaxMessagesDetails(quotaRoot);
         return Quota.<QuotaCount>builder()
             .used(currentQuotaManager.getCurrentMessageCount(quotaRoot))
-            .computedLimit(maxQuotaManager.getMaxMessage(quotaRoot).orElse(QuotaCount.unlimited()))
-            .limitsByScope(maxQuotaManager.listMaxMessagesDetails(quotaRoot))
+            .computedLimit(maxQuotaManager.getMaxMessage(maxMessageDetails).orElse(QuotaCount.unlimited()))
+            .limitsByScope(maxMessageDetails)
             .build();
     }
 
 
     @Override
     public Quota<QuotaSize> getStorageQuota(QuotaRoot quotaRoot) throws MailboxException {
+        Map<Scope, QuotaSize> maxStorageDetails = maxQuotaManager.listMaxStorageDetails(quotaRoot);
         return Quota.<QuotaSize>builder()
             .used(currentQuotaManager.getCurrentStorage(quotaRoot))
-            .computedLimit(maxQuotaManager.getMaxStorage(quotaRoot).orElse(QuotaSize.unlimited()))
-            .limitsByScope(maxQuotaManager.listMaxStorageDetails(quotaRoot))
+            .computedLimit(maxQuotaManager.getMaxStorage(maxStorageDetails).orElse(QuotaSize.unlimited()))
+            .limitsByScope(maxStorageDetails)
             .build();
     }
 

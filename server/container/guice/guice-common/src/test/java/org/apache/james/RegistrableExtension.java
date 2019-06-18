@@ -24,8 +24,11 @@ import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolutionException;
+import org.junit.jupiter.api.extension.ParameterResolver;
 
-public interface RegistrableExtension extends BeforeAllCallback, BeforeEachCallback, AfterEachCallback, AfterAllCallback {
+public interface RegistrableExtension extends BeforeAllCallback, BeforeEachCallback, AfterEachCallback, AfterAllCallback, ParameterResolver {
     @Override
     default void afterAll(ExtensionContext extensionContext) throws Exception {
 
@@ -44,5 +47,15 @@ public interface RegistrableExtension extends BeforeAllCallback, BeforeEachCallb
     @Override
     default void beforeEach(ExtensionContext extensionContext) throws Exception {
 
+    }
+
+    @Override
+    default boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return false;
+    }
+
+    @Override
+    default Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return null;
     }
 }

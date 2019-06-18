@@ -22,7 +22,6 @@ package org.apache.james.queue.rabbitmq;
 import static org.apache.james.queue.api.MailQueue.ENQUEUED_METRIC_NAME_PREFIX;
 
 import java.time.Clock;
-import java.util.concurrent.CompletableFuture;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -37,6 +36,7 @@ import org.apache.mailet.Mail;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.fge.lambdas.Throwing;
+import reactor.core.publisher.Mono;
 
 class Enqueuer {
     private final MailQueueName name;
@@ -61,13 +61,13 @@ class Enqueuer {
 
     void enQueue(Mail mail) throws MailQueue.MailQueueException {
         saveMail(mail)
-            .thenApply(Throwing.<MimeMessagePartsId, EnqueuedItem>function(partsId -> publishReferenceToRabbit(mail, partsId)).sneakyThrow())
-            .thenApply(mailQueueView::storeMail)
-            .thenRun(enqueueMetric::increment)
-            .join();
+            .map(Throwing.<MimeMessagePartsId, EnqueuedItem>function(partsId -> publishReferenceToRabbit(mail, partsId)).sneakyThrow())
+            .flatMap(mailQueueView::storeMail)
+            .thenEmpty(Mono.fromRunnable(enqueueMetric::increment))
+            .block();
     }
 
-    private CompletableFuture<MimeMessagePartsId> saveMail(Mail mail) throws MailQueue.MailQueueException {
+    private Mono<MimeMessagePartsId> saveMail(Mail mail) throws MailQueue.MailQueueException {
         try {
             return mimeMessageStore.save(mail.getMessage());
         } catch (MessagingException e) {

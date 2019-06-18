@@ -66,4 +66,10 @@ public class MessageBatcherTest {
         new MessageBatcher(-1);
     }
 
+    @Test
+    public void getBatchSizeShouldReturnTheBatchSize() {
+        int batchSize = 123;
+        MessageBatcher messageBatcher = new MessageBatcher(batchSize);
+        assertThat(messageBatcher.getBatchSize()).isEqualTo(batchSize);
+    }
 }

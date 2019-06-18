@@ -20,18 +20,21 @@
 package org.apache.james;
 
 import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.modules.ConfigurationProbe;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraJamesServerTest implements JamesServerContract {
     private static final int LIMIT_TO_10_MESSAGES = 10;
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
-        .extension(new EmbeddedElasticSearchExtension())
+    static JamesServerExtension testExtension = new JamesServerBuilder()
+        .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
@@ -39,4 +42,16 @@ class CassandraJamesServerTest implements JamesServerContract {
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
             .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
         .build();
+
+    @Test
+    void moveBatchSizeShouldEqualsConfigurationValue(GuiceJamesServer jamesServer) {
+        int moveBatchSize = jamesServer.getProbe(ConfigurationProbe.class).getMoveBatchSize();
+        assertThat(moveBatchSize).isEqualTo(100);
+    }
+
+    @Test
+    void copyBatchSizeShouldEqualsConfigurationValue(GuiceJamesServer jamesServer) {
+        int copyBatchSize = jamesServer.getProbe(ConfigurationProbe.class).getCopyBatchSize();
+        assertThat(copyBatchSize).isEqualTo(100);
+    }
 }

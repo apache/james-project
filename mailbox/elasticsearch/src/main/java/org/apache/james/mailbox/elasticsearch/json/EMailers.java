@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Preconditions;
 
-public class EMailers implements Serializable {
+public class EMailers implements SerializableMessage {
 
     public static EMailers from(Set<EMailer> emailers) {
         Preconditions.checkNotNull(emailers, "'emailers' is mandatory");

@@ -20,43 +20,36 @@
 package org.apache.james.metric.es;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.metrics.es.ESReporterConfiguration;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-public class ESReportedConfigurationTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class ESReportedConfigurationTest {
 
     @Test
-    public void builderShouldThrowWhenNotToldIfEnabled() {
-        expectedException.expect(IllegalStateException.class);
-
-        ESReporterConfiguration.builder().build();
+    void builderShouldThrowWhenNotToldIfEnabled() {
+        assertThatThrownBy(() -> ESReporterConfiguration.builder().build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void builderShouldThrowIfEnabledWithoutHostAndPort() {
-        expectedException.expect(IllegalStateException.class);
-
-        ESReporterConfiguration.builder()
-            .enabled()
-            .build();
+    void builderShouldThrowIfEnabledWithoutHostAndPort() {
+        assertThatThrownBy(() -> ESReporterConfiguration.builder()
+                .enabled()
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void builderShouldThrowOnNullHost() {
-        expectedException.expect(NullPointerException.class);
-
-        ESReporterConfiguration.builder()
-            .onHost(null, 18);
+    void builderShouldThrowOnNullHost() {
+        assertThatThrownBy(() -> ESReporterConfiguration.builder()
+                .onHost(null, 18))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void builderShouldWorkWhenDisabled() {
+    void builderShouldWorkWhenDisabled() {
         ESReporterConfiguration configuration = ESReporterConfiguration.builder()
             .disabled()
             .build();
@@ -67,18 +60,17 @@ public class ESReportedConfigurationTest {
     }
 
     @Test
-    public void getHostWithPortShouldThrowWhenDisabled() {
+    void getHostWithPortShouldThrowWhenDisabled() {
         ESReporterConfiguration configuration = ESReporterConfiguration.builder()
             .disabled()
             .build();
 
-        expectedException.expect(IllegalStateException.class);
-
-        configuration.getHostWithPort();
+        assertThatThrownBy(() -> configuration.getHostWithPort())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void builderShouldWorkWhenEnabled() {
+    void builderShouldWorkWhenEnabled() {
         int port = 14;
         String host = "host";
         ESReporterConfiguration configuration = ESReporterConfiguration.builder()

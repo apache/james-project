@@ -21,16 +21,16 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.Iterator;
-import java.util.Map;
-
 import javax.mail.MessagingException;
 
+import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
 
-import com.google.common.collect.ImmutableMap;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
 
 /**
  * <p>This mailet sets attributes on the Mail.</p>
@@ -47,7 +47,7 @@ import com.google.common.collect.ImmutableMap;
  */
 public class SetMailAttribute extends GenericMailet {
 
-    private ImmutableMap<String, String> entries;
+    private ImmutableList<Attribute> entries;
     
     @Override
     public String getMailetInfo() {
@@ -56,21 +56,14 @@ public class SetMailAttribute extends GenericMailet {
 
     @Override
     public void init() throws MailetException {
-        ImmutableMap.Builder<String, String> attributes = ImmutableMap.builder();
-        Iterator<String> iter = getInitParameterNames();
-        while (iter.hasNext()) {
-            String name = iter.next();
-            String value = getInitParameter(name);
-            attributes.put(name, value);
-        }
-        entries = attributes.build();
+        entries = Streams.stream(getInitParameterNames())
+            .map(name -> Attribute.convertToAttribute(name, getInitParameter(name)))
+            .collect(Guavate.toImmutableList());
     }
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        for (Map.Entry<String, String> entry : entries.entrySet()) {
-            mail.setAttribute(entry.getKey(), entry.getValue());
-        }
+        entries.forEach(mail::setAttribute);
     }
     
 

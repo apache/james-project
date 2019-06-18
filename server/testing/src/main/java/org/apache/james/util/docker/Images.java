@@ -22,8 +22,9 @@ package org.apache.james.util.docker;
 public interface Images {
     String FAKE_SMTP = "weave/rest-smtp-sink:latest";
     String RABBITMQ = "rabbitmq:3.7.7-management";
-    String ELASTICSEARCH = "elasticsearch:2.4.6";
+    String ELASTICSEARCH_2 = "elasticsearch:2.4.6";
+    String ELASTICSEARCH_6 = "docker.elastic.co/elasticsearch/elasticsearch:6.3.2";
     String NGINX = "nginx:1.15.1";
-    String TIKA = "linagora/docker-tikaserver:1.18-SNAPSHOT-plus-TIKA-2520";
+    String TIKA = "logicalspark/docker-tikaserver:1.20";
     String SPAMASSASSIN = "dinkel/spamassassin:3.4.0";
 }

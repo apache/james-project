@@ -21,7 +21,6 @@ package org.apache.james.dlp.eventsourcing.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraExtension;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.dlp.api.DLPConfigurationStore;
 import org.apache.james.dlp.eventsourcing.EventSourcingDLPConfigurationStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
@@ -80,7 +79,6 @@ public class CassandraEventSourcingDLPConfigurationStoreExtension implements Bef
 
         EventStoreDao eventStoreDao = new EventStoreDao(
             cassandra.getConf(),
-            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             jsonEventSerializer);
 
         return new EventSourcingDLPConfigurationStore(new CassandraEventStore(eventStoreDao));

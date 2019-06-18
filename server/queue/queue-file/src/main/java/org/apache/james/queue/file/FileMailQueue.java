@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -53,11 +54,18 @@ import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageSource;
+import org.apache.james.util.concurrent.NamedThreadFactory;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * {@link ManageableMailQueue} implementation which use the fs to store {@link Mail}'s
@@ -70,7 +78,7 @@ public class FileMailQueue implements ManageableMailQueue {
 
     private final Map<String, FileItem> keyMappings = Collections.synchronizedMap(new LinkedHashMap<>());
     private final BlockingQueue<String> inmemoryQueue = new LinkedBlockingQueue<>();
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(NamedThreadFactory.withClassName(getClass()));
     private static final AtomicLong COUNTER = new AtomicLong();
     private final String queueDirName;
     private final File queueDir;
@@ -79,10 +87,11 @@ public class FileMailQueue implements ManageableMailQueue {
     private final boolean sync;
     private static final String MSG_EXTENSION = ".msg";
     private static final String OBJECT_EXTENSION = ".obj";
-    private static final String NEXT_DELIVERY = "FileQueueNextDelivery";
+    private static final AttributeName NEXT_DELIVERY = AttributeName.of("FileQueueNextDelivery");
     private static final int SPLITCOUNT = 10;
     private static final SecureRandom RANDOM = new SecureRandom();
     private final String queueName;
+    private final Flux<MailQueueItem> flux;
 
     public FileMailQueue(MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, File parentDir, String queuename, boolean sync) throws IOException {
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
@@ -91,6 +100,9 @@ public class FileMailQueue implements ManageableMailQueue {
         this.queueDir = new File(parentDir, queueName);
         this.queueDirName = queueDir.getAbsolutePath();
         init();
+        this.flux = Mono.defer(this::deQueueOneItem)
+            .repeat()
+            .limitRate(1);
     }
 
     @Override
@@ -162,15 +174,13 @@ public class FileMailQueue implements ManageableMailQueue {
     }
 
     private Optional<ZonedDateTime> getNextDelivery(Mail mail) {
-        Long next = (Long) mail.getAttribute(NEXT_DELIVERY);
-        if (next == null) {
-            return Optional.empty();
-        }
-        return Optional.of(Instant.ofEpochMilli(next).atZone(ZoneId.systemDefault()));
+        return AttributeUtils
+            .getValueAndCastFromMail(mail, NEXT_DELIVERY, Long.class)
+            .map(next -> Instant.ofEpochMilli(next).atZone(ZoneId.systemDefault()));
     }
 
     @Override
-    public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
+    public void enQueue(Mail mail, Duration delay) throws MailQueueException {
         final String key = mail.getName() + "-" + COUNTER.incrementAndGet();
         try {
             int i = RANDOM.nextInt(SPLITCOUNT) + 1;
@@ -178,8 +188,8 @@ public class FileMailQueue implements ManageableMailQueue {
             String name = queueDirName + "/" + i + "/" + key;
 
             final FileItem item = new FileItem(name + OBJECT_EXTENSION, name + MSG_EXTENSION);
-            if (delay > 0) {
-                mail.setAttribute(NEXT_DELIVERY, System.currentTimeMillis() + unit.toMillis(delay));
+            if (!delay.isNegative()) {
+                mail.setAttribute(new Attribute(NEXT_DELIVERY, AttributeValue.of(computeNextDelivery(delay))));
             }
             try (FileOutputStream foout = new FileOutputStream(item.getObjectFile());
                 ObjectOutputStream oout = new ObjectOutputStream(foout)) {
@@ -199,7 +209,7 @@ public class FileMailQueue implements ManageableMailQueue {
 
             keyMappings.put(key, item);
 
-            if (delay > 0) {
+            if (!delay.isNegative()) {
                 // The message should get delayed so schedule it for later
                 scheduler.schedule(() -> {
                     try {
@@ -209,7 +219,7 @@ public class FileMailQueue implements ManageableMailQueue {
                         Thread.currentThread().interrupt();
                         throw new RuntimeException("Unable to init", e);
                     }
-                }, delay, unit);
+                }, delay.getSeconds(), TimeUnit.SECONDS);
 
             } else {
                 inmemoryQueue.put(key);
@@ -222,13 +232,25 @@ public class FileMailQueue implements ManageableMailQueue {
 
     }
 
+    private long computeNextDelivery(Duration delay) {
+        try {
+            return Instant.now().plus(delay).getEpochSecond();
+        } catch (ArithmeticException e) {
+            return Long.MAX_VALUE;
+        }
+    }
+
     @Override
     public void enQueue(Mail mail) throws MailQueueException {
         enQueue(mail, 0, TimeUnit.MILLISECONDS);
     }
 
     @Override
-    public MailQueueItem deQueue() throws MailQueueException {
+    public Flux<MailQueueItem> deQueue() {
+        return flux;
+    }
+
+    private Mono<MailQueueItem> deQueueOneItem() {
         try {
             FileItem item = null;
             String k = null;
@@ -270,16 +292,16 @@ public class FileMailQueue implements ManageableMailQueue {
                             LifecycleUtil.dispose(mail);
                         }
                     };
-                    return mailQueueItemDecoratorFactory.decorate(fileMailQueueItem);
+                    return Mono.just(mailQueueItemDecoratorFactory.decorate(fileMailQueueItem));
                 }
                 // TODO: Think about exception handling in detail
             } catch (IOException | ClassNotFoundException | MessagingException e) {
-                throw new MailQueueException("Unable to dequeue", e);
+                return Mono.error(new MailQueueException("Unable to dequeue", e));
             }
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new MailQueueException("Unable to dequeue", e);
+            return Mono.error(new MailQueueException("Unable to dequeue", e));
         }
     }
 

@@ -18,10 +18,13 @@
  ****************************************************************/
 package org.apache.james.modules;
 
+import org.apache.james.mailbox.SystemMailboxesProvider;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.store.SystemMailboxesProviderImpl;
+import org.apache.james.modules.mailbox.PreDeletionHookModule;
 import org.apache.james.utils.GuiceProbe;
 
 import com.google.inject.AbstractModule;
@@ -32,15 +35,22 @@ public class MailboxModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new PreDeletionHookModule());
+
         Multibinder<GuiceProbe> probeMultiBinder = Multibinder.newSetBinder(binder(), GuiceProbe.class);
         probeMultiBinder.addBinding().to(MailboxProbeImpl.class);
         probeMultiBinder.addBinding().to(QuotaProbesImpl.class);
         probeMultiBinder.addBinding().to(ACLProbeImpl.class);
+        probeMultiBinder.addBinding().to(ConfigurationProbe.class);
 
         bind(UnionMailboxACLResolver.class).in(Scopes.SINGLETON);
         bind(MailboxACLResolver.class).to(UnionMailboxACLResolver.class);
         bind(SimpleGroupMembershipResolver.class).in(Scopes.SINGLETON);
         bind(GroupMembershipResolver.class).to(SimpleGroupMembershipResolver.class);
+
+
+        bind(SystemMailboxesProviderImpl.class).in(Scopes.SINGLETON);
+        bind(SystemMailboxesProvider.class).to(SystemMailboxesProviderImpl.class);
     }
 
 }

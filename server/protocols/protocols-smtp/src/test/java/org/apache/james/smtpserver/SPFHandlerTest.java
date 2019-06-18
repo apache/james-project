@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.jspf.core.DNSRequest;
 import org.apache.james.jspf.core.DNSService;
 import org.apache.james.jspf.core.exceptions.TimeoutException;
@@ -169,7 +170,7 @@ public class SPFHandlerTest {
 
     @Test
     public void testSPFpass() throws Exception {
-        MailAddress sender = new MailAddress("test@spf1.james.apache.org");
+        MaybeSender sender = MaybeSender.of(new MailAddress("test@spf1.james.apache.org"));
         MailAddress rcpt = new MailAddress("test@localhost");
         setupMockedSMTPSession("192.168.100.1", "spf1.james.apache.org");
         SPFHandler spf = new SPFHandler();
@@ -182,7 +183,7 @@ public class SPFHandlerTest {
 
     @Test
     public void testSPFfail() throws Exception {
-        MailAddress sender = new MailAddress("test@spf2.james.apache.org");
+        MaybeSender sender = MaybeSender.of(new MailAddress("test@spf2.james.apache.org"));
         MailAddress rcpt = new MailAddress("test@localhost");
         setupMockedSMTPSession("192.168.100.1", "spf2.james.apache.org");
         SPFHandler spf = new SPFHandler();
@@ -195,7 +196,7 @@ public class SPFHandlerTest {
 
     @Test
     public void testSPFsoftFail() throws Exception {
-        MailAddress sender = new MailAddress("test@spf3.james.apache.org");
+        MaybeSender sender = MaybeSender.of(new MailAddress("test@spf3.james.apache.org"));
         MailAddress rcpt = new MailAddress("test@localhost");
         setupMockedSMTPSession("192.168.100.1", "spf3.james.apache.org");
         SPFHandler spf = new SPFHandler();
@@ -208,7 +209,7 @@ public class SPFHandlerTest {
 
     @Test
     public void testSPFsoftFailRejectEnabled() throws Exception {
-        MailAddress sender = new MailAddress("test@spf3.james.apache.org");
+        MaybeSender sender = MaybeSender.of(new MailAddress("test@spf3.james.apache.org"));
         MailAddress rcpt = new MailAddress("test@localhost");
 
         setupMockedSMTPSession("192.168.100.1", "spf3.james.apache.org");
@@ -224,7 +225,7 @@ public class SPFHandlerTest {
 
     @Test
     public void testSPFpermError() throws Exception {
-        MailAddress sender = new MailAddress("test@spf4.james.apache.org");
+        MaybeSender sender = MaybeSender.of(new MailAddress("test@spf4.james.apache.org"));
         MailAddress rcpt = new MailAddress("test@localhost");
 
         setupMockedSMTPSession("192.168.100.1", "spf4.james.apache.org");
@@ -240,7 +241,7 @@ public class SPFHandlerTest {
 
     @Test
     public void testSPFtempError() throws Exception {
-        MailAddress sender = new MailAddress("test@spf5.james.apache.org");
+        MaybeSender sender = MaybeSender.of(new MailAddress("test@spf5.james.apache.org"));
         MailAddress rcpt = new MailAddress("test@localhost");
 
         setupMockedSMTPSession("192.168.100.1", "spf5.james.apache.org");
@@ -255,7 +256,7 @@ public class SPFHandlerTest {
 
     @Test
     public void testSPFNoRecord() throws Exception {
-        MailAddress sender = new MailAddress("test@spf6.james.apache.org");
+        MaybeSender sender = MaybeSender.of(new MailAddress("test@spf6.james.apache.org"));
         MailAddress rcpt = new MailAddress("test@localhost");
 
         setupMockedSMTPSession("192.168.100.1", "spf6.james.apache.org");
@@ -269,7 +270,7 @@ public class SPFHandlerTest {
 
     @Test
     public void testSPFpermErrorRejectDisabled() throws Exception {
-        MailAddress sender = new MailAddress("test@spf4.james.apache.org");
+        MaybeSender sender = MaybeSender.of(new MailAddress("test@spf4.james.apache.org"));
         MailAddress rcpt = new MailAddress("test@localhost");
         setupMockedSMTPSession("192.168.100.1", "spf4.james.apache.org");
         SPFHandler spf = new SPFHandler();

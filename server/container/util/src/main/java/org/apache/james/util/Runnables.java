@@ -19,27 +19,27 @@
 
 package org.apache.james.util;
 
-import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class Runnables {
     public static void runParallel(Runnable... runnables) {
-        Stream<Runnable> stream = Arrays.stream(runnables);
-        runParrallelStream(stream);
+        Flux<Runnable> stream = Flux.just(runnables);
+        runParallel(stream);
     }
 
-    public static void runParrallelStream(Stream<Runnable> stream) {
-        FluentFutureStream.of(stream
-                .map(runnable -> CompletableFuture.supplyAsync(toVoidSupplier(runnable))))
-            .join();
-    }
-
-    private static Supplier<Void> toVoidSupplier(Runnable runnable) {
-        return () -> {
-            runnable.run();
-            return null;
-        };
+    public static void runParallel(Flux<Runnable> runnables) {
+        runnables
+            .publishOn(Schedulers.elastic())
+            .parallel()
+            .runOn(Schedulers.elastic())
+            .flatMap(runnable -> {
+                runnable.run();
+                return Mono.empty();
+            })
+            .sequential()
+            .then()
+            .block();
     }
 }

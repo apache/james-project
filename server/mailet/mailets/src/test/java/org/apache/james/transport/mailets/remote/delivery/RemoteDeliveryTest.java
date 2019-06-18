@@ -19,19 +19,21 @@
 
 package org.apache.james.transport.mailets.remote.delivery;
 
+import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG;
+import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG_DOMAIN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
+import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -39,7 +41,8 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.james.transport.mailets.RemoteDelivery;
-import org.apache.james.util.streams.Iterators;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -47,7 +50,6 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -55,10 +57,7 @@ public class RemoteDeliveryTest {
 
     public static class MailProjection {
         public static MailProjection from(Mail mail) {
-            return new MailProjection(mail.getName(), mail.getRecipients(),
-                Iterators.toStream(mail.getAttributeNames())
-                    .map(name -> Pair.of(name, mail.getAttribute(name)))
-                    .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)));
+            return new MailProjection(mail.getName(), mail.getRecipients(), mail.attributesMap());
         }
 
         public static MailProjection from(ManageableMailQueue.MailQueueItemView item) {
@@ -67,9 +66,9 @@ public class RemoteDeliveryTest {
 
         private final String name;
         private final List<MailAddress> recipients;
-        private final Map<String, Serializable> attributes;
+        private final ImmutableMap<AttributeName, Attribute> attributes;
 
-        public MailProjection(String name, Collection<MailAddress> recipients, Map<String, Serializable> attributes) {
+        public MailProjection(String name, Collection<MailAddress> recipients, Map<AttributeName, Attribute> attributes) {
             this.name = name;
             this.recipients = ImmutableList.copyOf(recipients);
             this.attributes = ImmutableMap.copyOf(attributes);
@@ -99,17 +98,19 @@ public class RemoteDeliveryTest {
     private ManageableMailQueue mailQueue;
 
     @Before
-    public void setUp() {
+    public void setUp() throws ConfigurationException {
         MailQueueFactory<ManageableMailQueue> queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
         mailQueue = queueFactory.createQueue(RemoteDeliveryConfiguration.OUTGOING);
-        remoteDelivery = new RemoteDelivery(mock(DNSService.class), mock(DomainList.class),
+        DNSService dnsService = mock(DNSService.class);
+        MemoryDomainList domainList = new MemoryDomainList(dnsService);
+        domainList.configure(DomainListConfiguration.builder().defaultDomain(JAMES_APACHE_ORG_DOMAIN));
+        remoteDelivery = new RemoteDelivery(dnsService, domainList,
             queueFactory, new NoopMetricFactory(), RemoteDelivery.ThreadState.DO_NOT_START_THREADS);
     }
 
     @Test
     public void remoteDeliveryShouldAddEmailToSpool() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build());
 
         Mail mail = FakeMail.builder().name(MAIL_NAME).recipients(MailAddressFixture.ANY_AT_JAMES).build();
@@ -120,7 +121,7 @@ public class RemoteDeliveryTest {
             .extracting(MailProjection::from)
             .containsOnly(MailProjection.from(
                 FakeMail.builder()
-                    .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
+                    .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + JAMES_APACHE_ORG)
                     .recipient(MailAddressFixture.ANY_AT_JAMES)
                     .build()));
     }
@@ -128,7 +129,6 @@ public class RemoteDeliveryTest {
     @Test
     public void remoteDeliveryShouldSplitMailsByServerWhenNoGateway() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build());
 
         Mail mail = FakeMail.builder()
@@ -142,7 +142,7 @@ public class RemoteDeliveryTest {
             .extracting(MailProjection::from)
             .containsOnly(
                 MailProjection.from(FakeMail.builder()
-                    .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
+                    .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + JAMES_APACHE_ORG)
                     .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES)
                     .build()),
                 MailProjection.from(FakeMail.builder()
@@ -154,7 +154,6 @@ public class RemoteDeliveryTest {
     @Test
     public void remoteDeliveryShouldNotSplitMailsByServerWhenGateway() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, MailAddressFixture.JAMES_LOCAL)
             .build());
 
@@ -177,7 +176,6 @@ public class RemoteDeliveryTest {
     @Test
     public void remoteDeliveryShouldGhostMails() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build());
 
         Mail mail = FakeMail.builder().name(MAIL_NAME).recipients(MailAddressFixture.ANY_AT_JAMES).build();
@@ -189,7 +187,6 @@ public class RemoteDeliveryTest {
     @Test
     public void remoteDeliveryShouldAddPriorityIfSpecified() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.USE_PRIORITY, "true")
             .build());
 
@@ -201,7 +198,7 @@ public class RemoteDeliveryTest {
             .extracting(MailProjection::from)
             .containsOnly(MailProjection.from(FakeMail.builder()
                 .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
-                .attribute(MailPrioritySupport.MAIL_PRIORITY, MailPrioritySupport.HIGH_PRIORITY)
+                .attribute(MailPrioritySupport.HIGH_PRIORITY_ATTRIBUTE)
                 .recipient(MailAddressFixture.ANY_AT_JAMES)
                 .build()));
     }
@@ -209,7 +206,6 @@ public class RemoteDeliveryTest {
     @Test
     public void remoteDeliveryShouldNotForwardMailsWithNoRecipients() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .build());
 
         Mail mail = FakeMail.builder().name(MAIL_NAME).build();
@@ -221,7 +217,6 @@ public class RemoteDeliveryTest {
     @Test
     public void remoteDeliveryShouldNotForwardMailsWithNoRecipientsWithGateway() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.DELIVERY_THREADS, "1")
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, MailAddressFixture.JAMES_LOCAL)
             .build());
 

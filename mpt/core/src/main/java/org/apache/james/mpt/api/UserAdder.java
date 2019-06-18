@@ -25,10 +25,8 @@ package org.apache.james.mpt.api;
 public interface UserAdder {
     
     /**
-     * Adds a user.
      * @param user not null
      * @param password not null
-     * @throws Exception when user cannot be added
      */
     void addUser(String user, String password) throws Exception;
 }

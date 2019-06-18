@@ -98,19 +98,31 @@ public class RabbitMQConfiguration {
     public static class Builder {
         static final int DEFAULT_MAX_RETRIES = 7;
         static final int DEFAULT_MIN_DELAY = 3000;
+        static final int DEFAULT_CONNECTION_TIMEOUT = 60_000;
+        static final int DEFAULT_CHANNEL_RPC_TIMEOUT = 60_000;
+        static final int DEFAULT_HANDSHAKE_TIMEOUT = 10_000;
+        static final int DEFAULT_SHUTDOWN_TIMEOUT = 10_000;
 
         private final URI amqpUri;
         private final URI managementUri;
         private final ManagementCredentials managementCredentials;
         private Optional<Integer> maxRetries;
-        private Optional<Integer> minDelay;
+        private Optional<Integer> minDelayInMs;
+        private Optional<Integer> connectionTimeoutInMs;
+        private Optional<Integer> channelRpcTimeoutInMs;
+        private Optional<Integer> handshakeTimeoutInMs;
+        private Optional<Integer> shutdownTimeoutInMs;
 
         private Builder(URI amqpUri, URI managementUri, ManagementCredentials managementCredentials) {
             this.amqpUri = amqpUri;
             this.managementUri = managementUri;
             this.managementCredentials = managementCredentials;
             this.maxRetries = Optional.empty();
-            this.minDelay = Optional.empty();
+            this.minDelayInMs = Optional.empty();
+            this.connectionTimeoutInMs = Optional.empty();
+            this.channelRpcTimeoutInMs = Optional.empty();
+            this.handshakeTimeoutInMs = Optional.empty();
+            this.shutdownTimeoutInMs = Optional.empty();
         }
 
         public Builder maxRetries(int maxRetries) {
@@ -118,8 +130,28 @@ public class RabbitMQConfiguration {
             return this;
         }
 
-        public Builder minDelay(int minDelay) {
-            this.minDelay = Optional.of(minDelay);
+        public Builder minDelayInMs(int minDelay) {
+            this.minDelayInMs = Optional.of(minDelay);
+            return this;
+        }
+
+        public Builder connectionTimeoutInMs(int connectionTimeout) {
+            this.connectionTimeoutInMs = Optional.of(connectionTimeout);
+            return this;
+        }
+
+        public Builder channelRpcTimeoutInMs(int channelRpcTimeout) {
+            this.channelRpcTimeoutInMs = Optional.of(channelRpcTimeout);
+            return this;
+        }
+
+        public Builder handshakeTimeoutInMs(int handshakeTimeout) {
+            this.handshakeTimeoutInMs = Optional.of(handshakeTimeout);
+            return this;
+        }
+
+        public Builder shutdownTimeoutInMs(int shutdownTimeout) {
+            this.shutdownTimeoutInMs = Optional.of(shutdownTimeout);
             return this;
         }
 
@@ -131,7 +163,12 @@ public class RabbitMQConfiguration {
                     managementUri,
                     managementCredentials,
                     maxRetries.orElse(DEFAULT_MAX_RETRIES),
-                    minDelay.orElse(DEFAULT_MIN_DELAY));
+                    minDelayInMs.orElse(DEFAULT_MIN_DELAY),
+                    connectionTimeoutInMs.orElse(DEFAULT_CONNECTION_TIMEOUT),
+                    channelRpcTimeoutInMs.orElse(DEFAULT_CHANNEL_RPC_TIMEOUT),
+                    handshakeTimeoutInMs.orElse(DEFAULT_HANDSHAKE_TIMEOUT),
+                    shutdownTimeoutInMs.orElse(DEFAULT_SHUTDOWN_TIMEOUT)
+                );
         }
     }
 
@@ -170,15 +207,26 @@ public class RabbitMQConfiguration {
     private final URI uri;
     private final URI managementUri;
     private final int maxRetries;
-    private final int minDelay;
+    private final int minDelayInMs;
+    private final int connectionTimeoutInMs;
+    private final int channelRpcTimeoutInMs;
+    private final int handshakeTimeoutInMs;
+    private final int shutdownTimeoutInMs;
+
+
     private final ManagementCredentials managementCredentials;
 
-    private RabbitMQConfiguration(URI uri, URI managementUri, ManagementCredentials managementCredentials, int maxRetries, int minDelay) {
+    private RabbitMQConfiguration(URI uri, URI managementUri, ManagementCredentials managementCredentials, int maxRetries, int minDelayInMs,
+                                  int connectionTimeoutInMs, int channelRpcTimeoutInMs, int handshakeTimeoutInMs, int shutdownTimeoutInMs) {
         this.uri = uri;
         this.managementUri = managementUri;
         this.managementCredentials = managementCredentials;
         this.maxRetries = maxRetries;
-        this.minDelay = minDelay;
+        this.minDelayInMs = minDelayInMs;
+        this.connectionTimeoutInMs = connectionTimeoutInMs;
+        this.channelRpcTimeoutInMs = channelRpcTimeoutInMs;
+        this.handshakeTimeoutInMs = handshakeTimeoutInMs;
+        this.shutdownTimeoutInMs = shutdownTimeoutInMs;
     }
 
     public URI getUri() {
@@ -193,8 +241,24 @@ public class RabbitMQConfiguration {
         return maxRetries;
     }
 
-    public int getMinDelay() {
-        return minDelay;
+    public int getMinDelayInMs() {
+        return minDelayInMs;
+    }
+
+    public int getConnectionTimeoutInMs() {
+        return connectionTimeoutInMs;
+    }
+
+    public int getChannelRpcTimeoutInMs() {
+        return channelRpcTimeoutInMs;
+    }
+
+    public int getHandshakeTimeoutInMs() {
+        return handshakeTimeoutInMs;
+    }
+
+    public int getShutdownTimeoutInMs() {
+        return shutdownTimeoutInMs;
     }
 
     public ManagementCredentials getManagementCredentials() {
@@ -209,7 +273,11 @@ public class RabbitMQConfiguration {
             return Objects.equals(this.uri, that.uri)
                 && Objects.equals(this.managementUri, that.managementUri)
                 && Objects.equals(this.maxRetries, that.maxRetries)
-                && Objects.equals(this.minDelay, that.minDelay)
+                && Objects.equals(this.minDelayInMs, that.minDelayInMs)
+                && Objects.equals(this.connectionTimeoutInMs, that.connectionTimeoutInMs)
+                && Objects.equals(this.channelRpcTimeoutInMs, that.channelRpcTimeoutInMs)
+                && Objects.equals(this.handshakeTimeoutInMs, that.handshakeTimeoutInMs)
+                && Objects.equals(this.shutdownTimeoutInMs, that.shutdownTimeoutInMs)
                 && Objects.equals(this.managementCredentials, that.managementCredentials);
         }
         return false;
@@ -217,6 +285,7 @@ public class RabbitMQConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(uri, managementUri, maxRetries, minDelay, managementCredentials);
+        return Objects.hash(uri, managementUri, maxRetries, minDelayInMs, connectionTimeoutInMs,
+            channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, managementCredentials);
     }
 }

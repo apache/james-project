@@ -19,6 +19,7 @@
 package org.apache.james.modules.protocols;
 
 import java.net.InetSocketAddress;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
@@ -26,9 +27,25 @@ import javax.inject.Inject;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.smtpserver.netty.SMTPServer;
 import org.apache.james.smtpserver.netty.SMTPServerFactory;
+import org.apache.james.util.Port;
 import org.apache.james.utils.GuiceProbe;
 
 public class SmtpGuiceProbe implements GuiceProbe {
+
+    public enum SmtpServerConnectedType {
+        SMTP_GLOBAL_SERVER(SmtpGuiceProbe::getSmtpPort),
+        SMTP_START_TLS_SERVER(SmtpGuiceProbe::getSmtpsPort);
+
+        private final Function<SmtpGuiceProbe, Port> portExtractor;
+
+        SmtpServerConnectedType(Function<SmtpGuiceProbe, Port> portExtractor) {
+            this.portExtractor = portExtractor;
+        }
+
+        public Function<SmtpGuiceProbe, Port> getPortExtractor() {
+            return portExtractor;
+        }
+    }
 
     private final SMTPServerFactory smtpServerFactory;
 
@@ -37,24 +54,25 @@ public class SmtpGuiceProbe implements GuiceProbe {
         this.smtpServerFactory = smtpServerFactory;
     }
 
-    public int getSmtpPort() {
+    public Port getSmtpPort() {
         return getPort(server -> true);
     }
 
-    public int getSmtpsPort() {
+    public Port getSmtpsPort() {
         return getPort(AbstractConfigurableAsyncServer::getStartTLSSupported);
     }
 
-    public Integer getSmtpAuthRequiredPort() {
+    public Port getSmtpAuthRequiredPort() {
         return getPort(server -> ((SMTPServer) server).getAuthRequired() == SMTPServer.AUTH_REQUIRED);
     }
 
-    private Integer getPort(Predicate<? super AbstractConfigurableAsyncServer> filter) {
+    private Port getPort(Predicate<? super AbstractConfigurableAsyncServer> filter) {
         return smtpServerFactory.getServers().stream()
             .filter(filter)
             .findFirst()
             .flatMap(server -> server.getListenAddresses().stream().findFirst())
             .map(InetSocketAddress::getPort)
+            .map(Port::new)
             .orElseThrow(() -> new IllegalStateException("SMTP server not defined"));
     }
 }

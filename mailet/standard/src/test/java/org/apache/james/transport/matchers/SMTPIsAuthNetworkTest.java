@@ -41,6 +41,7 @@ public class SMTPIsAuthNetworkTest {
     @Test
     public void matchShouldReturnEmptyWhenNoSmtpInformation() throws Exception {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipient(recipient)
             .build();
 
@@ -51,8 +52,9 @@ public class SMTPIsAuthNetworkTest {
     @Test
     public void matchShouldReturnAddressesWhenAuthorizedNetwork() throws Exception {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipient(recipient)
-            .attribute(SMTPIsAuthNetwork.SMTP_AUTH_NETWORK_NAME, "true")
+            .attribute(SMTPIsAuthNetwork.makeAttribute(true))
             .build();
 
         assertThat(testee.match(mail))
@@ -62,8 +64,9 @@ public class SMTPIsAuthNetworkTest {
     @Test
     public void matchShouldReturnEmptyWhenNonAuthorizedNetwork() throws Exception {
         Mail mail = FakeMail.builder()
+            .name("mail")
             .recipient(recipient)
-            .attribute(SMTPIsAuthNetwork.SMTP_AUTH_NETWORK_NAME, "false")
+            .attribute(SMTPIsAuthNetwork.makeAttribute(false))
             .build();
 
         assertThat(testee.match(mail))

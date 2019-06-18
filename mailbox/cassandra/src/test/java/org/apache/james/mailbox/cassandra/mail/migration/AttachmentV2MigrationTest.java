@@ -25,15 +25,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.migration.Migration;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
@@ -44,8 +42,13 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+@ExtendWith(CassandraRestartExtension.class)
 class AttachmentV2MigrationTest {
     private static final AttachmentId ATTACHMENT_ID = AttachmentId.from("id1");
     private static final AttachmentId ATTACHMENT_ID_2 = AttachmentId.from("id2");
@@ -67,7 +70,6 @@ class AttachmentV2MigrationTest {
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
         attachmentDAO = new CassandraAttachmentDAO(cassandra.getConf(),
-            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             CassandraConfiguration.DEFAULT_CONFIGURATION);
         attachmentDAOV2 = new CassandraAttachmentDAOV2(BLOB_ID_FACTORY, cassandra.getConf());
         blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
@@ -93,8 +95,8 @@ class AttachmentV2MigrationTest {
 
     @Test
     void migrationShouldSucceed() throws Exception {
-        attachmentDAO.storeAttachment(attachment1).join();
-        attachmentDAO.storeAttachment(attachment2).join();
+        attachmentDAO.storeAttachment(attachment1).block();
+        attachmentDAO.storeAttachment(attachment2).block();
 
         assertThat(migration.run())
             .isEqualTo(Migration.Result.COMPLETED);
@@ -102,31 +104,31 @@ class AttachmentV2MigrationTest {
 
     @Test
     void migrationShouldMoveAttachmentsToV2() throws Exception {
-        attachmentDAO.storeAttachment(attachment1).join();
-        attachmentDAO.storeAttachment(attachment2).join();
+        attachmentDAO.storeAttachment(attachment1).block();
+        attachmentDAO.storeAttachment(attachment2).block();
 
         migration.run();
 
-        assertThat(attachmentDAOV2.getAttachment(ATTACHMENT_ID).join())
+        assertThat(attachmentDAOV2.getAttachment(ATTACHMENT_ID).blockOptional())
             .contains(CassandraAttachmentDAOV2.from(attachment1, BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
-        assertThat(attachmentDAOV2.getAttachment(ATTACHMENT_ID_2).join())
+        assertThat(attachmentDAOV2.getAttachment(ATTACHMENT_ID_2).blockOptional())
             .contains(CassandraAttachmentDAOV2.from(attachment2, BLOB_ID_FACTORY.forPayload(attachment2.getBytes())));
-        assertThat(blobsDAO.readBytes(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())).join())
+        assertThat(blobsDAO.readBytes(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())).block())
             .isEqualTo(attachment1.getBytes());
-        assertThat(blobsDAO.readBytes(BLOB_ID_FACTORY.forPayload(attachment2.getBytes())).join())
+        assertThat(blobsDAO.readBytes(BLOB_ID_FACTORY.forPayload(attachment2.getBytes())).block())
             .isEqualTo(attachment2.getBytes());
     }
 
     @Test
     void migrationShouldRemoveAttachmentsFromV1() throws Exception {
-        attachmentDAO.storeAttachment(attachment1).join();
-        attachmentDAO.storeAttachment(attachment2).join();
+        attachmentDAO.storeAttachment(attachment1).block();
+        attachmentDAO.storeAttachment(attachment2).block();
 
         migration.run();
 
-        assertThat(attachmentDAO.getAttachment(ATTACHMENT_ID).join())
+        assertThat(attachmentDAO.getAttachment(ATTACHMENT_ID).blockOptional())
             .isEmpty();
-        assertThat(attachmentDAO.getAttachment(ATTACHMENT_ID_2).join())
+        assertThat(attachmentDAO.getAttachment(ATTACHMENT_ID_2).blockOptional())
             .isEmpty();
     }
 
@@ -137,7 +139,7 @@ class AttachmentV2MigrationTest {
         CassandraBlobsDAO blobsDAO = mock(CassandraBlobsDAO.class);
         migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsDAO);
 
-        when(attachmentDAO.retrieveAll()).thenThrow(new RuntimeException());
+        when(attachmentDAO.retrieveAll()).thenReturn(Flux.error(new RuntimeException()));
 
         assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
     }
@@ -149,7 +151,7 @@ class AttachmentV2MigrationTest {
         CassandraBlobsDAO blobsDAO = mock(CassandraBlobsDAO.class);
         migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsDAO);
 
-        when(attachmentDAO.retrieveAll()).thenReturn(Stream.of(
+        when(attachmentDAO.retrieveAll()).thenReturn(Flux.just(
             attachment1,
             attachment2));
         when(blobsDAO.save(any(byte[].class))).thenThrow(new RuntimeException());
@@ -164,13 +166,13 @@ class AttachmentV2MigrationTest {
         CassandraBlobsDAO blobsDAO = mock(CassandraBlobsDAO.class);
         migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsDAO);
 
-        when(attachmentDAO.retrieveAll()).thenReturn(Stream.of(
+        when(attachmentDAO.retrieveAll()).thenReturn(Flux.just(
             attachment1,
             attachment2));
         when(blobsDAO.save(attachment1.getBytes()))
-            .thenReturn(CompletableFuture.completedFuture(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
+            .thenReturn(Mono.just(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
         when(blobsDAO.save(attachment2.getBytes()))
-            .thenReturn(CompletableFuture.completedFuture(BLOB_ID_FACTORY.forPayload(attachment2.getBytes())));
+            .thenReturn(Mono.just(BLOB_ID_FACTORY.forPayload(attachment2.getBytes())));
         when(attachmentDAOV2.storeAttachment(any())).thenThrow(new RuntimeException());
 
         assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
@@ -183,14 +185,14 @@ class AttachmentV2MigrationTest {
         CassandraBlobsDAO blobsDAO = mock(CassandraBlobsDAO.class);
         migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsDAO);
 
-        when(attachmentDAO.retrieveAll()).thenReturn(Stream.of(
+        when(attachmentDAO.retrieveAll()).thenReturn(Flux.just(
             attachment1,
             attachment2));
         when(blobsDAO.save(attachment1.getBytes()))
-            .thenReturn(CompletableFuture.completedFuture(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
+            .thenReturn(Mono.just(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
         when(blobsDAO.save(attachment2.getBytes()))
-            .thenReturn(CompletableFuture.completedFuture(BLOB_ID_FACTORY.forPayload(attachment2.getBytes())));
-        when(attachmentDAOV2.storeAttachment(any())).thenReturn(CompletableFuture.completedFuture(null));
+            .thenReturn(Mono.just(BLOB_ID_FACTORY.forPayload(attachment2.getBytes())));
+        when(attachmentDAOV2.storeAttachment(any())).thenReturn(Mono.empty());
         when(attachmentDAO.deleteAttachment(any())).thenThrow(new RuntimeException());
 
         assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
@@ -203,15 +205,15 @@ class AttachmentV2MigrationTest {
         CassandraBlobsDAO blobsDAO = mock(CassandraBlobsDAO.class);
         migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsDAO);
 
-        when(attachmentDAO.retrieveAll()).thenReturn(Stream.of(
+        when(attachmentDAO.retrieveAll()).thenReturn(Flux.just(
             attachment1,
             attachment2));
         when(blobsDAO.save(attachment1.getBytes()))
-            .thenReturn(CompletableFuture.completedFuture(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
+            .thenReturn(Mono.just(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
         when(blobsDAO.save(attachment2.getBytes()))
             .thenThrow(new RuntimeException());
-        when(attachmentDAOV2.storeAttachment(any())).thenReturn(CompletableFuture.completedFuture(null));
-        when(attachmentDAO.deleteAttachment(any())).thenReturn(CompletableFuture.completedFuture(null));
+        when(attachmentDAOV2.storeAttachment(any())).thenReturn(Mono.empty());
+        when(attachmentDAO.deleteAttachment(any())).thenReturn(Mono.empty());
 
         assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
     }

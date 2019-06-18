@@ -27,15 +27,14 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.methods.integration.SetMessagesMethodTest;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
-import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class CassandraSetMessagesMethodTest extends SetMessagesMethodTest {
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    @Rule
+    public DockerCassandraRule cassandra = new DockerCassandraRule();
 
     @Rule
     public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
@@ -54,14 +53,6 @@ public class CassandraSetMessagesMethodTest extends SetMessagesMethodTest {
     protected MessageId randomMessageId() {
         return new CassandraMessageId.Factory().generate();
     }
-
-    @Ignore("JAMES-2221 Temporally ignored failed test")
-    @Override
-    @Test
-    public void attachmentsShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesTextAttachment() throws Exception {
-
-    }
-
 
     @Ignore("Temporally ignored CI failing test")
     @Override

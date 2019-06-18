@@ -31,7 +31,6 @@ import org.apache.james.webadmin.routes.HealthCheckRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -39,8 +38,8 @@ import io.restassured.RestAssured;
 
 public class AuthorizedEndpointsTest {
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
+    @Rule
+    public DockerCassandraRule cassandra = new DockerCassandraRule();
     
     @Rule
     public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
@@ -49,8 +48,7 @@ public class AuthorizedEndpointsTest {
 
     @Before
     public void setUp() throws Exception {
-        guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule(), new UnauthorizedModule())
-                .overrideWith(new WebAdminConfigurationModule());
+        guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule(), new UnauthorizedModule());
         guiceJamesServer.start();
         WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
 

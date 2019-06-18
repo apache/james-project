@@ -19,32 +19,31 @@
 
 package org.apache.james.transport.mailets.remote.delivery;
 
-import java.io.Serializable;
-
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 
 public class DeliveryRetriesHelper {
 
-    public static final String DELIVERY_RETRY_COUNT = "delivery_retry_count";
+    public static final AttributeName DELIVERY_RETRY_COUNT = AttributeName.of("delivery_retry_count");
 
     public static int retrieveRetries(Mail mail) {
-        try {
-            Serializable value = mail.getAttribute(DELIVERY_RETRY_COUNT);
-            if (value != null) {
-                return (Integer) value;
-            }
-            return 0;
-        } catch (ClassCastException e) {
-            return 0;
-        }
+        return AttributeUtils
+            .getValueAndCastFromMail(mail, DELIVERY_RETRY_COUNT, Integer.class)
+            .orElse(0);
     }
 
     public static void initRetries(Mail mail) {
-        mail.setAttribute(DELIVERY_RETRY_COUNT, 0);
+        mail.setAttribute(makeAttribute(0));
     }
 
     public static void incrementRetries(Mail mail) {
-        mail.setAttribute(DELIVERY_RETRY_COUNT, retrieveRetries(mail) + 1);
+        mail.setAttribute(makeAttribute(retrieveRetries(mail) + 1));
     }
 
+    public static Attribute makeAttribute(Integer value) {
+        return new Attribute(DELIVERY_RETRY_COUNT, AttributeValue.of(value));
+    }
 }

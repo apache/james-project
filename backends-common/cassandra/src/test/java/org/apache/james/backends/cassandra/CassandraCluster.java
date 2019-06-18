@@ -78,8 +78,10 @@ public final class CassandraCluster implements AutoCloseable {
 
     @Override
     public void close() {
-        clearTables();
-        closeCluster();
+        if (!cluster.isClosed()) {
+            clearTables();
+            closeCluster();
+        }
     }
 
     public void closeCluster() {

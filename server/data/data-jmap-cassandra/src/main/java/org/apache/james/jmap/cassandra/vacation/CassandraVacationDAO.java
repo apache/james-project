@@ -26,7 +26,6 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -49,6 +48,7 @@ import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.google.common.collect.ImmutableList;
+import reactor.core.publisher.Mono;
 
 public class CassandraVacationDAO {
 
@@ -79,17 +79,17 @@ public class CassandraVacationDAO {
                     (a, b) -> (vacation, insert) -> b.apply(vacation, a.apply(vacation, insert)));
     }
 
-    public CompletableFuture<Void> modifyVacation(AccountId accountId, VacationPatch vacationPatch) {
+    public Mono<Void> modifyVacation(AccountId accountId, VacationPatch vacationPatch) {
         return cassandraAsyncExecutor.executeVoid(
             createSpecificUpdate(vacationPatch,
                 insertInto(CassandraVacationTable.TABLE_NAME)
                     .value(CassandraVacationTable.ACCOUNT_ID, accountId.getIdentifier())));
     }
 
-    public CompletableFuture<Optional<Vacation>> retrieveVacation(AccountId accountId) {
-        return cassandraAsyncExecutor.executeSingleRow(readStatement.bind()
-            .setString(CassandraVacationTable.ACCOUNT_ID, accountId.getIdentifier()))
-            .thenApply(optional -> optional.map(row -> Vacation.builder()
+    public Mono<Optional<Vacation>> retrieveVacation(AccountId accountId) {
+        return cassandraAsyncExecutor.executeSingleRowOptional(readStatement.bind()
+                .setString(CassandraVacationTable.ACCOUNT_ID, accountId.getIdentifier()))
+            .map(optional -> optional.map(row -> Vacation.builder()
                 .enabled(row.getBool(CassandraVacationTable.IS_ENABLED))
                 .fromDate(retrieveDate(row, CassandraVacationTable.FROM_DATE))
                 .toDate(retrieveDate(row, CassandraVacationTable.TO_DATE))

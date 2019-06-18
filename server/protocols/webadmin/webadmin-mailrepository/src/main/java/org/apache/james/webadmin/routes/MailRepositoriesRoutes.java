@@ -61,6 +61,7 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.ParametersExtractor;
+import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.github.steveash.guavate.Guavate;
@@ -148,8 +149,7 @@ public class MailRepositoriesRoutes implements Routes {
             String protocol = request.queryParams("protocol");
             try {
                 repositoryStoreService.createMailRepository(path, protocol);
-                response.status(HttpStatus.NO_CONTENT_204);
-                return Constants.EMPTY_BODY;
+                return Responses.returnNoContent(response);
             } catch (MailRepositoryStore.MailRepositoryStoreException e) {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
@@ -359,9 +359,8 @@ public class MailRepositoriesRoutes implements Routes {
             MailRepositoryPath path = decodedRepositoryPath(request);
             MailKey mailKey = new MailKey(request.params("mailKey"));
             try {
-                response.status(HttpStatus.NO_CONTENT_204);
                 repositoryStoreService.deleteMail(path, mailKey);
-                return Constants.EMPTY_BODY;
+                return Responses.returnNoContent(response);
             } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)

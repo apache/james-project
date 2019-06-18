@@ -18,12 +18,12 @@
  ****************************************************************/
 package org.apache.james.backend.rabbitmq;
 
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.AUTO_DELETE;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DIRECT;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DURABLE;
+import static org.apache.james.backend.rabbitmq.Constants.AUTO_DELETE;
+import static org.apache.james.backend.rabbitmq.Constants.DIRECT_EXCHANGE;
+import static org.apache.james.backend.rabbitmq.Constants.DURABLE;
+import static org.apache.james.backend.rabbitmq.Constants.EXCLUSIVE;
+import static org.apache.james.backend.rabbitmq.Constants.NO_PROPERTIES;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.EXCHANGE_NAME;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.EXCLUSIVE;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.NO_PROPERTIES;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.ROUTING_KEY;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,12 +39,14 @@ import java.util.stream.IntStream;
 import org.apache.james.backend.rabbitmq.DockerClusterRabbitMQExtension.DockerRabbitMQCluster;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,12 +59,26 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
-@ExtendWith(DockerClusterRabbitMQExtension.class)
+@Disabled("JAMES-2577 RabbitMQClusterTest is not stable and usually reach out of wait timeout when starting up 3 dockers" +
+    " or joining them together")
 class RabbitMQClusterTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQClusterTest.class);
 
     private static final String QUEUE = "queue";
+
+    @RegisterExtension
+    static DockerClusterRabbitMQExtension testExtension = new DockerClusterRabbitMQExtension();
+
+    @BeforeAll
+    static void setup() {
+        testExtension.beforeAll();
+    }
+
+    @AfterAll
+    static void tearDown() throws Exception {
+        testExtension.afterAll();
+    }
 
     @Nested
     class ClusterSharing {
@@ -97,14 +113,14 @@ class RabbitMQClusterTest {
 
             assertThat(stdout)
                 .contains(
-                    DockerClusterRabbitMQExtension.RABBIT_1,
-                    DockerClusterRabbitMQExtension.RABBIT_2,
-                    DockerClusterRabbitMQExtension.RABBIT_3);
+                    cluster.getRabbitMQ1().getNodeName(),
+                    cluster.getRabbitMQ2().getNodeName(),
+                    cluster.getRabbitMQ3().getNodeName());
         }
 
         @Test
         void queuesShouldBeShared() throws Exception {
-            node1Channel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
+            node1Channel.exchangeDeclare(EXCHANGE_NAME, DIRECT_EXCHANGE, DURABLE);
             node1Channel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
             node1Channel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
 
@@ -126,7 +142,7 @@ class RabbitMQClusterTest {
 
         @Test
         void queuesShouldBeDeclarableOnAnotherNode() throws Exception {
-            node1Channel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
+            node1Channel.exchangeDeclare(EXCHANGE_NAME, DIRECT_EXCHANGE, DURABLE);
             node2Channel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
             node2Channel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
 
@@ -175,7 +191,7 @@ class RabbitMQClusterTest {
             "See https://github.com/rabbitmq/rabbitmq-server/issues/959")
         @Test
         void nodeKillingWhenProducing(DockerRabbitMQCluster cluster) throws Exception {
-            resilientChannel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
+            resilientChannel.exchangeDeclare(EXCHANGE_NAME, DIRECT_EXCHANGE, DURABLE);
             resilientChannel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
             resilientChannel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
 
@@ -225,7 +241,7 @@ class RabbitMQClusterTest {
             try (Connection connection = node3ConnectionFactory.newConnection(clusterAddresses);
                  Channel channel = connection.createChannel()) {
 
-                channel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
+                channel.exchangeDeclare(EXCHANGE_NAME, DIRECT_EXCHANGE, DURABLE);
                 channel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
                 channel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
 
@@ -245,11 +261,14 @@ class RabbitMQClusterTest {
             }
         }
 
+        @Disabled("JAMES-2334 For some reason, we are unable to recover topology when reconnecting" +
+            "See https://github.com/rabbitmq/rabbitmq-server/issues/959" +
+            "This test have roughly 4% chance to fail")
         @Test
         void nodeKillingWhenConsuming(DockerRabbitMQCluster cluster) throws Exception {
-            node2Channel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
-            node2Channel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
-            node2Channel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
+            resilientChannel.exchangeDeclare(EXCHANGE_NAME, DIRECT_EXCHANGE, DURABLE);
+            resilientChannel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
+            resilientChannel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
 
             int nbMessages = 10;
             IntStream.range(0, nbMessages)

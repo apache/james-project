@@ -25,6 +25,9 @@ import javax.mail.MessagingException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.delivery.MailStore;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
@@ -52,7 +55,7 @@ public class WithStorageDirective extends GenericMailet {
 
     private final UsersRepository usersRepository;
 
-    private String targetFolderName;
+    private AttributeValue<String> targetFolderName;
 
     @Inject
     public WithStorageDirective(UsersRepository usersRepository) {
@@ -61,12 +64,13 @@ public class WithStorageDirective extends GenericMailet {
 
     @Override
     public void init() throws MessagingException {
-        targetFolderName = getInitParameter(TARGET_FOLDER_NAME);
-        validateMailetConfiguration();
+        targetFolderName = AttributeValue.of(validateMailetConfiguration(TARGET_FOLDER_NAME));
     }
 
-    public void validateMailetConfiguration() {
-        Preconditions.checkState(!Strings.isNullOrEmpty(targetFolderName), "You need to specify " + TARGET_FOLDER_NAME);
+    private String validateMailetConfiguration(String initParameterName) {
+        String initParameterValue = getInitParameter(initParameterName);
+        Preconditions.checkState(!Strings.isNullOrEmpty(initParameterValue), "You need to specify " + initParameterName);
+        return initParameterValue;
     }
 
     @Override
@@ -77,10 +81,8 @@ public class WithStorageDirective extends GenericMailet {
 
     public ThrowingConsumer<MailAddress> addStorageDirective(Mail mail) {
         return recipient -> {
-            String attributeNameForUser = MailStore.DELIVERY_PATH_PREFIX + usersRepository.getUser(recipient);
-            mail.setAttribute(
-                attributeNameForUser,
-                targetFolderName);
+            AttributeName attributeNameForUser = AttributeName.of(MailStore.DELIVERY_PATH_PREFIX + usersRepository.getUser(recipient));
+            mail.setAttribute(new Attribute(attributeNameForUser, targetFolderName));
         };
 
     }

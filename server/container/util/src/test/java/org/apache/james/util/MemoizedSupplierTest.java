@@ -21,41 +21,58 @@ package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
-import org.junit.Test;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.junit.jupiter.api.Test;
 
-public class MemoizedSupplierTest {
+class MemoizedSupplierTest {
 
     @Test
-    public void getShouldReturnSuppliedValue() {
-        Supplier<Integer> supplier = MemoizedSupplier.of(() -> 42);
+    void getShouldReturnSuppliedValue() {
+        MemoizedSupplier<Integer> supplier = MemoizedSupplier.of(() -> 42);
 
         assertThat(supplier.get()).isEqualTo(42);
     }
 
     @Test
-    public void getShouldBeIdempotent() {
-        Supplier<Integer> supplier = MemoizedSupplier.of(() -> 42);
+    void getShouldBeIdempotent() {
+        MemoizedSupplier<Integer> supplier = MemoizedSupplier.of(() -> 42);
 
         supplier.get();
         assertThat(supplier.get()).isEqualTo(42);
     }
 
+
     @Test
-    public void nullValueShouldBeSupported() {
-        Supplier<Integer> supplier = MemoizedSupplier.of(() -> null);
+    void getShouldReturnSameMemorizedInstanceInParallel() throws Exception {
+        AtomicInteger counter = new AtomicInteger(0);
+        MemoizedSupplier<Integer> supplier = MemoizedSupplier.of(counter::incrementAndGet);
+
+        ConcurrentTestRunner.builder()
+            .operation((threadNumber, operationNumber) -> supplier.get())
+            .threadCount(20)
+            .operationCount(10)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
+
+        assertThat(counter.get()).isEqualTo(1);
+    }
+
+    @Test
+    void nullValueShouldBeSupported() {
+        MemoizedSupplier<Integer> supplier = MemoizedSupplier.of(() -> null);
 
         supplier.get();
         assertThat(supplier.get()).isNull();
     }
 
     @Test
-    public void underlyingSupplierShouldBeCalledOnlyOnce() {
+    void underlyingSupplierShouldBeCalledOnlyOnce() {
         AtomicInteger atomicInteger = new AtomicInteger(0);
 
-        Supplier<Integer> supplier = MemoizedSupplier.of(() -> {
+        MemoizedSupplier<Integer> supplier = MemoizedSupplier.of(() -> {
             atomicInteger.incrementAndGet();
             return 42;
         });
@@ -67,10 +84,10 @@ public class MemoizedSupplierTest {
     }
 
     @Test
-    public void underlyingSupplierShouldBeCalledOnlyOnceWhenReturningNullValue() {
+    void underlyingSupplierShouldBeCalledOnlyOnceWhenReturningNullValue() {
         AtomicInteger atomicInteger = new AtomicInteger(0);
 
-        Supplier<Integer> supplier = MemoizedSupplier.of(() -> {
+        MemoizedSupplier<Integer> supplier = MemoizedSupplier.of(() -> {
             atomicInteger.incrementAndGet();
             return null;
         });
@@ -81,4 +98,38 @@ public class MemoizedSupplierTest {
         assertThat(atomicInteger.get()).isEqualTo(1);
     }
 
+    @Test
+    void ifInitializedShouldPerformWhenValueIsInitialized() {
+        AtomicBoolean performAfterInitialization = new AtomicBoolean(false);
+        MemoizedSupplier<Integer> supplier = MemoizedSupplier.of(() -> 10);
+
+        supplier.get();
+        supplier.ifInitialized(value -> performAfterInitialization.set(true));
+        assertThat(performAfterInitialization.get()).isTrue();
+    }
+
+    @Test
+    void ifInitializedShouldPerformOnlyOnceWhenValueIsInitializedInParallel() throws Exception {
+        AtomicInteger performAfterInitializationCounter = new AtomicInteger(0);
+        MemoizedSupplier<Integer> supplier = MemoizedSupplier.of(() -> 10);
+
+        ConcurrentTestRunner.builder()
+            .operation((threadNumber, operationNumber) -> supplier.get())
+            .threadCount(20)
+            .operationCount(10)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
+        supplier.ifInitialized(value -> performAfterInitializationCounter.incrementAndGet());
+
+        assertThat(performAfterInitializationCounter.get()).isEqualTo(1);
+    }
+
+
+    @Test
+    void ifInitializedShouldNotPerformWhenValueIsNotInitialized() {
+        AtomicBoolean performAfterInitialization = new AtomicBoolean(false);
+        MemoizedSupplier<Integer> supplier = MemoizedSupplier.of(() -> 10);
+
+        supplier.ifInitialized(value -> performAfterInitialization.set(true));
+        assertThat(performAfterInitialization.get()).isFalse();
+    }
 }

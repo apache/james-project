@@ -19,6 +19,8 @@
 
 package org.apache.james.queue.memory;
 
+import java.time.DateTimeException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -51,6 +53,8 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQueue> {
 
@@ -83,14 +87,17 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
     public static class MemoryMailQueue implements ManageableMailQueue {
         private final DelayQueue<MemoryMailQueueItem> mailItems;
         private final LinkedBlockingDeque<MemoryMailQueueItem> inProcessingMailItems;
-        private final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
         private final String name;
+        private final Flux<MailQueueItem> flux;
 
         public MemoryMailQueue(String name, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory) {
             this.mailItems = new DelayQueue<>();
             this.inProcessingMailItems = new LinkedBlockingDeque<>();
             this.name = name;
-            this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
+            this.flux = Mono.fromCallable(mailItems::take)
+                .repeat()
+                .flatMap(item -> Mono.just(inProcessingMailItems.add(item)).thenReturn(item))
+                .map(mailQueueItemDecoratorFactory::decorate);
         }
 
         @Override
@@ -99,8 +106,8 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
         }
 
         @Override
-        public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
-            ZonedDateTime nextDelivery = calculateNextDelivery(delay, unit);
+        public void enQueue(Mail mail, Duration delay) throws MailQueueException {
+            ZonedDateTime nextDelivery = calculateNextDelivery(delay);
             try {
                 mailItems.put(new MemoryMailQueueItem(cloneMail(mail), this, nextDelivery));
             } catch (MessagingException e) {
@@ -108,11 +115,11 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
             }
         }
 
-        private ZonedDateTime calculateNextDelivery(long delay, TimeUnit unit) {
-            if (delay > 0) {
+        private ZonedDateTime calculateNextDelivery(Duration delay) {
+            if (!delay.isNegative()) {
                 try {
-                    return ZonedDateTime.now().plus(delay, Temporals.chronoUnit(unit));
-                } catch (ArithmeticException e) {
+                    return ZonedDateTime.now().plus(delay);
+                } catch (DateTimeException | ArithmeticException e) {
                     return Instant.ofEpochMilli(Long.MAX_VALUE).atZone(ZoneId.of("UTC"));
                 }
             }
@@ -136,10 +143,8 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
         }
 
         @Override
-        public MailQueueItem deQueue() throws MailQueueException, InterruptedException {
-            MemoryMailQueueItem item = mailItems.take();
-            inProcessingMailItems.add(item);
-            return mailQueueItemDecoratorFactory.decorate(item);
+        public Flux<MailQueueItem> deQueue() {
+            return flux;
         }
 
         public Mail getLastMail() throws MailQueueException, InterruptedException {
@@ -192,7 +197,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
                         .map(MailAddress::asString)
                         .anyMatch(value::equals);
                 case Sender:
-                    return item.getMail().getSender()
+                    return item.getMail().getMaybeSender()
                         .asString()
                         .equals(value);
                 default:

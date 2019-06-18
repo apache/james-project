@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.TestId;
@@ -34,6 +36,11 @@ public class DefaultMessageIdTest {
             MessageUid.of(23));
 
         composedMessageId.toString();
+    }
+
+    @Test
+    public void shouldNotBeSerializable() {
+        assertThat(new DefaultMessageId().isSerializable()).isFalse();
     }
 
 }

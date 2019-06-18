@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-project</artifactId>
-        <version>3.2.0-SNAPSHOT</version>
+        <version>3.4.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>apache-james-mailbox</artifactId>
@@ -40,18 +40,18 @@
         <module>caching</module>
         <module>cassandra</module>
         <module>elasticsearch</module>
-        <module>hbase</module>
-        <module>jcr</module>
+
+        <module>event/event-cassandra</module>
+        <module>event/event-memory</module>
+        <module>event/event-rabbitmq</module>
+        <module>event/json</module>
+
         <module>jpa</module>
         <module>lucene</module>
         <module>maildir</module>
         <module>memory</module>
-        <module>scanning-search</module>
-        <module>spring</module>
-        <module>store</module>
-        <module>tika</module>
-        <module>zoo-seq-provider</module>
 
+        <module>plugin/deleted-messages-vault</module>
         <module>plugin/quota-mailing</module>
         <module>plugin/quota-mailing-cassandra</module>
         <module>plugin/quota-mailing-memory</module>
@@ -59,10 +59,18 @@
         <module>plugin/quota-search-elasticsearch</module>
         <module>plugin/quota-search-scanning</module>
         <module>plugin/spamassassin</module>
+
+        <module>scanning-search</module>
+        <module>spring</module>
+        <module>store</module>
+        <module>tika</module>
+
         <module>tools/copier</module>
         <module>tools/indexer</module>
         <module>tools/jpa-migrator</module>
         <module>tools/maildir-utils</module>
+
+        <module>zoo-seq-provider</module>
     </modules>
 
     <issueManagement>

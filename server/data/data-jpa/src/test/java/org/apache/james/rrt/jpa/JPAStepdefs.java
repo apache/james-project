@@ -22,6 +22,7 @@ import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
+import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
 
 import cucumber.api.java.After;
@@ -52,6 +53,7 @@ public class JPAStepdefs {
         localVirtualUserTable.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
         DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();
         localVirtualUserTable.configure(defaultConfiguration);
+        localVirtualUserTable.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
         return localVirtualUserTable;
     }
 }

@@ -23,14 +23,15 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystemRule;
 import org.apache.james.mpt.imapmailbox.suite.UidSearch;
-import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.rules.RuleChain;
 
 public class CassandraUidSearchTest extends UidSearch {
-    @ClassRule
-    public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    @Rule
+    public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
     public CassandraHostSystemRule cassandraHostSystemRule = new CassandraHostSystemRule(cassandraServer);
+
+    @Rule
+    public RuleChain ruleChain = RuleChain.outerRule(cassandraServer).around(cassandraHostSystemRule);
 
     @Override
     protected ImapHostSystem createImapHostSystem() {

@@ -36,11 +36,10 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.StringTokenizer;
 
 import javax.annotation.PostConstruct;
@@ -63,9 +62,13 @@ import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Implementation of a MailRepository on a database.
@@ -435,10 +438,10 @@ public class JDBCMailRepository extends AbstractMailRepository {
                     updateMessage = conn.prepareStatement(sqlQueries.getSqlString("updateMessageSQL", true));
                     updateMessage.setString(1, mc.getState());
                     updateMessage.setString(2, mc.getErrorMessage());
-                    if (mc.getSender() == null) {
+                    if (mc.getMaybeSender().isNullSender()) {
                         updateMessage.setNull(3, java.sql.Types.VARCHAR);
                     } else {
-                        updateMessage.setString(3, mc.getSender().toString());
+                        updateMessage.setString(3, mc.getMaybeSender().get().toString());
                     }
                     StringBuilder recipients = new StringBuilder();
                     for (Iterator<MailAddress> i = mc.getRecipients().iterator(); i.hasNext();) {
@@ -474,11 +477,12 @@ public class JDBCMailRepository extends AbstractMailRepository {
                             if (mc instanceof MailImpl) {
                                 oos.writeObject(((MailImpl) mc).getAttributesRaw());
                             } else {
-                                HashMap<String, Serializable> temp = new HashMap<>();
-                                for (Iterator<String> i = mc.getAttributeNames(); i.hasNext();) {
-                                    String hashKey = i.next();
-                                    temp.put(hashKey, mc.getAttribute(hashKey));
-                                }
+                                Map<String, Serializable> temp = mc.attributes()
+                                    .collect(Guavate.toImmutableMap(
+                                            attribute -> attribute.getName().asString(),
+                                            attribute -> (Serializable) attribute.getValue().value()
+                                    ));
+
                                 oos.writeObject(temp);
                             }
                             oos.flush();
@@ -529,10 +533,10 @@ public class JDBCMailRepository extends AbstractMailRepository {
                     insertMessage.setString(2, repositoryName);
                     insertMessage.setString(3, mc.getState());
                     insertMessage.setString(4, mc.getErrorMessage());
-                    if (mc.getSender() == null) {
+                    if (mc.getMaybeSender().isNullSender()) {
                         insertMessage.setNull(5, Types.VARCHAR);
                     } else {
-                        insertMessage.setString(5, mc.getSender().toString());
+                        insertMessage.setString(5, mc.getMaybeSender().get().toString());
                     }
                     StringBuilder recipients = new StringBuilder();
                     for (Iterator<MailAddress> i = mc.getRecipients().iterator(); i.hasNext();) {
@@ -562,11 +566,12 @@ public class JDBCMailRepository extends AbstractMailRepository {
                             if (mc instanceof MailImpl) {
                                 oos.writeObject(((MailImpl) mc).getAttributesRaw());
                             } else {
-                                HashMap<String, Serializable> temp = new HashMap<>();
-                                for (Iterator<String> i = mc.getAttributeNames(); i.hasNext();) {
-                                    String hashKey = i.next();
-                                    temp.put(hashKey, mc.getAttribute(hashKey));
-                                }
+                                Map<String, Serializable> temp = mc.attributes()
+                                        .collect(Guavate.toImmutableMap(
+                                                attribute -> attribute.getName().asString(),
+                                                attribute -> (Serializable) attribute.getValue().value()
+                                        ));
+
                                 oos.writeObject(temp);
                             }
                             oos.flush();
@@ -669,37 +674,34 @@ public class JDBCMailRepository extends AbstractMailRepository {
                 }
             }
 
-            MailImpl mc = new MailImpl();
-            mc.setAttributesRaw(attributes);
-            mc.setName(key.asString());
-            mc.setState(rsMessage.getString(1));
-            mc.setErrorMessage(rsMessage.getString(2));
+            MailImpl.Builder mc = MailImpl.builder().name(key.asString());
+            mc.addAttributes(toAttributes(attributes));
+            mc.state(rsMessage.getString(1));
+            mc.errorMessage(rsMessage.getString(2));
             String sender = rsMessage.getString(3);
             if (sender == null) {
-                mc.setSender(null);
+                mc.sender((MailAddress)null);
             } else {
-                mc.setSender(new MailAddress(sender));
+                mc.sender(new MailAddress(sender));
             }
             StringTokenizer st = new StringTokenizer(rsMessage.getString(4), "\r\n", false);
-            Set<MailAddress> recipients = new HashSet<>();
             while (st.hasMoreTokens()) {
-                recipients.add(new MailAddress(st.nextToken()));
+                mc.addRecipient(st.nextToken());
             }
-            mc.setRecipients(recipients);
-            mc.setRemoteHost(rsMessage.getString(5));
-            mc.setRemoteAddr(rsMessage.getString(6));
+            mc.remoteHost(rsMessage.getString(5));
+            mc.remoteAddr(rsMessage.getString(6));
             try (InputStream is = rsMessage.getBinaryStream(7)) {
                 if (is != null) {
-                    mc.addAllSpecificHeaderForRecipient(SerializationUtils.deserialize(is));
+                    mc.addAllHeadersForRecipients(SerializationUtils.deserialize(is));
                 }
             }
 
-            mc.setLastUpdated(rsMessage.getTimestamp(8));
+            mc.lastUpdated(rsMessage.getTimestamp(8));
 
             MimeMessageJDBCSource source = new MimeMessageJDBCSource(this, key.asString(), sr);
             MimeMessageCopyOnWriteProxy message = new MimeMessageCopyOnWriteProxy(source);
-            mc.setMessage(message);
-            return mc;
+            mc.mimeMessage(message);
+            return mc.build();
         } catch (SQLException sqle) {
             LOGGER.error("Error retrieving message{}{}{}{}", sqle.getMessage(), sqle.getErrorCode(), sqle.getSQLState(), String.valueOf(sqle.getNextException()));
             LOGGER.debug("Failed to retrieve mail", sqle);
@@ -711,6 +713,15 @@ public class JDBCMailRepository extends AbstractMailRepository {
             theJDBCUtil.closeJDBCStatement(retrieveMessage);
             theJDBCUtil.closeJDBCConnection(conn);
         }
+    }
+
+    private ImmutableList<Attribute> toAttributes(HashMap<String, Object> attributes) {
+        return Optional.ofNullable(attributes)
+            .orElse(new HashMap<>())
+            .entrySet()
+            .stream()
+            .map(entry -> Attribute.convertToAttribute(entry.getKey(), entry.getValue()))
+            .collect(Guavate.toImmutableList());
     }
 
     @Override

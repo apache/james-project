@@ -86,7 +86,7 @@
                Protocols is coming with several implementations of popular mail protocols like:
                 <ul>
                   <li>SMTP</li>
-                  <li>LMPT</li>
+                  <li>LMTP</li>
                   <li>POP3</li>
                   <li>IMAP</li>
                   <li>ManageSieve</li>

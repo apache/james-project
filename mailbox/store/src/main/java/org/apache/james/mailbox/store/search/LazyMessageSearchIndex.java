@@ -23,20 +23,24 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedSearchException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,21 +57,25 @@ import com.google.common.base.Preconditions;
  *
  */
 public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
+    public static class LazyMessageSearchIndexGroup extends Group {}
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LazyMessageSearchIndex.class);
+    private static final Group GROUP = new LazyMessageSearchIndexGroup();
 
     private final ListeningMessageSearchIndex index;
     private final ConcurrentHashMap<MailboxId, Object> indexed = new ConcurrentHashMap<>();
+    private final MailboxSessionMapperFactory factory;
     
     
-    public LazyMessageSearchIndex(ListeningMessageSearchIndex index) {
-        super(index.getFactory());
+    public LazyMessageSearchIndex(ListeningMessageSearchIndex index, MailboxSessionMapperFactory factory, SessionProvider sessionProvider) {
+        super(factory, sessionProvider);
         this.index = index;
+        this.factory = factory;
     }
 
     @Override
-    public ListenerType getType() {
-        return index.getType();
+    public Group getDefaultGroup() {
+        return GROUP;
     }
     
     @Override
@@ -76,17 +84,17 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public void add(MailboxSession session, Mailbox mailbox, MailboxMessage message) throws MailboxException {
+    public void add(MailboxSession session, Mailbox mailbox, MailboxMessage message) throws Exception {
         index.add(session, mailbox, message);
     }
 
     @Override
-    public void delete(MailboxSession session, Mailbox mailbox, List<MessageUid> expungedUids) throws MailboxException {
+    public void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) throws Exception {
         index.delete(session, mailbox, expungedUids);
     }
 
     @Override
-    public void deleteAll(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public void deleteAll(MailboxSession session, Mailbox mailbox) throws Exception {
         index.deleteAll(session, mailbox);
     }
 
@@ -97,7 +105,7 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
      * 
      */
     @Override
-    public Iterator<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
+    public Stream<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         MailboxId id = mailbox.getMailboxId();
         
@@ -109,12 +117,12 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
                 done = oldDone;
             }
             synchronized (done) {
-                Iterator<MailboxMessage> messages = getFactory().getMessageMapper(session).findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
+                Iterator<MailboxMessage> messages = factory.getMessageMapper(session).findInMailbox(mailbox, MessageRange.all(), FetchType.Full, UNLIMITED);
                 while (messages.hasNext()) {
                     final MailboxMessage message = messages.next();
                     try {
                         add(session, mailbox, message);
-                    } catch (MailboxException e) {
+                    } catch (Exception e) {
                         LOGGER.error("Unable to index message {} in mailbox {}", message.getUid(), mailbox.getName(), e);
                     }
                 }
@@ -125,7 +133,7 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws MailboxException {
+    public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws Exception {
         index.update(session, mailbox, updatedFlagsList);
     }
     

@@ -26,8 +26,6 @@ I'll explain what I mean by 'component' and 'service' bellow.
 |-- data
     `-- data-api
     `-- data-file
-    `-- data-hbase
-    `-- data-jcr
     `-- data-jdbc
     `-- data-jpa
     `-- data-ldap

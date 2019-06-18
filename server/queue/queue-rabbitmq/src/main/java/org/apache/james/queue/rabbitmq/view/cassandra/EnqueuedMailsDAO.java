@@ -43,44 +43,40 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueV
 import static org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDaoUtil.asStringList;
 import static org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDaoUtil.toHeaderMap;
 import static org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDaoUtil.toRawAttributeMap;
-import static org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.BucketId;
-import static org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice;
 
 import java.util.Date;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
-import org.apache.james.core.MailAddress;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
+import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.BucketId;
+import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
 import org.apache.mailet.Mail;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 
-class EnqueuedMailsDAO {
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+public class EnqueuedMailsDAO {
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement selectFrom;
     private final PreparedStatement insert;
-    private final CassandraUtils cassandraUtils;
     private final CassandraTypesProvider cassandraTypesProvider;
     private final BlobId.Factory blobFactory;
 
     @Inject
-    EnqueuedMailsDAO(Session session, CassandraUtils cassandraUtils, CassandraTypesProvider cassandraTypesProvider,
+    EnqueuedMailsDAO(Session session, CassandraTypesProvider cassandraTypesProvider,
                      BlobId.Factory blobIdFactory) {
         this.executor = new CassandraAsyncExecutor(session);
-        this.cassandraUtils = cassandraUtils;
         this.cassandraTypesProvider = cassandraTypesProvider;
 
         this.selectFrom = prepareSelectFrom(session);
@@ -116,7 +112,7 @@ class EnqueuedMailsDAO {
             .value(PER_RECIPIENT_SPECIFIC_HEADERS, bindMarker(PER_RECIPIENT_SPECIFIC_HEADERS)));
     }
 
-    CompletableFuture<Void> insert(EnqueuedItemWithSlicingContext enqueuedItemWithSlicing) {
+    Mono<Void> insert(EnqueuedItemWithSlicingContext enqueuedItemWithSlicing) {
         EnqueuedItem enqueuedItem = enqueuedItemWithSlicing.getEnqueuedItem();
         EnqueuedItemWithSlicingContext.SlicingContext slicingContext = enqueuedItemWithSlicing.getSlicingContext();
         Mail mail = enqueuedItem.getMail();
@@ -131,9 +127,7 @@ class EnqueuedMailsDAO {
             .setString(HEADER_BLOB_ID, mimeMessagePartsId.getHeaderBlobId().asString())
             .setString(BODY_BLOB_ID, mimeMessagePartsId.getBodyBlobId().asString())
             .setString(STATE, mail.getState())
-            .setString(SENDER, Optional.ofNullable(mail.getSender())
-                .map(MailAddress::asString)
-                .orElse(null))
+            .setString(SENDER, mail.getMaybeSender().asString(null))
             .setList(RECIPIENTS, asStringList(mail.getRecipients()))
             .setString(ERROR_MESSAGE, mail.getErrorMessage())
             .setString(REMOTE_ADDR, mail.getRemoteAddr())
@@ -143,16 +137,15 @@ class EnqueuedMailsDAO {
             .setMap(PER_RECIPIENT_SPECIFIC_HEADERS, toHeaderMap(cassandraTypesProvider, mail.getPerRecipientSpecificHeaders())));
     }
 
-    CompletableFuture<Stream<EnqueuedItemWithSlicingContext>> selectEnqueuedMails(
+    Flux<EnqueuedItemWithSlicingContext> selectEnqueuedMails(
         MailQueueName queueName, Slice slice, BucketId bucketId) {
 
-        return executor.execute(
-            selectFrom.bind()
-                .setString(QUEUE_NAME, queueName.asString())
-                .setTimestamp(TIME_RANGE_START, Date.from(slice.getStartSliceInstant()))
-                .setInt(BUCKET_ID, bucketId.getValue()))
-            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
-                .map(row -> EnqueuedMailsDaoUtil.toEnqueuedMail(row, blobFactory)));
+        return executor.executeRows(
+                selectFrom.bind()
+                    .setString(QUEUE_NAME, queueName.asString())
+                    .setTimestamp(TIME_RANGE_START, Date.from(slice.getStartSliceInstant()))
+                    .setInt(BUCKET_ID, bucketId.getValue()))
+            .map(row -> EnqueuedMailsDaoUtil.toEnqueuedMail(row, blobFactory));
     }
 
 }

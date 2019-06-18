@@ -38,14 +38,28 @@ public class MailRepositoryUrl {
     private static final int SKIP_PROTOCOL = 1;
 
     public static MailRepositoryUrl fromEncoded(String encodedUrl) throws UnsupportedEncodingException {
-        return new MailRepositoryUrl(URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.displayName()));
+        return from(URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.displayName()));
     }
 
     public static MailRepositoryUrl from(String url) {
-        return new MailRepositoryUrl(url);
+        Preconditions.checkNotNull(url);
+        Preconditions.checkArgument(url.contains(PROTOCOL_SEPARATOR), "The expected format is: <protocol> \"" + PROTOCOL_SEPARATOR + "\" <path>");
+
+        List<String> urlParts = Splitter.on(PROTOCOL_SEPARATOR).splitToList(url);
+
+        Protocol protocol = new Protocol(urlParts.get(PROTOCOL_PART));
+        MailRepositoryPath path = MailRepositoryPath.from(
+            Joiner.on(PROTOCOL_SEPARATOR)
+                .join(Iterables.skip(urlParts, SKIP_PROTOCOL)));
+
+        return new MailRepositoryUrl(path, protocol);
     }
 
     public static MailRepositoryUrl fromPathAndProtocol(MailRepositoryPath path, String protocol) {
+        return new MailRepositoryUrl(path, new Protocol(protocol));
+    }
+
+    public static MailRepositoryUrl fromPathAndProtocol(Protocol protocol, MailRepositoryPath path) {
         return new MailRepositoryUrl(path, protocol);
     }
 
@@ -53,23 +67,12 @@ public class MailRepositoryUrl {
     private final MailRepositoryPath path;
     private final Protocol protocol;
 
-    private MailRepositoryUrl(String value) {
-        Preconditions.checkNotNull(value);
-        Preconditions.checkArgument(value.contains(PROTOCOL_SEPARATOR), "The expected format is: <protocol> \"" + PROTOCOL_SEPARATOR + "\" <path>");
-        this.value = value;
-        List<String> urlParts = Splitter.on(PROTOCOL_SEPARATOR).splitToList(value);
-        this.protocol = new Protocol(urlParts.get(PROTOCOL_PART));
-        this.path = MailRepositoryPath.from(
-            Joiner.on(PROTOCOL_SEPARATOR)
-                .join(Iterables.skip(urlParts, SKIP_PROTOCOL)));
-    }
-
-    private MailRepositoryUrl(MailRepositoryPath path, String protocol) {
+    private MailRepositoryUrl(MailRepositoryPath path, Protocol protocol) {
         Preconditions.checkNotNull(path);
         Preconditions.checkNotNull(protocol);
         this.path = path;
-        this.protocol = new Protocol(protocol);
-        this.value = protocol + PROTOCOL_SEPARATOR + path.asString();
+        this.protocol = protocol;
+        this.value = protocol.getValue()  + PROTOCOL_SEPARATOR + path.asString();
     }
 
     public String asString() {
@@ -80,8 +83,17 @@ public class MailRepositoryUrl {
         return path;
     }
 
+    public MailRepositoryUrl subUrl(String suffix) {
+        return new MailRepositoryUrl(path.subPath(suffix), protocol);
+    }
+
     public String urlEncoded() throws UnsupportedEncodingException {
         return URLEncoder.encode(value, StandardCharsets.UTF_8.displayName());
+    }
+
+    public boolean hasPrefix(MailRepositoryUrl other) {
+        return Objects.equals(this.protocol, other.protocol)
+            && this.path.hasPrefix(other.path);
     }
 
     public Protocol getProtocol() {

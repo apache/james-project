@@ -19,5 +19,4 @@
  -->
 
 <listeners>
-    <poolSize>8</poolSize>
 </listeners>

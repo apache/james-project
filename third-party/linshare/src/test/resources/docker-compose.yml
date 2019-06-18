@@ -1,0 +1,60 @@
+# Docker compose file for a full-featured Linshare architecture
+version: '3.7'
+
+services:
+    database:
+        restart: on-failure
+        image: linagora/linshare-database:2.2
+        environment:
+            - PGDATA=/var/lib/postgresql/data/pgdata
+            - POSTGRES_USER=linshare
+            - POSTGRES_PASSWORD=linshare
+
+    backend:
+        restart: on-failure
+        image: linagora/linshare-backend:2.2
+        links:
+            - database:linshare_database
+            - mongodb:linshare_mongodb
+            - smtp:linshare_smtp
+        depends_on:
+            - database
+            - mongodb
+            - smtp
+        volumes:
+            - ./conf/catalina.properties:/usr/local/tomcat/conf/catalina.properties
+            - ./conf/log4j.properties:/etc/linshare/log4j.properties
+            - ./ssl/id_rsa:/etc/linshare/id_rsa
+            - ./ssl/id_rsa.pub:/etc/linshare/id_rsa.pub
+        healthcheck:
+            test: ["CMD", "curl", "-s", "-f", "http://localhost:8080/linshare/"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 40s
+        environment:
+            - SMTP_HOST=linshare_smtp
+            - SMTP_PORT=25
+            - POSTGRES_HOST=linshare_database
+            - POSTGRES_PORT=5432
+            - POSTGRES_USER=linshare
+            - POSTGRES_PASSWORD=linshare
+            - MONGODB_HOST=linshare_mongodb
+            - MONGODB_PORT=27017
+            - THUMBNAIL_ENABLE=false
+
+    mongodb:
+        restart: on-failure
+        image: mongo:3.2
+        command: mongod --smallfiles
+
+    smtp:
+        restart: on-failure
+        image: linagora/opensmtpd
+        volumes:
+            - ./conf/smtpd.conf:/etc/smtpd/smtpd.conf
+
+    ldap:
+        image: linagora/linshare-ldap-for-tests:1.0
+        tty: true
+        stdin_open: true

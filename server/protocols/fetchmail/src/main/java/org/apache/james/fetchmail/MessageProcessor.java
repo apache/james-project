@@ -20,8 +20,6 @@
 package org.apache.james.fetchmail;
 
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
 
@@ -36,6 +34,9 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
@@ -595,23 +596,25 @@ public class MessageProcessor extends ProcessorAbstract {
      * @throws MessagingException
      */
     protected Mail createMail(MimeMessage message, MailAddress recipient) throws MessagingException, UnknownHostException {
-        Collection<MailAddress> recipients = new ArrayList<>(1);
-        recipients.add(recipient);
-        MailImpl mail = new MailImpl(MailImpl.getId(), getSender(), recipients, message);
+        MailImpl.Builder builder = MailImpl.builder()
+            .name(MailImpl.getId())
+            .sender(getSender())
+            .addRecipient(recipient)
+            .mimeMessage(message);
 
         try {
-            mail.setRemoteAddr(getRemoteAddress());
-            mail.setRemoteHost(getRemoteHostName());
+            builder.remoteAddr(getRemoteAddress());
+            builder.remoteHost(getRemoteHostName());
             setDefaultRemoteAddress(false);
         } catch (UnknownHostException e) {
             // check if we should ignore this
             // See: JAMES-795
             if (!isRejectRemoteReceivedHeaderInvalid()) {
-                // Ensure the mail is created with non-null remote host name and
+                // Ensure the builder is created with non-null remote host name and
                 // address,
                 // otherwise the Mailet chain may go splat!
-                mail.setRemoteAddr("127.0.0.1");
-                mail.setRemoteHost("localhost");
+                builder.remoteAddr("127.0.0.1");
+                builder.remoteHost("localhost");
                 setDefaultRemoteAddress(true);
                 logStatusInfo("Remote address could not be determined. Using localhost/127.0.0.1");
             } else {
@@ -619,6 +622,7 @@ public class MessageProcessor extends ProcessorAbstract {
             }
         }
 
+        MailImpl mail = builder.build();
         logMailCreation(mail);
         return mail;
     }
@@ -628,7 +632,7 @@ public class MessageProcessor extends ProcessorAbstract {
             StringBuilder messageBuffer = new StringBuilder("Created mail with name: ");
             messageBuffer.append(mail.getName());
             messageBuffer.append(", sender: ");
-            messageBuffer.append(mail.getSender());
+            messageBuffer.append(mail.getMaybeSender());
             messageBuffer.append(", recipients: ");
             for (Object o : mail.getRecipients()) {
                 messageBuffer.append(o);
@@ -1229,44 +1233,44 @@ public class MessageProcessor extends ProcessorAbstract {
      * @param aMail a Mail instance
      */
     protected void addMailAttributes(Mail aMail) throws MessagingException {
-        aMail.setAttribute(getAttributePrefix() + "taskName", getFetchTaskName());
+        aMail.setAttribute(new Attribute(makeAttributeName("taskName"), AttributeValue.of(getFetchTaskName())));
 
-        aMail.setAttribute(getAttributePrefix() + "folderName", getMessageIn().getFolder().getFullName());
+        aMail.setAttribute(new Attribute(makeAttributeName("folderName"), AttributeValue.of(getMessageIn().getFolder().getFullName())));
 
         if (isRemoteRecipient()) {
-            aMail.setAttribute(getAttributePrefix() + "isRemoteRecipient", null);
+            aMail.setAttribute(new Attribute(makeAttributeName("isRemoteRecipient"), AttributeValue.of(true)));
         }
 
         if (isUserUndefined()) {
-            aMail.setAttribute(getAttributePrefix() + "isUserUndefined", true);
+            aMail.setAttribute(new Attribute(makeAttributeName("isUserUndefined"), AttributeValue.of(true)));
         }
 
         if (isBlacklistedRecipient()) {
-            aMail.setAttribute(getAttributePrefix() + "isBlacklistedRecipient", true);
+            aMail.setAttribute(new Attribute(makeAttributeName("isBlacklistedRecipient"), AttributeValue.of(true)));
         }
 
         if (isRecipientNotFound()) {
-            aMail.setAttribute(getAttributePrefix() + "isRecipientNotFound", true);
+            aMail.setAttribute(new Attribute(makeAttributeName("isRecipientNotFound"), AttributeValue.of(true)));
         }
 
         if (isMaxMessageSizeExceeded()) {
-            aMail.setAttribute(getAttributePrefix() + "isMaxMessageSizeExceeded", Integer.toString(getMessageIn().getSize()));
+            aMail.setAttribute(new Attribute(makeAttributeName("isMaxMessageSizeExceeded"), AttributeValue.of(Integer.toString(getMessageIn().getSize()))));
         }
 
         if (isRemoteReceivedHeaderInvalid()) {
-            aMail.setAttribute(getAttributePrefix() + "isRemoteReceivedHeaderInvalid", true);
+            aMail.setAttribute(new Attribute(makeAttributeName("isRemoteReceivedHeaderInvalid"), AttributeValue.of(true)));
         }
 
         if (isDefaultSenderLocalPart()) {
-            aMail.setAttribute(getAttributePrefix() + "isDefaultSenderLocalPart", true);
+            aMail.setAttribute(new Attribute(makeAttributeName("isDefaultSenderLocalPart"), AttributeValue.of(true)));
         }
 
         if (isDefaultSenderDomainPart()) {
-            aMail.setAttribute(getAttributePrefix() + "isDefaultSenderDomainPart", true);
+            aMail.setAttribute(new Attribute(makeAttributeName("isDefaultSenderDomainPart"), AttributeValue.of(true)));
         }
 
         if (isDefaultRemoteAddress()) {
-            aMail.setAttribute(getAttributePrefix() + "isDefaultRemoteAddress", true);
+            aMail.setAttribute(new Attribute(makeAttributeName("isDefaultRemoteAddress"), AttributeValue.of(true)));
         }
     }
 
@@ -1649,4 +1653,7 @@ public class MessageProcessor extends ProcessorAbstract {
         fieldDefaultRemoteAddress = defaultRemoteAddress;
     }
 
+    private AttributeName makeAttributeName(String suffix) {
+        return AttributeName.of(getAttributePrefix() + suffix);
+    }
 }

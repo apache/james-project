@@ -30,26 +30,33 @@ import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
+import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
+import org.apache.james.mailbox.store.PreDeletionHooks;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
-import org.apache.james.mailbox.store.quota.StoreQuotaManager;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
+import org.apache.james.metrics.api.NoopMetricFactory;
 
-public class CassandraTestSystemFixture {
-    
-    public static final int MOD_SEQ = 452;
+class CassandraTestSystemFixture {
 
-    public static CassandraMailboxSessionMapperFactory createMapperFactory(CassandraCluster cassandra) {
+    static CassandraMailboxSessionMapperFactory createMapperFactory(CassandraCluster cassandra) {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
         return TestCassandraMailboxSessionMapperFactory.forTests(
@@ -58,43 +65,46 @@ public class CassandraTestSystemFixture {
             messageIdFactory);
     }
 
-    public static CassandraMailboxManager createMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory) throws Exception {
-        DefaultDelegatingMailboxListener delegatingMailboxListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingMailboxListener);
-        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), mailboxEventDispatcher);
+    static CassandraMailboxManager createMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory) {
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
+        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), eventBus);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager);
 
-        CassandraMailboxManager cassandraMailboxManager = new CassandraMailboxManager(mapperFactory, mock(Authenticator.class), mock(Authorizator.class),
+        SessionProvider sessionProvider = new SessionProvider(mock(Authenticator.class), mock(Authorizator.class));
+
+        QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mapperFactory);
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor());
+        CassandraMailboxManager cassandraMailboxManager = new CassandraMailboxManager(mapperFactory, sessionProvider,
             new NoMailboxPathLocker(), new MessageParser(), new CassandraMessageId.Factory(),
-            mailboxEventDispatcher, delegatingMailboxListener, annotationManager, storeRightManager);
-        cassandraMailboxManager.init();
+            eventBus, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK);
+
+        eventBus.register(new MailboxAnnotationListener(mapperFactory, sessionProvider));
 
         return cassandraMailboxManager;
     }
 
-    public static StoreMessageIdManager createMessageIdManager(CassandraMailboxSessionMapperFactory mapperFactory, QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception {
+    static StoreMessageIdManager createMessageIdManager(CassandraMailboxSessionMapperFactory mapperFactory, QuotaManager quotaManager, EventBus eventBus,
+                                                        PreDeletionHooks preDeletionHooks) {
+        CassandraMailboxManager mailboxManager = createMailboxManager(mapperFactory);
         return new StoreMessageIdManager(
-            createMailboxManager(mapperFactory),
+            mailboxManager,
             mapperFactory,
-            dispatcher,
+            eventBus,
             new CassandraMessageId.Factory(),
             quotaManager,
-            new DefaultUserQuotaRootResolver(mapperFactory));
+            new DefaultUserQuotaRootResolver(mailboxManager.getSessionProvider(), mapperFactory),
+            preDeletionHooks);
     }
 
-    public static MaxQuotaManager createMaxQuotaManager(CassandraCluster cassandra) {
+    static MaxQuotaManager createMaxQuotaManager(CassandraCluster cassandra) {
         return new CassandraPerUserMaxQuotaManager(
             new CassandraPerUserMaxQuotaDao(cassandra.getConf()),
             new CassandraPerDomainMaxQuotaDao(cassandra.getConf()),
             new CassandraGlobalMaxQuotaDao(cassandra.getConf()));
     }
 
-    public static CurrentQuotaManager createCurrentQuotaManager(CassandraCluster cassandra) {
+    static CurrentQuotaManager createCurrentQuotaManager(CassandraCluster cassandra) {
         return new CassandraCurrentQuotaManager(cassandra.getConf());
-    }
-
-    public static QuotaManager createQuotaManager(CassandraCluster cassandra, MaxQuotaManager maxQuotaManager) {
-        return new StoreQuotaManager(new CassandraCurrentQuotaManager(cassandra.getConf()), maxQuotaManager);
     }
 
 }

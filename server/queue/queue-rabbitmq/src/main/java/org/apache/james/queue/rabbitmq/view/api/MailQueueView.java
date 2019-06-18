@@ -19,22 +19,26 @@
 
 package org.apache.james.queue.rabbitmq.view.api;
 
-import java.util.concurrent.CompletableFuture;
-
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.mailet.Mail;
 
+import reactor.core.publisher.Mono;
+
 public interface MailQueueView {
+
+    interface Factory {
+        MailQueueView create(MailQueueName mailQueueName);
+    }
 
     void initialize(MailQueueName mailQueueName);
 
-    CompletableFuture<Void> storeMail(EnqueuedItem enqueuedItem);
+    Mono<Void> storeMail(EnqueuedItem enqueuedItem);
 
-    CompletableFuture<Long> delete(DeleteCondition deleteCondition);
+    long delete(DeleteCondition deleteCondition);
 
-    CompletableFuture<Boolean> isPresent(Mail mail);
+    Mono<Boolean> isPresent(Mail mail);
 
     ManageableMailQueue.MailQueueIterator browse();
 

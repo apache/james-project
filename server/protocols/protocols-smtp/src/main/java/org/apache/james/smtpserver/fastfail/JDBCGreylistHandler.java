@@ -25,6 +25,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -38,6 +39,7 @@ import javax.sql.DataSource;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
 import org.apache.james.filesystem.api.FileSystem;
@@ -45,7 +47,7 @@ import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.fastfail.AbstractGreylistHandler;
 import org.apache.james.protocols.smtp.hook.HookResult;
-import org.apache.james.util.TimeConverter;
+import org.apache.james.util.DurationParser;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
 import org.slf4j.Logger;
@@ -134,7 +136,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
      *            The temporary blocking time
      */
     public void setTempBlockTime(String tempBlockTime) {
-        setTempBlockTime(TimeConverter.getMilliSeconds(tempBlockTime));
+        setTempBlockTime(DurationParser.parse(tempBlockTime));
     }
 
     /**
@@ -145,7 +147,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
      *            The lifeTime
      */
     public void setAutoWhiteListLifeTime(String autoWhiteListLifeTime) {
-        setAutoWhiteListLifeTime(TimeConverter.getMilliSeconds(autoWhiteListLifeTime));
+        setAutoWhiteListLifeTime(DurationParser.parse(autoWhiteListLifeTime));
     }
 
     /**
@@ -156,7 +158,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
      *            The lifetime
      */
     public void setUnseenLifeTime(String unseenLifeTime) {
-        setUnseenLifeTime(TimeConverter.getMilliSeconds(unseenLifeTime));
+        setUnseenLifeTime(DurationParser.parse(unseenLifeTime));
     }
 
     @Inject
@@ -197,7 +199,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
     }
 
     @Override
-    protected void insertTriplet(String ipAddress, String sender, String recip, int count, long createTime) throws SQLException {
+    protected void insertTriplet(String ipAddress, String sender, String recip, int count, Instant createTime) throws SQLException {
         Connection conn = datasource.getConnection();
 
         PreparedStatement mappingStmt = null;
@@ -209,7 +211,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
             mappingStmt.setString(2, sender);
             mappingStmt.setString(3, recip);
             mappingStmt.setInt(4, count);
-            mappingStmt.setTimestamp(5, new Timestamp(createTime));
+            mappingStmt.setTimestamp(5, new Timestamp(createTime.getEpochSecond()));
             mappingStmt.executeUpdate();
         } finally {
             theJDBCUtil.closeJDBCStatement(mappingStmt);
@@ -218,13 +220,13 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
     }
 
     @Override
-    protected void updateTriplet(String ipAddress, String sender, String recip, int count, long time) throws SQLException {
+    protected void updateTriplet(String ipAddress, String sender, String recip, int count, Instant time) throws SQLException {
         Connection conn = datasource.getConnection();
         PreparedStatement mappingStmt = null;
 
         try {
             mappingStmt = conn.prepareStatement(updateQuery);
-            mappingStmt.setTimestamp(1, new Timestamp(time));
+            mappingStmt.setTimestamp(1, new Timestamp(time.getEpochSecond()));
             mappingStmt.setInt(2, (count + 1));
             mappingStmt.setString(3, ipAddress);
             mappingStmt.setString(4, sender);
@@ -237,14 +239,14 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
     }
 
     @Override
-    protected void cleanupAutoWhiteListGreyList(long time) throws SQLException {
+    protected void cleanupAutoWhiteListGreyList(Instant time) throws SQLException {
         PreparedStatement mappingStmt = null;
         Connection conn = datasource.getConnection();
 
         try {
             mappingStmt = conn.prepareStatement(deleteAutoWhiteListQuery);
 
-            mappingStmt.setTimestamp(1, new Timestamp(time));
+            mappingStmt.setTimestamp(1, new Timestamp(time.getEpochSecond()));
 
             mappingStmt.executeUpdate();
         } finally {
@@ -254,7 +256,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
     }
 
     @Override
-    protected void cleanupGreyList(long time) throws SQLException {
+    protected void cleanupGreyList(Instant time) throws SQLException {
         Connection conn = datasource.getConnection();
 
         PreparedStatement mappingStmt = null;
@@ -262,7 +264,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
         try {
             mappingStmt = conn.prepareStatement(deleteQuery);
 
-            mappingStmt.setTimestamp(1, new Timestamp(time));
+            mappingStmt.setTimestamp(1, new Timestamp(time.getEpochSecond()));
 
             mappingStmt.executeUpdate();
         } finally {
@@ -353,7 +355,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
     }
 
     @Override
-    public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
         if ((wNetworks == null) || (!wNetworks.matchInetNetwork(session.getRemoteAddress().getAddress().getHostAddress()))) {
             return super.doRcpt(session, sender, rcpt);
         } else {

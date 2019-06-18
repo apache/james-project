@@ -34,4 +34,8 @@ Note that you need to run a guice version of James.
  - Cassandra driver statistics
  - Tika HTTP client statistics
  - SpamAssassin TCP client statistics
- - Mailbox listeners statistics
+ - Mailbox listeners statistics execution times
+ - Mailbox listeners requests rate
+ - MailQueue enqueue/dequeue timer & counter statistics
+ - BlobStore timer statistics
+ - Statistics about pre-deletion hooks execution times

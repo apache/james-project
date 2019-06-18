@@ -19,13 +19,13 @@
 
 package org.apache.james.queue.rabbitmq;
 
-import java.io.Serializable;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
@@ -34,15 +34,18 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.server.core.MailImpl;
-import org.apache.james.util.SerializationUtil;
-import org.apache.james.util.streams.Iterators;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.consumers.ThrowingBiConsumer;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -56,7 +59,7 @@ class MailReferenceDTO {
                 .map(MailAddress::asString)
                 .collect(Guavate.toImmutableList()),
             mail.getName(),
-            Optional.ofNullable(mail.getSender()).map(MailAddress::asString),
+            mail.getMaybeSender().asOptional().map(MailAddress::asString),
             mail.getState(),
             mail.getErrorMessage(),
             Optional.ofNullable(mail.getLastUpdated()).map(Date::toInstant),
@@ -79,10 +82,11 @@ class MailReferenceDTO {
     }
 
     private static ImmutableMap<String, String> serializedAttributes(Mail mail) {
-        return Iterators.toStream(mail.getAttributeNames())
-            .collect(Guavate.toImmutableMap(
-                name -> name,
-                name -> SerializationUtil.serialize(mail.getAttribute(name))));
+        Function<Attribute, String> name = attribute -> attribute.getName().asString();
+        Function<Attribute, String> value = attribute -> attribute.getValue().toJson().toString();
+        return mail
+                .attributes()
+                .collect(Guavate.toImmutableMap(name, value));
     }
 
     private final ImmutableList<String> recipients;
@@ -186,28 +190,32 @@ class MailReferenceDTO {
     }
 
     MailImpl toMailWithMimeMessage(MimeMessage mimeMessage) throws MessagingException {
-        MailImpl mail = new MailImpl(name,
-            sender.map(MailAddress::getMailSender).orElse(null),
-            recipients.stream()
+        MailImpl.Builder builder = MailImpl.builder()
+            .name(name)
+            .sender(sender.map(MaybeSender::getMailSender).orElse(MaybeSender.nullSender()))
+            .addRecipients(recipients.stream()
                 .map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow())
-                .collect(Guavate.toImmutableList()),
-            mimeMessage);
+                .toArray(MailAddress[]::new))
+            .mimeMessage(mimeMessage)
+            .errorMessage(errorMessage)
+            .remoteAddr(remoteAddr)
+            .remoteHost(remoteHost)
+            .state(state);
 
-        mail.setErrorMessage(errorMessage);
-        mail.setRemoteAddr(remoteAddr);
-        mail.setRemoteHost(remoteHost);
-        mail.setState(state);
         lastUpdated
             .map(Instant::toEpochMilli)
             .map(Date::new)
-            .ifPresent(mail::setLastUpdated);
+            .ifPresent(builder::lastUpdated);
+
+        ThrowingBiConsumer<String, String> attributeSetter = (name, value) ->
+            builder.addAttribute(new Attribute(AttributeName.of(name), AttributeValue.fromJsonString(value)));
 
         attributes
-            .forEach((name, value) -> mail.setAttribute(name, SerializationUtil.<Serializable>deserialize(value)));
+            .forEach(Throwing.biConsumer(attributeSetter).sneakyThrow());
 
-        mail.addAllSpecificHeaderForRecipient(retrievePerRecipientHeaders());
+        builder.addAllHeadersForRecipients(retrievePerRecipientHeaders());
 
-        return mail;
+        return builder.build();
     }
 
     private PerRecipientHeaders retrievePerRecipientHeaders() {

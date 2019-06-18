@@ -59,6 +59,7 @@ public class VacationReplyTest {
         originalRecipient = new MailAddress("benwa@apache.org");
 
         mail = FakeMail.builder()
+                .name("name")
                 .mimeMessage(
                     MimeMessageUtil.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("spamMail.eml")))
                 .sender(originalSender)

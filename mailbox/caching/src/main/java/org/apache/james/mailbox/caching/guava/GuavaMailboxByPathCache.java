@@ -3,9 +3,9 @@ package org.apache.james.mailbox.caching.guava;
 import org.apache.james.mailbox.caching.MailboxByPathCache;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 import com.google.common.cache.Cache;
 
@@ -14,7 +14,11 @@ import com.google.common.cache.Cache;
  * Note: for efficiency/simplicity reasons the cache key is MailboxPath.toString()
  * That may help also make it compatible with other cache backends in the future.
  *
+ * @deprecated JAMES-2703 This class is deprecated and will be removed straight after upcoming James 3.4.0 release, unless it finds a maintainer
+ *
+ * This module lacks tests and is not used in James products hence the choice to deprecate it.
  */
+@Deprecated
 public class GuavaMailboxByPathCache extends AbstractGuavaCache implements MailboxByPathCache {
 
     private final Cache<String, Mailbox> findMailboxByPathCache = BUILDER.build();

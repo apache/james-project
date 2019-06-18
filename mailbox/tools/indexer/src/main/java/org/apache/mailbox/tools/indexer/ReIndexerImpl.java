@@ -19,140 +19,91 @@
 
 package org.apache.mailbox.tools.indexer;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-
 import javax.inject.Inject;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.indexer.ReIndexer;
+import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
-import org.apache.mailbox.tools.indexer.events.FlagsMessageEvent;
-import org.apache.mailbox.tools.indexer.events.ImpactingEventType;
-import org.apache.mailbox.tools.indexer.events.ImpactingMessageEvent;
-import org.apache.mailbox.tools.indexer.registrations.GlobalRegistration;
-import org.apache.mailbox.tools.indexer.registrations.MailboxRegistration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Iterables;
+import org.apache.james.task.Task;
 
 /**
  * Note about live re-indexation handling :
  *
  *  - Data races may arise... If you modify the stored value between the received event check and the index operation,
- *  you have an inconsistent behavior.
+ *  you have an inconsistent behavior (for mailbox renames).
  *
- *  This class is more about supporting changes in real time for future indexed values. If you change a flags / delete
- *  mails for instance, you will see it in the indexed value !
- *
- *  Why only care about updates and deletions ? Additions are already handled by the indexer that behaves normaly. We
- *  should just "adapt" our indexed value to the latest value, if any. The normal indexer will take care of new stuff.
+ *  A mechanism for tracking mailbox renames had been implemented, and is taken into account when starting re-indexing a mailbox.
+ *  Note that if a mailbox is renamed during its re-indexation process, it will not be taken into account. (We just reduce the inconsistency window).
  */
 public class ReIndexerImpl implements ReIndexer {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReIndexerImpl.class);
-    public static final int NO_LIMIT = 0;
-
+    private final ReIndexerPerformer reIndexerPerformer;
     private final MailboxManager mailboxManager;
-    private final ListeningMessageSearchIndex messageSearchIndex;
-    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
+    private final MailboxSessionMapperFactory mapperFactory;
 
     @Inject
-    public ReIndexerImpl(MailboxManager mailboxManager,
-                         ListeningMessageSearchIndex messageSearchIndex,
-                         MailboxSessionMapperFactory mailboxSessionMapperFactory) {
+    public ReIndexerImpl(ReIndexerPerformer reIndexerPerformer, MailboxManager mailboxManager, MailboxSessionMapperFactory mapperFactory) {
+        this.reIndexerPerformer = reIndexerPerformer;
         this.mailboxManager = mailboxManager;
-        this.messageSearchIndex = messageSearchIndex;
-        this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
+        this.mapperFactory = mapperFactory;
     }
 
     @Override
-    public void reIndex(MailboxPath path) throws MailboxException {
+    public Task reIndex(MailboxPath path) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(path.getUser());
-        reIndex(path, mailboxSession);
-    }
 
+        MailboxId mailboxId = mailboxManager.getMailbox(path, mailboxSession).getId();
+
+        return new SingleMailboxReindexingTask(reIndexerPerformer, mailboxId);
+    }
 
     @Override
-    public void reIndex() throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession("re-indexing");
-        LOGGER.info("Starting a full reindex");
-        List<MailboxPath> mailboxPaths = mailboxManager.list(mailboxSession);
-        GlobalRegistration globalRegistration = new GlobalRegistration();
-        mailboxManager.addGlobalListener(globalRegistration, mailboxSession);
-        try {
-            handleFullReindexingIterations(mailboxPaths, globalRegistration);
-        } finally {
-            mailboxManager.removeGlobalListener(globalRegistration, mailboxSession);
-        }
-        LOGGER.info("Full reindex finished");
+    public Task reIndex(MailboxId mailboxId) throws MailboxException {
+        validateIdExists(mailboxId);
+
+        return new SingleMailboxReindexingTask(reIndexerPerformer, mailboxId);
     }
 
-    private void reIndex(MailboxPath path, MailboxSession mailboxSession) throws MailboxException {
-        MailboxRegistration mailboxRegistration = new MailboxRegistration(path);
-        LOGGER.info("Intend to reindex {}",path);
-        Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxByPath(path);
-        messageSearchIndex.deleteAll(mailboxSession, mailbox);
-        mailboxManager.addListener(path, mailboxRegistration, mailboxSession);
-        try {
-            handleMailboxIndexingIterations(mailboxSession,
-                mailboxRegistration,
-                mailbox,
-                mailboxSessionMapperFactory.getMessageMapper(mailboxSession)
-                    .findInMailbox(mailbox,
-                        MessageRange.all(),
-                        MessageMapper.FetchType.Full,
-                        NO_LIMIT));
-            LOGGER.info("Finish to reindex {}", path);
-        } finally {
-            mailboxManager.removeListener(path, mailboxRegistration, mailboxSession);
-        }
+    @Override
+    public Task reIndex() {
+        return new FullReindexingTask(reIndexerPerformer);
     }
 
-    private void handleFullReindexingIterations(List<MailboxPath> mailboxPaths, GlobalRegistration globalRegistration) throws MailboxException {
-        for (MailboxPath mailboxPath : mailboxPaths) {
-            Optional<MailboxPath> pathToIndex = globalRegistration.getPathToIndex(mailboxPath);
-            if (pathToIndex.isPresent()) {
-                try {
-                    reIndex(pathToIndex.get());
-                } catch (Throwable e) {
-                    LOGGER.error("Error while proceeding to full reindexing on {}", pathToIndex.get(), e);
-                }
-            }
-        }
+    @Override
+    public Task reIndex(User user) {
+        return new UserReindexingTask(reIndexerPerformer, user);
     }
 
-    private void handleMailboxIndexingIterations(MailboxSession mailboxSession, MailboxRegistration mailboxRegistration, Mailbox mailbox, Iterator<MailboxMessage> iterator) throws MailboxException {
-        while (iterator.hasNext()) {
-            MailboxMessage message = iterator.next();
-            ImpactingMessageEvent impactingMessageEvent = findMostRelevant(mailboxRegistration.getImpactingEvents(message.getUid()));
-            if (impactingMessageEvent == null) {
-                messageSearchIndex.add(mailboxSession, mailbox, message);
-            } else if (impactingMessageEvent instanceof FlagsMessageEvent) {
-                message.setFlags(((FlagsMessageEvent) impactingMessageEvent).getFlags());
-                messageSearchIndex.add(mailboxSession, mailbox, message);
-            }
-        }
+    @Override
+    public Task reIndex(MailboxPath path, MessageUid uid) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(path.getUser());
+
+        MailboxId mailboxId = mailboxManager.getMailbox(path, mailboxSession).getId();
+
+        return new SingleMessageReindexingTask(reIndexerPerformer, mailboxId, uid);
     }
 
-    private ImpactingMessageEvent findMostRelevant(Collection<ImpactingMessageEvent> messageEvents) {
-        for (ImpactingMessageEvent impactingMessageEvent : messageEvents) {
-            if (impactingMessageEvent.getType().equals(ImpactingEventType.Deletion)) {
-                return impactingMessageEvent;
-            }
-        }
-        return Iterables.getLast(messageEvents, null);
+    @Override
+    public Task reIndex(MailboxId mailboxId, MessageUid uid) throws MailboxException {
+        validateIdExists(mailboxId);
+
+        return new SingleMessageReindexingTask(reIndexerPerformer, mailboxId, uid);
     }
 
+    @Override
+    public Task reIndex(ReIndexingExecutionFailures previousFailures) {
+        return new ErrorRecoveryIndexationTask(reIndexerPerformer, previousFailures);
+    }
+
+    private void validateIdExists(MailboxId mailboxId) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession("ReIndexingImap");
+        mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
+    }
 }

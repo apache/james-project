@@ -33,15 +33,11 @@ import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentTable.
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 
@@ -50,10 +46,12 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 public class CassandraAttachmentDAO {
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
-    private final CassandraUtils cassandraUtils;
     private CassandraConfiguration configuration;
     private final PreparedStatement insertStatement;
     private final PreparedStatement deleteStatement;
@@ -61,14 +59,13 @@ public class CassandraAttachmentDAO {
     private final PreparedStatement selectAllStatement;
 
     @Inject
-    public CassandraAttachmentDAO(Session session, CassandraUtils cassandraUtils, CassandraConfiguration configuration) {
+    public CassandraAttachmentDAO(Session session, CassandraConfiguration configuration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
 
         this.selectStatement = prepareSelect(session);
         this.selectAllStatement = prepareSelectAll(session);
         this.deleteStatement = prepareDelete(session);
         this.insertStatement = prepareInsert(session);
-        this.cassandraUtils = cassandraUtils;
         this.configuration = configuration;
     }
 
@@ -99,25 +96,23 @@ public class CassandraAttachmentDAO {
             .from(TABLE_NAME));
     }
 
-    public CompletableFuture<Optional<Attachment>> getAttachment(AttachmentId attachmentId) {
+    public Mono<Attachment> getAttachment(AttachmentId attachmentId) {
         Preconditions.checkArgument(attachmentId != null);
         return cassandraAsyncExecutor.executeSingleRow(
             selectStatement.bind()
                 .setString(ID, attachmentId.getId()))
-            .thenApply(optional -> optional.map(this::attachment));
-    }
-
-    public Stream<Attachment> retrieveAll() {
-        return cassandraUtils.convertToStream(
-            cassandraAsyncExecutor.execute(
-                selectAllStatement.bind()
-                    .setReadTimeoutMillis(configuration.getAttachmentV2MigrationReadTimeout())
-                    .setFetchSize(1))
-                .join())
             .map(this::attachment);
     }
 
-    public CompletableFuture<Void> storeAttachment(Attachment attachment) throws IOException {
+    public Flux<Attachment> retrieveAll() {
+        return cassandraAsyncExecutor.executeRows(
+                selectAllStatement.bind()
+                    .setReadTimeoutMillis(configuration.getAttachmentV2MigrationReadTimeout())
+                    .setFetchSize(1))
+            .map(this::attachment);
+    }
+
+    public Mono<Void> storeAttachment(Attachment attachment) throws IOException {
         return cassandraAsyncExecutor.executeVoid(
             insertStatement.bind()
                 .setString(ID, attachment.getAttachmentId().getId())
@@ -126,7 +121,7 @@ public class CassandraAttachmentDAO {
                 .setBytes(PAYLOAD, ByteBuffer.wrap(attachment.getBytes())));
     }
 
-    public CompletableFuture<Void> deleteAttachment(AttachmentId attachmentId) {
+    public Mono<Void> deleteAttachment(AttachmentId attachmentId) {
         return cassandraAsyncExecutor.executeVoid(
             deleteStatement
                 .bind()

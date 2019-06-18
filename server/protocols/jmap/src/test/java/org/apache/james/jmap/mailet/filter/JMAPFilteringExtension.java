@@ -37,7 +37,6 @@ import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -68,7 +67,7 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
             this.filteringManagement = filteringManagement;
             this.mailboxManager = mailboxManager;
             try {
-                this.recipient1Mailbox = createMailbox(RECIPIENT_1_USERNAME, RECIPIENT_1_MAILBOX_1);
+                this.recipient1Mailbox = createMailbox(RECIPIENT_1_USERNAME, RECIPIENT_1_MAILBOX_1.value());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -118,6 +117,7 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
 
         public FakeMail asMail(MimeMessageBuilder mimeMessageBuilder) throws MessagingException {
             return FakeMail.builder()
+                .name("name")
                 .sender(USER_1_ADDRESS)
                 .recipients(RECIPIENT_1)
                 .mimeMessage(mimeMessageBuilder)
@@ -128,10 +128,10 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
     private JMAPFilteringTestSystem testSystem;
 
     @Override
-    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+    public void beforeEach(ExtensionContext extensionContext) {
         FilteringManagement filteringManagement = new EventSourcingFilteringManagement(new InMemoryEventStore());
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
-        InMemoryMailboxManager mailboxManager = new InMemoryIntegrationResources().createMailboxManager(new SimpleGroupMembershipResolver());
+        InMemoryMailboxManager mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         ActionApplier.Factory actionApplierFactory = ActionApplier.factory(mailboxManager, new InMemoryId.Factory());
 
         JMAPFiltering jmapFiltering = new JMAPFiltering(filteringManagement, usersRepository, actionApplierFactory);

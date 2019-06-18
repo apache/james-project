@@ -20,21 +20,29 @@
 package org.apache.james.backends.cassandra;
 
 import org.apache.james.util.Host;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import org.junit.rules.ExternalResource;
 import org.testcontainers.containers.GenericContainer;
 
 
-public class DockerCassandraRule implements TestRule {
+public class DockerCassandraRule extends ExternalResource {
+
+    private boolean allowRestart = false;
+
+    public DockerCassandraRule allowRestart() {
+        allowRestart = true;
+        return this;
+    }
 
     @Override
-    public Statement apply(Statement base, Description description) {
-        return base;
+    protected void before() {
+        if (allowRestart) {
+            DockerCassandraSingleton.restartAfterMaxTestsPlayed();
+        }
+        DockerCassandraSingleton.incrementTestsPlayed();
     }
 
     public void start() {
-
+        DockerCassandraSingleton.singleton.start();
     }
 
     public void stop() {

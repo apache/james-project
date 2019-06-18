@@ -19,10 +19,6 @@
 
 package org.apache.james.mpt.imapmailbox.lucenesearch.host;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
@@ -31,113 +27,68 @@ import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
-import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
-import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.RAMDirectory;
 
-import com.google.common.io.Files;
+import com.github.fge.lambdas.Throwing;
 
 public class LuceneSearchHostSystem extends JamesImapHostSystem {
-    public static final String META_DATA_DIRECTORY = "target/user-meta-data";
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
         Feature.MOD_SEQ_SEARCH);
 
-
-    private File tempFile;
     private InMemoryMailboxManager mailboxManager;
+    private LuceneMessageSearchIndex searchIndex;
 
     @Override
     public void beforeTest() throws Exception {
         super.beforeTest();
-        this.tempFile = Files.createTempDir();
         initFields();
     }
 
-    @Override
-    public void afterTest() throws Exception {
-        tempFile.deleteOnExit();
-
-        resetUserMetaData();
-        MailboxSession session = mailboxManager.createSystemSession("test");
-        mailboxManager.startProcessingRequest(session);
-        mailboxManager.endProcessingRequest(session);
-        mailboxManager.logout(session, false);
-    }
-
-    public void resetUserMetaData() throws Exception {
-        File dir = new File(META_DATA_DIRECTORY);
-        if (dir.exists()) {
-            FileUtils.deleteDirectory(dir);
-        }
-        dir.mkdirs();
-    }
-
     private void initFields() {
-       
-        try {
-            DefaultDelegatingMailboxListener delegatingMailboxListener = new DefaultDelegatingMailboxListener();
-            MailboxEventDispatcher dispatcher = new MailboxEventDispatcher(delegatingMailboxListener);
-            
-            InMemoryMailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
-            StoreRightManager rightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), dispatcher);
-            JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
-            InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
-            mailboxManager = new InMemoryMailboxManager(mapperFactory,
-                authenticator,
-                authorizator,
-                locker,
-                new MessageParser(),
-                messageIdFactory,
-                dispatcher,
-                delegatingMailboxListener,
-                new StoreMailboxAnnotationManager(mapperFactory, rightManager),
-                rightManager);
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
+            .authenticator(authenticator)
+            .authorizator(authorizator)
+            .inVmEventBus()
+            .defaultAnnotationLimits()
+            .defaultMessageParser()
+            .listeningSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
+                preInstanciationStage.getMapperFactory(), new InMemoryId.Factory(), new RAMDirectory(),
+                new InMemoryMessageId.Factory(),
+                preInstanciationStage.getSessionProvider())))
+            .noPreDeletionHooks()
+            .storeQuotaManager()
+            .build();
 
-            FSDirectory fsDirectory = FSDirectory.open(tempFile);
-            LuceneMessageSearchIndex searchIndex = new LuceneMessageSearchIndex(mapperFactory, new InMemoryId.Factory(), fsDirectory, messageIdFactory);
-            searchIndex.setEnableSuffixMatch(true);
-            mailboxManager.setMessageSearchIndex(searchIndex);
+        mailboxManager = resources.getMailboxManager();
 
-            mailboxManager.init();
+        searchIndex = (LuceneMessageSearchIndex) resources.getSearchIndex();
+        searchIndex.setEnableSuffixMatch(true);
+        SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mailboxManager.getMapperFactory());
 
-            SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mapperFactory);
+        ImapProcessor defaultImapProcessorFactory =
+            DefaultImapProcessorFactory.createDefaultProcessor(
+                mailboxManager,
+                resources.getMailboxManager().getEventBus(),
+                subscriptionManager,
+                new NoQuotaManager(),
+                resources.getDefaultUserQuotaRootResolver(),
+                new DefaultMetricFactory());
 
-            final ImapProcessor defaultImapProcessorFactory =
-                DefaultImapProcessorFactory.createDefaultProcessor(
-                    mailboxManager,
-                    subscriptionManager,
-                    new NoQuotaManager(),
-                    new DefaultUserQuotaRootResolver(mapperFactory),
-                    new DefaultMetricFactory());
-
-            configure(new DefaultImapDecoderFactory().buildImapDecoder(),
-                new DefaultImapEncoderFactory().buildImapEncoder(),
-                defaultImapProcessorFactory);
-
-        } catch (IOException | MailboxException e) {
-            throw new RuntimeException(e);
-        }
+        configure(new DefaultImapDecoderFactory().buildImapDecoder(),
+            new DefaultImapEncoderFactory().buildImapEncoder(),
+            defaultImapProcessorFactory);
     }
 
     @Override
@@ -151,8 +102,12 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
     }
 
     @Override
-    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) throws Exception {
+    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) {
         throw new NotImplementedException();
     }
 
+    @Override
+    protected void await() throws Exception {
+        searchIndex.commit();
+    }
 }

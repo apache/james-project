@@ -20,25 +20,36 @@
 package org.apache.james.modules.server;
 
 import java.util.List;
+import java.util.function.Supplier;
 
-import org.apache.james.lifecycle.api.Configurable;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailrepository.api.MailRepositoryProvider;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.file.FileMailRepositoryProvider;
+import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.MailRepositoryProbeImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class MailStoreRepositoryModule extends AbstractModule {
+
+    public static final Logger LOGGER = LoggerFactory.getLogger(MailStoreRepositoryModule.class);
+
+    public interface DefaultItemSupplier extends Supplier<MailRepositoryStoreConfiguration.Item> {}
 
     @Override
     protected void configure() {
@@ -51,23 +62,30 @@ public class MailStoreRepositoryModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MailRepositoryProbeImpl.class);
     }
 
+    @Provides
+    @Singleton
+    MailRepositoryStoreConfiguration provideConfiguration(ConfigurationProvider configurationProvider, DefaultItemSupplier defaultItemSupplier) throws ConfigurationException {
+        HierarchicalConfiguration configuration = configurationProvider.getConfiguration("mailrepositorystore");
+        MailRepositoryStoreConfiguration userConfiguration = MailRepositoryStoreConfiguration.parse(configuration);
+        if (!userConfiguration.getItems().isEmpty()) {
+            return userConfiguration;
+        }
+        LOGGER.warn("Empty MailRepository store configuration supplied. Defaulting to default configuration for this product");
+        return MailRepositoryStoreConfiguration.forItems(defaultItemSupplier.get());
+    }
+
     @Singleton
     public static class MailRepositoryStoreModuleConfigurationPerformer implements ConfigurationPerformer {
-
-        private final ConfigurationProvider configurationProvider;
         private final MemoryMailRepositoryStore javaMailRepositoryStore;
 
         @Inject
-        public MailRepositoryStoreModuleConfigurationPerformer(ConfigurationProvider configurationProvider,
-                                                               MemoryMailRepositoryStore javaMailRepositoryStore) {
-            this.configurationProvider = configurationProvider;
+        public MailRepositoryStoreModuleConfigurationPerformer(MemoryMailRepositoryStore javaMailRepositoryStore) {
             this.javaMailRepositoryStore = javaMailRepositoryStore;
         }
 
         @Override
         public void initModule() {
             try {
-                javaMailRepositoryStore.configure(configurationProvider.getConfiguration("mailrepositorystore"));
                 javaMailRepositoryStore.init();
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -75,7 +93,7 @@ public class MailStoreRepositoryModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Configurable>> forClasses() {
+        public List<Class<? extends Startable>> forClasses() {
             return ImmutableList.of(MemoryMailRepositoryStore.class);
         }
     }

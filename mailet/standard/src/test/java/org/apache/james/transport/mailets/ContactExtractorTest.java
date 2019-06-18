@@ -30,6 +30,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.mailet.AttributeName;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.test.FakeMail;
@@ -44,7 +45,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ContactExtractorTest {
 
-    private static final String ATTRIBUTE = "ExtractedContacts";
+    private static final AttributeName ATTRIBUTE_NAME = AttributeName.of("ExtractedContacts");
     private static final String SENDER = "sender@james.org";
     private static final String TO = "to@james.org";
 
@@ -60,7 +61,7 @@ public class ContactExtractorTest {
         mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailetContext)
-                .setProperty(ContactExtractor.Configuration.ATTRIBUTE, ATTRIBUTE)
+                .setProperty(ContactExtractor.Configuration.ATTRIBUTE, ATTRIBUTE_NAME.asString())
                 .build();
     }
 
@@ -87,7 +88,9 @@ public class ContactExtractorTest {
 
     @Test
     public void serviceShouldNotThrowWhenJsonProcessingFails() throws Exception {
-        FakeMail mail = FakeMail.builder().mimeMessage(MimeMessageUtil.defaultMimeMessage())
+        FakeMail mail = FakeMail.builder()
+                .name("mail")
+                .mimeMessage(MimeMessageUtil.defaultMimeMessage())
                 .sender(SENDER)
                 .recipient(TO)
                 .build();
@@ -110,7 +113,9 @@ public class ContactExtractorTest {
                 .addToRecipient(TO)
                 .setSubject("Contact collection Rocks")
                 .setText("This is my email");
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .recipient(TO)
             .build();
@@ -119,7 +124,8 @@ public class ContactExtractorTest {
         String expectedMessage = "{\"userEmail\" : \"" + SENDER + "\", \"emails\" : [ \"" + TO + "\" ]}";
         mailet.service(mail);
 
-        assertThatJson(mail.getAttribute(ATTRIBUTE).toString()).isEqualTo(expectedMessage);
+        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).hasValueSatisfying(json ->
+            assertThatJson(json.getValue().value().toString()).isEqualTo(expectedMessage));
     }
 
     @Test
@@ -129,7 +135,9 @@ public class ContactExtractorTest {
             .addToRecipient("To <" + TO + ">")
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .recipient(TO)
             .build();
@@ -138,7 +146,8 @@ public class ContactExtractorTest {
         String expectedMessage = "{\"userEmail\" : \"" + SENDER + "\", \"emails\" : [ \"To <" + TO + ">\" ]}";
         mailet.service(mail);
 
-        assertThatJson(mail.getAttribute(ATTRIBUTE).toString()).isEqualTo(expectedMessage);
+        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).hasValueSatisfying(json ->
+                assertThatJson(json.getValue().value().toString()).isEqualTo(expectedMessage));
     }
 
     @Test
@@ -148,7 +157,9 @@ public class ContactExtractorTest {
             .addToRecipient("=?ISO-8859-1?Q?Beno=EEt_TELLIER?= <tellier@linagora.com>")
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .recipient(TO)
             .build();
@@ -157,7 +168,8 @@ public class ContactExtractorTest {
         String expectedMessage = "{\"userEmail\" : \"" + SENDER + "\", \"emails\" : [ \"Benoît TELLIER <tellier@linagora.com>\" ]}";
         mailet.service(mail);
 
-        assertThatJson(mail.getAttribute(ATTRIBUTE).toString()).isEqualTo(expectedMessage);
+        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).hasValueSatisfying(json ->
+                assertThatJson(json.getValue().value().toString()).isEqualTo(expectedMessage));
     }
 
     @Test
@@ -168,7 +180,9 @@ public class ContactExtractorTest {
             + "\r\n"
             + "Please!";
         MimeMessage message = MimeMessageUtil.mimeMessageFromString(rawMessage);
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .recipient("recipient@example.com")
             .build();
@@ -177,7 +191,8 @@ public class ContactExtractorTest {
         String expectedMessage = "{\"userEmail\" : \"" + SENDER + "\", \"emails\" : [ \"\\\"recip >> Frédéric RECIPIENT\\\" <frecipient@example.com>\" ]}";
         mailet.service(mail);
 
-        assertThatJson(mail.getAttribute(ATTRIBUTE).toString()).isEqualTo(expectedMessage);
+        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).hasValueSatisfying(json ->
+                assertThatJson(json.getValue().value().toString()).isEqualTo(expectedMessage));
     }
 
     @Test
@@ -188,7 +203,9 @@ public class ContactExtractorTest {
             + "\r\n"
             + "Please!";
         MimeMessage message = MimeMessageUtil.mimeMessageFromString(rawMessage);
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .recipient("recipient@example.com")
             .build();
@@ -197,7 +214,8 @@ public class ContactExtractorTest {
         String expectedMessage = "{\"userEmail\" : \"" + SENDER + "\", \"emails\" : [ \"User 1 <user1@example.com>\", \"\\\"recip >> Frédéric RECIPIENT\\\" <frecipient@example.com>\" ]}";
         mailet.service(mail);
 
-        assertThatJson(mail.getAttribute(ATTRIBUTE).toString()).isEqualTo(expectedMessage);
+        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).hasValueSatisfying(json ->
+                assertThatJson(json.getValue().value().toString()).isEqualTo(expectedMessage));
     }
 
     @Test
@@ -208,7 +226,9 @@ public class ContactExtractorTest {
             + "\r\n"
             + "Please!";
         MimeMessage message = MimeMessageUtil.mimeMessageFromString(rawMessage);
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .recipient("recipient@example.com")
             .build();
@@ -217,7 +237,8 @@ public class ContactExtractorTest {
         String expectedMessage = "{\"userEmail\" : \"" + SENDER + "\", \"emails\" : [ \"\\\"User, the first one\\\" <user1@example.com>\" ]}";
         mailet.service(mail);
 
-        assertThatJson(mail.getAttribute(ATTRIBUTE).toString()).isEqualTo(expectedMessage);
+        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).hasValueSatisfying(json ->
+                assertThatJson(json.getValue().value().toString()).isEqualTo(expectedMessage));
     }
 
     @Test
@@ -227,7 +248,8 @@ public class ContactExtractorTest {
             .addToRecipient("To <" + TO + ">")
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail").mimeMessage(message)
             .sender(SENDER)
             .recipient(TO)
             .build();
@@ -236,7 +258,8 @@ public class ContactExtractorTest {
         String expectedMessage = "{\"userEmail\" : \"" + SENDER + "\", \"emails\" : [ \"To <" + TO + ">\" ]}";
         mailet.service(mail);
 
-        assertThatJson(mail.getAttribute(ATTRIBUTE).toString()).isEqualTo(expectedMessage);
+        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).hasValueSatisfying(json ->
+                assertThatJson(json.getValue().value().toString()).isEqualTo(expectedMessage));
     }
 
     @Test
@@ -246,7 +269,9 @@ public class ContactExtractorTest {
             .addToRecipient("To <" + TO + ">")
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .recipient(TO)
             .build();
@@ -255,7 +280,8 @@ public class ContactExtractorTest {
         String expectedMessage = "{\"userEmail\" : \"" + SENDER + "\", \"emails\" : [ \"To <" + TO + ">\" ]}";
         mailet.service(mail);
 
-        assertThatJson(mail.getAttribute(ATTRIBUTE).toString()).isEqualTo(expectedMessage);
+        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).hasValueSatisfying(json ->
+                assertThatJson(json.getValue().value().toString()).isEqualTo(expectedMessage));
     }
 
     @Test
@@ -264,14 +290,17 @@ public class ContactExtractorTest {
             .addToRecipient("To <" + TO + ">")
             .setSubject("Contact collection Rocks")
             .setText("This is my email");
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .recipient(TO)
             .build();
         mailet.init(mailetConfig);
 
         mailet.service(mail);
 
-        assertThatJson(mail.getAttribute(ATTRIBUTE)).isEqualTo(null);
+        assertThat(mail.getAttribute(ATTRIBUTE_NAME))
+            .isEmpty();
     }
 
     @Test
@@ -280,14 +309,17 @@ public class ContactExtractorTest {
                 .setSender(SENDER)
                 .setSubject("Contact collection Rocks")
                 .setText("This is my email");
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .build();
         mailet.init(mailetConfig);
 
         mailet.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE)).isNull();
+        assertThat(mail.getAttribute(ATTRIBUTE_NAME))
+            .isEmpty();
     }
 
     @Test
@@ -296,7 +328,9 @@ public class ContactExtractorTest {
                 .setSender(SENDER)
                 .setSubject("Contact collection Rocks")
                 .setText("This is my email");
-        FakeMail mail = FakeMail.builder().mimeMessage(message)
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
             .sender(SENDER)
             .build();
 

@@ -47,12 +47,12 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,19 +61,19 @@ import com.google.common.collect.ImmutableList;
 
 abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequest> extends AbstractMailboxProcessor<M> implements PermitEnableCapabilityProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSelectionProcessor.class);
-
-    final StatusResponseFactory statusResponseFactory;
-
-    private final boolean openReadOnly;
     private static final List<String> CAPS = ImmutableList.of(ImapConstants.SUPPORTS_QRESYNC, ImapConstants.SUPPORTS_CONDSTORE);
 
+    private final StatusResponseFactory statusResponseFactory;
+    private final boolean openReadOnly;
+    private final EventBus eventBus;
     
     public AbstractSelectionProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, boolean openReadOnly,
-            MetricFactory metricFactory) {
+                                      MetricFactory metricFactory, EventBus eventBus) {
         super(acceptableClass, next, mailboxManager, statusResponseFactory, metricFactory);
         this.statusResponseFactory = statusResponseFactory;
         this.openReadOnly = openReadOnly;
 
+        this.eventBus = eventBus;
     }
 
     @Override
@@ -114,9 +114,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
             taggedBad(command, tag, responder, HumanReadableText.QRESYNC_NOT_ENABLED);
             return;
         }
-        
-        
-        
+
         final MessageManager.MetaData metaData = selectMailbox(fullMailboxPath, session);
         final SelectedMailbox selected = session.getSelected();
         MessageUid firstUnseen = metaData.getFirstUnseen();
@@ -131,7 +129,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
         // 
         // See IMAP-345
         int retryCount = 0;
-        while (unseen(responder, firstUnseen, selected, ImapSessionUtils.getMailboxSession(session)) == false) {
+        while (unseen(responder, firstUnseen, selected) == false) {
             // if we not was able to get find the unseen within 5 retries we should just not send it
             if (retryCount == 5) {
                 LOGGER.info("Unable to uid for unseen message {} in mailbox {}", firstUnseen, selected.getPath());
@@ -160,17 +158,14 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                 final MailboxManager mailboxManager = getMailboxManager();
                 final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
                 final MessageManager mailbox = mailboxManager.getMailbox(fullMailboxPath, mailboxSession);
-               
-                
+
                 //  If the provided UIDVALIDITY matches that of the selected mailbox, the
                 //  server then checks the last known modification sequence.
                 //
                 //  The server sends the client any pending flag changes (using FETCH
                 //  responses that MUST contain UIDs) and expunges those that have
                 //  occurred in this mailbox since the provided modification sequence.
-                SearchQuery sq = new SearchQuery();
-                sq.andCriteria(SearchQuery.modSeqGreaterThan(request.getKnownModSeq()));
-                
+
                 UidRange[] uidSet = request.getUidSet();
 
                 if (uidSet == null) {
@@ -218,8 +213,6 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                                 knownUidsList.add(uid);
                             }
                         }
-                       
-                        
                         
                         // loop over the known sequences and check the UID for MSN X again the known UID X 
                         MessageUid firstUid = MessageUid.MIN_VALUE;
@@ -247,7 +240,6 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                                     done = true;
                                     break;
                                 }
-
                             }
 
                             // We found the first uid to start with 
@@ -271,7 +263,6 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                             }
                         }
                         
-                        
                     }
                     
                     List<MessageRange> ranges = new ArrayList<>();
@@ -282,8 +273,6 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                             ranges.add(normalizedMessageSet);
                         }
                     }
-                    
-                    
                     
                     // TODO: Reconsider if we can do something to make the handling better. Maybe at least cache the triplets for the expunged
                     //       while have the server running. This could maybe allow us to not return every expunged message all the time
@@ -354,13 +343,13 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
         responder.respond(taggedOk);
     }
 
-    private boolean unseen(Responder responder, MessageUid firstUnseen, SelectedMailbox selected, MailboxSession session) throws MailboxException {
+    private boolean unseen(Responder responder, MessageUid firstUnseen, SelectedMailbox selected) throws MailboxException {
         if (firstUnseen != null) {
             final MessageUid unseenUid = firstUnseen;
             int msn = selected.msn(unseenUid);
 
             if (msn == SelectedMailbox.NO_SUCH_MESSAGE) {
-                LOGGER.debug("No message found with uid {} in mailbox {}", unseenUid, selected.getPath().getFullName(session.getPathDelimiter()));
+                LOGGER.debug("No message found with uid {} in mailbox {}", unseenUid, selected.getPath().asString());
                 return false;
             } 
 
@@ -407,7 +396,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
             if (currentMailbox != null) {
                 getStatusResponseFactory().untaggedOk(HumanReadableText.QRESYNC_CLOSED, ResponseCode.closed());
             }
-            session.selected(new SelectedMailboxImpl(getMailboxManager(),  session, mailboxPath));
+            session.selected(new SelectedMailboxImpl(getMailboxManager(), eventBus, session, mailboxPath));
 
             sessionMailbox = session.getSelected();
             
