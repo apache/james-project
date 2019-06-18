@@ -19,7 +19,6 @@
 package org.apache.james.mpt.smtp;
 
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.awaitility.Duration.ONE_MINUTE;
 import static org.awaitility.Duration.TWO_MINUTES;
 import static org.hamcrest.Matchers.equalTo;
 
@@ -31,7 +30,6 @@ import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -47,17 +45,12 @@ public abstract class ForwardSmtpTest {
         .await();
 
     @ClassRule
-    public static FakeSmtp fakeSmtp = new FakeSmtp();
+    public static FakeSmtp fakeSmtp = FakeSmtp.withDefaultPort();
 
     protected abstract SmtpHostSystem createSmtpHostSystem();
     
     private SmtpHostSystem hostSystem;
     private SimpleScriptedTestProtocol scriptedTest;
-
-    @BeforeClass
-    public static void classSetUp() {
-        fakeSmtp.awaitStarted(calmlyAwait.atMost(ONE_MINUTE));
-    }
 
     @Before
     public void setUp() throws Exception {

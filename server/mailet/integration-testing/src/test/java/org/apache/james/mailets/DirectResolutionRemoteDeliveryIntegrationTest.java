@@ -47,7 +47,6 @@ import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -74,18 +73,12 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
     @Rule
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
     @ClassRule
-    public static FakeSmtp fakeSmtp = new FakeSmtp();
+    public static FakeSmtp fakeSmtp = FakeSmtp.withDefaultPort();
     @ClassRule
     public static FakeSmtp fakeSmtpOnPort26 = FakeSmtp.withSmtpPort(26);
 
     private TemporaryJamesServer jamesServer;
     private DataProbe dataProbe;
-
-    @BeforeClass
-    public static void setup() {
-        fakeSmtp.awaitStarted(awaitAtMostOneMinute);
-        fakeSmtpOnPort26.awaitStarted(awaitAtMostOneMinute);
-    }
 
     @After
     public void tearDown() {

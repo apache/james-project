@@ -44,7 +44,6 @@ import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,7 +56,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     private static final String RECIPIENT = "touser@" + JAMES_ANOTHER_DOMAIN;
 
     @ClassRule
-    public static FakeSmtp fakeSmtp = new FakeSmtp();
+    public static FakeSmtp fakeSmtp = FakeSmtp.withDefaultPort();
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
@@ -68,11 +67,6 @@ public class GatewayRemoteDeliveryIntegrationTest {
     private TemporaryJamesServer jamesServer;
     private DataProbe dataProbe;
     private InMemoryDNSService inMemoryDNSService;
-
-    @BeforeClass
-    public static void classSetUp() {
-        fakeSmtp.awaitStarted(awaitAtMostOneMinute);
-    }
 
     @Before
     public void setup() throws Exception {

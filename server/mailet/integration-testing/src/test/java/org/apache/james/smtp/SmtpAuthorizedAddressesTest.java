@@ -56,7 +56,7 @@ public class SmtpAuthorizedAddressesTest {
     private static final String TO = "to@any.com";
 
     @ClassRule
-    public static FakeSmtp fakeSmtp = new FakeSmtp();
+    public static FakeSmtp fakeSmtp = FakeSmtp.withDefaultPort();
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
     @Rule
@@ -65,11 +65,6 @@ public class SmtpAuthorizedAddressesTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private TemporaryJamesServer jamesServer;
-
-    @BeforeClass
-    public static void setup() {
-        fakeSmtp.awaitStarted(awaitAtMostOneMinute);
-    }
 
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION

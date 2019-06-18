@@ -45,7 +45,6 @@ import org.apache.james.webadmin.routes.GroupsRoutes;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -67,18 +66,13 @@ public class GroupMappingRelayTest {
     private RequestSpecification webAdminApi;
 
     @ClassRule
-    public static final FakeSmtp fakeSmtp = new FakeSmtp();
+    public static final FakeSmtp fakeSmtp = FakeSmtp.withDefaultPort();
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
     @Rule
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
-
-    @BeforeClass
-    public static void classSetUp() {
-        fakeSmtp.awaitStarted(awaitAtMostOneMinute);
-    }
 
     @Before
     public void setup() throws Exception {

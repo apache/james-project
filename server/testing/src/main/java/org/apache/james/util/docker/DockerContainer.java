@@ -20,12 +20,9 @@
 package org.apache.james.util.docker;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-
-import javax.net.SocketFactory;
 
 import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;
@@ -147,16 +144,6 @@ public class DockerContainer implements TestRule {
     
     public String getHostIp() {
         return container.getContainerIpAddress();
-    }
-
-    public boolean tryConnect(int port) {
-        try {
-            Socket socket = SocketFactory.getDefault().createSocket(getContainerIp(), port);
-            socket.close();
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
     }
 
     @Override

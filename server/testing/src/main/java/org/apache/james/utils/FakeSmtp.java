@@ -24,12 +24,12 @@ import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.function.Function;
 
 import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
-import org.awaitility.core.ConditionFactory;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -57,39 +57,36 @@ public class FakeSmtp implements TestRule {
 
     public static FakeSmtp withSmtpPort(Integer smtpPort) {
         DockerContainer container = fakeSmtpContainer()
+            .withExposedPorts(smtpPort)
             .withCommands("node", "cli", "--listen", "80", "--smtp", smtpPort.toString());
 
-        return new FakeSmtp(container, smtpPort);
+        return new FakeSmtp(container);
+    }
+
+    public static FakeSmtp withDefaultPort() {
+        return withSmtpPort(SMTP_PORT);
     }
 
     private static DockerContainer fakeSmtpContainer() {
         return DockerContainer.fromName(Images.FAKE_SMTP)
             .withAffinityToContainer()
             .waitingFor(new HostPortWaitStrategy()
-            .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
+                .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND)
+                .withStartupTimeout(Duration.ofMinutes(1))
+            );
     }
 
     private static final int SMTP_PORT = 25;
     public static final ResponseSpecification RESPONSE_SPECIFICATION = new ResponseSpecBuilder().build();
     private final DockerContainer container;
-    private final Integer smtpPort;
 
-    public FakeSmtp() {
-        this(fakeSmtpContainer().withExposedPorts(SMTP_PORT), SMTP_PORT);
-    }
-
-    private FakeSmtp(DockerContainer container, Integer smtpPort) {
-        this.smtpPort = smtpPort;
+    private FakeSmtp(DockerContainer container) {
         this.container = container;
     }
 
     @Override
     public Statement apply(Statement statement, Description description) {
         return container.apply(statement, description);
-    }
-
-    public void awaitStarted(ConditionFactory calmyAwait) {
-        calmyAwait.until(() -> container.tryConnect(smtpPort));
     }
 
     public void assertEmailReceived(Function<ValidatableResponse, ValidatableResponse> expectations) {

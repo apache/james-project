@@ -60,7 +60,7 @@ public class SmtpContentTypeTest {
     public static final String SUBJECT = "test";
 
     @ClassRule
-    public static FakeSmtp fakeSmtp = new FakeSmtp();
+    public static FakeSmtp fakeSmtp = FakeSmtp.withDefaultPort();
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
     @Rule
@@ -69,11 +69,6 @@ public class SmtpContentTypeTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private TemporaryJamesServer jamesServer;
-
-    @BeforeClass
-    public static void setup() {
-        fakeSmtp.awaitStarted(awaitAtMostOneMinute);
-    }
 
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION

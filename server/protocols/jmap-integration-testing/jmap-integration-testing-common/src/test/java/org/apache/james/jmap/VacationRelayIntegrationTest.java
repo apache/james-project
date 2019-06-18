@@ -22,7 +22,6 @@ package org.apache.james.jmap;
 import static org.apache.james.jmap.TestingConstants.DOMAIN;
 import static org.apache.james.jmap.TestingConstants.LOCALHOST_IP;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
-import static org.awaitility.Duration.ONE_MINUTE;
 import static org.hamcrest.Matchers.equalTo;
 
 import java.io.IOException;
@@ -45,7 +44,6 @@ import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -58,7 +56,7 @@ public abstract class VacationRelayIntegrationTest {
     private static final String REASON = "Message explaining my wonderful vacations";
 
     @ClassRule
-    public static FakeSmtp fakeSmtp = new FakeSmtp();
+    public static FakeSmtp fakeSmtp = FakeSmtp.withDefaultPort();
 
     private GuiceJamesServer guiceJamesServer;
     private JmapGuiceProbe jmapGuiceProbe;
@@ -68,11 +66,6 @@ public abstract class VacationRelayIntegrationTest {
     protected abstract GuiceJamesServer getJmapServer() throws IOException;
 
     protected abstract InMemoryDNSService getInMemoryDns();
-
-    @BeforeClass
-    public static void classSetUp() {
-        fakeSmtp.awaitStarted(calmlyAwait.atMost(ONE_MINUTE));
-    }
 
     @Before
     public void setUp() throws Exception {
