@@ -89,8 +89,8 @@ class Dequeuer {
     }
 
     Flux<? extends MailQueue.MailQueueItem> deQueue() {
-        return flux.flatMap(this::loadItem)
-            .flatMap(this::filterIfDeleted);
+        return flux.concatMap(this::loadItem)
+            .concatMap(this::filterIfDeleted);
     }
 
     private Mono<RabbitMQMailQueueItem> filterIfDeleted(RabbitMQMailQueueItem item) {
