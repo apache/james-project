@@ -27,10 +27,11 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueV
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.BODY_BLOB_ID;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.BUCKET_ID;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.ENQUEUED_TIME;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.ENQUEUE_ID;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.ERROR_MESSAGE;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.HEADER_BLOB_ID;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.LAST_UPDATED;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.MAIL_KEY;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.NAME;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.PER_RECIPIENT_SPECIFIC_HEADERS;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.QUEUE_NAME;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.RECIPIENTS;
@@ -97,7 +98,8 @@ public class EnqueuedMailsDAO {
             .value(QUEUE_NAME, bindMarker(QUEUE_NAME))
             .value(TIME_RANGE_START, bindMarker(TIME_RANGE_START))
             .value(BUCKET_ID, bindMarker(BUCKET_ID))
-            .value(MAIL_KEY, bindMarker(MAIL_KEY))
+            .value(ENQUEUE_ID, bindMarker(ENQUEUE_ID))
+            .value(NAME, bindMarker(NAME))
             .value(HEADER_BLOB_ID, bindMarker(HEADER_BLOB_ID))
             .value(BODY_BLOB_ID, bindMarker(BODY_BLOB_ID))
             .value(ENQUEUED_TIME, bindMarker(ENQUEUED_TIME))
@@ -123,7 +125,8 @@ public class EnqueuedMailsDAO {
             .setTimestamp(TIME_RANGE_START, Date.from(slicingContext.getTimeRangeStart()))
             .setInt(BUCKET_ID, slicingContext.getBucketId().getValue())
             .setTimestamp(ENQUEUED_TIME, Date.from(enqueuedItem.getEnqueuedTime()))
-            .setString(MAIL_KEY, mail.getName())
+            .setUUID(ENQUEUE_ID, enqueuedItem.getEnQueueId().asUUID())
+            .setString(NAME, mail.getName())
             .setString(HEADER_BLOB_ID, mimeMessagePartsId.getHeaderBlobId().asString())
             .setString(BODY_BLOB_ID, mimeMessagePartsId.getBodyBlobId().asString())
             .setString(STATE, mail.getState())

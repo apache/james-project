@@ -46,6 +46,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 class MailDTOTest {
+    static final EnQueueId EN_QUEUE_ID = EnQueueId.ofSerialized("110e8400-e29b-11d4-a716-446655440000");
     static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
     static final Date LAST_UPDATED = Date.from(Instant.parse("2016-09-08T14:25:52.000Z"));
 
@@ -85,6 +86,7 @@ class MailDTOTest {
 
     private MailReferenceDTO mailDTO1() throws MessagingException {
         return MailReferenceDTO.fromMail(
+            EN_QUEUE_ID,
             FakeMail.builder()
                 .name("mail-name-558")
                 .recipients(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2)
@@ -117,6 +119,7 @@ class MailDTOTest {
         mail.setState(null);
         mail.setLastUpdated(null);
         return MailReferenceDTO.fromMail(
+            EN_QUEUE_ID,
             mail,
             MimeMessagePartsId.builder()
                 .headerBlobId(BLOB_ID_FACTORY.from("210e7136-ede3-44eb-9495-3ed816d6e23b"))

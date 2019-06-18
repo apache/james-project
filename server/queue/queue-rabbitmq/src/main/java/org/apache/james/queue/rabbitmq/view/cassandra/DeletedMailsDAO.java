@@ -23,18 +23,19 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.DeletedMailTable.MAIL_KEY;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.DeletedMailTable.ENQUEUE_ID;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.DeletedMailTable.QUEUE_NAME;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.DeletedMailTable.TABLE_NAME;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.queue.rabbitmq.EnQueueId;
 import org.apache.james.queue.rabbitmq.MailQueueName;
-import org.apache.james.queue.rabbitmq.view.cassandra.model.MailKey;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+
 import reactor.core.publisher.Mono;
 
 public class DeletedMailsDAO {
@@ -53,31 +54,31 @@ public class DeletedMailsDAO {
     private PreparedStatement prepareInsert(Session session) {
         return session.prepare(insertInto(TABLE_NAME)
             .value(QUEUE_NAME, bindMarker(QUEUE_NAME))
-            .value(MAIL_KEY, bindMarker(MAIL_KEY)));
+            .value(ENQUEUE_ID, bindMarker(ENQUEUE_ID)));
     }
 
     private PreparedStatement prepareSelectExist(Session session) {
         return session.prepare(select()
             .from(TABLE_NAME)
             .where(eq(QUEUE_NAME, bindMarker(QUEUE_NAME)))
-            .and(eq(MAIL_KEY, bindMarker(MAIL_KEY))));
+            .and(eq(ENQUEUE_ID, bindMarker(ENQUEUE_ID))));
     }
 
-    Mono<Void> markAsDeleted(MailQueueName mailQueueName, MailKey mailKey) {
+    Mono<Void> markAsDeleted(MailQueueName mailQueueName, EnQueueId enQueueId) {
         return executor.executeVoid(insertOne.bind()
             .setString(QUEUE_NAME, mailQueueName.asString())
-            .setString(MAIL_KEY, mailKey.getMailKey()));
+            .setUUID(ENQUEUE_ID, enQueueId.asUUID()));
     }
 
-    Mono<Boolean> isDeleted(MailQueueName mailQueueName, MailKey mailKey) {
+    Mono<Boolean> isDeleted(MailQueueName mailQueueName, EnQueueId enQueueId) {
         return executor.executeReturnExists(
             selectOne.bind()
                 .setString(QUEUE_NAME, mailQueueName.asString())
-                .setString(MAIL_KEY, mailKey.getMailKey()));
+                .setUUID(ENQUEUE_ID, enQueueId.asUUID()));
     }
 
-    Mono<Boolean> isStillEnqueued(MailQueueName mailQueueName, MailKey mailKey) {
-        return isDeleted(mailQueueName, mailKey)
+    Mono<Boolean> isStillEnqueued(MailQueueName mailQueueName, EnQueueId enQueueId) {
+        return isDeleted(mailQueueName, enQueueId)
             .map(b -> !b);
     }
 }

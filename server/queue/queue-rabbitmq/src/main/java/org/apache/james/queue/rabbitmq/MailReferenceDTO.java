@@ -52,8 +52,9 @@ import com.google.common.collect.ImmutableMap;
 
 class MailReferenceDTO {
 
-    static MailReferenceDTO fromMail(Mail mail, MimeMessagePartsId partsId) {
+    static MailReferenceDTO fromMail(EnQueueId enQueueId, Mail mail, MimeMessagePartsId partsId) {
         return new MailReferenceDTO(
+            enQueueId.serialize(),
             Optional.ofNullable(mail.getRecipients()).map(Collection::stream)
                 .orElse(Stream.empty())
                 .map(MailAddress::asString)
@@ -89,6 +90,7 @@ class MailReferenceDTO {
                 .collect(Guavate.toImmutableMap(name, value));
     }
 
+    private final String enQueueId;
     private final ImmutableList<String> recipients;
     private final String name;
     private final Optional<String> sender;
@@ -103,7 +105,8 @@ class MailReferenceDTO {
     private final String bodyBlobId;
 
     @JsonCreator
-    private MailReferenceDTO(@JsonProperty("recipients") ImmutableList<String> recipients,
+    private MailReferenceDTO(@JsonProperty("enQueueId") String enQueueId,
+                             @JsonProperty("recipients") ImmutableList<String> recipients,
                              @JsonProperty("name") String name,
                              @JsonProperty("sender") Optional<String> sender,
                              @JsonProperty("state") String state,
@@ -112,9 +115,10 @@ class MailReferenceDTO {
                              @JsonProperty("attributes") ImmutableMap<String, String> attributes,
                              @JsonProperty("remoteAddr") String remoteAddr,
                              @JsonProperty("remoteHost") String remoteHost,
-                             @JsonProperty("perRecipientHeaders") Map<String, HeadersDto>  perRecipientHeaders,
+                             @JsonProperty("perRecipientHeaders") Map<String, HeadersDto> perRecipientHeaders,
                              @JsonProperty("headerBlobId") String headerBlobId,
                              @JsonProperty("bodyBlobId") String bodyBlobId) {
+        this.enQueueId = enQueueId;
         this.recipients = recipients;
         this.name = name;
         this.sender = sender;
@@ -127,6 +131,11 @@ class MailReferenceDTO {
         this.perRecipientHeaders = perRecipientHeaders;
         this.headerBlobId = headerBlobId;
         this.bodyBlobId = bodyBlobId;
+    }
+
+    @JsonProperty("enQueueId")
+    public String getEnQueueId() {
+        return enQueueId;
     }
 
     @JsonProperty("recipients")
@@ -189,6 +198,10 @@ class MailReferenceDTO {
         return bodyBlobId;
     }
 
+    EnQueueId retrieveEnqueueId() {
+        return EnQueueId.ofSerialized(enQueueId);
+    }
+
     MailImpl toMailWithMimeMessage(MimeMessage mimeMessage) throws MessagingException {
         MailImpl.Builder builder = MailImpl.builder()
             .name(name)
@@ -233,7 +246,8 @@ class MailReferenceDTO {
         if (o instanceof MailReferenceDTO) {
             MailReferenceDTO mailDTO = (MailReferenceDTO) o;
 
-            return Objects.equals(this.recipients, mailDTO.recipients)
+            return Objects.equals(this.enQueueId, mailDTO.enQueueId)
+                && Objects.equals(this.recipients, mailDTO.recipients)
                 && Objects.equals(this.name, mailDTO.name)
                 && Objects.equals(this.sender, mailDTO.sender)
                 && Objects.equals(this.state, mailDTO.state)
@@ -251,6 +265,6 @@ class MailReferenceDTO {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(recipients, name, sender, state, errorMessage, lastUpdated, attributes, remoteAddr, remoteHost, perRecipientHeaders, headerBlobId, bodyBlobId);
+        return Objects.hash(enQueueId, recipients, name, sender, state, errorMessage, lastUpdated, attributes, remoteAddr, remoteHost, perRecipientHeaders, headerBlobId, bodyBlobId);
     }
 }

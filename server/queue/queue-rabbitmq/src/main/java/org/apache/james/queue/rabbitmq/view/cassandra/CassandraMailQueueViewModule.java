@@ -25,6 +25,7 @@ import static com.datastax.driver.core.DataType.list;
 import static com.datastax.driver.core.DataType.map;
 import static com.datastax.driver.core.DataType.text;
 import static com.datastax.driver.core.DataType.timestamp;
+import static com.datastax.driver.core.DataType.uuid;
 import static com.datastax.driver.core.schemabuilder.SchemaBuilder.frozen;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -32,14 +33,15 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 public interface CassandraMailQueueViewModule {
 
     interface EnqueuedMailsTable {
-        String TABLE_NAME = "enqueuedMails";
+        String TABLE_NAME = "enqueuedMailsV2";
 
         String QUEUE_NAME = "queueName";
         String TIME_RANGE_START = "timeRangeStart";
         String BUCKET_ID = "bucketId";
 
         String ENQUEUED_TIME = "enqueuedTime";
-        String MAIL_KEY = "mailKey";
+        String ENQUEUE_ID = "enqueueId";
+        String NAME = "name";
         String HEADER_BLOB_ID = "headerBlobId";
         String BODY_BLOB_ID = "bodyBlobId";
         String STATE = "state";
@@ -65,10 +67,10 @@ public interface CassandraMailQueueViewModule {
     }
 
     interface DeletedMailTable {
-        String TABLE_NAME = "deletedMails";
+        String TABLE_NAME = "deletedMailsV2";
 
         String QUEUE_NAME = "queueName";
-        String MAIL_KEY = "mailKey";
+        String ENQUEUE_ID = "enqueueId";
     }
 
     CassandraModule MODULE = CassandraModule
@@ -86,8 +88,9 @@ public interface CassandraMailQueueViewModule {
             .addPartitionKey(EnqueuedMailsTable.QUEUE_NAME, text())
             .addPartitionKey(EnqueuedMailsTable.TIME_RANGE_START, timestamp())
             .addPartitionKey(EnqueuedMailsTable.BUCKET_ID, cint())
-            .addClusteringColumn(EnqueuedMailsTable.MAIL_KEY, text())
+            .addClusteringColumn(EnqueuedMailsTable.ENQUEUE_ID, uuid())
             .addColumn(EnqueuedMailsTable.ENQUEUED_TIME, timestamp())
+            .addColumn(EnqueuedMailsTable.NAME, text())
             .addColumn(EnqueuedMailsTable.STATE, text())
             .addColumn(EnqueuedMailsTable.HEADER_BLOB_ID, text())
             .addColumn(EnqueuedMailsTable.BODY_BLOB_ID, text())
@@ -115,7 +118,7 @@ public interface CassandraMailQueueViewModule {
         .options(options -> options)
         .statement(statement -> statement
             .addPartitionKey(DeletedMailTable.QUEUE_NAME, text())
-            .addPartitionKey(DeletedMailTable.MAIL_KEY, text()))
+            .addPartitionKey(DeletedMailTable.ENQUEUE_ID, uuid()))
 
         .build();
 }

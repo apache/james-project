@@ -231,13 +231,6 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
 
     }
 
-    @Test
-    @Override
-    @Disabled("JAMES-2794 This test never finishes")
-    public void enQueueShouldAcceptMailWithDuplicatedNames() {
-
-    }
-
     private void enqueueSomeMails(Function<Integer, String> namePattern, int emailCount) {
         IntStream.rangeClosed(1, emailCount)
             .forEach(Throwing.intConsumer(i -> enQueue(defaultMail()

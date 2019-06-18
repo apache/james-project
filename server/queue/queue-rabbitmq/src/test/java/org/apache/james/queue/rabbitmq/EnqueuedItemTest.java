@@ -22,6 +22,7 @@ package org.apache.james.queue.rabbitmq;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
+
 import javax.mail.MessagingException;
 
 import org.apache.james.blob.api.HashBlobId;
@@ -56,8 +57,21 @@ class EnqueuedItemTest {
     }
 
     @Test
+    void buildShouldThrowWhenEnqueueIdIsNull() {
+        assertThatThrownBy(() -> EnqueuedItem.builder()
+                .enQueueId(null)
+                .mailQueueName(mailQueueName)
+                .mail(mail)
+                .enqueuedTime(enqueuedTime)
+                .mimeMessagePartsId(partsId)
+                .build())
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
     void buildShouldThrowWhenMailQueueNameIsNull() {
         assertThatThrownBy(() -> EnqueuedItem.builder()
+                .enQueueId(EnQueueId.generate())
                 .mailQueueName(null)
                 .mail(mail)
                 .enqueuedTime(enqueuedTime)
@@ -69,6 +83,7 @@ class EnqueuedItemTest {
     @Test
     void buildShouldThrowWhenMailIsNull() {
         assertThatThrownBy(() -> EnqueuedItem.builder()
+                .enQueueId(EnQueueId.generate())
                 .mailQueueName(mailQueueName)
                 .mail(null)
                 .enqueuedTime(enqueuedTime)
@@ -80,6 +95,7 @@ class EnqueuedItemTest {
     @Test
     void buildShouldThrowWhenEnqueuedTimeIsNull() {
         assertThatThrownBy(() -> EnqueuedItem.builder()
+                .enQueueId(EnQueueId.generate())
                 .mailQueueName(mailQueueName)
                 .mail(mail)
                 .enqueuedTime(null)
@@ -91,6 +107,7 @@ class EnqueuedItemTest {
     @Test
     void buildShouldThrowWhenMimeMessagePartsIdIsNull() {
         assertThatThrownBy(() -> EnqueuedItem.builder()
+                .enQueueId(EnQueueId.generate())
                 .mailQueueName(mailQueueName)
                 .mail(mail)
                 .enqueuedTime(enqueuedTime)

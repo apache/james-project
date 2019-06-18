@@ -23,8 +23,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.queue.rabbitmq.EnQueueId;
 import org.apache.james.queue.rabbitmq.MailQueueName;
-import org.apache.james.queue.rabbitmq.view.cassandra.model.MailKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -33,11 +35,14 @@ class DeletedMailsDAOTest {
 
     private static final MailQueueName OUT_GOING_1 = MailQueueName.fromString("OUT_GOING_1");
     private static final MailQueueName OUT_GOING_2 = MailQueueName.fromString("OUT_GOING_2");
-    private static final MailKey MAIL_KEY_1 = MailKey.of("mailkey1");
-    private static final MailKey MAIL_KEY_2 = MailKey.of("mailkey2");
+    private static final EnQueueId EN_QUEUE_ID_1 = EnQueueId.ofSerialized("110e8400-e29b-11d4-a716-446655440000");
+    private static final EnQueueId EN_QUEUE_ID_2 = EnQueueId.ofSerialized("464765a0-e4e7-11e4-aba4-710c1de3782b");
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraMailQueueViewModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
+        CassandraModule.aggregateModules(
+            CassandraSchemaVersionModule.MODULE,
+            CassandraMailQueueViewModule.MODULE));
 
     private DeletedMailsDAO testee;
 
@@ -49,14 +54,14 @@ class DeletedMailsDAOTest {
     @Test
     void markAsDeletedShouldWork() {
         Boolean isDeletedBeforeMark = testee
-                .isDeleted(OUT_GOING_1, MAIL_KEY_1)
+                .isDeleted(OUT_GOING_1, EN_QUEUE_ID_1)
                 .block();
         assertThat(isDeletedBeforeMark).isFalse();
 
-        testee.markAsDeleted(OUT_GOING_1, MAIL_KEY_1).block();
+        testee.markAsDeleted(OUT_GOING_1, EN_QUEUE_ID_1).block();
 
         Boolean isDeletedAfterMark = testee
-            .isDeleted(OUT_GOING_1, MAIL_KEY_1)
+            .isDeleted(OUT_GOING_1, EN_QUEUE_ID_1)
             .block();
 
         assertThat(isDeletedAfterMark).isTrue();
@@ -64,10 +69,10 @@ class DeletedMailsDAOTest {
 
     @Test
     void checkDeletedShouldReturnFalseWhenTableDoesntContainBothMailQueueAndMailKey() {
-        testee.markAsDeleted(OUT_GOING_2, MAIL_KEY_2).block();
+        testee.markAsDeleted(OUT_GOING_2, EN_QUEUE_ID_2).block();
 
         Boolean isDeleted = testee
-            .isDeleted(OUT_GOING_1, MAIL_KEY_1)
+            .isDeleted(OUT_GOING_1, EN_QUEUE_ID_1)
             .block();
 
         assertThat(isDeleted).isFalse();
@@ -75,10 +80,10 @@ class DeletedMailsDAOTest {
 
     @Test
     void checkDeletedShouldReturnFalseWhenTableContainsMailQueueButNotMailKey() {
-        testee.markAsDeleted(OUT_GOING_1, MAIL_KEY_2).block();
+        testee.markAsDeleted(OUT_GOING_1, EN_QUEUE_ID_2).block();
 
         Boolean isDeleted = testee
-            .isDeleted(OUT_GOING_1, MAIL_KEY_1)
+            .isDeleted(OUT_GOING_1, EN_QUEUE_ID_1)
             .block();
 
         assertThat(isDeleted).isFalse();
@@ -86,10 +91,10 @@ class DeletedMailsDAOTest {
 
     @Test
     void checkDeletedShouldReturnFalseWhenTableContainsMailKeyButNotMailQueue() {
-        testee.markAsDeleted(OUT_GOING_2, MAIL_KEY_1).block();
+        testee.markAsDeleted(OUT_GOING_2, EN_QUEUE_ID_1).block();
 
         Boolean isDeleted = testee
-            .isDeleted(OUT_GOING_1, MAIL_KEY_1)
+            .isDeleted(OUT_GOING_1, EN_QUEUE_ID_1)
             .block();
 
         assertThat(isDeleted).isFalse();
@@ -97,10 +102,10 @@ class DeletedMailsDAOTest {
 
     @Test
     void checkDeletedShouldReturnTrueWhenTableContainsMailItem() {
-        testee.markAsDeleted(OUT_GOING_1, MAIL_KEY_1).block();
+        testee.markAsDeleted(OUT_GOING_1, EN_QUEUE_ID_1).block();
 
         Boolean isDeleted = testee
-            .isDeleted(OUT_GOING_1, MAIL_KEY_1)
+            .isDeleted(OUT_GOING_1, EN_QUEUE_ID_1)
             .block();
 
         assertThat(isDeleted).isTrue();

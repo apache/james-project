@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
@@ -46,16 +47,22 @@ class Dequeuer {
 
     private static class RabbitMQMailQueueItem implements MailQueue.MailQueueItem {
         private final Consumer<Boolean> ack;
+        private final EnQueueId enQueueId;
         private final Mail mail;
 
-        private RabbitMQMailQueueItem(Consumer<Boolean> ack, Mail mail) {
+        private RabbitMQMailQueueItem(Consumer<Boolean> ack, EnQueueId enQueueId, Mail mail) {
             this.ack = ack;
+            this.enQueueId = enQueueId;
             this.mail = mail;
         }
 
         @Override
         public Mail getMail() {
             return mail;
+        }
+
+        public EnQueueId getEnQueueId() {
+            return enQueueId;
         }
 
         @Override
@@ -87,7 +94,7 @@ class Dequeuer {
     }
 
     private Mono<RabbitMQMailQueueItem> filterIfDeleted(RabbitMQMailQueueItem item) {
-        return mailQueueView.isPresent(item.getMail())
+        return mailQueueView.isPresent(item.getEnQueueId())
             .flatMap(isPresent -> {
                 if (isPresent) {
                     return Mono.just(item);
@@ -99,9 +106,10 @@ class Dequeuer {
 
     private Mono<RabbitMQMailQueueItem> loadItem(AcknowledgableDelivery response) {
         try {
-            Mail mail = loadMail(response);
+            Pair<EnQueueId, Mail> idAndMail = loadMail(response);
+            Mail mail = idAndMail.getRight();
             ThrowingConsumer<Boolean> ack = ack(response, mail);
-            return Mono.just(new RabbitMQMailQueueItem(ack, mail));
+            return Mono.just(new RabbitMQMailQueueItem(ack, idAndMail.getLeft(), mail));
         } catch (MailQueue.MailQueueException e) {
             return Mono.error(e);
         }
@@ -119,9 +127,11 @@ class Dequeuer {
         };
     }
 
-    private Mail loadMail(Delivery response) throws MailQueue.MailQueueException {
+    private Pair<EnQueueId, Mail> loadMail(Delivery response) throws MailQueue.MailQueueException {
         MailReferenceDTO mailDTO = toMailReference(response);
-        return mailLoader.apply(mailDTO);
+        EnQueueId enQueueId = mailDTO.retrieveEnqueueId();
+        Mail mail = mailLoader.apply(mailDTO);
+        return Pair.of(enQueueId, mail);
     }
 
     private MailReferenceDTO toMailReference(Delivery getResponse) throws MailQueue.MailQueueException {

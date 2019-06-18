@@ -30,12 +30,12 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
+import org.apache.james.queue.rabbitmq.EnQueueId;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.BucketId;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
-import org.apache.james.queue.rabbitmq.view.cassandra.model.MailKey;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class EnqueuedMailsDaoTest {
 
     private static final MailQueueName OUT_GOING_1 = MailQueueName.fromString("OUT_GOING_1");
-    private static final MailKey MAIL_KEY_1 = MailKey.of("mailkey1");
+    private static final EnQueueId EN_QUEUE_ID = EnQueueId.ofSerialized("110e8400-e29b-11d4-a716-446655440000");
+    private static final String NAME = "name";
     private static int BUCKET_ID_VALUE = 10;
     private static final BucketId BUCKET_ID = BucketId.of(BUCKET_ID_VALUE);
     private static final Instant NOW = Instant.now();
@@ -75,9 +76,10 @@ class EnqueuedMailsDaoTest {
     void insertShouldWork() throws Exception {
         testee.insert(EnqueuedItemWithSlicingContext.builder()
                 .enqueuedItem(EnqueuedItem.builder()
+                    .enQueueId(EN_QUEUE_ID)
                     .mailQueueName(OUT_GOING_1)
                     .mail(FakeMail.builder()
-                        .name(MAIL_KEY_1.getMailKey())
+                        .name(NAME)
                         .build())
                     .enqueuedTime(NOW)
                     .mimeMessagePartsId(MIME_MESSAGE_PARTS_ID)
@@ -97,9 +99,10 @@ class EnqueuedMailsDaoTest {
     void selectEnqueuedMailsShouldWork() throws Exception {
         testee.insert(EnqueuedItemWithSlicingContext.builder()
                 .enqueuedItem(EnqueuedItem.builder()
+                    .enQueueId(EN_QUEUE_ID)
                     .mailQueueName(OUT_GOING_1)
                     .mail(FakeMail.builder()
-                        .name(MAIL_KEY_1.getMailKey())
+                        .name(NAME)
                         .build())
                     .enqueuedTime(NOW)
                     .mimeMessagePartsId(MIME_MESSAGE_PARTS_ID)
@@ -110,9 +113,10 @@ class EnqueuedMailsDaoTest {
 
         testee.insert(EnqueuedItemWithSlicingContext.builder()
                 .enqueuedItem(EnqueuedItem.builder()
+                    .enQueueId(EN_QUEUE_ID)
                     .mailQueueName(OUT_GOING_1)
                     .mail(FakeMail.builder()
-                        .name(MAIL_KEY_1.getMailKey())
+                        .name(NAME)
                         .build())
                     .enqueuedTime(NOW)
                     .mimeMessagePartsId(MIME_MESSAGE_PARTS_ID)
@@ -134,7 +138,8 @@ class EnqueuedMailsDaoTest {
                     softly.assertThat(slicingContext.getTimeRangeStart()).isEqualTo(NOW);
                     softly.assertThat(enqueuedItem.getMailQueueName()).isEqualTo(OUT_GOING_1);
                     softly.assertThat(enqueuedItem.getEnqueuedTime()).isEqualTo(NOW);
-                    softly.assertThat(enqueuedItem.getMailKey()).isEqualTo(MAIL_KEY_1);
+                    softly.assertThat(enqueuedItem.getEnQueueId()).isEqualTo(EN_QUEUE_ID);
+                    softly.assertThat(enqueuedItem.getMail().getName()).isEqualTo(NAME);
                     softly.assertThat(enqueuedItem.getPartsId()).isEqualTo(MIME_MESSAGE_PARTS_ID);
                 });
             });

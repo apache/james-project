@@ -22,10 +22,12 @@ package org.apache.james.queue.rabbitmq.view.cassandra.model;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
+
 import javax.mail.MessagingException;
 
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
+import org.apache.james.queue.rabbitmq.EnQueueId;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.mailet.base.test.FakeMail;
@@ -40,7 +42,8 @@ class EnqueuedItemWithSlicingContextTest {
 
     private EnqueuedItemWithSlicingContextTest() throws MessagingException {
         enqueuedItem = EnqueuedItem.builder()
-                .mailQueueName(MailQueueName.fromString("mailQueueName"))
+            .enQueueId(EnQueueId.generate())
+            .mailQueueName(MailQueueName.fromString("mailQueueName"))
                 .mail(FakeMail.builder()
                         .name("name")
                         .build())

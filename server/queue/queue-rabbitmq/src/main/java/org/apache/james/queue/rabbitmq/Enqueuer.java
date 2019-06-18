@@ -36,6 +36,7 @@ import org.apache.mailet.Mail;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.fge.lambdas.Throwing;
+
 import reactor.core.publisher.Mono;
 
 class Enqueuer {
@@ -60,8 +61,9 @@ class Enqueuer {
     }
 
     void enQueue(Mail mail) throws MailQueue.MailQueueException {
+        EnQueueId enQueueId = EnQueueId.generate();
         saveMail(mail)
-            .map(Throwing.<MimeMessagePartsId, EnqueuedItem>function(partsId -> publishReferenceToRabbit(mail, partsId)).sneakyThrow())
+            .map(Throwing.<MimeMessagePartsId, EnqueuedItem>function(partsId -> publishReferenceToRabbit(enQueueId, mail, partsId)).sneakyThrow())
             .flatMap(mailQueueView::storeMail)
             .thenEmpty(Mono.fromRunnable(enqueueMetric::increment))
             .block();
@@ -75,10 +77,11 @@ class Enqueuer {
         }
     }
 
-    private EnqueuedItem publishReferenceToRabbit(Mail mail, MimeMessagePartsId partsId) throws MailQueue.MailQueueException {
-        rabbitClient.publish(name, getMailReferenceBytes(mail, partsId));
+    private EnqueuedItem publishReferenceToRabbit(EnQueueId enQueueId, Mail mail, MimeMessagePartsId partsId) throws MailQueue.MailQueueException {
+        rabbitClient.publish(name, getMailReferenceBytes(enQueueId, mail, partsId));
 
         return EnqueuedItem.builder()
+            .enQueueId(enQueueId)
             .mailQueueName(name)
             .mail(mail)
             .enqueuedTime(clock.instant())
@@ -86,9 +89,9 @@ class Enqueuer {
             .build();
     }
 
-    private byte[] getMailReferenceBytes(Mail mail, MimeMessagePartsId partsId) throws MailQueue.MailQueueException {
+    private byte[] getMailReferenceBytes(EnQueueId enQueueId, Mail mail, MimeMessagePartsId partsId) throws MailQueue.MailQueueException {
         try {
-            MailReferenceDTO mailDTO = MailReferenceDTO.fromMail(mail, partsId);
+            MailReferenceDTO mailDTO = MailReferenceDTO.fromMail(enQueueId, mail, partsId);
             return mailReferenceSerializer.write(mailDTO);
         } catch (JsonProcessingException e) {
             throw new MailQueue.MailQueueException("Unable to serialize message", e);

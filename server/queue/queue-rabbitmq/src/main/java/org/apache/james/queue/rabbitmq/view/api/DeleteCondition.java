@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.rabbitmq.EnQueueId;
 import org.apache.mailet.Mail;
 
 import com.google.common.base.Preconditions;
@@ -86,10 +87,6 @@ public interface DeleteCondition {
             this.name = name;
         }
 
-        public String getName() {
-            return name;
-        }
-
         @Override
         public boolean shouldBeDeleted(Mail mail) {
             Preconditions.checkNotNull(mail);
@@ -109,6 +106,24 @@ public interface DeleteCondition {
         @Override
         public final int hashCode() {
             return Objects.hashCode(name);
+        }
+    }
+
+    class WithEnqueueId implements DeleteCondition {
+        private final EnQueueId enQueueId;
+
+
+        public WithEnqueueId(EnQueueId enQueueId) {
+            this.enQueueId = enQueueId;
+        }
+
+        public EnQueueId getEnQueueId() {
+            return enQueueId;
+        }
+
+        @Override
+        public boolean shouldBeDeleted(Mail mail) {
+            throw new NotImplementedException("EnQueueId is not carried as a Mail property");
         }
     }
 
