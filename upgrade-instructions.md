@@ -17,6 +17,41 @@ Changes to apply between 3.3.x and 3.4.x will be reported here.
 Change list:
 
  - [Upgrade to ElasticSearch 6.3](#upgrade-to-elasticsearch-6.3)
+ 
+#### Enqueuing several times a mail with the same name
+
+Date: XX/06/2019
+
+SHA-1: XXXXX
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-2794
+
+Concerned products: (experimental) RabbitMQ MailQueue
+
+RabbitMQ mail queue combines RabbitMQ with projections in Cassandra to offer advanced management capabilities expected from
+a mail queue (browse, delete, size, clear). In these projections, the mails are identified by there name. Thus enqueuing a
+mail that had already been processed will lead the given email to be considered already deleted and it will be discarded 
+and lost.
+
+This is an issue, as several other components build features around submitting a mail several time with the name. 
+
+For instance:
+
+ - MailRepository reprocessing
+ - RemoteDelivery bouncing under some configurations
+ - RecipientRewriteTable rewriting to a remote server
+
+We thus changed the table structure of RabbitMQ mail queue projections to be built around an EnqueueId. This additional 
+level of indirection allows several enqueues with the same name.
+
+Upgrade to the newest James server needs to be performed with an empty MailQueue.
+
+To do so:
+
+ - Given a distributed Guice James server
+ - Stop incoming traffic
+ - Monitor the mailQueues and wait them to be empty (spool & outgoing)
+ - Once empty, upgrade James server and re-enable incoming traffic.
 
 #### Upgrade to ElasticSearch 6.3
 
