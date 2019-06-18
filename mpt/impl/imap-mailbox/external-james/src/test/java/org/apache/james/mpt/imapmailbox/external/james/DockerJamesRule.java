@@ -25,7 +25,7 @@ import org.apache.james.mpt.imapmailbox.external.james.host.StaticJamesConfigura
 import org.apache.james.mpt.imapmailbox.external.james.host.docker.CliProvisioningAPI;
 import org.apache.james.mpt.imapmailbox.external.james.host.external.ExternalJamesConfiguration;
 import org.apache.james.util.Port;
-import org.apache.james.util.docker.DockerGenericContainer;
+import org.apache.james.util.docker.DockerContainer;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -37,10 +37,10 @@ public class DockerJamesRule implements TestRule {
     private static final int SMTP_PORT = 587;
     private static final int WEBADMIN_PORT = 8000;
 
-    private final DockerGenericContainer container;
+    private final DockerContainer container;
 
     public DockerJamesRule(String image) {
-        container = DockerGenericContainer.fromName(image)
+        container = DockerContainer.fromName(image)
             .withExposedPorts(SMTP_PORT, IMAP_PORT)
             .waitingFor(new HostPortWaitStrategy());
     }

@@ -26,7 +26,7 @@ import static io.restassured.config.RestAssuredConfig.newConfig;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 
-import org.apache.james.util.docker.DockerGenericContainer;
+import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
 import org.awaitility.core.ConditionFactory;
@@ -56,14 +56,14 @@ public class FakeSmtp implements TestRule {
     }
 
     public static FakeSmtp withSmtpPort(Integer smtpPort) {
-        DockerGenericContainer container = fakeSmtpContainer()
+        DockerContainer container = fakeSmtpContainer()
             .withCommands("node", "cli", "--listen", "80", "--smtp", smtpPort.toString());
 
         return new FakeSmtp(container, smtpPort);
     }
 
-    private static DockerGenericContainer fakeSmtpContainer() {
-        return DockerGenericContainer.fromName(Images.FAKE_SMTP)
+    private static DockerContainer fakeSmtpContainer() {
+        return DockerContainer.fromName(Images.FAKE_SMTP)
             .withAffinityToContainer()
             .waitingFor(new HostPortWaitStrategy()
             .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
@@ -71,14 +71,14 @@ public class FakeSmtp implements TestRule {
 
     private static final int SMTP_PORT = 25;
     public static final ResponseSpecification RESPONSE_SPECIFICATION = new ResponseSpecBuilder().build();
-    private final DockerGenericContainer container;
+    private final DockerContainer container;
     private final Integer smtpPort;
 
     public FakeSmtp() {
         this(fakeSmtpContainer().withExposedPorts(SMTP_PORT), SMTP_PORT);
     }
 
-    private FakeSmtp(DockerGenericContainer container, Integer smtpPort) {
+    private FakeSmtp(DockerContainer container, Integer smtpPort) {
         this.smtpPort = smtpPort;
         this.container = container;
     }
@@ -110,7 +110,7 @@ public class FakeSmtp implements TestRule {
             .build();
     }
 
-    public DockerGenericContainer getContainer() {
+    public DockerContainer getContainer() {
         return container;
     }
 

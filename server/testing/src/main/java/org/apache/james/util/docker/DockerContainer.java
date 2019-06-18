@@ -41,20 +41,20 @@ import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import com.google.common.base.Strings;
 
-public class DockerGenericContainer implements TestRule {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DockerGenericContainer.class);
+public class DockerContainer implements TestRule {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DockerContainer.class);
     private static final String DOCKER_CONTAINER = "DOCKER_CONTAINER";
 
     private GenericContainer<?> container;
 
-    public static DockerGenericContainer fromName(String imageName) {
+    public static DockerContainer fromName(String imageName) {
         disableDockerTestsIfDockerUnavailable();
-        return new DockerGenericContainer(new GenericContainer<>(imageName));
+        return new DockerContainer(new GenericContainer<>(imageName));
     }
 
-    public static DockerGenericContainer fromDockerfile(ImageFromDockerfile imageFromDockerfile) {
+    public static DockerContainer fromDockerfile(ImageFromDockerfile imageFromDockerfile) {
         disableDockerTestsIfDockerUnavailable();
-        return new DockerGenericContainer(new GenericContainer<>(imageFromDockerfile));
+        return new DockerContainer(new GenericContainer<>(imageFromDockerfile));
     }
 
     private static void disableDockerTestsIfDockerUnavailable() {
@@ -66,11 +66,11 @@ public class DockerGenericContainer implements TestRule {
         }
     }
 
-    public DockerGenericContainer(GenericContainer<?> container) {
+    public DockerContainer(GenericContainer<?> container) {
         this.container = container;
     }
 
-    public DockerGenericContainer withAffinityToContainer() {
+    public DockerContainer withAffinityToContainer() {
         String containerEnv = System.getenv(DOCKER_CONTAINER);
         if (Strings.isNullOrEmpty(containerEnv)) {
             LOGGER.warn("'DOCKER_CONTAINER' environment variable not found, dockering without affinity");
@@ -82,32 +82,32 @@ public class DockerGenericContainer implements TestRule {
         return this;
     }
 
-    public DockerGenericContainer withEnv(String key, String value) {
+    public DockerContainer withEnv(String key, String value) {
         container.addEnv(key, value);
         return this;
     }
 
-    public DockerGenericContainer withTmpFs(Map<String, String> mapping) {
+    public DockerContainer withTmpFs(Map<String, String> mapping) {
         container.withTmpFs(mapping);
         return this;
     }
 
-    public DockerGenericContainer withExposedPorts(Integer... ports) {
+    public DockerContainer withExposedPorts(Integer... ports) {
         container.withExposedPorts(ports);
         return this;
     }
 
-    public DockerGenericContainer waitingFor(WaitStrategy waitStrategy) {
+    public DockerContainer waitingFor(WaitStrategy waitStrategy) {
         container.waitingFor(waitStrategy);
         return this;
     }
 
-    public DockerGenericContainer withStartupTimeout(Duration startupTimeout) {
+    public DockerContainer withStartupTimeout(Duration startupTimeout) {
         container.withStartupTimeout(startupTimeout);
         return this;
     }
 
-    public DockerGenericContainer withCommands(String... commands) {
+    public DockerContainer withCommands(String... commands) {
         container.withCommand(commands);
         return this;
     }

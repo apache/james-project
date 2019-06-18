@@ -26,7 +26,7 @@ import java.net.URISyntaxException;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.util.docker.DockerGenericContainer;
+import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
 import org.junit.Rule;
@@ -36,7 +36,7 @@ import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 public class ContainerTest {
 
     @Rule
-    public DockerGenericContainer container = DockerGenericContainer.fromName(Images.NGINX)
+    public DockerContainer container = DockerContainer.fromName(Images.NGINX)
         .withAffinityToContainer()
         .withExposedPorts(80)
         .waitingFor(new HttpWaitStrategy()

@@ -39,7 +39,7 @@ import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.util.docker.DockerGenericContainer;
+import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.utils.DataProbeImpl;
@@ -64,7 +64,7 @@ public class AmqpForwardAttachmentTest {
     
     private static final byte[] TEST_ATTACHMENT_CONTENT = "Test attachment content".getBytes(StandardCharsets.UTF_8);
 
-    public DockerGenericContainer rabbitMqContainer = DockerGenericContainer.fromName(Images.RABBITMQ)
+    public DockerContainer rabbitMqContainer = DockerContainer.fromName(Images.RABBITMQ)
         .withAffinityToContainer()
         .waitingFor(new HostPortWaitStrategy()
             .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));

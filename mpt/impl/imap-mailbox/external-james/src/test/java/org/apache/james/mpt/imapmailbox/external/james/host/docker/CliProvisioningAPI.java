@@ -24,7 +24,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mpt.imapmailbox.external.james.ProvisioningException;
 import org.apache.james.mpt.imapmailbox.external.james.host.ProvisioningAPI;
-import org.apache.james.util.docker.DockerGenericContainer;
+import org.apache.james.util.docker.DockerContainer;
 import org.testcontainers.containers.Container;
 
 import com.google.common.collect.ImmutableList;
@@ -36,13 +36,13 @@ public class CliProvisioningAPI implements ProvisioningAPI {
         SH
     }
 
-    private final DockerGenericContainer container;
+    private final DockerContainer container;
     private final String[] cmd;
 
     private static final String[] jarCmd = {"java", "-jar", "/root/james-cli.jar"};
     private static final String[] hostAndPort = {"-h", "127.0.0.1", "-p", "9999"};
 
-    public CliProvisioningAPI(CliType cliType, DockerGenericContainer container) throws InterruptedException, ProvisioningException, IOException, IllegalArgumentException {
+    public CliProvisioningAPI(CliType cliType, DockerContainer container) throws InterruptedException, ProvisioningException, IOException, IllegalArgumentException {
         this.container = container;
         switch (cliType) {
             case JAR:

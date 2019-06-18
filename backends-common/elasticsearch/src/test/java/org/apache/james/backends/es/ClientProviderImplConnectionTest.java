@@ -22,7 +22,7 @@ package org.apache.james.backends.es;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.util.Host;
-import org.apache.james.util.docker.DockerGenericContainer;
+import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.Images;
 import org.awaitility.Awaitility;
 import org.elasticsearch.action.search.SearchRequest;
@@ -40,13 +40,13 @@ public class ClientProviderImplConnectionTest {
     private static final int ES_APPLICATIVE_PORT = 9200;
 
     @ClassRule
-    public static DockerGenericContainer es1 = DockerGenericContainer.fromName(Images.ELASTICSEARCH_6)
+    public static DockerContainer es1 = DockerContainer.fromName(Images.ELASTICSEARCH_6)
         .withEnv("discovery.type", "single-node")
         .withAffinityToContainer()
         .withExposedPorts(ES_APPLICATIVE_PORT);
 
     @Rule
-    public DockerGenericContainer es2 = DockerGenericContainer.fromName(Images.ELASTICSEARCH_6)
+    public DockerContainer es2 = DockerContainer.fromName(Images.ELASTICSEARCH_6)
         .withEnv("discovery.type", "single-node")
         .withAffinityToContainer()
         .withExposedPorts(ES_APPLICATIVE_PORT);

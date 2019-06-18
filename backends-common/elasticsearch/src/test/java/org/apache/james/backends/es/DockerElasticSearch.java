@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.http.HttpStatus;
 import org.apache.james.util.Host;
-import org.apache.james.util.docker.DockerGenericContainer;
+import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
@@ -55,14 +55,14 @@ public class DockerElasticSearch {
 
     private static final int ES_HTTP_PORT = 9200;
 
-    private final DockerGenericContainer eSContainer;
+    private final DockerContainer eSContainer;
 
     public DockerElasticSearch() {
         this(Images.ELASTICSEARCH_6);
     }
 
     public DockerElasticSearch(String imageName) {
-        this.eSContainer = DockerGenericContainer.fromName(imageName)
+        this.eSContainer = DockerContainer.fromName(imageName)
             .withTmpFs(ImmutableMap.of("/usr/share/elasticsearch/data", "rw,size=200m"))
             .withExposedPorts(ES_HTTP_PORT)
             .withEnv("discovery.type", "single-node")

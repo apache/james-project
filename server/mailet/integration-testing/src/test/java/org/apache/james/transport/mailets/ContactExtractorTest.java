@@ -39,7 +39,7 @@ import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.SMTPAuthSuccessful;
-import org.apache.james.util.docker.DockerGenericContainer;
+import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.utils.DataProbeImpl;
@@ -65,7 +65,7 @@ public class ContactExtractorTest {
     public static final String EXCHANGE = "collector:email";
     public static final String ROUTING_KEY = "";
 
-    public DockerGenericContainer rabbit = DockerGenericContainer.fromName(Images.RABBITMQ)
+    public DockerContainer rabbit = DockerContainer.fromName(Images.RABBITMQ)
         .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     public AmqpRule amqpRule = new AmqpRule(rabbit, EXCHANGE, ROUTING_KEY);
     public TemporaryFolder folder = new TemporaryFolder();

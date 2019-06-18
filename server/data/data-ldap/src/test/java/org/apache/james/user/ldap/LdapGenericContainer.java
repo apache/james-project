@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.user.ldap;
 
-import org.apache.james.util.docker.DockerGenericContainer;
+import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.RateLimiters;
 import org.junit.rules.ExternalResource;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
@@ -59,8 +59,8 @@ public class LdapGenericContainer extends ExternalResource {
             return new LdapGenericContainer(createContainer());
         }
 
-        private DockerGenericContainer createContainer() {
-            return DockerGenericContainer.fromDockerfile(
+        private DockerContainer createContainer() {
+            return DockerContainer.fromDockerfile(
                 new ImageFromDockerfile()
                     .withFileFromClasspath("populate.ldif", "ldif-files/populate.ldif")
                     .withFileFromClasspath("Dockerfile", "ldif-files/Dockerfile"))
@@ -73,9 +73,9 @@ public class LdapGenericContainer extends ExternalResource {
         }
     }
 
-    private final DockerGenericContainer container;
+    private final DockerContainer container;
 
-    private LdapGenericContainer(DockerGenericContainer container) {
+    private LdapGenericContainer(DockerContainer container) {
         this.container = container;
     }
 
