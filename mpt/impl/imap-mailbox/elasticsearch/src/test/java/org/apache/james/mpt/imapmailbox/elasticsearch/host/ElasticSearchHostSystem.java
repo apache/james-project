@@ -134,6 +134,6 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
     @Override
     protected void await() {
-        dockerElasticSearch.awaitForElasticSearch();
+        dockerElasticSearch.flushIndices();
     }
 }

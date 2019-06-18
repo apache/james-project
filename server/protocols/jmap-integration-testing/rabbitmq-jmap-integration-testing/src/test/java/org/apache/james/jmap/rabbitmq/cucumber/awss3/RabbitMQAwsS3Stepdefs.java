@@ -95,7 +95,7 @@ public class RabbitMQAwsS3Stepdefs {
                 .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
                 .overrideWith(binder -> Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class).addBinding().to(CassandraTruncateTableTask.class))
                 .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()));
-        mainStepdefs.awaitMethod = () -> elasticSearch.getDockerEs().awaitForElasticSearch();
+        mainStepdefs.awaitMethod = () -> elasticSearch.getDockerEs().flushIndices();
         mainStepdefs.init();
     }
 

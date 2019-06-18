@@ -89,7 +89,7 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
                 usersRepository,
                 domainList,
                 resources.getCurrentQuotaManager(),
-                elasticSearch::awaitForElasticSearch);
+                elasticSearch::flushIndices);
 
             restQuotaSearchTestSystem = new WebAdminQuotaSearchTestSystem(quotaSearchTestSystem);
         } catch (Exception e) {

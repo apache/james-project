@@ -45,7 +45,7 @@ public class DockerElasticSearchExtension implements AfterAllCallback, BeforeAll
 
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
-        elasticSearch.awaitForElasticSearch();
+        elasticSearch.flushIndices();
     }
 
     @Override

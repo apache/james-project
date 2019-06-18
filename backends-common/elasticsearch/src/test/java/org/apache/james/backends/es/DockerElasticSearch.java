@@ -105,13 +105,15 @@ public class DockerElasticSearch {
     }
 
     public void cleanUpData() {
-        assertThat(esAPI().deleteAllIndexes().status())
-            .isEqualTo(HttpStatus.SC_OK);
+        if (esAPI().deleteAllIndexes().status() != HttpStatus.SC_OK) {
+            throw new IllegalStateException("Failed to delete all data from ElasticSearch");
+        }
     }
 
-    public void awaitForElasticSearch() {
-        assertThat(esAPI().flush().status())
-            .isEqualTo(HttpStatus.SC_OK);
+    public void flushIndices() {
+        if (esAPI().flush().status() != HttpStatus.SC_OK) {
+            throw new IllegalStateException("Failed to flush ElasticSearch");
+        }
     }
 
     public ClientProvider clientProvider() {

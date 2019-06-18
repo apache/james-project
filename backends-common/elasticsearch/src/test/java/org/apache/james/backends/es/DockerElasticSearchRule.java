@@ -40,7 +40,7 @@ public class DockerElasticSearchRule extends ExternalResource {
     }
     
     public void awaitForElasticSearch() {
-        dockerElasticSearch.awaitForElasticSearch();
+        dockerElasticSearch.flushIndices();
     }
 
     public DockerElasticSearch getDockerElasticSearch() {

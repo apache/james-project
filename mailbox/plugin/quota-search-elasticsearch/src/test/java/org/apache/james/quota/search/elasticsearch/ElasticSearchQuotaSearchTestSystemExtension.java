@@ -86,7 +86,7 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
                 usersRepository,
                 domainList,
                 resources.getCurrentQuotaManager(),
-                elasticSearch::awaitForElasticSearch);
+                elasticSearch::flushIndices);
         } catch (Exception e) {
             throw new ParameterResolutionException("Error while resolving parameter", e);
         }

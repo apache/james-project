@@ -39,7 +39,7 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
 
     @Override
     public void await() {
-        elasticSearch.awaitForElasticSearch();
+        elasticSearch.flushIndices();
     }
 
     @Override
