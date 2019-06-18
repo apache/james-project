@@ -17,49 +17,56 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.queue.rabbitmq.view.cassandra.model;
+package org.apache.james.queue.rabbitmq;
 
 import java.util.Objects;
+import java.util.UUID;
 
-import org.apache.mailet.Mail;
-
+import com.datastax.driver.core.utils.UUIDs;
 import com.google.common.base.Preconditions;
 
-public class MailKey {
+public class EnQueueId {
 
-    public static MailKey fromMail(Mail mail) {
-        return of(mail.getName());
+    public static EnQueueId generate() {
+        return of(UUIDs.timeBased());
     }
 
-    public static MailKey of(String mailKey) {
-        return new MailKey(mailKey);
+    public static EnQueueId of(UUID uuid) {
+        Preconditions.checkNotNull(uuid);
+        return new EnQueueId(uuid);
     }
 
-    private final String mailKey;
-
-    private MailKey(String mailKey) {
-        Preconditions.checkNotNull(mailKey);
-        Preconditions.checkArgument(!mailKey.isEmpty());
-
-        this.mailKey = mailKey;
+    public static EnQueueId ofSerialized(String serialized) {
+        Preconditions.checkNotNull(serialized);
+        return of(UUID.fromString(serialized));
     }
 
-    public String getMailKey() {
-        return mailKey;
+    private final UUID id;
+
+    private EnQueueId(UUID id) {
+        this.id = id;
+    }
+
+    public UUID asUUID() {
+        return id;
+    }
+
+    public String serialize() {
+        return id.toString();
     }
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof MailKey) {
-            MailKey mailKey1 = (MailKey) o;
+        if (o instanceof EnQueueId) {
+            EnQueueId enQueueId = (EnQueueId) o;
 
-            return Objects.equals(this.mailKey, mailKey1.mailKey);
+            return Objects.equals(this.id, enQueueId.id);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(mailKey);
+        return Objects.hash(id);
     }
 }
