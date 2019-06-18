@@ -65,7 +65,7 @@ public class ContactExtractorTest {
     public static final String EXCHANGE = "collector:email";
     public static final String ROUTING_KEY = "";
 
-    public DockerGenericContainer rabbit = new DockerGenericContainer(Images.RABBITMQ)
+    public DockerGenericContainer rabbit = DockerGenericContainer.fromName(Images.RABBITMQ)
         .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     public AmqpRule amqpRule = new AmqpRule(rabbit, EXCHANGE, ROUTING_KEY);
     public TemporaryFolder folder = new TemporaryFolder();

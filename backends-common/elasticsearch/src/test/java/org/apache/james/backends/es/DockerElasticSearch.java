@@ -62,7 +62,7 @@ public class DockerElasticSearch {
     }
 
     public DockerElasticSearch(String imageName) {
-        this.eSContainer = new DockerGenericContainer(imageName)
+        this.eSContainer = DockerGenericContainer.fromName(imageName)
             .withTmpFs(ImmutableMap.of("/usr/share/elasticsearch/data", "rw,size=200m"))
             .withExposedPorts(ES_HTTP_PORT)
             .withEnv("discovery.type", "single-node")

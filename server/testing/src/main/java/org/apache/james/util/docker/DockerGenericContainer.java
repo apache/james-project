@@ -27,7 +27,7 @@ import java.util.Map;
 
 import javax.net.SocketFactory;
 
-import org.junit.Assume;
+import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -39,39 +39,35 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
-import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 
 public class DockerGenericContainer implements TestRule {
     private static final Logger LOGGER = LoggerFactory.getLogger(DockerGenericContainer.class);
     private static final String DOCKER_CONTAINER = "DOCKER_CONTAINER";
-    private static final String NO_DOCKER_ENVIRONMENT = "Could not find a valid Docker environment.";
-    private static final String SKIPPING_TEST_CAUTION = "Skipping all docker tests as no Docker environment was found";
 
     private GenericContainer<?> container;
 
-    public DockerGenericContainer(String dockerImageName) {
+    public static DockerGenericContainer fromName(String imageName) {
+        disableDockerTestsIfDockerUnavailable();
+        return new DockerGenericContainer(new GenericContainer<>(imageName));
+    }
+
+    public static DockerGenericContainer fromDockerfile(ImageFromDockerfile imageFromDockerfile) {
+        disableDockerTestsIfDockerUnavailable();
+        return new DockerGenericContainer(new GenericContainer<>(imageFromDockerfile));
+    }
+
+    private static void disableDockerTestsIfDockerUnavailable() {
         try {
-            this.container = new GenericContainer<>(dockerImageName);
+            DockerClientFactory.instance().client();
         } catch (IllegalStateException e) {
-            logAndCheckSkipTest(e);
+            LOGGER.error("Cannot connect to docker service", e);
+            throw new AssumptionViolatedException("Skipping all docker tests as no Docker environment was found");
         }
     }
 
-    public DockerGenericContainer(ImageFromDockerfile imageFromDockerfile) {
-        try {
-            this.container = new GenericContainer<>(imageFromDockerfile);
-        } catch (IllegalStateException e) {
-            logAndCheckSkipTest(e);
-        }
-    }
-
-    private void logAndCheckSkipTest(IllegalStateException e) {
-        LOGGER.error("Cannot initial a docker container", e);
-        if (e.getMessage().startsWith(NO_DOCKER_ENVIRONMENT)) {
-            Assume.assumeTrue(SKIPPING_TEST_CAUTION, false);
-        }
+    public DockerGenericContainer(GenericContainer<?> container) {
+        this.container = container;
     }
 
     public DockerGenericContainer withAffinityToContainer() {
@@ -98,11 +94,6 @@ public class DockerGenericContainer implements TestRule {
 
     public DockerGenericContainer withExposedPorts(Integer... ports) {
         container.withExposedPorts(ports);
-        return this;
-    }
-
-    public DockerGenericContainer portBinding(int hostPort, int dockerPort) {
-        container.setPortBindings(ImmutableList.of("0.0.0.0:" + hostPort + ":" + dockerPort));
         return this;
     }
 
@@ -156,10 +147,6 @@ public class DockerGenericContainer implements TestRule {
     
     public String getHostIp() {
         return container.getContainerIpAddress();
-    }
-
-    public InspectContainerResponse getContainerInfo() {
-        return container.getContainerInfo();
     }
 
     public boolean tryConnect(int port) {

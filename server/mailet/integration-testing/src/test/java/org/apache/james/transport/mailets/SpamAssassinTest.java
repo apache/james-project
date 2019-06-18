@@ -59,7 +59,7 @@ public class SpamAssassinTest {
     private static final String SPAM_CONTENT = "XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X";
 
     @ClassRule
-    public static DockerGenericContainer spamAssassinContainer = new DockerGenericContainer(Images.SPAMASSASSIN)
+    public static DockerGenericContainer spamAssassinContainer = DockerGenericContainer.fromName(Images.SPAMASSASSIN)
         .withExposedPorts(783)
         .withAffinityToContainer()
         .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));

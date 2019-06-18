@@ -63,7 +63,7 @@ public class FakeSmtp implements TestRule {
     }
 
     private static DockerGenericContainer fakeSmtpContainer() {
-        return new DockerGenericContainer(Images.FAKE_SMTP)
+        return DockerGenericContainer.fromName(Images.FAKE_SMTP)
             .withAffinityToContainer()
             .waitingFor(new HostPortWaitStrategy()
             .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));

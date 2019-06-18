@@ -429,7 +429,7 @@ public class ICSAttachmentWorkflowTest {
             "";
 
     @ClassRule
-    public static DockerGenericContainer rabbitMqContainer = new DockerGenericContainer(Images.RABBITMQ)
+    public static DockerGenericContainer rabbitMqContainer = DockerGenericContainer.fromName(Images.RABBITMQ)
         .withAffinityToContainer()
         .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     @Rule

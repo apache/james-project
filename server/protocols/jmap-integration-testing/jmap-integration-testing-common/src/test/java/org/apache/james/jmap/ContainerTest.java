@@ -36,7 +36,7 @@ import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 public class ContainerTest {
 
     @Rule
-    public DockerGenericContainer container = new DockerGenericContainer(Images.NGINX)
+    public DockerGenericContainer container = DockerGenericContainer.fromName(Images.NGINX)
         .withAffinityToContainer()
         .withExposedPorts(80)
         .waitingFor(new HttpWaitStrategy()

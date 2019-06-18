@@ -37,7 +37,7 @@ public class TikaContainer extends ExternalResource {
     private final DockerGenericContainer tika;
 
     public TikaContainer() {
-        tika = new DockerGenericContainer(Images.TIKA)
+        tika = DockerGenericContainer.fromName(Images.TIKA)
                 .withExposedPorts(DEFAULT_TIKA_PORT)
                 .waitingFor(Wait.forHttp("/tika").withRateLimiter(RateLimiters.TWENTIES_PER_SECOND))
                 .withStartupTimeout(Duration.ofSeconds(30));

@@ -40,13 +40,13 @@ public class ClientProviderImplConnectionTest {
     private static final int ES_APPLICATIVE_PORT = 9200;
 
     @ClassRule
-    public static DockerGenericContainer es1 = new DockerGenericContainer(Images.ELASTICSEARCH_6)
+    public static DockerGenericContainer es1 = DockerGenericContainer.fromName(Images.ELASTICSEARCH_6)
         .withEnv("discovery.type", "single-node")
         .withAffinityToContainer()
         .withExposedPorts(ES_APPLICATIVE_PORT);
 
     @Rule
-    public DockerGenericContainer es2 = new DockerGenericContainer(Images.ELASTICSEARCH_6)
+    public DockerGenericContainer es2 = DockerGenericContainer.fromName(Images.ELASTICSEARCH_6)
         .withEnv("discovery.type", "single-node")
         .withAffinityToContainer()
         .withExposedPorts(ES_APPLICATIVE_PORT);

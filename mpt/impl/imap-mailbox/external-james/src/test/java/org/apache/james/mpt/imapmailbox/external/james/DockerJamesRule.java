@@ -40,7 +40,7 @@ public class DockerJamesRule implements TestRule {
     private final DockerGenericContainer container;
 
     public DockerJamesRule(String image) {
-        container = new DockerGenericContainer(image)
+        container = DockerGenericContainer.fromName(image)
             .withExposedPorts(SMTP_PORT, IMAP_PORT)
             .waitingFor(new HostPortWaitStrategy());
     }

@@ -64,7 +64,7 @@ public class AmqpForwardAttachmentTest {
     
     private static final byte[] TEST_ATTACHMENT_CONTENT = "Test attachment content".getBytes(StandardCharsets.UTF_8);
 
-    public DockerGenericContainer rabbitMqContainer = new DockerGenericContainer(Images.RABBITMQ)
+    public DockerGenericContainer rabbitMqContainer = DockerGenericContainer.fromName(Images.RABBITMQ)
         .withAffinityToContainer()
         .waitingFor(new HostPortWaitStrategy()
             .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));

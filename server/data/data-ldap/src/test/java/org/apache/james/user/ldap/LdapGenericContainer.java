@@ -60,7 +60,7 @@ public class LdapGenericContainer extends ExternalResource {
         }
 
         private DockerGenericContainer createContainer() {
-            return new DockerGenericContainer(
+            return DockerGenericContainer.fromDockerfile(
                 new ImageFromDockerfile()
                     .withFileFromClasspath("populate.ldif", "ldif-files/populate.ldif")
                     .withFileFromClasspath("Dockerfile", "ldif-files/Dockerfile"))
