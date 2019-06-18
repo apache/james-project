@@ -111,7 +111,7 @@ public class CassandraMailQueueView implements MailQueueView {
     private long browseThenDelete(DeleteCondition deleteCondition) {
         return cassandraMailQueueBrowser.browseReferences(mailQueueName)
             .map(EnqueuedItemWithSlicingContext::getEnqueuedItem)
-            .filter(mailReference -> deleteCondition.shouldBeDeleted(mailReference.getMail()))
+            .filter(deleteCondition::shouldBeDeleted)
             .flatMap(mailReference -> cassandraMailQueueMailDelete.considerDeleted(mailReference.getEnQueueId(), mailQueueName))
             .count()
             .doOnNext(ignored -> cassandraMailQueueMailDelete.updateBrowseStart(mailQueueName))

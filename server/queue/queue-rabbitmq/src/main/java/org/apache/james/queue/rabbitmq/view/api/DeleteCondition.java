@@ -24,17 +24,17 @@ import java.util.Objects;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.EnQueueId;
-import org.apache.mailet.Mail;
+import org.apache.james.queue.rabbitmq.EnqueuedItem;
 
 import com.google.common.base.Preconditions;
 
 public interface DeleteCondition {
-    boolean shouldBeDeleted(Mail mail);
+    boolean shouldBeDeleted(EnqueuedItem enqueuedItem);
 
     class All implements DeleteCondition {
         @Override
-        public boolean shouldBeDeleted(Mail mail) {
-            Preconditions.checkNotNull(mail);
+        public boolean shouldBeDeleted(EnqueuedItem enqueuedItem) {
+            Preconditions.checkNotNull(enqueuedItem);
             return true;
         }
 
@@ -57,9 +57,10 @@ public interface DeleteCondition {
         }
 
         @Override
-        public boolean shouldBeDeleted(Mail mail) {
-            Preconditions.checkNotNull(mail);
-            return mail.getMaybeSender()
+        public boolean shouldBeDeleted(EnqueuedItem enqueuedItem) {
+            Preconditions.checkNotNull(enqueuedItem);
+            return enqueuedItem.getMail()
+                .getMaybeSender()
                 .asString()
                 .equals(senderAsString);
         }
@@ -88,9 +89,11 @@ public interface DeleteCondition {
         }
 
         @Override
-        public boolean shouldBeDeleted(Mail mail) {
-            Preconditions.checkNotNull(mail);
-            return mail.getName().equals(name);
+        public boolean shouldBeDeleted(EnqueuedItem enqueuedItem) {
+            Preconditions.checkNotNull(enqueuedItem);
+            return enqueuedItem.getMail()
+                .getName()
+                .equals(name);
         }
 
         @Override
@@ -112,8 +115,7 @@ public interface DeleteCondition {
     class WithEnqueueId implements DeleteCondition {
         private final EnQueueId enQueueId;
 
-
-        public WithEnqueueId(EnQueueId enQueueId) {
+        WithEnqueueId(EnQueueId enQueueId) {
             this.enQueueId = enQueueId;
         }
 
@@ -122,8 +124,9 @@ public interface DeleteCondition {
         }
 
         @Override
-        public boolean shouldBeDeleted(Mail mail) {
-            throw new NotImplementedException("EnQueueId is not carried as a Mail property");
+        public boolean shouldBeDeleted(EnqueuedItem enqueuedItem) {
+            Preconditions.checkNotNull(enqueuedItem);
+            return enqueuedItem.getEnQueueId().equals(enQueueId);
         }
     }
 
@@ -135,9 +138,11 @@ public interface DeleteCondition {
         }
 
         @Override
-        public boolean shouldBeDeleted(Mail mail) {
-            Preconditions.checkNotNull(mail);
-            return mail.getRecipients()
+        public boolean shouldBeDeleted(EnqueuedItem enqueuedItem) {
+            Preconditions.checkNotNull(enqueuedItem);
+            return enqueuedItem
+                .getMail()
+                .getRecipients()
                 .stream()
                 .anyMatch(mailAddress -> mailAddress.asString().equals(recipientAsString));
         }
@@ -184,6 +189,11 @@ public interface DeleteCondition {
     static WithName withName(String value) {
         Preconditions.checkNotNull(value);
         return new WithName(value);
+    }
+
+    static WithEnqueueId withEnqueueId(EnQueueId value) {
+        Preconditions.checkNotNull(value);
+        return new WithEnqueueId(value);
     }
 
     static DeleteCondition all() {
