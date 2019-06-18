@@ -113,4 +113,11 @@ public class JMSMailQueueTest implements DelayedManageableMailQueueContract, Pri
     public void concurrentEnqueueDequeueWithAckNackShouldNotFail() {
 
     }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2794 This test never finishes")
+    public void enQueueShouldAcceptMailWithDuplicatedNames() {
+
+    }
 }

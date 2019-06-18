@@ -131,6 +131,13 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
     }
 
     @Test
+    @Override
+    @Disabled("JAMES-2794 This test never finishes")
+    public void enQueueShouldAcceptMailWithDuplicatedNames() {
+
+    }
+
+    @Test
     void computeNextDeliveryTimestampShouldReturnLongMaxWhenOverflow() {
         long deliveryTimestamp = mailQueue.computeNextDeliveryTimestamp(ChronoUnit.FOREVER.getDuration());
 

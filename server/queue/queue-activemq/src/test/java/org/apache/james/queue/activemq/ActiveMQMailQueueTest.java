@@ -127,6 +127,13 @@ public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract
 
     @Test
     @Override
+    @Disabled("JAMES-2794 This test never finishes")
+    public void enQueueShouldAcceptMailWithDuplicatedNames() {
+
+    }
+
+    @Test
+    @Override
     @Disabled("JAMES-2544 Mixing concurrent ack/nack might lead to a deadlock")
     public void concurrentEnqueueDequeueWithAckNackShouldNotFail() {
 

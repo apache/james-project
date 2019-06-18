@@ -37,6 +37,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import javax.mail.internet.MimeMessage;
 
@@ -53,6 +54,7 @@ import org.junit.jupiter.api.Test;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -107,6 +109,29 @@ public interface MailQueueContract {
         MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
         assertThat(mailQueueItem.getMail().getMaybeSender())
             .isEqualTo(MaybeSender.nullSender());
+    }
+
+    @Test
+    default void enQueueShouldAcceptMailWithDuplicatedNames() throws Exception {
+        String name = "name";
+        FakeMail mail = FakeMail.builder()
+            .name(name)
+            .mimeMessage(createMimeMessage())
+            .recipients(RECIPIENT1, RECIPIENT2)
+            .sender(MailAddress.nullSender())
+            .lastUpdated(new Date())
+            .build();
+
+        enQueue(mail);
+        enQueue(mail);
+
+        Stream<String> dequeuedItemNames = Flux.from(getMailQueue().deQueue())
+            .take(2)
+            .map(MailQueue.MailQueueItem::getMail)
+            .map(Mail::getName)
+            .toStream();
+
+        assertThat(dequeuedItemNames).hasSize(2).containsOnly(name);
     }
 
     @Test
