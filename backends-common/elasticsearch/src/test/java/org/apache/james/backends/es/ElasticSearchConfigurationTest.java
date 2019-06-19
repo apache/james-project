@@ -30,7 +30,6 @@ import org.apache.james.util.Host;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class ElasticSearchConfigurationTest {
@@ -189,51 +188,6 @@ public class ElasticSearchConfigurationTest {
 
         assertThat(elasticSearchConfiguration.getHosts())
             .containsOnly(Host.from(hostname, port));
-    }
-
-    @Test
-    public void clusterNameShouldBeEmptyWhenNotGiven() throws ConfigurationException {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        String hostname = "myHost";
-        configuration.addProperty("elasticsearch.masterHost", hostname);
-        int port = 9200;
-        configuration.addProperty("elasticsearch.port", port);
-
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
-
-        assertThat(elasticSearchConfiguration.getClusterName())
-                .isEmpty();
-    }
-
-    @Test
-    public void clusterNameShouldBeEmptyWhenNull() throws ConfigurationException {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        String hostname = "myHost";
-        configuration.addProperty("elasticsearch.masterHost", hostname);
-        int port = 9200;
-        configuration.addProperty("elasticsearch.port", port);
-        configuration.addProperty("elasticsearch.clusterName", null);
-
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
-
-        assertThat(elasticSearchConfiguration.getClusterName())
-                .isEmpty();
-    }
-
-    @Test
-    public void clusterNameShouldKeepTheValueWhenGiven() throws ConfigurationException {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        String hostname = "myHost";
-        configuration.addProperty("elasticsearch.masterHost", hostname);
-        int port = 9200;
-        configuration.addProperty("elasticsearch.port", port);
-        String clusterName = "myClusterName";
-        configuration.addProperty("elasticsearch.clusterName", clusterName);
-
-        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
-
-        assertThat(elasticSearchConfiguration.getClusterName())
-                .contains(clusterName);
     }
 
     @Test

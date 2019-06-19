@@ -22,9 +22,7 @@ import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.settings.Settings;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class ClientProviderImpl implements ClientProvider {
@@ -34,7 +32,6 @@ public class ClientProviderImpl implements ClientProvider {
         return new ClientProviderImpl(configuration);
     }
 
-    private static final String CLUSTER_NAME_SETTING = "cluster.name";
     private static final String HTTP_HOST_SCHEME = "http";
     private final ElasticSearchConfiguration configuration;
 
@@ -53,13 +50,5 @@ public class ClientProviderImpl implements ClientProvider {
         RestClientBuilder restClient = RestClient.builder(hostsToHttpHosts())
             .setMaxRetryTimeoutMillis(Math.toIntExact(configuration.getRequestTimeout().toMillis()));
         return new RestHighLevelClient(restClient);
-    }
-
-    @VisibleForTesting Settings settings() {
-        return configuration.getClusterName()
-            .map(clusterName -> Settings.builder()
-                .put(CLUSTER_NAME_SETTING, clusterName)
-                .build())
-            .orElse(Settings.EMPTY);
     }
 }
