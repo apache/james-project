@@ -22,13 +22,12 @@ package org.apache.james.queue.rabbitmq;
 import java.util.Objects;
 import java.util.UUID;
 
-import com.datastax.driver.core.utils.UUIDs;
 import com.google.common.base.Preconditions;
 
 public class EnqueueId {
 
     public static EnqueueId generate() {
-        return of(UUIDs.timeBased());
+        return of(UUID.randomUUID());
     }
 
     public static EnqueueId of(UUID uuid) {
