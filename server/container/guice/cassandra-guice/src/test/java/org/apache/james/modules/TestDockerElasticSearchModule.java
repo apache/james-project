@@ -19,18 +19,11 @@
 
 package org.apache.james.modules;
 
-import java.io.IOException;
-
-import javax.inject.Singleton;
-
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.backends.es.DockerElasticSearch;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
-import org.apache.james.mailbox.elasticsearch.MailboxIndexCreationUtil;
-import org.elasticsearch.client.RestHighLevelClient;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
 import com.google.inject.multibindings.Multibinder;
 
 public class TestDockerElasticSearchModule extends AbstractModule {
@@ -59,17 +52,10 @@ public class TestDockerElasticSearchModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(ElasticSearchConfiguration.class).toInstance(elasticSearch.configuration());
         Multibinder.newSetBinder(binder(), CleanupTasksPerformer.CleanupTask.class)
             .addBinding()
             .toInstance(new ESContainerCleanUp(elasticSearch));
     }
 
-    @Provides
-    @Singleton
-    protected RestHighLevelClient provideClientProvider() throws IOException {
-        RestHighLevelClient client = elasticSearch.clientProvider().get();
-        return MailboxIndexCreationUtil.prepareDefaultClient(client, ElasticSearchConfiguration.builder()
-            .addHost(elasticSearch.getHttpHost())
-            .build());
-    }
 }

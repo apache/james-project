@@ -21,6 +21,9 @@ package org.apache.james.quota.search.elasticsearch;
 
 import static org.mockito.Mockito.mock;
 
+import java.io.IOException;
+
+import org.apache.james.backends.es.ClientProvider;
 import org.apache.james.backends.es.DockerElasticSearch;
 import org.apache.james.backends.es.DockerElasticSearchSingleton;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
@@ -44,6 +47,7 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
 
     private final DockerElasticSearch elasticSearch = DockerElasticSearchSingleton.INSTANCE;
+    private RestHighLevelClient client;
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
@@ -53,11 +57,9 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         try {
-            RestHighLevelClient client = QuotaSearchIndexCreationUtil.prepareDefaultClient(
+            client = QuotaSearchIndexCreationUtil.prepareDefaultClient(
                 elasticSearch.clientProvider().get(),
-                ElasticSearchConfiguration.builder()
-                    .addHost(elasticSearch.getHttpHost())
-                    .build());
+                elasticSearch.configuration());
 
             InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
 
@@ -98,7 +100,8 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
     }
 
     @Override
-    public void afterEach(ExtensionContext context) {
+    public void afterEach(ExtensionContext context) throws IOException {
+        client.close();
         elasticSearch.cleanUpData();
     }
 }

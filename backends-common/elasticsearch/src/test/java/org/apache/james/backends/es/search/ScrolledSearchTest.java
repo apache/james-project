@@ -24,7 +24,6 @@ import static org.awaitility.Awaitility.await;
 
 import java.io.IOException;
 
-import org.apache.james.backends.es.ClientProvider;
 import org.apache.james.backends.es.DockerElasticSearchRule;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.IndexCreationFactory;
@@ -40,6 +39,7 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -55,120 +55,117 @@ public class ScrolledSearchTest {
 
     @Rule
     public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
-    private ClientProvider clientProvider;
+    private RestHighLevelClient client;
 
     @Before
     public void setUp() {
-        clientProvider = elasticSearch.clientProvider();
+        client = elasticSearch.clientProvider().get();
         new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
-            .createIndexAndAliases(clientProvider.get());
+            .createIndexAndAliases(client);
         elasticSearch.awaitForElasticSearch();
+    }
+
+    @After
+    public void tearDown() throws IOException {
+        client.close();
     }
 
     @Test
     public void scrollIterableShouldWorkWhenEmpty() throws Exception {
-        try (RestHighLevelClient client = clientProvider.get()) {
-            SearchRequest searchRequest = new SearchRequest(INDEX_NAME.getValue())
-                .scroll(TIMEOUT)
-                .source(new SearchSourceBuilder()
-                    .query(QueryBuilders.matchAllQuery())
-                    .size(SIZE));
+        SearchRequest searchRequest = new SearchRequest(INDEX_NAME.getValue())
+            .scroll(TIMEOUT)
+            .source(new SearchSourceBuilder()
+                .query(QueryBuilders.matchAllQuery())
+                .size(SIZE));
 
-            assertThat(new ScrolledSearch(client, searchRequest).searchHits())
-                .isEmpty();
-        }
+        assertThat(new ScrolledSearch(client, searchRequest).searchHits())
+            .isEmpty();
     }
 
     @Test
     public void scrollIterableShouldWorkWhenOneElement() throws Exception {
-        try (RestHighLevelClient client = clientProvider.get()) {
-            String id = "1";
-            client.index(new IndexRequest(INDEX_NAME.getValue())
-                    .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
-                    .id(id)
-                    .source(MESSAGE, "Sample message"));
+        String id = "1";
+        client.index(new IndexRequest(INDEX_NAME.getValue())
+                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                .id(id)
+                .source(MESSAGE, "Sample message"));
 
-            elasticSearch.awaitForElasticSearch();
-            WAIT_CONDITION.untilAsserted(() -> hasIdsInIndex(client, id));
+        elasticSearch.awaitForElasticSearch();
+        WAIT_CONDITION.untilAsserted(() -> hasIdsInIndex(client, id));
 
-            SearchRequest searchRequest = new SearchRequest(INDEX_NAME.getValue())
-                .scroll(TIMEOUT)
-                .source(new SearchSourceBuilder()
-                    .query(QueryBuilders.matchAllQuery())
-                    .size(SIZE));
+        SearchRequest searchRequest = new SearchRequest(INDEX_NAME.getValue())
+            .scroll(TIMEOUT)
+            .source(new SearchSourceBuilder()
+                .query(QueryBuilders.matchAllQuery())
+                .size(SIZE));
 
-            assertThat(new ScrolledSearch(client, searchRequest).searchHits())
-                .extracting(SearchHit::getId)
-                .containsOnly(id);
-        }
+        assertThat(new ScrolledSearch(client, searchRequest).searchHits())
+            .extracting(SearchHit::getId)
+            .containsOnly(id);
     }
 
     @Test
     public void scrollIterableShouldWorkWhenSizeElement() throws Exception {
-        try (RestHighLevelClient client = clientProvider.get()) {
-            String id1 = "1";
-            client.index(new IndexRequest(INDEX_NAME.getValue())
-                    .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
-                    .id(id1)
-                    .source(MESSAGE, "Sample message"));
+        String id1 = "1";
+        client.index(new IndexRequest(INDEX_NAME.getValue())
+                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                .id(id1)
+                .source(MESSAGE, "Sample message"));
 
-            String id2 = "2";
-            client.index(new IndexRequest(INDEX_NAME.getValue())
-                    .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
-                    .id(id2)
-                    .source(MESSAGE, "Sample message"));
+        String id2 = "2";
+        client.index(new IndexRequest(INDEX_NAME.getValue())
+                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                .id(id2)
+                .source(MESSAGE, "Sample message"));
 
-            elasticSearch.awaitForElasticSearch();
-            WAIT_CONDITION.untilAsserted(() -> hasIdsInIndex(client, id1, id2));
+        elasticSearch.awaitForElasticSearch();
+        WAIT_CONDITION.untilAsserted(() -> hasIdsInIndex(client, id1, id2));
 
-            SearchRequest searchRequest = new SearchRequest(INDEX_NAME.getValue())
-                .scroll(TIMEOUT)
-                .source(new SearchSourceBuilder()
-                    .query(QueryBuilders.matchAllQuery())
-                    .size(SIZE));
+        SearchRequest searchRequest = new SearchRequest(INDEX_NAME.getValue())
+            .scroll(TIMEOUT)
+            .source(new SearchSourceBuilder()
+                .query(QueryBuilders.matchAllQuery())
+                .size(SIZE));
 
-            assertThat(new ScrolledSearch(client, searchRequest).searchHits())
-                .extracting(SearchHit::getId)
-                .containsOnly(id1, id2);
-        }
+        assertThat(new ScrolledSearch(client, searchRequest).searchHits())
+            .extracting(SearchHit::getId)
+            .containsOnly(id1, id2);
     }
 
     @Test
     public void scrollIterableShouldWorkWhenMoreThanSizeElement() throws Exception {
-        try (RestHighLevelClient client = clientProvider.get()) {
-            String id1 = "1";
-            client.index(new IndexRequest(INDEX_NAME.getValue())
-                    .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
-                    .id(id1)
-                    .source(MESSAGE, "Sample message"));
+        String id1 = "1";
+        client.index(new IndexRequest(INDEX_NAME.getValue())
+                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                .id(id1)
+                .source(MESSAGE, "Sample message"));
 
-            String id2 = "2";
-            client.index(new IndexRequest(INDEX_NAME.getValue())
-                    .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
-                    .id(id2)
-                    .source(MESSAGE, "Sample message"));
+        String id2 = "2";
+        client.index(new IndexRequest(INDEX_NAME.getValue())
+                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                .id(id2)
+                .source(MESSAGE, "Sample message"));
 
-            String id3 = "3";
-            client.index(new IndexRequest(INDEX_NAME.getValue())
-                    .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
-                    .id(id3)
-                    .source(MESSAGE, "Sample message"));
+        String id3 = "3";
+        client.index(new IndexRequest(INDEX_NAME.getValue())
+                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
+                .id(id3)
+                .source(MESSAGE, "Sample message"));
 
-            elasticSearch.awaitForElasticSearch();
-            WAIT_CONDITION.untilAsserted(() -> hasIdsInIndex(client, id1, id2, id3));
+        elasticSearch.awaitForElasticSearch();
+        WAIT_CONDITION.untilAsserted(() -> hasIdsInIndex(client, id1, id2, id3));
 
-            SearchRequest searchRequest = new SearchRequest(INDEX_NAME.getValue())
-                .scroll(TIMEOUT)
-                .source(new SearchSourceBuilder()
-                    .query(QueryBuilders.matchAllQuery())
-                    .size(SIZE));
+        SearchRequest searchRequest = new SearchRequest(INDEX_NAME.getValue())
+            .scroll(TIMEOUT)
+            .source(new SearchSourceBuilder()
+                .query(QueryBuilders.matchAllQuery())
+                .size(SIZE));
 
-            assertThat(new ScrolledSearch(client, searchRequest).searchHits())
-                .extracting(SearchHit::getId)
-                .containsOnly(id1, id2, id3);
-        }
+        assertThat(new ScrolledSearch(client, searchRequest).searchHits())
+            .extracting(SearchHit::getId)
+            .containsOnly(id1, id2, id3);
     }
 
     private void hasIdsInIndex(RestHighLevelClient client, String... ids) throws IOException {

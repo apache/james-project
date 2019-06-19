@@ -21,6 +21,10 @@ package org.apache.james.backends.es;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.IOException;
+
+import org.elasticsearch.client.RestHighLevelClient;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,15 +35,20 @@ public class IndexCreationFactoryTest {
 
     @Rule
     public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
-    private ClientProvider clientProvider;
+    private RestHighLevelClient client;
 
     @Before
     public void setUp() {
-        clientProvider = elasticSearch.clientProvider();
+        client = elasticSearch.clientProvider().get();
         new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
-            .createIndexAndAliases(clientProvider.get());
+            .createIndexAndAliases(client);
+    }
+
+    @After
+    public void tearDown() throws IOException {
+        client.close();
     }
 
     @Test
@@ -47,7 +56,7 @@ public class IndexCreationFactoryTest {
         new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
-            .createIndexAndAliases(clientProvider.get());
+            .createIndexAndAliases(client);
     }
 
     @Test

@@ -38,7 +38,7 @@ public class DockerElasticSearchRule extends ExternalResource {
     public ClientProvider clientProvider() {
         return dockerElasticSearch.clientProvider();
     }
-    
+
     public void awaitForElasticSearch() {
         dockerElasticSearch.flushIndices();
     }

@@ -112,9 +112,12 @@ public class DockerElasticSearch {
         }
     }
 
+    public ElasticSearchConfiguration configuration() {
+        return ElasticSearchConfiguration.builder().addHost(getHttpHost()).build();
+    }
+
     public ClientProvider clientProvider() {
-        ElasticSearchConfiguration configuration = ElasticSearchConfiguration.builder().addHost(getHttpHost()).build();
-        return ClientProviderImpl.fromConfiguration(configuration);
+        return new ClientProvider(configuration());
     }
 
     private ElasticSearchAPI esAPI() {

@@ -43,6 +43,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -70,6 +71,11 @@ public class ElasticSearchQuotaMailboxListenerTest {
                 QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS,
                 BATCH_SIZE),
             new QuotaRatioToElasticSearchJson());
+    }
+
+    @After
+    public void tearDown() throws IOException {
+        client.close();
     }
 
     @Test

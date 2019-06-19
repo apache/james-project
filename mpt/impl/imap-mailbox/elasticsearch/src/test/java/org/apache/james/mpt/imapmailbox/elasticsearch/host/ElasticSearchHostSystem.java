@@ -19,6 +19,7 @@
 
 package org.apache.james.mpt.imapmailbox.elasticsearch.host;
 
+import java.io.IOException;
 import java.time.ZoneId;
 
 import org.apache.commons.lang.NotImplementedException;
@@ -61,6 +62,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
     private DockerElasticSearch dockerElasticSearch;
     private StoreMailboxManager mailboxManager;
+    private RestHighLevelClient client;
 
     @Override
     public void beforeTest() throws Exception {
@@ -71,12 +73,13 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
     }
 
     @Override
-    public void afterTest() {
+    public void afterTest() throws IOException {
+        client.close();
         dockerElasticSearch.cleanUpData();
     }
 
     private void initFields() throws Exception {
-        RestHighLevelClient client = MailboxIndexCreationUtil.prepareDefaultClient(
+        client = MailboxIndexCreationUtil.prepareDefaultClient(
             dockerElasticSearch.clientProvider().get(),
             ElasticSearchConfiguration.builder()
                 .addHost(dockerElasticSearch.getHttpHost())

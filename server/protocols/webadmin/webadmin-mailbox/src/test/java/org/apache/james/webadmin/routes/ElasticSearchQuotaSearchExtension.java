@@ -21,6 +21,8 @@ package org.apache.james.webadmin.routes;
 
 import static org.mockito.Mockito.mock;
 
+import java.io.IOException;
+
 import org.apache.james.backends.es.DockerElasticSearch;
 import org.apache.james.backends.es.DockerElasticSearchSingleton;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
@@ -50,6 +52,7 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
     private final DockerElasticSearch elasticSearch = DockerElasticSearchSingleton.INSTANCE;
     private WebAdminQuotaSearchTestSystem restQuotaSearchTestSystem;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private RestHighLevelClient client;
 
     @Override
     public void beforeEach(ExtensionContext context) {
@@ -57,7 +60,7 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
             temporaryFolder.create();
             elasticSearch.start();
 
-            RestHighLevelClient client = QuotaSearchIndexCreationUtil.prepareDefaultClient(
+            client = QuotaSearchIndexCreationUtil.prepareDefaultClient(
                 elasticSearch.clientProvider().get(),
                 ElasticSearchConfiguration.builder()
                     .addHost(elasticSearch.getHttpHost())
@@ -98,9 +101,9 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
     }
 
     @Override
-    public void afterEach(ExtensionContext context) {
+    public void afterEach(ExtensionContext context) throws IOException {
         restQuotaSearchTestSystem.getWebAdminServer().destroy();
-
+        client.close();
         elasticSearch.cleanUpData();
         temporaryFolder.delete();
     }

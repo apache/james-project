@@ -22,7 +22,11 @@ package org.apache.james.backends.es;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
+import java.io.IOException;
+
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,36 +38,41 @@ public class NodeMappingFactoryTest {
 
     @Rule
     public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
-    private ClientProvider clientProvider;
+    private RestHighLevelClient client;
 
     @Before
     public void setUp() throws Exception {
-        clientProvider = elasticSearch.clientProvider();
+        client = elasticSearch.getDockerElasticSearch().clientProvider().get();
         new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
-            .createIndexAndAliases(clientProvider.get());
-        NodeMappingFactory.applyMapping(clientProvider.get(),
+            .createIndexAndAliases(client);
+        NodeMappingFactory.applyMapping(client,
             INDEX_NAME,
             getMappingsSources());
     }
 
+    @After
+    public void tearDown() throws IOException {
+        client.close();
+    }
+
     @Test
     public void applyMappingShouldNotThrowWhenCalledSeveralTime() throws Exception {
-        NodeMappingFactory.applyMapping(clientProvider.get(),
+        NodeMappingFactory.applyMapping(client,
             INDEX_NAME,
             getMappingsSources());
     }
 
     @Test
     public void applyMappingShouldNotThrowWhenIncrementalChanges() throws Exception {
-        NodeMappingFactory.applyMapping(clientProvider.get(),
+        NodeMappingFactory.applyMapping(client,
             INDEX_NAME,
             getMappingsSources());
 
         elasticSearch.awaitForElasticSearch();
 
-        assertThatCode(() -> NodeMappingFactory.applyMapping(clientProvider.get(),
+        assertThatCode(() -> NodeMappingFactory.applyMapping(client,
             INDEX_NAME,
             getOtherMappingsSources()))
         .doesNotThrowAnyException();

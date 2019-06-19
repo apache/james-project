@@ -19,19 +19,15 @@
 
 package org.apache.james.backends.es;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.Optional;
-
-import org.elasticsearch.common.settings.Settings;
 import org.junit.Test;
 
-public class ClientProviderImplTest {
+public class ClientProviderTest {
 
     @Test
-    public void fromConfigurationShouldThrowOnNull() {
-        assertThatThrownBy(() -> ClientProviderImpl.fromConfiguration(null))
+    public void constructorShouldThrowOnNull() {
+        assertThatThrownBy(() -> new ClientProvider(null))
                 .isInstanceOf(NullPointerException.class);
     }
 }

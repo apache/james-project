@@ -50,6 +50,7 @@ import org.apache.james.mailbox.tika.TikaTextExtractor;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.mime4j.dom.Message;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -67,6 +68,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     @Rule
     public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
     private TikaTextExtractor textExtractor;
+    private RestHighLevelClient client;
 
     @Override
     public void setUp() throws Exception {
@@ -79,6 +81,11 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         super.setUp();
     }
 
+    @After
+    public void tearDown() throws IOException {
+        client.close();
+    }
+
     @Override
     protected void await() {
         elasticSearch.awaitForElasticSearch();
@@ -86,11 +93,9 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
 
     @Override
     protected void initializeMailboxManager() throws IOException {
-        RestHighLevelClient client = MailboxIndexCreationUtil.prepareDefaultClient(
+        client = MailboxIndexCreationUtil.prepareDefaultClient(
             elasticSearch.clientProvider().get(),
-            ElasticSearchConfiguration.builder()
-                .addHost(elasticSearch.getDockerElasticSearch().getHttpHost())
-                .build());
+            elasticSearch.getDockerElasticSearch().configuration());
 
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
 
