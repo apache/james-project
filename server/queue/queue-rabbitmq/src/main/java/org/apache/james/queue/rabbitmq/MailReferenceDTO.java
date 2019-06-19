@@ -28,10 +28,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -52,9 +50,12 @@ import com.google.common.collect.ImmutableMap;
 
 class MailReferenceDTO {
 
-    static MailReferenceDTO fromMail(EnQueueId enQueueId, Mail mail, MimeMessagePartsId partsId) {
+    static MailReferenceDTO fromMailReference(MailReference mailReference) {
+        Mail mail = mailReference.getMail();
+        MimeMessagePartsId partsId = mailReference.getPartsId();
+
         return new MailReferenceDTO(
-            enQueueId.serialize(),
+            mailReference.getEnQueueId().serialize(),
             Optional.ofNullable(mail.getRecipients()).map(Collection::stream)
                 .orElse(Stream.empty())
                 .map(MailAddress::asString)
@@ -202,14 +203,22 @@ class MailReferenceDTO {
         return EnQueueId.ofSerialized(enQueueId);
     }
 
-    MailImpl toMailWithMimeMessage(MimeMessage mimeMessage) throws MessagingException {
+    MailReference toMailReference(BlobId.Factory blobIdFactory) {
+        MimeMessagePartsId messagePartsId = MimeMessagePartsId.builder()
+            .headerBlobId(blobIdFactory.from(headerBlobId))
+            .bodyBlobId(blobIdFactory.from(bodyBlobId))
+            .build();
+
+        return new MailReference(EnQueueId.ofSerialized(enQueueId), mailMetadata(), messagePartsId);
+    }
+
+    private MailImpl mailMetadata() {
         MailImpl.Builder builder = MailImpl.builder()
             .name(name)
             .sender(sender.map(MaybeSender::getMailSender).orElse(MaybeSender.nullSender()))
             .addRecipients(recipients.stream()
                 .map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow())
-                .toArray(MailAddress[]::new))
-            .mimeMessage(mimeMessage)
+                .collect(Guavate.toImmutableList()))
             .errorMessage(errorMessage)
             .remoteAddr(remoteAddr)
             .remoteHost(remoteHost)

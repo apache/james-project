@@ -63,7 +63,8 @@ class Enqueuer {
     void enQueue(Mail mail) throws MailQueue.MailQueueException {
         EnQueueId enQueueId = EnQueueId.generate();
         saveMail(mail)
-            .map(Throwing.<MimeMessagePartsId, EnqueuedItem>function(partsId -> publishReferenceToRabbit(enQueueId, mail, partsId)).sneakyThrow())
+            .map(partIds -> new MailReference(enQueueId, mail, partIds))
+            .map(Throwing.function(this::publishReferenceToRabbit).sneakyThrow())
             .flatMap(mailQueueView::storeMail)
             .thenEmpty(Mono.fromRunnable(enqueueMetric::increment))
             .block();
@@ -77,21 +78,21 @@ class Enqueuer {
         }
     }
 
-    private EnqueuedItem publishReferenceToRabbit(EnQueueId enQueueId, Mail mail, MimeMessagePartsId partsId) throws MailQueue.MailQueueException {
-        rabbitClient.publish(name, getMailReferenceBytes(enQueueId, mail, partsId));
+    private EnqueuedItem publishReferenceToRabbit(MailReference mailReference) throws MailQueue.MailQueueException {
+        rabbitClient.publish(name, getMailReferenceBytes(mailReference));
 
         return EnqueuedItem.builder()
-            .enQueueId(enQueueId)
+            .enQueueId(mailReference.getEnQueueId())
             .mailQueueName(name)
-            .mail(mail)
+            .mail(mailReference.getMail())
             .enqueuedTime(clock.instant())
-            .mimeMessagePartsId(partsId)
+            .mimeMessagePartsId(mailReference.getPartsId())
             .build();
     }
 
-    private byte[] getMailReferenceBytes(EnQueueId enQueueId, Mail mail, MimeMessagePartsId partsId) throws MailQueue.MailQueueException {
+    private byte[] getMailReferenceBytes(MailReference mailReference) throws MailQueue.MailQueueException {
         try {
-            MailReferenceDTO mailDTO = MailReferenceDTO.fromMail(enQueueId, mail, partsId);
+            MailReferenceDTO mailDTO = MailReferenceDTO.fromMailReference(mailReference);
             return mailReferenceSerializer.write(mailDTO);
         } catch (JsonProcessingException e) {
             throw new MailQueue.MailQueueException("Unable to serialize message", e);

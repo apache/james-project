@@ -71,12 +71,12 @@ class Dequeuer {
         }
     }
 
-    private final Function<MailReferenceDTO, Mail> mailLoader;
+    private final Function<MailReferenceDTO, Pair<EnQueueId, Mail>> mailLoader;
     private final Metric dequeueMetric;
     private final MailReferenceSerializer mailReferenceSerializer;
     private final MailQueueView mailQueueView;
 
-    Dequeuer(MailQueueName name, RabbitClient rabbitClient, Function<MailReferenceDTO, Mail> mailLoader,
+    Dequeuer(MailQueueName name, RabbitClient rabbitClient, Function<MailReferenceDTO, Pair<EnQueueId, Mail>> mailLoader,
              MailReferenceSerializer serializer, MetricFactory metricFactory,
              MailQueueView mailQueueView) {
         this.mailLoader = mailLoader;
@@ -129,9 +129,7 @@ class Dequeuer {
 
     private Pair<EnQueueId, Mail> loadMail(Delivery response) throws MailQueue.MailQueueException {
         MailReferenceDTO mailDTO = toMailReference(response);
-        EnQueueId enQueueId = mailDTO.retrieveEnqueueId();
-        Mail mail = mailLoader.apply(mailDTO);
-        return Pair.of(enQueueId, mail);
+        return mailLoader.apply(mailDTO);
     }
 
     private MailReferenceDTO toMailReference(Delivery getResponse) throws MailQueue.MailQueueException {

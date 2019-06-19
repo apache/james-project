@@ -23,6 +23,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
@@ -30,7 +31,6 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.mailet.Mail;
 
 class MailLoader {
-
     private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
     private final BlobId.Factory blobIdFactory;
 
@@ -39,16 +39,14 @@ class MailLoader {
         this.blobIdFactory = blobIdFactory;
     }
 
-    Mail load(MailReferenceDTO dto) throws MailQueue.MailQueueException {
+    Pair<EnQueueId, Mail> load(MailReferenceDTO dto) throws MailQueue.MailQueueException {
         try {
-            MimeMessage mimeMessage = mimeMessageStore.read(
-                MimeMessagePartsId.builder()
-                    .headerBlobId(blobIdFactory.from(dto.getHeaderBlobId()))
-                    .bodyBlobId(blobIdFactory.from(dto.getBodyBlobId()))
-                    .build())
-                .block();
+            MailReference mailReference = dto.toMailReference(blobIdFactory);
 
-            return dto.toMailWithMimeMessage(mimeMessage);
+            Mail mail = mailReference.getMail();
+            MimeMessage mimeMessage = mimeMessageStore.read(mailReference.getPartsId()).block();
+            mail.setMessage(mimeMessage);
+            return Pair.of(mailReference.getEnQueueId(), mail);
         } catch (AddressException e) {
             throw new MailQueue.MailQueueException("Failed to parse mail address", e);
         } catch (MessagingException e) {
