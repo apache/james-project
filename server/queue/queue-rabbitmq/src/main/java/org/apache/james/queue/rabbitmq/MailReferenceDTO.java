@@ -55,7 +55,7 @@ class MailReferenceDTO {
         MimeMessagePartsId partsId = mailReference.getPartsId();
 
         return new MailReferenceDTO(
-            mailReference.getEnQueueId().serialize(),
+            mailReference.getEnqueueId().serialize(),
             Optional.ofNullable(mail.getRecipients()).map(Collection::stream)
                 .orElse(Stream.empty())
                 .map(MailAddress::asString)
@@ -91,7 +91,7 @@ class MailReferenceDTO {
                 .collect(Guavate.toImmutableMap(name, value));
     }
 
-    private final String enQueueId;
+    private final String enqueueId;
     private final ImmutableList<String> recipients;
     private final String name;
     private final Optional<String> sender;
@@ -106,7 +106,7 @@ class MailReferenceDTO {
     private final String bodyBlobId;
 
     @JsonCreator
-    private MailReferenceDTO(@JsonProperty("enQueueId") String enQueueId,
+    private MailReferenceDTO(@JsonProperty("enqueueId") String enqueueId,
                              @JsonProperty("recipients") ImmutableList<String> recipients,
                              @JsonProperty("name") String name,
                              @JsonProperty("sender") Optional<String> sender,
@@ -119,7 +119,7 @@ class MailReferenceDTO {
                              @JsonProperty("perRecipientHeaders") Map<String, HeadersDto> perRecipientHeaders,
                              @JsonProperty("headerBlobId") String headerBlobId,
                              @JsonProperty("bodyBlobId") String bodyBlobId) {
-        this.enQueueId = enQueueId;
+        this.enqueueId = enqueueId;
         this.recipients = recipients;
         this.name = name;
         this.sender = sender;
@@ -134,9 +134,9 @@ class MailReferenceDTO {
         this.bodyBlobId = bodyBlobId;
     }
 
-    @JsonProperty("enQueueId")
-    public String getEnQueueId() {
-        return enQueueId;
+    @JsonProperty("enqueueId")
+    public String getEnqueueId() {
+        return enqueueId;
     }
 
     @JsonProperty("recipients")
@@ -199,8 +199,8 @@ class MailReferenceDTO {
         return bodyBlobId;
     }
 
-    EnQueueId retrieveEnqueueId() {
-        return EnQueueId.ofSerialized(enQueueId);
+    EnqueueId retrieveEnqueueId() {
+        return EnqueueId.ofSerialized(enQueueId);
     }
 
     MailReference toMailReference(BlobId.Factory blobIdFactory) {
@@ -209,7 +209,7 @@ class MailReferenceDTO {
             .bodyBlobId(blobIdFactory.from(bodyBlobId))
             .build();
 
-        return new MailReference(EnQueueId.ofSerialized(enQueueId), mailMetadata(), messagePartsId);
+        return new MailReference(EnqueueId.ofSerialized(enqueueId), mailMetadata(), messagePartsId);
     }
 
     private MailImpl mailMetadata() {
@@ -255,7 +255,7 @@ class MailReferenceDTO {
         if (o instanceof MailReferenceDTO) {
             MailReferenceDTO mailDTO = (MailReferenceDTO) o;
 
-            return Objects.equals(this.enQueueId, mailDTO.enQueueId)
+            return Objects.equals(this.enqueueId, mailDTO.enqueueId)
                 && Objects.equals(this.recipients, mailDTO.recipients)
                 && Objects.equals(this.name, mailDTO.name)
                 && Objects.equals(this.sender, mailDTO.sender)
@@ -274,6 +274,6 @@ class MailReferenceDTO {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(enQueueId, recipients, name, sender, state, errorMessage, lastUpdated, attributes, remoteAddr, remoteHost, perRecipientHeaders, headerBlobId, bodyBlobId);
+        return Objects.hash(enqueueId, recipients, name, sender, state, errorMessage, lastUpdated, attributes, remoteAddr, remoteHost, perRecipientHeaders, headerBlobId, bodyBlobId);
     }
 }

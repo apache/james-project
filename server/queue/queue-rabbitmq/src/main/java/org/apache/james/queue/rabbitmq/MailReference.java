@@ -24,18 +24,18 @@ import org.apache.mailet.Mail;
 
 public class MailReference {
 
-    private final EnQueueId enQueueId;
+    private final EnqueueId enqueueId;
     private final Mail mail;
     private final MimeMessagePartsId partsId;
 
-    public MailReference(EnQueueId enQueueId, Mail mail, MimeMessagePartsId partsId) {
-        this.enQueueId = enQueueId;
+    public MailReference(EnqueueId enqueueId, Mail mail, MimeMessagePartsId partsId) {
+        this.enqueueId = enqueueId;
         this.mail = mail;
         this.partsId = partsId;
     }
 
-    public EnQueueId getEnQueueId() {
-        return enQueueId;
+    public EnqueueId getEnqueueId() {
+        return enqueueId;
     }
 
     public Mail getMail() {

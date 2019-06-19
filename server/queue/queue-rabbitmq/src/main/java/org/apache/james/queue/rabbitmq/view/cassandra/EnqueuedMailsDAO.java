@@ -125,7 +125,7 @@ public class EnqueuedMailsDAO {
             .setTimestamp(TIME_RANGE_START, Date.from(slicingContext.getTimeRangeStart()))
             .setInt(BUCKET_ID, slicingContext.getBucketId().getValue())
             .setTimestamp(ENQUEUED_TIME, Date.from(enqueuedItem.getEnqueuedTime()))
-            .setUUID(ENQUEUE_ID, enqueuedItem.getEnQueueId().asUUID())
+            .setUUID(ENQUEUE_ID, enqueuedItem.getEnqueueId().asUUID())
             .setString(NAME, mail.getName())
             .setString(HEADER_BLOB_ID, mimeMessagePartsId.getHeaderBlobId().asString())
             .setString(BODY_BLOB_ID, mimeMessagePartsId.getBodyBlobId().asString())

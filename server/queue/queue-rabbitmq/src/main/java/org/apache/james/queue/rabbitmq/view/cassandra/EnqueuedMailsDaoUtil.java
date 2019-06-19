@@ -58,7 +58,7 @@ import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.core.MailAddress;
-import org.apache.james.queue.rabbitmq.EnQueueId;
+import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices;
@@ -81,7 +81,7 @@ public class EnqueuedMailsDaoUtil {
 
     static EnqueuedItemWithSlicingContext toEnqueuedMail(Row row, BlobId.Factory blobFactory) {
         MailQueueName queueName = MailQueueName.fromString(row.getString(QUEUE_NAME));
-        EnQueueId enQueueId = EnQueueId.of(row.getUUID(ENQUEUE_ID));
+        EnqueueId enqueueId = EnqueueId.of(row.getUUID(ENQUEUE_ID));
         Instant timeRangeStart = row.getTimestamp(TIME_RANGE_START).toInstant();
         BucketedSlices.BucketId bucketId = BucketedSlices.BucketId.of(row.getInt(BUCKET_ID));
         Instant enqueuedTime = row.getTimestamp(ENQUEUED_TIME).toInstant();
@@ -122,7 +122,7 @@ public class EnqueuedMailsDaoUtil {
             .addAttributes(toAttributes(rawAttributes))
             .build();
         EnqueuedItem enqueuedItem = EnqueuedItem.builder()
-            .enQueueId(enQueueId)
+            .enqueueId(enqueueId)
             .mailQueueName(queueName)
             .mail(mail)
             .enqueuedTime(enqueuedTime)

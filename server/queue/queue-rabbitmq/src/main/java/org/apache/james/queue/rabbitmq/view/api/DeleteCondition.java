@@ -23,7 +23,7 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.queue.rabbitmq.EnQueueId;
+import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 
 import com.google.common.base.Preconditions;
@@ -113,20 +113,20 @@ public interface DeleteCondition {
     }
 
     class WithEnqueueId implements DeleteCondition {
-        private final EnQueueId enQueueId;
+        private final EnqueueId enqueueId;
 
-        WithEnqueueId(EnQueueId enQueueId) {
-            this.enQueueId = enQueueId;
+        WithEnqueueId(EnqueueId enqueueId) {
+            this.enqueueId = enqueueId;
         }
 
-        public EnQueueId getEnQueueId() {
-            return enQueueId;
+        public EnqueueId getEnqueueId() {
+            return enqueueId;
         }
 
         @Override
         public boolean shouldBeDeleted(EnqueuedItem enqueuedItem) {
             Preconditions.checkNotNull(enqueuedItem);
-            return enqueuedItem.getEnQueueId().equals(enQueueId);
+            return enqueuedItem.getEnqueueId().equals(enqueueId);
         }
     }
 
@@ -191,7 +191,7 @@ public interface DeleteCondition {
         return new WithName(value);
     }
 
-    static WithEnqueueId withEnqueueId(EnQueueId value) {
+    static WithEnqueueId withEnqueueId(EnqueueId value) {
         Preconditions.checkNotNull(value);
         return new WithEnqueueId(value);
     }

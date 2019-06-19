@@ -24,7 +24,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import javax.inject.Inject;
 
-import org.apache.james.queue.rabbitmq.EnQueueId;
+import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
 
@@ -49,14 +49,14 @@ public class CassandraMailQueueMailDelete {
         this.configuration = configuration;
     }
 
-    Mono<Void> considerDeleted(EnQueueId enQueueId, MailQueueName mailQueueName) {
+    Mono<Void> considerDeleted(EnqueueId enqueueId, MailQueueName mailQueueName) {
         return deletedMailsDao
-            .markAsDeleted(mailQueueName, enQueueId)
+            .markAsDeleted(mailQueueName, enqueueId)
             .doOnNext(ignored -> maybeUpdateBrowseStart(mailQueueName));
     }
 
-    Mono<Boolean> isDeleted(EnQueueId enQueueId, MailQueueName mailQueueName) {
-        return deletedMailsDao.isDeleted(mailQueueName, enQueueId);
+    Mono<Boolean> isDeleted(EnqueueId enqueueId, MailQueueName mailQueueName) {
+        return deletedMailsDao.isDeleted(mailQueueName, enqueueId);
     }
 
     void updateBrowseStart(MailQueueName mailQueueName) {

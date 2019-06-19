@@ -20,7 +20,7 @@
 package org.apache.james.queue.rabbitmq.view.api;
 
 import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.queue.rabbitmq.EnQueueId;
+import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 
@@ -38,7 +38,7 @@ public interface MailQueueView {
 
     long delete(DeleteCondition deleteCondition);
 
-    Mono<Boolean> isPresent(EnQueueId id);
+    Mono<Boolean> isPresent(EnqueueId id);
 
     ManageableMailQueue.MailQueueIterator browse();
 

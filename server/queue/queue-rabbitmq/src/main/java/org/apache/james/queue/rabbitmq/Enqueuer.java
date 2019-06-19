@@ -61,9 +61,9 @@ class Enqueuer {
     }
 
     void enQueue(Mail mail) throws MailQueue.MailQueueException {
-        EnQueueId enQueueId = EnQueueId.generate();
+        EnqueueId enqueueId = EnqueueId.generate();
         saveMail(mail)
-            .map(partIds -> new MailReference(enQueueId, mail, partIds))
+            .map(partIds -> new MailReference(enqueueId, mail, partIds))
             .map(Throwing.function(this::publishReferenceToRabbit).sneakyThrow())
             .flatMap(mailQueueView::storeMail)
             .thenEmpty(Mono.fromRunnable(enqueueMetric::increment))
@@ -82,7 +82,7 @@ class Enqueuer {
         rabbitClient.publish(name, getMailReferenceBytes(mailReference));
 
         return EnqueuedItem.builder()
-            .enQueueId(mailReference.getEnQueueId())
+            .enqueueId(mailReference.getEnqueueId())
             .mailQueueName(name)
             .mail(mailReference.getMail())
             .enqueuedTime(clock.instant())

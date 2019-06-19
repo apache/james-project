@@ -17,56 +17,45 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.queue.rabbitmq;
+package org.apache.james.queue.rabbitmq.view.cassandra.model;
 
-import java.util.Objects;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.UUID;
 
-import com.datastax.driver.core.utils.UUIDs;
-import com.google.common.base.Preconditions;
+import org.apache.james.queue.rabbitmq.EnqueueId;
+import org.junit.jupiter.api.Test;
 
-public class EnQueueId {
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    public static EnQueueId generate() {
-        return of(UUIDs.timeBased());
+class EnqueueIdTest {
+    private static final UUID UUID_1 = UUID.fromString("110e8400-e29b-11d4-a716-446655440000");
+
+    @Test
+    void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(EnqueueId.class)
+            .verify();
     }
 
-    public static EnQueueId of(UUID uuid) {
-        Preconditions.checkNotNull(uuid);
-        return new EnQueueId(uuid);
+    @Test
+    void ofSerializedShouldDeserializeTheGivenEnqueueId() {
+        assertThat(EnqueueId.ofSerialized(UUID_1.toString()))
+            .isEqualTo(EnqueueId.of(UUID_1));
     }
 
-    public static EnQueueId ofSerialized(String serialized) {
-        Preconditions.checkNotNull(serialized);
-        return of(UUID.fromString(serialized));
+    @Test
+    void serializeShouldReturnAStringRepresentation() {
+        EnqueueId enqueueId = EnqueueId.of(UUID_1);
+
+        assertThat(enqueueId.serialize())
+            .isEqualTo(UUID_1.toString());
     }
 
-    private final UUID id;
+    @Test
+    void ofSerializedShouldRevertSerialize() {
+        EnqueueId enqueueId = EnqueueId.of(UUID_1);
 
-    private EnQueueId(UUID id) {
-        this.id = id;
-    }
-
-    public UUID asUUID() {
-        return id;
-    }
-
-    public String serialize() {
-        return id.toString();
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof EnQueueId) {
-            EnQueueId enQueueId = (EnQueueId) o;
-
-            return Objects.equals(this.id, enQueueId.id);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(id);
+        assertThat(EnqueueId.ofSerialized(enqueueId.serialize()))
+            .isEqualTo(enqueueId);
     }
 }

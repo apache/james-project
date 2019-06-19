@@ -22,7 +22,7 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 import javax.inject.Inject;
 
 import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.queue.rabbitmq.EnQueueId;
+import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.api.DeleteCondition;
@@ -101,8 +101,8 @@ public class CassandraMailQueueView implements MailQueueView {
     @Override
     public long delete(DeleteCondition deleteCondition) {
         if (deleteCondition instanceof DeleteCondition.WithEnqueueId) {
-            DeleteCondition.WithEnqueueId enQueueIdCondition = (DeleteCondition.WithEnqueueId) deleteCondition;
-            delete(enQueueIdCondition.getEnQueueId()).block();
+            DeleteCondition.WithEnqueueId enqueueIdCondition = (DeleteCondition.WithEnqueueId) deleteCondition;
+            delete(enqueueIdCondition.getEnqueueId()).block();
             return 1L;
         }
         return browseThenDelete(deleteCondition);
@@ -112,18 +112,18 @@ public class CassandraMailQueueView implements MailQueueView {
         return cassandraMailQueueBrowser.browseReferences(mailQueueName)
             .map(EnqueuedItemWithSlicingContext::getEnqueuedItem)
             .filter(deleteCondition::shouldBeDeleted)
-            .flatMap(mailReference -> cassandraMailQueueMailDelete.considerDeleted(mailReference.getEnQueueId(), mailQueueName))
+            .flatMap(mailReference -> cassandraMailQueueMailDelete.considerDeleted(mailReference.getEnqueueId(), mailQueueName))
             .count()
             .doOnNext(ignored -> cassandraMailQueueMailDelete.updateBrowseStart(mailQueueName))
             .block();
     }
 
-    private Mono<Void> delete(EnQueueId enQueueId) {
-        return cassandraMailQueueMailDelete.considerDeleted(enQueueId, mailQueueName);
+    private Mono<Void> delete(EnqueueId enqueueId) {
+        return cassandraMailQueueMailDelete.considerDeleted(enqueueId, mailQueueName);
     }
 
     @Override
-    public Mono<Boolean> isPresent(EnQueueId id) {
+    public Mono<Boolean> isPresent(EnqueueId id) {
         return cassandraMailQueueMailDelete.isDeleted(id, mailQueueName)
                 .map(bool -> !bool);
     }

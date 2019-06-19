@@ -39,14 +39,14 @@ class MailLoader {
         this.blobIdFactory = blobIdFactory;
     }
 
-    Pair<EnQueueId, Mail> load(MailReferenceDTO dto) throws MailQueue.MailQueueException {
+    Pair<EnqueueId, Mail> load(MailReferenceDTO dto) throws MailQueue.MailQueueException {
         try {
             MailReference mailReference = dto.toMailReference(blobIdFactory);
 
             Mail mail = mailReference.getMail();
             MimeMessage mimeMessage = mimeMessageStore.read(mailReference.getPartsId()).block();
             mail.setMessage(mimeMessage);
-            return Pair.of(mailReference.getEnQueueId(), mail);
+            return Pair.of(mailReference.getEnqueueId(), mail);
         } catch (AddressException e) {
             throw new MailQueue.MailQueueException("Failed to parse mail address", e);
         } catch (MessagingException e) {

@@ -59,7 +59,7 @@ class EnqueuedItemTest {
     @Test
     void buildShouldThrowWhenEnqueueIdIsNull() {
         assertThatThrownBy(() -> EnqueuedItem.builder()
-                .enQueueId(null)
+                .enqueueId(null)
                 .mailQueueName(mailQueueName)
                 .mail(mail)
                 .enqueuedTime(enqueuedTime)
@@ -71,7 +71,7 @@ class EnqueuedItemTest {
     @Test
     void buildShouldThrowWhenMailQueueNameIsNull() {
         assertThatThrownBy(() -> EnqueuedItem.builder()
-                .enQueueId(EnQueueId.generate())
+                .enqueueId(EnqueueId.generate())
                 .mailQueueName(null)
                 .mail(mail)
                 .enqueuedTime(enqueuedTime)
@@ -83,7 +83,7 @@ class EnqueuedItemTest {
     @Test
     void buildShouldThrowWhenMailIsNull() {
         assertThatThrownBy(() -> EnqueuedItem.builder()
-                .enQueueId(EnQueueId.generate())
+                .enqueueId(EnqueueId.generate())
                 .mailQueueName(mailQueueName)
                 .mail(null)
                 .enqueuedTime(enqueuedTime)
@@ -95,7 +95,7 @@ class EnqueuedItemTest {
     @Test
     void buildShouldThrowWhenEnqueuedTimeIsNull() {
         assertThatThrownBy(() -> EnqueuedItem.builder()
-                .enQueueId(EnQueueId.generate())
+                .enqueueId(EnqueueId.generate())
                 .mailQueueName(mailQueueName)
                 .mail(mail)
                 .enqueuedTime(null)
@@ -107,7 +107,7 @@ class EnqueuedItemTest {
     @Test
     void buildShouldThrowWhenMimeMessagePartsIdIsNull() {
         assertThatThrownBy(() -> EnqueuedItem.builder()
-                .enQueueId(EnQueueId.generate())
+                .enqueueId(EnqueueId.generate())
                 .mailQueueName(mailQueueName)
                 .mail(mail)
                 .enqueuedTime(enqueuedTime)

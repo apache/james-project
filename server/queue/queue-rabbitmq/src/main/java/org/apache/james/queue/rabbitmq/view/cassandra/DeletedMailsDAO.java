@@ -30,7 +30,7 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueV
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.queue.rabbitmq.EnQueueId;
+import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 
 import com.datastax.driver.core.PreparedStatement;
@@ -64,21 +64,21 @@ public class DeletedMailsDAO {
             .and(eq(ENQUEUE_ID, bindMarker(ENQUEUE_ID))));
     }
 
-    Mono<Void> markAsDeleted(MailQueueName mailQueueName, EnQueueId enQueueId) {
+    Mono<Void> markAsDeleted(MailQueueName mailQueueName, EnqueueId enqueueId) {
         return executor.executeVoid(insertOne.bind()
             .setString(QUEUE_NAME, mailQueueName.asString())
-            .setUUID(ENQUEUE_ID, enQueueId.asUUID()));
+            .setUUID(ENQUEUE_ID, enqueueId.asUUID()));
     }
 
-    Mono<Boolean> isDeleted(MailQueueName mailQueueName, EnQueueId enQueueId) {
+    Mono<Boolean> isDeleted(MailQueueName mailQueueName, EnqueueId enqueueId) {
         return executor.executeReturnExists(
             selectOne.bind()
                 .setString(QUEUE_NAME, mailQueueName.asString())
-                .setUUID(ENQUEUE_ID, enQueueId.asUUID()));
+                .setUUID(ENQUEUE_ID, enqueueId.asUUID()));
     }
 
-    Mono<Boolean> isStillEnqueued(MailQueueName mailQueueName, EnQueueId enQueueId) {
-        return isDeleted(mailQueueName, enQueueId)
+    Mono<Boolean> isStillEnqueued(MailQueueName mailQueueName, EnqueueId enqueueId) {
+        return isDeleted(mailQueueName, enqueueId)
             .map(b -> !b);
     }
 }

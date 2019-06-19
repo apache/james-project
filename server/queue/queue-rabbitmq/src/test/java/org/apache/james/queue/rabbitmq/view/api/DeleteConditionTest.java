@@ -28,7 +28,7 @@ import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.queue.rabbitmq.EnQueueId;
+import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.mailet.base.test.FakeMail;
@@ -42,8 +42,8 @@ class DeleteConditionTest {
     private static final String ADDRESS_2 = "any2@toto.com";
     private static final String NAME = "name";
     private static final String VALUE = "value";
-    private static final EnQueueId EN_QUEUE_ID_1 = EnQueueId.ofSerialized("110e8400-e29b-11d4-a716-446655440000");
-    private static final EnQueueId EN_QUEUE_ID_2 = EnQueueId.ofSerialized("464765a0-e4e7-11e4-aba4-710c1de3782b");
+    private static final EnqueueId ENQUEUE_ID_1 = EnqueueId.ofSerialized("110e8400-e29b-11d4-a716-446655440000");
+    private static final EnqueueId ENQUEUE_ID_2 = EnqueueId.ofSerialized("464765a0-e4e7-11e4-aba4-710c1de3782b");
     private static final MailQueueName OUT_GOING_1 = MailQueueName.fromString("OUT_GOING_1");
     private static final Instant ENQUEUE_TIME = Instant.now();
     private static final MimeMessagePartsId MESSAGE_PARTS_ID = MimeMessagePartsId.builder()
@@ -57,7 +57,7 @@ class DeleteConditionTest {
         void allShouldReturnTrue() throws Exception {
             assertThat(
                 DeleteCondition.all()
-                    .shouldBeDeleted(enQueueItemForMail(FakeMail.builder().name("name").build())))
+                    .shouldBeDeleted(enqueuedItemForMail(FakeMail.builder().name("name").build())))
                 .isTrue();
         }
 
@@ -76,7 +76,7 @@ class DeleteConditionTest {
     }
 
     @Nested
-    class WithEnQueueIdTest {
+    class WithEnqueueIdTest {
         @Test
         void withSenderShouldThrowOnNullCondition() {
             assertThatThrownBy(() ->
@@ -87,7 +87,7 @@ class DeleteConditionTest {
         @Test
         void shouldBeDeletedShouldReturnTrueWhenSameId() throws Exception {
             EnqueuedItem enqueuedItem = EnqueuedItem.builder()
-                .enQueueId(EN_QUEUE_ID_1)
+                .enqueueId(ENQUEUE_ID_1)
                 .mailQueueName(OUT_GOING_1)
                 .mail(FakeMail.builder()
                     .name("name")
@@ -97,14 +97,14 @@ class DeleteConditionTest {
                 .mimeMessagePartsId(MESSAGE_PARTS_ID)
                 .build();
 
-            assertThat(DeleteCondition.withEnqueueId(EN_QUEUE_ID_1).shouldBeDeleted(enqueuedItem))
+            assertThat(DeleteCondition.withEnqueueId(ENQUEUE_ID_1).shouldBeDeleted(enqueuedItem))
                 .isTrue();
         }
 
         @Test
         void shouldBeDeletedShouldReturnFalseWhenDifferentId() throws Exception {
             EnqueuedItem enqueuedItem = EnqueuedItem.builder()
-                .enQueueId(EN_QUEUE_ID_2)
+                .enqueueId(ENQUEUE_ID_2)
                 .mailQueueName(OUT_GOING_1)
                 .mail(FakeMail.builder()
                     .name("name")
@@ -114,7 +114,7 @@ class DeleteConditionTest {
                 .mimeMessagePartsId(MESSAGE_PARTS_ID)
                 .build();
 
-            assertThat(DeleteCondition.withEnqueueId(EN_QUEUE_ID_1).shouldBeDeleted(enqueuedItem))
+            assertThat(DeleteCondition.withEnqueueId(ENQUEUE_ID_1).shouldBeDeleted(enqueuedItem))
                 .isFalse();
         }
     }
@@ -140,7 +140,7 @@ class DeleteConditionTest {
         void withSenderShouldReturnTrueWhenSameAddress() throws Exception {
             assertThat(
                 DeleteCondition.withSender(ADDRESS)
-                    .shouldBeDeleted(enQueueItemForMail(FakeMail.builder()
+                    .shouldBeDeleted(enqueuedItemForMail(FakeMail.builder()
                         .name("name")
                         .sender(ADDRESS)
                         .build())))
@@ -151,7 +151,7 @@ class DeleteConditionTest {
         void withSenderShouldReturnFalseWhenDifferentAddress() throws Exception {
             assertThat(
                 DeleteCondition.withSender(ADDRESS)
-                    .shouldBeDeleted(enQueueItemForMail(FakeMail.builder()
+                    .shouldBeDeleted(enqueuedItemForMail(FakeMail.builder()
                         .name("name")
                         .sender(ADDRESS_2)
                         .recipient(ADDRESS)
@@ -163,7 +163,7 @@ class DeleteConditionTest {
         void withSenderShouldNotThrowOnNullSender() throws Exception {
             assertThat(
                 DeleteCondition.withSender(ADDRESS)
-                    .shouldBeDeleted(enQueueItemForMail(FakeMail.builder()
+                    .shouldBeDeleted(enqueuedItemForMail(FakeMail.builder()
                         .name("name")
                         .sender(MailAddress.nullSender())
                         .build())))
@@ -174,7 +174,7 @@ class DeleteConditionTest {
         void withSenderShouldAllowNullSenderMatchingNullSender() throws Exception {
             assertThat(
                 DeleteCondition.withSender(MailAddress.NULL_SENDER_AS_STRING)
-                    .shouldBeDeleted(enQueueItemForMail(FakeMail.builder()
+                    .shouldBeDeleted(enqueuedItemForMail(FakeMail.builder()
                         .name("name")
                         .sender(MailAddress.nullSender())
                         .build())))
@@ -208,7 +208,7 @@ class DeleteConditionTest {
         void withNameShouldReturnTrueWhenSameName() throws Exception {
             assertThat(
                 DeleteCondition.withName(NAME)
-                    .shouldBeDeleted(enQueueItemForMail(FakeMail.builder()
+                    .shouldBeDeleted(enqueuedItemForMail(FakeMail.builder()
                         .name(NAME)
                         .build())))
                 .isTrue();
@@ -218,7 +218,7 @@ class DeleteConditionTest {
         void withSenderShouldReturnFalseWhenDifferentAddress() throws Exception {
             assertThat(
                 DeleteCondition.withName(NAME)
-                    .shouldBeDeleted(enQueueItemForMail(FakeMail.builder()
+                    .shouldBeDeleted(enqueuedItemForMail(FakeMail.builder()
                         .name("other")
                         .build())))
                 .isFalse();
@@ -251,7 +251,7 @@ class DeleteConditionTest {
         void withRecipientShouldReturnTrueWhenSameAddress() throws Exception {
             assertThat(
                 DeleteCondition.withRecipient(ADDRESS)
-                    .shouldBeDeleted(enQueueItemForMail(FakeMail.builder()
+                    .shouldBeDeleted(enqueuedItemForMail(FakeMail.builder()
                         .name("name")
                         .recipient(ADDRESS)
                         .build())))
@@ -262,7 +262,7 @@ class DeleteConditionTest {
         void withRecipientShouldReturnTrueWhenAtListOneMatches() throws Exception {
             assertThat(
                 DeleteCondition.withRecipient(ADDRESS)
-                    .shouldBeDeleted(enQueueItemForMail(FakeMail.builder()
+                    .shouldBeDeleted(enqueuedItemForMail(FakeMail.builder()
                         .name("name")
                         .recipients(ADDRESS, ADDRESS_2)
                         .build())))
@@ -273,7 +273,7 @@ class DeleteConditionTest {
         void withRecipientShouldReturnFalseWhenDifferentAddress() throws Exception {
             assertThat(
                 DeleteCondition.withRecipient(ADDRESS)
-                    .shouldBeDeleted(enQueueItemForMail(FakeMail.builder()
+                    .shouldBeDeleted(enqueuedItemForMail(FakeMail.builder()
                         .name("name")
                         .sender(ADDRESS)
                         .recipient(ADDRESS_2)
@@ -285,7 +285,7 @@ class DeleteConditionTest {
         void withRecipientShouldReturnFalseWhenNoRecipient() throws Exception {
             assertThat(
                 DeleteCondition.withRecipient(ADDRESS)
-                    .shouldBeDeleted(enQueueItemForMail(FakeMail.builder()
+                    .shouldBeDeleted(enqueuedItemForMail(FakeMail.builder()
                         .name("name")
                         .build())))
                 .isFalse();
@@ -318,9 +318,9 @@ class DeleteConditionTest {
         }
     }
 
-    private EnqueuedItem enQueueItemForMail(FakeMail mail) {
+    private EnqueuedItem enqueuedItemForMail(FakeMail mail) {
         return EnqueuedItem.builder()
-            .enQueueId(EN_QUEUE_ID_1)
+            .enqueueId(ENQUEUE_ID_1)
             .mailQueueName(OUT_GOING_1)
             .mail(mail)
             .enqueuedTime(ENQUEUE_TIME)

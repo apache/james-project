@@ -33,7 +33,7 @@ public class EnqueuedItem {
 
         @FunctionalInterface
         interface RequireEnqueueId {
-            RequireMailQueueName enQueueId(EnQueueId id);
+            RequireMailQueueName enqueueId(EnqueueId id);
         }
 
         @FunctionalInterface
@@ -57,20 +57,20 @@ public class EnqueuedItem {
         }
 
         class ReadyToBuild {
-            private final EnQueueId enQueueId;
+            private final EnqueueId enqueueId;
             private final MailQueueName mailQueueName;
             private final Mail mail;
             private final Instant enqueuedTime;
             private final MimeMessagePartsId partsId;
 
-            ReadyToBuild(EnQueueId enQueueId, MailQueueName mailQueueName, Mail mail, Instant enqueuedTime, MimeMessagePartsId partsId) {
-                Preconditions.checkNotNull(enQueueId, "'enQueueId' is mandatory");
+            ReadyToBuild(EnqueueId enqueueId, MailQueueName mailQueueName, Mail mail, Instant enqueuedTime, MimeMessagePartsId partsId) {
+                Preconditions.checkNotNull(enqueueId, "'enqueueId' is mandatory");
                 Preconditions.checkNotNull(mailQueueName, "'mailQueueName' is mandatory");
                 Preconditions.checkNotNull(mail, "'mail' is mandatory");
                 Preconditions.checkNotNull(enqueuedTime, "'enqueuedTime' is mandatory");
                 Preconditions.checkNotNull(partsId, "'partsId' is mandatory");
 
-                this.enQueueId = enQueueId;
+                this.enqueueId = enqueueId;
                 this.mailQueueName = mailQueueName;
                 this.mail = mail;
                 this.enqueuedTime = enqueuedTime;
@@ -78,31 +78,31 @@ public class EnqueuedItem {
             }
 
             public EnqueuedItem build() {
-                return new EnqueuedItem(enQueueId, mailQueueName, mail, enqueuedTime, partsId);
+                return new EnqueuedItem(enqueueId, mailQueueName, mail, enqueuedTime, partsId);
             }
         }
     }
 
     public static Builder.RequireEnqueueId builder() {
-        return enQueueId -> queueName -> mail -> enqueuedTime -> partsId -> new Builder.ReadyToBuild(enQueueId, queueName, mail, enqueuedTime, partsId);
+        return enqueueId -> queueName -> mail -> enqueuedTime -> partsId -> new Builder.ReadyToBuild(enqueueId, queueName, mail, enqueuedTime, partsId);
     }
 
-    private final EnQueueId enQueueId;
+    private final EnqueueId enqueueId;
     private final MailQueueName mailQueueName;
     private final Mail mail;
     private final Instant enqueuedTime;
     private final MimeMessagePartsId partsId;
 
-    EnqueuedItem(EnQueueId enQueueId, MailQueueName mailQueueName, Mail mail, Instant enqueuedTime, MimeMessagePartsId partsId) {
-        this.enQueueId = enQueueId;
+    EnqueuedItem(EnqueueId enqueueId, MailQueueName mailQueueName, Mail mail, Instant enqueuedTime, MimeMessagePartsId partsId) {
+        this.enqueueId = enqueueId;
         this.mailQueueName = mailQueueName;
         this.mail = mail;
         this.enqueuedTime = enqueuedTime;
         this.partsId = partsId;
     }
 
-    public EnQueueId getEnQueueId() {
-        return enQueueId;
+    public EnqueueId getEnqueueId() {
+        return enqueueId;
     }
 
     public MailQueueName getMailQueueName() {
@@ -126,7 +126,7 @@ public class EnqueuedItem {
         if (o instanceof EnqueuedItem) {
             EnqueuedItem that = (EnqueuedItem) o;
 
-            return Objects.equals(this.enQueueId, that.enQueueId)
+            return Objects.equals(this.enqueueId, that.enqueueId)
                 && Objects.equals(this.mailQueueName, that.mailQueueName)
                 && Objects.equals(this.mail, that.mail)
                 && Objects.equals(this.enqueuedTime, that.enqueuedTime)
@@ -137,6 +137,6 @@ public class EnqueuedItem {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(enQueueId, mailQueueName, mail, enqueuedTime, partsId);
+        return Objects.hash(enqueueId, mailQueueName, mail, enqueuedTime, partsId);
     }
 }

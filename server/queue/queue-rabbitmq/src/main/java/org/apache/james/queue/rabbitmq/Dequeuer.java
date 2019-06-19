@@ -47,12 +47,12 @@ class Dequeuer {
 
     private static class RabbitMQMailQueueItem implements MailQueue.MailQueueItem {
         private final Consumer<Boolean> ack;
-        private final EnQueueId enQueueId;
+        private final EnqueueId enqueueId;
         private final Mail mail;
 
-        private RabbitMQMailQueueItem(Consumer<Boolean> ack, EnQueueId enQueueId, Mail mail) {
+        private RabbitMQMailQueueItem(Consumer<Boolean> ack, EnqueueId enqueueId, Mail mail) {
             this.ack = ack;
-            this.enQueueId = enQueueId;
+            this.enqueueId = enqueueId;
             this.mail = mail;
         }
 
@@ -61,8 +61,8 @@ class Dequeuer {
             return mail;
         }
 
-        public EnQueueId getEnQueueId() {
-            return enQueueId;
+        public EnqueueId getEnqueueId() {
+            return enqueueId;
         }
 
         @Override
@@ -71,12 +71,12 @@ class Dequeuer {
         }
     }
 
-    private final Function<MailReferenceDTO, Pair<EnQueueId, Mail>> mailLoader;
+    private final Function<MailReferenceDTO, Pair<EnqueueId, Mail>> mailLoader;
     private final Metric dequeueMetric;
     private final MailReferenceSerializer mailReferenceSerializer;
     private final MailQueueView mailQueueView;
 
-    Dequeuer(MailQueueName name, RabbitClient rabbitClient, Function<MailReferenceDTO, Pair<EnQueueId, Mail>> mailLoader,
+    Dequeuer(MailQueueName name, RabbitClient rabbitClient, Function<MailReferenceDTO, Pair<EnqueueId, Mail>> mailLoader,
              MailReferenceSerializer serializer, MetricFactory metricFactory,
              MailQueueView mailQueueView) {
         this.mailLoader = mailLoader;
@@ -94,7 +94,7 @@ class Dequeuer {
     }
 
     private Mono<RabbitMQMailQueueItem> filterIfDeleted(RabbitMQMailQueueItem item) {
-        return mailQueueView.isPresent(item.getEnQueueId())
+        return mailQueueView.isPresent(item.getEnqueueId())
             .flatMap(isPresent -> {
                 if (isPresent) {
                     return Mono.just(item);
@@ -106,7 +106,7 @@ class Dequeuer {
 
     private Mono<RabbitMQMailQueueItem> loadItem(AcknowledgableDelivery response) {
         try {
-            Pair<EnQueueId, Mail> idAndMail = loadMail(response);
+            Pair<EnqueueId, Mail> idAndMail = loadMail(response);
             Mail mail = idAndMail.getRight();
             ThrowingConsumer<Boolean> ack = ack(response, mail);
             return Mono.just(new RabbitMQMailQueueItem(ack, idAndMail.getLeft(), mail));
@@ -127,7 +127,7 @@ class Dequeuer {
         };
     }
 
-    private Pair<EnQueueId, Mail> loadMail(Delivery response) throws MailQueue.MailQueueException {
+    private Pair<EnqueueId, Mail> loadMail(Delivery response) throws MailQueue.MailQueueException {
         MailReferenceDTO mailDTO = toMailReference(response);
         return mailLoader.apply(mailDTO);
     }

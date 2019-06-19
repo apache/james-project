@@ -17,45 +17,56 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.queue.rabbitmq.view.cassandra.model;
+package org.apache.james.queue.rabbitmq;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+import java.util.Objects;
 import java.util.UUID;
 
-import org.apache.james.queue.rabbitmq.EnQueueId;
-import org.junit.jupiter.api.Test;
+import com.datastax.driver.core.utils.UUIDs;
+import com.google.common.base.Preconditions;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
+public class EnqueueId {
 
-class EnQueueIdTest {
-    private static final UUID UUID_1 = UUID.fromString("110e8400-e29b-11d4-a716-446655440000");
-
-    @Test
-    void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(EnQueueId.class)
-            .verify();
+    public static EnqueueId generate() {
+        return of(UUIDs.timeBased());
     }
 
-    @Test
-    void ofSerializedShouldDeserializeTheGivenEnqueueId() {
-        assertThat(EnQueueId.ofSerialized(UUID_1.toString()))
-            .isEqualTo(EnQueueId.of(UUID_1));
+    public static EnqueueId of(UUID uuid) {
+        Preconditions.checkNotNull(uuid);
+        return new EnqueueId(uuid);
     }
 
-    @Test
-    void serializeShouldReturnAStringRepresentation() {
-        EnQueueId enQueueId = EnQueueId.of(UUID_1);
-
-        assertThat(enQueueId.serialize())
-            .isEqualTo(UUID_1.toString());
+    public static EnqueueId ofSerialized(String serialized) {
+        Preconditions.checkNotNull(serialized);
+        return of(UUID.fromString(serialized));
     }
 
-    @Test
-    void ofSerializedShouldRevertSerialize() {
-        EnQueueId enQueueId = EnQueueId.of(UUID_1);
+    private final UUID id;
 
-        assertThat(EnQueueId.ofSerialized(enQueueId.serialize()))
-            .isEqualTo(enQueueId);
+    private EnqueueId(UUID id) {
+        this.id = id;
+    }
+
+    public UUID asUUID() {
+        return id;
+    }
+
+    public String serialize() {
+        return id.toString();
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof EnqueueId) {
+            EnqueueId enqueueId = (EnqueueId) o;
+
+            return Objects.equals(this.id, enqueueId.id);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(id);
     }
 }

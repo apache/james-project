@@ -27,7 +27,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
-import org.apache.james.queue.rabbitmq.EnQueueId;
+import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.mailet.base.test.FakeMail;
@@ -42,7 +42,7 @@ class EnqueuedItemWithSlicingContextTest {
 
     private EnqueuedItemWithSlicingContextTest() throws MessagingException {
         enqueuedItem = EnqueuedItem.builder()
-            .enQueueId(EnQueueId.generate())
+            .enqueueId(EnqueueId.generate())
             .mailQueueName(MailQueueName.fromString("mailQueueName"))
                 .mail(FakeMail.builder()
                         .name("name")
