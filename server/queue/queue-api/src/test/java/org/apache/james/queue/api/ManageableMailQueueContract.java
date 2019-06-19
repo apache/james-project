@@ -40,6 +40,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.junit.jupiter.api.Test;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 
@@ -79,7 +80,9 @@ public interface ManageableMailQueueContract extends MailQueueContract {
     default void dequeueShouldDecreaseQueueSize() throws Exception {
         enQueue(defaultMail().name("name").build());
 
-        Flux.from(getManageableMailQueue().deQueue()).blockFirst().done(true);
+        Flux.from(getManageableMailQueue().deQueue())
+            .doOnNext(Throwing.consumer(item -> item.done(true)))
+            .blockFirst();
 
         long size = getManageableMailQueue().getSize();
 
@@ -90,7 +93,9 @@ public interface ManageableMailQueueContract extends MailQueueContract {
     default void noAckShouldNotDecreaseSize() throws Exception {
         enQueue(defaultMail().name("name").build());
 
-        Flux.from(getManageableMailQueue().deQueue()).blockFirst().done(false);
+        Flux.from(getManageableMailQueue().deQueue())
+            .doOnNext(Throwing.consumer(item -> item.done(false)))
+            .blockFirst();
 
         long size = getManageableMailQueue().getSize();
 
