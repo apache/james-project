@@ -71,7 +71,7 @@ class ReindexingWithEventDeadLettersTest {
         .atMost(Duration.ONE_MINUTE)
         .await();
 
-    private static final DockerElasticSearchExtension dockerElasticSearch = new DockerElasticSearchExtension();
+    private static final DockerElasticSearchExtension dockerElasticSearch = new DockerElasticSearchExtension().withRequestTimeout(java.time.Duration.ofSeconds(1));
 
     private static final JamesServerBuilder.ServerProvider CONFIGURATION_BUILDER = configuration -> GuiceJamesServer
             .forConfiguration(configuration)
