@@ -21,8 +21,6 @@ package org.apache.james.backends.es;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
-
 import org.apache.http.HttpStatus;
 import org.apache.james.util.Host;
 import org.apache.james.util.docker.DockerGenericContainer;
@@ -30,9 +28,7 @@ import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import feign.Feign;
 import feign.Logger;
 import feign.RequestLine;
@@ -117,8 +113,8 @@ public class DockerElasticSearch {
     }
 
     public ClientProvider clientProvider() {
-        Optional<String> noClusterName = Optional.empty();
-        return ClientProviderImpl.fromHosts(ImmutableList.of(getHttpHost()), noClusterName);
+        ElasticSearchConfiguration configuration = ElasticSearchConfiguration.builder().addHost(getHttpHost()).build();
+        return ClientProviderImpl.fromConfiguration(configuration);
     }
 
     private ElasticSearchAPI esAPI() {

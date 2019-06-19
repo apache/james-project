@@ -19,9 +19,9 @@
 
 package org.apache.james.backends.es;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.james.util.Host;
 import org.apache.james.util.docker.DockerGenericContainer;
 import org.apache.james.util.docker.Images;
 import org.awaitility.Awaitility;
@@ -53,22 +53,27 @@ public class ClientProviderImplConnectionTest {
 
     @Test
     public void connectingASingleServerShouldWork() {
+        ElasticSearchConfiguration configuration = ElasticSearchConfiguration.builder()
+            .addHost(Host.from(es1.getContainerIp(), ES_APPLICATIVE_PORT))
+            .build();
+
         Awaitility.await()
             .atMost(1, TimeUnit.MINUTES)
             .pollInterval(5, TimeUnit.SECONDS)
-            .until(() -> isConnected(ClientProviderImpl.forHost(es1.getContainerIp(), ES_APPLICATIVE_PORT, Optional.empty())));
+            .until(() -> isConnected(ClientProviderImpl.fromConfiguration(configuration)));
     }
 
     @Test
     public void connectingAClusterShouldWork() {
+        ElasticSearchConfiguration configuration = ElasticSearchConfiguration.builder()
+            .addHost(Host.from(es1.getContainerIp(), ES_APPLICATIVE_PORT))
+            .addHost(Host.from(es2.getContainerIp(), ES_APPLICATIVE_PORT))
+            .build();
+
         Awaitility.await()
             .atMost(1, TimeUnit.MINUTES)
             .pollInterval(5, TimeUnit.SECONDS)
-            .until(() -> isConnected(
-                ClientProviderImpl.fromHostsString(
-                    es1.getContainerIp() + ":" + ES_APPLICATIVE_PORT + ","
-                        + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT,
-                    Optional.empty())));
+            .until(() -> isConnected(ClientProviderImpl.fromConfiguration(configuration)));
     }
 
     @Test
@@ -77,14 +82,15 @@ public class ClientProviderImplConnectionTest {
         String es2Ip = es2.getContainerIp();
         es2.stop();
 
+        ElasticSearchConfiguration configuration = ElasticSearchConfiguration.builder()
+            .addHost(Host.from(es1Ip, ES_APPLICATIVE_PORT))
+            .addHost(Host.from(es2Ip, ES_APPLICATIVE_PORT))
+            .build();
+
         Awaitility.await()
             .atMost(1, TimeUnit.MINUTES)
             .pollInterval(5, TimeUnit.SECONDS)
-            .until(() -> isConnected(
-                ClientProviderImpl.fromHostsString(
-                    es1Ip + ":" + ES_APPLICATIVE_PORT + ","
-                        + es2Ip + ":" + ES_APPLICATIVE_PORT,
-                    Optional.empty())));
+            .until(() -> isConnected(ClientProviderImpl.fromConfiguration(configuration)));
     }
 
     private boolean isConnected(ClientProvider clientProvider) {

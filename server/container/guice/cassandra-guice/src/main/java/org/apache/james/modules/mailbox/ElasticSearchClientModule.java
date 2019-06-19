@@ -62,7 +62,7 @@ public class ElasticSearchClientModule extends AbstractModule {
     private RestHighLevelClient connectToCluster(ElasticSearchConfiguration configuration) throws IOException {
         LOGGER.info("Trying to connect to ElasticSearch service at {}", LocalDateTime.now());
 
-        return ClientProviderImpl.fromHosts(configuration.getHosts(), configuration.getClusterName())
+        return ClientProviderImpl.fromConfiguration(configuration)
             .get();
     }
 }

@@ -19,6 +19,7 @@
 
 package org.apache.james.backends.es;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -46,6 +47,7 @@ public class ElasticSearchConfiguration {
         private Optional<Integer> nbReplica;
         private Optional<Integer> minDelay;
         private Optional<Integer> maxRetries;
+        private Optional<Duration> requestTimeout;
 
         public Builder() {
             hosts = ImmutableList.builder();
@@ -54,6 +56,7 @@ public class ElasticSearchConfiguration {
             nbReplica = Optional.empty();
             minDelay = Optional.empty();
             maxRetries = Optional.empty();
+            requestTimeout = Optional.empty();
         }
 
         public Builder addHost(Host host) {
@@ -93,6 +96,11 @@ public class ElasticSearchConfiguration {
             return this;
         }
 
+        public Builder requestTimeout(Optional<Duration> requestTimeout) {
+            this.requestTimeout = requestTimeout;
+            return this;
+        }
+
         public ElasticSearchConfiguration build() {
             ImmutableList<Host> hosts = this.hosts.build();
             Preconditions.checkState(!hosts.isEmpty(), "You need to specify ElasticSearch host");
@@ -102,7 +110,8 @@ public class ElasticSearchConfiguration {
                 nbShards.orElse(DEFAULT_NB_SHARDS),
                 nbReplica.orElse(DEFAULT_NB_REPLICA),
                 minDelay.orElse(DEFAULT_CONNECTION_MIN_DELAY),
-                maxRetries.orElse(DEFAULT_CONNECTION_MAX_RETRIES));
+                maxRetries.orElse(DEFAULT_CONNECTION_MAX_RETRIES),
+                requestTimeout.orElse(DEFAULT_REQUEST_TIMEOUT));
         }
     }
 
@@ -121,6 +130,7 @@ public class ElasticSearchConfiguration {
 
     public static final int DEFAULT_CONNECTION_MAX_RETRIES = 7;
     public static final int DEFAULT_CONNECTION_MIN_DELAY = 3000;
+    public static final Duration DEFAULT_REQUEST_TIMEOUT = Duration.ofSeconds(30);
     public static final int DEFAULT_NB_SHARDS = 5;
     public static final int DEFAULT_NB_REPLICA = 1;
     public static final int DEFAULT_PORT = 9200;
@@ -184,14 +194,16 @@ public class ElasticSearchConfiguration {
     private final int nbReplica;
     private final int minDelay;
     private final int maxRetries;
+    private final Duration requestTimeout;
 
-    private ElasticSearchConfiguration(ImmutableList<Host> hosts, Optional<String> clusterName, int nbShards, int nbReplica, int minDelay, int maxRetries) {
+    private ElasticSearchConfiguration(ImmutableList<Host> hosts, Optional<String> clusterName, int nbShards, int nbReplica, int minDelay, int maxRetries, Duration requestTimeout) {
         this.hosts = hosts;
         this.clusterName = clusterName;
         this.nbShards = nbShards;
         this.nbReplica = nbReplica;
         this.minDelay = minDelay;
         this.maxRetries = maxRetries;
+        this.requestTimeout = requestTimeout;
     }
 
     public ImmutableList<Host> getHosts() {
@@ -218,6 +230,10 @@ public class ElasticSearchConfiguration {
         return maxRetries;
     }
 
+    public Duration getRequestTimeout() {
+        return requestTimeout;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof ElasticSearchConfiguration) {
@@ -228,13 +244,14 @@ public class ElasticSearchConfiguration {
                 && Objects.equals(this.nbReplica, that.nbReplica)
                 && Objects.equals(this.minDelay, that.minDelay)
                 && Objects.equals(this.maxRetries, that.maxRetries)
-                && Objects.equals(this.hosts, that.hosts);
+                && Objects.equals(this.hosts, that.hosts)
+                && Objects.equals(this.requestTimeout, that.requestTimeout);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(hosts, clusterName, nbShards, nbReplica, minDelay, maxRetries);
+        return Objects.hash(hosts, clusterName, nbShards, nbReplica, minDelay, maxRetries, requestTimeout);
     }
 }
