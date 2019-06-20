@@ -65,6 +65,7 @@ public class DefaultEventModule extends AbstractModule {
     }
 
     @Provides
+    @Singleton
     ListenersConfiguration providesConfiguration(ConfigurationProvider configurationProvider) throws ConfigurationException {
         return ListenersConfiguration.from(configurationProvider.getConfiguration("listeners"));
     }
