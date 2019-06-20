@@ -37,19 +37,16 @@ public class CassandraMailQueueMailDelete {
     private final BrowseStartDAO browseStartDao;
     private final CassandraMailQueueBrowser cassandraMailQueueBrowser;
     private final CassandraMailQueueViewConfiguration configuration;
-    private final ThreadLocalRandom random;
 
     @Inject
     CassandraMailQueueMailDelete(DeletedMailsDAO deletedMailsDao,
                                  BrowseStartDAO browseStartDao,
                                  CassandraMailQueueBrowser cassandraMailQueueBrowser,
-                                 CassandraMailQueueViewConfiguration configuration,
-                                 ThreadLocalRandom random) {
+                                 CassandraMailQueueViewConfiguration configuration) {
         this.deletedMailsDao = deletedMailsDao;
         this.browseStartDao = browseStartDao;
         this.cassandraMailQueueBrowser = cassandraMailQueueBrowser;
         this.configuration = configuration;
-        this.random = random;
     }
 
     Mono<Void> considerDeleted(Mail mail, MailQueueName mailQueueName) {
@@ -90,6 +87,6 @@ public class CassandraMailQueueMailDelete {
 
     private boolean shouldUpdateBrowseStart() {
         int threshold = configuration.getUpdateBrowseStartPace();
-        return Math.abs(random.nextInt()) % threshold == 0;
+        return Math.abs(ThreadLocalRandom.current().nextInt()) % threshold == 0;
     }
 }

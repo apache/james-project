@@ -27,7 +27,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -90,7 +89,6 @@ class RabbitMQMailQueueConfigurationChangeTest {
     private UpdatableTickingClock clock;
     private RabbitMQMailQueueManagement mqManagementApi;
     private RabbitClient rabbitClient;
-    private ThreadLocalRandom random;
     private MimeMessageStore.Factory mimeMessageStoreFactory;
 
     @BeforeEach
@@ -98,8 +96,6 @@ class RabbitMQMailQueueConfigurationChangeTest {
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, BLOB_ID_FACTORY);
         mimeMessageStoreFactory = MimeMessageStore.factory(blobsDAO);
         clock = new UpdatableTickingClock(IN_SLICE_1);
-        random = ThreadLocalRandom.current();
-
         rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
         mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
     }
@@ -110,7 +106,7 @@ class RabbitMQMailQueueConfigurationChangeTest {
     }
 
     private RabbitMQMailQueue getRabbitMQMailQueue(CassandraCluster cassandra, CassandraMailQueueViewConfiguration mailQueueViewConfiguration) throws Exception {
-        CassandraMailQueueView.Factory mailQueueViewFactory = CassandraMailQueueViewTestFactory.factory(clock, random,
+        CassandraMailQueueView.Factory mailQueueViewFactory = CassandraMailQueueViewTestFactory.factory(clock,
             cassandra.getConf(),
             cassandra.getTypesProvider(),
             mailQueueViewConfiguration,

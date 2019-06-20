@@ -21,7 +21,6 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 
 import java.time.Clock;
 import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.blob.api.HashBlobId;
@@ -41,7 +40,7 @@ import reactor.core.publisher.Mono;
 
 public class CassandraMailQueueViewTestFactory {
 
-    public static CassandraMailQueueView.Factory factory(Clock clock, ThreadLocalRandom random, Session session,
+    public static CassandraMailQueueView.Factory factory(Clock clock, Session session,
                                                          CassandraTypesProvider typesProvider,
                                                          CassandraMailQueueViewConfiguration configuration,
                                                          MimeMessageStore.Factory mimeMessageStoreFactory) {
@@ -53,7 +52,7 @@ public class CassandraMailQueueViewTestFactory {
 
         CassandraMailQueueBrowser cassandraMailQueueBrowser = new CassandraMailQueueBrowser(browseStartDao, deletedMailsDao, enqueuedMailsDao, mimeMessageStoreFactory, configuration, clock);
         CassandraMailQueueMailStore cassandraMailQueueMailStore = new CassandraMailQueueMailStore(enqueuedMailsDao, browseStartDao, configuration, clock);
-        CassandraMailQueueMailDelete cassandraMailQueueMailDelete = new CassandraMailQueueMailDelete(deletedMailsDao, browseStartDao, cassandraMailQueueBrowser, configuration, random);
+        CassandraMailQueueMailDelete cassandraMailQueueMailDelete = new CassandraMailQueueMailDelete(deletedMailsDao, browseStartDao, cassandraMailQueueBrowser, configuration);
 
 
         EventsourcingConfigurationManagement eventsourcingConfigurationManagement = new EventsourcingConfigurationManagement(new CassandraEventStore(new EventStoreDao(session,
