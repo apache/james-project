@@ -199,10 +199,6 @@ class MailReferenceDTO {
         return bodyBlobId;
     }
 
-    EnqueueId retrieveEnqueueId() {
-        return EnqueueId.ofSerialized(enQueueId);
-    }
-
     MailReference toMailReference(BlobId.Factory blobIdFactory) {
         MimeMessagePartsId messagePartsId = MimeMessagePartsId.builder()
             .headerBlobId(blobIdFactory.from(headerBlobId))
