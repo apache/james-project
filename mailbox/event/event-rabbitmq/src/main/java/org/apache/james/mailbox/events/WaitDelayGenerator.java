@@ -26,6 +26,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 class WaitDelayGenerator {
 
@@ -56,7 +57,7 @@ class WaitDelayGenerator {
         }
 
         return countRetryMono
-            .delayElement(generateDelay(retryCount));
+            .delayElement(generateDelay(retryCount), Schedulers.elastic());
     }
 
     @VisibleForTesting
