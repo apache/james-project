@@ -45,6 +45,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -139,7 +140,7 @@ public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
         GhostMailbox.logger()
                 .addField(GhostMailbox.MAILBOX_NAME, mailboxPath)
                 .addField(TYPE, "readMiss")
-                .log(logger -> logger.info("Read mailbox missed"));
+                .log(logger -> logger.debug("Read mailbox missed"));
     }
 
     /**
@@ -153,7 +154,7 @@ public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
             .addField(GhostMailbox.MAILBOX_NAME, cassandraIdAndPath.getMailboxPath())
             .addField(TYPE, "readSuccess")
             .addField(GhostMailbox.MAILBOX_ID, cassandraIdAndPath.getCassandraId())
-            .log(logger -> logger.info("Read mailbox succeeded"));
+            .log(logger -> logger.debug("Read mailbox succeeded"));
     }
 
     private CassandraIdAndPath fromRowToCassandraIdAndPath(Row row) {
