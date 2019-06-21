@@ -21,6 +21,8 @@ package org.apache.james.modules.mailbox;
 
 import java.util.Set;
 
+import javax.inject.Singleton;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
@@ -37,11 +39,13 @@ public class PreDeletionHookModule extends AbstractModule {
     }
 
     @Provides
+    @Singleton
     PreDeletionHooksConfiguration providesConfiguration(ConfigurationProvider configurationProvider) throws ConfigurationException {
         return PreDeletionHooksConfiguration.from(configurationProvider.getConfiguration("listeners"));
     }
 
     @Provides
+    @Singleton
     Set<PreDeletionHook> createHooks(PreDeletionHooksConfiguration configuration, PreDeletionHookLoader loader) throws ClassNotFoundException {
         return configuration.getHooksConfiguration()
             .stream()

@@ -54,6 +54,7 @@ public class ElasticSearchMetricReporterModule extends AbstractModule {
     }
 
     @Provides
+    @Singleton
     public ESReporterConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
             Configuration propertiesReader = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);

@@ -21,6 +21,8 @@ package org.apache.james.jmap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Singleton;
+
 import org.apache.james.jmap.api.AccessTokenManager;
 import org.apache.james.jmap.api.SimpleTokenFactory;
 import org.apache.james.jmap.api.SimpleTokenManager;
@@ -83,6 +85,7 @@ public class JMAPCommonModule extends AbstractModule {
     }
 
     @Provides
+    @Singleton
     public List<AuthenticationStrategy> authStrategies(
             AccessTokenAuthenticationStrategy accessTokenAuthenticationStrategy,
             JWTAuthenticationStrategy jwtAuthenticationStrategy,

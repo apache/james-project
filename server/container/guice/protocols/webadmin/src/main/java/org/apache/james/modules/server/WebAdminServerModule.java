@@ -79,6 +79,7 @@ public class WebAdminServerModule extends AbstractModule {
     }
 
     @Provides
+    @Singleton
     public WebAdminConfiguration provideWebAdminConfiguration(PropertiesProvider propertiesProvider) throws Exception {
         try {
             Configuration configurationFile = propertiesProvider.getConfiguration("webadmin");
@@ -97,6 +98,7 @@ public class WebAdminServerModule extends AbstractModule {
     }
 
     @Provides
+    @Singleton
     public AuthenticationFilter providesAuthenticationFilter(PropertiesProvider propertiesProvider,
                                                              JwtTokenVerifier jwtTokenVerifier) throws Exception {
         try {

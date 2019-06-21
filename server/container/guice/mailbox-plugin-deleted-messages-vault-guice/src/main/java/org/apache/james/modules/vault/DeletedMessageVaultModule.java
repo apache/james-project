@@ -21,6 +21,8 @@ package org.apache.james.modules.vault;
 
 import java.io.FileNotFoundException;
 
+import javax.inject.Singleton;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
@@ -36,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.ConfigurationException;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 
 public class DeletedMessageVaultModule extends AbstractModule {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeletedMessageVaultModule.class);
@@ -43,11 +46,13 @@ public class DeletedMessageVaultModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(MailRepositoryDeletedMessageVault.class).in(Scopes.SINGLETON);
         bind(DeletedMessageVault.class)
             .to(MailRepositoryDeletedMessageVault.class);
     }
 
     @Provides
+    @Singleton
     MailRepositoryDeletedMessageVault.Configuration providesConfiguration(PropertiesProvider propertiesProvider, MailRepositoryStoreConfiguration mailRepositoryStoreConfiguration) throws ConfigurationException  {
         try {
             Configuration configuration = propertiesProvider.getConfiguration("deletedMessageVault");
@@ -63,6 +68,7 @@ public class DeletedMessageVaultModule extends AbstractModule {
     }
 
     @Provides
+    @Singleton
     RetentionConfiguration providesRetentionConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, org.apache.commons.configuration.ConfigurationException {
         try {
             Configuration configuration = propertiesProvider.getConfiguration("deletedMessageVault");
