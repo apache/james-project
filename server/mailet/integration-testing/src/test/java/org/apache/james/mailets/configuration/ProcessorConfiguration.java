@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableList;
 
 public class ProcessorConfiguration implements SerializableAsXml {
 
-    public static final String STATE_TRANSPORT = "transport";
+    public static final String TRANSPORT_PROCESSOR = "transport";
     public static final String STATE_ROOT = "root";
     public static final String STATE_BOUNCES = "bounces";
     public static final String STATE_ERROR = "error";
@@ -39,7 +39,7 @@ public class ProcessorConfiguration implements SerializableAsXml {
     }
 
     public static Builder transport() {
-        return builder().state(STATE_TRANSPORT);
+        return builder().state(TRANSPORT_PROCESSOR);
     }
 
     public static Builder root() {

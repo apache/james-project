@@ -114,7 +114,7 @@ public class ToRepositoryTest {
 
         String taskId = with()
             .spec(webAdminAPI)
-            .queryParam("processor", ProcessorConfiguration.STATE_TRANSPORT)
+            .queryParam("processor", ProcessorConfiguration.TRANSPORT_PROCESSOR)
             .queryParam("action", "reprocess")
         .patch(MailRepositoriesRoutes.MAIL_REPOSITORIES
                 + "/" + CUSTOM_REPOSITORY.getPath().urlEncoded()
@@ -145,7 +145,7 @@ public class ToRepositoryTest {
 
         with()
             .spec(webAdminAPI)
-            .queryParam("processor", ProcessorConfiguration.STATE_TRANSPORT)
+            .queryParam("processor", ProcessorConfiguration.TRANSPORT_PROCESSOR)
             .queryParam("action", "reprocess")
             .patch(MailRepositoriesRoutes.MAIL_REPOSITORIES
                 + "/" + CUSTOM_REPOSITORY.getPath().urlEncoded()

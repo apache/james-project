@@ -68,7 +68,7 @@ public class SmtpAuthIntegrationTest {
             .addMailet(MailetConfiguration.builder()
                 .matcher(SMTPAuthSuccessful.class)
                 .mailet(ToProcessor.class)
-                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
+                .addProperty("processor", ProcessorConfiguration.TRANSPORT_PROCESSOR))
             .addMailet(MailetConfiguration.TO_BOUNCE);
 
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION

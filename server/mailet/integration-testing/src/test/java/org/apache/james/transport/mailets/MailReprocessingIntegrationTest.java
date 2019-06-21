@@ -28,7 +28,7 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT2;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
-import static org.apache.james.mailets.configuration.ProcessorConfiguration.STATE_TRANSPORT;
+import static org.apache.james.mailets.configuration.ProcessorConfiguration.TRANSPORT_PROCESSOR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.MemoryJamesServerMain;
@@ -124,7 +124,7 @@ public class MailReprocessingIntegrationTest {
             .spec(specification)
             .param("action", "reprocess")
             .param("queue", MailQueueFactory.SPOOL)
-            .param("processor", STATE_TRANSPORT)
+            .param("processor", TRANSPORT_PROCESSOR)
         .patch("/mailRepositories/" + REPOSITORY_B.getPath().urlEncoded() + "/mails");
 
         // Then I can move it to repository A
@@ -152,7 +152,7 @@ public class MailReprocessingIntegrationTest {
             .spec(specification)
             .param("action", "reprocess")
             .param("queue", MailQueueFactory.SPOOL)
-            .param("processor", STATE_TRANSPORT)
+            .param("processor", TRANSPORT_PROCESSOR)
         .patch("/mailRepositories/" + REPOSITORY_B.getPath().urlEncoded() + "/mails");
 
         // I can move it to repository A

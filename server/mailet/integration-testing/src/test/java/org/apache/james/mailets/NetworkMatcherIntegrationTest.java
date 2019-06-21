@@ -93,7 +93,7 @@ public class NetworkMatcherIntegrationTest {
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("127.0.0.0/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
+                .addProperty("processor", ProcessorConfiguration.TRANSPORT_PROCESSOR))
             .addMailet(toRepository()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -113,7 +113,7 @@ public class NetworkMatcherIntegrationTest {
                 .matcher(RemoteAddrNotInNetwork.class)
                 .matcherCondition("172.0.0.0/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
+                .addProperty("processor", ProcessorConfiguration.TRANSPORT_PROCESSOR))
             .addMailet(toRepository()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -133,7 +133,7 @@ public class NetworkMatcherIntegrationTest {
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("127.0.0.0/2")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
+                .addProperty("processor", ProcessorConfiguration.TRANSPORT_PROCESSOR))
             .addMailet(toRepository()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -153,7 +153,7 @@ public class NetworkMatcherIntegrationTest {
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("127.0.4.108/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
+                .addProperty("processor", ProcessorConfiguration.TRANSPORT_PROCESSOR))
             .addMailet(toRepository()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -173,7 +173,7 @@ public class NetworkMatcherIntegrationTest {
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("127.255.255.255/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
+                .addProperty("processor", ProcessorConfiguration.TRANSPORT_PROCESSOR))
             .addMailet(toRepository()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -193,7 +193,7 @@ public class NetworkMatcherIntegrationTest {
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("126.0.0.0/4")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
+                .addProperty("processor", ProcessorConfiguration.TRANSPORT_PROCESSOR))
             .addMailet(toRepository()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -213,7 +213,7 @@ public class NetworkMatcherIntegrationTest {
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("172.0.0.0/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
+                .addProperty("processor", ProcessorConfiguration.TRANSPORT_PROCESSOR))
             .addMailet(toRepository()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -237,7 +237,7 @@ public class NetworkMatcherIntegrationTest {
                 .matcher(RemoteAddrNotInNetwork.class)
                 .matcherCondition("127.0.0.0/8")
                 .mailet(ToProcessor.class)
-                .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT))
+                .addProperty("processor", ProcessorConfiguration.TRANSPORT_PROCESSOR))
             .addMailet(toRepository()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())

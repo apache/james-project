@@ -95,7 +95,7 @@ public class MailetConfiguration implements SerializableAsXml {
     public static final MailetConfiguration TO_TRANSPORT = MailetConfiguration.builder()
         .matcher(All.class)
         .mailet(ToProcessor.class)
-        .addProperty("processor", ProcessorConfiguration.STATE_TRANSPORT)
+        .addProperty("processor", ProcessorConfiguration.TRANSPORT_PROCESSOR)
         .build();
 
     public static final MailetConfiguration TO_BOUNCE = MailetConfiguration.builder()
