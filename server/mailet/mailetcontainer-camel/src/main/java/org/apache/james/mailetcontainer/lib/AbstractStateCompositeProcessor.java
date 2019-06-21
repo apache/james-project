@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -66,7 +67,7 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
     }
 
     @Override
-    public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+    public void configure(HierarchicalConfiguration config) {
         this.config = config;
         this.enableJmx = config.getBoolean("[@enableJmx]", true);
 
@@ -74,34 +75,42 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        long start = System.currentTimeMillis();
+        handleWithProcessor(mail, getProcessorOrFallBackToError(mail));
+    }
+
+    private MailProcessor getProcessorOrFallBackToError(Mail mail) {
+        return Optional.ofNullable(getProcessor(mail.getState()))
+            .orElseGet(() -> {
+                mail.setErrorMessage("MailProcessor '" + mail.getState() + "' could not be found. Processing to 'error' instead");
+                LOGGER.error("MailProcessor '{}' could not be found. Processing {} to 'error' instead", mail.getState(), mail.getName());
+                mail.setState(Mail.ERROR);
+                return getProcessor(Mail.ERROR);
+            });
+    }
+
+    private void handleWithProcessor(Mail mail, MailProcessor processor) throws MessagingException {
         MessagingException ex = null;
-        MailProcessor processor = getProcessor(mail.getState());
+        long start = System.currentTimeMillis();
+        LOGGER.debug("Call MailProcessor {}", mail.getState());
+        try {
+            processor.service(mail);
 
-        if (processor != null) {
-            LOGGER.debug("Call MailProcessor {}", mail.getState());
-            try {
-                processor.service(mail);
-
-                if (Mail.GHOST.equals(mail.getState())) {
-                    LifecycleUtil.dispose(mail);
-                }
-                /*
-                 * // check the mail needs further processing if
-                 * (Mail.GHOST.equalsIgnoreCase(mail.getState()) == false) {
-                 * service(mail); } else { LifecycleUtil.dispose(mail); }
-                 */
-            } catch (MessagingException e) {
-                ex = e;
-                throw e;
-            } finally {
-                long end = System.currentTimeMillis() - start;
-                for (CompositeProcessorListener listener : listeners) {
-                    listener.afterProcessor(processor, mail.getName(), end, ex);
-                }
+            if (Mail.GHOST.equals(mail.getState())) {
+                LifecycleUtil.dispose(mail);
             }
-        } else {
-            throw new MessagingException("No processor found for mail " + mail.getName() + " with state " + mail.getState());
+            /*
+             * // check the mail needs further processing if
+             * (Mail.GHOST.equalsIgnoreCase(mail.getState()) == false) {
+             * service(mail); } else { LifecycleUtil.dispose(mail); }
+             */
+        } catch (MessagingException e) {
+            ex = e;
+            throw e;
+        } finally {
+            long end = System.currentTimeMillis() - start;
+            for (CompositeProcessorListener listener : listeners) {
+                listener.afterProcessor(processor, mail.getName(), end, ex);
+            }
         }
     }
 

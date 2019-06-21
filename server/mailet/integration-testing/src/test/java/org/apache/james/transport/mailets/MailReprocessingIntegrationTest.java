@@ -54,7 +54,6 @@ import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -190,7 +189,6 @@ public class MailReprocessingIntegrationTest {
         assertThat(containsExactlyOneMail(REPOSITORY_A)).isTrue();
     }
 
-    @Ignore("JAMES-2994 Reprocessing to an unknown processor triggers an infinite loop as the mail is nack")
     @Test
     public void reprocessingShouldProcessAsErrorWhenUnknownMailProcessor() throws Exception {
         // Given an incoming email

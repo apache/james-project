@@ -74,8 +74,6 @@ public abstract class AbstractStateCompositeProcessorTest {
             processor.service(mail2);
             processor.service(mail3);
 
-            expectedException.expect(MessagingException.class);
-
             processor.service(mail4);
         } finally {
             processor.dispose();
