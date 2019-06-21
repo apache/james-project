@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static io.restassured.RestAssured.given;
+import static org.apache.james.mailets.configuration.CommonProcessors.ERROR_REPOSITORY;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.FROM;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
@@ -53,6 +54,7 @@ import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -186,6 +188,35 @@ public class MailReprocessingIntegrationTest {
         // It then is processed by the transport processor again
         awaitAtMostOneMinute.until(() -> containsExactlyOneMail(REPOSITORY_A));
         assertThat(containsExactlyOneMail(REPOSITORY_A)).isTrue();
+    }
+
+    @Ignore("JAMES-2994 Reprocessing to an unknown processor triggers an infinite loop as the mail is nack")
+    @Test
+    public void reprocessingShouldProcessAsErrorWhenUnknownMailProcessor() throws Exception {
+        // Given an incoming email
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FakeMail.builder()
+                .name("name")
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .addToRecipient(RECIPIENT)
+                    .setSender(FROM)
+                    .setText("match me"))
+                .sender(FROM)
+                .recipient(RECIPIENT));
+        // Being stored in MailRepository B
+        awaitAtMostOneMinute.until(() -> containsExactlyOneMail(REPOSITORY_B));
+
+        // When I reprocess it
+        given()
+            .spec(specification)
+            .param("action", "reprocess")
+            .param("queue", MailQueueFactory.SPOOL)
+            .param("processor", "unknown")
+            .patch("/mailRepositories/" + REPOSITORY_B.getPath().urlEncoded() + "/mails").prettyPeek();
+
+        // Then I can move it to repository A
+        awaitAtMostOneMinute.until(() -> containsExactlyOneMail(ERROR_REPOSITORY));
+        assertThat(containsExactlyOneMail(ERROR_REPOSITORY)).isTrue();
     }
 
     private boolean containsExactlyOneMail(MailRepositoryUrl repositoryUrl) {
