@@ -65,6 +65,7 @@ import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.util.EventCollector;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.assertj.core.data.Percentage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -559,7 +560,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
 
             @Test
-            void registrationsShouldNotHandleEventsAfterStop() throws Exception {
+            void dispatchShouldStopDeliveringEventsShortlyAfterStopIsCalled() throws Exception {
                 eventBus.start();
 
                 MailboxListenerCountingSuccessfulExecution listener = new MailboxListenerCountingSuccessfulExecution();
@@ -579,8 +580,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
                     TimeUnit.SECONDS.sleep(1);
                     assertThat(listener.numberOfEventCalls())
-                        .isEqualTo(callsAfterStop)
-                        .isLessThanOrEqualTo(MAX_EVENT_DISPATCHED_COUNT);
+                        .isCloseTo(callsAfterStop, Percentage.withPercentage(2));
                 }
             }
         }
@@ -650,7 +650,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
 
             @Test
-            void registrationsShouldNotHandleEventsAfterStop() throws Exception {
+            void dispatchShouldStopDeliveringEventsShortlyAfterStopIsCalled() throws Exception {
                 eventBus.start();
                 eventBus2.start();
 
@@ -672,8 +672,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
                     TimeUnit.SECONDS.sleep(1);
                     assertThat(listener.numberOfEventCalls())
-                        .isEqualTo(callsAfterStop)
-                        .isLessThanOrEqualTo(MAX_EVENT_DISPATCHED_COUNT);
+                        .isCloseTo(callsAfterStop, Percentage.withPercentage(2));
                 }
             }
         }
