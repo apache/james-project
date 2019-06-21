@@ -297,7 +297,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
         @Test
         void dispatchShouldPublishSerializedEventToRabbitMQWhenNotBlocking() {
-            eventBus.dispatch(EVENT, NO_KEYS);
+            eventBus.dispatch(EVENT, NO_KEYS).block();
 
             assertThat(dequeueEvent()).isEqualTo(EVENT);
         }
@@ -566,7 +566,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 eventBus.register(listener, GROUP_A);
 
                 try (Closeable closeable = ConcurrentTestRunner.builder()
-                    .operation((threadNumber, step) -> eventBus.dispatch(EVENT, KEY_1))
+                    .operation((threadNumber, step) -> eventBus.dispatch(EVENT, KEY_1).block())
                     .threadCount(THREAD_COUNT)
                     .operationCount(OPERATION_COUNT)
                     .run()) {
@@ -659,7 +659,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 eventBus2.register(listener, GROUP_A);
 
                 try (Closeable closeable = ConcurrentTestRunner.builder()
-                    .operation((threadNumber, step) -> eventBus.dispatch(EVENT, KEY_1))
+                    .operation((threadNumber, step) -> eventBus.dispatch(EVENT, KEY_1).block())
                     .threadCount(THREAD_COUNT)
                     .operationCount(OPERATION_COUNT)
                     .run()) {
