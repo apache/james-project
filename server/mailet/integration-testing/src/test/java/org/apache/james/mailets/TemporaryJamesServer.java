@@ -61,6 +61,7 @@ public class TemporaryJamesServer {
         .putProcessor(CommonProcessors.error())
         .putProcessor(CommonProcessors.transport());
 
+
     public static class Builder {
         private ImmutableList.Builder<Module> overrideModules;
         private Optional<Module> module;

@@ -19,7 +19,10 @@
 
 package org.apache.james;
 
+import java.util.Optional;
+
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.BlobMemoryModule;
 import org.apache.james.modules.MailboxModule;
@@ -50,6 +53,9 @@ import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.server.core.configuration.Configuration;
+import org.apache.james.webadmin.WebAdminConfiguration;
+import org.apache.james.webadmin.authentication.AuthenticationFilter;
+import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -66,6 +72,16 @@ public class MemoryJamesServerMain {
         new SwaggerRoutesModule(),
         new DLPRoutesModule(),
         new SieveRoutesModule());
+
+
+    public static final JwtConfiguration NO_JWT_CONFIGURATION = new JwtConfiguration(Optional.empty());
+
+    public static final Module WEBADMIN_NO_AUTH_MODULE = Modules.combine(binder -> binder.bind(JwtConfiguration.class).toInstance(NO_JWT_CONFIGURATION),
+        binder -> binder.bind(AuthenticationFilter.class).to(NoAuthenticationFilter.class),
+        binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
+
+    public static final Module WEBADMIN_TESTING = Modules.override(WEBADMIN)
+        .with(WEBADMIN_NO_AUTH_MODULE);
 
     public static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),

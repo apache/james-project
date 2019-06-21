@@ -31,11 +31,8 @@ import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMin
 import static org.apache.james.mailets.configuration.ProcessorConfiguration.STATE_TRANSPORT;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
-
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.core.builder.MimeMessageBuilder;
-import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
@@ -47,10 +44,7 @@ import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.WebAdminGuiceProbe;
-import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.authentication.AuthenticationFilter;
-import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.After;
 import org.junit.Before;
@@ -65,7 +59,6 @@ import io.restassured.specification.RequestSpecification;
 public class MailReprocessingIntegrationTest {
     private static final MailRepositoryUrl REPOSITORY_A = MailRepositoryUrl.from("file://var/mail/a");
     private static final MailRepositoryUrl REPOSITORY_B = MailRepositoryUrl.from("file://var/mail/b");
-    private static final JwtConfiguration NO_JWT_CONFIGURATION = new JwtConfiguration(Optional.empty());
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -92,13 +85,7 @@ public class MailReprocessingIntegrationTest {
                         .addProperty("repositoryPath", REPOSITORY_B.asString())));
 
         jamesServer = TemporaryJamesServer.builder()
-            .withBase(Modules.override(
-                    MemoryJamesServerMain.SMTP_AND_IMAP_MODULE,
-                    MemoryJamesServerMain.WEBADMIN)
-                .with(
-                    binder -> binder.bind(JwtConfiguration.class).toInstance(NO_JWT_CONFIGURATION),
-                    binder -> binder.bind(AuthenticationFilter.class).to(NoAuthenticationFilter.class),
-                    binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION)))
+            .withBase(Modules.combine(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE, MemoryJamesServerMain.WEBADMIN_TESTING))
             .withMailetContainer(mailets)
             .build(folder);
 
@@ -210,7 +197,7 @@ public class MailReprocessingIntegrationTest {
             .param("action", "reprocess")
             .param("queue", MailQueueFactory.SPOOL)
             .param("processor", "unknown")
-            .patch("/mailRepositories/" + REPOSITORY_B.getPath().urlEncoded() + "/mails").prettyPeek();
+            .patch("/mailRepositories/" + REPOSITORY_B.getPath().urlEncoded() + "/mails");
 
         // Then I can move it to repository A
         awaitAtMostOneMinute.until(() -> containsExactlyOneMail(ERROR_REPOSITORY));
