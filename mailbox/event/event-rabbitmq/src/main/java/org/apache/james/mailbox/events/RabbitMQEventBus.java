@@ -31,12 +31,11 @@ import org.apache.james.metrics.api.MetricFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.ChannelPool;
-import reactor.rabbitmq.ChannelPoolFactory;
-import reactor.rabbitmq.ChannelPoolOptions;
 import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Sender;
 import reactor.rabbitmq.SenderOptions;
@@ -82,12 +81,10 @@ public class RabbitMQEventBus implements EventBus, Startable {
 
     public void start() {
         if (!isRunning && !isStopping) {
-            this.channelPool = ChannelPoolFactory.createChannelPool(
-                    connectionMono,
-                    new ChannelPoolOptions().maxCacheSize(MAX_CHANNELS_NUMBER)
-            );
+            this.channelPool = new ReactorRabbitMQChannelPool(connectionMono, MAX_CHANNELS_NUMBER);
+
             sender = RabbitFlux.createSender(new SenderOptions().connectionMono(connectionMono).channelPool(channelPool)
-                .resourceManagementChannelMono(connectionMono.map(Throwing.function(Connection::createChannel))));
+                .resourceManagementChannelMono(connectionMono.map(Throwing.<Connection, Channel>function(Connection::createChannel).sneakyThrow()).cache()));
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
             keyRegistrationHandler = new KeyRegistrationHandler(eventBusId, eventSerializer, sender, connectionMono, routingKeyConverter, localListenerRegistry, mailboxListenerExecutor);
             groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, sender, connectionMono, retryBackoff, eventDeadLetters, mailboxListenerExecutor);
