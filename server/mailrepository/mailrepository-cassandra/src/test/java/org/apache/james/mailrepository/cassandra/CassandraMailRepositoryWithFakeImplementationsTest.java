@@ -48,33 +48,34 @@ import org.apache.mailet.Mail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import reactor.core.publisher.Mono;
 
-@ExtendWith(CassandraMailRepositoryWithFakeImplementationsTest.MailRepositoryCassandraClusterExtension.class)
+
 class CassandraMailRepositoryWithFakeImplementationsTest {
     private static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
-    static class MailRepositoryCassandraClusterExtension extends CassandraClusterExtension {
-        public MailRepositoryCassandraClusterExtension() {
-            super(CassandraModule.aggregateModules(
-                    CassandraMailRepositoryModule.MODULE,
-                    CassandraBlobModule.MODULE,
-                    CassandraSchemaVersionModule.MODULE));
-        }
-
-        @Override
-        public void afterAll(ExtensionContext extensionContext) {
-        }
+    static CassandraClusterExtension extension() {
+        return new CassandraClusterExtension(
+            CassandraModule.aggregateModules(
+                CassandraMailRepositoryModule.MODULE,
+                CassandraBlobModule.MODULE,
+                CassandraSchemaVersionModule.MODULE));
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     class FailingStoreTest {
+        @RegisterExtension
+        CassandraClusterExtension extension = extension();
+
         CassandraMailRepository cassandraMailRepository;
         CassandraMailRepositoryKeysDAO keysDAO;
 
@@ -124,7 +125,11 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     class FailingMailDaoTest {
+        @RegisterExtension
+        CassandraClusterExtension extension = extension();
+
         CassandraMailRepository cassandraMailRepository;
         CassandraMailRepositoryKeysDAO keysDAO;
 
@@ -209,7 +214,11 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     class FailingKeysDaoTest {
+        @RegisterExtension
+        CassandraClusterExtension extension = extension();
+
         CassandraMailRepository cassandraMailRepository;
         CassandraMailRepositoryCountDAO countDAO;
 
