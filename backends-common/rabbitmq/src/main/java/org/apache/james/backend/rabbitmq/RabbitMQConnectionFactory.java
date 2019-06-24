@@ -58,8 +58,8 @@ public class RabbitMQConnectionFactory {
     }
 
     Mono<Connection> connectionMono() {
+        Duration forever = Duration.ofMillis(Long.MAX_VALUE);
         return Mono.fromCallable(connectionFactory::newConnection)
-            .retryBackoff(configuration.getMaxRetries(), Duration.ofMillis(configuration.getMinDelayInMs()))
-            .publishOn(Schedulers.elastic());
+            .retryBackoff(configuration.getMaxRetries(), Duration.ofMillis(configuration.getMinDelayInMs()), forever, Schedulers.elastic());
     }
 }

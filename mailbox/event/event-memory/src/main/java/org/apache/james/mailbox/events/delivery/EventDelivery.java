@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public interface EventDelivery {
 
@@ -75,7 +76,7 @@ public interface EventDelivery {
             }
 
             private static final Logger LOGGER = LoggerFactory.getLogger(BackoffRetryer.class);
-            private static final Duration MAX_BACKOFF = Duration.ofMillis(Long.MAX_VALUE);
+            private static final Duration FOREVER = Duration.ofMillis(Long.MAX_VALUE);
 
             private final RetryBackoffConfiguration retryBackoff;
             private final MailboxListener mailboxListener;
@@ -88,7 +89,7 @@ public interface EventDelivery {
             @Override
             public Mono<Void> doRetry(Mono<Void> executionResult, Event event) {
                 return executionResult
-                    .retryBackoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff(), MAX_BACKOFF, retryBackoff.getJitterFactor())
+                    .retryBackoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff(), FOREVER, retryBackoff.getJitterFactor(), Schedulers.elastic())
                     .doOnError(throwable -> LOGGER.error("listener {} exceeded maximum retry({}) to handle event {}",
                         mailboxListener.getClass().getCanonicalName(),
                         retryBackoff.getMaxRetries(),
