@@ -12,4 +12,6 @@
 
     <logger name="com.datastax.driver.core.QueryLogger.SLOW" level="DEBUG" />
 
+    <logger name="org.apache.james.linshare" level="DEBUG" />
+
 </configuration>

@@ -28,4 +28,6 @@
         <appender-ref ref="STDOUT" />
     </root>
 
+    <logger name="org.apache.james.linshare" level="DEBUG" />
+
 </configuration>
