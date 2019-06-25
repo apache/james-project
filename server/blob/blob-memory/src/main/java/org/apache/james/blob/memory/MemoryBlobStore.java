@@ -23,7 +23,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 
@@ -35,31 +34,41 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectStoreException;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Table;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MemoryBlobStore implements BlobStore {
-    private final ConcurrentHashMap<BlobId, byte[]> blobs;
     private final BlobId.Factory factory;
+    private final Table<BucketName, BlobId, byte[]> blobs;
 
     @Inject
     public MemoryBlobStore(BlobId.Factory factory) {
         this.factory = factory;
-        blobs = new ConcurrentHashMap<>();
+        blobs = HashBasedTable.create();
     }
 
     @Override
     public Mono<BlobId> save(BucketName bucketName, byte[] data) {
+        Preconditions.checkNotNull(bucketName);
         Preconditions.checkNotNull(data);
+
         BlobId blobId = factory.forPayload(data);
 
-        blobs.put(blobId, data);
-
-        return Mono.just(blobId);
+        return Mono.fromCallable(() -> {
+            synchronized (blobs) {
+                blobs.put(bucketName, blobId, data);
+                return blobId;
+            }
+        });
     }
 
     @Override
     public Mono<BlobId> save(BucketName bucketName, InputStream data) {
+        Preconditions.checkNotNull(bucketName);
         Preconditions.checkNotNull(data);
         try {
             byte[] bytes = IOUtils.toByteArray(data);
@@ -71,12 +80,14 @@ public class MemoryBlobStore implements BlobStore {
 
     @Override
     public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
-        return Mono.fromCallable(() -> retrieveStoredValue(blobId));
+        Preconditions.checkNotNull(bucketName);
+        return Mono.fromCallable(() -> retrieveStoredValue(bucketName, blobId));
     }
 
     @Override
     public InputStream read(BucketName bucketName, BlobId blobId) {
-        return new ByteArrayInputStream(retrieveStoredValue(blobId));
+        Preconditions.checkNotNull(bucketName);
+        return new ByteArrayInputStream(retrieveStoredValue(bucketName, blobId));
     }
 
     @Override
@@ -84,8 +95,10 @@ public class MemoryBlobStore implements BlobStore {
         throw new NotImplementedException("not implemented");
     }
 
-    private byte[] retrieveStoredValue(BlobId blobId) {
-        return Optional.ofNullable(blobs.get(blobId))
-            .orElseThrow(() -> new ObjectStoreException("unable to find blob with id " + blobId));
+    private byte[] retrieveStoredValue(BucketName bucketName, BlobId blobId) {
+        synchronized (blobs) {
+            return Optional.ofNullable(blobs.get(bucketName, blobId))
+                .orElseThrow(() -> new ObjectStoreException("Unable to find blob with id " + blobId + " in bucket " + bucketName.asString()));
+        }
     }
 }
