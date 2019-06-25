@@ -70,9 +70,11 @@ class RabbitMQJamesServerReprocessingTest {
 
     @Test
     void reprocessingADeniedMailShouldNotLooseIt(GuiceJamesServer server) throws Exception {
-        new SMTPMessageSender("other.com")
-            .connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .sendMessage("denied@other.com", "any@domain.tld");
+        try (SMTPMessageSender smtpMessageSender = new SMTPMessageSender("other.com")) {
+            smtpMessageSender
+                .connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .sendMessage("denied@other.com", "any@domain.tld");
+        }
 
         MailRepositoryProbeImpl mailRepositoryProbe = server.getProbe(MailRepositoryProbeImpl.class);
         AWAIT.until(() -> mailRepositoryProbe.listMailKeys(SENDER_DENIED).size() == 1);

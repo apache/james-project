@@ -102,6 +102,7 @@ public class ScrolledSearch {
             .flatMap(searchResponse -> Arrays.stream(searchResponse.getHits().getHits()));
     }
 
+    @SuppressWarnings("resource")
     public Stream<SearchResponse> searchResponses() {
         return new ScrollIterator(client, searchRequest)
             .stream();

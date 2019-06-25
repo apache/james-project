@@ -28,6 +28,12 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.function.Consumer;
+
+import javax.mail.MessagingException;
+
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.metrics.api.MetricFactory;
@@ -39,13 +45,8 @@ import org.apache.mailet.base.test.FakeMail;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Test;
-import reactor.core.publisher.WorkQueueProcessor;
 
-import javax.mail.MessagingException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
+import reactor.core.publisher.WorkQueueProcessor;
 
 class JamesMailSpoolerTest {
     private static final ConditionFactory CALMLY_AWAIT = Awaitility

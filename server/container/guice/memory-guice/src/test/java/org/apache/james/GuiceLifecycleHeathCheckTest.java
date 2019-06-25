@@ -29,8 +29,6 @@ import java.util.concurrent.CountDownLatch;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminConfiguration;

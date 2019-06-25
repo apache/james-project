@@ -18,11 +18,11 @@
  ****************************************************************/
 package org.apache.james.transport.matchers;
 
-import java.util.Collection;
-import javax.mail.MessagingException;
 import static org.assertj.core.api.Assertions.assertThat;
-import org.junit.Before;
-import org.junit.Test;
+
+import java.util.Collection;
+
+import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.MailPrioritySupport;
@@ -30,6 +30,8 @@ import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
+import org.junit.Before;
+import org.junit.Test;
 
 public class AtLeastPriorityTest {
     protected AtLeastPriority matcher;

@@ -28,7 +28,6 @@ import java.util.Properties;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.jdkim.DKIMVerifier;
 import org.apache.james.jdkim.MockPublicKeyRecordRetriever;
 import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;

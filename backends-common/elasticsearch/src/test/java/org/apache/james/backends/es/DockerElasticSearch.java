@@ -19,8 +19,6 @@
 
 package org.apache.james.backends.es;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.apache.http.HttpStatus;
 import org.apache.james.util.Host;
 import org.apache.james.util.docker.DockerContainer;
@@ -29,6 +27,7 @@ import org.apache.james.util.docker.RateLimiters;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
 import com.google.common.collect.ImmutableMap;
+
 import feign.Feign;
 import feign.Logger;
 import feign.RequestLine;

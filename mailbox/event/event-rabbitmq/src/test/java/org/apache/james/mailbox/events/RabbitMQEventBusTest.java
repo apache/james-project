@@ -317,7 +317,6 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     class LifeCycleTest {
         private static final int THREAD_COUNT = 10;
         private static final int OPERATION_COUNT = 100000;
-        private static final int MAX_EVENT_DISPATCHED_COUNT = THREAD_COUNT * OPERATION_COUNT;
 
         private RabbitMQManagementAPI rabbitManagementAPI;
 

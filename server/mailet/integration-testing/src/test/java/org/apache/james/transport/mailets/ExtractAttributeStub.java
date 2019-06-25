@@ -19,15 +19,15 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.Optional;
+import java.util.function.Consumer;
+
+import javax.mail.MessagingException;
+
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
-
-import javax.mail.MessagingException;
-
-import java.util.Optional;
-import java.util.function.Consumer;
 
 public class ExtractAttributeStub extends GenericMailet {
 

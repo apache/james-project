@@ -38,7 +38,6 @@ import org.apache.james.mailetcontainer.impl.JamesMailetContext;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.impl.camel.CamelCompositeProcessor;
 import org.apache.james.mailetcontainer.impl.camel.CamelMailetProcessor;
-import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.transport.mailets.RemoveMimeHeader;
 import org.apache.james.transport.matchers.All;
@@ -101,7 +100,6 @@ public class CamelMailetContainerModule extends AbstractModule {
         private final CamelCompositeProcessor camelCompositeProcessor;
         private final JamesMailSpooler jamesMailSpooler;
         private final JamesMailetContext mailetContext;
-        private final MailQueueFactory<?> mailQueueFactory;
         private final DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier;
         private final Set<TransportProcessorCheck> transportProcessorCheckSet;
 
@@ -110,14 +108,12 @@ public class CamelMailetContainerModule extends AbstractModule {
                                                 CamelCompositeProcessor camelCompositeProcessor,
                                                 JamesMailSpooler jamesMailSpooler,
                                                 JamesMailetContext mailetContext,
-                                                MailQueueFactory<?> mailQueueFactory,
                                                 Set<TransportProcessorCheck> transportProcessorCheckSet,
                                                 DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier) {
             this.configurationProvider = configurationProvider;
             this.camelCompositeProcessor = camelCompositeProcessor;
             this.jamesMailSpooler = jamesMailSpooler;
             this.mailetContext = mailetContext;
-            this.mailQueueFactory = mailQueueFactory;
             this.transportProcessorCheckSet = transportProcessorCheckSet;
             this.defaultProcessorsConfigurationSupplier = defaultProcessorsConfigurationSupplier;
         }

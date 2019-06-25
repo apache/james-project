@@ -26,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 
 import org.apache.james.backends.es.DockerElasticSearchRule;
-import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
