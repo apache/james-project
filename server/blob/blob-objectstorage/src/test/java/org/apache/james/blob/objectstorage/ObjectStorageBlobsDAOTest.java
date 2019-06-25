@@ -137,7 +137,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
         String content = "James is the best!";
         BlobId blobId = encryptedDao.save(BucketName.DEFAULT, content).block();
 
-        InputStream read = encryptedDao.read(blobId);
+        InputStream read = encryptedDao.read(BucketName.DEFAULT, blobId);
         String expectedContent = IOUtils.toString(read, Charsets.UTF_8);
         assertThat(content).isEqualTo(expectedContent);
     }
@@ -153,12 +153,12 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
         String content = "James is the best!";
         BlobId blobId = encryptedDao.save(BucketName.DEFAULT, content).block();
 
-        InputStream encryptedIs = testee.read(blobId);
+        InputStream encryptedIs = testee.read(BucketName.DEFAULT, blobId);
         assertThat(encryptedIs).isNotNull();
         String encryptedString = IOUtils.toString(encryptedIs, Charsets.UTF_8);
         assertThat(encryptedString).isNotEqualTo(content);
 
-        InputStream clearTextIs = encryptedDao.read(blobId);
+        InputStream clearTextIs = encryptedDao.read(BucketName.DEFAULT, blobId);
         String expectedContent = IOUtils.toString(clearTextIs, Charsets.UTF_8);
         assertThat(content).isEqualTo(expectedContent);
     }
@@ -198,7 +198,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     @Test
     void readBytesShouldNotCompleteWhenDoesNotAwait() {
         BlobId blobId = testee().save(BucketName.DEFAULT, BIG_STRING).block();
-        Mono<byte[]> resultFuture = testee.readBytes(blobId).subscribeOn(Schedulers.elastic());
+        Mono<byte[]> resultFuture = testee.readBytes(BucketName.DEFAULT, blobId).subscribeOn(Schedulers.elastic());
         assertThat(resultFuture.toFuture()).isNotCompleted();
     }
 }

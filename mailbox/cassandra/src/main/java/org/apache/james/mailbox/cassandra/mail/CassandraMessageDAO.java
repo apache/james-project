@@ -359,7 +359,7 @@ public class CassandraMessageDAO {
     }
 
     private Mono<byte[]> getFieldContent(String field, Row row) {
-        return blobStore.readBytes(blobIdFactory.from(row.getString(field)));
+        return blobStore.readBytes(BucketName.DEFAULT, blobIdFactory.from(row.getString(field)));
     }
 
     public static MessageResult notFound(ComposedMessageIdWithMetaData id) {

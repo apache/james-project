@@ -29,9 +29,9 @@ public interface BlobStore {
 
     Mono<BlobId> save(BucketName bucketName, InputStream data);
 
-    Mono<byte[]> readBytes(BlobId blobId);
+    Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId);
 
-    InputStream read(BlobId blobId);
+    InputStream read(BucketName bucketName, BlobId blobId);
 
     default Mono<BlobId> save(BucketName bucketName, String data) {
         return save(bucketName, data.getBytes(StandardCharsets.UTF_8));

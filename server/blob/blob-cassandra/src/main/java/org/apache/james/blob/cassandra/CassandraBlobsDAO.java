@@ -164,7 +164,7 @@ public class CassandraBlobsDAO implements BlobStore {
     }
 
     @Override
-    public Mono<byte[]> readBytes(BlobId blobId) {
+    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
         return readBlobParts(blobId)
             .collectList()
             .map(parts -> Bytes.concat(parts.toArray(new byte[0][])));
@@ -194,7 +194,7 @@ public class CassandraBlobsDAO implements BlobStore {
     }
 
     @Override
-    public InputStream read(BlobId blobId) {
+    public InputStream read(BucketName bucketName, BlobId blobId) {
         PipedInputStream pipedInputStream = new PipedInputStream();
         readBlobParts(blobId)
             .subscribe(new PipedStreamSubscriber(pipedInputStream));

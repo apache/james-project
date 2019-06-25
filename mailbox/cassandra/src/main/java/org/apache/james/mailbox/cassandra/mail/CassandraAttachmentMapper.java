@@ -80,7 +80,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     private Mono<Attachment> retrievePayload(DAOAttachment daoAttachment) {
-        return blobStore.readBytes(daoAttachment.getBlobId())
+        return blobStore.readBytes(BucketName.DEFAULT, daoAttachment.getBlobId())
             .map(daoAttachment::toAttachment);
     }
 

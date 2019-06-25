@@ -69,12 +69,12 @@ public class MemoryBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<byte[]> readBytes(BlobId blobId) {
+    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
         return Mono.fromCallable(() -> retrieveStoredValue(blobId));
     }
 
     @Override
-    public InputStream read(BlobId blobId) {
+    public InputStream read(BucketName bucketName, BlobId blobId) {
         return new ByteArrayInputStream(retrieveStoredValue(blobId));
     }
 

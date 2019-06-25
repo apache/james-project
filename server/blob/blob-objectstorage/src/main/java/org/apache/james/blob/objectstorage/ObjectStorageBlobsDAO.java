@@ -126,12 +126,12 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     }
 
     @Override
-    public Mono<byte[]> readBytes(BlobId blobId) {
-        return Mono.fromCallable(() -> IOUtils.toByteArray(read(blobId)));
+    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
+        return Mono.fromCallable(() -> IOUtils.toByteArray(read(bucketName, blobId)));
     }
 
     @Override
-    public InputStream read(BlobId blobId) throws ObjectStoreException {
+    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreException {
         Blob blob = blobStore.getBlob(containerName.value(), blobId.asString());
 
         try {

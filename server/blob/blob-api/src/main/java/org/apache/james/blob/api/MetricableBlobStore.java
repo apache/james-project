@@ -60,14 +60,14 @@ public class MetricableBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<byte[]> readBytes(BlobId blobId) {
+    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
         return metricFactory
-            .runPublishingTimerMetric(READ_BYTES_TIMER_NAME, blobStoreImpl.readBytes(blobId));
+            .runPublishingTimerMetric(READ_BYTES_TIMER_NAME, blobStoreImpl.readBytes(bucketName, blobId));
     }
 
     @Override
-    public InputStream read(BlobId blobId) {
+    public InputStream read(BucketName bucketName, BlobId blobId) {
         return metricFactory
-            .runPublishingTimerMetric(READ_TIMER_NAME, () -> blobStoreImpl.read(blobId));
+            .runPublishingTimerMetric(READ_TIMER_NAME, () -> blobStoreImpl.read(bucketName, blobId));
     }
 }

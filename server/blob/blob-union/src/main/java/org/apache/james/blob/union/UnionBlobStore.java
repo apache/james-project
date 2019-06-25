@@ -118,31 +118,31 @@ public class UnionBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<byte[]> readBytes(BlobId blobId) {
+    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
         try {
-            return readBytesFallBackIfFailsOrEmptyResult(blobId);
+            return readBytesFallBackIfFailsOrEmptyResult(bucketName, blobId);
         } catch (Exception e) {
             LOGGER.error("exception directly happens while readBytes, fall back to legacy blob store", e);
-            return Mono.defer(() -> legacyBlobStore.readBytes(blobId));
+            return Mono.defer(() -> legacyBlobStore.readBytes(bucketName, blobId));
         }
     }
 
     @Override
-    public InputStream read(BlobId blobId) {
+    public InputStream read(BucketName bucketName, BlobId blobId) {
         try {
-            return readFallBackIfEmptyResult(blobId);
+            return readFallBackIfEmptyResult(bucketName, blobId);
         } catch (Exception e) {
             LOGGER.error("exception directly happens while read, fall back to legacy blob store", e);
-            return legacyBlobStore.read(blobId);
+            return legacyBlobStore.read(bucketName, blobId);
         }
     }
 
-    private InputStream readFallBackIfEmptyResult(BlobId blobId) {
-        return Optional.ofNullable(currentBlobStore.read(blobId))
+    private InputStream readFallBackIfEmptyResult(BucketName bucketName, BlobId blobId) {
+        return Optional.ofNullable(currentBlobStore.read(bucketName, blobId))
             .map(PushbackInputStream::new)
             .filter(Throwing.predicate(this::streamHasContent).sneakyThrow())
             .<InputStream>map(Function.identity())
-            .orElseGet(() -> legacyBlobStore.read(blobId));
+            .orElseGet(() -> legacyBlobStore.read(bucketName, blobId));
     }
 
     @VisibleForTesting
@@ -155,10 +155,10 @@ public class UnionBlobStore implements BlobStore {
         return false;
     }
 
-    private Mono<byte[]> readBytesFallBackIfFailsOrEmptyResult(BlobId blobId) {
-        return Mono.defer(() -> currentBlobStore.readBytes(blobId))
+    private Mono<byte[]> readBytesFallBackIfFailsOrEmptyResult(BucketName bucketName, BlobId blobId) {
+        return Mono.defer(() -> currentBlobStore.readBytes(bucketName, blobId))
             .onErrorResume(this::logAndReturnEmpty)
-            .switchIfEmpty(legacyBlobStore.readBytes(blobId));
+            .switchIfEmpty(legacyBlobStore.readBytes(bucketName, blobId));
     }
 
     private Mono<BlobId> saveToCurrentFallbackIfFails(

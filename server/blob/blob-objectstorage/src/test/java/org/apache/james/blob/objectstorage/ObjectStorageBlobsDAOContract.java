@@ -41,7 +41,7 @@ public interface ObjectStorageBlobsDAOContract {
 
         BlobId blobId = dao.save(BucketName.DEFAULT, CONTENT).block();
 
-        InputStream inputStream = dao.read(blobId);
+        InputStream inputStream = dao.read(BucketName.DEFAULT, blobId);
         assertThat(inputStream).hasSameContentAs(IOUtils.toInputStream(CONTENT, StandardCharsets.UTF_8));
     }
 }

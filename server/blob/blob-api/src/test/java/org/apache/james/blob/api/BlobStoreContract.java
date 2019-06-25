@@ -64,7 +64,7 @@ public interface BlobStoreContract {
     default void saveShouldSaveEmptyData() {
         BlobId blobId = testee().save(BucketName.DEFAULT, EMPTY_BYTEARRAY).block();
 
-        byte[] bytes = testee().readBytes(blobId).block();
+        byte[] bytes = testee().readBytes(BucketName.DEFAULT, blobId).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEmpty();
     }
@@ -73,7 +73,7 @@ public interface BlobStoreContract {
     default void saveShouldSaveEmptyString() {
         BlobId blobId = testee().save(BucketName.DEFAULT, new String()).block();
 
-        byte[] bytes = testee().readBytes(blobId).block();
+        byte[] bytes = testee().readBytes(BucketName.DEFAULT, blobId).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEmpty();
     }
@@ -82,7 +82,7 @@ public interface BlobStoreContract {
     default void saveShouldSaveEmptyInputStream() {
         BlobId blobId = testee().save(BucketName.DEFAULT, new ByteArrayInputStream(EMPTY_BYTEARRAY)).block();
 
-        byte[] bytes = testee().readBytes(blobId).block();
+        byte[] bytes = testee().readBytes(BucketName.DEFAULT, blobId).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEmpty();
     }
@@ -111,7 +111,7 @@ public interface BlobStoreContract {
 
     @Test
     default void readBytesShouldThrowWhenNoExisting() {
-        assertThatThrownBy(() -> testee().readBytes(blobIdFactory().from("unknown")).block())
+        assertThatThrownBy(() -> testee().readBytes(BucketName.DEFAULT, blobIdFactory().from("unknown")).block())
             .isExactlyInstanceOf(ObjectStoreException.class);
     }
 
@@ -119,7 +119,7 @@ public interface BlobStoreContract {
     default void readBytesShouldReturnSavedData() {
         BlobId blobId = testee().save(BucketName.DEFAULT, SHORT_BYTEARRAY).block();
 
-        byte[] bytes = testee().readBytes(blobId).block();
+        byte[] bytes = testee().readBytes(BucketName.DEFAULT, blobId).block();
 
         assertThat(bytes).isEqualTo(SHORT_BYTEARRAY);
     }
@@ -128,7 +128,7 @@ public interface BlobStoreContract {
     default void readBytesShouldReturnLongSavedData() {
         BlobId blobId = testee().save(BucketName.DEFAULT, ELEVEN_KILOBYTES).block();
 
-        byte[] bytes = testee().readBytes(blobId).block();
+        byte[] bytes = testee().readBytes(BucketName.DEFAULT, blobId).block();
 
         assertThat(bytes).isEqualTo(ELEVEN_KILOBYTES);
     }
@@ -137,14 +137,14 @@ public interface BlobStoreContract {
     default void readBytesShouldReturnBigSavedData() {
         BlobId blobId = testee().save(BucketName.DEFAULT, TWELVE_MEGABYTES).block();
 
-        byte[] bytes = testee().readBytes(blobId).block();
+        byte[] bytes = testee().readBytes(BucketName.DEFAULT, blobId).block();
 
         assertThat(bytes).isEqualTo(TWELVE_MEGABYTES);
     }
 
     @Test
     default void readShouldThrowWhenNoExistingStream() {
-        assertThatThrownBy(() -> testee().read(blobIdFactory().from("unknown")))
+        assertThatThrownBy(() -> testee().read(BucketName.DEFAULT, blobIdFactory().from("unknown")))
             .isInstanceOf(ObjectStoreException.class);
     }
 
@@ -152,7 +152,7 @@ public interface BlobStoreContract {
     default void readShouldReturnSavedData() {
         BlobId blobId = testee().save(BucketName.DEFAULT, SHORT_BYTEARRAY).block();
 
-        InputStream read = testee().read(blobId);
+        InputStream read = testee().read(BucketName.DEFAULT, blobId);
 
         assertThat(read).hasSameContentAs(new ByteArrayInputStream(SHORT_BYTEARRAY));
     }
@@ -161,7 +161,7 @@ public interface BlobStoreContract {
     default void readShouldReturnLongSavedData() {
         BlobId blobId = testee().save(BucketName.DEFAULT, ELEVEN_KILOBYTES).block();
 
-        InputStream read = testee().read(blobId);
+        InputStream read = testee().read(BucketName.DEFAULT, blobId);
 
         assertThat(read).hasSameContentAs(new ByteArrayInputStream(ELEVEN_KILOBYTES));
     }
@@ -171,7 +171,7 @@ public interface BlobStoreContract {
         // 12 MB of text
         BlobId blobId = testee().save(BucketName.DEFAULT, TWELVE_MEGABYTES).block();
 
-        InputStream read = testee().read(blobId);
+        InputStream read = testee().read(BucketName.DEFAULT, blobId);
 
         assertThat(read).hasSameContentAs(new ByteArrayInputStream(TWELVE_MEGABYTES));
     }

@@ -75,7 +75,7 @@ public class CassandraBlobsDAOTest implements MetricableBlobStoreContract {
         String longString = Strings.repeat("0123456789\n", MULTIPLE_CHUNK_SIZE);
         BlobId blobId = testee.save(BucketName.DEFAULT, longString).block();
 
-        byte[] bytes = testee.readBytes(blobId).block();
+        byte[] bytes = testee.readBytes(BucketName.DEFAULT, blobId).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEqualTo(longString);
     }
@@ -83,7 +83,7 @@ public class CassandraBlobsDAOTest implements MetricableBlobStoreContract {
     @Test
     void blobStoreShouldSupport100MBBlob() {
         BlobId blobId = testee.save(BucketName.DEFAULT, new ZeroedInputStream(100_000_000)).block();
-        InputStream bytes = testee.read(blobId);
+        InputStream bytes = testee.read(BucketName.DEFAULT, blobId);
         assertThat(bytes).hasSameContentAs(new ZeroedInputStream(100_000_000));
     }
 
