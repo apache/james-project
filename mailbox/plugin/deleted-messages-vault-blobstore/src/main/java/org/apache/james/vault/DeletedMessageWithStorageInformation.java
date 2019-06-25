@@ -24,19 +24,19 @@ import java.util.Objects;
 import com.google.common.base.Preconditions;
 
 public class DeletedMessageWithStorageInformation {
-    private final DeletedMessage deletedmessage;
+    private final DeletedMessage deletedMessage;
     private final StorageInformation storageInformation;
 
-    public DeletedMessageWithStorageInformation(DeletedMessage deletedmessage, StorageInformation storageInformation) {
-        Preconditions.checkNotNull(deletedmessage);
+    public DeletedMessageWithStorageInformation(DeletedMessage deletedMessage, StorageInformation storageInformation) {
+        Preconditions.checkNotNull(deletedMessage);
         Preconditions.checkNotNull(storageInformation);
 
-        this.deletedmessage = deletedmessage;
+        this.deletedMessage = deletedMessage;
         this.storageInformation = storageInformation;
     }
 
-    public DeletedMessage getDeletedmessage() {
-        return deletedmessage;
+    public DeletedMessage getDeletedMessage() {
+        return deletedMessage;
     }
 
     public StorageInformation getStorageInformation() {
@@ -48,7 +48,7 @@ public class DeletedMessageWithStorageInformation {
         if (o instanceof DeletedMessageWithStorageInformation) {
             DeletedMessageWithStorageInformation that = (DeletedMessageWithStorageInformation) o;
 
-            return Objects.equals(this.deletedmessage, that.deletedmessage)
+            return Objects.equals(this.deletedMessage, that.deletedMessage)
                 && Objects.equals(this.storageInformation, that.storageInformation);
         }
         return false;
@@ -56,6 +56,6 @@ public class DeletedMessageWithStorageInformation {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(deletedmessage, storageInformation);
+        return Objects.hash(deletedMessage, storageInformation);
     }
 }

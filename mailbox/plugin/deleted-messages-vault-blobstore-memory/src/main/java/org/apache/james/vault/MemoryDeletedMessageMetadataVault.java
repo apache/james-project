@@ -19,40 +19,94 @@
 
 package org.apache.james.vault;
 
-import org.apache.commons.lang3.NotImplementedException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
 import org.reactivestreams.Publisher;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Table;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 public class MemoryDeletedMessageMetadataVault implements DeletedMessageMetadataVault {
+    private final Table<BucketName, User, Map<MessageId, DeletedMessageWithStorageInformation>> table;
+
+    public MemoryDeletedMessageMetadataVault() {
+        table = HashBasedTable.create();
+    }
+
     @Override
     public Publisher<Void> store(DeletedMessageWithStorageInformation deletedMessage) {
-        throw new NotImplementedException("Not yet implemented");
+        BucketName bucketName = deletedMessage.getStorageInformation().getBucketName();
+        User owner = deletedMessage.getDeletedMessage().getOwner();
+        MessageId messageId = deletedMessage.getDeletedMessage().getMessageId();
+
+        return Mono.fromRunnable(() -> {
+            synchronized (table) {
+                Map<MessageId, DeletedMessageWithStorageInformation> userVault = userVault(bucketName, owner);
+                userVault.put(messageId, deletedMessage);
+                table.put(bucketName, owner, userVault);
+            }
+        });
     }
 
     @Override
     public Publisher<Void> removeBucket(BucketName bucketName) {
-        throw new NotImplementedException("Not yet implemented");
+        return Mono.fromRunnable(() -> {
+            synchronized (table) {
+                table.row(bucketName).clear();
+            }
+        });
     }
 
     @Override
     public Publisher<Void> remove(BucketName bucketName, User user, MessageId messageId) {
-        throw new NotImplementedException("Not yet implemented");
+        return Mono.fromRunnable(() -> {
+            synchronized (table) {
+                userVault(bucketName, user).remove(messageId);
+            }
+        });
     }
 
     @Override
     public Publisher<StorageInformation> retrieveStorageInformation(User user, MessageId messageId) {
-        throw new NotImplementedException("Not yet implemented");
+        return Flux.from(listBuckets())
+            .concatMap(bucket -> {
+                synchronized (table) {
+                    return Mono.justOrEmpty(userVault(bucket, user).get(messageId));
+                }
+            })
+            .map(DeletedMessageWithStorageInformation::getStorageInformation)
+            .next();
     }
 
     @Override
     public Publisher<DeletedMessageWithStorageInformation> listMessages(BucketName bucketName, User user) {
-        throw new NotImplementedException("Not yet implemented");
+        synchronized (table) {
+            return Flux.fromIterable(Optional.ofNullable(table.get(bucketName, user))
+                .map(Map::values)
+                .map(ImmutableList::copyOf)
+                .orElse(ImmutableList.of()));
+        }
     }
 
     @Override
     public Publisher<BucketName> listBuckets() {
-        throw new NotImplementedException("Not yet implemented");
+        synchronized (table) {
+            return Flux.fromIterable(ImmutableSet.copyOf(table.rowKeySet()));
+        }
+    }
+
+    private Map<MessageId, DeletedMessageWithStorageInformation> userVault(BucketName bucketName, User owner) {
+        return Optional.ofNullable(table.get(bucketName, owner))
+            .orElse(new HashMap<>());
     }
 }
