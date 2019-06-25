@@ -27,6 +27,8 @@ public final class BucketName {
         return new BucketName(value);
     }
 
+    public static final BucketName DEFAULT = BucketName.of("default");
+
     private final String bucket;
 
     private BucketName(String value) {
