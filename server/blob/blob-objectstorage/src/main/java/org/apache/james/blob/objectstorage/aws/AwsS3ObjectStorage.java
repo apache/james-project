@@ -32,7 +32,7 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.james.blob.objectstorage.ContainerName;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
 import org.apache.james.blob.objectstorage.PutBlobFunction;
 import org.apache.james.util.Size;
@@ -89,17 +89,17 @@ public class AwsS3ObjectStorage {
         executorService.shutdownNow();
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireContainerName daoBuilder(AwsS3AuthConfiguration configuration) {
+    public static ObjectStorageBlobsDAOBuilder.RequireBucketName daoBuilder(AwsS3AuthConfiguration configuration) {
         return ObjectStorageBlobsDAOBuilder.forBlobStore(new BlobStoreBuilder(configuration));
     }
 
-    public Optional<PutBlobFunction> putBlob(ContainerName containerName, AwsS3AuthConfiguration configuration) {
+    public Optional<PutBlobFunction> putBlob(BucketName bucketName, AwsS3AuthConfiguration configuration) {
         return Optional.of((blob) -> {
             File file = null;
             try {
                 file = File.createTempFile(UUID.randomUUID().toString(), ".tmp");
                 FileUtils.copyToFile(blob.getPayload().openStream(), file);
-                putWithRetry(containerName, configuration, blob, file, FIRST_TRY);
+                putWithRetry(bucketName, configuration, blob, file, FIRST_TRY);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             } finally {
@@ -110,21 +110,21 @@ public class AwsS3ObjectStorage {
         });
     }
 
-    private void putWithRetry(ContainerName containerName, AwsS3AuthConfiguration configuration, Blob blob, File file, int tried) {
+    private void putWithRetry(BucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file, int tried) {
         try {
-            put(containerName, configuration, blob, file);
+            put(bucketName, configuration, blob, file);
         } catch (RuntimeException e) {
             if (tried < MAX_RETRY_ON_EXCEPTION) {
-                putWithRetry(containerName, configuration, blob, file, tried + 1);
+                putWithRetry(bucketName, configuration, blob, file, tried + 1);
             } else {
                 throw e;
             }
         }
     }
 
-    private void put(ContainerName containerName, AwsS3AuthConfiguration configuration, Blob blob, File file) {
+    private void put(BucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file) {
         try {
-            PutObjectRequest request = new PutObjectRequest(containerName.value(),
+            PutObjectRequest request = new PutObjectRequest(bucketName.asString(),
                 blob.getMetadata().getName(),
                 file);
 

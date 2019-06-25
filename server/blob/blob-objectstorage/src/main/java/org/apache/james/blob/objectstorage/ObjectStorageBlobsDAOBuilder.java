@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BucketName;
 import org.jclouds.blobstore.BlobStore;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -30,13 +31,13 @@ import com.google.common.base.Preconditions;
 
 public class ObjectStorageBlobsDAOBuilder {
 
-    public static RequireContainerName forBlobStore(Supplier<BlobStore> supplier) {
-        return containerName -> blobIdFactory -> new ReadyToBuild(supplier, blobIdFactory, containerName);
+    public static RequireBucketName forBlobStore(Supplier<BlobStore> supplier) {
+        return bucketName -> blobIdFactory -> new ReadyToBuild(supplier, blobIdFactory, bucketName);
     }
 
     @FunctionalInterface
-    public interface RequireContainerName {
-        RequireBlobIdFactory container(ContainerName containerName);
+    public interface RequireBucketName {
+        RequireBlobIdFactory container(BucketName bucketName);
     }
 
     @FunctionalInterface
@@ -47,14 +48,14 @@ public class ObjectStorageBlobsDAOBuilder {
     public static class ReadyToBuild {
 
         private final Supplier<BlobStore> supplier;
-        private final ContainerName containerName;
+        private final BucketName bucketName;
         private final BlobId.Factory blobIdFactory;
         private Optional<PayloadCodec> payloadCodec;
         private Optional<PutBlobFunction> putBlob;
 
-        public ReadyToBuild(Supplier<BlobStore> supplier, BlobId.Factory blobIdFactory, ContainerName containerName) {
+        public ReadyToBuild(Supplier<BlobStore> supplier, BlobId.Factory blobIdFactory, BucketName bucketName) {
             this.blobIdFactory = blobIdFactory;
-            this.containerName = containerName;
+            this.bucketName = bucketName;
             this.payloadCodec = Optional.empty();
             this.supplier = supplier;
             this.putBlob = Optional.empty();
@@ -76,12 +77,12 @@ public class ObjectStorageBlobsDAOBuilder {
         }
 
         public ObjectStorageBlobsDAO build() {
-            Preconditions.checkState(containerName != null);
+            Preconditions.checkState(bucketName != null);
             Preconditions.checkState(blobIdFactory != null);
 
             BlobStore blobStore = supplier.get();
 
-            return new ObjectStorageBlobsDAO(containerName,
+            return new ObjectStorageBlobsDAO(bucketName,
                 blobIdFactory,
                 blobStore,
                 putBlob.orElse(defaultPutBlob(blobStore)),
@@ -89,7 +90,7 @@ public class ObjectStorageBlobsDAOBuilder {
         }
 
         private PutBlobFunction defaultPutBlob(BlobStore blobStore) {
-            return (blob) -> blobStore.putBlob(containerName.value(), blob);
+            return (blob) -> blobStore.putBlob(bucketName.asString(), blob);
         }
 
         @VisibleForTesting

@@ -33,11 +33,11 @@ public interface ObjectStorageBlobsDAOContract {
 
     String CONTENT = "content";
 
-    ContainerName containerName();
+    BucketName bucketName();
 
     default void assertBlobsDAOCanStoreAndRetrieve(ObjectStorageBlobsDAOBuilder.ReadyToBuild builder) {
         ObjectStorageBlobsDAO dao = builder.build();
-        dao.createContainer(containerName()).block();
+        dao.createContainer(bucketName()).block();
 
         BlobId blobId = dao.save(BucketName.DEFAULT, CONTENT).block();
 

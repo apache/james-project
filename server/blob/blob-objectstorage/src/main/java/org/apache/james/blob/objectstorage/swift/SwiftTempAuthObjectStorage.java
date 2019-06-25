@@ -44,7 +44,7 @@ public class SwiftTempAuthObjectStorage {
     private static final Iterable<Module> JCLOUDS_MODULES =
         ImmutableSet.of(new SLF4JLoggingModule());
 
-    public static ObjectStorageBlobsDAOBuilder.RequireContainerName daoBuilder(Configuration testConfig) {
+    public static ObjectStorageBlobsDAOBuilder.RequireBucketName daoBuilder(Configuration testConfig) {
         return ObjectStorageBlobsDAOBuilder.forBlobStore(new BlobStoreBuilder(testConfig));
     }
 

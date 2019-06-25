@@ -23,8 +23,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.UUID;
 
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOContract;
@@ -36,14 +36,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(DockerAwsS3Extension.class)
 class AwsS3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOContract {
 
-    private ContainerName containerName;
+    private BucketName bucketName;
     private AwsS3AuthConfiguration configuration;
     private AwsS3ObjectStorage awsS3ObjectStorage;
 
     @BeforeEach
     void setUp(DockerAwsS3Container dockerAwsS3Container) {
         awsS3ObjectStorage = new AwsS3ObjectStorage();
-        containerName = ContainerName.of(UUID.randomUUID().toString());
+        bucketName = BucketName.of(UUID.randomUUID().toString());
         configuration = AwsS3AuthConfiguration.builder()
             .endpoint(dockerAwsS3Container.getEndpoint())
             .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
@@ -57,12 +57,12 @@ class AwsS3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOCont
     }
 
     @Override
-    public ContainerName containerName() {
-        return containerName;
+    public BucketName bucketName() {
+        return bucketName;
     }
 
     @Test
-    void containerNameIsMandatoryToBuildBlobsDAO() {
+    void bucketNameIsMandatoryToBuildBlobsDAO() {
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(configuration)
             .container(null)
@@ -75,7 +75,7 @@ class AwsS3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOCont
     void blobIdFactoryIsMandatoryToBuildBlobsDAO() {
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(configuration)
-            .container(containerName)
+            .container(bucketName)
             .blobIdFactory(null);
 
         assertThatThrownBy(builder::build).isInstanceOf(IllegalStateException.class);
@@ -85,9 +85,9 @@ class AwsS3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOCont
     void builtBlobsDAOCanStoreAndRetrieve() {
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(configuration)
-            .container(containerName)
+            .container(bucketName)
             .blobIdFactory(new HashBlobId.Factory())
-            .putBlob(awsS3ObjectStorage.putBlob(containerName, configuration));
+            .putBlob(awsS3ObjectStorage.putBlob(bucketName, configuration));
 
         assertBlobsDAOCanStoreAndRetrieve(builder);
     }

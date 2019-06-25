@@ -53,40 +53,40 @@ public class ObjectStorageBlobsDAO implements BlobStore {
 
     private final BlobId.Factory blobIdFactory;
 
-    private final ContainerName containerName;
+    private final BucketName bucketName;
     private final org.jclouds.blobstore.BlobStore blobStore;
     private final PutBlobFunction putBlobFunction;
     private final PayloadCodec payloadCodec;
 
-    ObjectStorageBlobsDAO(ContainerName containerName, BlobId.Factory blobIdFactory,
+    ObjectStorageBlobsDAO(BucketName bucketName, BlobId.Factory blobIdFactory,
                           org.jclouds.blobstore.BlobStore blobStore,
                           PutBlobFunction putBlobFunction,
                           PayloadCodec payloadCodec) {
         this.blobIdFactory = blobIdFactory;
-        this.containerName = containerName;
+        this.bucketName = bucketName;
         this.blobStore = blobStore;
         this.putBlobFunction = putBlobFunction;
         this.payloadCodec = payloadCodec;
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireContainerName builder(SwiftTempAuthObjectStorage.Configuration testConfig) {
+    public static ObjectStorageBlobsDAOBuilder.RequireBucketName builder(SwiftTempAuthObjectStorage.Configuration testConfig) {
         return SwiftTempAuthObjectStorage.daoBuilder(testConfig);
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireContainerName builder(SwiftKeystone2ObjectStorage.Configuration testConfig) {
+    public static ObjectStorageBlobsDAOBuilder.RequireBucketName builder(SwiftKeystone2ObjectStorage.Configuration testConfig) {
         return SwiftKeystone2ObjectStorage.daoBuilder(testConfig);
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireContainerName builder(SwiftKeystone3ObjectStorage.Configuration testConfig) {
+    public static ObjectStorageBlobsDAOBuilder.RequireBucketName builder(SwiftKeystone3ObjectStorage.Configuration testConfig) {
         return SwiftKeystone3ObjectStorage.daoBuilder(testConfig);
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireContainerName builder(AwsS3AuthConfiguration testConfig) {
+    public static ObjectStorageBlobsDAOBuilder.RequireBucketName builder(AwsS3AuthConfiguration testConfig) {
         return AwsS3ObjectStorage.daoBuilder(testConfig);
     }
 
-    public Mono<ContainerName> createContainer(ContainerName name) {
-        return Mono.fromCallable(() -> blobStore.createContainerInLocation(DEFAULT_LOCATION, name.value()))
+    public Mono<BucketName> createContainer(BucketName name) {
+        return Mono.fromCallable(() -> blobStore.createContainerInLocation(DEFAULT_LOCATION, name.asString()))
             .filter(created -> created == false)
             .doOnNext(ignored -> LOGGER.debug("{} already existed", name))
             .thenReturn(name);
@@ -117,10 +117,10 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     }
 
     private Mono<BlobId> updateBlobId(BlobId from, BlobId to) {
-        String containerName = this.containerName.value();
+        String bucketName = this.bucketName.asString();
         return Mono
-            .fromCallable(() -> blobStore.copyBlob(containerName, from.asString(), containerName, to.asString(), CopyOptions.NONE))
-            .then(Mono.fromRunnable(() -> blobStore.removeBlob(containerName, from.asString())))
+            .fromCallable(() -> blobStore.copyBlob(bucketName, from.asString(), bucketName, to.asString(), CopyOptions.NONE))
+            .then(Mono.fromRunnable(() -> blobStore.removeBlob(bucketName, from.asString())))
             .thenReturn(to);
     }
 
@@ -146,7 +146,7 @@ public class ObjectStorageBlobsDAO implements BlobStore {
 
     @Override
     public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreException {
-        Blob blob = blobStore.getBlob(containerName.value(), blobId.asString());
+        Blob blob = blobStore.getBlob(this.bucketName.asString(), blobId.asString());
 
         try {
             if (blob != null) {
@@ -167,7 +167,7 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     }
 
     public void deleteContainer() {
-        blobStore.deleteContainer(containerName.value());
+        blobStore.deleteContainer(bucketName.asString());
     }
 
     public PayloadCodec getPayloadCodec() {

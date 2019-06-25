@@ -25,8 +25,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.DockerSwift;
 import org.apache.james.blob.objectstorage.DockerSwiftExtension;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
@@ -69,7 +69,7 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
             .credentials(DEMO_PASSWORD)
             .project(Project.of(PROJECT_NAME, DOMAIN_ID));
 
-    private ContainerName containerName;
+    private BucketName bucketName;
 
     private SwiftKeystone3ObjectStorage.Configuration testConfig;
     private DockerSwift dockerSwift;
@@ -78,7 +78,7 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
     @BeforeEach
     void setUp(DockerSwift dockerSwift) {
         this.dockerSwift = dockerSwift;
-        containerName = ContainerName.of(UUID.randomUUID().toString());
+        bucketName = BucketName.of(UUID.randomUUID().toString());
         testConfig = PROJECT_CONFIG
             .endpoint(dockerSwift.keystoneV3Endpoint())
             .build();
@@ -91,12 +91,12 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
     }
 
     @Override
-    public ContainerName containerName() {
-        return containerName;
+    public BucketName bucketName() {
+        return bucketName;
     }
 
     @Test
-    void containerNameIsMandatoryToBuildBlobsDAO() {
+    void bucketNameIsMandatoryToBuildBlobsDAO() {
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(testConfig)
             .container(null)
@@ -109,7 +109,7 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
     void blobIdFactoryIsMandatoryToBuildBlobsDAO() {
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(testConfig)
-            .container(containerName)
+            .container(bucketName)
             .blobIdFactory(null);
 
         assertThatThrownBy(builder::build).isInstanceOf(IllegalStateException.class);
@@ -122,7 +122,7 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
             configBuilders.get(key).endpoint(dockerSwift.keystoneV3Endpoint()).build();
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(config)
-            .container(containerName)
+            .container(bucketName)
             .blobIdFactory(new HashBlobId.Factory());
 
         assertBlobsDAOCanStoreAndRetrieve(builder);

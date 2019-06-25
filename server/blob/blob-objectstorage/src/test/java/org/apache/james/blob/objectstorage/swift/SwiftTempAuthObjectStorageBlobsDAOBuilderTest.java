@@ -24,8 +24,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.net.URI;
 import java.util.UUID;
 
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.DockerSwift;
 import org.apache.james.blob.objectstorage.DockerSwiftExtension;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
@@ -42,13 +42,13 @@ class SwiftTempAuthObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlob
     private static final UserName USER_NAME = UserName.of("tester");
     private static final Credentials PASSWORD = Credentials.of("testing");
     private static final Identity SWIFT_IDENTITY = Identity.of(TENANT_NAME, USER_NAME);
-    private ContainerName containerName;
+    private BucketName bucketName;
     private URI endpoint;
     private SwiftTempAuthObjectStorage.Configuration testConfig;
 
     @BeforeEach
     void setUp(DockerSwift dockerSwift) {
-        containerName = ContainerName.of(UUID.randomUUID().toString());
+        bucketName = BucketName.of(UUID.randomUUID().toString());
         endpoint = dockerSwift.swiftEndpoint();
         testConfig = SwiftTempAuthObjectStorage.configBuilder()
             .endpoint(endpoint)
@@ -60,12 +60,12 @@ class SwiftTempAuthObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlob
     }
 
     @Override
-    public ContainerName containerName() {
-        return containerName;
+    public BucketName bucketName() {
+        return bucketName;
     }
 
     @Test
-    void containerNameIsMandatoryToBuildBlobsDAO() {
+    void bucketNameIsMandatoryToBuildBlobsDAO() {
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(testConfig)
             .container(null)
@@ -78,7 +78,7 @@ class SwiftTempAuthObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlob
     void blobIdFactoryIsMandatoryToBuildBlobsDAO() {
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(testConfig)
-            .container(containerName)
+            .container(bucketName)
             .blobIdFactory(null);
 
         assertThatThrownBy(builder::build).isInstanceOf(IllegalStateException.class);
@@ -88,7 +88,7 @@ class SwiftTempAuthObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlob
     void builtBlobsDAOCanStoreAndRetrieve() {
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(testConfig)
-            .container(containerName)
+            .container(bucketName)
             .blobIdFactory(new HashBlobId.Factory());
 
         assertBlobsDAOCanStoreAndRetrieve(builder);
