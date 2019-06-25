@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
@@ -50,10 +49,10 @@ class Dequeuer {
         private final EnqueueId enqueueId;
         private final Mail mail;
 
-        private RabbitMQMailQueueItem(Consumer<Boolean> ack, EnqueueId enqueueId, Mail mail) {
+        private RabbitMQMailQueueItem(Consumer<Boolean> ack, MailWithEnqueueId mailWithEnqueueId) {
             this.ack = ack;
-            this.enqueueId = enqueueId;
-            this.mail = mail;
+            this.enqueueId = mailWithEnqueueId.getEnqueueId();
+            this.mail = mailWithEnqueueId.getMail();
         }
 
         @Override
@@ -71,12 +70,12 @@ class Dequeuer {
         }
     }
 
-    private final Function<MailReferenceDTO, Pair<EnqueueId, Mail>> mailLoader;
+    private final Function<MailReferenceDTO, MailWithEnqueueId> mailLoader;
     private final Metric dequeueMetric;
     private final MailReferenceSerializer mailReferenceSerializer;
     private final MailQueueView mailQueueView;
 
-    Dequeuer(MailQueueName name, RabbitClient rabbitClient, Function<MailReferenceDTO, Pair<EnqueueId, Mail>> mailLoader,
+    Dequeuer(MailQueueName name, RabbitClient rabbitClient, Function<MailReferenceDTO, MailWithEnqueueId> mailLoader,
              MailReferenceSerializer serializer, MetricFactory metricFactory,
              MailQueueView mailQueueView) {
         this.mailLoader = mailLoader;
@@ -108,28 +107,27 @@ class Dequeuer {
 
     private Mono<RabbitMQMailQueueItem> loadItem(AcknowledgableDelivery response) {
         try {
-            Pair<EnqueueId, Mail> idAndMail = loadMail(response);
-            Mail mail = idAndMail.getRight();
-            ThrowingConsumer<Boolean> ack = ack(response, mail);
-            return Mono.just(new RabbitMQMailQueueItem(ack, idAndMail.getLeft(), mail));
+            MailWithEnqueueId mailWithEnqueueId = loadMail(response);
+            ThrowingConsumer<Boolean> ack = ack(response, mailWithEnqueueId);
+            return Mono.just(new RabbitMQMailQueueItem(ack, mailWithEnqueueId));
         } catch (MailQueue.MailQueueException e) {
             return Mono.error(e);
         }
     }
 
-    private ThrowingConsumer<Boolean> ack(AcknowledgableDelivery response, Mail mail) {
+    private ThrowingConsumer<Boolean> ack(AcknowledgableDelivery response, MailWithEnqueueId mailWithEnqueueId) {
         return success -> {
             if (success) {
                 dequeueMetric.increment();
                 response.ack();
-                mailQueueView.delete(DeleteCondition.withName(mail.getName()));
+                mailQueueView.delete(DeleteCondition.withName(mailWithEnqueueId.getMail().getName()));
             } else {
                 response.nack(REQUEUE);
             }
         };
     }
 
-    private Pair<EnqueueId, Mail> loadMail(Delivery response) throws MailQueue.MailQueueException {
+    private MailWithEnqueueId loadMail(Delivery response) throws MailQueue.MailQueueException {
         MailReferenceDTO mailDTO = toMailReference(response);
         return mailLoader.apply(mailDTO);
     }

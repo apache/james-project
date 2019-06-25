@@ -23,7 +23,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
@@ -39,14 +38,14 @@ class MailLoader {
         this.blobIdFactory = blobIdFactory;
     }
 
-    Pair<EnqueueId, Mail> load(MailReferenceDTO dto) throws MailQueue.MailQueueException {
+    MailWithEnqueueId load(MailReferenceDTO dto) throws MailQueue.MailQueueException {
         try {
             MailReference mailReference = dto.toMailReference(blobIdFactory);
 
             Mail mail = mailReference.getMail();
             MimeMessage mimeMessage = mimeMessageStore.read(mailReference.getPartsId()).block();
             mail.setMessage(mimeMessage);
-            return Pair.of(mailReference.getEnqueueId(), mail);
+            return new MailWithEnqueueId(mailReference.getEnqueueId(), mail);
         } catch (AddressException e) {
             throw new MailQueue.MailQueueException("Failed to parse mail address", e);
         } catch (MessagingException e) {
