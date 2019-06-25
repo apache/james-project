@@ -27,6 +27,7 @@ import java.util.Optional;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 import org.apache.james.blob.objectstorage.aws.AwsS3ObjectStorage;
@@ -92,12 +93,12 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(byte[] data) {
-        return save(new ByteArrayInputStream(data));
+    public Mono<BlobId> save(BucketName bucketName, byte[] data) {
+        return save(bucketName, new ByteArrayInputStream(data));
     }
 
     @Override
-    public Mono<BlobId> save(InputStream data) {
+    public Mono<BlobId> save(BucketName bucketName, InputStream data) {
         Preconditions.checkNotNull(data);
 
         BlobId tmpId = blobIdFactory.randomId();

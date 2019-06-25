@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BucketName;
 
 
 public interface ObjectStorageBlobsDAOContract {
@@ -38,7 +39,7 @@ public interface ObjectStorageBlobsDAOContract {
         ObjectStorageBlobsDAO dao = builder.build();
         dao.createContainer(containerName()).block();
 
-        BlobId blobId = dao.save(CONTENT).block();
+        BlobId blobId = dao.save(BucketName.DEFAULT, CONTENT).block();
 
         InputStream inputStream = dao.read(blobId);
         assertThat(inputStream).hasSameContentAs(IOUtils.toInputStream(CONTENT, StandardCharsets.UTF_8));

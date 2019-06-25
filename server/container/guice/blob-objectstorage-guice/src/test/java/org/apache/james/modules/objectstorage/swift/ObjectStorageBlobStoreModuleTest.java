@@ -26,6 +26,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.DockerSwift;
@@ -141,7 +142,7 @@ class ObjectStorageBlobStoreModuleTest {
 
         BlobStore blobStore = injector.getInstance(Key.get(BlobStore.class, Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION)));
 
-        assertThatCode(() -> blobStore.save(new byte[] {0x00})).doesNotThrowAnyException();
+        assertThatCode(() -> blobStore.save(BucketName.DEFAULT, new byte[] {0x00})).doesNotThrowAnyException();
     }
 
 }

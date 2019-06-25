@@ -25,15 +25,15 @@ import reactor.core.publisher.Mono;
 
 public interface BlobStore {
 
-    Mono<BlobId> save(byte[] data);
+    Mono<BlobId> save(BucketName bucketName, byte[] data);
 
-    Mono<BlobId> save(InputStream data);
+    Mono<BlobId> save(BucketName bucketName, InputStream data);
 
     Mono<byte[]> readBytes(BlobId blobId);
 
     InputStream read(BlobId blobId);
 
-    default Mono<BlobId> save(String data) {
-        return save(data.getBytes(StandardCharsets.UTF_8));
+    default Mono<BlobId> save(BucketName bucketName, String data) {
+        return save(bucketName, data.getBytes(StandardCharsets.UTF_8));
     }
 }

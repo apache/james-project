@@ -32,6 +32,7 @@ import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.migration.Migration;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
@@ -154,7 +155,7 @@ class AttachmentV2MigrationTest {
         when(attachmentDAO.retrieveAll()).thenReturn(Flux.just(
             attachment1,
             attachment2));
-        when(blobsDAO.save(any(byte[].class))).thenThrow(new RuntimeException());
+        when(blobsDAO.save(BucketName.DEFAULT, any(byte[].class))).thenThrow(new RuntimeException());
 
         assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
     }
@@ -169,9 +170,9 @@ class AttachmentV2MigrationTest {
         when(attachmentDAO.retrieveAll()).thenReturn(Flux.just(
             attachment1,
             attachment2));
-        when(blobsDAO.save(attachment1.getBytes()))
+        when(blobsDAO.save(BucketName.DEFAULT, attachment1.getBytes()))
             .thenReturn(Mono.just(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
-        when(blobsDAO.save(attachment2.getBytes()))
+        when(blobsDAO.save(BucketName.DEFAULT, attachment2.getBytes()))
             .thenReturn(Mono.just(BLOB_ID_FACTORY.forPayload(attachment2.getBytes())));
         when(attachmentDAOV2.storeAttachment(any())).thenThrow(new RuntimeException());
 
@@ -188,9 +189,9 @@ class AttachmentV2MigrationTest {
         when(attachmentDAO.retrieveAll()).thenReturn(Flux.just(
             attachment1,
             attachment2));
-        when(blobsDAO.save(attachment1.getBytes()))
+        when(blobsDAO.save(BucketName.DEFAULT, attachment1.getBytes()))
             .thenReturn(Mono.just(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
-        when(blobsDAO.save(attachment2.getBytes()))
+        when(blobsDAO.save(BucketName.DEFAULT, attachment2.getBytes()))
             .thenReturn(Mono.just(BLOB_ID_FACTORY.forPayload(attachment2.getBytes())));
         when(attachmentDAOV2.storeAttachment(any())).thenReturn(Mono.empty());
         when(attachmentDAO.deleteAttachment(any())).thenThrow(new RuntimeException());
@@ -208,9 +209,9 @@ class AttachmentV2MigrationTest {
         when(attachmentDAO.retrieveAll()).thenReturn(Flux.just(
             attachment1,
             attachment2));
-        when(blobsDAO.save(attachment1.getBytes()))
+        when(blobsDAO.save(BucketName.DEFAULT, attachment1.getBytes()))
             .thenReturn(Mono.just(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
-        when(blobsDAO.save(attachment2.getBytes()))
+        when(blobsDAO.save(BucketName.DEFAULT, attachment2.getBytes()))
             .thenThrow(new RuntimeException());
         when(attachmentDAOV2.storeAttachment(any())).thenReturn(Mono.empty());
         when(attachmentDAO.deleteAttachment(any())).thenReturn(Mono.empty());

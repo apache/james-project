@@ -57,6 +57,7 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Attachments;
@@ -182,8 +183,8 @@ public class CassandraMessageDAO {
             byte[] headerContent = IOUtils.toByteArray(message.getHeaderContent());
             byte[] bodyContent = IOUtils.toByteArray(message.getBodyContent());
 
-            Mono<BlobId> bodyFuture = blobStore.save(bodyContent);
-            Mono<BlobId> headerFuture = blobStore.save(headerContent);
+            Mono<BlobId> bodyFuture = blobStore.save(BucketName.DEFAULT, bodyContent);
+            Mono<BlobId> headerFuture = blobStore.save(BucketName.DEFAULT, headerContent);
 
             return headerFuture.zipWith(bodyFuture);
         } catch (IOException e) {

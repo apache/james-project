@@ -31,6 +31,7 @@ import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
@@ -134,7 +135,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
             .payloadCodec(new AESPayloadCodec(CRYPTO_CONFIG))
             .build();
         String content = "James is the best!";
-        BlobId blobId = encryptedDao.save(content).block();
+        BlobId blobId = encryptedDao.save(BucketName.DEFAULT, content).block();
 
         InputStream read = encryptedDao.read(blobId);
         String expectedContent = IOUtils.toString(read, Charsets.UTF_8);
@@ -150,7 +151,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
             .payloadCodec(new AESPayloadCodec(CRYPTO_CONFIG))
             .build();
         String content = "James is the best!";
-        BlobId blobId = encryptedDao.save(content).block();
+        BlobId blobId = encryptedDao.save(BucketName.DEFAULT, content).block();
 
         InputStream encryptedIs = testee.read(blobId);
         assertThat(encryptedIs).isNotNull();
@@ -173,7 +174,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     void saveBytesShouldNotCompleteWhenDoesNotAwait() {
         // String need to be big enough to get async thread busy hence could not return result instantly
         Mono<BlobId> blobIdFuture = testee
-            .save(BIG_STRING.getBytes(StandardCharsets.UTF_8))
+            .save(BucketName.DEFAULT, BIG_STRING.getBytes(StandardCharsets.UTF_8))
             .subscribeOn(Schedulers.elastic());
         assertThat(blobIdFuture.toFuture()).isNotCompleted();
     }
@@ -181,7 +182,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     @Test
     void saveStringShouldNotCompleteWhenDoesNotAwait() {
         Mono<BlobId> blobIdFuture = testee
-            .save(BIG_STRING)
+            .save(BucketName.DEFAULT, BIG_STRING)
             .subscribeOn(Schedulers.elastic());
         assertThat(blobIdFuture.toFuture()).isNotCompleted();
     }
@@ -189,14 +190,14 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     @Test
     void saveInputStreamShouldNotCompleteWhenDoesNotAwait() {
         Mono<BlobId> blobIdFuture = testee
-            .save(new ByteArrayInputStream(BIG_STRING.getBytes(StandardCharsets.UTF_8)))
+            .save(BucketName.DEFAULT, new ByteArrayInputStream(BIG_STRING.getBytes(StandardCharsets.UTF_8)))
             .subscribeOn(Schedulers.elastic());
         assertThat(blobIdFuture.toFuture()).isNotCompleted();
     }
 
     @Test
     void readBytesShouldNotCompleteWhenDoesNotAwait() {
-        BlobId blobId = testee().save(BIG_STRING).block();
+        BlobId blobId = testee().save(BucketName.DEFAULT, BIG_STRING).block();
         Mono<byte[]> resultFuture = testee.readBytes(blobId).subscribeOn(Schedulers.elastic());
         assertThat(resultFuture.toFuture()).isNotCompleted();
     }

@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectStoreException;
 
 import com.google.common.base.Preconditions;
@@ -47,7 +48,7 @@ public class MemoryBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(byte[] data) {
+    public Mono<BlobId> save(BucketName bucketName, byte[] data) {
         Preconditions.checkNotNull(data);
         BlobId blobId = factory.forPayload(data);
 
@@ -57,11 +58,11 @@ public class MemoryBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(InputStream data) {
+    public Mono<BlobId> save(BucketName bucketName, InputStream data) {
         Preconditions.checkNotNull(data);
         try {
             byte[] bytes = IOUtils.toByteArray(data);
-            return save(bytes);
+            return save(bucketName, bytes);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.export.api.BlobExportMechanism;
 import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.core.MailAddress;
@@ -76,7 +77,7 @@ class ExportService {
         try (FileBackedOutputStream fileOutputStream = new FileBackedOutputStream(FileUtils.ONE_MB_BI.intValue())) {
             zipper.zip(contentLoader(user), messages.toStream(), fileOutputStream);
             ByteSource byteSource = fileOutputStream.asByteSource();
-            return blobStore.save(byteSource.openStream()).block();
+            return blobStore.save(BucketName.DEFAULT, byteSource.openStream()).block();
         }
     }
 

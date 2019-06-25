@@ -29,6 +29,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
@@ -72,7 +73,7 @@ public class CassandraBlobsDAOTest implements MetricableBlobStoreContract {
     @Test
     void readBytesShouldReturnSplitSavedDataByChunk() {
         String longString = Strings.repeat("0123456789\n", MULTIPLE_CHUNK_SIZE);
-        BlobId blobId = testee.save(longString).block();
+        BlobId blobId = testee.save(BucketName.DEFAULT, longString).block();
 
         byte[] bytes = testee.readBytes(blobId).block();
 
@@ -81,7 +82,7 @@ public class CassandraBlobsDAOTest implements MetricableBlobStoreContract {
 
     @Test
     void blobStoreShouldSupport100MBBlob() {
-        BlobId blobId = testee.save(new ZeroedInputStream(100_000_000)).block();
+        BlobId blobId = testee.save(BucketName.DEFAULT, new ZeroedInputStream(100_000_000)).block();
         InputStream bytes = testee.read(blobId);
         assertThat(bytes).hasSameContentAs(new ZeroedInputStream(100_000_000));
     }

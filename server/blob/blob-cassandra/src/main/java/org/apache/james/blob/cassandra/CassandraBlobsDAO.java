@@ -39,6 +39,7 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.cassandra.BlobTable.BlobParts;
@@ -114,7 +115,7 @@ public class CassandraBlobsDAO implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(byte[] data) {
+    public Mono<BlobId> save(BucketName bucketName, byte[] data) {
         Preconditions.checkNotNull(data);
 
         return saveAsMono(data);
@@ -212,7 +213,7 @@ public class CassandraBlobsDAO implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(InputStream data) {
+    public Mono<BlobId> save(BucketName bucketName, InputStream data) {
         Preconditions.checkNotNull(data);
         return Mono.fromCallable(() -> IOUtils.toByteArray(data))
             .flatMap(this::saveAsMono);

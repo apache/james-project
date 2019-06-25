@@ -96,7 +96,7 @@ public interface Store<T, I> {
 
         private Mono<Tuple2<BlobType, BlobId>> saveEntry(Pair<BlobType, InputStream> entry) {
             return Mono.just(entry.getLeft())
-                .zipWith(blobStore.save(entry.getRight()));
+                .zipWith(blobStore.save(BucketName.DEFAULT, entry.getRight()));
         }
 
         @Override

@@ -57,8 +57,8 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
 
     @Test
     default void saveBytesShouldPublishSaveBytesTimerMetrics() {
-        testee().save(BYTES_CONTENT).block();
-        testee().save(BYTES_CONTENT).block();
+        testee().save(BucketName.DEFAULT, BYTES_CONTENT).block();
+        testee().save(BucketName.DEFAULT, BYTES_CONTENT).block();
 
         assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_BYTES_TIMER_NAME))
             .hasSize(2);
@@ -66,8 +66,8 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
 
     @Test
     default void saveStringShouldPublishSaveBytesTimerMetrics() {
-        testee().save(STRING_CONTENT).block();
-        testee().save(STRING_CONTENT).block();
+        testee().save(BucketName.DEFAULT, STRING_CONTENT).block();
+        testee().save(BucketName.DEFAULT, STRING_CONTENT).block();
 
         assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_BYTES_TIMER_NAME))
             .hasSize(2);
@@ -75,8 +75,8 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
 
     @Test
     default void saveInputStreamShouldPublishSaveInputStreamTimerMetrics() {
-        testee().save(new ByteArrayInputStream(BYTES_CONTENT)).block();
-        testee().save(new ByteArrayInputStream(BYTES_CONTENT)).block();
+        testee().save(BucketName.DEFAULT, new ByteArrayInputStream(BYTES_CONTENT)).block();
+        testee().save(BucketName.DEFAULT, new ByteArrayInputStream(BYTES_CONTENT)).block();
 
         assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_INPUT_STREAM_TIMER_NAME))
             .hasSize(2);
@@ -84,7 +84,7 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
 
     @Test
     default void readBytesShouldPublishReadBytesTimerMetrics() {
-        BlobId blobId = testee().save(BYTES_CONTENT).block();
+        BlobId blobId = testee().save(BucketName.DEFAULT, BYTES_CONTENT).block();
         testee().readBytes(blobId).block();
         testee().readBytes(blobId).block();
 
@@ -94,7 +94,7 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
 
     @Test
     default void readShouldPublishReadTimerMetrics() {
-        BlobId blobId = testee().save(BYTES_CONTENT).block();
+        BlobId blobId = testee().save(BucketName.DEFAULT, BYTES_CONTENT).block();
         testee().read(blobId);
         testee().read(blobId);
 

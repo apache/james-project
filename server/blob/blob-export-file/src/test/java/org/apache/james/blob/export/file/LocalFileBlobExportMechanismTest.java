@@ -37,6 +37,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.export.api.FileExtension;
@@ -79,7 +80,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void exportingBlobShouldSendAMail() {
-        BlobId blobId = blobStore.save(BLOB_CONTENT).block();
+        BlobId blobId = blobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
 
         String explanation = "The content of a deleted message vault had been shared with you.";
         testee.blobId(blobId)
@@ -112,7 +113,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void exportingBlobShouldCreateAFileWithTheCorrespondingContent(FileSystem fileSystem) {
-        BlobId blobId = blobStore.save(BLOB_CONTENT).block();
+        BlobId blobId = blobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
 
         testee.blobId(blobId)
             .with(MailAddressFixture.RECIPIENT1)
@@ -150,7 +151,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void exportingBlobShouldCreateAFileWithoutExtensionWhenNotDeclaringExtension() {
-        BlobId blobId = blobStore.save(BLOB_CONTENT).block();
+        BlobId blobId = blobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
 
         testee.blobId(blobId)
             .with(MailAddressFixture.RECIPIENT1)
@@ -174,7 +175,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void exportingBlobShouldCreateAFileWithExtensionWhenDeclaringExtension() {
-        BlobId blobId = blobStore.save(BLOB_CONTENT).block();
+        BlobId blobId = blobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
 
         testee.blobId(blobId)
             .with(MailAddressFixture.RECIPIENT1)
@@ -199,7 +200,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void exportingBlobShouldCreateAFileWithPrefixWhenDeclaringPrefix() {
-        BlobId blobId = blobStore.save(BLOB_CONTENT).block();
+        BlobId blobId = blobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
         String filePrefix = "deleted-message-of-bob@james.org";
 
         testee.blobId(blobId)
