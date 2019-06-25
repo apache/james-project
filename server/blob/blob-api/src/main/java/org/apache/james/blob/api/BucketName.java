@@ -19,8 +19,12 @@
 
 package org.apache.james.blob.api;
 
+import java.util.Objects;
+
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 public final class BucketName {
     public static BucketName of(String value) {
@@ -29,37 +33,37 @@ public final class BucketName {
 
     public static final BucketName DEFAULT = BucketName.of("default");
 
-    private final String bucket;
+    private final String value;
 
     private BucketName(String value) {
-        this.bucket = value;
+        Preconditions.checkNotNull(value);
+        Preconditions.checkArgument(StringUtils.isNotBlank(value), "`value` cannot be blank");
+
+        this.value = value;
     }
 
-    public String value() {
-        return bucket;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        BucketName that = (BucketName) o;
-        return Objects.equal(bucket, that.bucket);
+    public String asString() {
+        return value;
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hashCode(bucket);
+    public final boolean equals(Object o) {
+        if (o instanceof BucketName) {
+            BucketName that = (BucketName) o;
+            return Objects.equals(this.value, that.value);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(value);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("bucket", bucket)
+            .add("value", value)
             .toString();
     }
 }

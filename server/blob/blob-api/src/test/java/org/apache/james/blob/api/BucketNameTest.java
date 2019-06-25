@@ -19,6 +19,9 @@
 
 package org.apache.james.blob.api;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -29,6 +32,24 @@ class BucketNameTest {
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(BucketName.class)
             .verify();
+    }
+
+    @Test
+    void newBucketNameShouldThrowWhenNullValue() {
+        assertThatThrownBy(() -> BucketName.of(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void newBucketNameShouldThrowWhenEmptyValue() {
+        assertThatThrownBy(() -> BucketName.of(""))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void newBucketNameShouldThrowWhenBlankValue() {
+        assertThatThrownBy(() -> BucketName.of("   "))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
 }
