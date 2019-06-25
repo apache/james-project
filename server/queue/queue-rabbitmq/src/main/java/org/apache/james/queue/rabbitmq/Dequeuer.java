@@ -120,7 +120,7 @@ class Dequeuer {
             if (success) {
                 dequeueMetric.increment();
                 response.ack();
-                mailQueueView.delete(DeleteCondition.withName(mailWithEnqueueId.getMail().getName()));
+                mailQueueView.delete(DeleteCondition.withEnqueueId(mailWithEnqueueId.getEnqueueId()));
             } else {
                 response.nack(REQUEUE);
             }
