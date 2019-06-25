@@ -52,12 +52,16 @@
         <module>memory</module>
 
         <module>plugin/deleted-messages-vault</module>
+        <module>plugin/deleted-messages-vault-blobstore</module>
+
         <module>plugin/quota-mailing</module>
         <module>plugin/quota-mailing-cassandra</module>
         <module>plugin/quota-mailing-memory</module>
+
         <module>plugin/quota-search</module>
         <module>plugin/quota-search-elasticsearch</module>
         <module>plugin/quota-search-scanning</module>
+
         <module>plugin/spamassassin</module>
 
         <module>scanning-search</module>
