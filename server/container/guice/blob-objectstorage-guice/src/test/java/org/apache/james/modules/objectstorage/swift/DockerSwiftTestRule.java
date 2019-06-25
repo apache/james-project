@@ -26,7 +26,7 @@ import javax.inject.Inject;
 
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.GuiceModuleTestRule;
-import org.apache.james.blob.objectstorage.ContainerName;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.DockerSwiftRule;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
 import org.apache.james.blob.objectstorage.PayloadCodec;
@@ -106,11 +106,11 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
             .endpoint(swiftContainer.dockerSwift().keystoneV2Endpoint())
             .build();
 
-        ContainerName containerName = ContainerName.of(UUID.randomUUID().toString());
+        BucketName bucketName = BucketName.of(UUID.randomUUID().toString());
         ObjectStorageBlobConfiguration configuration = ObjectStorageBlobConfiguration.builder()
             .codec(payloadCodecFactory)
             .provider(ObjectStorageProvider.SWIFT)
-            .container(containerName)
+            .bucketName(bucketName)
             .authConfiguration(new SwiftAuthConfiguration(SwiftKeystone2ObjectStorage.AUTH_API_NAME,
                 Optional.empty(),
                 Optional.of(authConfiguration),

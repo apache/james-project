@@ -25,7 +25,7 @@ import javax.inject.Inject;
 
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.GuiceModuleTestRule;
-import org.apache.james.blob.objectstorage.ContainerName;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.DockerAwsS3Singleton;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
 import org.apache.james.blob.objectstorage.PayloadCodec;
@@ -105,7 +105,7 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
 
     @Override
     public Module getModule() {
-        ContainerName containerName = ContainerName.of(UUID.randomUUID().toString());
+        BucketName bucketName = BucketName.of(UUID.randomUUID().toString());
         AwsS3AuthConfiguration authConfiguration = AwsS3AuthConfiguration.builder()
             .endpoint(DockerAwsS3Singleton.singleton.getEndpoint())
             .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
@@ -115,7 +115,7 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
         ObjectStorageBlobConfiguration configuration = ObjectStorageBlobConfiguration.builder()
             .codec(payloadCodecFactory)
             .provider(ObjectStorageProvider.AWSS3)
-            .container(containerName)
+            .bucketName(bucketName)
             .authConfiguration(authConfiguration)
             .aesSalt("c603a7327ee3dcbc031d8d34b1096c605feca5e1")
             .aesPassword("dockerAwsS3Encryption".toCharArray())

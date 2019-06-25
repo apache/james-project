@@ -76,7 +76,7 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
         return dao;
     }
 
-    private ObjectStorageBlobsDAOBuilder.RequireContainerName selectDaoBuilder(ObjectStorageBlobConfiguration configuration) {
+    private ObjectStorageBlobsDAOBuilder.RequireBucketName selectDaoBuilder(ObjectStorageBlobConfiguration configuration) {
         switch (configuration.getProvider()) {
             case SWIFT:
                 return SwiftObjectStorage.builder(configuration);

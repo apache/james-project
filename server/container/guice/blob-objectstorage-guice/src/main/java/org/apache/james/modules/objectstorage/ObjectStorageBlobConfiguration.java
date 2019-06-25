@@ -25,7 +25,7 @@ import java.util.Optional;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.blob.objectstorage.ContainerName;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.PayloadCodec;
 import org.apache.james.blob.objectstorage.SpecificAuthConfiguration;
 import org.apache.james.modules.objectstorage.aws.s3.AwsS3ConfigurationReader;
@@ -70,7 +70,7 @@ public class ObjectStorageBlobConfiguration {
         return builder()
             .codec(payloadCodecFactory)
             .provider(ObjectStorageProvider.from(provider))
-            .container(ContainerName.of(namespace))
+            .bucketName(BucketName.of(namespace))
             .authConfiguration(authConfiguration(provider, configuration))
             .aesSalt(aesSalt)
             .aesPassword(aesPassword)
@@ -104,7 +104,7 @@ public class ObjectStorageBlobConfiguration {
 
         @FunctionalInterface
         interface RequireContainerName {
-            RequireAuthConfiguration container(ContainerName container);
+            RequireAuthConfiguration bucketName(BucketName bucketName);
         }
 
         @FunctionalInterface
@@ -116,7 +116,7 @@ public class ObjectStorageBlobConfiguration {
 
             private final PayloadCodecFactory payloadCodecFactory;
             private final ObjectStorageProvider provider;
-            private final ContainerName container;
+            private final BucketName bucketName;
             private final SpecificAuthConfiguration specificAuthConfiguration;
 
             private Optional<String> aesSalt;
@@ -124,13 +124,13 @@ public class ObjectStorageBlobConfiguration {
 
             public ReadyToBuild(PayloadCodecFactory payloadCodecFactory,
                                 ObjectStorageProvider provider,
-                                ContainerName container,
+                                BucketName bucketName,
                                 SpecificAuthConfiguration specificAuthConfiguration) {
                 this.aesSalt = Optional.empty();
                 this.aesPassword = Optional.empty();
                 this.payloadCodecFactory = payloadCodecFactory;
                 this.provider = provider;
-                this.container = container;
+                this.bucketName = bucketName;
                 this.specificAuthConfiguration = specificAuthConfiguration;
             }
 
@@ -160,7 +160,7 @@ public class ObjectStorageBlobConfiguration {
                         .orElseThrow(() -> new IllegalStateException("AES code requires an non-empty password parameter"));
                 }
 
-                return new ObjectStorageBlobConfiguration(payloadCodecFactory, provider, container, specificAuthConfiguration, aesSalt, aesPassword);
+                return new ObjectStorageBlobConfiguration(payloadCodecFactory, provider, bucketName, specificAuthConfiguration, aesSalt, aesPassword);
             }
 
         }
@@ -168,7 +168,7 @@ public class ObjectStorageBlobConfiguration {
     }
 
     private final PayloadCodecFactory payloadCodec;
-    private final ContainerName namespace;
+    private final BucketName namespace;
     private final ObjectStorageProvider provider;
     private final SpecificAuthConfiguration specificAuthConfiguration;
     private Optional<String> aesSalt;
@@ -176,7 +176,7 @@ public class ObjectStorageBlobConfiguration {
 
     @VisibleForTesting
     ObjectStorageBlobConfiguration(PayloadCodecFactory payloadCodec, ObjectStorageProvider provider,
-                                   ContainerName namespace,
+                                   BucketName namespace,
                                    SpecificAuthConfiguration specificAuthConfiguration,
                                    Optional<String> aesSalt,
                                    Optional<char[]> aesPassword) {
@@ -188,7 +188,7 @@ public class ObjectStorageBlobConfiguration {
         this.aesPassword = aesPassword;
     }
 
-    public ContainerName getNamespace() {
+    public BucketName getNamespace() {
         return namespace;
     }
 

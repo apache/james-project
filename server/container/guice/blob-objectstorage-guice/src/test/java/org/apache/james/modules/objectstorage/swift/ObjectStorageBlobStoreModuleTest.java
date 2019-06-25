@@ -28,7 +28,6 @@ import java.util.stream.Stream;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.MetricableBlobStore;
-import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.DockerSwift;
 import org.apache.james.blob.objectstorage.DockerSwiftExtension;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
@@ -80,7 +79,7 @@ class ObjectStorageBlobStoreModuleTest {
             ObjectStorageBlobConfiguration tmpAuth = ObjectStorageBlobConfiguration.builder()
                 .codec(PayloadCodecFactory.DEFAULT)
                 .provider(ObjectStorageProvider.SWIFT)
-                .container(generateContainerName())
+                .bucketName(generateBucketName())
                 .authConfiguration(new SwiftAuthConfiguration(SwiftTempAuthObjectStorage.AUTH_API_NAME,
                     Optional.of(SwiftTempAuthObjectStorage.configBuilder()
                         .endpoint(dockerSwift.swiftEndpoint())
@@ -96,7 +95,7 @@ class ObjectStorageBlobStoreModuleTest {
             ObjectStorageBlobConfiguration keystone2 = ObjectStorageBlobConfiguration.builder()
                 .codec(PayloadCodecFactory.DEFAULT)
                 .provider(ObjectStorageProvider.SWIFT)
-                .container(generateContainerName())
+                .bucketName(generateBucketName())
                 .authConfiguration(new SwiftAuthConfiguration(SwiftKeystone2ObjectStorage.AUTH_API_NAME,
                     Optional.empty(),
                     Optional.of(SwiftKeystone2ObjectStorage.configBuilder()
@@ -110,7 +109,7 @@ class ObjectStorageBlobStoreModuleTest {
             ObjectStorageBlobConfiguration keystone3 = ObjectStorageBlobConfiguration.builder()
                 .codec(PayloadCodecFactory.DEFAULT)
                 .provider(ObjectStorageProvider.SWIFT)
-                .container(generateContainerName())
+                .bucketName(generateBucketName())
                 .authConfiguration(new SwiftAuthConfiguration(SwiftKeystone3ObjectStorage.AUTH_API_NAME,
                     Optional.empty(),
                     Optional.empty(),
@@ -125,8 +124,8 @@ class ObjectStorageBlobStoreModuleTest {
         }
     }
 
-    private static ContainerName generateContainerName() {
-        return ContainerName.of(UUID.randomUUID().toString());
+    private static BucketName generateBucketName() {
+        return BucketName.of(UUID.randomUUID().toString());
     }
 
     @ParameterizedTest

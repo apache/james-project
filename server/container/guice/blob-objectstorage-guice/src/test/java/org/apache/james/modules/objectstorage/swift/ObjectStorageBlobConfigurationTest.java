@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.blob.objectstorage.ContainerName;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.swift.Credentials;
 import org.apache.james.blob.objectstorage.swift.DomainName;
 import org.apache.james.blob.objectstorage.swift.IdentityV3;
@@ -97,7 +97,7 @@ class ObjectStorageBlobConfigurationTest {
                 ObjectStorageBlobConfiguration.builder()
                     .codec(PayloadCodecFactory.DEFAULT)
                     .provider(ObjectStorageProvider.SWIFT)
-                    .container(ContainerName.of("foo"))
+                    .bucketName(BucketName.of("foo"))
                     .authConfiguration(new SwiftAuthConfiguration(SwiftTempAuthObjectStorage.AUTH_API_NAME,
                         Optional.of(SwiftTempAuthObjectStorage.configBuilder()
                             .endpoint(URI.create("http://swift/endpoint"))
@@ -130,7 +130,7 @@ class ObjectStorageBlobConfigurationTest {
                 ObjectStorageBlobConfiguration.builder()
                     .codec(PayloadCodecFactory.DEFAULT)
                     .provider(ObjectStorageProvider.SWIFT)
-                    .container(ContainerName.of("foo"))
+                    .bucketName(BucketName.of("foo"))
                     .authConfiguration(new SwiftAuthConfiguration(SwiftKeystone2ObjectStorage.AUTH_API_NAME,
                         Optional.empty(),
                         Optional.of(SwiftKeystone2ObjectStorage.configBuilder()
@@ -162,7 +162,7 @@ class ObjectStorageBlobConfigurationTest {
                 ObjectStorageBlobConfiguration.builder()
                     .codec(PayloadCodecFactory.DEFAULT)
                     .provider(ObjectStorageProvider.SWIFT)
-                    .container(ContainerName.of("foo"))
+                    .bucketName(BucketName.of("foo"))
                     .authConfiguration(new SwiftAuthConfiguration(SwiftKeystone3ObjectStorage.AUTH_API_NAME,
                         Optional.empty(),
                         Optional.empty(),

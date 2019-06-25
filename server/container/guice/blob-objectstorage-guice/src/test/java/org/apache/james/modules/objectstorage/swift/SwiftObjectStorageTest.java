@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.Optional;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.james.blob.objectstorage.ContainerName;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.modules.objectstorage.ObjectStorageBlobConfiguration;
 import org.apache.james.modules.objectstorage.ObjectStorageProvider;
 import org.apache.james.modules.objectstorage.PayloadCodecFactory;
@@ -37,7 +37,7 @@ class SwiftObjectStorageTest {
         ObjectStorageBlobConfiguration objectStorageBlobConfiguration = ObjectStorageBlobConfiguration.builder()
             .codec(PayloadCodecFactory.DEFAULT)
             .provider(ObjectStorageProvider.SWIFT)
-            .container(ContainerName.of("myContainer"))
+            .bucketName(BucketName.of("myContainer"))
             .authConfiguration(new SwiftAuthConfiguration("tmpauth", Optional.empty(), Optional.empty(), Optional.empty()))
             .build();
         assertThatThrownBy(() -> SwiftObjectStorage.builder(objectStorageBlobConfiguration))
@@ -57,7 +57,7 @@ class SwiftObjectStorageTest {
         ObjectStorageBlobConfiguration objectStorageBlobConfiguration = ObjectStorageBlobConfiguration.builder()
             .codec(PayloadCodecFactory.DEFAULT)
             .provider(ObjectStorageProvider.SWIFT)
-            .container(ContainerName.of("myContainer"))
+            .bucketName(BucketName.of("myContainer"))
             .authConfiguration(SwiftAuthConfiguration.from(configuration))
             .build();
         SwiftObjectStorage.builder(objectStorageBlobConfiguration);
@@ -68,7 +68,7 @@ class SwiftObjectStorageTest {
         ObjectStorageBlobConfiguration objectStorageBlobConfiguration = ObjectStorageBlobConfiguration.builder()
             .codec(PayloadCodecFactory.DEFAULT)
             .provider(ObjectStorageProvider.SWIFT)
-            .container(ContainerName.of("myContainer"))
+            .bucketName(BucketName.of("myContainer"))
             .authConfiguration(new SwiftAuthConfiguration("keystone2", Optional.empty(), Optional.empty(), Optional.empty()))
             .build();
         assertThatThrownBy(() -> SwiftObjectStorage.builder(objectStorageBlobConfiguration))
@@ -88,7 +88,7 @@ class SwiftObjectStorageTest {
         ObjectStorageBlobConfiguration objectStorageBlobConfiguration = ObjectStorageBlobConfiguration.builder()
             .codec(PayloadCodecFactory.DEFAULT)
             .provider(ObjectStorageProvider.SWIFT)
-            .container(ContainerName.of("myContainer"))
+            .bucketName(BucketName.of("myContainer"))
             .authConfiguration(SwiftAuthConfiguration.from(configuration))
             .build();
         SwiftObjectStorage.builder(objectStorageBlobConfiguration);
@@ -99,7 +99,7 @@ class SwiftObjectStorageTest {
         ObjectStorageBlobConfiguration objectStorageBlobConfiguration = ObjectStorageBlobConfiguration.builder()
             .codec(PayloadCodecFactory.DEFAULT)
             .provider(ObjectStorageProvider.SWIFT)
-            .container(ContainerName.of("myContainer"))
+            .bucketName(BucketName.of("myContainer"))
             .authConfiguration(new SwiftAuthConfiguration("keystone3", Optional.empty(), Optional.empty(), Optional.empty()))
             .build();
         assertThatThrownBy(() -> SwiftObjectStorage.builder(objectStorageBlobConfiguration))
@@ -119,7 +119,7 @@ class SwiftObjectStorageTest {
         ObjectStorageBlobConfiguration objectStorageBlobConfiguration = ObjectStorageBlobConfiguration.builder()
             .codec(PayloadCodecFactory.DEFAULT)
             .provider(ObjectStorageProvider.SWIFT)
-            .container(ContainerName.of("myContainer"))
+            .bucketName(BucketName.of("myContainer"))
             .authConfiguration(SwiftAuthConfiguration.from(configuration))
             .build();
         SwiftObjectStorage.builder(objectStorageBlobConfiguration);
