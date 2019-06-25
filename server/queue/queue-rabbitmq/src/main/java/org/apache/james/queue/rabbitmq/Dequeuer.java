@@ -95,13 +95,15 @@ class Dequeuer {
 
     private Mono<RabbitMQMailQueueItem> filterIfDeleted(RabbitMQMailQueueItem item) {
         return mailQueueView.isPresent(item.getEnqueueId())
-            .flatMap(isPresent -> {
-                if (isPresent) {
-                    return Mono.just(item);
-                }
-                item.done(true);
-                return Mono.empty();
-            });
+            .flatMap(isPresent -> keepWhenPresent(item, isPresent));
+    }
+
+    private Mono<? extends RabbitMQMailQueueItem> keepWhenPresent(RabbitMQMailQueueItem item, Boolean isPresent) {
+        if (isPresent) {
+            return Mono.just(item);
+        }
+        item.done(true);
+        return Mono.empty();
     }
 
     private Mono<RabbitMQMailQueueItem> loadItem(AcknowledgableDelivery response) {
