@@ -82,6 +82,11 @@ class UnionBlobStoreTest implements BlobStoreContract {
         }
 
         @Override
+        public Mono<Void> deleteBucket(BucketName bucketName) {
+            return Mono.error(new RuntimeException("broken everywhere"));
+        }
+
+        @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
                 .toString();
@@ -113,6 +118,11 @@ class UnionBlobStoreTest implements BlobStoreContract {
         @Override
         public InputStream read(BucketName bucketName, BlobId blobId) {
             throw new RuntimeException("broken everywhere");
+        }
+
+        @Override
+        public Mono<Void> deleteBucket(BucketName bucketName) {
+            return Mono.error(new RuntimeException("broken everywhere"));
         }
 
         @Override
