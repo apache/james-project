@@ -37,5 +37,7 @@ public interface BlobStore {
         return save(bucketName, data.getBytes(StandardCharsets.UTF_8));
     }
 
+    BucketName getDefaultBucketName();
+
     Mono<Void> deleteBucket(BucketName bucketName);
 }
