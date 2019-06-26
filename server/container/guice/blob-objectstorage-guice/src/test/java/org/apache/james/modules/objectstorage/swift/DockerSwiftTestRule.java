@@ -106,7 +106,7 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
             .endpoint(swiftContainer.dockerSwift().keystoneV2Endpoint())
             .build();
 
-        BucketName bucketName = BucketName.of(UUID.randomUUID().toString());
+        BucketName defaultBucketName = BucketName.of(UUID.randomUUID().toString());
         ObjectStorageBlobConfiguration configuration = ObjectStorageBlobConfiguration.builder()
             .codec(payloadCodecFactory)
             .provider(ObjectStorageProvider.SWIFT)
@@ -116,7 +116,7 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
                 Optional.empty()))
             .aesSalt("c603a7327ee3dcbc031d8d34b1096c605feca5e1")
             .aesPassword("dockerSwiftEncryption".toCharArray())
-            .defaultBucketName(Optional.of(bucketName))
+            .defaultBucketName(Optional.of(defaultBucketName))
             .build();
 
         return binder -> {

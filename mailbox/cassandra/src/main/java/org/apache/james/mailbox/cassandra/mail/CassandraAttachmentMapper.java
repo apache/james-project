@@ -25,7 +25,6 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -80,7 +79,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     private Mono<Attachment> retrievePayload(DAOAttachment daoAttachment) {
-        return blobStore.readBytes(BucketName.DEFAULT, daoAttachment.getBlobId())
+        return blobStore.readBytes(blobStore.getDefaultBucketName(), daoAttachment.getBlobId())
             .map(daoAttachment::toAttachment);
     }
 
@@ -111,7 +110,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     @Override
     public void storeAttachmentForOwner(Attachment attachment, Username owner) throws MailboxException {
         ownerDAO.addOwner(attachment.getAttachmentId(), owner)
-            .then(blobStore.save(BucketName.DEFAULT, attachment.getBytes()))
+            .then(blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes()))
             .map(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
             .flatMap(attachmentDAOV2::storeAttachment)
             .block();
@@ -138,7 +137,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     public Mono<Void> storeAttachmentAsync(Attachment attachment, MessageId ownerMessageId) {
-        return blobStore.save(BucketName.DEFAULT, attachment.getBytes())
+        return blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes())
             .map(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
             .flatMap(daoAttachment -> storeAttachmentWithIndex(daoAttachment, ownerMessageId));
     }

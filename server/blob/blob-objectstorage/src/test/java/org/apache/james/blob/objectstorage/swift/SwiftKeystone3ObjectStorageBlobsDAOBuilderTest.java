@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
@@ -68,7 +69,7 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
             .credentials(DEMO_PASSWORD)
             .project(Project.of(PROJECT_NAME, DOMAIN_ID));
 
-    private BucketName bucketName;
+    private BucketName defaultBucketName;
 
     private SwiftKeystone3ObjectStorage.Configuration testConfig;
     private DockerSwift dockerSwift;
@@ -77,7 +78,7 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
     @BeforeEach
     void setUp(DockerSwift dockerSwift) {
         this.dockerSwift = dockerSwift;
-        bucketName = BucketName.DEFAULT;
+        defaultBucketName = BucketName.of(UUID.randomUUID().toString());
         testConfig = PROJECT_CONFIG
             .endpoint(dockerSwift.keystoneV3Endpoint())
             .build();
@@ -90,8 +91,8 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
     }
 
     @Override
-    public BucketName bucketName() {
-        return bucketName;
+    public BucketName defaultBucketName() {
+        return defaultBucketName;
     }
 
     @Test
@@ -108,7 +109,7 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
     void blobIdFactoryIsMandatoryToBuildBlobsDAO() {
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(testConfig)
-            .defaultBucketName(bucketName)
+            .defaultBucketName(defaultBucketName)
             .blobIdFactory(null);
 
         assertThatThrownBy(builder::build).isInstanceOf(IllegalStateException.class);
@@ -121,7 +122,7 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
             configBuilders.get(key).endpoint(dockerSwift.keystoneV3Endpoint()).build();
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(config)
-            .defaultBucketName(bucketName)
+            .defaultBucketName(defaultBucketName)
             .blobIdFactory(new HashBlobId.Factory());
 
         assertBlobsDAOCanStoreAndRetrieve(builder);

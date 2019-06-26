@@ -141,7 +141,7 @@ class ObjectStorageBlobStoreModuleTest {
 
         BlobStore blobStore = injector.getInstance(Key.get(BlobStore.class, Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION)));
 
-        assertThatCode(() -> blobStore.save(BucketName.DEFAULT, new byte[] {0x00})).doesNotThrowAnyException();
+        assertThatCode(() -> blobStore.save(blobStore.getDefaultBucketName(), new byte[] {0x00})).doesNotThrowAnyException();
     }
 
 }

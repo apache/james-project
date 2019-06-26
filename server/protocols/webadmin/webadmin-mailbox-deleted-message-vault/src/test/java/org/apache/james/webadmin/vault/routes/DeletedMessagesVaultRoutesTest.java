@@ -72,7 +72,6 @@ import java.util.stream.Stream;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.export.api.BlobExportMechanism;
 import org.apache.james.blob.memory.MemoryBlobStore;
@@ -1905,7 +1904,7 @@ class DeletedMessagesVaultRoutesTest {
 
             byte[] expectedZippedData = zippedMessagesData();
 
-            assertThat(blobStore.read(BucketName.DEFAULT, blobIdFactory.forPayload(expectedZippedData)))
+            assertThat(blobStore.read(blobStore.getDefaultBucketName(), blobIdFactory.forPayload(expectedZippedData)))
                 .hasSameContentAs(new ByteArrayInputStream(expectedZippedData));
         }
 

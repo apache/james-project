@@ -57,7 +57,6 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Attachments;
@@ -183,8 +182,8 @@ public class CassandraMessageDAO {
             byte[] headerContent = IOUtils.toByteArray(message.getHeaderContent());
             byte[] bodyContent = IOUtils.toByteArray(message.getBodyContent());
 
-            Mono<BlobId> bodyFuture = blobStore.save(BucketName.DEFAULT, bodyContent);
-            Mono<BlobId> headerFuture = blobStore.save(BucketName.DEFAULT, headerContent);
+            Mono<BlobId> bodyFuture = blobStore.save(blobStore.getDefaultBucketName(), bodyContent);
+            Mono<BlobId> headerFuture = blobStore.save(blobStore.getDefaultBucketName(), headerContent);
 
             return headerFuture.zipWith(bodyFuture);
         } catch (IOException e) {
@@ -359,7 +358,7 @@ public class CassandraMessageDAO {
     }
 
     private Mono<byte[]> getFieldContent(String field, Row row) {
-        return blobStore.readBytes(BucketName.DEFAULT, blobIdFactory.from(row.getString(field)));
+        return blobStore.readBytes(blobStore.getDefaultBucketName(), blobIdFactory.from(row.getString(field)));
     }
 
     public static MessageResult notFound(ComposedMessageIdWithMetaData id) {

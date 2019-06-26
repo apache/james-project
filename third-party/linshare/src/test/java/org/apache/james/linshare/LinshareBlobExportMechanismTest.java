@@ -32,7 +32,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.export.api.BlobExportMechanism;
 import org.apache.james.blob.export.api.FileExtension;
@@ -75,7 +74,7 @@ class LinshareBlobExportMechanismTest {
 
     @Test
     void exportShouldShareTheDocumentViaLinshare() throws Exception {
-        BlobId blobId = blobStore.save(BucketName.DEFAULT, FILE_CONTENT).block();
+        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), FILE_CONTENT).block();
         String filePrefix = "deleted-message-of-bob@james.org-";
 
         testee.blobId(blobId)
@@ -94,7 +93,7 @@ class LinshareBlobExportMechanismTest {
 
     @Test
     void exportShouldSendAnEmailToSharee() throws Exception {
-        BlobId blobId = blobStore.save(BucketName.DEFAULT, FILE_CONTENT).block();
+        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), FILE_CONTENT).block();
 
         testee.blobId(blobId)
             .with(new MailAddress(USER_2.getUsername()))
@@ -123,7 +122,7 @@ class LinshareBlobExportMechanismTest {
 
     @Test
     void exportShouldShareTheDocumentAndAllowDownloadViaLinshare() throws Exception {
-        BlobId blobId = blobStore.save(BucketName.DEFAULT, FILE_CONTENT).block();
+        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), FILE_CONTENT).block();
 
         testee.blobId(blobId)
             .with(new MailAddress(USER_2.getUsername()))
@@ -153,7 +152,7 @@ class LinshareBlobExportMechanismTest {
 
     @Test
     void exportWithFilePrefixShouldCreateFileWithCustomPrefix() throws Exception {
-        BlobId blobId = blobStore.save(BucketName.DEFAULT, FILE_CONTENT).block();
+        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), FILE_CONTENT).block();
         String filePrefix = "deleted-message-of-bob@james.org";
 
         testee.blobId(blobId)

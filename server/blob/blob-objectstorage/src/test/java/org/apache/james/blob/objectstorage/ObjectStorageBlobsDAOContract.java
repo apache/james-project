@@ -33,15 +33,15 @@ public interface ObjectStorageBlobsDAOContract {
 
     String CONTENT = "content";
 
-    BucketName bucketName();
+    BucketName defaultBucketName();
 
     default void assertBlobsDAOCanStoreAndRetrieve(ObjectStorageBlobsDAOBuilder.ReadyToBuild builder) {
         ObjectStorageBlobsDAO dao = builder.build();
-        dao.createBucket(bucketName()).block();
+        dao.createBucket(dao.getDefaultBucketName()).block();
 
-        BlobId blobId = dao.save(BucketName.DEFAULT, CONTENT).block();
+        BlobId blobId = dao.save(dao.getDefaultBucketName(), CONTENT).block();
 
-        InputStream inputStream = dao.read(BucketName.DEFAULT, blobId);
+        InputStream inputStream = dao.read(dao.getDefaultBucketName(), blobId);
         assertThat(inputStream).hasSameContentAs(IOUtils.toInputStream(CONTENT, StandardCharsets.UTF_8));
     }
 }

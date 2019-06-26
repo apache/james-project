@@ -106,7 +106,7 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
 
     @Override
     public Module getModule() {
-        BucketName bucketName = BucketName.of(UUID.randomUUID().toString());
+        BucketName defaultBucketName = BucketName.of(UUID.randomUUID().toString());
         AwsS3AuthConfiguration authConfiguration = AwsS3AuthConfiguration.builder()
             .endpoint(DockerAwsS3Singleton.singleton.getEndpoint())
             .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
@@ -119,7 +119,7 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
             .authConfiguration(authConfiguration)
             .aesSalt("c603a7327ee3dcbc031d8d34b1096c605feca5e1")
             .aesPassword("dockerAwsS3Encryption".toCharArray())
-            .defaultBucketName(Optional.of(bucketName))
+            .defaultBucketName(Optional.of(defaultBucketName))
             .build();
 
         return binder -> {

@@ -68,7 +68,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
         .password(PASSWORD.value().toCharArray())
         .build();
 
-    private BucketName bucketName;
+    private BucketName defaultBucketName;
     private org.jclouds.blobstore.BlobStore blobStore;
     private SwiftTempAuthObjectStorage.Configuration testConfig;
     private ObjectStorageBlobsDAO objectStorageBlobsDAO;
@@ -76,7 +76,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
 
     @BeforeEach
     void setUp(DockerSwift dockerSwift) {
-        bucketName = BucketName.DEFAULT;
+        defaultBucketName = BucketName.of(UUID.randomUUID().toString());
         testConfig = SwiftTempAuthObjectStorage.configBuilder()
             .endpoint(dockerSwift.swiftEndpoint())
             .identity(SWIFT_IDENTITY)
@@ -87,17 +87,17 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
         BlobId.Factory blobIdFactory = blobIdFactory();
         ObjectStorageBlobsDAOBuilder.ReadyToBuild daoBuilder = ObjectStorageBlobsDAO
             .builder(testConfig)
-            .defaultBucketName(bucketName)
+            .defaultBucketName(defaultBucketName)
             .blobIdFactory(blobIdFactory);
         blobStore = daoBuilder.getSupplier().get();
         objectStorageBlobsDAO = daoBuilder.build();
-        objectStorageBlobsDAO.createBucket(bucketName).block();
+        objectStorageBlobsDAO.createBucket(defaultBucketName).block();
         testee = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), objectStorageBlobsDAO);
     }
 
     @AfterEach
     void tearDown() {
-        blobStore.deleteContainer(bucketName.asString());
+        blobStore.deleteContainer(defaultBucketName.asString());
         blobStore.getContext().close();
     }
 
@@ -137,14 +137,14 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     void supportsEncryptionWithCustomPayloadCodec() throws IOException {
         ObjectStorageBlobsDAO encryptedDao = ObjectStorageBlobsDAO
             .builder(testConfig)
-            .defaultBucketName(bucketName)
+            .defaultBucketName(defaultBucketName)
             .blobIdFactory(blobIdFactory())
             .payloadCodec(new AESPayloadCodec(CRYPTO_CONFIG))
             .build();
         String content = "James is the best!";
-        BlobId blobId = encryptedDao.save(BucketName.DEFAULT, content).block();
+        BlobId blobId = encryptedDao.save(encryptedDao.getDefaultBucketName(), content).block();
 
-        InputStream read = encryptedDao.read(BucketName.DEFAULT, blobId);
+        InputStream read = encryptedDao.read(encryptedDao.getDefaultBucketName(), blobId);
         String expectedContent = IOUtils.toString(read, Charsets.UTF_8);
         assertThat(content).isEqualTo(expectedContent);
     }
@@ -153,27 +153,27 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     void encryptionWithCustomPayloadCodeCannotBeReadFromUnencryptedDAO() throws Exception {
         ObjectStorageBlobsDAO encryptedDao = ObjectStorageBlobsDAO
             .builder(testConfig)
-            .defaultBucketName(bucketName)
+            .defaultBucketName(defaultBucketName)
             .blobIdFactory(blobIdFactory())
             .payloadCodec(new AESPayloadCodec(CRYPTO_CONFIG))
             .build();
         String content = "James is the best!";
-        BlobId blobId = encryptedDao.save(BucketName.DEFAULT, content).block();
+        BlobId blobId = encryptedDao.save(encryptedDao.getDefaultBucketName(), content).block();
 
-        InputStream encryptedIs = testee.read(BucketName.DEFAULT, blobId);
+        InputStream encryptedIs = testee.read(encryptedDao.getDefaultBucketName(), blobId);
         assertThat(encryptedIs).isNotNull();
         String encryptedString = IOUtils.toString(encryptedIs, Charsets.UTF_8);
         assertThat(encryptedString).isNotEqualTo(content);
 
-        InputStream clearTextIs = encryptedDao.read(BucketName.DEFAULT, blobId);
+        InputStream clearTextIs = encryptedDao.read(encryptedDao.getDefaultBucketName(), blobId);
         String expectedContent = IOUtils.toString(clearTextIs, Charsets.UTF_8);
         assertThat(content).isEqualTo(expectedContent);
     }
 
     @Test
     void deleteContainerShouldDeleteSwiftContainer() {
-        objectStorageBlobsDAO.deleteContainer(bucketName);
-        assertThat(blobStore.containerExists(bucketName.asString()))
+        objectStorageBlobsDAO.deleteContainer(defaultBucketName);
+        assertThat(blobStore.containerExists(defaultBucketName.asString()))
             .isFalse();
     }
 
@@ -181,7 +181,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     void saveBytesShouldNotCompleteWhenDoesNotAwait() {
         // String need to be big enough to get async thread busy hence could not return result instantly
         Mono<BlobId> blobIdFuture = testee
-            .save(BucketName.DEFAULT, BIG_STRING.getBytes(StandardCharsets.UTF_8))
+            .save(testee.getDefaultBucketName(), BIG_STRING.getBytes(StandardCharsets.UTF_8))
             .subscribeOn(Schedulers.elastic());
         assertThat(blobIdFuture.toFuture()).isNotCompleted();
     }
@@ -189,7 +189,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     @Test
     void saveStringShouldNotCompleteWhenDoesNotAwait() {
         Mono<BlobId> blobIdFuture = testee
-            .save(BucketName.DEFAULT, BIG_STRING)
+            .save(testee.getDefaultBucketName(), BIG_STRING)
             .subscribeOn(Schedulers.elastic());
         assertThat(blobIdFuture.toFuture()).isNotCompleted();
     }
@@ -197,15 +197,15 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     @Test
     void saveInputStreamShouldNotCompleteWhenDoesNotAwait() {
         Mono<BlobId> blobIdFuture = testee
-            .save(BucketName.DEFAULT, new ByteArrayInputStream(BIG_STRING.getBytes(StandardCharsets.UTF_8)))
+            .save(testee.getDefaultBucketName(), new ByteArrayInputStream(BIG_STRING.getBytes(StandardCharsets.UTF_8)))
             .subscribeOn(Schedulers.elastic());
         assertThat(blobIdFuture.toFuture()).isNotCompleted();
     }
 
     @Test
     void readBytesShouldNotCompleteWhenDoesNotAwait() {
-        BlobId blobId = testee().save(BucketName.DEFAULT, BIG_STRING).block();
-        Mono<byte[]> resultFuture = testee.readBytes(BucketName.DEFAULT, blobId).subscribeOn(Schedulers.elastic());
+        BlobId blobId = testee().save(testee.getDefaultBucketName(), BIG_STRING).block();
+        Mono<byte[]> resultFuture = testee.readBytes(testee.getDefaultBucketName(), blobId).subscribeOn(Schedulers.elastic());
         assertThat(resultFuture.toFuture()).isNotCompleted();
     }
 }
