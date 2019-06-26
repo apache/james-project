@@ -19,44 +19,37 @@
 
 package org.apache.james.task;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.awaitility.Duration.ONE_SECOND;
-
-import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import org.assertj.core.api.SoftAssertions;
-import org.awaitility.Awaitility;
-import org.awaitility.Duration;
-import org.awaitility.core.ConditionFactory;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolutionException;
+import org.junit.jupiter.api.extension.ParameterResolver;
 
-@ExtendWith(CountDownLatchExtension.class)
-class MemoryTaskManagerTest implements TaskManagerContract {
+public class CountDownLatchExtension implements AfterEachCallback, BeforeEachCallback, ParameterResolver {
 
-    private MemoryTaskManager memoryTaskManager;
+    private CountDownLatch countDownLatch;
 
-    @BeforeEach
-    void setUp() {
-        memoryTaskManager = new MemoryTaskManager();
-    }
-
-    @AfterEach
-    void tearDown() {
-        memoryTaskManager.stop();
+    @Override
+    public void beforeEach(ExtensionContext context) throws Exception {
+        countDownLatch = new CountDownLatch(1);
     }
 
     @Override
-    public TaskManager taskManager() {
-        return memoryTaskManager;
+    public void afterEach(ExtensionContext context) throws Exception {
+        countDownLatch.countDown();
     }
+
+    @Override
+    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return (parameterContext.getParameter().getType() == CountDownLatch.class);
+    }
+
+    @Override
+    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return countDownLatch;
+    }
+
 }
