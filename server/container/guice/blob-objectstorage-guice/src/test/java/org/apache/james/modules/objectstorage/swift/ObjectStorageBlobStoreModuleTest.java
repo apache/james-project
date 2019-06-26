@@ -79,7 +79,6 @@ class ObjectStorageBlobStoreModuleTest {
             ObjectStorageBlobConfiguration tmpAuth = ObjectStorageBlobConfiguration.builder()
                 .codec(PayloadCodecFactory.DEFAULT)
                 .provider(ObjectStorageProvider.SWIFT)
-                .bucketName(generateBucketName())
                 .authConfiguration(new SwiftAuthConfiguration(SwiftTempAuthObjectStorage.AUTH_API_NAME,
                     Optional.of(SwiftTempAuthObjectStorage.configBuilder()
                         .endpoint(dockerSwift.swiftEndpoint())
@@ -91,11 +90,11 @@ class ObjectStorageBlobStoreModuleTest {
                         .build()),
                     Optional.empty(),
                     Optional.empty()))
+                .defaultBucketName(Optional.of(generateBucketName()))
                 .build();
             ObjectStorageBlobConfiguration keystone2 = ObjectStorageBlobConfiguration.builder()
                 .codec(PayloadCodecFactory.DEFAULT)
                 .provider(ObjectStorageProvider.SWIFT)
-                .bucketName(generateBucketName())
                 .authConfiguration(new SwiftAuthConfiguration(SwiftKeystone2ObjectStorage.AUTH_API_NAME,
                     Optional.empty(),
                     Optional.of(SwiftKeystone2ObjectStorage.configBuilder()
@@ -105,11 +104,11 @@ class ObjectStorageBlobStoreModuleTest {
                         .tenantName(TenantName.of("test"))
                         .build()),
                     Optional.empty()))
+                .defaultBucketName(Optional.of(generateBucketName()))
                 .build();
             ObjectStorageBlobConfiguration keystone3 = ObjectStorageBlobConfiguration.builder()
                 .codec(PayloadCodecFactory.DEFAULT)
                 .provider(ObjectStorageProvider.SWIFT)
-                .bucketName(generateBucketName())
                 .authConfiguration(new SwiftAuthConfiguration(SwiftKeystone3ObjectStorage.AUTH_API_NAME,
                     Optional.empty(),
                     Optional.empty(),
@@ -119,6 +118,7 @@ class ObjectStorageBlobStoreModuleTest {
                         .project(Project.of(ProjectName.of("test")))
                         .identity(IdentityV3.of(DomainName.of("Default"), UserName.of("demo")))
                         .build())))
+                .defaultBucketName(Optional.of(generateBucketName()))
                 .build();
             return Stream.of(tmpAuth, keystone2, keystone3).map(Arguments::of);
         }

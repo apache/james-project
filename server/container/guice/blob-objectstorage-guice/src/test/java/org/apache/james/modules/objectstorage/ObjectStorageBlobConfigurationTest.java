@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.MapConfiguration;
+import org.apache.james.blob.api.BucketName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,7 +23,6 @@ class ObjectStorageBlobConfigurationTest {
 
     static final ImmutableMap<String, Object> CONFIGURATION_WITHOUT_CODEC = ImmutableMap.<String, Object>builder()
         .put("objectstorage.provider", "swift")
-        .put("objectstorage.namespace", "foo")
         .put("objectstorage.swift.authapi", "tmpauth")
         .put("objectstorage.swift.endpoint", "http://swift/endpoint")
         .put("objectstorage.swift.credentials", "testing")
@@ -40,7 +40,7 @@ class ObjectStorageBlobConfigurationTest {
     static class RequiredParameters implements ArgumentsProvider {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            return Stream.of("objectstorage.provider", "objectstorage.namespace", "objectstorage.swift.authapi", "objectstorage.payload.codec")
+            return Stream.of("objectstorage.provider", "objectstorage.swift.authapi", "objectstorage.payload.codec")
                     .map(Arguments::of);
         }
     }
@@ -156,4 +156,29 @@ class ObjectStorageBlobConfigurationTest {
             .isInstanceOf(ConfigurationException.class)
             .hasMessage("Unknown object storage provider: unknown");
     }
+
+    @Test
+    void fromShouldParseNameSpaceWhenSpecified() throws Exception {
+        String bucketNameAsString = "my-bucket";
+        MapConfiguration configuration = new MapConfiguration(
+            ImmutableMap.<String, Object>builder()
+                .putAll(VALID_CONFIGURATION)
+                .put("objectstorage.namespace", bucketNameAsString)
+                .build());
+
+         assertThat(ObjectStorageBlobConfiguration.from(configuration).getNamespace())
+            .isEqualTo(BucketName.of(bucketNameAsString));
+    }
+
+     @Test
+    void fromShouldUseTheDefaultValueWhenDontSpecifyNameSpace() throws Exception {
+        MapConfiguration configuration = new MapConfiguration(
+            ImmutableMap.<String, Object>builder()
+                .putAll(VALID_CONFIGURATION)
+                .build());
+
+         assertThat(ObjectStorageBlobConfiguration.from(configuration).getNamespace())
+            .isEqualTo(BucketName.DEFAULT);
+    }
+
 }

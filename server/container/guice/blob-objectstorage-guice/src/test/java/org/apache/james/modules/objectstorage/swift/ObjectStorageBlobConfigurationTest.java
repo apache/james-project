@@ -97,7 +97,6 @@ class ObjectStorageBlobConfigurationTest {
                 ObjectStorageBlobConfiguration.builder()
                     .codec(PayloadCodecFactory.DEFAULT)
                     .provider(ObjectStorageProvider.SWIFT)
-                    .bucketName(BucketName.of("foo"))
                     .authConfiguration(new SwiftAuthConfiguration(SwiftTempAuthObjectStorage.AUTH_API_NAME,
                         Optional.of(SwiftTempAuthObjectStorage.configBuilder()
                             .endpoint(URI.create("http://swift/endpoint"))
@@ -109,6 +108,7 @@ class ObjectStorageBlobConfigurationTest {
                             .build()),
                         Optional.empty(),
                         Optional.empty()))
+                    .defaultBucketName(Optional.of(BucketName.of("foo")))
                     .build());
     }
 
@@ -130,7 +130,6 @@ class ObjectStorageBlobConfigurationTest {
                 ObjectStorageBlobConfiguration.builder()
                     .codec(PayloadCodecFactory.DEFAULT)
                     .provider(ObjectStorageProvider.SWIFT)
-                    .bucketName(BucketName.of("foo"))
                     .authConfiguration(new SwiftAuthConfiguration(SwiftKeystone2ObjectStorage.AUTH_API_NAME,
                         Optional.empty(),
                         Optional.of(SwiftKeystone2ObjectStorage.configBuilder()
@@ -140,6 +139,7 @@ class ObjectStorageBlobConfigurationTest {
                             .tenantName(TenantName.of("test"))
                             .build()),
                         Optional.empty()))
+                    .defaultBucketName(Optional.of(BucketName.of("foo")))
                     .build());
     }
 
@@ -162,7 +162,6 @@ class ObjectStorageBlobConfigurationTest {
                 ObjectStorageBlobConfiguration.builder()
                     .codec(PayloadCodecFactory.DEFAULT)
                     .provider(ObjectStorageProvider.SWIFT)
-                    .bucketName(BucketName.of("foo"))
                     .authConfiguration(new SwiftAuthConfiguration(SwiftKeystone3ObjectStorage.AUTH_API_NAME,
                         Optional.empty(),
                         Optional.empty(),
@@ -172,6 +171,7 @@ class ObjectStorageBlobConfigurationTest {
                             .project(Project.of(ProjectName.of("test")))
                             .identity(IdentityV3.of(DomainName.of("Default"), UserName.of("demo")))
                             .build())))
+                    .defaultBucketName(Optional.of(BucketName.of("foo")))
                     .build());
     }
 

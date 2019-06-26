@@ -110,13 +110,13 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
         ObjectStorageBlobConfiguration configuration = ObjectStorageBlobConfiguration.builder()
             .codec(payloadCodecFactory)
             .provider(ObjectStorageProvider.SWIFT)
-            .bucketName(bucketName)
             .authConfiguration(new SwiftAuthConfiguration(SwiftKeystone2ObjectStorage.AUTH_API_NAME,
                 Optional.empty(),
                 Optional.of(authConfiguration),
                 Optional.empty()))
             .aesSalt("c603a7327ee3dcbc031d8d34b1096c605feca5e1")
             .aesPassword("dockerSwiftEncryption".toCharArray())
+            .defaultBucketName(Optional.of(bucketName))
             .build();
 
         return binder -> {
