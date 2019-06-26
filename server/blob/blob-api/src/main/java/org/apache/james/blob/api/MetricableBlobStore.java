@@ -77,4 +77,9 @@ public class MetricableBlobStore implements BlobStore {
         return metricFactory
             .runPublishingTimerMetric(DELETE_TIMER_NAME, () -> blobStoreImpl.deleteBucket(bucketName));
     }
+
+    @Override
+    public BucketName getDefaultBucketName() {
+        return blobStoreImpl.getDefaultBucketName();
+    }
 }

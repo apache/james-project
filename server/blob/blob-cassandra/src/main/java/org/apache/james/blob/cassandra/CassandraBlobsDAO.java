@@ -202,6 +202,11 @@ public class CassandraBlobsDAO implements BlobStore {
         return pipedInputStream;
     }
 
+    @Override
+    public BucketName getDefaultBucketName() {
+        return BucketName.DEFAULT;
+    }
+
     private Flux<byte[]> readBlobParts(BlobId blobId) {
         Integer rowCount = selectRowCount(blobId)
             .publishOn(Schedulers.elastic())

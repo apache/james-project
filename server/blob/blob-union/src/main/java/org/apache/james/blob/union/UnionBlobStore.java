@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Mono;
 
@@ -103,6 +104,17 @@ public class UnionBlobStore implements BlobStore {
             LOGGER.error("exception directly happens while saving String data, fall back to legacy blob store", e);
             return legacyBlobStore.save(bucketName, data);
         }
+    }
+
+    @Override
+    public BucketName getDefaultBucketName() {
+        Preconditions.checkState(
+            currentBlobStore.getDefaultBucketName()
+                .equals(legacyBlobStore.getDefaultBucketName()),
+            "currentBlobStore and legacyBlobStore doen't have same defaultBucketName which could lead to " +
+                "unexpected result when interact with other APIs");
+
+        return currentBlobStore.getDefaultBucketName();
     }
 
     @Override

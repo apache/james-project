@@ -67,6 +67,11 @@ class UnionBlobStoreTest implements BlobStoreContract {
         }
 
         @Override
+        public BucketName getDefaultBucketName() {
+            throw new RuntimeException("broken everywhere");
+        }
+
+        @Override
         public Mono<BlobId> save(BucketName bucketName, InputStream data) {
             return Mono.error(new RuntimeException("broken everywhere"));
         }
@@ -102,6 +107,11 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
         @Override
         public Mono<BlobId> save(BucketName bucketName, String data) {
+            throw new RuntimeException("broken everywhere");
+        }
+
+        @Override
+        public BucketName getDefaultBucketName() {
             throw new RuntimeException("broken everywhere");
         }
 
@@ -527,5 +537,18 @@ class UnionBlobStoreTest implements BlobStoreContract {
     void deleteBucketShouldNotThrowWhenCurrentAndLegacyBucketsDoNotExist() {
         assertThatCode(() -> unionBlobStore.deleteBucket(BucketName.DEFAULT).block())
             .doesNotThrowAnyException();
+    }
+
+    @Test
+    void getDefaultBucketNameShouldThrowWhenBlobStoreDontShareTheSameDefaultBucketName() {
+        currentBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, BucketName.of("current"));
+        legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, BucketName.of("legacy"));
+        unionBlobStore = UnionBlobStore.builder()
+            .current(currentBlobStore)
+            .legacy(legacyBlobStore)
+            .build();
+
+        assertThatThrownBy(() -> unionBlobStore.getDefaultBucketName())
+            .isInstanceOf(IllegalStateException.class);
     }
 }
