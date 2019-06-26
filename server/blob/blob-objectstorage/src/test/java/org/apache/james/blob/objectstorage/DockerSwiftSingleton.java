@@ -27,5 +27,5 @@ public class DockerSwiftSingleton {
         singleton.start();
     }
 
-    // Cleanup will be performed by test container resource reaper
+    // Cleanup will be performed by test defaultBucketName resource reaper
 }

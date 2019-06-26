@@ -29,7 +29,7 @@ import org.apache.james.modules.objectstorage.ObjectStorageProvider;
 
 public class SwiftObjectStorage {
 
-    public static ObjectStorageBlobsDAOBuilder.RequireBucketName builder(ObjectStorageBlobConfiguration configuration) {
+    public static ObjectStorageBlobsDAOBuilder.RequireDefaultBucketName builder(ObjectStorageBlobConfiguration configuration) {
         if (configuration.getProvider() != ObjectStorageProvider.SWIFT) {
             throw new IllegalArgumentException("unknown provider " + configuration.getProvider());
         }
@@ -52,15 +52,15 @@ public class SwiftObjectStorage {
         }
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireBucketName builder(SwiftTempAuthObjectStorage.Configuration testConfig) {
+    public static ObjectStorageBlobsDAOBuilder.RequireDefaultBucketName builder(SwiftTempAuthObjectStorage.Configuration testConfig) {
         return SwiftTempAuthObjectStorage.daoBuilder(testConfig);
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireBucketName builder(SwiftKeystone2ObjectStorage.Configuration testConfig) {
+    public static ObjectStorageBlobsDAOBuilder.RequireDefaultBucketName builder(SwiftKeystone2ObjectStorage.Configuration testConfig) {
         return SwiftKeystone2ObjectStorage.daoBuilder(testConfig);
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireBucketName builder(SwiftKeystone3ObjectStorage.Configuration testConfig) {
+    public static ObjectStorageBlobsDAOBuilder.RequireDefaultBucketName builder(SwiftKeystone3ObjectStorage.Configuration testConfig) {
         return SwiftKeystone3ObjectStorage.daoBuilder(testConfig);
     }
 }
