@@ -90,7 +90,7 @@ public class ObjectStorageBlobsDAOBuilder {
         }
 
         private PutBlobFunction defaultPutBlob(BlobStore blobStore) {
-            return (blob) -> blobStore.putBlob(defaultBucketName.asString(), blob);
+            return (bucketName, blob) -> blobStore.putBlob(bucketName.asString(), blob);
         }
 
         @VisibleForTesting

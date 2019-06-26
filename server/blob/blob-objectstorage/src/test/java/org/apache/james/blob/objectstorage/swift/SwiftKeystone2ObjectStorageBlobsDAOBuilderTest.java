@@ -22,7 +22,6 @@ package org.apache.james.blob.objectstorage.swift;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.URI;
-import java.util.UUID;
 
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
@@ -48,7 +47,7 @@ class SwiftKeystone2ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
 
     @BeforeEach
     void setUp(DockerSwift dockerSwift) {
-        bucketName = BucketName.of(UUID.randomUUID().toString());
+        bucketName = BucketName.DEFAULT;
         endpoint = dockerSwift.keystoneV2Endpoint();
         testConfig = SwiftKeystone2ObjectStorage.configBuilder()
             .endpoint(endpoint)

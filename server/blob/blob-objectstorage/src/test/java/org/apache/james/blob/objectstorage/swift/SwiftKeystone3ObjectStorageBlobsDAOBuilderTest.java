@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
@@ -78,7 +77,7 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
     @BeforeEach
     void setUp(DockerSwift dockerSwift) {
         this.dockerSwift = dockerSwift;
-        bucketName = BucketName.of(UUID.randomUUID().toString());
+        bucketName = BucketName.DEFAULT;
         testConfig = PROJECT_CONFIG
             .endpoint(dockerSwift.keystoneV3Endpoint())
             .build();

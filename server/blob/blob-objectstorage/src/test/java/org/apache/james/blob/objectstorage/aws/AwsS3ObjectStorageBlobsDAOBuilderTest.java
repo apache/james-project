@@ -21,8 +21,6 @@ package org.apache.james.blob.objectstorage.aws;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.UUID;
-
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
@@ -43,7 +41,7 @@ class AwsS3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOCont
     @BeforeEach
     void setUp(DockerAwsS3Container dockerAwsS3Container) {
         awsS3ObjectStorage = new AwsS3ObjectStorage();
-        bucketName = BucketName.of(UUID.randomUUID().toString());
+        bucketName = BucketName.DEFAULT;
         configuration = AwsS3AuthConfiguration.builder()
             .endpoint(dockerAwsS3Container.getEndpoint())
             .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
@@ -87,7 +85,7 @@ class AwsS3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOCont
             .builder(configuration)
             .defaultBucketName(bucketName)
             .blobIdFactory(new HashBlobId.Factory())
-            .putBlob(awsS3ObjectStorage.putBlob(bucketName, configuration));
+            .putBlob(awsS3ObjectStorage.putBlob(configuration));
 
         assertBlobsDAOCanStoreAndRetrieve(builder);
     }

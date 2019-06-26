@@ -19,6 +19,7 @@
 
 package org.apache.james.blob.objectstorage;
 
+import org.apache.james.blob.api.BucketName;
 import org.jclouds.blobstore.domain.Blob;
 
 /**
@@ -33,5 +34,5 @@ import org.jclouds.blobstore.domain.Blob;
 @FunctionalInterface
 public interface PutBlobFunction {
 
-    void putBlob(Blob blob);
+    void putBlob(BucketName bucketName, Blob blob);
 }

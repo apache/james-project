@@ -93,8 +93,8 @@ public class AwsS3ObjectStorage {
         return ObjectStorageBlobsDAOBuilder.forBlobStore(new BlobStoreBuilder(configuration));
     }
 
-    public Optional<PutBlobFunction> putBlob(BucketName bucketName, AwsS3AuthConfiguration configuration) {
-        return Optional.of((blob) -> {
+    public Optional<PutBlobFunction> putBlob(AwsS3AuthConfiguration configuration) {
+        return Optional.of((bucketName, blob) -> {
             File file = null;
             try {
                 file = File.createTempFile(UUID.randomUUID().toString(), ".tmp");

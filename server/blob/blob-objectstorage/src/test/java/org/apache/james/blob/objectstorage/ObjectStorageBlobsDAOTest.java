@@ -76,7 +76,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
 
     @BeforeEach
     void setUp(DockerSwift dockerSwift) {
-        bucketName = BucketName.of(UUID.randomUUID().toString());
+        bucketName = BucketName.DEFAULT;
         testConfig = SwiftTempAuthObjectStorage.configBuilder()
             .endpoint(dockerSwift.swiftEndpoint())
             .identity(SWIFT_IDENTITY)
