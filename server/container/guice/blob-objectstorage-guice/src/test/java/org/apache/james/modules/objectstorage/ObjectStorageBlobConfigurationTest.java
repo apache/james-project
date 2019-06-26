@@ -181,4 +181,27 @@ class ObjectStorageBlobConfigurationTest {
             .isEqualTo(BucketName.DEFAULT);
     }
 
+    @Test
+    void fromShouldParseBucketPrefixWhenSpecified() throws Exception {
+        String bucketPrefix = "defaultPrefix";
+        MapConfiguration configuration = new MapConfiguration(
+            ImmutableMap.<String, Object>builder()
+                .putAll(VALID_CONFIGURATION)
+                .put("objectstorage.bucketPrefix", bucketPrefix)
+                .build());
+
+         assertThat(ObjectStorageBlobConfiguration.from(configuration).getBucketPrefix())
+            .isEqualTo(bucketPrefix);
+    }
+
+     @Test
+    void fromShouldUseTheDefaultValueWhenDontSpecifyBucketPrefix() throws Exception {
+        MapConfiguration configuration = new MapConfiguration(
+            ImmutableMap.<String, Object>builder()
+                .putAll(VALID_CONFIGURATION)
+                .build());
+
+         assertThat(ObjectStorageBlobConfiguration.from(configuration).getBucketPrefix())
+            .isEqualTo(ObjectStorageBlobConfiguration.DEFAULT_BUCKET_PREFIX);
+    }
 }
