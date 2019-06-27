@@ -102,7 +102,7 @@ public class TaskExecutionDetails {
     }
 
     public TaskExecutionDetails start() {
-        Preconditions.checkState(status == TaskManager.Status.WAITING);
+        Preconditions.checkState(status == TaskManager.Status.WAITING, "expected WAITING actual status is " + status);
         return new TaskExecutionDetails(
             taskId,
             task,
