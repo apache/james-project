@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.events;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
@@ -38,6 +39,7 @@ import com.github.fge.lambdas.Throwing;
 import com.rabbitmq.client.Channel;
 
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.SignalType;
 import reactor.rabbitmq.ChannelPool;
 
 class ReactorRabbitMQChannelPoolTest implements ChannelPoolContract {
@@ -59,12 +61,16 @@ class ReactorRabbitMQChannelPoolTest implements ChannelPoolContract {
 
     @Override
     public ChannelPool getChannelPool(int poolSize) {
-        ReactorRabbitMQChannelPool channelPool = new ReactorRabbitMQChannelPool(
-            rabbitMQExtension.getRabbitConnectionPool().getResilientConnection(),
-            poolSize);
+        ReactorRabbitMQChannelPool channelPool = generateChannelPool(poolSize);
         channelPools.add(channelPool);
 
         return channelPool;
+    }
+
+    private ReactorRabbitMQChannelPool generateChannelPool(int poolSize) {
+        return new ReactorRabbitMQChannelPool(
+                rabbitMQExtension.getRabbitConnectionPool().getResilientConnection(),
+                poolSize);
     }
 
     // Pool wait timeout is an expected exception
@@ -81,7 +87,24 @@ class ReactorRabbitMQChannelPoolTest implements ChannelPoolContract {
                 .runSuccessfullyWithin(Duration.ofSeconds(30)))
             .isInstanceOf(ExecutionException.class)
             .hasMessageContaining("java.util.NoSuchElementException: Timeout waiting for idle object");
+    }
 
-        listChannels.forEach(Throwing.consumer(Channel::close));
+    @Test
+    void usedChannelShouldBeClosedWhenPoolIsClosed() {
+        ChannelPool channelPool = generateChannelPool(2);
+        Channel channel = channelPool.getChannelMono().block();
+        assertThat(channel.isOpen()).isTrue();
+        channelPool.close();
+        assertThat(channel.isOpen()).isFalse();
+    }
+
+    @Test
+    void notUsedChannelShouldBeClosedWhenPoolIsClosed() {
+        ChannelPool channelPool = generateChannelPool(2);
+        Channel channel = channelPool.getChannelMono().block();
+        assertThat(channel.isOpen()).isTrue();
+        channelPool.getChannelCloseHandler().accept(SignalType.ON_NEXT, channel);
+        channelPool.close();
+        assertThat(channel.isOpen()).isFalse();
     }
 }

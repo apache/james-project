@@ -20,6 +20,8 @@
 package org.apache.james.mailbox.events;
 
 import java.time.Duration;
+import java.util.Comparator;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.function.BiConsumer;
 
 import org.apache.commons.pool2.BasePooledObjectFactory;
@@ -86,24 +88,30 @@ class ReactorRabbitMQChannelPool implements ChannelPool {
     private static final long MAXIMUM_BORROW_TIMEOUT_IN_MS = Duration.ofSeconds(5).toMillis();
 
     private final GenericObjectPool<Channel> pool;
-    private final ChannelFactory channelFactory;
+    private final ConcurrentSkipListSet<Channel> borrowedChannels;
 
     ReactorRabbitMQChannelPool(Mono<Connection> connectionMono, int poolSize) {
-        this.channelFactory = new ChannelFactory(connectionMono);
+        ChannelFactory channelFactory = new ChannelFactory(connectionMono);
 
         GenericObjectPoolConfig<Channel> config = new GenericObjectPoolConfig<>();
         config.setMaxTotal(poolSize);
         this.pool = new GenericObjectPool<>(channelFactory, config);
+        this.borrowedChannels = new ConcurrentSkipListSet<>(Comparator.comparingInt(System::identityHashCode));
     }
 
     @Override
     public Mono<? extends Channel> getChannelMono() {
-        return Mono.fromCallable(() -> pool.borrowObject(MAXIMUM_BORROW_TIMEOUT_IN_MS));
+        return Mono.fromCallable(() -> {
+            Channel channel = pool.borrowObject(MAXIMUM_BORROW_TIMEOUT_IN_MS);
+            borrowedChannels.add(channel);
+            return channel;
+        });
     }
 
     @Override
     public BiConsumer<SignalType, Channel> getChannelCloseHandler() {
         return (signalType, channel) -> {
+            borrowedChannels.remove(channel);
             if (!channel.isOpen() || signalType != SignalType.ON_COMPLETE) {
                 invalidateObject(channel);
                 return;
@@ -125,6 +133,8 @@ class ReactorRabbitMQChannelPool implements ChannelPool {
 
     @Override
     public void close() {
+        borrowedChannels.forEach(channel -> getChannelCloseHandler().accept(SignalType.ON_NEXT, channel));
+        borrowedChannels.clear();
         pool.close();
     }
 }
