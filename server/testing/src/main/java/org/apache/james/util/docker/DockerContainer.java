@@ -81,7 +81,7 @@ public class DockerContainer implements TestRule {
         return this;
     }
 
-    public DockerGenericContainer withLogConsumer(Consumer<OutputFrame> consumer) {
+    public DockerContainer withLogConsumer(Consumer<OutputFrame> consumer) {
         container.withLogConsumer(consumer);
         return this;
     }
