@@ -233,7 +233,8 @@ public interface TaskManagerContract {
     default TaskManager.Status entryWithId(List<TaskExecutionDetails> list, TaskId taskId) {
         return list.stream()
             .filter(e -> e.getTaskId().equals(taskId))
-            .findFirst().get()
+            .findFirst()
+            .get()
             .getStatus();
     }
 
@@ -270,7 +271,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void listShouldAllowToSeeInProgressTasks(CountDownLatch waitingForResultLatch) throws Exception {
+    default void listShouldAllowToSeeCompletedTasks(CountDownLatch waitingForResultLatch) throws Exception {
         TaskManager taskManager = taskManager();
         CountDownLatch latch1 = new CountDownLatch(1);
         CountDownLatch latch2 = new CountDownLatch(1);
@@ -334,7 +335,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void listShouldAllowToSeeSuccessfulTasks(CountDownLatch waitingForResultLatch) throws Exception {
+    default void listShouldAllowToSeeInProgressfulTasks(CountDownLatch waitingForResultLatch) throws Exception {
         TaskManager taskManager = taskManager();
         CountDownLatch latch1 = new CountDownLatch(1);
         CountDownLatch latch2 = new CountDownLatch(1);
