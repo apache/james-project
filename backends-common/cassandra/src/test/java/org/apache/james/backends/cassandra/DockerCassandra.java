@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.OutputFrame;
+import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import com.github.dockerjava.api.DockerClient;
 import com.google.common.collect.ImmutableMap;
@@ -34,6 +35,10 @@ public class DockerCassandra {
     private static final Logger logger = LoggerFactory.getLogger(DockerCassandra.class);
 
     private static final int CASSANDRA_PORT = 9042;
+    private static final int CASSANDRA_MEMORY = 650;
+
+    private static final String CASSANDRA_CONFIG_DIR = "$CASSANDRA_CONFIG";
+    private static final String JVM_OPTIONS = CASSANDRA_CONFIG_DIR + "/jvm.options";
 
     private final GenericContainer<?> cassandraContainer;
     private final DockerClient client;
@@ -41,7 +46,16 @@ public class DockerCassandra {
     @SuppressWarnings("resource")
     public DockerCassandra() {
         client = DockerClientFactory.instance().client();
-        cassandraContainer = new GenericContainer<>("cassandra:3.11.3")
+        boolean doNotDeleteImageAfterUsage = false;
+        cassandraContainer = new GenericContainer<>(
+            new ImageFromDockerfile("cassandra_3_11_3", doNotDeleteImageAfterUsage)
+                .withDockerfileFromBuilder(builder ->
+                    builder
+                        .from("cassandra:3.11.3")
+                        .env("ENV CASSANDRA_CONFIG", "/etc/cassandra")
+                        .run("echo \"-Xms" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS)
+                        .run("echo \"-Xmx" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS)
+                        .build()))
             .withTmpFs(ImmutableMap.of("/var/lib/cassandra", "rw,noexec,nosuid,size=200m"))
             .withExposedPorts(CASSANDRA_PORT)
             .withLogConsumer(DockerCassandra::displayDockerLog);
