@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
@@ -45,6 +44,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class ObjectStorageBlobsDAO implements BlobStore {
     private static final Location DEFAULT_LOCATION = null;
@@ -162,17 +162,14 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     }
 
     @Override
-    public Mono<Void> deleteBucket(BucketName bucketName) {
-        throw new NotImplementedException("not implemented");
-    }
-
-    @Override
     public BucketName getDefaultBucketName() {
         return defaultBucketName;
     }
 
-    public void deleteContainer(BucketName bucketName) {
-        blobStore.deleteContainer(bucketName.asString());
+    @Override
+    public Mono<Void> deleteBucket(BucketName bucketName) {
+        return Mono.<Void>fromRunnable(() -> blobStore.deleteContainer(bucketName.asString()))
+            .subscribeOn(Schedulers.elastic());
     }
 
     public PayloadCodec getPayloadCodec() {

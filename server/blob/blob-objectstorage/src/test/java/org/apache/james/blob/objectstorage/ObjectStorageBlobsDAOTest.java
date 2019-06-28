@@ -118,14 +118,14 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     }
 
     @Test
-    void createContainerShouldMakeTheContainerToExist() {
+    void createBucketShouldMakeTheContainerToExist() {
         BucketName bucketName = BucketName.of(UUID.randomUUID().toString());
         objectStorageBlobsDAO.createBucket(bucketName).block();
         assertThat(blobStore.containerExists(bucketName.asString())).isTrue();
     }
 
     @Test
-    void createContainerShouldNotFailWithRuntimeExceptionWhenCreateContainerTwice() {
+    void createBucketShouldNotFailWithRuntimeExceptionWhenCreateBucketTwice() {
         BucketName bucketName = BucketName.of(UUID.randomUUID().toString());
 
         objectStorageBlobsDAO.createBucket(bucketName).block();
@@ -171,8 +171,8 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     }
 
     @Test
-    void deleteContainerShouldDeleteSwiftContainer() {
-        objectStorageBlobsDAO.deleteContainer(defaultBucketName);
+    void deleteBucketShouldDeleteSwiftContainer() {
+        objectStorageBlobsDAO.deleteBucket(defaultBucketName).block();
         assertThat(blobStore.containerExists(defaultBucketName.asString()))
             .isFalse();
     }

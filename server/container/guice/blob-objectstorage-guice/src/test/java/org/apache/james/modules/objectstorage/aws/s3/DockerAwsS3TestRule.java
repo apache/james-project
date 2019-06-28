@@ -69,7 +69,7 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
 
         @Override
         public Result run() {
-            blobsDAO.deleteContainer(blobsDAO.getDefaultBucketName());
+            blobsDAO.deleteBucket(blobsDAO.getDefaultBucketName()).block();
 
             return Result.COMPLETED;
         }
