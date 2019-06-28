@@ -29,9 +29,13 @@ import org.apache.james.util.docker.DockerContainer;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
 public class DockerJamesRule implements TestRule {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DockerJamesRule.class);
 
     private static final int IMAP_PORT = 143;
     private static final int SMTP_PORT = 587;
@@ -42,7 +46,15 @@ public class DockerJamesRule implements TestRule {
     public DockerJamesRule(String image) {
         container = DockerContainer.fromName(image)
             .withExposedPorts(SMTP_PORT, IMAP_PORT)
-            .waitingFor(new HostPortWaitStrategy());
+            .waitingFor(new HostPortWaitStrategy())
+            .withLogConsumer(frame -> {
+                switch (frame.getType()) {
+                    case STDOUT:
+                        LOGGER.info(frame.getUtf8String());
+                    case STDERR:
+                        LOGGER.error(frame.getUtf8String());
+                }
+            });
     }
 
     public ProvisioningAPI cliJarDomainsAndUsersAdder() throws InterruptedException, ProvisioningException, IOException {

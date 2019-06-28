@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
@@ -76,6 +78,11 @@ public class DockerContainer implements TestRule {
         List<String> envVariables = container.getEnv();
         envVariables.add("affinity:container==" + container);
         container.setEnv(envVariables);
+        return this;
+    }
+
+    public DockerGenericContainer withLogConsumer(Consumer<OutputFrame> consumer) {
+        container.withLogConsumer(consumer);
         return this;
     }
 
