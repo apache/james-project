@@ -38,6 +38,41 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class MemoryTaskManager implements TaskManager {
+
+    private static class DetailsUpdater implements TaskManagerWorker.Listener {
+
+        private final Consumer<TaskExecutionDetailsUpdater> updater;
+
+        DetailsUpdater(Consumer<TaskExecutionDetailsUpdater> updater) {
+            this.updater = updater;
+        }
+
+        @Override
+        public void started() {
+            updater.accept(TaskExecutionDetails::start);
+        }
+
+        @Override
+        public void completed() {
+            updater.accept(TaskExecutionDetails::completed);
+        }
+
+        @Override
+        public void failed(Throwable t) {
+            failed();
+        }
+
+        @Override
+        public void failed() {
+            updater.accept(TaskExecutionDetails::failed);
+        }
+
+        @Override
+        public void cancelled() {
+            updater.accept(TaskExecutionDetails::cancelEffectively);
+        }
+    }
+
     public static final Duration AWAIT_POLLING_DURATION = Duration.ofMillis(500);
     public static final Duration NOW = Duration.ZERO;
     private final WorkQueue workQueue;
@@ -66,7 +101,8 @@ public class MemoryTaskManager implements TaskManager {
     }
 
     private void treatTask(TaskWithId task) {
-        Mono<Task.Result> result = worker.executeTask(task, updateDetails(task.getId()));
+        DetailsUpdater detailsUpdater = updater(task.getId());
+        Mono<Task.Result> result = worker.executeTask(task, detailsUpdater);
         tasksResult.put(task.getId(), result);
         try {
             BiConsumer<Throwable, Object> ignoreException = (t, o) -> { };
@@ -116,7 +152,7 @@ public class MemoryTaskManager implements TaskManager {
                     updateDetails(id).accept(TaskExecutionDetails::cancelRequested);
                 }
                 workQueue.cancel(id);
-                worker.cancelTask(id, updateDetails(id));
+                worker.cancelTask(id, updater(id));
             }
         );
     }
@@ -151,6 +187,10 @@ public class MemoryTaskManager implements TaskManager {
         } catch (IOException ignored) {
             //avoid noise when closing the workqueue
         }
+    }
+
+    private DetailsUpdater updater(TaskId id) {
+        return new DetailsUpdater(updateDetails(id));
     }
 
     private Consumer<TaskExecutionDetailsUpdater> updateDetails(TaskId taskId) {

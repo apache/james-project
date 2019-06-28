@@ -23,8 +23,6 @@ import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.MDCBuilder;
@@ -35,6 +33,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MemoryTaskManagerWorker implements TaskManagerWorker {
+
     private static final boolean INTERRUPT_IF_RUNNING = true;
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryTaskManagerWorker.class);
     private static final Duration CHECK_CANCELED_PERIOD = Duration.ofMillis(100);
@@ -43,62 +42,59 @@ public class MemoryTaskManagerWorker implements TaskManagerWorker {
     private final ConcurrentHashMap<TaskId, CompletableFuture<Task.Result>> idToFuture = new ConcurrentHashMap<>();
 
     @Override
-    public Mono<Task.Result> executeTask(TaskWithId taskWithId, Consumer<TaskExecutionDetailsUpdater> updateDetails) {
-        CompletableFuture<Task.Result> futureResult = CompletableFuture.supplyAsync(() -> runWithMdc(taskWithId, updateDetails));
+    public Mono<Task.Result> executeTask(TaskWithId taskWithId, Listener listener) {
+        CompletableFuture<Task.Result> futureResult = CompletableFuture.supplyAsync(() -> runWithMdc(taskWithId, listener));
 
         idToFuture.put(taskWithId.getId(), futureResult);
 
         return Mono.fromFuture(futureResult)
             .doOnError(res -> {
                 if (!(res instanceof CancellationException)) {
-                    failed(updateDetails,
-                        (logger, details) -> logger.error("Task was partially performed. Check logs for more details"));
+                    listener.failed(res);
+                    LOGGER.error("Task was partially performed. Check logs for more details", res);
                 }
             })
             .doOnTerminate(() -> idToFuture.remove(taskWithId.getId()));
     }
 
-    private Task.Result runWithMdc(TaskWithId taskWithId, Consumer<TaskExecutionDetailsUpdater> updateDetails) {
+    private Task.Result runWithMdc(TaskWithId taskWithId, Listener listener) {
         return MDCBuilder.withMdc(
             MDCBuilder.create()
                 .addContext(Task.TASK_ID, taskWithId.getId())
                 .addContext(Task.TASK_TYPE, taskWithId.getTask().type())
                 .addContext(Task.TASK_DETAILS, taskWithId.getTask().details()),
-            () -> run(taskWithId, updateDetails));
+            () -> run(taskWithId, listener));
     }
 
 
-    private Task.Result run(TaskWithId taskWithId, Consumer<TaskExecutionDetailsUpdater> updateDetails) {
-        updateDetails.accept(TaskExecutionDetails::start);
+    private Task.Result run(TaskWithId taskWithId, Listener listener) {
+        listener.started();
         try {
             return taskWithId.getTask()
                 .run()
-                .onComplete(() -> success(updateDetails))
-                .onFailure(() -> failed(updateDetails, (logger, details) -> logger.error("Task was partially performed. Check logs for more details" + details.getTaskId())));
+                .onComplete(listener::completed)
+                .onFailure(() -> {
+                    LOGGER.error("Task was partially performed. Check logs for more details. Taskid : " + taskWithId.getId());
+                    listener.failed();
+                });
         } catch (Exception e) {
-            failed(updateDetails,
-                (logger, executionDetails) -> logger.error("Error while running task {}", executionDetails, e));
+            LOGGER.error("Error while running task {}", taskWithId.getId(), e);
+            listener.failed(e);
             return Task.Result.PARTIAL;
         }
     }
 
     @Override
-    public void cancelTask(TaskId id, Consumer<TaskExecutionDetailsUpdater> updateDetails) {
+    public void cancelTask(TaskId id, Listener listener) {
         Optional.ofNullable(idToFuture.remove(id))
             .ifPresent(future -> {
-                requestCancellation(updateDetails, future);
+                requestCancellation(future);
                 waitUntilFutureIsCancelled(future).blockFirst();
-                effectivelyCancelled(updateDetails);
+                listener.cancelled();
             });
     }
 
-    private void requestCancellation(Consumer<TaskExecutionDetailsUpdater> updateDetails, CompletableFuture<Task.Result> future) {
-        updateDetails.accept(details -> {
-            if (details.getStatus().equals(TaskManager.Status.WAITING) || details.getStatus().equals(TaskManager.Status.IN_PROGRESS)) {
-                return details.cancelRequested();
-            }
-            return details;
-        });
+    private void requestCancellation(CompletableFuture<Task.Result> future) {
         future.cancel(INTERRUPT_IF_RUNNING);
     }
 
@@ -108,42 +104,4 @@ public class MemoryTaskManagerWorker implements TaskManagerWorker {
             .filter(FunctionalUtils.identityPredicate())
             .take(FIRST);
     }
-
-    private void effectivelyCancelled(Consumer<TaskExecutionDetailsUpdater> updateDetails) {
-        updateDetails.accept(details -> {
-            if (canBeCancelledEffectively(details)) {
-                return details.cancelEffectively();
-            }
-            return details;
-        });
-    }
-
-    private boolean canBeCancelledEffectively(TaskExecutionDetails details) {
-        return !details.getStatus().isFinished();
-    }
-
-    private void success(Consumer<TaskExecutionDetailsUpdater> updateDetails) {
-        updateDetails.accept(currentDetails -> {
-            if (!wasCancelled(currentDetails)) {
-                LOGGER.info("Task success");
-                return currentDetails.completed();
-            }
-            return currentDetails;
-        });
-    }
-
-    private void failed(Consumer<TaskExecutionDetailsUpdater> updateDetails, BiConsumer<Logger, TaskExecutionDetails> logOperation) {
-        updateDetails.accept(currentDetails -> {
-            if (!wasCancelled(currentDetails)) {
-                logOperation.accept(LOGGER, currentDetails);
-                return currentDetails.failed();
-            }
-            return currentDetails;
-        });
-    }
-
-    private boolean wasCancelled(TaskExecutionDetails details) {
-        return details.getStatus() == TaskManager.Status.CANCELLED;
-    }
-
 }

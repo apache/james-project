@@ -18,14 +18,24 @@
  ****************************************************************/
 package org.apache.james.task;
 
-import java.util.function.Consumer;
-
 import reactor.core.publisher.Mono;
 
 public interface TaskManagerWorker {
 
-    Mono<Task.Result> executeTask(TaskWithId taskWithId, Consumer<TaskExecutionDetailsUpdater> updateDetails);
+    interface Listener {
+        void started();
 
-    void cancelTask(TaskId id, Consumer<TaskExecutionDetailsUpdater> updateDetails);
+        void completed();
+
+        void failed(Throwable t);
+
+        void failed();
+
+        void cancelled();
+    }
+
+    Mono<Task.Result> executeTask(TaskWithId taskWithId, Listener listener);
+
+    void cancelTask(TaskId id, Listener listener);
 
 }
