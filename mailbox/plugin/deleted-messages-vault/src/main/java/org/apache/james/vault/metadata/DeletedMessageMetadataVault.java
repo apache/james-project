@@ -27,7 +27,7 @@ import org.reactivestreams.Publisher;
 public interface DeletedMessageMetadataVault {
     Publisher<Void> store(DeletedMessageWithStorageInformation deletedMessage);
 
-    Publisher<Void> removeBucket(BucketName bucketName);
+    Publisher<Void> removeMetadataRelatedToBucket(BucketName bucketName);
 
     Publisher<Void> remove(BucketName bucketName, User user, MessageId messageId);
 
@@ -35,5 +35,5 @@ public interface DeletedMessageMetadataVault {
 
     Publisher<DeletedMessageWithStorageInformation> listMessages(BucketName bucketName, User user);
 
-    Publisher<BucketName> listBuckets();
+    Publisher<BucketName> listRelatedBuckets();
 }

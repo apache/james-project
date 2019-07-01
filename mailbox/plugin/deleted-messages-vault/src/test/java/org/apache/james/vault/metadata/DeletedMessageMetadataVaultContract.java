@@ -79,7 +79,7 @@ public interface DeletedMessageMetadataVaultContract {
 
     @Test
     default void listBucketsShouldBeEmptyWhenNoMessageInserted() {
-        Stream<BucketName> messages = Flux.from(metadataVault().listBuckets()).toStream();
+        Stream<BucketName> messages = Flux.from(metadataVault().listRelatedBuckets()).toStream();
         assertThat(messages).isEmpty();
     }
 
@@ -88,7 +88,7 @@ public interface DeletedMessageMetadataVaultContract {
         Mono.from(metadataVault().store(DELETED_MESSAGE)).block();
         Mono.from(metadataVault().store(DELETED_MESSAGE_2_OTHER_BUCKET)).block();
 
-        Stream<BucketName> messages = Flux.from(metadataVault().listBuckets()).toStream();
+        Stream<BucketName> messages = Flux.from(metadataVault().listRelatedBuckets()).toStream();
         assertThat(messages).containsOnly(BUCKET_NAME, OTHER_BUCKET_NAME);
     }
 
@@ -97,7 +97,7 @@ public interface DeletedMessageMetadataVaultContract {
         Mono.from(metadataVault().store(DELETED_MESSAGE)).block();
         Mono.from(metadataVault().store(DELETED_MESSAGE_2)).block();
 
-        Stream<BucketName> messages = Flux.from(metadataVault().listBuckets()).toStream();
+        Stream<BucketName> messages = Flux.from(metadataVault().listRelatedBuckets()).toStream();
         assertThat(messages).containsExactly(BUCKET_NAME);
     }
 
@@ -106,9 +106,9 @@ public interface DeletedMessageMetadataVaultContract {
         Mono.from(metadataVault().store(DELETED_MESSAGE)).block();
         Mono.from(metadataVault().store(DELETED_MESSAGE_2_OTHER_BUCKET)).block();
 
-        Mono.from(metadataVault().removeBucket(BUCKET_NAME)).block();
+        Mono.from(metadataVault().removeMetadataRelatedToBucket(BUCKET_NAME)).block();
 
-        Stream<BucketName> messages = Flux.from(metadataVault().listBuckets()).toStream();
+        Stream<BucketName> messages = Flux.from(metadataVault().listRelatedBuckets()).toStream();
         assertThat(messages).containsOnly(OTHER_BUCKET_NAME);
     }
 
@@ -117,9 +117,9 @@ public interface DeletedMessageMetadataVaultContract {
         Mono.from(metadataVault().store(DELETED_MESSAGE)).block();
         Mono.from(metadataVault().store(DELETED_MESSAGE_2)).block();
 
-        Mono.from(metadataVault().removeBucket(BUCKET_NAME)).block();
+        Mono.from(metadataVault().removeMetadataRelatedToBucket(BUCKET_NAME)).block();
 
-        Stream<BucketName> messages = Flux.from(metadataVault().listBuckets()).toStream();
+        Stream<BucketName> messages = Flux.from(metadataVault().listRelatedBuckets()).toStream();
         assertThat(messages).isEmpty();
     }
 
@@ -128,7 +128,7 @@ public interface DeletedMessageMetadataVaultContract {
         Mono.from(metadataVault().store(DELETED_MESSAGE)).block();
         Mono.from(metadataVault().store(DELETED_MESSAGE_2_OTHER_BUCKET)).block();
 
-        Mono.from(metadataVault().removeBucket(BUCKET_NAME)).block();
+        Mono.from(metadataVault().removeMetadataRelatedToBucket(BUCKET_NAME)).block();
 
         Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(OTHER_BUCKET_NAME, USER)).toStream();
         assertThat(messages).containsOnly(DELETED_MESSAGE_2_OTHER_BUCKET);
@@ -139,7 +139,7 @@ public interface DeletedMessageMetadataVaultContract {
         Mono.from(metadataVault().store(DELETED_MESSAGE)).block();
         Mono.from(metadataVault().store(DELETED_MESSAGE_2)).block();
 
-        Mono.from(metadataVault().removeBucket(BUCKET_NAME)).block();
+        Mono.from(metadataVault().removeMetadataRelatedToBucket(BUCKET_NAME)).block();
 
         Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(BUCKET_NAME, USER)).toStream();
         assertThat(messages).isEmpty();

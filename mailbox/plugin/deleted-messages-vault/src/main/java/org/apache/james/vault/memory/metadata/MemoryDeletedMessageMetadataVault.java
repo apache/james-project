@@ -62,7 +62,7 @@ public class MemoryDeletedMessageMetadataVault implements DeletedMessageMetadata
     }
 
     @Override
-    public Publisher<Void> removeBucket(BucketName bucketName) {
+    public Publisher<Void> removeMetadataRelatedToBucket(BucketName bucketName) {
         return Mono.fromRunnable(() -> {
             synchronized (table) {
                 table.row(bucketName).clear();
@@ -81,7 +81,7 @@ public class MemoryDeletedMessageMetadataVault implements DeletedMessageMetadata
 
     @Override
     public Publisher<StorageInformation> retrieveStorageInformation(User user, MessageId messageId) {
-        return Flux.from(listBuckets())
+        return Flux.from(listRelatedBuckets())
             .concatMap(bucket -> {
                 synchronized (table) {
                     return Mono.justOrEmpty(userVault(bucket, user).get(messageId));
@@ -102,7 +102,7 @@ public class MemoryDeletedMessageMetadataVault implements DeletedMessageMetadata
     }
 
     @Override
-    public Publisher<BucketName> listBuckets() {
+    public Publisher<BucketName> listRelatedBuckets() {
         synchronized (table) {
             return Flux.fromIterable(ImmutableSet.copyOf(table.rowKeySet()));
         }
