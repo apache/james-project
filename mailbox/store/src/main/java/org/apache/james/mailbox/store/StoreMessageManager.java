@@ -133,6 +133,16 @@ public class StoreMessageManager implements MessageManager {
      */
     protected static final Flags MINIMAL_PERMANET_FLAGS;
 
+    private static class MediaType {
+        final String mediaType;
+        final String subType;
+
+        private MediaType(String mediaType, String subType) {
+            this.mediaType = mediaType;
+            this.subType = subType;
+        }
+    }
+
     static {
         MINIMAL_PERMANET_FLAGS = new Flags();
         MINIMAL_PERMANET_FLAGS.add(Flags.Flag.ANSWERED);
@@ -327,7 +337,6 @@ public class StoreMessageManager implements MessageManager {
 
     @Override
     public ComposedMessageId appendMessage(InputStream msgIn, Date internalDate, final MailboxSession mailboxSession, boolean isRecent, Flags flagsToBeSet) throws MailboxException {
-
         File file = null;
 
         if (!isWriteable(mailboxSession)) {
@@ -346,126 +355,20 @@ public class StoreMessageManager implements MessageManager {
                 // Disable line length... This should be handled by the smtp server
                 // component and not the parser itself
                 // https://issues.apache.org/jira/browse/IMAP-122
-
-                final MimeTokenStream parser = new MimeTokenStream(MimeConfig.PERMISSIVE, new DefaultBodyDescriptorBuilder());
-
-                parser.setRecursionMode(RecursionMode.M_NO_RECURSE);
-                parser.parse(bIn);
-                final HeaderImpl header = new HeaderImpl();
-
-                EntityState next = parser.next();
-                while (next != EntityState.T_BODY && next != EntityState.T_END_OF_STREAM && next != EntityState.T_START_MULTIPART) {
-                    if (next == EntityState.T_FIELD) {
-                        header.addField(parser.getField());
-                    }
-                    next = parser.next();
-                }
+                final MimeTokenStream parser = getParser(bIn);
+                final HeaderImpl header = readHeader(parser);
                 final MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) parser.getBodyDescriptor();
-                final PropertyBuilder propertyBuilder = new PropertyBuilder();
-                final String mediaType;
-                final String mediaTypeFromHeader = descriptor.getMediaType();
-                final String subType;
-                if (mediaTypeFromHeader == null) {
-                    mediaType = "text";
-                    subType = "plain";
-                } else {
-                    mediaType = mediaTypeFromHeader;
-                    subType = descriptor.getSubType();
-                }
-                propertyBuilder.setMediaType(mediaType);
-                propertyBuilder.setSubType(subType);
-                propertyBuilder.setContentID(descriptor.getContentId());
-                propertyBuilder.setContentDescription(descriptor.getContentDescription());
-                propertyBuilder.setContentLocation(descriptor.getContentLocation());
-                propertyBuilder.setContentMD5(descriptor.getContentMD5Raw());
-                propertyBuilder.setContentTransferEncoding(descriptor.getTransferEncoding());
-                propertyBuilder.setContentLanguage(descriptor.getContentLanguage());
-                propertyBuilder.setContentDispositionType(descriptor.getContentDispositionType());
-                propertyBuilder.setContentDispositionParameters(descriptor.getContentDispositionParameters());
-                propertyBuilder.setContentTypeParameters(descriptor.getContentTypeParameters());
-                // Add missing types
-                final String codeset = descriptor.getCharset();
-                if (codeset == null) {
-                    if ("TEXT".equalsIgnoreCase(mediaType)) {
-                        propertyBuilder.setCharset("us-ascii");
-                    }
-                } else {
-                    propertyBuilder.setCharset(codeset);
-                }
+                final MediaType mediaType = getMediaType(descriptor);
+                final PropertyBuilder propertyBuilder = getPropertyBuilder(descriptor, mediaType.mediaType, mediaType.subType);
+                setTextualLinesCount(parser, mediaType.mediaType, propertyBuilder);
+                final Flags flags = getFlags(mailboxSession, isRecent, flagsToBeSet);
 
-                final String boundary = descriptor.getBoundary();
-                if (boundary != null) {
-                    propertyBuilder.setBoundary(boundary);
-                }
-                if ("text".equalsIgnoreCase(mediaType)) {
-                    final CountingInputStream bodyStream = new CountingInputStream(parser.getInputStream());
-                    bodyStream.readAll();
-                    long lines = bodyStream.getLineCount();
-                    bodyStream.close();
-                    next = parser.next();
-                    if (next == EntityState.T_EPILOGUE) {
-                        final CountingInputStream epilogueStream = new CountingInputStream(parser.getInputStream());
-                        epilogueStream.readAll();
-                        lines += epilogueStream.getLineCount();
-                        epilogueStream.close();
-
-                    }
-                    propertyBuilder.setTextualLineCount(lines);
-                }
-
-                final Flags flags;
-                if (flagsToBeSet == null) {
-                    flags = new Flags();
-                } else {
-                    flags = flagsToBeSet;
-
-                    // Check if we need to trim the flags
-                    trimFlags(flags, mailboxSession);
-
-                }
-                if (isRecent) {
-                    flags.add(Flags.Flag.RECENT);
-                }
                 if (internalDate == null) {
                     internalDate = new Date();
                 }
-                byte[] discard = new byte[4096];
-                while (tmpMsgIn.read(discard) != -1) {
-                    // consume the rest of the stream so everything get copied to
-                    // the file now
-                    // via the TeeInputStream
-                }
-                bufferedOut.close();
-                int bodyStartOctet = (int) bIn.getBodyStartOffset();
-                if (bodyStartOctet == -1) {
-                    bodyStartOctet = 0;
-                }
-                try (SharedFileInputStream contentIn = new SharedFileInputStream(file)) {
-                    final int size = (int) file.length();
-
-                    final List<MessageAttachment> attachments = extractAttachments(contentIn);
-                    propertyBuilder.setHasAttachment(hasNonInlinedAttachment(attachments));
-
-                    final MailboxMessage message = createMessage(internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder, attachments);
-
-                    new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
-
-                    return locker.executeWithLock(mailboxSession, getMailboxPath(), () -> {
-                        MessageMetaData data = appendMessageToStore(message, attachments, mailboxSession);
-
-                        Mailbox mailbox = getMailboxEntity();
-
-                        eventBus.dispatch(EventFactory.added()
-                            .randomEventId()
-                            .mailboxSession(mailboxSession)
-                            .mailbox(mailbox)
-                            .addMetaData(message.metaData())
-                            .build(),
-                            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
-                            .block();
-                        return new ComposedMessageId(mailbox.getMailboxId(), data.getMessageId(), data.getUid());
-                    }, true);
-                }
+                consumeStream(bufferedOut, tmpMsgIn);
+                int bodyStartOctet = getBodyStartOctet(bIn);
+                return createAndDispatchMessage(internalDate, mailboxSession, file, propertyBuilder, flags, bodyStartOctet);
             }
         } catch (IOException | MimeException e) {
             throw new MailboxException("Unable to parse message", e);
@@ -479,7 +382,148 @@ public class StoreMessageManager implements MessageManager {
                 }
             }
         }
+    }
 
+    private MimeTokenStream getParser(BodyOffsetInputStream bIn) {
+        final MimeTokenStream parser = new MimeTokenStream(MimeConfig.PERMISSIVE, new DefaultBodyDescriptorBuilder());
+
+        parser.setRecursionMode(RecursionMode.M_NO_RECURSE);
+        parser.parse(bIn);
+        return parser;
+    }
+
+    private MediaType getMediaType(MaximalBodyDescriptor descriptor) {
+        final String mediaTypeFromHeader = descriptor.getMediaType();
+        if (mediaTypeFromHeader == null) {
+            return new MediaType("text", "plain");
+        } else {
+            return new MediaType(mediaTypeFromHeader, descriptor.getSubType());
+        }
+    }
+
+    private HeaderImpl readHeader(MimeTokenStream parser) throws IOException, MimeException {
+        final HeaderImpl header = new HeaderImpl();
+
+        EntityState next = parser.next();
+        while (next != EntityState.T_BODY && next != EntityState.T_END_OF_STREAM && next != EntityState.T_START_MULTIPART) {
+            if (next == EntityState.T_FIELD) {
+                header.addField(parser.getField());
+            }
+            next = parser.next();
+        }
+        return header;
+    }
+
+    private Flags getFlags(MailboxSession mailboxSession, boolean isRecent, Flags flagsToBeSet) {
+        final Flags flags;
+        if (flagsToBeSet == null) {
+            flags = new Flags();
+        } else {
+            flags = flagsToBeSet;
+
+            // Check if we need to trim the flags
+            trimFlags(flags, mailboxSession);
+
+        }
+        if (isRecent) {
+            flags.add(Flag.RECENT);
+        }
+        return flags;
+    }
+
+    private void setTextualLinesCount(MimeTokenStream parser, String mediaType, PropertyBuilder propertyBuilder) throws IOException, MimeException {
+        EntityState next;
+        if ("text".equalsIgnoreCase(mediaType)) {
+            final CountingInputStream bodyStream = new CountingInputStream(parser.getInputStream());
+            bodyStream.readAll();
+            long lines = bodyStream.getLineCount();
+            bodyStream.close();
+            next = parser.next();
+            if (next == EntityState.T_EPILOGUE) {
+                final CountingInputStream epilogueStream = new CountingInputStream(parser.getInputStream());
+                epilogueStream.readAll();
+                lines += epilogueStream.getLineCount();
+                epilogueStream.close();
+
+            }
+            propertyBuilder.setTextualLineCount(lines);
+        }
+    }
+
+    private void consumeStream(BufferedOutputStream bufferedOut, BufferedInputStream tmpMsgIn) throws IOException {
+        byte[] discard = new byte[4096];
+        while (tmpMsgIn.read(discard) != -1) {
+            // consume the rest of the stream so everything get copied to
+            // the file now
+            // via the TeeInputStream
+        }
+        bufferedOut.flush();
+    }
+
+    private int getBodyStartOctet(BodyOffsetInputStream bIn) {
+        int bodyStartOctet = (int) bIn.getBodyStartOffset();
+        if (bodyStartOctet == -1) {
+            bodyStartOctet = 0;
+        }
+        return bodyStartOctet;
+    }
+
+    private ComposedMessageId createAndDispatchMessage(Date internalDate, MailboxSession mailboxSession, File file, PropertyBuilder propertyBuilder, Flags flags, int bodyStartOctet) throws IOException, MailboxException {
+        try (SharedFileInputStream contentIn = new SharedFileInputStream(file)) {
+            final int size = (int) file.length();
+
+            final List<MessageAttachment> attachments = extractAttachments(contentIn);
+            propertyBuilder.setHasAttachment(hasNonInlinedAttachment(attachments));
+
+            final MailboxMessage message = createMessage(internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder, attachments);
+
+            new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
+
+            return locker.executeWithLock(mailboxSession, getMailboxPath(), () -> {
+                MessageMetaData data = appendMessageToStore(message, attachments, mailboxSession);
+
+                Mailbox mailbox = getMailboxEntity();
+
+                eventBus.dispatch(EventFactory.added()
+                    .randomEventId()
+                    .mailboxSession(mailboxSession)
+                    .mailbox(mailbox)
+                    .addMetaData(message.metaData())
+                    .build(),
+                    new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+                    .block();
+                return new ComposedMessageId(mailbox.getMailboxId(), data.getMessageId(), data.getUid());
+            }, true);
+        }
+    }
+
+    private PropertyBuilder getPropertyBuilder(MaximalBodyDescriptor descriptor, String mediaType, String subType) {
+        final PropertyBuilder propertyBuilder = new PropertyBuilder();
+        propertyBuilder.setMediaType(mediaType);
+        propertyBuilder.setSubType(subType);
+        propertyBuilder.setContentID(descriptor.getContentId());
+        propertyBuilder.setContentDescription(descriptor.getContentDescription());
+        propertyBuilder.setContentLocation(descriptor.getContentLocation());
+        propertyBuilder.setContentMD5(descriptor.getContentMD5Raw());
+        propertyBuilder.setContentTransferEncoding(descriptor.getTransferEncoding());
+        propertyBuilder.setContentLanguage(descriptor.getContentLanguage());
+        propertyBuilder.setContentDispositionType(descriptor.getContentDispositionType());
+        propertyBuilder.setContentDispositionParameters(descriptor.getContentDispositionParameters());
+        propertyBuilder.setContentTypeParameters(descriptor.getContentTypeParameters());
+        // Add missing types
+        final String codeset = descriptor.getCharset();
+        if (codeset == null) {
+            if ("TEXT".equalsIgnoreCase(mediaType)) {
+                propertyBuilder.setCharset("us-ascii");
+            }
+        } else {
+            propertyBuilder.setCharset(codeset);
+        }
+        final String boundary = descriptor.getBoundary();
+        if (boundary != null) {
+            propertyBuilder.setBoundary(boundary);
+        }
+        return propertyBuilder;
     }
 
     private boolean hasNonInlinedAttachment(List<MessageAttachment> attachments) {
