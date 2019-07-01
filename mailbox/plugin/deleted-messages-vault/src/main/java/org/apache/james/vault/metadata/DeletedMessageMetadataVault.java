@@ -17,20 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault;
+package org.apache.james.vault.metadata;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.apache.james.blob.api.BucketName;
+import org.apache.james.core.User;
+import org.apache.james.mailbox.model.MessageId;
+import org.reactivestreams.Publisher;
 
-public class MemoryDeletedMessageMetadataVaultTest implements DeletedMessageMetadataVaultContract {
-    private MemoryDeletedMessageMetadataVault memoryDeletedMessageMetadataVault;
+public interface DeletedMessageMetadataVault {
+    Publisher<Void> store(DeletedMessageWithStorageInformation deletedMessage);
 
-    @BeforeEach
-    void setUp() {
-        memoryDeletedMessageMetadataVault = new MemoryDeletedMessageMetadataVault();
-    }
+    Publisher<Void> removeBucket(BucketName bucketName);
 
-    @Override
-    public DeletedMessageMetadataVault metadataVault() {
-        return memoryDeletedMessageMetadataVault;
-    }
+    Publisher<Void> remove(BucketName bucketName, User user, MessageId messageId);
+
+    Publisher<StorageInformation> retrieveStorageInformation(User user, MessageId messageId);
+
+    Publisher<DeletedMessageWithStorageInformation> listMessages(BucketName bucketName, User user);
+
+    Publisher<BucketName> listBuckets();
 }

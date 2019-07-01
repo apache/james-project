@@ -17,48 +17,22 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault;
+package org.apache.james.vault.memory.metadata;
 
-import java.util.Objects;
+import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
+import org.apache.james.vault.metadata.DeletedMessageMetadataVaultContract;
+import org.junit.jupiter.api.BeforeEach;
 
-import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BucketName;
+public class MemoryDeletedMessageMetadataVaultTest implements DeletedMessageMetadataVaultContract {
+    private MemoryDeletedMessageMetadataVault memoryDeletedMessageMetadataVault;
 
-import com.google.common.base.Preconditions;
-
-public class StorageInformation {
-    private final BucketName bucketName;
-    private final BlobId blobId;
-
-    public StorageInformation(BucketName bucketName, BlobId blobId) {
-        Preconditions.checkNotNull(bucketName);
-        Preconditions.checkNotNull(blobId);
-
-        this.bucketName = bucketName;
-        this.blobId = blobId;
-    }
-
-    public BucketName getBucketName() {
-        return bucketName;
-    }
-
-    public BlobId getBlobId() {
-        return blobId;
+    @BeforeEach
+    void setUp() {
+        memoryDeletedMessageMetadataVault = new MemoryDeletedMessageMetadataVault();
     }
 
     @Override
-    public final boolean equals(Object o) {
-        if (o instanceof StorageInformation) {
-            StorageInformation that = (StorageInformation) o;
-
-            return Objects.equals(this.bucketName, that.bucketName)
-                && Objects.equals(this.blobId, that.blobId);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(bucketName, blobId);
+    public DeletedMessageMetadataVault metadataVault() {
+        return memoryDeletedMessageMetadataVault;
     }
 }

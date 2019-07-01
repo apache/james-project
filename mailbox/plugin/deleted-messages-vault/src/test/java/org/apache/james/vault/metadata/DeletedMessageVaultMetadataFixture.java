@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault;
+package org.apache.james.vault.metadata;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;

@@ -52,8 +52,6 @@
         <module>memory</module>
 
         <module>plugin/deleted-messages-vault</module>
-        <module>plugin/deleted-messages-vault-blobstore</module>
-        <module>plugin/deleted-messages-vault-blobstore-memory</module>
 
         <module>plugin/quota-mailing</module>
         <module>plugin/quota-mailing-cassandra</module>

@@ -17,9 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault;
+package org.apache.james.vault.metadata;
 
 import java.util.Objects;
+
+import org.apache.james.vault.DeletedMessage;
 
 import com.google.common.base.Preconditions;
 

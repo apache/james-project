@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault;
+package org.apache.james.vault.memory.metadata;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +26,9 @@ import java.util.Optional;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
+import org.apache.james.vault.metadata.DeletedMessageWithStorageInformation;
+import org.apache.james.vault.metadata.StorageInformation;
 import org.reactivestreams.Publisher;
 
 import com.google.common.collect.HashBasedTable;

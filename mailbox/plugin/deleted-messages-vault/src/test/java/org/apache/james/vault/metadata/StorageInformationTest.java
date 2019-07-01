@@ -17,23 +17,31 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault;
+package org.apache.james.vault.metadata;
 
-import org.apache.james.blob.api.BucketName;
-import org.apache.james.core.User;
-import org.apache.james.mailbox.model.MessageId;
-import org.reactivestreams.Publisher;
+import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.BLOB_ID;
+import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.BUCKET_NAME;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public interface DeletedMessageMetadataVault {
-    Publisher<Void> store(DeletedMessageWithStorageInformation deletedMessage);
+import org.junit.jupiter.api.Test;
 
-    Publisher<Void> removeBucket(BucketName bucketName);
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    Publisher<Void> remove(BucketName bucketName, User user, MessageId messageId);
+class StorageInformationTest {
+    @Test
+    void shouldRespectBeanContract() {
+        EqualsVerifier.forClass(StorageInformation.class).verify();
+    }
 
-    Publisher<StorageInformation> retrieveStorageInformation(User user, MessageId messageId);
+    @Test
+    void constructorShouldThrowOnNullBucketName() {
+        assertThatThrownBy(() -> new StorageInformation(null, BLOB_ID))
+            .isInstanceOf(NullPointerException.class);
+    }
 
-    Publisher<DeletedMessageWithStorageInformation> listMessages(BucketName bucketName, User user);
-
-    Publisher<BucketName> listBuckets();
+    @Test
+    void constructorShouldThrowOnNullBlobId() {
+        assertThatThrownBy(() -> new StorageInformation(BUCKET_NAME, null))
+            .isInstanceOf(NullPointerException.class);
+    }
 }

@@ -17,31 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault;
+package org.apache.james.vault.metadata;
 
-import static org.apache.james.vault.DeletedMessageVaultMetadataFixture.BLOB_ID;
-import static org.apache.james.vault.DeletedMessageVaultMetadataFixture.BUCKET_NAME;
+import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.STORAGE_INFORMATION;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.vault.DeletedMessageFixture;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class StorageInformationTest {
+class DeletedMessageWithStorageInformationTest {
+
     @Test
     void shouldRespectBeanContract() {
-        EqualsVerifier.forClass(StorageInformation.class).verify();
+        EqualsVerifier.forClass(DeletedMessageWithStorageInformation.class).verify();
     }
 
     @Test
-    void constructorShouldThrowOnNullBucketName() {
-        assertThatThrownBy(() -> new StorageInformation(null, BLOB_ID))
+    void constructorShouldThrowOnNullDeletedMessage() {
+        assertThatThrownBy(() -> new DeletedMessageWithStorageInformation(null, STORAGE_INFORMATION))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    void constructorShouldThrowOnNullBlobId() {
-        assertThatThrownBy(() -> new StorageInformation(BUCKET_NAME, null))
+    void constructorShouldThrowOnNullStorageInformation() {
+        assertThatThrownBy(() -> new DeletedMessageWithStorageInformation(DeletedMessageFixture.DELETED_MESSAGE, null))
             .isInstanceOf(NullPointerException.class);
     }
 }

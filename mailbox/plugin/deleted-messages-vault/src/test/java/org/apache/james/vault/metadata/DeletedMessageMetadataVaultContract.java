@@ -17,12 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault;
+package org.apache.james.vault.metadata;
 
 import static org.apache.james.vault.DeletedMessageFixture.USER;
-import static org.apache.james.vault.DeletedMessageVaultMetadataFixture.BLOB_ID_2;
-import static org.apache.james.vault.DeletedMessageVaultMetadataFixture.BUCKET_NAME;
-import static org.apache.james.vault.DeletedMessageVaultMetadataFixture.STORAGE_INFORMATION;
+import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.BLOB_ID_2;
+import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.BUCKET_NAME;
+import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.STORAGE_INFORMATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.vault.DeletedMessageFixture;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Flux;

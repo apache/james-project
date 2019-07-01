@@ -17,31 +17,48 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault;
+package org.apache.james.vault.metadata;
 
-import static org.apache.james.vault.DeletedMessageVaultMetadataFixture.STORAGE_INFORMATION;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import java.util.Objects;
 
-import org.junit.jupiter.api.Test;
+import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BucketName;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
+import com.google.common.base.Preconditions;
 
-class DeletedMessageWithStorageInformationTest {
+public class StorageInformation {
+    private final BucketName bucketName;
+    private final BlobId blobId;
 
-    @Test
-    void shouldRespectBeanContract() {
-        EqualsVerifier.forClass(DeletedMessageWithStorageInformation.class).verify();
+    public StorageInformation(BucketName bucketName, BlobId blobId) {
+        Preconditions.checkNotNull(bucketName);
+        Preconditions.checkNotNull(blobId);
+
+        this.bucketName = bucketName;
+        this.blobId = blobId;
     }
 
-    @Test
-    void constructorShouldThrowOnNullDeletedMessage() {
-        assertThatThrownBy(() -> new DeletedMessageWithStorageInformation(null, STORAGE_INFORMATION))
-            .isInstanceOf(NullPointerException.class);
+    public BucketName getBucketName() {
+        return bucketName;
     }
 
-    @Test
-    void constructorShouldThrowOnNullStorageInformation() {
-        assertThatThrownBy(() -> new DeletedMessageWithStorageInformation(DeletedMessageFixture.DELETED_MESSAGE, null))
-            .isInstanceOf(NullPointerException.class);
+    public BlobId getBlobId() {
+        return blobId;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof StorageInformation) {
+            StorageInformation that = (StorageInformation) o;
+
+            return Objects.equals(this.bucketName, that.bucketName)
+                && Objects.equals(this.blobId, that.blobId);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(bucketName, blobId);
     }
 }
