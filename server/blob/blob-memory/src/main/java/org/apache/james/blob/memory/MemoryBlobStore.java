@@ -27,7 +27,6 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
@@ -35,10 +34,8 @@ import org.apache.james.blob.api.ObjectStoreException;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MemoryBlobStore implements BlobStore {
@@ -92,7 +89,13 @@ public class MemoryBlobStore implements BlobStore {
 
     @Override
     public Mono<Void> deleteBucket(BucketName bucketName) {
-        throw new NotImplementedException("not implemented");
+        Preconditions.checkNotNull(bucketName);
+
+        return Mono.fromRunnable(() -> {
+            synchronized (blobs) {
+                blobs.row(bucketName).clear();
+            }
+        });
     }
 
     private byte[] retrieveStoredValue(BucketName bucketName, BlobId blobId) {

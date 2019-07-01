@@ -20,6 +20,7 @@
 package org.apache.james.blob.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
@@ -37,6 +38,30 @@ public interface BucketBlobStoreContract {
     BlobStore testee();
 
     BlobId.Factory blobIdFactory();
+
+    @Test
+    default void deleteBucketShouldThrowWhenNullBucketName() {
+        assertThatThrownBy(() -> testee().deleteBucket(null).block())
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    default void deleteBucketShouldDeleteExistingBucketWithItsData() {
+        BlobId blobId = testee().save(CUSTOM, SHORT_BYTEARRAY).block();
+        testee().deleteBucket(CUSTOM).block();
+
+        assertThatThrownBy(() -> testee().read(CUSTOM, blobId))
+            .isInstanceOf(ObjectStoreException.class);
+    }
+
+    @Test
+    default void deleteBucketShouldBeIdempotent(){
+        testee().save(CUSTOM, SHORT_BYTEARRAY).block();
+        testee().deleteBucket(CUSTOM).block();
+
+        assertThatCode(() -> testee().deleteBucket(CUSTOM).block())
+            .doesNotThrowAnyException();
+    }
 
     @Test
     default void saveBytesShouldThrowWhenNullBucketName() {
@@ -99,6 +124,17 @@ public interface BucketBlobStoreContract {
     default void saveConcurrentlyWithNonPreExistingBucketShouldNotFail() throws Exception {
         ConcurrentTestRunner.builder()
             .operation(((threadNumber, step) -> testee().save(CUSTOM, SHORT_STRING + threadNumber + step).block()))
+            .threadCount(10)
+            .operationCount(10)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
+    }
+
+    @Test
+    default void deleteBucketConcurrentlyShouldNotFail() throws Exception {
+        testee().save(CUSTOM, SHORT_BYTEARRAY).block();
+
+        ConcurrentTestRunner.builder()
+            .operation(((threadNumber, step) -> testee().deleteBucket(CUSTOM).block()))
             .threadCount(10)
             .operationCount(10)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
