@@ -44,16 +44,18 @@ import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class DKIMSignTest {
 
-    private static final String TESTING_PEM_FILE = "test-dkim.pem";
+    private static final String PKCS1_PEM_FILE = "test-dkim-pkcs1.pem";
+    private static final String PKCS8_PEM_FILE = "test-dkim-pkcs8.pem";
     private static final FakeMailContext FAKE_MAIL_CONTEXT = FakeMailContext.defaultContext();
 
-    @Test
-    void testDKIMSign() throws MessagingException, IOException,
+    @ParameterizedTest
+    @ValueSource(strings = {PKCS1_PEM_FILE, PKCS8_PEM_FILE})
+    void testDKIMSign(String pemFile) throws MessagingException, IOException,
             FailException {
         String message = "Received: by 10.XX.XX.12 with SMTP id dfgskldjfhgkljsdfhgkljdhfg;\r\n\tTue, 06 Oct 2009 07:37:34 -0700 (PDT)\r\nReturn-Path: <bounce@example.com>\r\nReceived: from example.co.uk (example.co.uk [XX.XXX.125.19])\r\n\tby mx.example.com with ESMTP id dgdfgsdfgsd.97.2009.10.06.07.37.32;\r\n\tTue, 06 Oct 2009 07:37:32 -0700 (PDT)\r\nFrom: apache@bago.org\r\nTo: apache@bago.org\r\n\r\nbody\r\nprova\r\n";
 
@@ -65,7 +67,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKeyFilepath", TESTING_PEM_FILE)
+                .setProperty("privateKeyFilepath", pemFile)
                 .build();
 
         mailet.init(mci);
@@ -101,8 +103,9 @@ public class DKIMSignTest {
         return signs;
     }
 
-    @Test
-    void testDKIMSignFuture() throws MessagingException, IOException,
+    @ParameterizedTest
+    @ValueSource(strings = {PKCS1_PEM_FILE, PKCS8_PEM_FILE})
+    void testDKIMSignFuture(String pemFile) throws MessagingException, IOException,
             FailException {
         String message = "Received: by 10.XX.XX.12 with SMTP id dfgskldjfhgkljsdfhgkljdhfg;\r\n\tTue, 06 Oct 2009 07:37:34 -0700 (PDT)\r\nReturn-Path: <bounce@example.com>\r\nReceived: from example.co.uk (example.co.uk [XX.XXX.125.19])\r\n\tby mx.example.com with ESMTP id dgdfgsdfgsd.97.2009.10.06.07.37.32;\r\n\tTue, 06 Oct 2009 07:37:32 -0700 (PDT)\r\nFrom: apache@bago.org\r\nTo: apache@bago.org\r\n\r\nbody\r\nprova\r\n";
 
@@ -114,7 +117,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; t=" + ((System.currentTimeMillis() / 1000) + 1000) + "; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKeyFilepath", TESTING_PEM_FILE)
+                .setProperty("privateKeyFilepath", pemFile)
                 .build();
 
         mailet.init(mci);
@@ -147,8 +150,9 @@ public class DKIMSignTest {
     }
 
 
-    @Test
-    void testDKIMSignTime() throws MessagingException, IOException,
+    @ParameterizedTest
+    @ValueSource(strings = {PKCS1_PEM_FILE, PKCS8_PEM_FILE})
+    void testDKIMSignTime(String pemFile) throws MessagingException, IOException,
             FailException {
         String message = "Received: by 10.XX.XX.12 with SMTP id dfgskldjfhgkljsdfhgkljdhfg;\r\n\tTue, 06 Oct 2009 07:37:34 -0700 (PDT)\r\nReturn-Path: <bounce@example.com>\r\nReceived: from example.co.uk (example.co.uk [XX.XXX.125.19])\r\n\tby mx.example.com with ESMTP id dgdfgsdfgsd.97.2009.10.06.07.37.32;\r\n\tTue, 06 Oct 2009 07:37:32 -0700 (PDT)\r\nFrom: apache@bago.org\r\nTo: apache@bago.org\r\n\r\nbody\r\nprova\r\n";
 
@@ -160,7 +164,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; t=; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKeyFilepath", TESTING_PEM_FILE)
+                .setProperty("privateKeyFilepath", pemFile)
                 .build();
 
         mailet.init(mci);
@@ -196,8 +200,9 @@ public class DKIMSignTest {
         assertThat(rs.get(0).getSignatureTimestamp() >= ref - 60).isTrue();
     }
 
-    @Test
-    void testDKIMSignMessageAsText() throws MessagingException,
+    @ParameterizedTest
+    @ValueSource(strings = {PKCS1_PEM_FILE, PKCS8_PEM_FILE})
+    void testDKIMSignMessageAsText(String pemFile) throws MessagingException,
             IOException, FailException {
         MimeMessage mm = new MimeMessage(Session
                 .getDefaultInstance(new Properties()));
@@ -213,7 +218,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKeyFilepath", TESTING_PEM_FILE)
+                .setProperty("privateKeyFilepath", pemFile)
                 .build();
 
         mailet.init(mci);
@@ -240,8 +245,9 @@ public class DKIMSignTest {
         verify(rawMessage, mockPublicKeyRecordRetriever);
     }
 
-    @Test
-    void testDKIMSignMessageAsObjectConvertedTo7Bit()
+    @ParameterizedTest
+    @ValueSource(strings = {PKCS1_PEM_FILE, PKCS8_PEM_FILE})
+    void testDKIMSignMessageAsObjectConvertedTo7Bit(String pemFile)
             throws MessagingException, IOException, FailException {
         MimeMessage mm = new MimeMessage(Session
                 .getDefaultInstance(new Properties()));
@@ -260,7 +266,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKeyFilepath", TESTING_PEM_FILE)
+                .setProperty("privateKeyFilepath", pemFile)
                 .build();
 
         Mail mail = FakeMail.builder()
@@ -288,8 +294,9 @@ public class DKIMSignTest {
         verify(rawMessage, mockPublicKeyRecordRetriever);
     }
 
-    @Test
-    void testDKIMSignMessageAsObjectNotConverted()
+    @ParameterizedTest
+    @ValueSource(strings = {PKCS1_PEM_FILE, PKCS8_PEM_FILE})
+    void testDKIMSignMessageAsObjectNotConverted(String pemFile)
             throws MessagingException, IOException, FailException {
         MimeMessage mm = new MimeMessage(Session
                 .getDefaultInstance(new Properties()));
@@ -308,7 +315,7 @@ public class DKIMSignTest {
                 .setProperty(
                         "signatureTemplate",
                         "v=1; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;")
-                .setProperty("privateKeyFilepath", TESTING_PEM_FILE)
+                .setProperty("privateKeyFilepath", pemFile)
                 .build();
 
         Mail mail = FakeMail.builder()

@@ -46,7 +46,7 @@ import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.PermFailException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
-
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMDecryptorProvider;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
 import org.bouncycastle.openssl.PEMKeyPair;
@@ -197,6 +197,9 @@ public class DKIMSign extends GenericMailet {
                 Object pemObject = pemParser.readObject();
                 JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
                 KeyPair keyPair;
+                if (pemObject instanceof PrivateKeyInfo) {
+                    return converter.getPrivateKey((PrivateKeyInfo)pemObject);
+                }
                 if (pemObject instanceof PEMEncryptedKeyPair) {
                     PEMEncryptedKeyPair pemEncryptedKeyPair = (PEMEncryptedKeyPair) pemObject;
                     PEMDecryptorProvider decProv = new JcePEMDecryptorProviderBuilder().build(passphrase);
