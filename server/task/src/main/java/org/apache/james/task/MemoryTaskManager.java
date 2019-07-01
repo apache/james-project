@@ -19,73 +19,96 @@
 
 package org.apache.james.task;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import javax.annotation.PreDestroy;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.WorkQueueProcessor;
 import reactor.core.scheduler.Schedulers;
 
 public class MemoryTaskManager implements TaskManager {
-    public static final Duration AWAIT_POLLING_DURATION = Duration.ofMillis(500);
-    public static final Duration NOW = Duration.ZERO;
-    private final WorkQueueProcessor<TaskWithId> workQueue;
-    private final TaskManagerWorker worker;
-    private final ConcurrentHashMap<TaskId, TaskExecutionDetails> idToExecutionDetails;
-    private final ConcurrentHashMap<TaskId, Mono<Task.Result>> tasksResult;
-    private final ExecutorService taskExecutor = Executors.newSingleThreadExecutor();
-    private final ExecutorService requestTaskExecutor = Executors.newSingleThreadExecutor();
 
-    public MemoryTaskManager() {
-        workQueue = WorkQueueProcessor.<TaskWithId>builder()
-            .executor(taskExecutor)
-            .requestTaskExecutor(requestTaskExecutor)
-            .build();
-        idToExecutionDetails = new ConcurrentHashMap<>();
-        tasksResult = new ConcurrentHashMap<>();
-        worker = new MemoryTaskManagerWorker();
-        workQueue
-            .subscribeOn(Schedulers.single())
-            .filter(isTaskWaiting().or(isTaskRequestedForCancellation()))
-            .subscribe(this::sendTaskToWorker);
-    }
+    private static class DetailsUpdater implements TaskManagerWorker.Listener {
 
-    private void sendTaskToWorker(TaskWithId taskWithId) {
-        if (isTaskWaiting().test(taskWithId)) {
-            treatTask(taskWithId);
-        } else if (isTaskRequestedForCancellation().test(taskWithId)) {
-            updateDetails(taskWithId.getId()).accept(TaskExecutionDetails::cancelEffectively);
+        private final Consumer<TaskExecutionDetailsUpdater> updater;
+
+        DetailsUpdater(Consumer<TaskExecutionDetailsUpdater> updater) {
+            this.updater = updater;
+        }
+
+        @Override
+        public void started() {
+            updater.accept(TaskExecutionDetails::start);
+        }
+
+        @Override
+        public void completed() {
+            updater.accept(TaskExecutionDetails::completed);
+        }
+
+        @Override
+        public void failed(Throwable t) {
+            failed();
+        }
+
+        @Override
+        public void failed() {
+            updater.accept(TaskExecutionDetails::failed);
+        }
+
+        @Override
+        public void cancelled() {
+            updater.accept(TaskExecutionDetails::cancelEffectively);
         }
     }
 
-    private Predicate<TaskWithId> isTaskWaiting() {
-        return task -> listIds(Status.WAITING).contains(task.getId());
+    public static final Duration AWAIT_POLLING_DURATION = Duration.ofMillis(500);
+    public static final Duration NOW = Duration.ZERO;
+    private final WorkQueue workQueue;
+    private final TaskManagerWorker worker;
+    private final ConcurrentHashMap<TaskId, TaskExecutionDetails> idToExecutionDetails;
+    private final ConcurrentHashMap<TaskId, Mono<Task.Result>> tasksResult;
+
+    public MemoryTaskManager() {
+
+        idToExecutionDetails = new ConcurrentHashMap<>();
+        tasksResult = new ConcurrentHashMap<>();
+        worker = new MemoryTaskManagerWorker();
+        workQueue = WorkQueue.builder()
+            .worker(this::treatTask)
+            .listener(this::listenToWorkQueueEvents);
     }
 
-    private Predicate<TaskWithId> isTaskRequestedForCancellation() {
-        return task -> listIds(Status.CANCEL_REQUESTED).contains(task.getId());
+    private void listenToWorkQueueEvents(WorkQueue.Event event) {
+        switch (event.status) {
+            case CANCELLED:
+                updateDetails(event.id).accept(TaskExecutionDetails::cancelEffectively);
+                break;
+            case STARTED:
+                break;
+        }
     }
 
     private void treatTask(TaskWithId task) {
-        Mono<Task.Result> result = worker.executeTask(task, updateDetails(task.getId()));
+        DetailsUpdater detailsUpdater = updater(task.getId());
+        Mono<Task.Result> result = worker.executeTask(task, detailsUpdater);
         tasksResult.put(task.getId(), result);
         try {
-            result.block();
+            BiConsumer<Throwable, Object> ignoreException = (t, o) -> { };
+            result
+                .onErrorContinue(InterruptedException.class, ignoreException)
+                .block();
         } catch (CancellationException e) {
             // Do not throw CancellationException
         }
@@ -95,7 +118,7 @@ public class MemoryTaskManager implements TaskManager {
         TaskId taskId = TaskId.generateTaskId();
         TaskExecutionDetails executionDetails = TaskExecutionDetails.from(task, taskId);
         idToExecutionDetails.put(taskId, executionDetails);
-        workQueue.onNext(new TaskWithId(taskId, task));
+        workQueue.submit(new TaskWithId(taskId, task));
         return taskId;
     }
 
@@ -115,10 +138,6 @@ public class MemoryTaskManager implements TaskManager {
         return ImmutableList.copyOf(tasksFiltered(status).values());
     }
 
-    public Set<TaskId> listIds(Status status) {
-        return tasksFiltered(status).keySet();
-    }
-
     public Map<TaskId, TaskExecutionDetails> tasksFiltered(Status status) {
         return idToExecutionDetails.entrySet()
             .stream()
@@ -132,7 +151,8 @@ public class MemoryTaskManager implements TaskManager {
                 if (details.getStatus().equals(Status.WAITING)) {
                     updateDetails(id).accept(TaskExecutionDetails::cancelRequested);
                 }
-                worker.cancelTask(id, updateDetails(id));
+                workQueue.cancel(id);
+                worker.cancelTask(id, updater(id));
             }
         );
     }
@@ -162,13 +182,21 @@ public class MemoryTaskManager implements TaskManager {
 
     @PreDestroy
     public void stop() {
-        taskExecutor.shutdown();
-        requestTaskExecutor.shutdown();
+        try {
+            workQueue.close();
+        } catch (IOException ignored) {
+            //avoid noise when closing the workqueue
+        }
+    }
+
+    private DetailsUpdater updater(TaskId id) {
+        return new DetailsUpdater(updateDetails(id));
     }
 
     private Consumer<TaskExecutionDetailsUpdater> updateDetails(TaskId taskId) {
         return updater -> {
-            TaskExecutionDetails newDetails = updater.update(idToExecutionDetails.get(taskId));
+            TaskExecutionDetails currentDetails = idToExecutionDetails.get(taskId);
+            TaskExecutionDetails newDetails = updater.update(currentDetails);
             idToExecutionDetails.replace(taskId, newDetails);
         };
     }
