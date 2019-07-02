@@ -38,7 +38,7 @@ class SwiftObjectStorageTest {
             .codec(PayloadCodecFactory.DEFAULT)
             .provider(ObjectStorageProvider.SWIFT)
             .authConfiguration(new SwiftAuthConfiguration("tmpauth", Optional.empty(), Optional.empty(), Optional.empty()))
-            .defaultBucketName(Optional.of(BucketName.of("myBucket")))
+            .defaultBucketName(BucketName.of("myBucket"))
             .build();
         assertThatThrownBy(() -> SwiftObjectStorage.builder(objectStorageBlobConfiguration))
             .isInstanceOf(IllegalArgumentException.class)
@@ -58,7 +58,7 @@ class SwiftObjectStorageTest {
             .codec(PayloadCodecFactory.DEFAULT)
             .provider(ObjectStorageProvider.SWIFT)
             .authConfiguration(SwiftAuthConfiguration.from(configuration))
-            .defaultBucketName(Optional.of(BucketName.of("myBucket")))
+            .defaultBucketName(BucketName.of("myBucket"))
             .build();
         SwiftObjectStorage.builder(objectStorageBlobConfiguration);
     }
@@ -69,7 +69,7 @@ class SwiftObjectStorageTest {
             .codec(PayloadCodecFactory.DEFAULT)
             .provider(ObjectStorageProvider.SWIFT)
             .authConfiguration(new SwiftAuthConfiguration("keystone2", Optional.empty(), Optional.empty(), Optional.empty()))
-            .defaultBucketName(Optional.of(BucketName.of("myBucket")))
+            .defaultBucketName(BucketName.of("myBucket"))
             .build();
         assertThatThrownBy(() -> SwiftObjectStorage.builder(objectStorageBlobConfiguration))
             .isInstanceOf(IllegalArgumentException.class)
@@ -89,7 +89,7 @@ class SwiftObjectStorageTest {
             .codec(PayloadCodecFactory.DEFAULT)
             .provider(ObjectStorageProvider.SWIFT)
             .authConfiguration(SwiftAuthConfiguration.from(configuration))
-            .defaultBucketName(Optional.of(BucketName.of("myBucket")))
+            .defaultBucketName(BucketName.of("myBucket"))
             .build();
         SwiftObjectStorage.builder(objectStorageBlobConfiguration);
     }
@@ -100,7 +100,7 @@ class SwiftObjectStorageTest {
             .codec(PayloadCodecFactory.DEFAULT)
             .provider(ObjectStorageProvider.SWIFT)
             .authConfiguration(new SwiftAuthConfiguration("keystone3", Optional.empty(), Optional.empty(), Optional.empty()))
-            .defaultBucketName(Optional.of(BucketName.of("myBucket")))
+            .defaultBucketName(BucketName.of("myBucket"))
             .build();
         assertThatThrownBy(() -> SwiftObjectStorage.builder(objectStorageBlobConfiguration))
             .isInstanceOf(IllegalArgumentException.class)
@@ -120,7 +120,7 @@ class SwiftObjectStorageTest {
             .codec(PayloadCodecFactory.DEFAULT)
             .provider(ObjectStorageProvider.SWIFT)
             .authConfiguration(SwiftAuthConfiguration.from(configuration))
-            .defaultBucketName(Optional.of(BucketName.of("myBucket")))
+            .defaultBucketName(BucketName.of("myBucket"))
             .build();
         SwiftObjectStorage.builder(objectStorageBlobConfiguration);
     }

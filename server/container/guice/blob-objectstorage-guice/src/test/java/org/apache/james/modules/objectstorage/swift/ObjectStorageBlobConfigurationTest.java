@@ -108,7 +108,7 @@ class ObjectStorageBlobConfigurationTest {
                             .build()),
                         Optional.empty(),
                         Optional.empty()))
-                    .defaultBucketName(Optional.of(BucketName.of("foo")))
+                    .defaultBucketName(BucketName.of("foo"))
                     .build());
     }
 
@@ -139,7 +139,7 @@ class ObjectStorageBlobConfigurationTest {
                             .tenantName(TenantName.of("test"))
                             .build()),
                         Optional.empty()))
-                    .defaultBucketName(Optional.of(BucketName.of("foo")))
+                    .defaultBucketName(BucketName.of("foo"))
                     .build());
     }
 
@@ -171,7 +171,7 @@ class ObjectStorageBlobConfigurationTest {
                             .project(Project.of(ProjectName.of("test")))
                             .identity(IdentityV3.of(DomainName.of("Default"), UserName.of("demo")))
                             .build())))
-                    .defaultBucketName(Optional.of(BucketName.of("foo")))
+                    .defaultBucketName(BucketName.of("foo"))
                     .build());
     }
 

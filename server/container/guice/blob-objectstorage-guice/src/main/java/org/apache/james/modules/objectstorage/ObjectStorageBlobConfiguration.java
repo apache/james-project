@@ -155,6 +155,11 @@ public class ObjectStorageBlobConfiguration {
                 return this;
             }
 
+            public ReadyToBuild defaultBucketName(BucketName defaultBucketName) {
+                this.defaultBucketName = Optional.of(defaultBucketName);
+                return this;
+            }
+
             public ReadyToBuild bucketPrefix(Optional<String> bucketPrefix) {
                 this.bucketPrefix = bucketPrefix;
                 return this;

@@ -19,7 +19,6 @@
 
 package org.apache.james.modules.objectstorage.aws.s3;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -119,7 +118,7 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
             .authConfiguration(authConfiguration)
             .aesSalt("c603a7327ee3dcbc031d8d34b1096c605feca5e1")
             .aesPassword("dockerAwsS3Encryption".toCharArray())
-            .defaultBucketName(Optional.of(defaultBucketName))
+            .defaultBucketName(defaultBucketName)
             .build();
 
         return binder -> {

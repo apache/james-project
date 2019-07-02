@@ -90,7 +90,7 @@ class ObjectStorageBlobStoreModuleTest {
                         .build()),
                     Optional.empty(),
                     Optional.empty()))
-                .defaultBucketName(Optional.of(generateBucketName()))
+                .defaultBucketName(generateBucketName())
                 .build();
             ObjectStorageBlobConfiguration keystone2 = ObjectStorageBlobConfiguration.builder()
                 .codec(PayloadCodecFactory.DEFAULT)
@@ -104,7 +104,7 @@ class ObjectStorageBlobStoreModuleTest {
                         .tenantName(TenantName.of("test"))
                         .build()),
                     Optional.empty()))
-                .defaultBucketName(Optional.of(generateBucketName()))
+                .defaultBucketName(generateBucketName())
                 .build();
             ObjectStorageBlobConfiguration keystone3 = ObjectStorageBlobConfiguration.builder()
                 .codec(PayloadCodecFactory.DEFAULT)
@@ -118,7 +118,7 @@ class ObjectStorageBlobStoreModuleTest {
                         .project(Project.of(ProjectName.of("test")))
                         .identity(IdentityV3.of(DomainName.of("Default"), UserName.of("demo")))
                         .build())))
-                .defaultBucketName(Optional.of(generateBucketName()))
+                .defaultBucketName(generateBucketName())
                 .build();
             return Stream.of(tmpAuth, keystone2, keystone3).map(Arguments::of);
         }

@@ -116,7 +116,7 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
                 Optional.empty()))
             .aesSalt("c603a7327ee3dcbc031d8d34b1096c605feca5e1")
             .aesPassword("dockerSwiftEncryption".toCharArray())
-            .defaultBucketName(Optional.of(defaultBucketName))
+            .defaultBucketName(defaultBucketName)
             .build();
 
         return binder -> {
