@@ -282,6 +282,11 @@ public class FakeMail implements Mail {
             return this;
         }
 
+        public Builder addAllHeadersForRecipients(PerRecipientHeaders perRecipientHeaders) {
+            this.perRecipientHeaders.addAll(perRecipientHeaders);
+            return this;
+        }
+
         public FakeMail build() throws MessagingException {
             return new FakeMail(getMimeMessage(), recipients, name, sender.orElse(null), state.orElse(null), errorMessage.orElse(null), lastUpdated.orElse(null),
                 attributes, size.orElse(0L), remoteAddr.orElse(DEFAULT_REMOTE_ADDRESS), remoteHost.orElse(DEFAULT_REMOTE_HOST), perRecipientHeaders);
@@ -340,9 +345,8 @@ public class FakeMail implements Mail {
 
     @Override
     public Mail duplicate() throws MessagingException {
-        return builder()
+        Builder builder = builder()
             .name(name)
-            .mimeMessage(msg)
             .recipients(ImmutableList.copyOf(recipients))
             .sender(MaybeSender.of(sender))
             .state(Optional.ofNullable(state))
@@ -352,7 +356,10 @@ public class FakeMail implements Mail {
             .size(size)
             .remoteAddr(remoteAddr)
             .remoteHost(remoteHost)
-            .build();
+            .addAllHeadersForRecipients(perRecipientHeaders);
+
+        Optional.ofNullable(msg).ifPresent(builder::mimeMessage);
+        return builder.build();
     }
 
     @Override
