@@ -21,12 +21,6 @@
 
 <mailrepositorystore>
     <mailrepositories>
-        <mailrepository class="org.apache.james.mailrepository.file.FileMailRepository">
-            <protocols>
-                <protocol>file</protocol>
-            </protocols>
-            <config FIFO="false" CACHEKEYS="true"/>
-        </mailrepository>
         <mailrepository class="org.apache.james.mailrepository.cassandra.CassandraMailRepository">
             <protocols>
                 <protocol>cassandra</protocol>
