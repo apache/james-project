@@ -18,14 +18,16 @@
  ****************************************************************/
 package org.apache.james.task;
 
+import java.io.Closeable;
+
 import reactor.core.publisher.Mono;
 
-public interface TaskManagerWorker {
+public interface TaskManagerWorker extends Closeable {
 
     interface Listener {
         void started();
 
-        void completed();
+        void completed(Task.Result result);
 
         void failed(Throwable t);
 
@@ -36,6 +38,5 @@ public interface TaskManagerWorker {
 
     Mono<Task.Result> executeTask(TaskWithId taskWithId, Listener listener);
 
-    void cancelTask(TaskId id, Listener listener);
-
+    void cancelTask(TaskId taskId);
 }

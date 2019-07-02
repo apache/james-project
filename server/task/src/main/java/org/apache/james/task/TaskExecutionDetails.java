@@ -22,8 +22,6 @@ package org.apache.james.task;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import com.google.common.base.Preconditions;
-
 public class TaskExecutionDetails {
 
     public interface AdditionalInformation {
@@ -102,69 +100,93 @@ public class TaskExecutionDetails {
     }
 
     public TaskExecutionDetails start() {
-        Preconditions.checkState(status == TaskManager.Status.WAITING, "expected WAITING actual status is " + status);
-        return new TaskExecutionDetails(
-            taskId,
-            task,
-            TaskManager.Status.IN_PROGRESS,
-            submitDate,
-            Optional.of(ZonedDateTime.now()),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty());
+        switch (status) {
+            case WAITING:
+                return new TaskExecutionDetails(
+                    taskId,
+                    task,
+                    TaskManager.Status.IN_PROGRESS,
+                    submitDate,
+                    Optional.of(ZonedDateTime.now()),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty());
+            default:
+                return this;
+        }
     }
 
     public TaskExecutionDetails completed() {
-        Preconditions.checkState(status == TaskManager.Status.IN_PROGRESS);
-        return new TaskExecutionDetails(
-            taskId,
-            task,
-            TaskManager.Status.COMPLETED,
-            submitDate,
-            startedDate,
-            Optional.of(ZonedDateTime.now()),
-            Optional.empty(),
-            Optional.empty());
+        switch (status) {
+            case IN_PROGRESS:
+            case CANCEL_REQUESTED:
+            case WAITING:
+                return new TaskExecutionDetails(
+                    taskId,
+                    task,
+                    TaskManager.Status.COMPLETED,
+                    submitDate,
+                    startedDate,
+                    Optional.of(ZonedDateTime.now()),
+                    Optional.empty(),
+                    Optional.empty());
+            default:
+                return this;
+        }
     }
 
     public TaskExecutionDetails failed() {
-        Preconditions.checkState(status == TaskManager.Status.IN_PROGRESS);
-        return new TaskExecutionDetails(
-            taskId,
-            task,
-            TaskManager.Status.FAILED,
-            submitDate,
-            startedDate,
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(ZonedDateTime.now()));
+        switch (status) {
+            case IN_PROGRESS:
+            case CANCEL_REQUESTED:
+                return new TaskExecutionDetails(
+                    taskId,
+                    task,
+                    TaskManager.Status.FAILED,
+                    submitDate,
+                    startedDate,
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.of(ZonedDateTime.now()));
+            default:
+                return this;
+        }
     }
 
     public TaskExecutionDetails cancelRequested() {
-        Preconditions.checkState(status == TaskManager.Status.IN_PROGRESS
-            || status == TaskManager.Status.WAITING);
-        return new TaskExecutionDetails(
-            taskId,
-            task,
-            TaskManager.Status.CANCEL_REQUESTED,
-            submitDate,
-            startedDate,
-            Optional.empty(),
-            Optional.of(ZonedDateTime.now()),
-            Optional.empty());
+        switch (status) {
+            case IN_PROGRESS:
+            case WAITING:
+                return new TaskExecutionDetails(
+                    taskId,
+                    task,
+                    TaskManager.Status.CANCEL_REQUESTED,
+                    submitDate,
+                    startedDate,
+                    Optional.empty(),
+                    Optional.of(ZonedDateTime.now()),
+                    Optional.empty());
+            default:
+                return this;
+        }
     }
 
     public TaskExecutionDetails cancelEffectively() {
-        Preconditions.checkState(status == TaskManager.Status.IN_PROGRESS
-            || status == TaskManager.Status.WAITING || status == TaskManager.Status.CANCEL_REQUESTED);
-        return new TaskExecutionDetails(
-            taskId,
-            task,
-            TaskManager.Status.CANCELLED,
-            submitDate,
-            startedDate,
-            Optional.empty(),
-            Optional.of(ZonedDateTime.now()),
-            Optional.empty());
+        switch (status) {
+            case CANCEL_REQUESTED:
+            case IN_PROGRESS:
+            case WAITING:
+                return new TaskExecutionDetails(
+                    taskId,
+                    task,
+                    TaskManager.Status.CANCELLED,
+                    submitDate,
+                    startedDate,
+                    Optional.empty(),
+                    Optional.of(ZonedDateTime.now()),
+                    Optional.empty());
+            default:
+                return this;
+        }
     }
 }

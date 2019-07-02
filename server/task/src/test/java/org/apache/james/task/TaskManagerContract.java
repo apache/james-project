@@ -3,8 +3,8 @@ package org.apache.james.task;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Duration.FIVE_SECONDS;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.awaitility.Duration.ONE_SECOND;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -15,6 +15,7 @@ import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 public interface TaskManagerContract {
@@ -26,7 +27,7 @@ public interface TaskManagerContract {
         .with()
         .pollDelay(slowPacedPollInterval)
         .await();
-    ConditionFactory awaitAtMostOneSecond = calmlyAwait.atMost(ONE_SECOND);
+    ConditionFactory awaitAtMostFiveSeconds = calmlyAwait.atMost(FIVE_SECONDS);
 
     TaskManager taskManager();
 
@@ -41,7 +42,7 @@ public interface TaskManagerContract {
     default void getStatusShouldReturnWaitingWhenNotYetProcessed(CountDownLatch waitingForResultLatch) {
         TaskManager taskManager = taskManager();
         taskManager.submit(() -> {
-            waitForResult(waitingForResultLatch);
+            waitingForResultLatch.await();
             return Task.Result.COMPLETED;
         });
 
@@ -52,21 +53,21 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void taskCodeAfterCancelIsNotRun(CountDownLatch waitingForResultLatch) {
+    default void taskCodeAfterCancelIsNotRun(CountDownLatch waitingForResultLatch) throws InterruptedException {
         TaskManager taskManager = taskManager();
         CountDownLatch waitForTaskToBeLaunched = new CountDownLatch(1);
         AtomicInteger count = new AtomicInteger(0);
 
         TaskId id = taskManager.submit(() -> {
             waitForTaskToBeLaunched.countDown();
-            waitForResult(waitingForResultLatch);
+            waitingForResultLatch.await();
             //We sleep to handover the CPU to the scheduler
             Thread.sleep(1);
             count.incrementAndGet();
             return Task.Result.COMPLETED;
         });
 
-        await(waitForTaskToBeLaunched);
+        waitForTaskToBeLaunched.await();
         taskManager.cancel(id);
 
         assertThat(count.get()).isEqualTo(0);
@@ -105,10 +106,10 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void getStatusShouldBeCancelledWhenCancelled() {
+    default void getStatusShouldBeCancelledWhenCancelled(CountDownLatch countDownLatch) {
         TaskManager taskManager = taskManager();
         TaskId id = taskManager.submit(() -> {
-            sleep(500);
+            countDownLatch.await();
             return Task.Result.COMPLETED;
         });
 
@@ -118,6 +119,8 @@ public interface TaskManagerContract {
         assertThat(taskManager.getExecutionDetails(id).getStatus())
             .isIn(TaskManager.Status.CANCELLED, TaskManager.Status.CANCEL_REQUESTED);
 
+        countDownLatch.countDown();
+
         awaitUntilTaskHasStatus(id, TaskManager.Status.CANCELLED, taskManager);
         assertThat(taskManager.getExecutionDetails(id).getStatus())
             .isEqualTo(TaskManager.Status.CANCELLED);
@@ -125,10 +128,10 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void aWaitingTaskShouldBeCancelled() {
+    default void aWaitingTaskShouldBeCancelled(CountDownLatch countDownLatch) {
         TaskManager taskManager = taskManager();
         TaskId id = taskManager.submit(() -> {
-            sleep(500);
+            countDownLatch.await();
             return Task.Result.COMPLETED;
         });
 
@@ -138,21 +141,21 @@ public interface TaskManagerContract {
 
         awaitUntilTaskHasStatus(id, TaskManager.Status.IN_PROGRESS, taskManager);
 
-
         assertThat(taskManager.getExecutionDetails(idTaskToCancel).getStatus())
             .isIn(TaskManager.Status.CANCELLED, TaskManager.Status.CANCEL_REQUESTED);
+
+        countDownLatch.countDown();
 
         awaitUntilTaskHasStatus(idTaskToCancel, TaskManager.Status.CANCELLED, taskManager);
         assertThat(taskManager.getExecutionDetails(idTaskToCancel).getStatus())
             .isEqualTo(TaskManager.Status.CANCELLED);
-
     }
 
     @Test
     default void cancelShouldBeIdempotent(CountDownLatch waitingForResultLatch) {
         TaskManager taskManager = taskManager();
         TaskId id = taskManager.submit(() -> {
-            waitForResult(waitingForResultLatch);
+            waitingForResultLatch.await();
             return Task.Result.COMPLETED;
         });
         awaitUntilTaskHasStatus(id, TaskManager.Status.IN_PROGRESS, taskManager);
@@ -165,7 +168,7 @@ public interface TaskManagerContract {
     default void getStatusShouldReturnInProgressWhenProcessingIsInProgress(CountDownLatch waitingForResultLatch) {
         TaskManager taskManager = taskManager();
         TaskId taskId = taskManager.submit(() -> {
-            waitForResult(waitingForResultLatch);
+            waitingForResultLatch.await();
             return Task.Result.COMPLETED;
         });
         awaitUntilTaskHasStatus(taskId, TaskManager.Status.IN_PROGRESS, taskManager);
@@ -210,7 +213,7 @@ public interface TaskManagerContract {
         TaskId inProgressId = taskManager.submit(
             () -> {
                 latch1.countDown();
-                waitForResult(waitingForResultLatch);
+                waitingForResultLatch.await();
                 return Task.Result.COMPLETED;
             });
         TaskId waitingId = taskManager.submit(
@@ -250,14 +253,14 @@ public interface TaskManagerContract {
             () -> Task.Result.COMPLETED);
         taskManager.submit(
             () -> {
-                await(latch1);
+                latch1.await();
                 latch2.countDown();
-                waitForResult(waitingForResultLatch);
+                waitingForResultLatch.await();
                 return Task.Result.COMPLETED;
             });
         TaskId waitingId = taskManager.submit(
             () -> {
-                waitForResult(waitingForResultLatch);
+                waitingForResultLatch.await();
                 latch2.countDown();
                 return Task.Result.COMPLETED;
             });
@@ -282,14 +285,14 @@ public interface TaskManagerContract {
             () -> Task.Result.COMPLETED);
         taskManager.submit(
             () -> {
-                await(latch1);
+                latch1.await();
                 latch2.countDown();
-                waitForResult(waitingForResultLatch);
+                waitingForResultLatch.await();
                 return Task.Result.COMPLETED;
             });
         taskManager.submit(
             () -> {
-                waitForResult(waitingForResultLatch);
+                waitingForResultLatch.await();
                 latch2.countDown();
                 return Task.Result.COMPLETED;
             });
@@ -314,14 +317,14 @@ public interface TaskManagerContract {
             () -> Task.Result.COMPLETED);
         taskManager.submit(
             () -> {
-                await(latch1);
+                latch1.await();
                 latch2.countDown();
-                waitForResult(waitingForResultLatch);
+                waitingForResultLatch.await();
                 return Task.Result.COMPLETED;
             });
         taskManager.submit(
             () -> {
-                waitForResult(waitingForResultLatch);
+                waitingForResultLatch.await();
                 latch2.countDown();
                 return Task.Result.COMPLETED;
             });
@@ -346,14 +349,14 @@ public interface TaskManagerContract {
             () -> Task.Result.COMPLETED);
         TaskId inProgressId = taskManager.submit(
             () -> {
-                await(latch1);
+                latch1.await();
                 latch2.countDown();
-                waitForResult(waitingForResultLatch);
+                waitingForResultLatch.await();
                 return Task.Result.COMPLETED;
             });
         taskManager.submit(
             () -> {
-                waitForResult(waitingForResultLatch);
+                waitingForResultLatch.await();
                 latch2.countDown();
                 return Task.Result.COMPLETED;
             });
@@ -396,7 +399,7 @@ public interface TaskManagerContract {
         CountDownLatch latch = new CountDownLatch(1);
         taskManager.submit(
             () -> {
-                await(latch);
+                latch.await();
                 return Task.Result.COMPLETED;
             });
         latch.countDown();
@@ -413,24 +416,24 @@ public interface TaskManagerContract {
 
         taskManager.submit(() -> {
             queue.add(1);
-            sleep(50);
+            Thread.sleep(50);
             queue.add(2);
             return Task.Result.COMPLETED;
         });
         taskManager.submit(() -> {
             queue.add(3);
-            sleep(50);
+            Thread.sleep(50);
             queue.add(4);
             return Task.Result.COMPLETED;
         });
         taskManager.submit(() -> {
             queue.add(5);
-            sleep(50);
+            Thread.sleep(50);
             queue.add(6);
             return Task.Result.COMPLETED;
         });
 
-        awaitAtMostOneSecond.until(() -> queue.contains(6));
+        awaitAtMostFiveSeconds.until(() -> queue.contains(6));
 
         assertThat(queue)
             .containsExactly(1, 2, 3, 4, 5, 6);
@@ -458,27 +461,7 @@ public interface TaskManagerContract {
             .isEqualTo(TaskManager.Status.FAILED);
     }
 
-    default void sleep(int durationInMs) {
-        try {
-            Thread.sleep(durationInMs);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    default void await(CountDownLatch countDownLatch) {
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    default void waitForResult(CountDownLatch waitingForResultLatch) {
-        await(waitingForResultLatch);
-    }
-
     default void awaitUntilTaskHasStatus(TaskId id, TaskManager.Status status, TaskManager taskManager) {
-        awaitAtMostOneSecond.until(() -> taskManager.getExecutionDetails(id).getStatus().equals(status));
+        awaitAtMostFiveSeconds.until(() -> taskManager.getExecutionDetails(id).getStatus(), Matchers.equalTo(status));
     }
 }

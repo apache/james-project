@@ -21,6 +21,7 @@ package org.apache.james.task;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,11 +33,23 @@ public interface Task {
         void run();
     }
 
+    interface CompletionOperation {
+        void complete(Result result);
+    }
+
     enum Result {
         COMPLETED,
         PARTIAL;
 
-        public Result onComplete(Operation... operation) {
+        public Result onComplete(Operation... operations) {
+            return onComplete(Arrays.stream(operations).map(this::wrap));
+        }
+
+        public Result onComplete(CompletionOperation... operation) {
+            return onComplete(Arrays.stream(operation));
+        }
+
+        private Result onComplete(Stream<CompletionOperation> operation) {
             try {
                 if (this == COMPLETED) {
                     run(operation);
@@ -48,16 +61,19 @@ public interface Task {
             }
         }
 
-        public Result onFailure(Operation... operation) {
+        public Result onFailure(Operation... operations) {
             if (this == PARTIAL) {
-                run(operation);
+                run(Arrays.stream(operations).map(this::wrap));
             }
             return this;
         }
 
-        private void run(Operation... operation) {
-            Arrays.stream(operation)
-                .forEach(Operation::run);
+        private CompletionOperation wrap(Operation o) {
+            return result -> o.run();
+        }
+
+        private void run(Stream<CompletionOperation> operations) {
+            operations.forEach(operation -> operation.complete(this));
         }
     }
 

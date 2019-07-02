@@ -24,9 +24,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import javax.annotation.PreDestroy;
@@ -34,7 +32,6 @@ import javax.annotation.PreDestroy;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class MemoryTaskManager implements TaskManager {
@@ -53,8 +50,9 @@ public class MemoryTaskManager implements TaskManager {
         }
 
         @Override
-        public void completed() {
+        public void completed(Task.Result result) {
             updater.accept(TaskExecutionDetails::completed);
+
         }
 
         @Override
@@ -78,47 +76,19 @@ public class MemoryTaskManager implements TaskManager {
     private final WorkQueue workQueue;
     private final TaskManagerWorker worker;
     private final ConcurrentHashMap<TaskId, TaskExecutionDetails> idToExecutionDetails;
-    private final ConcurrentHashMap<TaskId, Mono<Task.Result>> tasksResult;
 
     public MemoryTaskManager() {
 
         idToExecutionDetails = new ConcurrentHashMap<>();
-        tasksResult = new ConcurrentHashMap<>();
-        worker = new MemoryTaskManagerWorker();
-        workQueue = WorkQueue.builder()
-            .worker(this::treatTask)
-            .listener(this::listenToWorkQueueEvents);
-    }
-
-    private void listenToWorkQueueEvents(WorkQueue.Event event) {
-        switch (event.status) {
-            case CANCELLED:
-                updateDetails(event.id).accept(TaskExecutionDetails::cancelEffectively);
-                break;
-            case STARTED:
-                break;
-        }
-    }
-
-    private void treatTask(TaskWithId task) {
-        DetailsUpdater detailsUpdater = updater(task.getId());
-        Mono<Task.Result> result = worker.executeTask(task, detailsUpdater);
-        tasksResult.put(task.getId(), result);
-        try {
-            BiConsumer<Throwable, Object> ignoreException = (t, o) -> { };
-            result
-                .onErrorContinue(InterruptedException.class, ignoreException)
-                .block();
-        } catch (CancellationException e) {
-            // Do not throw CancellationException
-        }
+        worker = new SerialTaskManagerWorker();
+        workQueue = WorkQueue.builder().worker(worker);
     }
 
     public TaskId submit(Task task) {
         TaskId taskId = TaskId.generateTaskId();
         TaskExecutionDetails executionDetails = TaskExecutionDetails.from(task, taskId);
         idToExecutionDetails.put(taskId, executionDetails);
-        workQueue.submit(new TaskWithId(taskId, task));
+        workQueue.submit(new TaskWithId(taskId, task), updater(taskId));
         return taskId;
     }
 
@@ -148,11 +118,8 @@ public class MemoryTaskManager implements TaskManager {
     @Override
     public void cancel(TaskId id) {
         Optional.ofNullable(idToExecutionDetails.get(id)).ifPresent(details -> {
-                if (details.getStatus().equals(Status.WAITING)) {
-                    updateDetails(id).accept(TaskExecutionDetails::cancelRequested);
-                }
+                updateDetails(id).accept(TaskExecutionDetails::cancelRequested);
                 workQueue.cancel(id);
-                worker.cancelTask(id, updater(id));
             }
         );
     }
@@ -161,18 +128,10 @@ public class MemoryTaskManager implements TaskManager {
     public TaskExecutionDetails await(TaskId id) {
         if (Optional.ofNullable(idToExecutionDetails.get(id)).isPresent()) {
             return Flux.interval(NOW, AWAIT_POLLING_DURATION, Schedulers.elastic())
-                .filter(ignore -> tasksResult.get(id) != null)
-                .map(ignore -> {
-                    Optional.ofNullable(tasksResult.get(id))
-                        .ifPresent(mono -> {
-                            try {
-                                mono.block();
-                            } catch (CancellationException e) {
-                                // ignore
-                            }
-                        });
-                    return getExecutionDetails(id);
-                })
+                .map(ignored -> getExecutionDetails(id))
+                .filter(details -> details.getStatus() == Status.COMPLETED
+                    || details.getStatus() == Status.FAILED
+                    || details.getStatus() == Status.CANCELLED)
                 .take(1)
                 .blockFirst();
         } else {

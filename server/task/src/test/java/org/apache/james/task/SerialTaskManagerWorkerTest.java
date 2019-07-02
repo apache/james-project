@@ -25,16 +25,20 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import java.io.IOException;
+import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.awaitility.Awaitility;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Mono;
 
-class MemoryTaskManagerWorkerTest {
+class SerialTaskManagerWorkerTest {
 
-    private final MemoryTaskManagerWorker worker = new MemoryTaskManagerWorker();
+    private final SerialTaskManagerWorker worker = new SerialTaskManagerWorker();
 
     private final Task successfulTask = () -> Task.Result.COMPLETED;
     private final Task failedTask = () -> Task.Result.PARTIAL;
@@ -42,17 +46,22 @@ class MemoryTaskManagerWorkerTest {
         throw new RuntimeException("Throwing Task");
     };
 
+    @AfterEach
+    void tearDown() throws IOException {
+        worker.close();
+    }
+
     @Test
     void aSuccessfullTaskShouldCompleteSuccessfully() {
         TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), this.successfulTask);
 
         TaskManagerWorker.Listener listener = mock(TaskManagerWorker.Listener.class);
 
-        Mono<Task.Result> result = worker.executeTask(taskWithId, listener).cache();
+        Mono<Task.Result> result = worker.executeTask(taskWithId, listener);
 
         assertThat(result.block()).isEqualTo(Task.Result.COMPLETED);
 
-        verify(listener, atLeastOnce()).completed();
+        verify(listener, atLeastOnce()).completed(Task.Result.COMPLETED);
     }
 
     @Test
@@ -60,7 +69,7 @@ class MemoryTaskManagerWorkerTest {
         TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), failedTask);
         TaskManagerWorker.Listener listener = mock(TaskManagerWorker.Listener.class);
 
-        Mono<Task.Result> result = worker.executeTask(taskWithId, listener).cache();
+        Mono<Task.Result> result = worker.executeTask(taskWithId, listener);
 
         assertThat(result.block()).isEqualTo(Task.Result.PARTIAL);
         verify(listener, atLeastOnce()).failed();
@@ -71,14 +80,14 @@ class MemoryTaskManagerWorkerTest {
         TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), throwingTask);
         TaskManagerWorker.Listener listener = mock(TaskManagerWorker.Listener.class);
 
-        Mono<Task.Result> result = worker.executeTask(taskWithId, listener).cache();
+        Mono<Task.Result> result = worker.executeTask(taskWithId, listener);
 
         assertThat(result.block()).isEqualTo(Task.Result.PARTIAL);
         verify(listener, atLeastOnce()).failed(any(RuntimeException.class));
     }
 
     @Test
-    void theWorkerShouldReportThatATaskIsInProgress() {
+    void theWorkerShouldReportThatATaskIsInProgress() throws InterruptedException {
         TaskId id = TaskId.generateTaskId();
         CountDownLatch latch = new CountDownLatch(1);
         CountDownLatch taskLaunched = new CountDownLatch(1);
@@ -93,7 +102,7 @@ class MemoryTaskManagerWorkerTest {
 
         TaskManagerWorker.Listener listener = mock(TaskManagerWorker.Listener.class);
 
-        worker.executeTask(taskWithId, listener).cache();
+        worker.executeTask(taskWithId, listener).subscribe();
 
         await(taskLaunched);
         verify(listener, atLeastOnce()).started();
@@ -102,7 +111,7 @@ class MemoryTaskManagerWorkerTest {
     }
 
     @Test
-    void theWorkerShouldCancelAnInProgressTask() {
+    void theWorkerShouldCancelAnInProgressTask() throws InterruptedException {
         TaskId id = TaskId.generateTaskId();
         AtomicInteger counter = new AtomicInteger(0);
         CountDownLatch latch = new CountDownLatch(1);
@@ -117,21 +126,22 @@ class MemoryTaskManagerWorkerTest {
 
         TaskManagerWorker.Listener listener = mock(TaskManagerWorker.Listener.class);
 
-        worker.executeTask(taskWithId, listener).cache();
+        Mono<Task.Result> resultMono = worker.executeTask(taskWithId, listener).cache();
+        resultMono.subscribe();
 
-        worker.cancelTask(id, listener);
+        Awaitility.waitAtMost(org.awaitility.Duration.TEN_SECONDS)
+            .untilAsserted(() -> verify(listener, atLeastOnce()).started());
 
-        verify(listener, atLeastOnce()).started();
+        worker.cancelTask(id);
+
+        resultMono.block(Duration.ofSeconds(10));
+
         verify(listener, atLeastOnce()).cancelled();
         verifyNoMoreInteractions(listener);
     }
 
 
-    private void await(CountDownLatch countDownLatch) {
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+    private void await(CountDownLatch countDownLatch) throws InterruptedException {
+        countDownLatch.await();
     }
 }

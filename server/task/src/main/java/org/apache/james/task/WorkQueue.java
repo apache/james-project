@@ -21,81 +21,54 @@ package org.apache.james.task;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Consumer;
+import java.util.concurrent.LinkedBlockingQueue;
 
-import com.google.common.collect.Sets;
 import reactor.core.Disposable;
-import reactor.core.publisher.WorkQueueProcessor;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 public class WorkQueue implements Closeable {
 
-    public enum Status {
-        STARTED,
-        CANCELLED
-    }
-
-    public static class Event {
-        public final TaskId id;
-        public final Status status;
-
-        private Event(TaskId id, Status status) {
-            this.id = id;
-            this.status = status;
-        }
-    }
-
     public static RequireWorker builder() {
-        return worker -> listener -> new WorkQueue(worker, listener);
+        return WorkQueue::new;
     }
 
     public interface RequireWorker {
-        RequireListener worker(Consumer<TaskWithId> worker);
+        WorkQueue worker(TaskManagerWorker worker);
     }
 
-    public interface RequireListener {
-        WorkQueue listener(Consumer<Event> worker);
-    }
-
-    private final WorkQueueProcessor<TaskWithId> workQueue;
-    private final ExecutorService taskExecutor = Executors.newSingleThreadExecutor();
-    private final ExecutorService requestTaskExecutor = Executors.newSingleThreadExecutor();
-    private final Set<TaskId> cancelledTasks;
-    private final Consumer<Event> listener;
+    private final TaskManagerWorker worker;
     private final Disposable subscription;
+    private final LinkedBlockingQueue<Tuple2<TaskWithId, TaskManagerWorker.Listener>> tasks;
 
-    private WorkQueue(Consumer<TaskWithId> worker, Consumer<Event> listener) {
-        this.listener = listener;
-        cancelledTasks = Sets.newConcurrentHashSet();
-        workQueue = WorkQueueProcessor.<TaskWithId>builder()
-            .executor(taskExecutor)
-            .requestTaskExecutor(requestTaskExecutor)
-            .build();
-        subscription = workQueue
-            .subscribeOn(Schedulers.single())
-            .subscribe(dispatchNonCancelledTaskToWorker(worker));
+    private WorkQueue(TaskManagerWorker worker) {
+        this.worker = worker;
+        this.tasks = new LinkedBlockingQueue<>();
+        this.subscription = Mono.fromCallable(tasks::take)
+            .repeat()
+            .subscribeOn(Schedulers.elastic())
+            .flatMapSequential(this::dispatchTaskToWorker)
+            .subscribe();
     }
 
-    private Consumer<TaskWithId> dispatchNonCancelledTaskToWorker(Consumer<TaskWithId> delegate) {
-        return taskWithId -> {
-            if (!cancelledTasks.remove(taskWithId.getId())) {
-                listener.accept(new Event(taskWithId.getId(), Status.STARTED));
-                delegate.accept(taskWithId);
-            } else {
-                listener.accept(new Event(taskWithId.getId(), Status.CANCELLED));
-            }
-        };
+    private Mono<?> dispatchTaskToWorker(Tuple2<TaskWithId, TaskManagerWorker.Listener> tuple) {
+        TaskWithId taskWithId = tuple.getT1();
+        TaskManagerWorker.Listener listener = tuple.getT2();
+        return worker.executeTask(taskWithId, listener);
     }
 
-    public void submit(TaskWithId taskWithId) {
-        workQueue.onNext(taskWithId);
+    public void submit(TaskWithId taskWithId, TaskManagerWorker.Listener listener) {
+        try {
+            tasks.put(Tuples.of(taskWithId, listener));
+        } catch (InterruptedException e) {
+            listener.cancelled();
+        }
     }
 
     public void cancel(TaskId taskId) {
-        cancelledTasks.add(taskId);
+        worker.cancelTask(taskId);
     }
 
     @Override
@@ -105,13 +78,7 @@ public class WorkQueue implements Closeable {
         } catch (Throwable ignore) {
             //avoid failing during close
         }
-        try {
-            workQueue.dispose();
-        } catch (Throwable ignore) {
-            //avoid failing during close
-        }
-        taskExecutor.shutdownNow();
-        requestTaskExecutor.shutdownNow();
+        worker.close();
     }
 
 }
