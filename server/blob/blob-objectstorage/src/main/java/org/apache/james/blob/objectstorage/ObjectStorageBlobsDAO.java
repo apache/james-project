@@ -134,9 +134,8 @@ public class ObjectStorageBlobsDAO implements BlobStore {
             .then(Mono.fromCallable(() -> blobIdFactory.from(hashingInputStream.hash().toString())));
     }
 
-    private Mono<String> save(BucketName bucketName, Blob blob) {
-        String containerName = this.containerName.value();
-        return Mono.fromCallable(() -> blobStore.putBlob(containerName, blob));
+    private Mono<Void> save(BucketName bucketName, Blob blob) {
+        return Mono.fromRunnable(() -> putBlobFunction.putBlob(blob));
     }
 
     @Override
