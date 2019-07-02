@@ -36,6 +36,7 @@ public class MetricableBlobStore implements BlobStore {
     static final String SAVE_INPUT_STREAM_TIMER_NAME = BLOB_STORE_METRIC_PREFIX + "saveInputStream";
     static final String READ_BYTES_TIMER_NAME = BLOB_STORE_METRIC_PREFIX + "readBytes";
     static final String READ_TIMER_NAME = BLOB_STORE_METRIC_PREFIX + "read";
+    static final String DELETE_TIMER_NAME = BLOB_STORE_METRIC_PREFIX + "delete";
 
     private final MetricFactory metricFactory;
     private final BlobStore blobStoreImpl;
@@ -73,6 +74,7 @@ public class MetricableBlobStore implements BlobStore {
 
     @Override
     public Mono<Void> deleteBucket(BucketName bucketName) {
-        return blobStoreImpl.deleteBucket(bucketName);
+        return metricFactory
+            .runPublishingTimerMetric(DELETE_TIMER_NAME, () -> blobStoreImpl.deleteBucket(bucketName));
     }
 }
