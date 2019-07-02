@@ -43,7 +43,7 @@
             <mailet match="All" class="Bounce">
             </mailet>
             <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/error/</repositoryPath>
+                <repositoryPath>cassandra://var/mail/error/</repositoryPath>
             </mailet>
         </processor>
 
@@ -82,7 +82,7 @@
                 <attachment>none</attachment>
             </mailet>
             <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/relay-denied/</repositoryPath>
+                <repositoryPath>cassandra://var/mail/relay-denied/</repositoryPath>
                 <notice>Warning: You are sending an e-mail to a remote server. You must be authentified to perform such an operation</notice>
             </mailet>
         </processor>
@@ -95,7 +95,7 @@
 
         <processor state="rrt-error" enableJmx="false">
             <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/rrt-error/</repositoryPath>
+                <repositoryPath>cassandra://var/mail/rrt-error/</repositoryPath>
                 <passThrough>true</passThrough>
             </mailet>
             <mailet match="IsSenderInRRTLoop" class="Null"/>
