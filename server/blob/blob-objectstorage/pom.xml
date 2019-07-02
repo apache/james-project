@@ -33,7 +33,7 @@
     <name>Apache James :: Server :: Blob :: Object storage</name>
 
     <properties>
-        <jclouds.version>2.1.1</jclouds.version>
+        <jclouds.version>2.1.2</jclouds.version>
     </properties>
 
     <dependencies>
