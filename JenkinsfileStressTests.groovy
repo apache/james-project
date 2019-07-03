@@ -50,6 +50,10 @@ pipeline {
                 stage('Start James') {
                     steps {
                         script {
+                            if (fileExists('/srv/bench-running-docker')) {
+                                echo 'Last build failed, cleaning provisionning'
+                                sh 'sudo btrfs subvolume delete /srv/bench-running-docker'
+                            }
                             sh "cd /srv && sudo btrfs subvolume snapshot bench-snapshot bench-running-docker"
                             sh 'docker run -d --name=cassandra -p 9042:9042 -v /srv/bench-running-docker/cassandra:/var/lib/cassandra cassandra:3.11.3'
                             sh 'docker run -d --name=elasticsearch -p 9200:9200 -v /srv/bench-running-docker/elasticsearch:/usr/share/elasticsearch/data/elasticsearch  --env "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:6.3.2'
