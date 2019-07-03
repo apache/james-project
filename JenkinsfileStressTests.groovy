@@ -10,6 +10,10 @@
 // It may be used to wait for a service to be available.
 
 pipeline {
+    options {
+        disableConcurrentBuilds()
+    }
+
     agent none
 
     stages {
