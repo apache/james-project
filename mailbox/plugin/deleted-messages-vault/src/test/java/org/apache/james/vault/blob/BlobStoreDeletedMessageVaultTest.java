@@ -110,18 +110,6 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract {
 
     @Disabled("Will be implemented later")
     @Override
-    public void usersWithVaultShouldReturnEmptyWhenNoItem() {
-
-    }
-
-    @Disabled("Will be implemented later")
-    @Override
-    public void usersWithVaultShouldReturnAllUsers() {
-
-    }
-
-    @Disabled("Will be implemented later")
-    @Override
     public void searchAllShouldNotReturnDeletedItems() {
 
     }
@@ -129,6 +117,12 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract {
     @Disabled("Will be implemented later")
     @Override
     public void loadMimeMessageShouldReturnEmptyWhenDeleted() {
+
+    }
+
+    @Disabled("Will be implemented later")
+    @Override
+    public void deleteExpiredMessagesTaskShouldDeleteOldMailsWhenRunSeveralTime() {
 
     }
 }

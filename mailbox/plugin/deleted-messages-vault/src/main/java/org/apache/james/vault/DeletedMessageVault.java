@@ -36,7 +36,5 @@ public interface DeletedMessageVault {
 
     Publisher<DeletedMessage> search(User user, Query query);
 
-    Publisher<User> usersWithVault();
-
     Task deleteExpiredMessagesTask();
 }

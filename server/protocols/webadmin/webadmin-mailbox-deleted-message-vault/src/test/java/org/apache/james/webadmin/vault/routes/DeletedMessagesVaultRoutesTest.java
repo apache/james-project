@@ -2022,7 +2022,7 @@ class DeletedMessagesVaultRoutesTest {
                 vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
                 vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
 
-                doReturn(new DeleteByQueryExecutor(vault)).when(vault).getDeleteByQueryExecutor();
+                doReturn(new DeleteByQueryExecutor(vault, vault::usersWithVault)).when(vault).getDeleteByQueryExecutor();
                 doReturn(Flux.error(new RuntimeException("mock exception")))
                     .when(vault)
                     .search(any(), any());
@@ -2057,7 +2057,7 @@ class DeletedMessagesVaultRoutesTest {
                 vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
                 vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
 
-                doReturn(new DeleteByQueryExecutor(vault)).when(vault).getDeleteByQueryExecutor();
+                doReturn(new DeleteByQueryExecutor(vault, vault::usersWithVault)).when(vault).getDeleteByQueryExecutor();
                 doReturn(Mono.error(new RuntimeException("mock exception")))
                     .when(vault)
                     .delete(any(), any());

@@ -88,11 +88,6 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     }
 
     @Override
-    public Publisher<User> usersWithVault() {
-        throw new NotImplementedException("Will be implemented later");
-    }
-
-    @Override
     public Task deleteExpiredMessagesTask() {
         throw new NotImplementedException("Will be implemented later");
     }

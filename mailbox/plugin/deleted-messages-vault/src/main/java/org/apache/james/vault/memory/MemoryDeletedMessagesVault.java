@@ -56,7 +56,7 @@ public class MemoryDeletedMessagesVault implements DeletedMessageVault {
     private DeleteByQueryExecutor deleteByQueryExecutor;
 
     public MemoryDeletedMessagesVault(RetentionConfiguration retentionConfiguration, Clock clock) {
-        this.deleteByQueryExecutor = new DeleteByQueryExecutor(this);
+        this.deleteByQueryExecutor = new DeleteByQueryExecutor(this, this::usersWithVault);
         this.retentionConfiguration = retentionConfiguration;
         this.clock = clock;
         this.table = HashBasedTable.create();
@@ -111,11 +111,14 @@ public class MemoryDeletedMessagesVault implements DeletedMessageVault {
             .filter(query.toPredicate());
     }
 
-    @Override
+    @VisibleForTesting
     public Publisher<User> usersWithVault() {
-        synchronized (table) {
-            return Flux.fromIterable(ImmutableList.copyOf(table.rowKeySet()));
-        }
+        return Flux.defer(
+            () -> {
+                synchronized (table) {
+                    return Flux.fromIterable(ImmutableList.copyOf(table.rowKeySet()));
+                }
+            });
     }
 
     public Task deleteExpiredMessagesTask() {

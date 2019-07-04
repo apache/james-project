@@ -75,7 +75,7 @@ public class MailRepositoryDeletedMessageVault implements DeletedMessageVault {
     MailRepositoryDeletedMessageVault(MailRepositoryStore mailRepositoryStore, RetentionConfiguration retentionConfiguration, Configuration configuration, MailConverter mailConverter, Clock clock) {
         this.retentionConfiguration = retentionConfiguration;
         this.clock = clock;
-        this.deleteByQueryExecutor = new DeleteByQueryExecutor(this);
+        this.deleteByQueryExecutor = new DeleteByQueryExecutor(this, this::usersWithVault);
         this.mailRepositoryStore = mailRepositoryStore;
         this.configuration = configuration;
         this.mailConverter = mailConverter;
@@ -139,11 +139,11 @@ public class MailRepositoryDeletedMessageVault implements DeletedMessageVault {
         }
     }
 
-    @Override
-    public Publisher<User> usersWithVault() {
-        return Flux.fromStream(mailRepositoryStore.getUrls()
-            .filter(this::isVault)
-            .map(this::userForRepository));
+    private Publisher<User> usersWithVault() {
+        return Flux.defer(() ->
+            Flux.fromStream(mailRepositoryStore.getUrls()
+                .filter(this::isVault)
+                .map(this::userForRepository)));
     }
 
     private boolean isVault(MailRepositoryUrl url) {

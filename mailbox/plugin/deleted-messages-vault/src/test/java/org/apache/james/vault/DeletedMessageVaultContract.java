@@ -170,21 +170,6 @@ public interface DeletedMessageVaultContract {
     }
 
     @Test
-    default void usersWithVaultShouldReturnEmptyWhenNoItem() {
-        assertThat(Flux.from(getVault().usersWithVault()).collectList().block())
-            .isEmpty();
-    }
-
-    @Test
-    default void usersWithVaultShouldReturnAllUsers() {
-        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-        Mono.from(getVault().append(USER_2, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-
-        assertThat(Flux.from(getVault().usersWithVault()).collectList().block())
-            .containsOnly(USER, USER_2);
-    }
-
-    @Test
     default void appendShouldRunSuccessfullyInAConcurrentContext() throws Exception {
         int operationCount = 10;
         int threadCount = 10;
@@ -280,6 +265,20 @@ public interface DeletedMessageVaultContract {
         getVault().deleteExpiredMessagesTask().run();
 
         assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    default void deleteExpiredMessagesTaskShouldDeleteOldMailsWhenRunSeveralTime() throws InterruptedException {
+        Mono.from(getVault().append(USER, OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        getVault().deleteExpiredMessagesTask().run();
+
+        Mono.from(getVault().append(USER_2, OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        getVault().deleteExpiredMessagesTask().run();
+
+        assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
+            .isEmpty();
+        assertThat(Flux.from(getVault().search(USER_2, ALL)).collectList().block())
             .isEmpty();
     }
 }

@@ -36,7 +36,6 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 
 import org.apache.james.task.Task;
-import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.RetentionConfiguration;
 import org.apache.james.vault.memory.MemoryDeletedMessagesVault;
 import org.apache.james.vault.search.Query;
@@ -48,7 +47,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 class DeleteByQueryExecutorTest {
-    private DeletedMessageVault vault;
+    private MemoryDeletedMessagesVault vault;
     private DeleteByQueryExecutor testee;
     private DeleteByQueryExecutor.Notifiers notifiers;
     private DeleteByQueryExecutor.Notifier userHandledNotifier;
@@ -59,7 +58,7 @@ class DeleteByQueryExecutorTest {
     @BeforeEach
     void setUp() {
         vault = Mockito.spy(new MemoryDeletedMessagesVault(RetentionConfiguration.DEFAULT, CLOCK));
-        testee = new DeleteByQueryExecutor(vault);
+        testee = new DeleteByQueryExecutor(vault, vault::usersWithVault);
 
         userHandledNotifier = mock(DeleteByQueryExecutor.Notifier.class);
         searchErrorNotifier = mock(DeleteByQueryExecutor.Notifier.class);
@@ -75,6 +74,7 @@ class DeleteByQueryExecutorTest {
     @Test
     void deleteByQueryShouldReturnPartialWhenListingUserFailed() {
         when(vault.usersWithVault()).thenReturn(Mono.error(new RuntimeException()));
+        testee = new DeleteByQueryExecutor(vault, vault::usersWithVault);
 
         assertThat(testee.deleteByQuery(Query.ALL, notifiers)).isEqualTo(Task.Result.PARTIAL);
     }

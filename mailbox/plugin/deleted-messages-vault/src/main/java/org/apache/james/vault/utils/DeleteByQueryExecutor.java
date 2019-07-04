@@ -19,12 +19,15 @@
 
 package org.apache.james.vault.utils;
 
+import java.util.function.Supplier;
+
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.task.Task;
 import org.apache.james.util.FunctionalUtils;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.search.Query;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,13 +57,15 @@ public class DeleteByQueryExecutor {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeleteByQueryExecutor.class);
 
     private final DeletedMessageVault deletedMessageVault;
+    private final Supplier<Publisher<User>> userWithVaults;
 
-    public DeleteByQueryExecutor(DeletedMessageVault deletedMessageVault) {
+    public DeleteByQueryExecutor(DeletedMessageVault deletedMessageVault, Supplier<Publisher<User>> userWithVaults) {
         this.deletedMessageVault = deletedMessageVault;
+        this.userWithVaults = userWithVaults;
     }
 
     public Task.Result deleteByQuery(Query query, Notifiers notifiers) {
-        return Flux.from(deletedMessageVault.usersWithVault())
+        return Flux.from(userWithVaults.get())
             .flatMap(user -> deleteByQueryForUser(query, user, notifiers))
             .reduce(Task::combine)
             .onErrorResume(e -> {
