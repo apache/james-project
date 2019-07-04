@@ -34,6 +34,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -217,5 +218,10 @@ public class CassandraBlobsDAO implements BlobStore {
         Preconditions.checkNotNull(data);
         return Mono.fromCallable(() -> IOUtils.toByteArray(data))
             .flatMap(this::saveAsMono);
+    }
+
+    @Override
+    public Mono<Void> deleteBucket(BucketName bucketName) {
+        throw new NotImplementedException("not implemented");
     }
 }

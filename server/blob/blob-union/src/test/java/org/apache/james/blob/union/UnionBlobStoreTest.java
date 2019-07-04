@@ -82,6 +82,11 @@ class UnionBlobStoreTest implements BlobStoreContract {
         }
 
         @Override
+        public Mono<Void> deleteBucket(BucketName bucketName) {
+            return Mono.error(new RuntimeException("broken everywhere"));
+        }
+
+        @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
                 .toString();
@@ -113,6 +118,11 @@ class UnionBlobStoreTest implements BlobStoreContract {
         @Override
         public InputStream read(BucketName bucketName, BlobId blobId) {
             throw new RuntimeException("broken everywhere");
+        }
+
+        @Override
+        public Mono<Void> deleteBucket(BucketName bucketName) {
+            return Mono.error(new RuntimeException("broken everywhere"));
         }
 
         @Override
@@ -478,5 +488,44 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
         assertThat(pushBackIS)
             .hasSameContentAs(new ByteArrayInputStream(new byte[0]));
+    }
+
+    @Test
+    void deleteBucketShouldDeleteBothCurrentAndLegacyBuckets() {
+        BlobId legacyBlobId = legacyBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
+        BlobId currentBlobId = currentBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
+
+        unionBlobStore.deleteBucket(BucketName.DEFAULT).block();
+
+        assertThatThrownBy(() -> legacyBlobStore.readBytes(BucketName.DEFAULT, legacyBlobId).block())
+            .isInstanceOf(ObjectStoreException.class);
+        assertThatThrownBy(() -> currentBlobStore.readBytes(BucketName.DEFAULT, currentBlobId).block())
+            .isInstanceOf(ObjectStoreException.class);
+    }
+
+    @Test
+    void deleteBucketShouldDeleteCurrentBucketEvenWhenLegacyDoesNotExist() {
+        BlobId currentBlobId = currentBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
+
+        unionBlobStore.deleteBucket(BucketName.DEFAULT).block();
+
+        assertThatThrownBy(() -> currentBlobStore.readBytes(BucketName.DEFAULT, currentBlobId).block())
+            .isInstanceOf(ObjectStoreException.class);
+    }
+
+    @Test
+    void deleteBucketShouldDeleteLegacyBucketEvenWhenCurrentDoesNotExist() {
+        BlobId legacyBlobId = legacyBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
+
+        unionBlobStore.deleteBucket(BucketName.DEFAULT).block();
+
+        assertThatThrownBy(() -> legacyBlobStore.readBytes(BucketName.DEFAULT, legacyBlobId).block())
+            .isInstanceOf(ObjectStoreException.class);
+    }
+
+    @Test
+    void deleteBucketShouldNotThrowWhenCurrentAndLegacyBucketsDoNotExist() {
+        assertThatCode(() -> unionBlobStore.deleteBucket(BucketName.DEFAULT).block())
+            .doesNotThrowAnyException();
     }
 }

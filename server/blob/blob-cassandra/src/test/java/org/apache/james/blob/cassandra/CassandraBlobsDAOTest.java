@@ -35,6 +35,7 @@ import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
 import org.apache.james.util.ZeroedInputStream;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -68,6 +69,12 @@ public class CassandraBlobsDAOTest implements MetricableBlobStoreContract {
     @Override
     public BlobId.Factory blobIdFactory() {
         return new HashBlobId.Factory();
+    }
+
+    @Override
+    @Disabled("JAMES-2806: delete bucket not implemented yet for Cassandra")
+    public void deleteBucketShouldPublishDeleteTimerMetrics() {
+
     }
 
     @Test
