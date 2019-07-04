@@ -31,6 +31,7 @@ import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketBlobStoreContract;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
@@ -45,7 +46,6 @@ import org.apache.james.blob.objectstorage.swift.UserHeaderName;
 import org.apache.james.blob.objectstorage.swift.UserName;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -56,7 +56,8 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 @ExtendWith(DockerSwiftExtension.class)
-public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
+public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract, BucketBlobStoreContract {
+
     private static final String BIG_STRING = Strings.repeat("big blob content", 10 * 1024);
     private static final TenantName TENANT_NAME = TenantName.of("test");
     private static final UserName USER_NAME = UserName.of("tester");
@@ -98,6 +99,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     @AfterEach
     void tearDown() {
         blobStore.deleteContainer(defaultBucketName.asString());
+        blobStore.deleteContainer(CUSTOM.asString());
         blobStore.getContext().close();
     }
 
@@ -109,12 +111,6 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     @Override
     public BlobId.Factory blobIdFactory() {
         return new HashBlobId.Factory();
-    }
-
-    @Override
-    @Disabled("JAMES-2806: delete bucket not implemented yet for ObjectStorage")
-    public void deleteBucketShouldPublishDeleteTimerMetrics() {
-
     }
 
     @Test
