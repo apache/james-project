@@ -21,6 +21,7 @@ package org.apache.james.blob.objectstorage.aws;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.UUID;
@@ -45,7 +46,6 @@ import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -53,12 +53,18 @@ import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.retry.PredefinedRetryPolicies;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import reactor.retry.Retry;
 
 public class AwsS3ObjectStorage {
 
@@ -82,7 +88,7 @@ public class AwsS3ObjectStorage {
 
     @Inject
     @VisibleForTesting
-    AwsS3ObjectStorage() {
+    public AwsS3ObjectStorage() {
         executorService = Executors.newFixedThreadPool(MAX_THREADS, NamedThreadFactory.withClassName(AwsS3ObjectStorage.class));
     }
 
@@ -125,6 +131,12 @@ public class AwsS3ObjectStorage {
     }
 
     private static class AwsS3BlobPutter implements BlobPutter {
+
+        private static final int NOT_FOUND_STATUS_CODE = 404;
+        private static final String BUCKET_NOT_FOUND_ERROR_CODE = "NoSuchBucket";
+        private static final Duration FIRST_BACK_OFF = Duration.ofMillis(100);
+        private static final Duration FOREVER = Duration.ofMillis(Long.MAX_VALUE);
+
         private final AwsS3AuthConfiguration configuration;
         private final ExecutorService executorService;
 
@@ -135,14 +147,14 @@ public class AwsS3ObjectStorage {
 
         @Override
         public void putDirectly(BucketName bucketName, Blob blob) {
-            writeFileAndAct(blob, (file) -> putWithRetry(bucketName, configuration, blob, file, FIRST_TRY));
+            writeFileAndAct(blob, (file) -> putWithRetry(bucketName, configuration, blob, file, FIRST_TRY).block());
         }
 
         @Override
         public BlobId putAndComputeId(BucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier) {
             Consumer<File> putChangedBlob = (file) -> {
                 initialBlob.getMetadata().setName(blobIdSupplier.get().asString());
-                putWithRetry(bucketName, configuration, initialBlob, file, FIRST_TRY);
+                putWithRetry(bucketName, configuration, initialBlob, file, FIRST_TRY).block();
             };
             writeFileAndAct(initialBlob, putChangedBlob);
             return blobIdSupplier.get();
@@ -163,30 +175,40 @@ public class AwsS3ObjectStorage {
             }
         }
 
-        private void putWithRetry(BucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file, int tried) {
-            try {
-                put(bucketName, configuration, blob, file);
-            } catch (RuntimeException e) {
-                if (tried < MAX_RETRY_ON_EXCEPTION) {
-                    putWithRetry(bucketName, configuration, blob, file, tried + 1);
-                } else {
-                    throw e;
-                }
-            }
+        private Mono<Void> putWithRetry(BucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file, int tried) {
+            return Mono.<Void>fromRunnable(Throwing.runnable(() -> put(bucketName, configuration, blob, file)).sneakyThrow())
+                .publishOn(Schedulers.elastic())
+                .retryWhen(Retry
+                    .<Void>onlyIf(retryContext -> needToCreateBucket(retryContext.exception()))
+                    .exponentialBackoff(FIRST_BACK_OFF, FOREVER)
+                    .withBackoffScheduler(Schedulers.elastic())
+                    .retryMax(MAX_RETRY_ON_EXCEPTION)
+                    .doOnRetry(retryContext -> createBucket(bucketName, configuration)));
         }
 
-        private void put(BucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file) {
-            try {
-                PutObjectRequest request = new PutObjectRequest(bucketName.asString(),
-                        blob.getMetadata().getName(),
-                        file);
+        private void put(BucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file) throws InterruptedException {
+            PutObjectRequest request = new PutObjectRequest(bucketName.asString(),
+                blob.getMetadata().getName(),
+                file);
 
-                getTransferManager(configuration)
-                        .upload(request)
-                        .waitForUploadResult();
-            } catch (AmazonClientException | InterruptedException e) {
-                throw new RuntimeException(e);
+            getTransferManager(configuration)
+                .upload(request)
+                .waitForUploadResult();
+        }
+
+        private void createBucket(BucketName bucketName, AwsS3AuthConfiguration configuration) {
+            getS3Client(configuration, getClientConfiguration())
+                .createBucket(bucketName.asString());
+        }
+
+        private boolean needToCreateBucket(Throwable th) {
+            if (th instanceof AmazonS3Exception) {
+                AmazonS3Exception s3Exception = (AmazonS3Exception) th;
+                return NOT_FOUND_STATUS_CODE == s3Exception.getStatusCode()
+                    && BUCKET_NOT_FOUND_ERROR_CODE.equals(s3Exception.getErrorCode());
             }
+
+            return false;
         }
 
         private TransferManager getTransferManager(AwsS3AuthConfiguration configuration) {
