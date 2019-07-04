@@ -46,13 +46,13 @@ class WaitDelayGeneratorTest {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(generator.generateDelay(1).toMillis())
-                .isBetween(100L, 150L);
+                .isBetween(50L, 150L);
             softly.assertThat(generator.generateDelay(2).toMillis())
-                .isBetween(200L, 300L);
+                .isBetween(100L, 300L);
             softly.assertThat(generator.generateDelay(3).toMillis())
-                .isBetween(400L, 600L);
+                .isBetween(200L, 600L);
             softly.assertThat(generator.generateDelay(4).toMillis())
-                .isBetween(800L, 1200L);
+                .isBetween(300L, 1200L);
         });
     }
 

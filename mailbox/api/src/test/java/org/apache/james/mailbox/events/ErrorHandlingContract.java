@@ -167,8 +167,8 @@ interface ErrorHandlingContract extends EventBusContract {
             softly.assertThat(timeElapsed).hasSize(4);
 
             long minFirstDelayAfter = 100; // first backOff
-            long minSecondDelayAfter = 100; // 200 * jitter factor (200 * 0.5)
-            long minThirdDelayAfter = 200; // 400 * jitter factor (400 * 0.5)
+            long minSecondDelayAfter = 50; // 50 * jitter factor (50 * 0.5)
+            long minThirdDelayAfter = 100; // 100 * jitter factor (100 * 0.5)
 
             softly.assertThat(timeElapsed.get(1))
                 .isAfterOrEqualTo(timeElapsed.get(0).plusMillis(minFirstDelayAfter));
