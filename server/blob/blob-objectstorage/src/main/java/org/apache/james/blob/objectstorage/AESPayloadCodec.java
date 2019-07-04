@@ -72,6 +72,11 @@ public class AESPayloadCodec implements PayloadCodec {
     }
 
     @Override
+    public Payload write(byte[] bytes) {
+        return write(new ByteArrayInputStream(bytes));
+    }
+
+    @Override
     public Payload write(InputStream inputStream) {
         try (FileBackedOutputStream outputStream = new FileBackedOutputStream(MAX_BYTES.intValue())) {
             outputStream.write(aead.encrypt(IOUtils.toByteArray(inputStream), EMPTY_ASSOCIATED_DATA));

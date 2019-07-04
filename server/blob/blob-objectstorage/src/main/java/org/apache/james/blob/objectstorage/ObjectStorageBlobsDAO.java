@@ -19,7 +19,6 @@
 
 package org.apache.james.blob.objectstorage;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
@@ -95,7 +94,17 @@ public class ObjectStorageBlobsDAO implements BlobStore {
 
     @Override
     public Mono<BlobId> save(BucketName bucketName, byte[] data) {
-        return save(bucketName, new ByteArrayInputStream(data));
+        Preconditions.checkNotNull(data);
+        BlobId blobId = blobIdFactory.forPayload(data);
+        Payload payload = payloadCodec.write(data);
+
+        Blob blob = blobStore.blobBuilder(blobId.asString())
+            .payload(payload.getPayload())
+            .contentLength(payload.getLength().orElse(new Long(data.length)))
+            .build();
+
+        return save(bucketName, blob)
+            .thenReturn(blobId);
     }
 
     @Override
@@ -103,7 +112,7 @@ public class ObjectStorageBlobsDAO implements BlobStore {
         Preconditions.checkNotNull(data);
 
         BlobId tmpId = blobIdFactory.randomId();
-        return save(data, tmpId)
+        return save(bucketName, data, tmpId)
             .flatMap(id -> updateBlobId(tmpId, id));
     }
 
@@ -115,15 +124,19 @@ public class ObjectStorageBlobsDAO implements BlobStore {
             .thenReturn(to);
     }
 
-    private Mono<BlobId> save(InputStream data, BlobId id) {
+    private Mono<BlobId> save(BucketName bucketName, InputStream data, BlobId id) {
         HashingInputStream hashingInputStream = new HashingInputStream(Hashing.sha256(), data);
         Payload payload = payloadCodec.write(hashingInputStream);
         Blob blob = blobStore.blobBuilder(id.asString())
                             .payload(payload.getPayload())
                             .build();
 
-        return Mono.fromRunnable(() -> putBlobFunction.putBlob(blob))
+        return save(bucketName, blob)
             .then(Mono.fromCallable(() -> blobIdFactory.from(hashingInputStream.hash().toString())));
+    }
+
+    private Mono<Void> save(BucketName bucketName, Blob blob) {
+        return Mono.fromRunnable(() -> putBlobFunction.putBlob(blob));
     }
 
     @Override
@@ -146,7 +159,6 @@ public class ObjectStorageBlobsDAO implements BlobStore {
                 "Failed to readBytes blob " + blobId.asString(),
                 cause);
         }
-
     }
 
     @Override

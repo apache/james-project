@@ -19,7 +19,6 @@
 
 package org.apache.james.blob.api;
 
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -66,8 +65,25 @@ public interface Store<T, I> {
 
     class Impl<T, I extends BlobPartsId> implements Store<T, I> {
 
+        public interface ValueToSave {
+            Mono<BlobId> saveIn(BucketName bucketName, BlobStore blobStore);
+        }
+
+        public static class BytesToSave implements ValueToSave {
+            private final byte[] bytes;
+
+            public BytesToSave(byte[] bytes) {
+                this.bytes = bytes;
+            }
+
+            @Override
+            public Mono<BlobId> saveIn(BucketName bucketName, BlobStore blobStore) {
+                return blobStore.save(bucketName, bytes);
+            }
+        }
+
         public interface Encoder<T> {
-            Stream<Pair<BlobType, InputStream>> encode(T t);
+            Stream<Pair<BlobType, ValueToSave>> encode(T t);
         }
 
         public interface Decoder<T> {
@@ -94,9 +110,9 @@ public interface Store<T, I> {
                 .map(idFactory::generate);
         }
 
-        private Mono<Tuple2<BlobType, BlobId>> saveEntry(Pair<BlobType, InputStream> entry) {
+        private Mono<Tuple2<BlobType, BlobId>> saveEntry(Pair<BlobType, ValueToSave> entry) {
             return Mono.just(entry.getLeft())
-                .zipWith(blobStore.save(BucketName.DEFAULT, entry.getRight()));
+                .zipWith(entry.getRight().saveIn(BucketName.DEFAULT, blobStore));
         }
 
         @Override

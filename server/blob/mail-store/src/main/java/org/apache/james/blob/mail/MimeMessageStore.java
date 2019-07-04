@@ -69,15 +69,15 @@ public class MimeMessageStore {
 
     static class MimeMessageEncoder implements Store.Impl.Encoder<MimeMessage> {
         @Override
-        public Stream<Pair<BlobType, InputStream>> encode(MimeMessage message) {
+        public Stream<Pair<BlobType, Store.Impl.ValueToSave>> encode(MimeMessage message) {
             try {
                 byte[] messageAsArray = messageToArray(message);
                 int bodyStartOctet = computeBodyStartOctet(messageAsArray);
                 byte[] headerBytes = getHeaderBytes(messageAsArray, bodyStartOctet);
                 byte[] bodyBytes = getBodyBytes(messageAsArray, bodyStartOctet);
                 return Stream.of(
-                    Pair.of(HEADER_BLOB_TYPE, new ByteArrayInputStream(headerBytes)),
-                    Pair.of(BODY_BLOB_TYPE, new ByteArrayInputStream(bodyBytes)));
+                    Pair.of(HEADER_BLOB_TYPE, new Store.Impl.BytesToSave(headerBytes)),
+                    Pair.of(BODY_BLOB_TYPE, new Store.Impl.BytesToSave(bodyBytes)));
             } catch (MessagingException | IOException e) {
                 throw new RuntimeException(e);
             }
