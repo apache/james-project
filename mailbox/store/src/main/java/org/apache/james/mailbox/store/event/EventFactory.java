@@ -111,10 +111,6 @@ public class EventFactory {
             return metaData(ImmutableSortedMap.of(metaData.getUid(), metaData));
         }
 
-        default T addMessage(MailboxMessage message) {
-            return addMetaData(message.metaData());
-        }
-
         default T addMetaData(Iterable<MessageMetaData> metaData) {
             return metaData(ImmutableList.copyOf(metaData)
                 .stream()
