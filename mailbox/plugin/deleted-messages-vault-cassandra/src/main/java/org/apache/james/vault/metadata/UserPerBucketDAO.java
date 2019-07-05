@@ -43,12 +43,14 @@ class UserPerBucketDAO {
     private final PreparedStatement addStatement;
     private final PreparedStatement removeStatement;
     private final PreparedStatement listStatement;
+    private final PreparedStatement listBucketsStatement;
 
     UserPerBucketDAO(Session session) {
         cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         addStatement = prepareAddUser(session);
         removeStatement = prepareRemoveBucket(session);
         listStatement = prepareListUser(session);
+        listBucketsStatement = prepareListBuckets(session);
     }
 
     private PreparedStatement prepareAddUser(Session session) {
@@ -67,11 +69,21 @@ class UserPerBucketDAO {
             .where(eq(BUCKET_NAME, bindMarker(BUCKET_NAME))));
     }
 
+    private PreparedStatement prepareListBuckets(Session session) {
+        return session.prepare(select(BUCKET_NAME).from(TABLE).perPartitionLimit(1));
+    }
+
     Flux<User> retrieveUsers(BucketName bucketName) {
         return cassandraAsyncExecutor.executeRows(listStatement.bind()
             .setString(BUCKET_NAME, bucketName.asString()))
             .map(row -> row.getString(USER))
             .map(User::fromUsername);
+    }
+
+    Flux<BucketName> retrieveBuckets() {
+        return cassandraAsyncExecutor.executeRows(listBucketsStatement.bind())
+            .map(row -> row.getString(BUCKET_NAME))
+            .map(BucketName::of);
     }
 
     Mono<Void> addUser(BucketName bucketName, User user) {

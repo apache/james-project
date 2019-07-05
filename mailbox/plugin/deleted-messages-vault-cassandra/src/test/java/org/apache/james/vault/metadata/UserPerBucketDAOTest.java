@@ -53,10 +53,22 @@ class UserPerBucketDAOTest {
     }
 
     @Test
+    void retrieveBucketsShouldReturnEmptyWhenNone() {
+        assertThat(testee.retrieveBuckets().toStream()).isEmpty();
+    }
+
+    @Test
     void retrieveUsersShouldReturnAddedUser() {
         testee.addUser(BUCKET_NAME, OWNER).block();
 
         assertThat(testee.retrieveUsers(BUCKET_NAME).toStream()).containsExactly(OWNER);
+    }
+
+    @Test
+    void retrieveBucketsShouldReturnAddedBuckets() {
+        testee.addUser(BUCKET_NAME, OWNER).block();
+
+        assertThat(testee.retrieveBuckets().toStream()).containsExactly(BUCKET_NAME);
     }
 
     @Test
@@ -68,7 +80,23 @@ class UserPerBucketDAOTest {
     }
 
     @Test
+    void retrieveBucketsShouldNotReturnDuplicates() {
+        testee.addUser(BUCKET_NAME, OWNER).block();
+        testee.addUser(BUCKET_NAME, OWNER_2).block();
+
+        assertThat(testee.retrieveBuckets().toStream()).containsExactly(BUCKET_NAME);
+    }
+
+    @Test
     void retrieveUsersShouldNotReturnUsersOfOtherBuckets() {
+        testee.addUser(BUCKET_NAME, OWNER).block();
+        testee.addUser(BUCKET_NAME_2, OWNER_2).block();
+
+        assertThat(testee.retrieveUsers(BUCKET_NAME).toStream()).containsExactlyInAnyOrder(OWNER);
+    }
+
+    @Test
+    void retrieveBucketsShouldReturnAllAddedBuckets() {
         testee.addUser(BUCKET_NAME, OWNER).block();
         testee.addUser(BUCKET_NAME_2, OWNER_2).block();
 
