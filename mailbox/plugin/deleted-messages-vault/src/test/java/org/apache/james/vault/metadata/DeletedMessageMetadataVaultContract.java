@@ -20,9 +20,11 @@
 package org.apache.james.vault.metadata;
 
 import static org.apache.james.vault.DeletedMessageFixture.USER;
-import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.BLOB_ID_2;
 import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.BUCKET_NAME;
-import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.STORAGE_INFORMATION;
+import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.DELETED_MESSAGE;
+import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.DELETED_MESSAGE_2;
+import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.DELETED_MESSAGE_2_OTHER_BUCKET;
+import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.OTHER_BUCKET_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
@@ -30,21 +32,12 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.vault.DeletedMessageFixture;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface DeletedMessageMetadataVaultContract {
-    DeletedMessageWithStorageInformation DELETED_MESSAGE = new DeletedMessageWithStorageInformation(DeletedMessageFixture.DELETED_MESSAGE, STORAGE_INFORMATION);
-    DeletedMessageWithStorageInformation DELETED_MESSAGE_2 = new DeletedMessageWithStorageInformation(DeletedMessageFixture.DELETED_MESSAGE_2, STORAGE_INFORMATION);
-    BucketName OTHER_BUCKET_NAME = BucketName.of("other");
-    StorageInformation OTHER_STORAGE_INFORMATION = StorageInformation.builder()
-        .bucketName(OTHER_BUCKET_NAME)
-        .blobId(BLOB_ID_2);
-    DeletedMessageWithStorageInformation DELETED_MESSAGE_2_OTHER_BUCKET = new DeletedMessageWithStorageInformation(DeletedMessageFixture.DELETED_MESSAGE_2,
-        OTHER_STORAGE_INFORMATION);
 
     DeletedMessageMetadataVault metadataVault();
 

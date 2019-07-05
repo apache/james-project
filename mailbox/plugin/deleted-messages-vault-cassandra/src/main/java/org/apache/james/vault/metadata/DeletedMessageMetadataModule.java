@@ -43,6 +43,16 @@ public interface DeletedMessageMetadataModule {
         String USER = "user";
     }
 
+    interface DeletedMessageMetadataTable {
+        String TABLE = "deletedMessageMetadata";
+
+        String BUCKET_NAME = "bucketName";
+        String OWNER = "owner";
+        String MESSAGE_ID = "messageId";
+
+        String PAYLOAD = "payload";
+    }
+
     CassandraModule MODULE = CassandraModule
         .builder()
 
@@ -63,6 +73,16 @@ public interface DeletedMessageMetadataModule {
         .statement(statement -> statement
             .addPartitionKey(UserPerBucketTable.BUCKET_NAME, text())
             .addClusteringColumn(UserPerBucketTable.USER, text()))
+
+        .table(DeletedMessageMetadataTable.TABLE)
+        .comment("Holds storage information for deleted messages in the BlobStore based DeletedMessages vault")
+        .options(options -> options
+            .caching(SchemaBuilder.KeyCaching.ALL, SchemaBuilder.noRows()))
+        .statement(statement -> statement
+            .addPartitionKey(DeletedMessageMetadataTable.BUCKET_NAME, text())
+            .addPartitionKey(DeletedMessageMetadataTable.OWNER, text())
+            .addClusteringColumn(DeletedMessageMetadataTable.MESSAGE_ID, text())
+            .addColumn(DeletedMessageMetadataTable.PAYLOAD, text()))
 
         .build();
 }
