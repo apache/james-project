@@ -86,13 +86,6 @@ public class ObjectStorageBlobsDAO implements BlobStore {
         return AwsS3ObjectStorage.daoBuilder(testConfig);
     }
 
-    public Mono<BucketName> createBucket(BucketName name) {
-        return Mono.fromCallable(() -> blobStore.createContainerInLocation(DEFAULT_LOCATION, name.asString()))
-            .filter(created -> created == false)
-            .doOnNext(ignored -> LOGGER.debug("{} already existed", name))
-            .thenReturn(name);
-    }
-
     @Override
     public Mono<BlobId> save(BucketName bucketName, byte[] data) {
         Preconditions.checkNotNull(data);

@@ -20,7 +20,6 @@
 package org.apache.james.blob.objectstorage;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -92,7 +91,6 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract, B
             .blobIdFactory(blobIdFactory);
         blobStore = daoBuilder.getSupplier().get();
         objectStorageBlobsDAO = daoBuilder.build();
-        objectStorageBlobsDAO.createBucket(defaultBucketName).block();
         testee = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), objectStorageBlobsDAO);
     }
 
@@ -111,22 +109,6 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract, B
     @Override
     public BlobId.Factory blobIdFactory() {
         return new HashBlobId.Factory();
-    }
-
-    @Test
-    void createBucketShouldMakeTheContainerToExist() {
-        BucketName bucketName = BucketName.of(UUID.randomUUID().toString());
-        objectStorageBlobsDAO.createBucket(bucketName).block();
-        assertThat(blobStore.containerExists(bucketName.asString())).isTrue();
-    }
-
-    @Test
-    void createBucketShouldNotFailWithRuntimeExceptionWhenCreateBucketTwice() {
-        BucketName bucketName = BucketName.of(UUID.randomUUID().toString());
-
-        objectStorageBlobsDAO.createBucket(bucketName).block();
-        assertThatCode(() -> objectStorageBlobsDAO.createBucket(bucketName).block())
-            .doesNotThrowAnyException();
     }
 
     @Test

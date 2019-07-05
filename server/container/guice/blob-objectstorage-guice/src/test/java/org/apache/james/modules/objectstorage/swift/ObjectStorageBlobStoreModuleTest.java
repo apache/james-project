@@ -30,7 +30,6 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.objectstorage.DockerSwift;
 import org.apache.james.blob.objectstorage.DockerSwiftExtension;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
 import org.apache.james.blob.objectstorage.swift.Credentials;
 import org.apache.james.blob.objectstorage.swift.DomainName;
 import org.apache.james.blob.objectstorage.swift.IdentityV3;
@@ -135,9 +134,6 @@ class ObjectStorageBlobStoreModuleTest {
             Modules
                 .override(new ObjectStorageBlobStoreModule())
                 .with(binder -> binder.bind(ObjectStorageBlobConfiguration.class).toInstance(configuration)));
-
-        ObjectStorageBlobsDAO dao = injector.getInstance(ObjectStorageBlobsDAO.class);
-        dao.createBucket(dao.getDefaultBucketName()).block();
 
         BlobStore blobStore = injector.getInstance(Key.get(BlobStore.class, Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION)));
 

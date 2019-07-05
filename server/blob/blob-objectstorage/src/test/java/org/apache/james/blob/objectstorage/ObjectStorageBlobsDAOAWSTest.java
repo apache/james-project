@@ -66,7 +66,6 @@ public class ObjectStorageBlobsDAOAWSTest implements MetricableBlobStoreContract
 
         blobStore = builder.getSupplier().get();
         objectStorageBlobsDAO = builder.build();
-        objectStorageBlobsDAO.createBucket(defaultBucketName).block();
         testee = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), objectStorageBlobsDAO);
     }
 

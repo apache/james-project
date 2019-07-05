@@ -20,7 +20,6 @@
 package org.apache.james.modules.objectstorage;
 
 import java.io.FileNotFoundException;
-import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -72,7 +71,6 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
             .payloadCodec(configuration.getPayloadCodec())
             .blobPutter(putBlob(blobIdFactory, configuration, awsS3ObjectStorageProvider))
             .build();
-        dao.createBucket(dao.getDefaultBucketName()).block(Duration.ofMinutes(1));
         return dao;
     }
 
