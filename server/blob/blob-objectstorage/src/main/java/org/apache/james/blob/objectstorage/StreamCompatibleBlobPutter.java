@@ -42,6 +42,7 @@ public class StreamCompatibleBlobPutter implements BlobPutter {
     private static final Duration FIRST_BACK_OFF = Duration.ofMillis(100);
     private static final Duration FOREVER = Duration.ofMillis(Long.MAX_VALUE);
     private static final Location DEFAULT_LOCATION = null;
+    private static final long RETRY_ONE_LAST_TIME_ON_CONCURRENT_SAVING = 1;
 
     private final BlobStore blobStore;
 
@@ -58,6 +59,10 @@ public class StreamCompatibleBlobPutter implements BlobPutter {
                 .withBackoffScheduler(Schedulers.elastic())
                 .retryMax(MAX_RETRIES)
                 .doOnRetry(retryContext -> blobStore.createContainerInLocation(DEFAULT_LOCATION, bucketName.asString())))
+            .retryWhen(Retry.onlyIf(RetryContext -> isPutMethod(RetryContext.exception()))
+                .withBackoffScheduler(Schedulers.elastic())
+                .exponentialBackoff(FIRST_BACK_OFF, FOREVER)
+                .retryMax(RETRY_ONE_LAST_TIME_ON_CONCURRENT_SAVING))
             .block();
     }
 
@@ -76,15 +81,16 @@ public class StreamCompatibleBlobPutter implements BlobPutter {
     }
 
     private boolean needToCreateBucket(Throwable throwable, BucketName bucketName) {
-        if (throwable instanceof HttpResponseException
-            || throwable instanceof KeyNotFoundException) {
+        return Optional.of(throwable)
+            .filter(t -> t instanceof HttpResponseException || t instanceof KeyNotFoundException)
+            .flatMap(this::extractHttpException)
+            .map(ex -> isPutMethod(ex) && !bucketExists(bucketName))
+            .orElse(false);
+    }
 
-            return extractHttpException(throwable)
-                    .map(ex -> isPutMethod(ex) && !bucketExisted(bucketName))
-                    .orElse(false);
-        }
-
-        return false;
+    private boolean isPutMethod(Throwable throwable) {
+        return throwable instanceof HttpResponseException
+            && isPutMethod((HttpResponseException) throwable);
     }
 
     private boolean isPutMethod(HttpResponseException ex) {
@@ -94,7 +100,7 @@ public class StreamCompatibleBlobPutter implements BlobPutter {
             .equals("PUT");
     }
 
-    private boolean bucketExisted(BucketName bucketName) {
+    private boolean bucketExists(BucketName bucketName) {
         return blobStore.containerExists(bucketName.asString());
     }
 
