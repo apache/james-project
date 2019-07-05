@@ -20,11 +20,13 @@
 package org.apache.james.blob.objectstorage;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
 import org.jclouds.blobstore.BlobStore;
+import org.jclouds.blobstore.KeyNotFoundException;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.blobstore.options.CopyOptions;
 import org.jclouds.domain.Location;
@@ -74,12 +76,35 @@ public class StreamCompatibleBlobPutter implements BlobPutter {
     }
 
     private boolean needToCreateBucket(Throwable throwable, BucketName bucketName) {
-        if (throwable instanceof HttpResponseException) {
-            HttpResponseException ex = (HttpResponseException) throwable;
-            return ex.getCommand().getCurrentRequest().getMethod().equals("PUT")
-                && !blobStore.containerExists(bucketName.asString());
+        if (throwable instanceof HttpResponseException
+            || throwable instanceof KeyNotFoundException) {
+
+            return extractHttpException(throwable)
+                    .map(ex -> isPutMethod(ex) && !bucketExisted(bucketName))
+                    .orElse(false);
         }
 
         return false;
+    }
+
+    private boolean isPutMethod(HttpResponseException ex) {
+        return ex.getCommand()
+            .getCurrentRequest()
+            .getMethod()
+            .equals("PUT");
+    }
+
+    private boolean bucketExisted(BucketName bucketName) {
+        return blobStore.containerExists(bucketName.asString());
+    }
+
+    private Optional<HttpResponseException> extractHttpException(Throwable throwable) {
+        if (throwable instanceof HttpResponseException) {
+            return Optional.of((HttpResponseException) throwable);
+        } else if (throwable.getCause() instanceof HttpResponseException) {
+            return Optional.of((HttpResponseException) throwable.getCause());
+        }
+
+        return Optional.empty();
     }
 }
