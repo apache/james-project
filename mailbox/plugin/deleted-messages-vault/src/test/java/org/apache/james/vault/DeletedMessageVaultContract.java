@@ -23,9 +23,11 @@ import static org.apache.james.vault.DeletedMessageFixture.CONTENT;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_2;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_GENERATOR;
+import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_WITH_SUBJECT;
 import static org.apache.james.vault.DeletedMessageFixture.MESSAGE_ID;
 import static org.apache.james.vault.DeletedMessageFixture.NOW;
 import static org.apache.james.vault.DeletedMessageFixture.OLD_DELETED_MESSAGE;
+import static org.apache.james.vault.DeletedMessageFixture.SUBJECT;
 import static org.apache.james.vault.DeletedMessageFixture.USER;
 import static org.apache.james.vault.DeletedMessageFixture.USER_2;
 import static org.apache.james.vault.search.Query.ALL;
@@ -39,6 +41,8 @@ import java.time.Duration;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.task.Task;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.apache.james.vault.search.CriterionFactory;
+import org.apache.james.vault.search.Query;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Flux;
@@ -124,6 +128,18 @@ public interface DeletedMessageVaultContract {
 
         assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
             .containsOnly(DELETED_MESSAGE, DELETED_MESSAGE_2);
+    }
+
+    @Test
+    default void searchShouldReturnMatchingItems() {
+        Mono.from(getVault().append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(USER, DELETED_MESSAGE_WITH_SUBJECT, new ByteArrayInputStream(CONTENT))).block();
+
+        assertThat(
+            Flux.from(getVault().search(USER,
+                Query.of(CriterionFactory.subject().containsIgnoreCase(SUBJECT))))
+                .collectList().block())
+            .containsOnly(DELETED_MESSAGE_WITH_SUBJECT);
     }
 
     @Test
