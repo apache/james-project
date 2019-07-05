@@ -22,6 +22,7 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
@@ -85,6 +86,6 @@ class BrowseStartDAOTest {
         testee.insertInitialBrowseStart(OUT_GOING_1, NOW_PLUS_TEN_SECONDS).block();
 
         assertThat(testee.findBrowseStart(OUT_GOING_1).flux().collectList().block())
-            .contains(NOW);
+            .contains(NOW.truncatedTo(ChronoUnit.MILLIS));
     }
 }

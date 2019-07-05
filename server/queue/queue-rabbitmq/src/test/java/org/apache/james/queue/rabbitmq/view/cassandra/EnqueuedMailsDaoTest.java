@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -138,9 +139,9 @@ class EnqueuedMailsDaoTest {
                 EnqueuedItemWithSlicingContext.SlicingContext slicingContext = selectedEnqueuedMail.getSlicingContext();
                 assertSoftly(softly -> {
                     softly.assertThat(slicingContext.getBucketId()).isEqualTo(BUCKET_ID);
-                    softly.assertThat(slicingContext.getTimeRangeStart()).isEqualTo(NOW);
+                    softly.assertThat(slicingContext.getTimeRangeStart()).isEqualTo(NOW.truncatedTo(ChronoUnit.MILLIS));
                     softly.assertThat(enqueuedItem.getMailQueueName()).isEqualTo(OUT_GOING_1);
-                    softly.assertThat(enqueuedItem.getEnqueuedTime()).isEqualTo(NOW);
+                    softly.assertThat(enqueuedItem.getEnqueuedTime()).isEqualTo(NOW.truncatedTo(ChronoUnit.MILLIS));
                     softly.assertThat(enqueuedItem.getEnqueueId()).isEqualTo(ENQUEUE_ID);
                     softly.assertThat(enqueuedItem.getMail().getName()).isEqualTo(NAME);
                     softly.assertThat(enqueuedItem.getPartsId()).isEqualTo(MIME_MESSAGE_PARTS_ID);
