@@ -32,9 +32,9 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.objectstorage.BlobPutter;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
-import org.apache.james.blob.objectstorage.PutBlobFunction;
 import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 import org.apache.james.blob.objectstorage.aws.AwsS3ObjectStorage;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
@@ -70,7 +70,7 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
             .defaultBucketName(configuration.getNamespace())
             .blobIdFactory(blobIdFactory)
             .payloadCodec(configuration.getPayloadCodec())
-            .putBlob(putBlob(blobIdFactory, configuration, awsS3ObjectStorageProvider))
+            .blobPutter(putBlob(blobIdFactory, configuration, awsS3ObjectStorageProvider))
             .build();
         dao.createBucket(dao.getDefaultBucketName()).block(Duration.ofMinutes(1));
         return dao;
@@ -86,7 +86,7 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
         throw new IllegalArgumentException("unknown provider " + configuration.getProvider());
     }
 
-    private Optional<PutBlobFunction> putBlob(BlobId.Factory blobIdFactory, ObjectStorageBlobConfiguration configuration, Provider<AwsS3ObjectStorage> awsS3ObjectStorageProvider) {
+    private Optional<BlobPutter> putBlob(BlobId.Factory blobIdFactory, ObjectStorageBlobConfiguration configuration, Provider<AwsS3ObjectStorage> awsS3ObjectStorageProvider) {
         switch (configuration.getProvider()) {
             case SWIFT:
                 return Optional.empty();

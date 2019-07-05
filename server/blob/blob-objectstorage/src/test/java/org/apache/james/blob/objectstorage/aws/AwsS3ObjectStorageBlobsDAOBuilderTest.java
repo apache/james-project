@@ -87,7 +87,7 @@ class AwsS3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOCont
             .builder(configuration)
             .defaultBucketName(defaultBucketName)
             .blobIdFactory(new HashBlobId.Factory())
-            .putBlob(awsS3ObjectStorage.putBlob(configuration));
+            .blobPutter(awsS3ObjectStorage.putBlob(configuration));
 
         assertBlobsDAOCanStoreAndRetrieve(builder);
     }

@@ -22,6 +22,7 @@ package org.apache.james.blob.objectstorage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
@@ -34,7 +35,6 @@ import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone3ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
 import org.jclouds.blobstore.domain.Blob;
-import org.jclouds.blobstore.options.CopyOptions;
 import org.jclouds.domain.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,17 +55,17 @@ public class ObjectStorageBlobsDAO implements BlobStore {
 
     private final BucketName defaultBucketName;
     private final org.jclouds.blobstore.BlobStore blobStore;
-    private final PutBlobFunction putBlobFunction;
+    private final BlobPutter blobPutter;
     private final PayloadCodec payloadCodec;
 
     ObjectStorageBlobsDAO(BucketName defaultBucketName, BlobId.Factory blobIdFactory,
                           org.jclouds.blobstore.BlobStore blobStore,
-                          PutBlobFunction putBlobFunction,
+                          BlobPutter blobPutter,
                           PayloadCodec payloadCodec) {
         this.blobIdFactory = blobIdFactory;
         this.defaultBucketName = defaultBucketName;
         this.blobStore = blobStore;
-        this.putBlobFunction = putBlobFunction;
+        this.blobPutter = blobPutter;
         this.payloadCodec = payloadCodec;
     }
 
@@ -103,7 +103,7 @@ public class ObjectStorageBlobsDAO implements BlobStore {
             .contentLength(payload.getLength().orElse(new Long(data.length)))
             .build();
 
-        return save(bucketName, blob)
+        return Mono.fromRunnable(() -> blobPutter.putDirectly(bucketName, blob))
             .thenReturn(blobId);
     }
 
@@ -112,31 +112,14 @@ public class ObjectStorageBlobsDAO implements BlobStore {
         Preconditions.checkNotNull(data);
 
         BlobId tmpId = blobIdFactory.randomId();
-        return save(bucketName, data, tmpId)
-            .flatMap(id -> updateBlobId(bucketName, tmpId, id));
-    }
-
-    private Mono<BlobId> updateBlobId(BucketName bucketName, BlobId from, BlobId to) {
-        String bucketNameAsString = bucketName.asString();
-        return Mono
-            .fromCallable(() -> blobStore.copyBlob(bucketNameAsString, from.asString(), bucketNameAsString, to.asString(), CopyOptions.NONE))
-            .then(Mono.fromRunnable(() -> blobStore.removeBlob(bucketNameAsString, from.asString())))
-            .thenReturn(to);
-    }
-
-    private Mono<BlobId> save(BucketName bucketName, InputStream data, BlobId id) {
         HashingInputStream hashingInputStream = new HashingInputStream(Hashing.sha256(), data);
         Payload payload = payloadCodec.write(hashingInputStream);
-        Blob blob = blobStore.blobBuilder(id.asString())
+        Blob blob = blobStore.blobBuilder(tmpId.asString())
                             .payload(payload.getPayload())
                             .build();
 
-        return save(bucketName, blob)
-            .then(Mono.fromCallable(() -> blobIdFactory.from(hashingInputStream.hash().toString())));
-    }
-
-    private Mono<Void> save(BucketName bucketName, Blob blob) {
-        return Mono.fromRunnable(() -> putBlobFunction.putBlob(bucketName, blob));
+        Supplier<BlobId> blobIdSupplier = () -> blobIdFactory.from(hashingInputStream.hash().toString());
+        return Mono.fromRunnable(() -> blobPutter.putAndComputeId(bucketName, blob, blobIdSupplier));
     }
 
     @Override

@@ -26,15 +26,17 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.objectstorage.BlobPutter;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
-import org.apache.james.blob.objectstorage.PutBlobFunction;
 import org.apache.james.util.Size;
 import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.jclouds.ContextBuilder;
@@ -93,75 +95,8 @@ public class AwsS3ObjectStorage {
         return ObjectStorageBlobsDAOBuilder.forBlobStore(new BlobStoreBuilder(configuration));
     }
 
-    public Optional<PutBlobFunction> putBlob(AwsS3AuthConfiguration configuration) {
-        return Optional.of((bucketName, blob) -> {
-            File file = null;
-            try {
-                file = File.createTempFile(UUID.randomUUID().toString(), ".tmp");
-                FileUtils.copyToFile(blob.getPayload().openStream(), file);
-                putWithRetry(bucketName, configuration, blob, file, FIRST_TRY);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            } finally {
-                if (file != null) {
-                    FileUtils.deleteQuietly(file);
-                }
-            }
-        });
-    }
-
-    private void putWithRetry(BucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file, int tried) {
-        try {
-            put(bucketName, configuration, blob, file);
-        } catch (RuntimeException e) {
-            if (tried < MAX_RETRY_ON_EXCEPTION) {
-                putWithRetry(bucketName, configuration, blob, file, tried + 1);
-            } else {
-                throw e;
-            }
-        }
-    }
-
-    private void put(BucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file) {
-        try {
-            PutObjectRequest request = new PutObjectRequest(bucketName.asString(),
-                blob.getMetadata().getName(),
-                file);
-
-            getTransferManager(configuration)
-                .upload(request)
-                .waitForUploadResult();
-        } catch (AmazonClientException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private TransferManager getTransferManager(AwsS3AuthConfiguration configuration) {
-        ClientConfiguration clientConfiguration = getClientConfiguration();
-        AmazonS3 amazonS3 = getS3Client(configuration, clientConfiguration);
-
-        return TransferManagerBuilder
-            .standard()
-            .withS3Client(amazonS3)
-            .withMultipartUploadThreshold(MULTIPART_UPLOAD_THRESHOLD.getValue())
-            .withExecutorFactory(() -> executorService)
-            .withShutDownThreadPools(DO_NOT_SHUTDOWN_THREAD_POOL)
-            .build();
-    }
-
-    private static AmazonS3 getS3Client(AwsS3AuthConfiguration configuration, ClientConfiguration clientConfiguration) {
-        return AmazonS3ClientBuilder
-                .standard()
-                .withClientConfiguration(clientConfiguration)
-                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(configuration.getAccessKeyId(), configuration.getSecretKey())))
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(configuration.getEndpoint(), null))
-                .build();
-    }
-
-    private static ClientConfiguration getClientConfiguration() {
-        ClientConfiguration clientConfiguration = new ClientConfiguration();
-        clientConfiguration.setRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(MAX_ERROR_RETRY));
-        return clientConfiguration;
+    public Optional<BlobPutter> putBlob(AwsS3AuthConfiguration configuration) {
+        return Optional.of(new AwsS3BlobPutter(configuration, executorService));
     }
 
     private static class BlobStoreBuilder implements Supplier<BlobStore> {
@@ -186,6 +121,100 @@ public class AwsS3ObjectStorage {
 
         private ContextBuilder contextBuilder() {
             return ContextBuilder.newBuilder("s3");
+        }
+    }
+
+    private static class AwsS3BlobPutter implements BlobPutter {
+        private final AwsS3AuthConfiguration configuration;
+        private final ExecutorService executorService;
+
+        AwsS3BlobPutter(AwsS3AuthConfiguration configuration, ExecutorService executorService) {
+            this.configuration = configuration;
+            this.executorService = executorService;
+        }
+
+        @Override
+        public void putDirectly(BucketName bucketName, Blob blob) {
+            writeFileAndAct(blob, (file) -> putWithRetry(bucketName, configuration, blob, file, FIRST_TRY));
+        }
+
+        @Override
+        public BlobId putAndComputeId(BucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier) {
+            Consumer<File> putChangedBlob = (file) -> {
+                initialBlob.getMetadata().setName(blobIdSupplier.get().asString());
+                putWithRetry(bucketName, configuration, initialBlob, file, FIRST_TRY);
+            };
+            writeFileAndAct(initialBlob, putChangedBlob);
+            return blobIdSupplier.get();
+        }
+
+        private void writeFileAndAct(Blob blob, Consumer<File> putFile) {
+            File file = null;
+            try {
+                file = File.createTempFile(UUID.randomUUID().toString(), ".tmp");
+                FileUtils.copyToFile(blob.getPayload().openStream(), file);
+                putFile.accept(file);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } finally {
+                if (file != null) {
+                    FileUtils.deleteQuietly(file);
+                }
+            }
+        }
+
+        private void putWithRetry(BucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file, int tried) {
+            try {
+                put(bucketName, configuration, blob, file);
+            } catch (RuntimeException e) {
+                if (tried < MAX_RETRY_ON_EXCEPTION) {
+                    putWithRetry(bucketName, configuration, blob, file, tried + 1);
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        private void put(BucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file) {
+            try {
+                PutObjectRequest request = new PutObjectRequest(bucketName.asString(),
+                        blob.getMetadata().getName(),
+                        file);
+
+                getTransferManager(configuration)
+                        .upload(request)
+                        .waitForUploadResult();
+            } catch (AmazonClientException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private TransferManager getTransferManager(AwsS3AuthConfiguration configuration) {
+            ClientConfiguration clientConfiguration = getClientConfiguration();
+            AmazonS3 amazonS3 = getS3Client(configuration, clientConfiguration);
+
+            return TransferManagerBuilder
+                    .standard()
+                    .withS3Client(amazonS3)
+                    .withMultipartUploadThreshold(MULTIPART_UPLOAD_THRESHOLD.getValue())
+                    .withExecutorFactory(() -> executorService)
+                    .withShutDownThreadPools(DO_NOT_SHUTDOWN_THREAD_POOL)
+                    .build();
+        }
+
+        private static AmazonS3 getS3Client(AwsS3AuthConfiguration configuration, ClientConfiguration clientConfiguration) {
+            return AmazonS3ClientBuilder
+                    .standard()
+                    .withClientConfiguration(clientConfiguration)
+                    .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(configuration.getAccessKeyId(), configuration.getSecretKey())))
+                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(configuration.getEndpoint(), null))
+                    .build();
+        }
+
+        private static ClientConfiguration getClientConfiguration() {
+            ClientConfiguration clientConfiguration = new ClientConfiguration();
+            clientConfiguration.setRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(MAX_ERROR_RETRY));
+            return clientConfiguration;
         }
     }
 }
