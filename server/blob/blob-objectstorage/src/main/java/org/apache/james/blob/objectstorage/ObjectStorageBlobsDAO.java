@@ -19,6 +19,7 @@
 
 package org.apache.james.blob.objectstorage;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
@@ -49,7 +50,7 @@ import reactor.core.scheduler.Schedulers;
 public class ObjectStorageBlobsDAO implements BlobStore {
     private static final Location DEFAULT_LOCATION = null;
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjectStorageBlobsDAO.class);
-
+    private static final int BUFFERED_SIZE = 256 * 1024;
 
     private final BlobId.Factory blobIdFactory;
 
@@ -111,6 +112,31 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     public Mono<BlobId> save(BucketName bucketName, InputStream data) {
         Preconditions.checkNotNull(data);
 
+        return Mono.defer(() -> savingStrategySelection(bucketName, data));
+    }
+
+    private Mono<BlobId> savingStrategySelection(BucketName bucketName, InputStream data) {
+        InputStream bufferedData = new BufferedInputStream(data, BUFFERED_SIZE + 1);
+        try {
+            if (isItABigStream(bufferedData)) {
+                return saveBigStream(bucketName, bufferedData);
+            } else {
+                return save(bucketName, IOUtils.toByteArray(bufferedData));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean isItABigStream(InputStream bufferedData) throws IOException {
+        bufferedData.mark(0);
+        bufferedData.skip(BUFFERED_SIZE);
+        boolean isItABigStream = bufferedData.read() != -1;
+        bufferedData.reset();
+        return isItABigStream;
+    }
+
+    private Mono<BlobId> saveBigStream(BucketName bucketName, InputStream data) {
         BlobId tmpId = blobIdFactory.randomId();
         HashingInputStream hashingInputStream = new HashingInputStream(Hashing.sha256(), data);
         Payload payload = payloadCodec.write(hashingInputStream);
