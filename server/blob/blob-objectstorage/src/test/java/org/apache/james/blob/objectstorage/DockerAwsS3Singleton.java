@@ -29,6 +29,6 @@ public class DockerAwsS3Singleton {
         singleton.start();
     }
 
-    // Cleanup will be performed by test defaultBucketName resource reaper
+    // Cleanup will be performed by test namespace resource reaper
 }
 

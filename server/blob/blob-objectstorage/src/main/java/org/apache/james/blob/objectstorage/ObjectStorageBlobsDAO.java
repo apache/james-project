@@ -70,19 +70,19 @@ public class ObjectStorageBlobsDAO implements BlobStore {
         this.payloadCodec = payloadCodec;
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireDefaultBucketName builder(SwiftTempAuthObjectStorage.Configuration testConfig) {
+    public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory builder(SwiftTempAuthObjectStorage.Configuration testConfig) {
         return SwiftTempAuthObjectStorage.daoBuilder(testConfig);
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireDefaultBucketName builder(SwiftKeystone2ObjectStorage.Configuration testConfig) {
+    public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory builder(SwiftKeystone2ObjectStorage.Configuration testConfig) {
         return SwiftKeystone2ObjectStorage.daoBuilder(testConfig);
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireDefaultBucketName builder(SwiftKeystone3ObjectStorage.Configuration testConfig) {
+    public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory builder(SwiftKeystone3ObjectStorage.Configuration testConfig) {
         return SwiftKeystone3ObjectStorage.daoBuilder(testConfig);
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireDefaultBucketName builder(AwsS3AuthConfiguration testConfig) {
+    public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory builder(AwsS3AuthConfiguration testConfig) {
         return AwsS3ObjectStorage.daoBuilder(testConfig);
     }
 

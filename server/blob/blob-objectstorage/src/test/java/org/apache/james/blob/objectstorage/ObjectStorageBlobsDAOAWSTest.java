@@ -58,8 +58,8 @@ public class ObjectStorageBlobsDAOAWSTest implements MetricableBlobStoreContract
 
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(configuration)
-            .defaultBucketName(defaultBucketName)
             .blobIdFactory(BLOB_ID_FACTORY)
+            .namespace(defaultBucketName)
             .blobPutter(awsS3ObjectStorage.putBlob(configuration));
 
         blobStore = builder.getSupplier().get();

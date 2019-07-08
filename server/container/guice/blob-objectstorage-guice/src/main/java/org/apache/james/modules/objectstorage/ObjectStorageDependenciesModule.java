@@ -66,15 +66,15 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
     @Singleton
     private ObjectStorageBlobsDAO buildObjectStore(ObjectStorageBlobConfiguration configuration, BlobId.Factory blobIdFactory, Provider<AwsS3ObjectStorage> awsS3ObjectStorageProvider) throws InterruptedException, ExecutionException, TimeoutException {
         ObjectStorageBlobsDAO dao = selectDaoBuilder(configuration)
-            .defaultBucketName(configuration.getNamespace())
             .blobIdFactory(blobIdFactory)
             .payloadCodec(configuration.getPayloadCodec())
             .blobPutter(putBlob(blobIdFactory, configuration, awsS3ObjectStorageProvider))
+            .namespace(configuration.getNamespace())
             .build();
         return dao;
     }
 
-    private ObjectStorageBlobsDAOBuilder.RequireDefaultBucketName selectDaoBuilder(ObjectStorageBlobConfiguration configuration) {
+    private ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory selectDaoBuilder(ObjectStorageBlobConfiguration configuration) {
         switch (configuration.getProvider()) {
             case SWIFT:
                 return SwiftObjectStorage.builder(configuration);

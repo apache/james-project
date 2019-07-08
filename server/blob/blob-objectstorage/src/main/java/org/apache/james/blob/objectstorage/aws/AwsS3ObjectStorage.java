@@ -97,7 +97,7 @@ public class AwsS3ObjectStorage {
         executorService.shutdownNow();
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireDefaultBucketName daoBuilder(AwsS3AuthConfiguration configuration) {
+    public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory daoBuilder(AwsS3AuthConfiguration configuration) {
         return ObjectStorageBlobsDAOBuilder.forBlobStore(new BlobStoreBuilder(configuration));
     }
 

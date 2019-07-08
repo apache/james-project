@@ -167,18 +167,18 @@ class ObjectStorageBlobConfigurationTest {
                 .build());
 
          assertThat(ObjectStorageBlobConfiguration.from(configuration).getNamespace())
-            .isEqualTo(BucketName.of(bucketNameAsString));
+            .contains(BucketName.of(bucketNameAsString));
     }
 
      @Test
-    void fromShouldUseTheDefaultValueWhenDontSpecifyNameSpace() throws Exception {
+    void fromShouldNotContainsNamespaceWhenDontSpecify() throws Exception {
         MapConfiguration configuration = new MapConfiguration(
             ImmutableMap.<String, Object>builder()
                 .putAll(VALID_CONFIGURATION)
                 .build());
 
          assertThat(ObjectStorageBlobConfiguration.from(configuration).getNamespace())
-            .isEqualTo(BucketName.DEFAULT);
+            .isEmpty();
     }
 
     @Test

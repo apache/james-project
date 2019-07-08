@@ -31,13 +31,8 @@ import com.google.common.base.Preconditions;
 
 public class ObjectStorageBlobsDAOBuilder {
 
-    public static RequireDefaultBucketName forBlobStore(Supplier<BlobStore> supplier) {
-        return bucketName -> blobIdFactory -> new ReadyToBuild(supplier, blobIdFactory, bucketName);
-    }
-
-    @FunctionalInterface
-    public interface RequireDefaultBucketName {
-        RequireBlobIdFactory defaultBucketName(BucketName bucketName);
+    public static RequireBlobIdFactory forBlobStore(Supplier<BlobStore> supplier) {
+        return blobIdFactory -> new ReadyToBuild(supplier, blobIdFactory);
     }
 
     @FunctionalInterface
@@ -48,17 +43,17 @@ public class ObjectStorageBlobsDAOBuilder {
     public static class ReadyToBuild {
 
         private final Supplier<BlobStore> supplier;
-        private final BucketName defaultBucketName;
         private final BlobId.Factory blobIdFactory;
         private Optional<PayloadCodec> payloadCodec;
         private Optional<BlobPutter> blobPutter;
+        private Optional<BucketName> namespace;
 
-        public ReadyToBuild(Supplier<BlobStore> supplier, BlobId.Factory blobIdFactory, BucketName defaultBucketName) {
+        public ReadyToBuild(Supplier<BlobStore> supplier, BlobId.Factory blobIdFactory) {
             this.blobIdFactory = blobIdFactory;
-            this.defaultBucketName = defaultBucketName;
             this.payloadCodec = Optional.empty();
             this.supplier = supplier;
             this.blobPutter = Optional.empty();
+            this.namespace = Optional.empty();
         }
 
         public ReadyToBuild payloadCodec(PayloadCodec payloadCodec) {
@@ -76,13 +71,22 @@ public class ObjectStorageBlobsDAOBuilder {
             return this;
         }
 
+        public ReadyToBuild namespace(Optional<BucketName> namespace) {
+            this.namespace = namespace;
+            return this;
+        }
+
+        public ReadyToBuild namespace(BucketName namespace) {
+            this.namespace = Optional.ofNullable(namespace);
+            return this;
+        }
+
         public ObjectStorageBlobsDAO build() {
-            Preconditions.checkState(defaultBucketName != null);
             Preconditions.checkState(blobIdFactory != null);
 
             BlobStore blobStore = supplier.get();
 
-            return new ObjectStorageBlobsDAO(defaultBucketName,
+            return new ObjectStorageBlobsDAO(namespace.orElse(BucketName.DEFAULT),
                 blobIdFactory,
                 blobStore,
                 blobPutter.orElseGet(() -> defaultPutBlob(blobStore)),

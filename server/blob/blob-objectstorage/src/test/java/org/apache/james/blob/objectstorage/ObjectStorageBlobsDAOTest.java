@@ -86,8 +86,8 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract, B
         BlobId.Factory blobIdFactory = blobIdFactory();
         ObjectStorageBlobsDAOBuilder.ReadyToBuild daoBuilder = ObjectStorageBlobsDAO
             .builder(testConfig)
-            .defaultBucketName(defaultBucketName)
-            .blobIdFactory(blobIdFactory);
+            .blobIdFactory(blobIdFactory)
+            .namespace(defaultBucketName);
         blobStore = daoBuilder.getSupplier().get();
         objectStorageBlobsDAO = daoBuilder.build();
         testee = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), objectStorageBlobsDAO);
@@ -114,9 +114,9 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract, B
     void supportsEncryptionWithCustomPayloadCodec() throws IOException {
         ObjectStorageBlobsDAO encryptedDao = ObjectStorageBlobsDAO
             .builder(testConfig)
-            .defaultBucketName(defaultBucketName)
             .blobIdFactory(blobIdFactory())
             .payloadCodec(new AESPayloadCodec(CRYPTO_CONFIG))
+            .namespace(defaultBucketName)
             .build();
         String content = "James is the best!";
         BlobId blobId = encryptedDao.save(encryptedDao.getDefaultBucketName(), content).block();
@@ -130,9 +130,9 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract, B
     void encryptionWithCustomPayloadCodeCannotBeReadFromUnencryptedDAO() throws Exception {
         ObjectStorageBlobsDAO encryptedDao = ObjectStorageBlobsDAO
             .builder(testConfig)
-            .defaultBucketName(defaultBucketName)
             .blobIdFactory(blobIdFactory())
             .payloadCodec(new AESPayloadCodec(CRYPTO_CONFIG))
+            .namespace(defaultBucketName)
             .build();
         String content = "James is the best!";
         BlobId blobId = encryptedDao.save(encryptedDao.getDefaultBucketName(), content).block();
