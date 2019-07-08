@@ -26,7 +26,7 @@ import org.apache.james.task.Task
 import org.apache.james.task.Task.Result
 import org.apache.james.task.TaskManager.Status
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class TaskAggregate private(val aggregateId: TaskAggregateId, private val history: History) {
 

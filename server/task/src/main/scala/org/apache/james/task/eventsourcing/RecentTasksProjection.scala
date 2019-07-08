@@ -25,7 +25,7 @@ import org.apache.james.task.TaskId
 
 class RecentTasksProjection() {
 
-  import scala.collection.JavaConverters._
+  import scala.jdk.CollectionConverters._
 
   private val tasks = new ConcurrentLinkedDeque[TaskId]
 

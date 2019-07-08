@@ -18,7 +18,7 @@
   * ***************************************************************/
 package org.apache.james.task.eventsourcing
 
-import org.apache.james.eventsourcing.{AggregateId, Event, EventId}
+import org.apache.james.eventsourcing.{Event, EventId}
 import org.apache.james.task.Task
 import org.apache.james.task.Task.Result
 
