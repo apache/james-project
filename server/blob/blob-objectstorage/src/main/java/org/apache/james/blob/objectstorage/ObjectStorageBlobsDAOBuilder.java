@@ -83,6 +83,11 @@ public class ObjectStorageBlobsDAOBuilder {
             return this;
         }
 
+        public ReadyToBuild bucketPrefix(Optional<String> bucketPrefix) {
+            this.bucketPrefix = bucketPrefix;
+            return this;
+        }
+
         public ReadyToBuild bucketPrefix(String prefix) {
             this.bucketPrefix = Optional.ofNullable(prefix);
             return this;

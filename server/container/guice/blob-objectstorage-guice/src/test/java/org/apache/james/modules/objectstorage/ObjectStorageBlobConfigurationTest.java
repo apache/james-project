@@ -191,17 +191,17 @@ class ObjectStorageBlobConfigurationTest {
                 .build());
 
          assertThat(ObjectStorageBlobConfiguration.from(configuration).getBucketPrefix())
-            .isEqualTo(bucketPrefix);
+            .contains(bucketPrefix);
     }
 
      @Test
-    void fromShouldUseTheDefaultValueWhenDontSpecifyBucketPrefix() throws Exception {
+    void fromShouldReturnEmptyWhenDontSpecifyBucketPrefix() throws Exception {
         MapConfiguration configuration = new MapConfiguration(
             ImmutableMap.<String, Object>builder()
                 .putAll(VALID_CONFIGURATION)
                 .build());
 
          assertThat(ObjectStorageBlobConfiguration.from(configuration).getBucketPrefix())
-            .isEqualTo(ObjectStorageBlobConfiguration.DEFAULT_BUCKET_PREFIX);
+            .isEmpty();
     }
 }

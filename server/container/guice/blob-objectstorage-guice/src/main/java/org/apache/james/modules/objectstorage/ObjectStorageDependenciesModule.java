@@ -70,6 +70,7 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
             .payloadCodec(configuration.getPayloadCodec())
             .blobPutter(putBlob(blobIdFactory, configuration, awsS3ObjectStorageProvider))
             .namespace(configuration.getNamespace())
+            .bucketPrefix(configuration.getBucketPrefix())
             .build();
         return dao;
     }

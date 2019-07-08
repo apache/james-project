@@ -173,8 +173,6 @@ public class ObjectStorageBlobConfiguration {
                         .orElseThrow(() -> new IllegalStateException("AES code requires an non-empty password parameter"));
                 }
 
-                String bucketPrefix = this.bucketPrefix.orElse(DEFAULT_BUCKET_PREFIX);
-
                 return new ObjectStorageBlobConfiguration(payloadCodecFactory, bucketPrefix, provider, defaultBucketName, specificAuthConfiguration, aesSalt, aesPassword);
             }
 
@@ -183,15 +181,16 @@ public class ObjectStorageBlobConfiguration {
     }
 
     private final PayloadCodecFactory payloadCodec;
-    private final String bucketPrefix;
     private final ObjectStorageProvider provider;
     private final SpecificAuthConfiguration specificAuthConfiguration;
     private Optional<BucketName> namespace;
     private Optional<String> aesSalt;
     private Optional<char[]> aesPassword;
+    private Optional<String> bucketPrefix;
 
     @VisibleForTesting
-    ObjectStorageBlobConfiguration(PayloadCodecFactory payloadCodec, String bucketPrefix,
+    ObjectStorageBlobConfiguration(PayloadCodecFactory payloadCodec,
+                                   Optional<String> bucketPrefix,
                                    ObjectStorageProvider provider,
                                    Optional<BucketName> namespace,
                                    SpecificAuthConfiguration specificAuthConfiguration,
@@ -234,7 +233,7 @@ public class ObjectStorageBlobConfiguration {
         return aesPassword;
     }
 
-    public String getBucketPrefix() {
+    public Optional<String> getBucketPrefix() {
         return bucketPrefix;
     }
 
