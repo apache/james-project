@@ -50,7 +50,7 @@ import org.junit.rules.TemporaryFolder;
 
 public class MailetErrorsTest {
     public static final String CUSTOM_PROCESSOR = "custom";
-    public static final MailRepositoryUrl CUSTOM_REPOSITORY = MailRepositoryUrl.from("file://var/mail/custom/");
+    public static final MailRepositoryUrl CUSTOM_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/custom/");
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();

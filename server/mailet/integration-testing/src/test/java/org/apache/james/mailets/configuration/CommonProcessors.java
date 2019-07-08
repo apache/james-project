@@ -44,8 +44,8 @@ import org.apache.james.transport.matchers.SMTPAuthSuccessful;
 
 public class CommonProcessors {
 
-    public static final MailRepositoryUrl ERROR_REPOSITORY = MailRepositoryUrl.from("file://var/mail/error/");
-    public static final MailRepositoryUrl RRT_ERROR_REPOSITORY = MailRepositoryUrl.from("file://var/mail/rrt-error/");
+    public static final MailRepositoryUrl ERROR_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/error/");
+    public static final MailRepositoryUrl RRT_ERROR_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/rrt-error/");
     private static final String RRT_ERROR = "rrt-error";
 
     public static ProcessorConfiguration root() {

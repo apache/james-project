@@ -44,9 +44,9 @@ import org.junit.rules.TemporaryFolder;
 public class ToSenderDomainRepositoryTest {
 
     private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
-    private static final String CUSTOM_REPOSITORY_PREFIX = "file://var/mail/custom/";
+    private static final String CUSTOM_REPOSITORY_PREFIX = "memory://var/mail/custom/";
     public static final MailRepositoryUrl DOMAIN_URL = MailRepositoryUrl.from(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN);
-    public static final MailRepositoryUrl AWAIT_REPOSITORY_PATH = MailRepositoryUrl.from("file://var/mail/await/");
+    public static final MailRepositoryUrl AWAIT_REPOSITORY_PATH = MailRepositoryUrl.from("memory://var/mail/await/");
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();

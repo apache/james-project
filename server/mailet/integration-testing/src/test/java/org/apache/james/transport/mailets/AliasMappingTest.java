@@ -75,7 +75,7 @@ public class AliasMappingTest {
     private static final String GROUP_ALIAS = GROUP + "-alias@" + DOMAIN;
 
     private static final String MESSAGE_CONTENT = "any text";
-    private static final MailRepositoryUrl RRT_ERROR_REPOSITORY = MailRepositoryUrl.from("file://var/mail/rrt-error/");
+    private static final MailRepositoryUrl RRT_ERROR_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/rrt-error/");
 
     private TemporaryJamesServer jamesServer;
     private MimeMessage message;

@@ -55,7 +55,7 @@ import com.google.inject.util.Modules;
 import io.restassured.specification.RequestSpecification;
 
 public class DlpIntegrationTest {
-    public static final String REPOSITORY_PREFIX = "file://var/mail/dlp/quarantine/";
+    public static final String REPOSITORY_PREFIX = "memory://var/mail/dlp/quarantine/";
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();

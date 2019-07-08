@@ -49,7 +49,7 @@ import org.junit.rules.TemporaryFolder;
 
 public class NetworkMatcherIntegrationTest {
     private static final String FROM = "fromuser@" + DEFAULT_DOMAIN;
-    private static final MailRepositoryUrl DROPPED_MAILS = MailRepositoryUrl.from("file://var/mail/dropped-mails/");
+    private static final MailRepositoryUrl DROPPED_MAILS = MailRepositoryUrl.from("memory://var/mail/dropped-mails/");
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
