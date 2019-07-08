@@ -47,6 +47,7 @@ public class ObjectStorageBlobsDAOBuilder {
         private Optional<PayloadCodec> payloadCodec;
         private Optional<BlobPutter> blobPutter;
         private Optional<BucketName> namespace;
+        private Optional<String> bucketPrefix;
 
         public ReadyToBuild(Supplier<BlobStore> supplier, BlobId.Factory blobIdFactory) {
             this.blobIdFactory = blobIdFactory;
@@ -54,6 +55,7 @@ public class ObjectStorageBlobsDAOBuilder {
             this.supplier = supplier;
             this.blobPutter = Optional.empty();
             this.namespace = Optional.empty();
+            this.bucketPrefix = Optional.empty();
         }
 
         public ReadyToBuild payloadCodec(PayloadCodec payloadCodec) {
@@ -78,6 +80,11 @@ public class ObjectStorageBlobsDAOBuilder {
 
         public ReadyToBuild namespace(BucketName namespace) {
             this.namespace = Optional.ofNullable(namespace);
+            return this;
+        }
+
+        public ReadyToBuild bucketPrefix(String prefix) {
+            this.bucketPrefix = Optional.ofNullable(prefix);
             return this;
         }
 

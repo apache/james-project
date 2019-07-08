@@ -60,12 +60,12 @@ class ObjectStorageBucketNameResolverTest {
         @Test
         void resolveShouldReturnPassedValueWithPrefix() {
             ObjectStorageBucketNameResolver resolver = ObjectStorageBucketNameResolver.builder()
-                .prefix("prefix-")
+                .prefix("bucketPrefix-")
                 .noNamespace()
                 .build();
 
             assertThat(resolver.resolve(BucketName.of("bucketName")))
-                .isEqualTo(ObjectStorageBucketName.of("prefix-bucketName"));
+                .isEqualTo(ObjectStorageBucketName.of("bucketPrefix-bucketName"));
         }
     }
 
@@ -90,18 +90,18 @@ class ObjectStorageBucketNameResolverTest {
         @Test
         void resolveShouldReturnPassedValueWithPrefix() {
             ObjectStorageBucketNameResolver resolver = ObjectStorageBucketNameResolver.builder()
-                .prefix("prefix-")
+                .prefix("bucketPrefix-")
                 .namespace(BucketName.of("namespace"))
                 .build();
 
             assertThat(resolver.resolve(BucketName.of("bucketName")))
-                .isEqualTo(ObjectStorageBucketName.of("prefix-bucketName"));
+                .isEqualTo(ObjectStorageBucketName.of("bucketPrefix-bucketName"));
         }
 
         @Test
         void resolveShouldReturnNamespaceWhenPassingNamespace() {
             ObjectStorageBucketNameResolver resolver = ObjectStorageBucketNameResolver.builder()
-                .prefix("prefix-")
+                .prefix("bucketPrefix-")
                 .namespace(BucketName.of("namespace"))
                 .build();
 
