@@ -41,7 +41,7 @@ import com.datastax.driver.core.Session;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-class MetadataDAO {
+public class MetadataDAO {
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement addStatement;
     private final PreparedStatement removeStatement;
