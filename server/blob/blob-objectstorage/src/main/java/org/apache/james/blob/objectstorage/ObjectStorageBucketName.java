@@ -22,11 +22,16 @@ package org.apache.james.blob.objectstorage;
 import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.blob.api.BucketName;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 class ObjectStorageBucketName {
+
+    static ObjectStorageBucketName of(BucketName bucketName) {
+        return of(bucketName.asString());
+    }
 
     static ObjectStorageBucketName of(String value) {
         return new ObjectStorageBucketName(value);
