@@ -19,8 +19,6 @@
 
 package org.apache.james.blob.objectstorage;
 
-import java.util.UUID;
-
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketBlobStoreContract;
@@ -51,7 +49,7 @@ public class ObjectStorageBlobsDAOAWSTest implements MetricableBlobStoreContract
     @BeforeEach
     void setUp(DockerAwsS3Container dockerAwsS3) {
         awsS3ObjectStorage = new AwsS3ObjectStorage();
-        defaultBucketName = BucketName.of(UUID.randomUUID().toString());
+        defaultBucketName = BucketName.of("e7a929fe-2003-48d4-aaa9-a65d4954379d");
         configuration = AwsS3AuthConfiguration.builder()
             .endpoint(dockerAwsS3.getEndpoint())
             .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)

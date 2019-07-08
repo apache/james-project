@@ -22,7 +22,6 @@ package org.apache.james.blob.objectstorage.swift;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.URI;
-import java.util.UUID;
 
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
@@ -48,7 +47,7 @@ class SwiftTempAuthObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlob
 
     @BeforeEach
     void setUp(DockerSwift dockerSwift) {
-        defaultBucketName = BucketName.of(UUID.randomUUID().toString());
+        defaultBucketName = BucketName.of("ea21582e-f6c1-4737-867a-b25d0b36eccc");
         endpoint = dockerSwift.swiftEndpoint();
         testConfig = SwiftTempAuthObjectStorage.configBuilder()
             .endpoint(endpoint)

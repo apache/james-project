@@ -25,7 +25,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
@@ -76,7 +75,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract, B
 
     @BeforeEach
     void setUp(DockerSwift dockerSwift) {
-        defaultBucketName = BucketName.of(UUID.randomUUID().toString());
+        defaultBucketName = BucketName.of("e4fc2427-f2aa-422a-a535-3df0d2a086c4");
         testConfig = SwiftTempAuthObjectStorage.configBuilder()
             .endpoint(dockerSwift.swiftEndpoint())
             .identity(SWIFT_IDENTITY)
