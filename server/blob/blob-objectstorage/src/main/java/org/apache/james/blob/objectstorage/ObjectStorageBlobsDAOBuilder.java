@@ -93,11 +93,17 @@ public class ObjectStorageBlobsDAOBuilder {
 
             BlobStore blobStore = supplier.get();
 
+            ObjectStorageBucketNameResolver bucketNameResolver = ObjectStorageBucketNameResolver.builder()
+                .prefix(bucketPrefix)
+                .namespace(namespace)
+                .build();
+
             return new ObjectStorageBlobsDAO(namespace.orElse(BucketName.DEFAULT),
                 blobIdFactory,
                 blobStore,
                 blobPutter.orElseGet(() -> defaultPutBlob(blobStore)),
-                payloadCodec.orElse(PayloadCodec.DEFAULT_CODEC));
+                payloadCodec.orElse(PayloadCodec.DEFAULT_CODEC),
+                bucketNameResolver);
         }
 
         private BlobPutter defaultPutBlob(BlobStore blobStore) {

@@ -27,7 +27,7 @@ import org.apache.james.blob.api.BucketName;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
-class ObjectStorageBucketName {
+public class ObjectStorageBucketName {
 
     static ObjectStorageBucketName of(BucketName bucketName) {
         return of(bucketName.asString());
@@ -46,7 +46,7 @@ class ObjectStorageBucketName {
         this.value = value;
     }
 
-    String asString() {
+    public String asString() {
         return value;
     }
 

@@ -35,9 +35,9 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.BlobPutter;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
+import org.apache.james.blob.objectstorage.ObjectStorageBucketName;
 import org.apache.james.util.Size;
 import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.jclouds.ContextBuilder;
@@ -146,12 +146,12 @@ public class AwsS3ObjectStorage {
         }
 
         @Override
-        public void putDirectly(BucketName bucketName, Blob blob) {
+        public void putDirectly(ObjectStorageBucketName bucketName, Blob blob) {
             writeFileAndAct(blob, (file) -> putWithRetry(bucketName, configuration, blob, file, FIRST_TRY).block());
         }
 
         @Override
-        public BlobId putAndComputeId(BucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier) {
+        public BlobId putAndComputeId(ObjectStorageBucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier) {
             Consumer<File> putChangedBlob = (file) -> {
                 initialBlob.getMetadata().setName(blobIdSupplier.get().asString());
                 putWithRetry(bucketName, configuration, initialBlob, file, FIRST_TRY).block();
@@ -175,7 +175,7 @@ public class AwsS3ObjectStorage {
             }
         }
 
-        private Mono<Void> putWithRetry(BucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file, int tried) {
+        private Mono<Void> putWithRetry(ObjectStorageBucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file, int tried) {
             return Mono.<Void>fromRunnable(Throwing.runnable(() -> put(bucketName, configuration, blob, file)).sneakyThrow())
                 .publishOn(Schedulers.elastic())
                 .retryWhen(Retry
@@ -186,7 +186,7 @@ public class AwsS3ObjectStorage {
                     .doOnRetry(retryContext -> createBucket(bucketName, configuration)));
         }
 
-        private void put(BucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file) throws InterruptedException {
+        private void put(ObjectStorageBucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file) throws InterruptedException {
             PutObjectRequest request = new PutObjectRequest(bucketName.asString(),
                 blob.getMetadata().getName(),
                 file);
@@ -196,7 +196,7 @@ public class AwsS3ObjectStorage {
                 .waitForUploadResult();
         }
 
-        private void createBucket(BucketName bucketName, AwsS3AuthConfiguration configuration) {
+        private void createBucket(ObjectStorageBucketName bucketName, AwsS3AuthConfiguration configuration) {
             getS3Client(configuration, getClientConfiguration())
                 .createBucket(bucketName.asString());
         }

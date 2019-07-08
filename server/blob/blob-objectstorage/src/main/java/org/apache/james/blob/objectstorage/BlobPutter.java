@@ -22,7 +22,6 @@ package org.apache.james.blob.objectstorage;
 import java.util.function.Supplier;
 
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BucketName;
 import org.jclouds.blobstore.domain.Blob;
 
 /**
@@ -37,7 +36,7 @@ import org.jclouds.blobstore.domain.Blob;
 
 public interface BlobPutter {
 
-    void putDirectly(BucketName bucketName, Blob blob);
+    void putDirectly(ObjectStorageBucketName bucketName, Blob blob);
 
-    BlobId putAndComputeId(BucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier);
+    BlobId putAndComputeId(ObjectStorageBucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier);
 }

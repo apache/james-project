@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BucketName;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.KeyNotFoundException;
 import org.jclouds.blobstore.domain.Blob;
@@ -51,7 +50,7 @@ public class StreamCompatibleBlobPutter implements BlobPutter {
     }
 
     @Override
-    public void putDirectly(BucketName bucketName, Blob blob) {
+    public void putDirectly(ObjectStorageBucketName bucketName, Blob blob) {
         Mono.fromRunnable(() -> blobStore.putBlob(bucketName.asString(), blob))
             .publishOn(Schedulers.elastic())
             .retryWhen(Retry.onlyIf(retryContext -> needToCreateBucket(retryContext.exception(), bucketName))
@@ -67,20 +66,20 @@ public class StreamCompatibleBlobPutter implements BlobPutter {
     }
 
     @Override
-    public BlobId putAndComputeId(BucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier) {
+    public BlobId putAndComputeId(ObjectStorageBucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier) {
         putDirectly(bucketName, initialBlob);
         BlobId finalId = blobIdSupplier.get();
         updateBlobId(bucketName, initialBlob.getMetadata().getName(), finalId.asString());
         return finalId;
     }
 
-    private void updateBlobId(BucketName bucketName, String from, String to) {
+    private void updateBlobId(ObjectStorageBucketName bucketName, String from, String to) {
         String bucketNameAsString = bucketName.asString();
         blobStore.copyBlob(bucketNameAsString, from, bucketNameAsString, to, CopyOptions.NONE);
         blobStore.removeBlob(bucketNameAsString, from);
     }
 
-    private boolean needToCreateBucket(Throwable throwable, BucketName bucketName) {
+    private boolean needToCreateBucket(Throwable throwable, ObjectStorageBucketName bucketName) {
         return Optional.of(throwable)
             .filter(t -> t instanceof HttpResponseException || t instanceof KeyNotFoundException)
             .flatMap(this::extractHttpException)
@@ -100,7 +99,7 @@ public class StreamCompatibleBlobPutter implements BlobPutter {
             .equals("PUT");
     }
 
-    private boolean bucketExists(BucketName bucketName) {
+    private boolean bucketExists(ObjectStorageBucketName bucketName) {
         return blobStore.containerExists(bucketName.asString());
     }
 

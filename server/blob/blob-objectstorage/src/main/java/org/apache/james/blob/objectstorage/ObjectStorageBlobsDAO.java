@@ -58,16 +58,18 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     private final org.jclouds.blobstore.BlobStore blobStore;
     private final BlobPutter blobPutter;
     private final PayloadCodec payloadCodec;
+    private final ObjectStorageBucketNameResolver bucketNameResolver;
 
     ObjectStorageBlobsDAO(BucketName defaultBucketName, BlobId.Factory blobIdFactory,
                           org.jclouds.blobstore.BlobStore blobStore,
                           BlobPutter blobPutter,
-                          PayloadCodec payloadCodec) {
+                          PayloadCodec payloadCodec, ObjectStorageBucketNameResolver bucketNameResolver) {
         this.blobIdFactory = blobIdFactory;
         this.defaultBucketName = defaultBucketName;
         this.blobStore = blobStore;
         this.blobPutter = blobPutter;
         this.payloadCodec = payloadCodec;
+        this.bucketNameResolver = bucketNameResolver;
     }
 
     public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory builder(SwiftTempAuthObjectStorage.Configuration testConfig) {
@@ -89,6 +91,8 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     @Override
     public Mono<BlobId> save(BucketName bucketName, byte[] data) {
         Preconditions.checkNotNull(data);
+        ObjectStorageBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+
         BlobId blobId = blobIdFactory.forPayload(data);
         Payload payload = payloadCodec.write(data);
 
@@ -97,7 +101,7 @@ public class ObjectStorageBlobsDAO implements BlobStore {
             .contentLength(payload.getLength().orElse(new Long(data.length)))
             .build();
 
-        return Mono.fromRunnable(() -> blobPutter.putDirectly(bucketName, blob))
+        return Mono.fromRunnable(() -> blobPutter.putDirectly(resolvedBucketName, blob))
             .thenReturn(blobId);
     }
 
@@ -130,6 +134,8 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     }
 
     private Mono<BlobId> saveBigStream(BucketName bucketName, InputStream data) {
+        ObjectStorageBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+
         BlobId tmpId = blobIdFactory.randomId();
         HashingInputStream hashingInputStream = new HashingInputStream(Hashing.sha256(), data);
         Payload payload = payloadCodec.write(hashingInputStream);
@@ -138,7 +144,7 @@ public class ObjectStorageBlobsDAO implements BlobStore {
                             .build();
 
         Supplier<BlobId> blobIdSupplier = () -> blobIdFactory.from(hashingInputStream.hash().toString());
-        return Mono.fromRunnable(() -> blobPutter.putAndComputeId(bucketName, blob, blobIdSupplier));
+        return Mono.fromRunnable(() -> blobPutter.putAndComputeId(resolvedBucketName, blob, blobIdSupplier));
     }
 
     @Override
