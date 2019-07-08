@@ -24,6 +24,8 @@ import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
@@ -56,6 +58,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private final Clock clock;
     private final RetentionConfiguration retentionConfiguration;
 
+    @Inject
     BlobStoreDeletedMessageVault(DeletedMessageMetadataVault messageMetadataVault, BlobStore blobStore, BucketNameGenerator nameGenerator, Clock clock, RetentionConfiguration retentionConfiguration) {
         this.messageMetadataVault = messageMetadataVault;
         this.blobStore = blobStore;

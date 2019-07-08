@@ -17,30 +17,20 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.vault;
+package org.apache.james.modules;
 
-import org.apache.james.vault.DeletedMessageVault;
-import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
-import org.apache.james.vault.blob.BucketNameGenerator;
-import org.apache.james.vault.metadata.CassandraDeletedMessageMetadataVault;
-import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
+import org.apache.james.modules.mailbox.PreDeletionHookConfiguration;
+import org.apache.james.modules.mailbox.PreDeletionHooksConfiguration;
+import org.apache.james.vault.DeletedMessageVaultHook;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
 
-public class BlobStoreDeletedMessageVaultModule extends AbstractModule {
+public class TestPreDeletionHooksModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new CassandraDeletedMessageMetadataVaultModule());
-
-        bind(CassandraDeletedMessageMetadataVault.class).in(Scopes.SINGLETON);
-        bind(DeletedMessageMetadataVault.class)
-            .to(CassandraDeletedMessageMetadataVault.class);
-
-        bind(BucketNameGenerator.class).in(Scopes.SINGLETON);
-        bind(BlobStoreDeletedMessageVault.class).in(Scopes.SINGLETON);
-        bind(DeletedMessageVault.class)
-            .to(BlobStoreDeletedMessageVault.class);
+        binder().bind(PreDeletionHooksConfiguration.class)
+            .toInstance(PreDeletionHooksConfiguration.forHooks(
+                PreDeletionHookConfiguration.forClass(DeletedMessageVaultHook.class)));
     }
 }

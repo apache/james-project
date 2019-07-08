@@ -30,6 +30,8 @@ import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.Stora
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.StorageInformationTable.OWNER;
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.StorageInformationTable.TABLE;
 
+import javax.inject.Inject;
+
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
@@ -41,13 +43,14 @@ import com.datastax.driver.core.Session;
 
 import reactor.core.publisher.Mono;
 
-class StorageInformationDAO {
+public class StorageInformationDAO {
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement addStatement;
     private final PreparedStatement removeStatement;
     private final PreparedStatement readStatement;
     private final BlobId.Factory blobIdFactory;
 
+    @Inject
     StorageInformationDAO(Session session, BlobId.Factory blobIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.addStatement = prepareAdd(session);

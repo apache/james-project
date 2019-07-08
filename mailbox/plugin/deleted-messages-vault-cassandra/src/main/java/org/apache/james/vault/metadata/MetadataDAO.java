@@ -30,6 +30,8 @@ import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.Delet
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.DeletedMessageMetadataTable.PAYLOAD;
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.DeletedMessageMetadataTable.TABLE;
 
+import javax.inject.Inject;
+
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.User;
@@ -51,6 +53,7 @@ public class MetadataDAO {
     private final MessageId.Factory messageIdFactory;
     private final MetadataSerializer metadataSerializer;
 
+    @Inject
     MetadataDAO(Session session, MessageId.Factory messageIdFactory, MetadataSerializer metadataSerializer) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.addStatement = prepareAdd(session);

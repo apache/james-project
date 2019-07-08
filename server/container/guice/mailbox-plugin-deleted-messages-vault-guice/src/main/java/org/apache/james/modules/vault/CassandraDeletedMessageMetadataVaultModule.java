@@ -19,28 +19,31 @@
 
 package org.apache.james.modules.vault;
 
-import org.apache.james.vault.DeletedMessageVault;
-import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
-import org.apache.james.vault.blob.BucketNameGenerator;
-import org.apache.james.vault.metadata.CassandraDeletedMessageMetadataVault;
-import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.vault.dto.DeletedMessageWithStorageInformationConverter;
+import org.apache.james.vault.metadata.BucketListDAO;
+import org.apache.james.vault.metadata.DeletedMessageMetadataModule;
+import org.apache.james.vault.metadata.MetadataDAO;
+import org.apache.james.vault.metadata.StorageInformationDAO;
+import org.apache.james.vault.metadata.UserPerBucketDAO;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 
-public class BlobStoreDeletedMessageVaultModule extends AbstractModule {
+public class CassandraDeletedMessageMetadataVaultModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new CassandraDeletedMessageMetadataVaultModule());
+        bind(MetadataDAO.class).in(Scopes.SINGLETON);
+        bind(BucketListDAO.class).in(Scopes.SINGLETON);
+        bind(StorageInformationDAO.class).in(Scopes.SINGLETON);
+        bind(UserPerBucketDAO.class).in(Scopes.SINGLETON);
+        bind(DeletedMessageWithStorageInformationConverter.class).in(Scopes.SINGLETON);
 
-        bind(CassandraDeletedMessageMetadataVault.class).in(Scopes.SINGLETON);
-        bind(DeletedMessageMetadataVault.class)
-            .to(CassandraDeletedMessageMetadataVault.class);
-
-        bind(BucketNameGenerator.class).in(Scopes.SINGLETON);
-        bind(BlobStoreDeletedMessageVault.class).in(Scopes.SINGLETON);
-        bind(DeletedMessageVault.class)
-            .to(BlobStoreDeletedMessageVault.class);
+        Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
+        cassandraDataDefinitions
+            .addBinding()
+            .toInstance(DeletedMessageMetadataModule.MODULE);
     }
 }

@@ -19,6 +19,8 @@
 
 package org.apache.james.vault.metadata;
 
+import javax.inject.Inject;
+
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
@@ -29,6 +31,7 @@ public class CassandraDeletedMessageMetadataVault implements DeletedMessageMetad
     private final StorageInformationDAO storageInformationDAO;
     private final UserPerBucketDAO userPerBucketDAO;
 
+    @Inject
     CassandraDeletedMessageMetadataVault(MetadataDAO metadataDAO, StorageInformationDAO storageInformationDAO, UserPerBucketDAO userPerBucketDAO) {
         this.metadataDAO = metadataDAO;
         this.storageInformationDAO = storageInformationDAO;
