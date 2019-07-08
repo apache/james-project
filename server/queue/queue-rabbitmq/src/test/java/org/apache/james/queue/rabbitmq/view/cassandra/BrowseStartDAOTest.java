@@ -25,6 +25,8 @@ import java.time.Instant;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,7 +42,8 @@ class BrowseStartDAOTest {
     private static final Instant NOW_PLUS_TEN_SECONDS = NOW.plusSeconds(10);
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraMailQueueViewModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
+            CassandraModule.aggregateModules(CassandraSchemaVersionModule.MODULE,CassandraMailQueueViewModule.MODULE));
 
     private BrowseStartDAO testee;
 
