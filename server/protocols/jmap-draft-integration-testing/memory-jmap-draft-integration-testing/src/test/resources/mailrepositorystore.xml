@@ -21,14 +21,6 @@
 
 <mailrepositorystore>
     <mailrepositories>
-        <mailrepository class="org.apache.james.mailrepository.file.FileMailRepository">
-            <protocols>
-                <protocol>file</protocol>
-            </protocols>
-            <config FIFO="false" CACHEKEYS="true"/>
-        </mailrepository>
-    </mailrepositories>
-    <mailrepositories>
         <mailrepository class="org.apache.james.mailrepository.memory.MemoryMailRepository">
             <protocols>
                 <protocol>memory</protocol>
