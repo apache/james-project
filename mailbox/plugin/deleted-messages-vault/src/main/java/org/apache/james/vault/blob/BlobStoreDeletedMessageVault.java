@@ -58,7 +58,9 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         Preconditions.checkNotNull(mimeMessage);
         BucketName bucketName = nameGenerator.currentBucket();
         return blobStore.save(bucketName, mimeMessage)
-            .map(blobId -> new StorageInformation(bucketName, blobId))
+            .map(blobId -> StorageInformation.builder()
+                .bucketName(bucketName)
+                .blobId(blobId))
             .map(storageInformation -> new DeletedMessageWithStorageInformation(deletedMessage, storageInformation))
             .flatMap(message -> Mono.from(messageMetadataVault.store(message)))
             .then();

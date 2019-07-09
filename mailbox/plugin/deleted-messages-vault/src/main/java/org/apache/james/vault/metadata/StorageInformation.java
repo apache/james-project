@@ -20,7 +20,6 @@
 package org.apache.james.vault.metadata;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
@@ -30,40 +29,25 @@ import com.google.common.base.Preconditions;
 public class StorageInformation {
 
     public static class Builder {
-        private Optional<BucketName> bucketName;
-        private Optional<BlobId> blobId;
-
-        private Builder() {
-            this.bucketName = Optional.empty();
-            this.blobId = Optional.empty();
+        @FunctionalInterface
+        public interface RequireBucketName {
+            RequireBlobId bucketName(BucketName bucketName);
         }
 
-        public Builder bucketName(BucketName bucketName) {
-            this.bucketName = Optional.of(bucketName);
-            return this;
-        }
-
-        public Builder blobId(BlobId blobId) {
-            this.blobId = Optional.of(blobId);
-            return this;
-        }
-
-        public StorageInformation build() {
-            Preconditions.checkState(bucketName.isPresent(), "`bucketName` is mandatory");
-            Preconditions.checkState(blobId.isPresent(), "`blobId` is mandatory");
-
-            return new StorageInformation(bucketName.get(), blobId.get());
+        @FunctionalInterface
+        public interface RequireBlobId {
+            StorageInformation blobId(BlobId blobId);
         }
     }
 
-    public static Builder builder() {
-        return new Builder();
+    public static Builder.RequireBucketName builder() {
+        return bucketName -> blobId -> new StorageInformation(bucketName, blobId);
     }
 
     private final BucketName bucketName;
     private final BlobId blobId;
 
-    public StorageInformation(BucketName bucketName, BlobId blobId) {
+    private StorageInformation(BucketName bucketName, BlobId blobId) {
         Preconditions.checkNotNull(bucketName);
         Preconditions.checkNotNull(blobId);
 

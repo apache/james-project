@@ -40,8 +40,11 @@ public interface DeletedMessageMetadataVaultContract {
     DeletedMessageWithStorageInformation DELETED_MESSAGE = new DeletedMessageWithStorageInformation(DeletedMessageFixture.DELETED_MESSAGE, STORAGE_INFORMATION);
     DeletedMessageWithStorageInformation DELETED_MESSAGE_2 = new DeletedMessageWithStorageInformation(DeletedMessageFixture.DELETED_MESSAGE_2, STORAGE_INFORMATION);
     BucketName OTHER_BUCKET_NAME = BucketName.of("other");
+    StorageInformation OTHER_STORAGE_INFORMATION = StorageInformation.builder()
+        .bucketName(OTHER_BUCKET_NAME)
+        .blobId(BLOB_ID_2);
     DeletedMessageWithStorageInformation DELETED_MESSAGE_2_OTHER_BUCKET = new DeletedMessageWithStorageInformation(DeletedMessageFixture.DELETED_MESSAGE_2,
-        new StorageInformation(OTHER_BUCKET_NAME, BLOB_ID_2));
+        OTHER_STORAGE_INFORMATION);
 
     DeletedMessageMetadataVault metadataVault();
 

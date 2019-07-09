@@ -35,13 +35,17 @@ class StorageInformationTest {
 
     @Test
     void constructorShouldThrowOnNullBucketName() {
-        assertThatThrownBy(() -> new StorageInformation(null, BLOB_ID))
+        assertThatThrownBy(() -> StorageInformation.builder()
+                .bucketName(null)
+                .blobId(BLOB_ID))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void constructorShouldThrowOnNullBlobId() {
-        assertThatThrownBy(() -> new StorageInformation(BUCKET_NAME, null))
+        assertThatThrownBy(() -> StorageInformation.builder()
+                .bucketName(BUCKET_NAME)
+                .blobId(null))
             .isInstanceOf(NullPointerException.class);
     }
 }
