@@ -1,0 +1,27 @@
+{
+  "deletedMessage":
+  {
+    "messageId": "42",
+    "originMailboxes": [
+      "43",
+      "44"
+    ],
+    "owner":"bob@apache.org",
+    "deliveryDate":"2014-10-30T14:12:00Z",
+    "deletionDate":"2015-10-30T14:12:00Z",
+    "sender":"sender@localhost",
+    "recipients": [
+      "recipient1@localhost",
+      "recipient1@localhost@invalid",
+      "recipient2@localhost"
+    ],
+    "subject":"subject",
+    "hasAttachment": false,
+    "size":24
+  },
+  "storageInformation":
+  {
+    "bucketName":"bucket-2019-06-01",
+    "blobId":"05dcb33b-8382-4744-923a-bc593ad84d23"
+  }
+}

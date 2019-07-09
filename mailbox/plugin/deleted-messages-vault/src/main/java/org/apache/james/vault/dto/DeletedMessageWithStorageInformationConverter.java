@@ -23,6 +23,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.mail.internet.AddressException;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
@@ -60,7 +61,7 @@ public class DeletedMessageWithStorageInformationConverter {
             .build();
     }
 
-    public DeletedMessage toDomainObject(DeletedMessageWithStorageInformationDTO.DeletedMessageDTO deletedMessageDTO) {
+    public DeletedMessage toDomainObject(DeletedMessageWithStorageInformationDTO.DeletedMessageDTO deletedMessageDTO) throws AddressException {
         return DeletedMessage.builder()
             .messageId(messageIdFactory.fromString(deletedMessageDTO.getMessageId()))
             .originMailboxes(deserializeOriginMailboxes(deletedMessageDTO.getOriginMailboxes()))
@@ -75,7 +76,7 @@ public class DeletedMessageWithStorageInformationConverter {
             .build();
     }
 
-    public DeletedMessageWithStorageInformation toDomainObject(DeletedMessageWithStorageInformationDTO deletedMessageWithStorageInfoDTO) {
+    public DeletedMessageWithStorageInformation toDomainObject(DeletedMessageWithStorageInformationDTO deletedMessageWithStorageInfoDTO) throws AddressException {
         return new DeletedMessageWithStorageInformation(
             toDomainObject(deletedMessageWithStorageInfoDTO.getDeletedMessage()),
             toDomainObject(deletedMessageWithStorageInfoDTO.getStorageInformation()));
@@ -87,9 +88,9 @@ public class DeletedMessageWithStorageInformationConverter {
             .collect(Guavate.toImmutableList());
     }
 
-    private ImmutableList<MailAddress> deserializeRecipients(List<String> recipients) {
+    private ImmutableList<MailAddress> deserializeRecipients(List<String> recipients) throws AddressException {
         return recipients.stream()
-            .map(Throwing.function(recipient -> new MailAddress(recipient)))
+            .map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow())
             .collect(Guavate.toImmutableList());
     }
 }

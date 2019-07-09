@@ -1,0 +1,17 @@
+{
+  "messageId": "42",
+  "originMailboxes": [
+    "43",
+    "44"
+  ],
+  "owner":"bob@apache.org",
+  "deliveryDate":"2014-10-30T14:12:00Z",
+  "deletionDate":"2015-10-30T14:12:00Z",
+  "sender":"sender@localhost",
+  "recipients": [
+    "recipient1@localhost",
+    "recipient2@localhost"
+  ],
+  "hasAttachment": false,
+  "size":24
+}
