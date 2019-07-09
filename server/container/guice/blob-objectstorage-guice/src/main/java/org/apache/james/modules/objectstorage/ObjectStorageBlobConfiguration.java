@@ -165,6 +165,11 @@ public class ObjectStorageBlobConfiguration {
                 return this;
             }
 
+            public ReadyToBuild bucketPrefix(String bucketPrefix) {
+                this.bucketPrefix = Optional.ofNullable(bucketPrefix);
+                return this;
+            }
+
             public ObjectStorageBlobConfiguration build() {
                 if (payloadCodecFactory == PayloadCodecFactory.AES256) {
                     aesSalt.filter(s -> !s.isEmpty())

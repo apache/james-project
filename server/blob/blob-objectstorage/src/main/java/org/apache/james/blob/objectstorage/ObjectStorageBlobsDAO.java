@@ -193,7 +193,7 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     }
 
     @VisibleForTesting
-    public Mono<Void> deleteAllBuckets() {
+    Mono<Void> deleteAllBuckets() {
         return Flux.fromIterable(blobStore.list())
             .publishOn(Schedulers.elastic())
             .filter(storageMetadata -> storageMetadata.getType().equals(StorageType.CONTAINER))

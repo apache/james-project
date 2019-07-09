@@ -23,7 +23,6 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.GuiceModuleTestRule;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.DockerAwsS3Singleton;
@@ -54,23 +53,6 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
 
         public PayloadCodec getAwsS3PayloadCodec() {
             return awss3BlobStore.getPayloadCodec();
-        }
-    }
-
-    private static class ContainerCleanUp implements CleanupTasksPerformer.CleanupTask {
-
-        private final ObjectStorageBlobsDAO blobsDAO;
-
-        @Inject
-        public ContainerCleanUp(ObjectStorageBlobsDAO blobsDAO) {
-            this.blobsDAO = blobsDAO;
-        }
-
-        @Override
-        public Result run() {
-            blobsDAO.deleteBucket(blobsDAO.getDefaultBucketName()).block();
-
-            return Result.COMPLETED;
         }
     }
 
@@ -119,14 +101,11 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
             .aesSalt("c603a7327ee3dcbc031d8d34b1096c605feca5e1")
             .aesPassword("dockerAwsS3Encryption".toCharArray())
             .defaultBucketName(defaultBucketName)
+            .bucketPrefix(UUID.randomUUID().toString())
             .build();
 
         return binder -> {
             binder.bind(ObjectStorageBlobConfiguration.class).toInstance(configuration);
-
-            Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class)
-                .addBinding()
-                .to(ContainerCleanUp.class);
 
             Multibinder.newSetBinder(binder, GuiceProbe.class).addBinding().to(TestAwsS3BlobStoreProbe.class);
         };
