@@ -22,6 +22,7 @@ package org.apache.james.mailrepository.memory;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.mail.MessagingException;
 
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
@@ -38,7 +39,13 @@ public class MemoryMailRepository implements MailRepository {
     @Override
     public MailKey store(Mail mail) {
         MailKey mailKey = MailKey.forMail(mail);
-        mails.put(mailKey, mail);
+        try {
+            Mail newMail = mail.duplicate();
+            newMail.setName(mail.getName());
+            mails.put(mailKey, newMail);
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
         return mailKey;
     }
 
@@ -54,7 +61,7 @@ public class MemoryMailRepository implements MailRepository {
 
     @Override
     public void remove(Mail mail) {
-        mails.remove(MailKey.forMail(mail));
+        remove(MailKey.forMail(mail));
     }
 
     @Override
