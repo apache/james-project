@@ -15,7 +15,7 @@
   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
   KIND, either express or implied.  See the License for the
   specific language governing permissions and limitations
-  under the License.    
+  under the License.
 -->
 <document>
 
@@ -26,19 +26,32 @@
 <body>
 
   <section name="Users Repositories">
-  
+
     <subsection name="Introduction">
-  
+
       <p>User repositories are required to store James user information and authentication data</p>
-  
+
       <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/usersrepository.xml">usersrepository.xml</a> in GIT to get some examples and hints.</p>
-      
+
     </subsection>
-    
+
+    <subsection name="General configuration">
+
+      <p>All Users Repositories provide at least these two options</p>
+
+      <dl>
+        <dt><strong>enableVirtualHosting</strong></dt>
+        <dd>true or false. Add domain support for users (default: false, except for Cassandra Users Repository)</dd>
+        <dt><strong>administratorId</strong></dt>
+        <dd>user's name. Allow an user to access to the <a href="https://tools.ietf.org/html/rfc4616#section-2">impersonation command</a>, acting on the behalf of any user.</dd>
+      </dl>
+
+    </subsection>
+
     <subsection name="JPA Users Repository">
-  
+
      <p>JPA (database via OpenJPA) based user repository. This is the default implementation.</p>
-     
+
      <p>The usersrepository tag as 2 attributes: name="LocalUsers" and class="org.apache.james.user.file.UsersFileRepository">
      The class tag should be specified for Spring, but is not taken into acount by Guice.</p>
 
@@ -54,12 +67,12 @@
     </subsection>
 
     <subsection name="File Users Repository">
-  
+
       <p>The File UsersRepository implementations below are DEPRECATED and will get removed in the next release</p>
       <p>It just listed here for backward-compatibility</p>
 
       <p>File-based user repositories  Use these configurations to store user info in the filesystem.</p>
-      
+
      <p>The usersrepository tag as 2 attributes:name="LocalUsers" class="org.apache.james.user.file.UsersFileRepository"></p>
 
       <dl>
@@ -78,20 +91,20 @@
     </subsection>
 
     <subsection name="JDBC Users Repository">
-    
+
       <p>The JDBC UsersRepository implementations below are DEPRECATED and will get removed in the next release.</p>
       <p>It just listed here for backward-compatibility.</p>
 
     </subsection>
 
     <subsection name="LDAP Users Repository">
-    
+
        <p>Read-Only LDAP based UsersRepository</p>
-     
+
        <p>Example:</p>
 
        <source>
-&lt;repository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldap://myldapserver:389" 
+&lt;repository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldap://myldapserver:389"
     principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"/&gt;</source>
 
      </subsection>
