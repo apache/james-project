@@ -21,7 +21,6 @@ package org.apache.james.modules.vault;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.vault.dto.DeletedMessageWithStorageInformationConverter;
-import org.apache.james.vault.metadata.BucketListDAO;
 import org.apache.james.vault.metadata.DeletedMessageMetadataModule;
 import org.apache.james.vault.metadata.MetadataDAO;
 import org.apache.james.vault.metadata.StorageInformationDAO;
@@ -36,7 +35,6 @@ public class CassandraDeletedMessageMetadataVaultModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(MetadataDAO.class).in(Scopes.SINGLETON);
-        bind(BucketListDAO.class).in(Scopes.SINGLETON);
         bind(StorageInformationDAO.class).in(Scopes.SINGLETON);
         bind(UserPerBucketDAO.class).in(Scopes.SINGLETON);
         bind(DeletedMessageWithStorageInformationConverter.class).in(Scopes.SINGLETON);

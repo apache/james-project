@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules;
+package org.apache.james.modules.vault;
 
 import org.apache.james.modules.mailbox.PreDeletionHookConfiguration;
 import org.apache.james.modules.mailbox.PreDeletionHooksConfiguration;
@@ -25,7 +25,7 @@ import org.apache.james.vault.DeletedMessageVaultHook;
 
 import com.google.inject.AbstractModule;
 
-public class TestPreDeletionHooksModule extends AbstractModule {
+public class TestDeleteMessageVaultPreDeletionHookModule extends AbstractModule {
 
     @Override
     protected void configure() {

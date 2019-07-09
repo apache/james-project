@@ -28,9 +28,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.methods.integration.DeletedMessagesVaultTest;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
-import org.apache.james.modules.mailbox.PreDeletionHookConfiguration;
-import org.apache.james.modules.mailbox.PreDeletionHooksConfiguration;
-import org.apache.james.vault.DeletedMessageVaultHook;
+import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
 import org.apache.james.vault.MailRepositoryDeletedMessageVault;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.Rule;
@@ -45,9 +43,7 @@ public class CassandraDeletedMessageVaultTest extends DeletedMessagesVaultTest {
     @Override
     protected GuiceJamesServer createJmapServer(FileSystem fileSystem, Clock clock) throws IOException {
         return rule.jmapServer(cassandra.getModule(),
-            binder -> binder.bind(PreDeletionHooksConfiguration.class)
-                .toInstance(PreDeletionHooksConfiguration.forHooks(
-                    PreDeletionHookConfiguration.forClass(DeletedMessageVaultHook.class))),
+            new TestDeleteMessageVaultPreDeletionHookModule(),
             binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION),
             binder -> binder.bind(MailRepositoryDeletedMessageVault.Configuration.class)
                 .toInstance(new MailRepositoryDeletedMessageVault.Configuration(MailRepositoryUrl.from("cassandra://var/deletedMessages/user"))),
