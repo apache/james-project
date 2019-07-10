@@ -40,6 +40,7 @@ import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.ContractMailTest;
 import org.apache.mailet.Mail;
+import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -153,10 +154,14 @@ public class MailImplTest extends ContractMailTest {
     @Test
     void duplicateFactoryMethodShouldGenerateNewObjectWithSameValuesButName() throws Exception {
         String name = MailUtil.newId();
+        PerRecipientHeaders perRecipientSpecificHeaders = new PerRecipientHeaders();
+        PerRecipientHeaders.Header perRecipientHeader = PerRecipientHeaders.Header.builder().name("a").value("b").build();
+        perRecipientSpecificHeaders.addHeaderForRecipient(perRecipientHeader, new MailAddress("a@b.c"));
         MailImpl mail = MailImpl.builder()
             .name(name)
             .sender("sender@localhost")
             .mimeMessage(emptyMessage)
+            .addAllHeadersForRecipients(perRecipientSpecificHeaders)
             .build();
 
         MailImpl duplicate = MailImpl.duplicate(mail);
@@ -168,6 +173,7 @@ public class MailImplTest extends ContractMailTest {
             .isEqualTo(mail);
         assertThat(duplicate.getName()).isNotEqualTo(name);
         assertThat(duplicate.getMessage().getInputStream()).hasSameContentAs(mail.getMessage().getInputStream());
+        assertThat(mail.getPerRecipientSpecificHeaders()).isEqualTo(duplicate.getPerRecipientSpecificHeaders());
     }
 
     @Test

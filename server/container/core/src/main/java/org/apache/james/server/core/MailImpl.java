@@ -105,6 +105,7 @@ public class MailImpl implements Disposable, Mail {
             .lastUpdated(mail.getLastUpdated())
             .errorMessage(mail.getErrorMessage())
             .addAttributes(duplicateAttributes(mail))
+            .addAllHeadersForRecipients(mail.getPerRecipientSpecificHeaders())
             .build();
     }
 
