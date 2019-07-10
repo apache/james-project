@@ -75,7 +75,7 @@ class BucketNameGeneratorTest {
             BucketName bucketName = BucketName.of("deleted-messages-2019-07-01");
 
             assertThat(DEFAULT_GENERATOR.bucketEndTime(bucketName))
-                .contains(ZonedDateTime.parse("2019-07-31T23:59:59.999999999Z[UTC]"));
+                .contains(ZonedDateTime.parse("2019-08-01T00:00:00.000000000Z[UTC]"));
         }
     }
 }

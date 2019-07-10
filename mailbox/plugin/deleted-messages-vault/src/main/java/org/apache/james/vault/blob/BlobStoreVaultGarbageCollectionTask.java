@@ -17,12 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault.utils;
+package org.apache.james.vault.blob;
 
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.Vector;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.task.Task;
@@ -38,9 +39,9 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
 
         private final ZonedDateTime beginningOfRetentionPeriod;
-        private final List<BucketName> deletedBuckets;
+        private final Collection<BucketName> deletedBuckets;
 
-        AdditionalInformation(ZonedDateTime beginningOfRetentionPeriod, List<BucketName> deletedBuckets) {
+        AdditionalInformation(ZonedDateTime beginningOfRetentionPeriod, Collection<BucketName> deletedBuckets) {
             this.beginningOfRetentionPeriod = beginningOfRetentionPeriod;
             this.deletedBuckets = deletedBuckets;
         }
@@ -60,12 +61,12 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
 
     private final Flux<BucketName> retentionOperation;
     private final ZonedDateTime beginningOfRetentionPeriod;
-    private final Vector<BucketName> deletedBuckets;
+    private final Collection<BucketName> deletedBuckets;
 
-    public BlobStoreVaultGarbageCollectionTask(ZonedDateTime beginningOfRetentionPeriod, Flux<BucketName> retentionOperation) {
+    BlobStoreVaultGarbageCollectionTask(ZonedDateTime beginningOfRetentionPeriod, Flux<BucketName> retentionOperation) {
         this.retentionOperation = retentionOperation;
         this.beginningOfRetentionPeriod = beginningOfRetentionPeriod;
-        this.deletedBuckets = new Vector<>();
+        this.deletedBuckets = new ConcurrentLinkedQueue<>();
     }
 
     @Override

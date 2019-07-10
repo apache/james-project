@@ -22,6 +22,7 @@ package org.apache.james.vault.blob;
 import java.io.InputStream;
 import java.time.Clock;
 import java.time.ZonedDateTime;
+import java.util.Optional;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.blob.api.BlobStore;
@@ -36,8 +37,9 @@ import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
 import org.apache.james.vault.metadata.DeletedMessageWithStorageInformation;
 import org.apache.james.vault.metadata.StorageInformation;
 import org.apache.james.vault.search.Query;
-import org.apache.james.vault.utils.BlobStoreVaultGarbageCollectionTask;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -46,6 +48,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BlobStoreDeletedMessageVault.class);
+
     private final DeletedMessageMetadataVault messageMetadataVault;
     private final BlobStore blobStore;
     private final BucketNameGenerator nameGenerator;
@@ -112,7 +116,17 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     @VisibleForTesting
     Flux<BucketName> retentionQualifiedBuckets(ZonedDateTime beginningOfRetentionPeriod) {
         return Flux.from(messageMetadataVault.listRelatedBuckets())
-            .filter(bucketName -> nameGenerator.isBucketRangeBefore(bucketName, beginningOfRetentionPeriod));
+            .filter(bucketName -> isFullyExpired(beginningOfRetentionPeriod, bucketName));
+    }
+
+    private boolean isFullyExpired(ZonedDateTime beginningOfRetentionPeriod, BucketName bucketName) {
+        Optional<ZonedDateTime> maybeEndDate = nameGenerator.bucketEndTime(bucketName);
+
+        if (!maybeEndDate.isPresent()) {
+            LOGGER.error("Pattern used for bucketName used in deletedMessageVault is invalid and end date cannot be parsed {}", bucketName);
+        }
+        return maybeEndDate.map(endDate -> endDate.isBefore(beginningOfRetentionPeriod))
+            .orElse(false);
     }
 
     private Mono<Void> deleteBucketData(BucketName bucketName) {
