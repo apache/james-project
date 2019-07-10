@@ -32,6 +32,12 @@ public interface TaskManagerContract {
     TaskManager taskManager();
 
     @Test
+    default void submitShouldReturnATaskId() {
+        TaskId taskId = taskManager().submit(() -> Task.Result.COMPLETED);
+        assertThat(taskId).isNotNull();
+    }
+
+    @Test
     default void getStatusShouldReturnUnknownWhenUnknownId() {
         TaskId unknownId = TaskId.generateTaskId();
         assertThatThrownBy(() -> taskManager().getExecutionDetails(unknownId))

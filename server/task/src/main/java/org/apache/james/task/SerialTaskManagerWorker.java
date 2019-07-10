@@ -49,7 +49,7 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
     private final Semaphore semaphore;
     private final Set<TaskId> cancelledTasks;
 
-    SerialTaskManagerWorker() {
+    public SerialTaskManagerWorker() {
         this.taskExecutor = Executors.newSingleThreadExecutor(NamedThreadFactory.withName("task executor"));
         this.cancelledTasks = Sets.newConcurrentHashSet();
         this.runningTask = new AtomicReference<>();
