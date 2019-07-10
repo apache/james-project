@@ -160,7 +160,8 @@ public class ObjectStorageBlobsDAO implements BlobStore {
 
     @Override
     public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreException {
-        Blob blob = blobStore.getBlob(bucketName.asString(), blobId.asString());
+        ObjectStorageBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+        Blob blob = blobStore.getBlob(resolvedBucketName.asString(), blobId.asString());
 
         try {
             if (blob != null) {
@@ -182,7 +183,8 @@ public class ObjectStorageBlobsDAO implements BlobStore {
 
     @Override
     public Mono<Void> deleteBucket(BucketName bucketName) {
-        return Mono.<Void>fromRunnable(() -> blobStore.deleteContainer(bucketName.asString()))
+        ObjectStorageBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+        return Mono.<Void>fromRunnable(() -> blobStore.deleteContainer(resolvedBucketName.asString()))
             .subscribeOn(Schedulers.elastic());
     }
 

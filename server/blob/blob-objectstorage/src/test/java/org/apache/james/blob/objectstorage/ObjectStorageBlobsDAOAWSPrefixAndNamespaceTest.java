@@ -22,6 +22,7 @@ package org.apache.james.blob.objectstorage;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketBlobStoreContract;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
@@ -34,13 +35,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
-public class ObjectStorageBlobsDAOAWSTest implements MetricableBlobStoreContract, BucketBlobStoreContract {
-
+public class ObjectStorageBlobsDAOAWSPrefixAndNamespaceTest implements MetricableBlobStoreContract, BucketBlobStoreContract {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
+    private BlobStore testee;
     private ObjectStorageBlobsDAO objectStorageBlobsDAO;
     private AwsS3ObjectStorage awsS3ObjectStorage;
-    private BlobStore testee;
 
     @BeforeEach
     void setUp(DockerAwsS3Container dockerAwsS3) {
@@ -54,6 +54,8 @@ public class ObjectStorageBlobsDAOAWSTest implements MetricableBlobStoreContract
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(configuration)
             .blobIdFactory(BLOB_ID_FACTORY)
+            .bucketPrefix("prefix")
+            .namespace(BucketName.of("namespace"))
             .blobPutter(awsS3ObjectStorage.putBlob(configuration));
 
         objectStorageBlobsDAO = builder.build();
@@ -74,6 +76,8 @@ public class ObjectStorageBlobsDAOAWSTest implements MetricableBlobStoreContract
 
     @Override
     public BlobId.Factory blobIdFactory() {
-        return BLOB_ID_FACTORY;
+        return new HashBlobId.Factory();
     }
+
 }
+
