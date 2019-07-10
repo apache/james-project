@@ -42,6 +42,8 @@ import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
 import org.apache.james.blob.objectstorage.swift.TenantName;
 import org.apache.james.blob.objectstorage.swift.UserHeaderName;
 import org.apache.james.blob.objectstorage.swift.UserName;
+import org.jclouds.blobstore.domain.StorageType;
+import org.jclouds.domain.Location;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -95,8 +97,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract, B
 
     @AfterEach
     void tearDown() {
-        testee.deleteBucket(testee.getDefaultBucketName()).block();
-        testee.deleteBucket(CUSTOM).block();
+        objectStorageBlobsDAO.deleteAllBuckets().block();
         objectStorageBlobsDAO.close();
     }
 
@@ -149,9 +150,28 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract, B
 
     @Test
     void deleteBucketShouldDeleteSwiftContainer() {
-        objectStorageBlobsDAO.deleteBucket(defaultBucketName).block();
-        assertThat(blobStore.containerExists(defaultBucketName.asString()))
+        BucketName bucketName = BucketName.of("azerty");
+        objectStorageBlobsDAO.save(bucketName, "data").block();
+
+        objectStorageBlobsDAO.deleteBucket(bucketName).block();
+
+        assertThat(blobStore.containerExists(bucketName.asString()))
             .isFalse();
+    }
+
+    @Test
+    void deleteAllBucketsShouldDeleteAllContainersInBlobStore() {
+        Location defaultLocation = null;
+        blobStore.createContainerInLocation(defaultLocation, "bucket1");
+        blobStore.createContainerInLocation(defaultLocation, "bucket2");
+        blobStore.createContainerInLocation(defaultLocation, "bucket3");
+
+        objectStorageBlobsDAO.deleteAllBuckets().block();
+
+        assertThat(blobStore.list()
+                .stream()
+                .filter(storageMetadata -> storageMetadata.getType().equals(StorageType.CONTAINER)))
+            .isEmpty();
     }
 
     @Test

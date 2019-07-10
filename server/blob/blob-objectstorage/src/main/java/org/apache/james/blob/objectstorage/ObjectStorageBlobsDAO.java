@@ -38,11 +38,15 @@ import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone3ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
 import org.jclouds.blobstore.domain.Blob;
+import org.jclouds.blobstore.domain.StorageMetadata;
+import org.jclouds.blobstore.domain.StorageType;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -184,5 +188,15 @@ public class ObjectStorageBlobsDAO implements BlobStore {
 
     public PayloadCodec getPayloadCodec() {
         return payloadCodec;
+    }
+
+    @VisibleForTesting
+    public Mono<Void> deleteAllBuckets() {
+        return Flux.fromIterable(blobStore.list())
+            .publishOn(Schedulers.elastic())
+            .filter(storageMetadata -> storageMetadata.getType().equals(StorageType.CONTAINER))
+            .map(StorageMetadata::getName)
+            .doOnNext(blobStore::deleteContainer)
+            .then();
     }
 }
