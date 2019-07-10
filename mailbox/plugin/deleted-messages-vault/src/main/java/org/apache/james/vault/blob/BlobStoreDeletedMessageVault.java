@@ -20,6 +20,8 @@
 package org.apache.james.vault.blob;
 
 import java.io.InputStream;
+import java.time.Clock;
+import java.time.ZonedDateTime;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.blob.api.BlobStore;
@@ -29,12 +31,15 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.task.Task;
 import org.apache.james.vault.DeletedMessage;
 import org.apache.james.vault.DeletedMessageVault;
+import org.apache.james.vault.RetentionConfiguration;
 import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
 import org.apache.james.vault.metadata.DeletedMessageWithStorageInformation;
 import org.apache.james.vault.metadata.StorageInformation;
 import org.apache.james.vault.search.Query;
+import org.apache.james.vault.utils.BlobStoreVaultGarbageCollectionTask;
 import org.reactivestreams.Publisher;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
@@ -44,11 +49,15 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private final DeletedMessageMetadataVault messageMetadataVault;
     private final BlobStore blobStore;
     private final BucketNameGenerator nameGenerator;
+    private final Clock clock;
+    private final RetentionConfiguration retentionConfiguration;
 
-    public BlobStoreDeletedMessageVault(DeletedMessageMetadataVault messageMetadataVault, BlobStore blobStore, BucketNameGenerator nameGenerator) {
+    public BlobStoreDeletedMessageVault(DeletedMessageMetadataVault messageMetadataVault, BlobStore blobStore, BucketNameGenerator nameGenerator, Clock clock, RetentionConfiguration retentionConfiguration) {
         this.messageMetadataVault = messageMetadataVault;
         this.blobStore = blobStore;
         this.nameGenerator = nameGenerator;
+        this.clock = clock;
+        this.retentionConfiguration = retentionConfiguration;
     }
 
     @Override
@@ -91,6 +100,23 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
 
     @Override
     public Task deleteExpiredMessagesTask() {
-        throw new NotImplementedException("Will be implemented later");
+        ZonedDateTime now = ZonedDateTime.now(clock);
+        ZonedDateTime beginningOfRetentionPeriod = now.minus(retentionConfiguration.getRetentionPeriod());
+
+        Flux<BucketName> deleteOperation = retentionQualifiedBuckets(beginningOfRetentionPeriod)
+            .flatMap(bucketName -> deleteBucketData(bucketName).then(Mono.just(bucketName)));
+
+        return new BlobStoreVaultGarbageCollectionTask(beginningOfRetentionPeriod, deleteOperation);
+    }
+
+    @VisibleForTesting
+    Flux<BucketName> retentionQualifiedBuckets(ZonedDateTime beginningOfRetentionPeriod) {
+        return Flux.from(messageMetadataVault.listRelatedBuckets())
+            .filter(bucketName -> nameGenerator.isBucketRangeBefore(bucketName, beginningOfRetentionPeriod));
+    }
+
+    private Mono<Void> deleteBucketData(BucketName bucketName) {
+        return blobStore.deleteBucket(bucketName)
+            .then(Mono.from(messageMetadataVault.removeMetadataRelatedToBucket(bucketName)));
     }
 }

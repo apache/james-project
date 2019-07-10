@@ -19,6 +19,9 @@
 
 package org.apache.james.vault.memory;
 
+import static org.apache.james.vault.DeletedMessageFixture.NOW;
+
+import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.DeletedMessageVaultContract;
 import org.apache.james.vault.DeletedMessageVaultSearchContract;
@@ -37,5 +40,10 @@ public class MemoryDeletedMessagesVaultTest implements DeletedMessageVaultContra
     @Override
     public DeletedMessageVault getVault() {
         return memoryDeletedMessagesVault;
+    }
+
+    @Override
+    public UpdatableTickingClock getClock() {
+        return new UpdatableTickingClock(NOW.toInstant());
     }
 }

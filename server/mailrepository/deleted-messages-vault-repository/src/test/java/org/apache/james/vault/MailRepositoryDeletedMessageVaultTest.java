@@ -19,6 +19,8 @@
 
 package org.apache.james.vault;
 
+import static org.apache.james.vault.DeletedMessageFixture.NOW;
+
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -29,6 +31,7 @@ import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryProvider;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.BeforeEach;
 
 import com.google.common.collect.ImmutableList;
@@ -63,5 +66,10 @@ public class MailRepositoryDeletedMessageVaultTest implements DeletedMessageVaul
     @Override
     public DeletedMessageVault getVault() {
         return testee;
+    }
+
+    @Override
+    public UpdatableTickingClock getClock() {
+        return new UpdatableTickingClock(NOW.toInstant());
     }
 }

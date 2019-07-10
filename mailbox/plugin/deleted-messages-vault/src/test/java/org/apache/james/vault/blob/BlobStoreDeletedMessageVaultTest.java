@@ -19,29 +19,42 @@
 
 package org.apache.james.vault.blob;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneId;
+import static org.apache.james.vault.DeletedMessageFixture.CONTENT;
+import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_2;
+import static org.apache.james.vault.DeletedMessageFixture.NOW;
+import static org.apache.james.vault.DeletedMessageFixture.OLD_DELETED_MESSAGE;
+import static org.apache.james.vault.DeletedMessageFixture.USER;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayInputStream;
+import java.time.Instant;
+import java.time.ZonedDateTime;
+
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.memory.MemoryBlobStore;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.DeletedMessageVaultContract;
+import org.apache.james.vault.RetentionConfiguration;
 import org.apache.james.vault.memory.metadata.MemoryDeletedMessageMetadataVault;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
+import reactor.core.publisher.Mono;
 
 class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract {
-    private static final Instant NOW = Instant.parse("2007-12-03T10:15:30.00Z");
-    private static final Clock CLOCK = Clock.fixed(NOW, ZoneId.of("UTC"));
 
     private BlobStoreDeletedMessageVault messageVault;
+    private UpdatableTickingClock clock;
 
     @BeforeEach
     void setUp() {
+        clock = new UpdatableTickingClock(NOW.toInstant());
         messageVault = new BlobStoreDeletedMessageVault(new MemoryDeletedMessageMetadataVault(),
             new MemoryBlobStore(new HashBlobId.Factory()),
-            new BucketNameGenerator(CLOCK));
+            new BucketNameGenerator(clock), clock, RetentionConfiguration.DEFAULT);
     }
 
     @Override
@@ -49,57 +62,40 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract {
         return messageVault;
     }
 
-
-    @Disabled("Will be implemented later")
-    public void deleteShouldThrowOnNullMessageId() {
-
-    }
-
-    @Disabled("Will be implemented later")
-    public void deleteShouldThrowOnNullUser() {
-
-    }
-
-    @Disabled("Will be implemented in JAMES-2811")
     @Override
-    public void deleteExpiredMessagesTaskShouldCompleteWhenNoMail() {
-
+    public UpdatableTickingClock getClock() {
+        return clock;
     }
 
-    @Disabled("Will be implemented in JAMES-2811")
+    @Test
+    void retentionQualifiedBucketsShouldReturnOnlyBucketsFullyBeforeBeginningOfRetentionPeriod() {
+        clock.setInstant(Instant.parse("2007-12-03T10:15:30.00Z"));
+        Mono.from(getVault().append(USER, OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        clock.setInstant(Instant.parse("2008-01-03T10:15:30.00Z"));
+        Mono.from(getVault().append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+
+        ZonedDateTime beginningOfRetention = ZonedDateTime.parse("2008-01-30T10:15:30.00Z");
+        assertThat(messageVault.retentionQualifiedBuckets(beginningOfRetention).toStream())
+            .containsOnly(BucketName.of("deleted-messages-2007-12-01"));
+    }
+
+    @Test
+    void retentionQualifiedBucketsShouldReturnAllWhenAllBucketMonthAreBeforeBeginningOfRetention() {
+        clock.setInstant(Instant.parse("2007-12-03T10:15:30.00Z"));
+        Mono.from(getVault().append(USER, OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        clock.setInstant(Instant.parse("2008-01-30T10:15:30.00Z"));
+        Mono.from(getVault().append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+
+        assertThat(messageVault.retentionQualifiedBuckets(ZonedDateTime.parse("2008-02-01T10:15:30.00Z")).toStream())
+            .containsOnly(
+                BucketName.of("deleted-messages-2007-12-01"),
+                BucketName.of("deleted-messages-2008-01-01"));
+    }
+
+
+    @Disabled("JAMES-2811 need vault.delete() to be implemented because this test uses that method")
     @Override
     public void deleteExpiredMessagesTaskShouldCompleteWhenAllMailsDeleted() {
-
-    }
-
-    @Disabled("Will be implemented in JAMES-2811")
-    @Override
-    public void deleteExpiredMessagesTaskShouldCompleteWhenOnlyRecentMails() {
-
-    }
-
-    @Disabled("Will be implemented in JAMES-2811")
-    @Override
-    public void deleteExpiredMessagesTaskShouldDeleteOldMails() {
-
-    }
-
-    @Disabled("Will be implemented in JAMES-2811")
-    @Override
-    public void deleteExpiredMessagesTaskShouldNotDeleteRecentMails() {
-
-    }
-
-    @Disabled("Will be implemented in JAMES-2811")
-    @Override
-    public void deleteExpiredMessagesTaskShouldDoNothingWhenEmpty() {
-
-    }
-
-    @Disabled("Will be implemented in JAMES-2811")
-    @Override
-    public void deleteExpiredMessagesTaskShouldCompleteWhenOnlyOldMails() {
-
     }
 
     @Disabled("Will be implemented later")
@@ -122,7 +118,13 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract {
 
     @Disabled("Will be implemented later")
     @Override
-    public void deleteExpiredMessagesTaskShouldDeleteOldMailsWhenRunSeveralTime() {
+    public void deleteShouldThrowOnNullMessageId() {
+
+    }
+
+    @Disabled("Will be implemented later")
+    @Override
+    public void deleteShouldThrowOnNullUser() {
 
     }
 }

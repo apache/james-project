@@ -38,7 +38,7 @@ public class UpdatableTickingClock extends Clock {
 
     @Override
     public ZoneId getZone() {
-        throw new NotImplementedException("No timezone attached to this clock");
+        return ZoneId.of("UTC");
     }
 
     @Override
