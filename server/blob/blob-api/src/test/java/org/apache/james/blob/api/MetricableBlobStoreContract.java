@@ -109,8 +109,8 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
         testee().save(BucketName.DEFAULT, BYTES_CONTENT).block();
         testee().save(bucketName, BYTES_CONTENT).block();
 
-        testee().deleteBucket(BucketName.DEFAULT);
-        testee().deleteBucket(bucketName);
+        testee().deleteBucket(BucketName.DEFAULT).block();
+        testee().deleteBucket(bucketName).block();
 
         assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(DELETE_TIMER_NAME))
             .hasSize(2);

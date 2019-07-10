@@ -69,8 +69,8 @@ public class ObjectStorageBlobsDAOAWSTest implements MetricableBlobStoreContract
 
     @AfterEach
     void tearDown() {
-        blobStore.deleteContainer(defaultBucketName.asString());
-        blobStore.deleteContainer(CUSTOM.asString());
+        testee.deleteBucket(testee.getDefaultBucketName()).block();
+        testee.deleteBucket(CUSTOM).block();
         blobStore.getContext().close();
         awsS3ObjectStorage.tearDown();
     }

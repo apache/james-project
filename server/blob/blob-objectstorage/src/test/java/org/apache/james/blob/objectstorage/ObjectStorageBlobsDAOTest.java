@@ -95,8 +95,8 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract, B
 
     @AfterEach
     void tearDown() {
-        blobStore.deleteContainer(defaultBucketName.asString());
-        blobStore.deleteContainer(CUSTOM.asString());
+        testee.deleteBucket(testee.getDefaultBucketName()).block();
+        testee.deleteBucket(CUSTOM).block();
         blobStore.getContext().close();
     }
 
