@@ -36,9 +36,6 @@ import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone3ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
 import org.jclouds.blobstore.domain.Blob;
-import org.jclouds.domain.Location;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
@@ -48,8 +45,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class ObjectStorageBlobsDAO implements BlobStore {
-    private static final Location DEFAULT_LOCATION = null;
-    private static final Logger LOGGER = LoggerFactory.getLogger(ObjectStorageBlobsDAO.class);
     private static final int BUFFERED_SIZE = 256 * 1024;
 
     private final BlobId.Factory blobIdFactory;
@@ -98,7 +93,7 @@ public class ObjectStorageBlobsDAO implements BlobStore {
 
         Blob blob = blobStore.blobBuilder(blobId.asString())
             .payload(payload.getPayload())
-            .contentLength(payload.getLength().orElse(new Long(data.length)))
+            .contentLength(payload.getLength().orElse(Long.valueOf(data.length)))
             .build();
 
         return Mono.fromRunnable(() -> blobPutter.putDirectly(resolvedBucketName, blob))
