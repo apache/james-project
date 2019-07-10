@@ -39,18 +39,15 @@ public class ObjectStorageBlobsDAOAWSTest implements MetricableBlobStoreContract
 
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
-    private BucketName defaultBucketName;
-    private org.jclouds.blobstore.BlobStore blobStore;
     private ObjectStorageBlobsDAO objectStorageBlobsDAO;
     private AwsS3ObjectStorage awsS3ObjectStorage;
-    private AwsS3AuthConfiguration configuration;
     private BlobStore testee;
 
     @BeforeEach
     void setUp(DockerAwsS3Container dockerAwsS3) {
         awsS3ObjectStorage = new AwsS3ObjectStorage();
-        defaultBucketName = BucketName.of("e7a929fe-2003-48d4-aaa9-a65d4954379d");
-        configuration = AwsS3AuthConfiguration.builder()
+        BucketName defaultBucketName = BucketName.of("e7a929fe-2003-48d4-aaa9-a65d4954379d");
+        AwsS3AuthConfiguration configuration = AwsS3AuthConfiguration.builder()
             .endpoint(dockerAwsS3.getEndpoint())
             .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
             .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
@@ -62,7 +59,6 @@ public class ObjectStorageBlobsDAOAWSTest implements MetricableBlobStoreContract
             .namespace(defaultBucketName)
             .blobPutter(awsS3ObjectStorage.putBlob(configuration));
 
-        blobStore = builder.getSupplier().get();
         objectStorageBlobsDAO = builder.build();
         testee = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), objectStorageBlobsDAO);
     }
@@ -71,7 +67,7 @@ public class ObjectStorageBlobsDAOAWSTest implements MetricableBlobStoreContract
     void tearDown() {
         testee.deleteBucket(testee.getDefaultBucketName()).block();
         testee.deleteBucket(CUSTOM).block();
-        blobStore.getContext().close();
+        objectStorageBlobsDAO.close();
         awsS3ObjectStorage.tearDown();
     }
 

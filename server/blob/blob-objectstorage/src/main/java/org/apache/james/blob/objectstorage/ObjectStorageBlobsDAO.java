@@ -25,6 +25,8 @@ import java.io.InputStream;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import javax.annotation.PreDestroy;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
@@ -81,6 +83,11 @@ public class ObjectStorageBlobsDAO implements BlobStore {
 
     public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory builder(AwsS3AuthConfiguration testConfig) {
         return AwsS3ObjectStorage.daoBuilder(testConfig);
+    }
+
+    @PreDestroy
+    public void close() {
+        blobStore.getContext().close();
     }
 
     @Override
