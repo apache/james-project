@@ -63,7 +63,7 @@ public class CassandraDeletedMessageMetadataVaultTest implements DeletedMessageM
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         DeletedMessageWithStorageInformationConverter dtoConverter = new DeletedMessageWithStorageInformationConverter(blobIdFactory, messageIdFactory, new InMemoryId.Factory());
 
-        metadataDAO = spy(new MetadataDAO(cassandra.getConf(), messageIdFactory, dtoConverter));
+        metadataDAO = spy(new MetadataDAO(cassandra.getConf(), messageIdFactory, new MetadataSerializer(dtoConverter)));
         storageInformationDAO = spy(new StorageInformationDAO(cassandra.getConf(), blobIdFactory));
         userPerBucketDAO = spy(new UserPerBucketDAO(cassandra.getConf()));
 

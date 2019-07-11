@@ -51,7 +51,8 @@ class MetadataDAOTest {
         DeletedMessageWithStorageInformationConverter dtoConverter = new DeletedMessageWithStorageInformationConverter(
             new HashBlobId.Factory(), new InMemoryMessageId.Factory(), new InMemoryId.Factory());
 
-        testee = new MetadataDAO(cassandra.getConf(), new InMemoryMessageId.Factory(), dtoConverter);
+        testee = new MetadataDAO(cassandra.getConf(), new InMemoryMessageId.Factory(),
+            new MetadataSerializer(dtoConverter));
     }
 
     @Test

@@ -34,24 +34,14 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.vault.dto.DeletedMessageWithStorageInformationConverter;
-import org.apache.james.vault.dto.DeletedMessageWithStorageInformationDTO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 class MetadataDAO {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MetadataDAO.class);
-
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement addStatement;
     private final PreparedStatement removeStatement;
@@ -59,11 +49,9 @@ class MetadataDAO {
     private final PreparedStatement readStatement;
     private final PreparedStatement readMessageIdStatement;
     private final MessageId.Factory messageIdFactory;
-    private final ObjectMapper objectMapper;
-    private final DeletedMessageWithStorageInformationConverter dtoConverter;
+    private final MetadataSerializer metadataSerializer;
 
-
-    MetadataDAO(Session session, MessageId.Factory messageIdFactory, DeletedMessageWithStorageInformationConverter dtoConverter) {
+    MetadataDAO(Session session, MessageId.Factory messageIdFactory, MetadataSerializer metadataSerializer) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.addStatement = prepareAdd(session);
         this.removeStatement = prepareRemove(session);
@@ -71,10 +59,7 @@ class MetadataDAO {
         this.readStatement = prepareRead(session, PAYLOAD);
         this.readMessageIdStatement = prepareRead(session, MESSAGE_ID);
         this.messageIdFactory = messageIdFactory;
-        this.dtoConverter = dtoConverter;
-        this.objectMapper = new ObjectMapper()
-            .registerModule(new Jdk8Module())
-            .setSerializationInclusion(JsonInclude.Include.NON_ABSENT);
+        this.metadataSerializer = metadataSerializer;
     }
 
     private PreparedStatement prepareRead(Session session, String fieldName) {
@@ -107,8 +92,7 @@ class MetadataDAO {
 
     Mono<Void> store(DeletedMessageWithStorageInformation metadata) {
         return Mono.just(metadata)
-            .map(DeletedMessageWithStorageInformationDTO::toDTO)
-            .map(Throwing.function(objectMapper::writeValueAsString))
+            .map(metadataSerializer::serialize)
             .flatMap(payload -> cassandraAsyncExecutor.executeVoid(addStatement.bind()
                 .setString(BUCKET_NAME, metadata.getStorageInformation().getBucketName().asString())
                 .setString(OWNER, metadata.getDeletedMessage().getOwner().asString())
@@ -122,10 +106,7 @@ class MetadataDAO {
                 .setString(BUCKET_NAME, bucketName.asString())
                 .setString(OWNER, user.asString()))
             .map(row -> row.getString(PAYLOAD))
-            .flatMap(string -> Mono.fromCallable(() -> objectMapper.readValue(string, DeletedMessageWithStorageInformationDTO.class))
-                .onErrorResume(e -> Mono.fromRunnable(() -> LOGGER.error("Error deserializing JSON metadata", e))))
-            .flatMap(dto -> Mono.fromCallable(() -> dtoConverter.toDomainObject(dto))
-                .onErrorResume(e -> Mono.fromRunnable(() -> LOGGER.error("Error deserializing DTO", e))));
+            .flatMap(metadataSerializer::deserialize);
     }
 
     Flux<MessageId> retrieveMessageIds(BucketName bucketName, User user) {
