@@ -258,4 +258,64 @@ public class CassandraDeletedMessageMetadataVaultTest implements DeletedMessageM
             .blockOptional();
         assertThat(maybeInfo).isEmpty();
     }
+
+    @Test
+    void retentionShouldBeRetriableWhenUserPerBucketDAOFails() {
+        Mono.from(testee.store(DELETED_MESSAGE)).block();
+
+        when(userPerBucketDAO.deleteBucket(BUCKET_NAME))
+            .thenReturn(Mono.error(new RuntimeException()));
+
+        try {
+            Mono.from(testee.removeMetadataRelatedToBucket(BUCKET_NAME)).block();
+        } catch (Exception e) {
+            // ignored
+        }
+
+        reset(userPerBucketDAO);
+        Mono.from(testee.removeMetadataRelatedToBucket(BUCKET_NAME)).block();
+
+        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(BUCKET_NAME, USER)).toStream();
+        assertThat(messages).isEmpty();
+    }
+
+    @Test
+    void retentionShouldBeRetriableWhenMetadataDAOFails() {
+        Mono.from(testee.store(DELETED_MESSAGE)).block();
+
+        when(metadataDAO.deleteInBucket(BUCKET_NAME, USER))
+            .thenReturn(Mono.error(new RuntimeException()));
+
+        try {
+            Mono.from(testee.removeMetadataRelatedToBucket(BUCKET_NAME)).block();
+        } catch (Exception e) {
+            // ignored
+        }
+
+        reset(metadataDAO);
+        Mono.from(testee.removeMetadataRelatedToBucket(BUCKET_NAME)).block();
+
+        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(BUCKET_NAME, USER)).toStream();
+        assertThat(messages).isEmpty();
+    }
+
+    @Test
+    void retentionShouldBeRetriableWhenStorageInformationDAOFails() {
+        Mono.from(testee.store(DELETED_MESSAGE)).block();
+
+        when(storageInformationDAO.deleteStorageInformation(USER, MESSAGE_ID))
+            .thenReturn(Mono.error(new RuntimeException()));
+
+        try {
+            Mono.from(testee.removeMetadataRelatedToBucket(BUCKET_NAME)).block();
+        } catch (Exception e) {
+            // ignored
+        }
+
+        reset(storageInformationDAO);
+        Mono.from(testee.removeMetadataRelatedToBucket(BUCKET_NAME)).block();
+
+        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(BUCKET_NAME, USER)).toStream();
+        assertThat(messages).isEmpty();
+    }
 }
