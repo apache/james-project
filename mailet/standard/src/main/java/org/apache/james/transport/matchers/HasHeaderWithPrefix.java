@@ -30,13 +30,14 @@ import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 
 /**
  * Matches emails with headers having a given prefix.
  *
- * If a header with the given prefix is found, all recipients will be matched. Otherwise, no recipient in returned.
+ * If a header with the given prefix is found in the message (global) all recipients will be matched. If a header with the given prefix is found per recipient (specific), only these will be matched. 
+ * Otherwise, no recipient in returned.
  *
  * use: <pre><code>&lt;mailet match="HasHeaderWithPrefix=PREFIX" class="..." /&gt;</code></pre>
  */
@@ -60,11 +61,22 @@ public class HasHeaderWithPrefix extends GenericMatcher {
     @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         List<Header> headers = new MimeMessageUtils(mail.getMessage()).toHeaderList();
+
         for (Header header: headers) {
             if (header.getName().startsWith(prefix)) {
                 return mail.getRecipients();
             }
         }
-        return ImmutableList.of();
+
+        return matchSpecific(mail);
+    }
+
+    protected Collection<MailAddress> matchSpecific(Mail mail) {
+        return mail.getPerRecipientSpecificHeaders().getHeadersByRecipient()
+                .entries()
+                .stream()
+                .filter(entry -> entry.getValue().getName().startsWith(prefix))
+                .map(entry -> entry.getKey())
+                .collect(Guavate.toImmutableSet());
     }
 }

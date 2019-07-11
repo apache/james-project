@@ -17,18 +17,21 @@
  * under the License.                                           *
  ****************************************************************/
 
-
 package org.apache.james.transport.matchers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Arrays;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
+import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
@@ -208,4 +211,44 @@ public class HasHeaderTest {
 
         assertThat(matcher.match(mail)).containsAll(mockedMail.getRecipients());
     }
+
+    @Test
+    public void matchShouldReturnAddressesWhenAllConditionsMatchGlobalAndSpecific() throws MessagingException {
+        matcher.init(FakeMatcherConfig.builder().matcherName("HasHeader").condition(HEADER_NAME_1 + "+" + HEADER_NAME_2).build());
+
+        Mail mail = MailUtil.createMockMail2Recipients(MimeMessageBuilder.mimeMessageBuilder().addHeader(HEADER_NAME_1, HEADER_VALUE_1).build());
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER_NAME_2).value(HEADER_VALUE_2).build(), new MailAddress("test@james.apache.org"));
+
+        assertThat(matcher.match(mail)).containsAll(Arrays.asList(new MailAddress("test@james.apache.org")));
+    }
+
+    @Test
+    public void matchShouldReturnAddressesWhenAllConditionsMatchSpecific() throws MessagingException {
+        matcher.init(FakeMatcherConfig.builder().matcherName("HasHeader").condition(HEADER_NAME_1 + "+" + HEADER_NAME_2).build());
+
+        Mail mail = MailUtil.createMockMail2Recipients(MimeMessageBuilder.mimeMessageBuilder().build());
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER_NAME_1).value(HEADER_VALUE_1).build(), new MailAddress("test@james.apache.org"));
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER_NAME_2).value(HEADER_VALUE_2).build(), new MailAddress("test@james.apache.org"));
+
+        assertThat(matcher.match(mail)).containsAll(Arrays.asList(new MailAddress("test@james.apache.org")));
+    }
+
+    @Test
+    public void matchShouldReturnAddressesWhenAllValueConditionsMatchGlobalAndSpecific() throws MessagingException {
+        matcher.init(FakeMatcherConfig.builder().matcherName("HasHeader").condition(HEADER_NAME_1 + "=" + HEADER_VALUE_1 + "+" + HEADER_NAME_2).build());
+
+        Mail mail = FakeMail.builder() //
+                .name(MailUtil.newId()) //
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().build()) //
+                .recipients(new MailAddress("test@james.apache.org"), new MailAddress("test2@james.apache.org"), new MailAddress("test3@james.apache.org")) //
+                .build();
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER_NAME_1).value("wrong value").build(), new MailAddress("test@james.apache.org"));
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER_NAME_1).value(HEADER_VALUE_1).build(), new MailAddress("test2@james.apache.org"));
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER_NAME_2).value("any value").build(), new MailAddress("test2@james.apache.org"));
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER_NAME_1).value("wrong value").build(), new MailAddress("test3@james.apache.org"));
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER_NAME_2).value("any value").build(), new MailAddress("test3@james.apache.org"));
+
+        assertThat(matcher.match(mail)).containsAll(Arrays.asList(new MailAddress("test2@james.apache.org")));
+    }
+
 }

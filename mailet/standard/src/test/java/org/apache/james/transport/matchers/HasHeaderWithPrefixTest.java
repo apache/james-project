@@ -23,11 +23,14 @@ package org.apache.james.transport.matchers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Arrays;
+
 import javax.mail.MessagingException;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
+import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
@@ -66,6 +69,26 @@ class HasHeaderWithPrefixTest {
     }
 
     @Test
+    void matchShouldReturnAddressesWhenPrefixedHeaderNameInSpecific() throws MessagingException {
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+            .matcherName("HasHeader")
+            .condition(PREFIX)
+            .build();
+
+        matcher.init(matcherConfig);
+
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
+            .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES2)
+            .build();
+        
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER_NAME_PREFIX_1).value("true").build(), MailAddressFixture.ANY_AT_JAMES);
+
+        assertThat(matcher.match(mail)).containsAll(Arrays.asList(MailAddressFixture.ANY_AT_JAMES));
+    }
+
+    @Test
     void matchShouldReturnAddressesWhenExactlyPrefix() throws MessagingException {
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
             .matcherName("HasHeader")
@@ -82,6 +105,26 @@ class HasHeaderWithPrefixTest {
             .build();
 
         assertThat(matcher.match(mail)).containsAll(mail.getRecipients());
+    }
+
+    @Test
+    void matchShouldReturnAddressesWhenExactlyPrefixInSpecific() throws MessagingException {
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+                .matcherName("HasHeader")
+                .condition(PREFIX)
+                .build();
+        
+        matcher.init(matcherConfig);
+        
+        Mail mail = FakeMail.builder()
+                .name("mail")
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
+                .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES2)
+                .build();
+        
+        mail.addSpecificHeaderForRecipient(Header.builder().name(PREFIX).value("true").build(), MailAddressFixture.ANY_AT_JAMES);
+        
+        assertThat(matcher.match(mail)).containsAll(Arrays.asList(MailAddressFixture.ANY_AT_JAMES));
     }
 
     @Test
@@ -121,6 +164,28 @@ class HasHeaderWithPrefixTest {
             .build();
 
         assertThat(matcher.match(mail)).containsAll(mail.getRecipients());
+    }
+
+    @Test
+    void matchShouldReturnAddressesWhenAtLeastOneHeaderPrefixedInSpecific() throws MessagingException {
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+                .matcherName("HasHeader")
+                .condition(PREFIX)
+                .build();
+        
+        matcher.init(matcherConfig);
+        
+        Mail mail = FakeMail.builder()
+                .name("mail")
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
+                .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES2)
+                .build();
+        
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER_NAME_PREFIX_1).value("true").build(), MailAddressFixture.ANY_AT_JAMES);
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER_NAME_NO_PREFIX).value("true").build(), MailAddressFixture.ANY_AT_JAMES);
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER_NAME_NO_PREFIX).value("true").build(), MailAddressFixture.OTHER_AT_JAMES2);
+        
+        assertThat(matcher.match(mail)).containsAll(Arrays.asList(MailAddressFixture.ANY_AT_JAMES));
     }
 
     @Test
