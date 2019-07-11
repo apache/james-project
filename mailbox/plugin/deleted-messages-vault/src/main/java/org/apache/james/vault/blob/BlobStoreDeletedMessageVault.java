@@ -56,7 +56,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private final Clock clock;
     private final RetentionConfiguration retentionConfiguration;
 
-    public BlobStoreDeletedMessageVault(DeletedMessageMetadataVault messageMetadataVault, BlobStore blobStore, BucketNameGenerator nameGenerator, Clock clock, RetentionConfiguration retentionConfiguration) {
+    BlobStoreDeletedMessageVault(DeletedMessageMetadataVault messageMetadataVault, BlobStore blobStore, BucketNameGenerator nameGenerator, Clock clock, RetentionConfiguration retentionConfiguration) {
         this.messageMetadataVault = messageMetadataVault;
         this.blobStore = blobStore;
         this.nameGenerator = nameGenerator;
