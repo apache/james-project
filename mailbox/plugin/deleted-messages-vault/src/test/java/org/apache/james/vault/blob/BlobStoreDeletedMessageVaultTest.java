@@ -23,7 +23,6 @@ import static org.apache.james.vault.DeletedMessageFixture.CONTENT;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_2;
 import static org.apache.james.vault.DeletedMessageFixture.NOW;
 import static org.apache.james.vault.DeletedMessageFixture.OLD_DELETED_MESSAGE;
-import static org.apache.james.vault.DeletedMessageFixture.USER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
@@ -36,6 +35,7 @@ import org.apache.james.blob.memory.MemoryBlobStore;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.DeletedMessageVaultContract;
+import org.apache.james.vault.DeletedMessageVaultSearchContract;
 import org.apache.james.vault.RetentionConfiguration;
 import org.apache.james.vault.memory.metadata.MemoryDeletedMessageMetadataVault;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,8 +44,8 @@ import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Mono;
 
-class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract {
 
+class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, DeletedMessageVaultSearchContract.AllContracts {
     private BlobStoreDeletedMessageVault messageVault;
     private UpdatableTickingClock clock;
 
@@ -70,9 +70,9 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract {
     @Test
     void retentionQualifiedBucketsShouldReturnOnlyBucketsFullyBeforeBeginningOfRetentionPeriod() {
         clock.setInstant(Instant.parse("2007-12-03T10:15:30.00Z"));
-        Mono.from(getVault().append(USER, OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
         clock.setInstant(Instant.parse("2008-01-03T10:15:30.00Z"));
-        Mono.from(getVault().append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
         ZonedDateTime beginningOfRetention = ZonedDateTime.parse("2008-01-30T10:15:30.00Z");
         assertThat(messageVault.retentionQualifiedBuckets(beginningOfRetention).toStream())
@@ -82,9 +82,9 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract {
     @Test
     void retentionQualifiedBucketsShouldReturnAllWhenAllBucketMonthAreBeforeBeginningOfRetention() {
         clock.setInstant(Instant.parse("2007-12-03T10:15:30.00Z"));
-        Mono.from(getVault().append(USER, OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
         clock.setInstant(Instant.parse("2008-01-30T10:15:30.00Z"));
-        Mono.from(getVault().append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
         assertThat(messageVault.retentionQualifiedBuckets(ZonedDateTime.parse("2008-02-01T10:15:30.00Z")).toStream())
             .containsOnly(
