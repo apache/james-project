@@ -58,26 +58,6 @@ public class RabbitMQBlobStoreDeletedMessagesVaultTest extends DeletedMessagesVa
 
     @Ignore("Will be implemented latter")
     @Test
-    public void vaultPurgeShouldMakeExportProduceEmptyZipWhenAllMessagesAreExpired() throws Exception {
-    }
-
-    @Ignore("Will be implemented latter")
-    @Test
-    public void vaultPurgeShouldMakeExportProduceAZipWhenOneMessageIsNotExpired() throws Exception {
-    }
-
-    @Ignore("Will be implemented latter")
-    @Test
-    public void vaultPurgeShouldMakeExportProduceZipWhenAllMessagesAreNotExpired() throws Exception {
-    }
-
-    @Ignore("Will be implemented latter")
-    @Test
-    public void vaultPurgeShouldNotAppendMessageToTheUserMailbox() {
-    }
-
-    @Ignore("Will be implemented latter")
-    @Test
     public void vaultDeleteShouldDeleteMessageThenExportWithNoEntry() throws Exception {
     }
 
