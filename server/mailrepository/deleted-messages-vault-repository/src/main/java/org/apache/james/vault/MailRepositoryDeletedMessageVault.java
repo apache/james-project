@@ -82,12 +82,11 @@ public class MailRepositoryDeletedMessageVault implements DeletedMessageVault {
     }
 
     @Override
-    public Publisher<Void> append(User user, DeletedMessage deletedMessage, InputStream inputStream) {
-        Preconditions.checkNotNull(user);
+    public Publisher<Void> append(DeletedMessage deletedMessage, InputStream inputStream) {
         Preconditions.checkNotNull(deletedMessage);
         Preconditions.checkNotNull(inputStream);
 
-        MailRepository mailRepository = repositoryForUser(user);
+        MailRepository mailRepository = repositoryForUser(deletedMessage.getOwner());
 
         return Mono.fromCallable(() -> mailRepository.store(mailConverter.toMail(deletedMessage, inputStream)))
             .subscribeOn(Schedulers.elastic())

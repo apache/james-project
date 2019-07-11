@@ -65,8 +65,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     }
 
     @Override
-    public Publisher<Void> append(User user, DeletedMessage deletedMessage, InputStream mimeMessage) {
-        Preconditions.checkNotNull(user);
+    public Publisher<Void> append(DeletedMessage deletedMessage, InputStream mimeMessage) {
         Preconditions.checkNotNull(deletedMessage);
         Preconditions.checkNotNull(mimeMessage);
         BucketName bucketName = nameGenerator.currentBucket();

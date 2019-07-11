@@ -20,6 +20,9 @@
 package org.apache.james.vault;
 
 import static org.apache.james.vault.DeletedMessageFixture.CONTENT;
+import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE;
+import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_2;
+import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_OTHER_USER;
 import static org.apache.james.vault.DeletedMessageFixture.DELETION_DATE;
 import static org.apache.james.vault.DeletedMessageFixture.DELIVERY_DATE;
 import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_1;
@@ -27,7 +30,6 @@ import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_2;
 import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_3;
 import static org.apache.james.vault.DeletedMessageFixture.SUBJECT;
 import static org.apache.james.vault.DeletedMessageFixture.USER;
-import static org.apache.james.vault.DeletedMessageFixture.USER_2;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT2;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT3;
@@ -503,20 +505,11 @@ public interface DeletedMessageVaultSearchContract {
     }
 
     interface PerUserContract extends DeletedMessageVaultSearchContract {
-
-        default DeletedMessage storeMessageWithUser(User user) {
-            DeletedMessage deletedMessage = defaultDeletedMessageFinalStage(DELIVERY_DATE, DELETION_DATE)
-                .subject(SUBJECT)
-                .build();
-
-            return storeDeletedMessage(deletedMessage, user);
-        }
-
         @Test
         default void searchForAnUserShouldNotReturnMessagesFromAnotherUser() {
-            DeletedMessage message1 = storeMessageWithUser(USER);
-            DeletedMessage message2 = storeMessageWithUser(USER);
-            storeMessageWithUser(USER_2);
+            DeletedMessage message1 = storeDeletedMessage(DELETED_MESSAGE);
+            DeletedMessage message2 = storeDeletedMessage(DELETED_MESSAGE_2);
+            storeDeletedMessage(DELETED_MESSAGE_OTHER_USER);
 
             assertThat(search(USER, Query.ALL))
                 .containsOnly(message1, message2);
@@ -553,14 +546,14 @@ public interface DeletedMessageVaultSearchContract {
         DeletedMessage deletedMessage = defaultDeletedMessageFinalStage(deliveryDate, DELETION_DATE)
             .build();
 
-        return storeDeletedMessage(deletedMessage, USER);
+        return storeDeletedMessage(deletedMessage);
     }
 
     default DeletedMessage storeMessageWithDeletionDate(ZonedDateTime delitionDate) {
         DeletedMessage deletedMessage = defaultDeletedMessageFinalStage(DELIVERY_DATE, delitionDate)
             .build();
 
-        return storeDeletedMessage(deletedMessage, USER);
+        return storeDeletedMessage(deletedMessage);
     }
 
     default DeletedMessage storeMessageWithRecipients(MailAddress... recipients) {
@@ -576,7 +569,7 @@ public interface DeletedMessageVaultSearchContract {
             .size(CONTENT.length)
             .build();
 
-        return storeDeletedMessage(deletedMessage, USER);
+        return storeDeletedMessage(deletedMessage);
     }
 
     default DeletedMessage storeMessageWithSender(MaybeSender sender) {
@@ -592,7 +585,7 @@ public interface DeletedMessageVaultSearchContract {
             .size(CONTENT.length)
             .build();
 
-        return storeDeletedMessage(deletedMessage, USER);
+        return storeDeletedMessage(deletedMessage);
     }
 
     default DeletedMessage storeMessageWithHasAttachment(boolean hasAttachment) {
@@ -608,7 +601,7 @@ public interface DeletedMessageVaultSearchContract {
             .size(CONTENT.length)
             .build();
 
-        return storeDeletedMessage(deletedMessage, USER);
+        return storeDeletedMessage(deletedMessage);
     }
 
     default DeletedMessage storeMessageWithOriginMailboxes(MailboxId... originMailboxIds) {
@@ -624,14 +617,14 @@ public interface DeletedMessageVaultSearchContract {
             .size(CONTENT.length)
             .build();
 
-        return storeDeletedMessage(deletedMessage, USER);
+        return storeDeletedMessage(deletedMessage);
     }
 
     default DeletedMessage storeMessageNoSubject() {
         DeletedMessage deletedMessage = defaultDeletedMessageFinalStage(DELIVERY_DATE, DELETION_DATE)
             .build();
 
-        return storeDeletedMessage(deletedMessage, USER);
+        return storeDeletedMessage(deletedMessage);
     }
 
     default DeletedMessage storeMessageWithSubject(String subject) {
@@ -639,7 +632,7 @@ public interface DeletedMessageVaultSearchContract {
             .subject(subject)
             .build();
 
-        return storeDeletedMessage(deletedMessage, USER);
+        return storeDeletedMessage(deletedMessage);
     }
 
     default DeletedMessage storeDefaultMessage() {
@@ -647,11 +640,11 @@ public interface DeletedMessageVaultSearchContract {
             .subject(SUBJECT)
             .build();
 
-        return storeDeletedMessage(deletedMessage, USER);
+        return storeDeletedMessage(deletedMessage);
     }
 
-    default DeletedMessage storeDeletedMessage(DeletedMessage deletedMessage, User user) {
-        Mono.from(getVault().append(user, deletedMessage, new ByteArrayInputStream(CONTENT)))
+    default DeletedMessage storeDeletedMessage(DeletedMessage deletedMessage) {
+        Mono.from(getVault().append(deletedMessage, new ByteArrayInputStream(CONTENT)))
             .block();
         return deletedMessage;
     }

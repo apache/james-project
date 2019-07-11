@@ -63,13 +63,12 @@ public class MemoryDeletedMessagesVault implements DeletedMessageVault {
     }
 
     @Override
-    public Mono<Void> append(User user, DeletedMessage deletedMessage, InputStream mimeMessage) {
-        Preconditions.checkNotNull(user);
+    public Mono<Void> append(DeletedMessage deletedMessage, InputStream mimeMessage) {
         Preconditions.checkNotNull(deletedMessage);
 
         synchronized (table) {
             try {
-                table.put(user, deletedMessage.getMessageId(),
+                table.put(deletedMessage.getOwner(), deletedMessage.getMessageId(),
                     Pair.of(deletedMessage, IOUtils.toByteArray(mimeMessage)));
                 return Mono.empty();
             } catch (IOException e) {

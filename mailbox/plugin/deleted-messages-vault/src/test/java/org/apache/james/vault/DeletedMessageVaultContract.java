@@ -70,19 +70,13 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void appendShouldThrowOnNullMessage() {
-       assertThatThrownBy(() -> getVault().append(USER, null, new ByteArrayInputStream(CONTENT)))
-           .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    default void appendShouldThrowOnNullUser() {
-       assertThatThrownBy(() -> getVault().append(null, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)))
+       assertThatThrownBy(() -> getVault().append(null, new ByteArrayInputStream(CONTENT)))
            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     default void appendShouldThrowOnNullContent() {
-       assertThatThrownBy(() -> getVault().append(USER, DELETED_MESSAGE, null))
+       assertThatThrownBy(() -> getVault().append(DELETED_MESSAGE, null))
            .isInstanceOf(NullPointerException.class);
     }
 
@@ -118,7 +112,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void searchAllShouldReturnContainedItems() {
-        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
             .containsOnly(DELETED_MESSAGE);
@@ -126,8 +120,8 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void searchAllShouldReturnAllContainedItems() {
-        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-        Mono.from(getVault().append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
         assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
             .containsOnly(DELETED_MESSAGE, DELETED_MESSAGE_2);
@@ -135,8 +129,8 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void searchShouldReturnMatchingItems() {
-        Mono.from(getVault().append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
-        Mono.from(getVault().append(USER, DELETED_MESSAGE_WITH_SUBJECT, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE_WITH_SUBJECT, new ByteArrayInputStream(CONTENT))).block();
 
         assertThat(
             Flux.from(getVault().search(USER,
@@ -147,7 +141,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void vaultShouldBePartitionnedByUser() {
-        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         assertThat(Flux.from(getVault().search(USER_2, ALL)).collectList().block())
             .isEmpty();
@@ -155,7 +149,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void searchAllShouldNotReturnDeletedItems() {
-        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         Mono.from(getVault().delete(USER, MESSAGE_ID)).block();
 
@@ -171,7 +165,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void loadMimeMessageShouldReturnStoredValue() {
-        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         assertThat(Mono.from(getVault().loadMimeMessage(USER, MESSAGE_ID)).blockOptional())
             .isNotEmpty()
@@ -180,7 +174,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void loadMimeMessageShouldReturnEmptyWhenDeleted() {
-        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         Mono.from(getVault().delete(USER, MESSAGE_ID)).block();
 
@@ -193,7 +187,7 @@ public interface DeletedMessageVaultContract {
         int operationCount = 10;
         int threadCount = 10;
         ConcurrentTestRunner.builder()
-            .operation((a, b) -> Mono.from(getVault().append(USER,
+            .operation((a, b) -> Mono.from(getVault().append(
                 DELETED_MESSAGE_GENERATOR.apply(Long.valueOf(a * threadCount + b)),
                 new ByteArrayInputStream(CONTENT))).block())
             .threadCount(threadCount)
@@ -209,7 +203,7 @@ public interface DeletedMessageVaultContract {
         int operationCount = 10;
         int threadCount = 10;
         Flux.range(0, operationCount * threadCount)
-            .flatMap(i -> Mono.from(getVault().append(USER,
+            .flatMap(i -> Mono.from(getVault().append(
                 DELETED_MESSAGE_GENERATOR.apply(Long.valueOf(i)),
                 new ByteArrayInputStream(CONTENT))))
             .blockLast();
@@ -233,7 +227,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void deleteExpiredMessagesTaskShouldCompleteWhenAllMailsDeleted() throws InterruptedException {
-        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
         Mono.from(getVault().delete(USER, DELETED_MESSAGE.getMessageId())).block();
 
         Task.Result result = getVault().deleteExpiredMessagesTask().run();
@@ -243,7 +237,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void deleteExpiredMessagesTaskShouldCompleteWhenOnlyRecentMails() throws InterruptedException {
-        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         Task.Result result = getVault().deleteExpiredMessagesTask().run();
 
@@ -252,7 +246,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void deleteExpiredMessagesTaskShouldCompleteWhenOnlyOldMails() throws InterruptedException {
-        Mono.from(getVault().append(USER, OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         Task.Result result = getVault().deleteExpiredMessagesTask().run();
 
@@ -269,7 +263,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void deleteExpiredMessagesTaskShouldNotDeleteRecentMails() throws InterruptedException {
-        Mono.from(getVault().append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         getVault().deleteExpiredMessagesTask().run();
 
@@ -279,7 +273,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void deleteExpiredMessagesTaskShouldDeleteOldMails() throws InterruptedException {
-        Mono.from(getVault().append(USER, OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         getClock().setInstant(NOW.plusYears(2).toInstant());
         getVault().deleteExpiredMessagesTask().run();
@@ -290,11 +284,11 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void deleteExpiredMessagesTaskShouldDeleteOldMailsWhenRunSeveralTime() throws InterruptedException {
-        Mono.from(getVault().append(USER, OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
         getClock().setInstant(NOW.plusYears(2).toInstant());
         getVault().deleteExpiredMessagesTask().run();
 
-        Mono.from(getVault().append(USER_2, OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
         getClock().setInstant(NOW.plusYears(4).toInstant());
         getVault().deleteExpiredMessagesTask().run();
 

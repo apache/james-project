@@ -22,8 +22,8 @@ package org.apache.james.vault.utils;
 import static org.apache.james.vault.DeletedMessageFixture.CONTENT;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_2;
+import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_OTHER_USER;
 import static org.apache.james.vault.DeletedMessageFixture.USER;
-import static org.apache.james.vault.DeletedMessageFixture.USER_2;
 import static org.apache.james.vault.DeletedMessageVaultContract.CLOCK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -93,17 +93,17 @@ class DeleteByQueryExecutorTest {
 
     @Test
     void deleteByQueryShouldReturnCompletedUponNormalExecution() {
-        Mono.from(vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-        Mono.from(vault.append(USER_2, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         assertThat(testee.deleteByQuery(Query.ALL, notifiers)).isEqualTo(Task.Result.COMPLETED);
     }
 
     @Test
     void deleteByQueryShouldUpdateNotifiesdUponNormalExecution() {
-        Mono.from(vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-        Mono.from(vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
-        Mono.from(vault.append(USER_2, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(vault.append(DELETED_MESSAGE_OTHER_USER, new ByteArrayInputStream(CONTENT))).block();
 
         testee.deleteByQuery(Query.ALL, notifiers);
 
@@ -120,8 +120,8 @@ class DeleteByQueryExecutorTest {
 
     @Test
     void deleteByQueryShouldReturnPartialWhenSearchingFails() {
-        Mono.from(vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-        Mono.from(vault.append(USER_2, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         when(vault.search(USER, Query.ALL)).thenReturn(Flux.error(new RuntimeException()));
 
@@ -130,8 +130,8 @@ class DeleteByQueryExecutorTest {
 
     @Test
     void deleteByQueryShouldUpdateNotifiesWhenSearchingFails() {
-        Mono.from(vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-        Mono.from(vault.append(USER_2, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(vault.append(DELETED_MESSAGE_OTHER_USER, new ByteArrayInputStream(CONTENT))).block();
 
         when(vault.search(USER, Query.ALL)).thenReturn(Flux.error(new RuntimeException()));
 
@@ -151,9 +151,9 @@ class DeleteByQueryExecutorTest {
     @Test
     void deleteByQueryShouldReturnPartialWhenDeletionFails() {
         when(vault.delete(USER, DELETED_MESSAGE.getMessageId())).thenReturn(Mono.error(new RuntimeException()));
-        Mono.from(vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-        Mono.from(vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
-        Mono.from(vault.append(USER_2, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         assertThat(testee.deleteByQuery(Query.ALL, notifiers)).isEqualTo(Task.Result.PARTIAL);
     }
@@ -161,9 +161,9 @@ class DeleteByQueryExecutorTest {
     @Test
     void deleteByQueryShouldUpdateNotifiesWhenDeletionFails() {
         when(vault.delete(USER, DELETED_MESSAGE.getMessageId())).thenReturn(Mono.error(new RuntimeException()));
-        Mono.from(vault.append(USER, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-        Mono.from(vault.append(USER, DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
-        Mono.from(vault.append(USER_2, DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(vault.append(DELETED_MESSAGE_OTHER_USER, new ByteArrayInputStream(CONTENT))).block();
 
         testee.deleteByQuery(Query.ALL, notifiers);
 

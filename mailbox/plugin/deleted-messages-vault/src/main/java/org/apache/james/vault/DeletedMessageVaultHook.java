@@ -142,7 +142,7 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
                 deletedMessageConverter.convert(deletedMessageMailboxContext, mailboxMessage,
                     ZonedDateTime.ofInstant(clock.instant(), ZoneOffset.UTC)))))
             .map(Throwing.function(pairs -> Mono.from(deletedMessageVault
-                .append(pairs.getRight().getOwner(), pairs.getRight(), pairs.getLeft().getFullContent()))))
+                .append(pairs.getRight(), pairs.getLeft().getFullContent()))))
             .orElse(Mono.empty());
     }
 

@@ -90,4 +90,16 @@ public interface DeletedMessageFixture {
         .size(CONTENT.length)
         .build();
     DeletedMessage DELETED_MESSAGE_2 = DELETED_MESSAGE_GENERATOR.apply(MESSAGE_ID_2.getRawId());
+
+    DeletedMessage DELETED_MESSAGE_OTHER_USER = DeletedMessage.builder()
+        .messageId(InMemoryMessageId.of(48))
+        .originMailboxes(MAILBOX_ID_1, MAILBOX_ID_2)
+        .user(USER_2)
+        .deliveryDate(DELIVERY_DATE)
+        .deletionDate(DELETION_DATE)
+        .sender(MaybeSender.of(SENDER))
+        .recipients(RECIPIENT1, RECIPIENT2)
+        .hasAttachment(false)
+        .size(CONTENT.length)
+        .build();
 }
