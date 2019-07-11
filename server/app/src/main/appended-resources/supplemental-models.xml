@@ -451,30 +451,5 @@ Serp
         </organization>
     </project>
   </supplement>  
-  
-<!-- 
 
-
-==============================================================
-Geronimo
- -->
-  <supplement>
-    <project>
-        <groupId>org.apache.geronimo.specs</groupId>
-        <artifactId>geronimo-jms_1.1_spec</artifactId>
-        <organization>
-            <name>The Apache Software Foundation</name>
-            <url>http://www.apache.org</url>
-        </organization>
-        <licenses>
-            <license>
-            <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-            <comments>Distributed within spring-framework-3.0.5.RELEASE</comments>
-            </license>
-        </licenses>
-    </project>
-  </supplement>
- 
 </supplementalDataModels>

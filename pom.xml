@@ -597,13 +597,10 @@
         <jackrabbit.version>2.17.5</jackrabbit.version>
         <jsieve.version>0.7</jsieve.version>
         <spring.version>3.2.18.RELEASE</spring.version>
-        <geronimo-jms-spec.version>1.1.1</geronimo-jms-spec.version>
         <activmq-artemis.version>2.9.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.1</apache-jspf-resolver.version>
         <javamail.version>1.5.4</javamail.version>
         <javax-activation.version>1.1.1</javax-activation.version>
-        <geronimo-activation-spec.version>1.1</geronimo-activation-spec.version>
-        <geronimo-javamail.version>1.8.3</geronimo-javamail.version>
         <slf4j.version>1.7.25</slf4j.version>
         <servlet-api.version>2.4</servlet-api.version>
         <commons-logging.version>1.1.1</commons-logging.version>
@@ -657,7 +654,6 @@
         <lucene.version>3.6.2</lucene.version>
         <xercesImpl.version>2.12.0</xercesImpl.version>
         <xml-apis.version>1.4.01</xml-apis.version>
-        <geronimo-activation-spec.version>1.1</geronimo-activation-spec.version>
         <jasypt.version>1.9.2</jasypt.version>
         <guice.version>4.2.0</guice.version>
         <jackrabbit-core.version>2.5.2</jackrabbit-core.version>

@@ -1266,13 +1266,6 @@ All rights reserved.
                 <resource name='commons-logging-api-1.1.jar'/>
                 <resource name='commons-pool-1.5.5.jar'/>
                 <resource name='derby-10.14.2.0.jar'/>
-                <resource name='geronimo-annotation_1.0_spec-1.1.1.jar'/>
-                <resource name='geronimo-annotation_1.1_spec-1.0.1.jar'/>
-                <resource name='geronimo-j2ee-management_1.1_spec-1.0.1.jar'/>
-                <resource name='geronimo-jms_1.1_spec-1.0.jar'/>
-                <resource name='geronimo-jpa_2.0_spec-1.0.jar'/>
-                <resource name='geronimo-jta_1.1_spec-1.1.1.jar'/>
-                <resource name='geronimo-stax-api_1.0_spec-1.0.1.jar'/>
                 <resource name='jackrabbit-api-2.2.5.jar'/>
                 <resource name='jackrabbit-core-2.2.5.jar'/>
                 <resource name='jackrabbit-spi-2.2.5.jar'/>
