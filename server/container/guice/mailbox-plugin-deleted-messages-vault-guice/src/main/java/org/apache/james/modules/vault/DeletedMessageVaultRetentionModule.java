@@ -19,21 +19,37 @@
 
 package org.apache.james.modules.vault;
 
-import org.apache.james.vault.DeletedMessageVault;
-import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
-import org.apache.james.vault.blob.BucketNameGenerator;
+import java.io.FileNotFoundException;
+
+import javax.inject.Singleton;
+
+import org.apache.commons.configuration.Configuration;
+import org.apache.james.utils.PropertiesProvider;
+import org.apache.james.vault.RetentionConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+import com.google.inject.ConfigurationException;
+import com.google.inject.Provides;
 
-public class BlobStoreDeletedMessageVaultModule extends AbstractModule {
+public class DeletedMessageVaultRetentionModule extends AbstractModule {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeletedMessageVaultRetentionModule.class);
+
     @Override
     protected void configure() {
-        install(new DeletedMessageVaultRetentionModule());
 
-        bind(BucketNameGenerator.class).in(Scopes.SINGLETON);
-        bind(BlobStoreDeletedMessageVault.class).in(Scopes.SINGLETON);
-        bind(DeletedMessageVault.class)
-            .to(BlobStoreDeletedMessageVault.class);
+    }
+
+    @Provides
+    @Singleton
+    RetentionConfiguration providesRetentionConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, org.apache.commons.configuration.ConfigurationException {
+        try {
+            Configuration configuration = propertiesProvider.getConfiguration("deletedMessageVault");
+            return RetentionConfiguration.from(configuration);
+        } catch (FileNotFoundException e) {
+            LOGGER.warn("Error encountered while retrieving Deleted message vault configuration. Using default MailRepository RetentionTime (1 year) instead.");
+            return RetentionConfiguration.DEFAULT;
+        }
     }
 }

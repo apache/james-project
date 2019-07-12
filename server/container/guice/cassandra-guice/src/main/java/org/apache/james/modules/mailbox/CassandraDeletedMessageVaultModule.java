@@ -17,11 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.vault;
+package org.apache.james.modules.mailbox;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.modules.vault.BlobStoreDeletedMessageVaultModule;
+import org.apache.james.vault.DeletedMessageVault;
+import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
+import org.apache.james.vault.blob.BucketNameGenerator;
 import org.apache.james.vault.dto.DeletedMessageWithStorageInformationConverter;
+import org.apache.james.vault.metadata.CassandraDeletedMessageMetadataVault;
 import org.apache.james.vault.metadata.DeletedMessageMetadataModule;
+import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
 import org.apache.james.vault.metadata.MetadataDAO;
 import org.apache.james.vault.metadata.StorageInformationDAO;
 import org.apache.james.vault.metadata.UserPerBucketDAO;
@@ -30,10 +36,12 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 
-public class CassandraDeletedMessageMetadataVaultModule extends AbstractModule {
+public class CassandraDeletedMessageVaultModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new BlobStoreDeletedMessageVaultModule());
+
         bind(MetadataDAO.class).in(Scopes.SINGLETON);
         bind(StorageInformationDAO.class).in(Scopes.SINGLETON);
         bind(UserPerBucketDAO.class).in(Scopes.SINGLETON);
@@ -43,5 +51,14 @@ public class CassandraDeletedMessageMetadataVaultModule extends AbstractModule {
         cassandraDataDefinitions
             .addBinding()
             .toInstance(DeletedMessageMetadataModule.MODULE);
+
+        bind(CassandraDeletedMessageMetadataVault.class).in(Scopes.SINGLETON);
+        bind(DeletedMessageMetadataVault.class)
+            .to(CassandraDeletedMessageMetadataVault.class);
+
+        bind(BucketNameGenerator.class).in(Scopes.SINGLETON);
+        bind(BlobStoreDeletedMessageVault.class).in(Scopes.SINGLETON);
+        bind(DeletedMessageVault.class)
+            .to(BlobStoreDeletedMessageVault.class);
     }
 }

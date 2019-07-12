@@ -19,6 +19,8 @@
 
 package org.apache.james.vault.metadata;
 
+import javax.inject.Inject;
+
 import org.apache.james.vault.dto.DeletedMessageWithStorageInformationConverter;
 import org.apache.james.vault.dto.DeletedMessageWithStorageInformationDTO;
 import org.slf4j.Logger;
@@ -34,10 +36,10 @@ import reactor.core.publisher.Mono;
 class MetadataSerializer {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetadataSerializer.class);
 
-
     private final ObjectMapper objectMapper;
     private final DeletedMessageWithStorageInformationConverter dtoConverter;
 
+    @Inject
     MetadataSerializer(DeletedMessageWithStorageInformationConverter dtoConverter) {
         this.dtoConverter = dtoConverter;
         this.objectMapper = new ObjectMapper()
