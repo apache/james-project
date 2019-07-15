@@ -17,57 +17,54 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.eventsourcing.eventstore.cassandra.dto;
+package org.apache.dto;
 
-import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.EventId;
-import org.apache.james.eventsourcing.TestAggregateId;
-import org.apache.james.eventsourcing.TestEvent;
+import java.time.ZonedDateTime;
+import java.util.Optional;
+
+import org.apache.james.json.DTO;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class TestEventDTO implements EventDTO<TestEvent> {
+public class FirstDTO implements DTO<FirstDomainObject> {
     private final String type;
-    private final String data;
-    private final int eventId;
-    private final int aggregate;
+    private final Optional<Long> id;
+    private final String time;
+    private final String payload;
 
     @JsonCreator
-    public TestEventDTO(
+    public FirstDTO(
             @JsonProperty("type") String type,
-            @JsonProperty("data") String data,
-            @JsonProperty("eventId") int eventId,
-            @JsonProperty("aggregate") int aggregate) {
+            @JsonProperty("id") Optional<Long> id,
+            @JsonProperty("time") String time,
+            @JsonProperty("payload") String payload) {
         this.type = type;
-        this.data = data;
-        this.eventId = eventId;
-        this.aggregate = aggregate;
+        this.id = id;
+        this.time = time;
+        this.payload = payload;
     }
 
     public String getType() {
         return type;
     }
 
-    public String getData() {
-        return data;
+    public Optional<Long> getId() {
+        return id;
     }
 
-    public long getEventId() {
-        return eventId;
+    public String getTime() {
+        return time;
     }
 
-    public int getAggregate() {
-        return aggregate;
+    public String getPayload() {
+        return payload;
     }
 
     @JsonIgnore
     @Override
-    public TestEvent toEvent() {
-        return new TestEvent(
-            EventId.fromSerialized(eventId),
-            TestAggregateId.testId(aggregate),
-            data);
+    public FirstDomainObject toDomainObject() {
+        return new FirstDomainObject(id, ZonedDateTime.parse(time), payload);
     }
 }

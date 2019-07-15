@@ -31,6 +31,7 @@ public interface FilteringRuleSetDefineDTOModules {
             .forEvent(RuleSetDefined.class)
             .convertToDTO(FilteringRuleSetDefinedDTO.class)
             .convertWith(FilteringRuleSetDefinedDTO::from)
-            .typeName(TYPE);
+            .typeName(TYPE)
+            .withFactory(EventDTOModule::new);
 
 }

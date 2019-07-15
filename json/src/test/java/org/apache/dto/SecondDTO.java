@@ -17,57 +17,46 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.eventsourcing.eventstore.cassandra.dto;
+package org.apache.dto;
 
-import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.EventId;
-import org.apache.james.eventsourcing.TestAggregateId;
-import org.apache.james.eventsourcing.TestEvent;
+import java.util.UUID;
+
+import org.apache.james.json.DTO;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class TestEventDTO implements EventDTO<TestEvent> {
+public class SecondDTO implements DTO<SecondDomainObject> {
     private final String type;
-    private final String data;
-    private final int eventId;
-    private final int aggregate;
+    private final String id;
+    private final String payload;
 
     @JsonCreator
-    public TestEventDTO(
+    public SecondDTO(
             @JsonProperty("type") String type,
-            @JsonProperty("data") String data,
-            @JsonProperty("eventId") int eventId,
-            @JsonProperty("aggregate") int aggregate) {
+            @JsonProperty("id") String id,
+            @JsonProperty("payload") String payload) {
         this.type = type;
-        this.data = data;
-        this.eventId = eventId;
-        this.aggregate = aggregate;
+        this.id = id;
+        this.payload = payload;
     }
 
     public String getType() {
         return type;
     }
 
-    public String getData() {
-        return data;
+    public String getId() {
+        return id;
     }
 
-    public long getEventId() {
-        return eventId;
-    }
-
-    public int getAggregate() {
-        return aggregate;
+    public String getPayload() {
+        return payload;
     }
 
     @JsonIgnore
     @Override
-    public TestEvent toEvent() {
-        return new TestEvent(
-            EventId.fromSerialized(eventId),
-            TestAggregateId.testId(aggregate),
-            data);
+    public SecondDomainObject toDomainObject() {
+        return new SecondDomainObject(UUID.fromString(id), payload);
     }
 }

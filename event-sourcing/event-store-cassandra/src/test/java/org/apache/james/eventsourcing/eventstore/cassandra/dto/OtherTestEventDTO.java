@@ -19,7 +19,6 @@
 
 package org.apache.james.eventsourcing.eventstore.cassandra.dto;
 
-import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.eventsourcing.TestAggregateId;
 
@@ -27,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class OtherTestEventDTO implements EventDTO {
+public class OtherTestEventDTO implements EventDTO<OtherEvent> {
     private final String type;
     private final long data;
     private final int eventId;
@@ -63,7 +62,7 @@ public class OtherTestEventDTO implements EventDTO {
 
     @JsonIgnore
     @Override
-    public Event toEvent() {
+    public OtherEvent toEvent() {
         return new OtherEvent(
             EventId.fromSerialized(eventId),
             TestAggregateId.testId(aggregate),

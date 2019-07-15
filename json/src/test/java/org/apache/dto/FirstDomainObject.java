@@ -17,33 +17,47 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.eventsourcing.eventstore.cassandra.dto;
+package org.apache.dto;
 
-import org.apache.james.eventsourcing.TestEvent;
+import java.time.ZonedDateTime;
+import java.util.Objects;
+import java.util.Optional;
 
-public interface TestEventDTOModules {
+public class FirstDomainObject implements BaseType {
+    private final Optional<Long> id;
+    private final ZonedDateTime time;
+    private final String payload;
 
+    public FirstDomainObject(Optional<Long> id, ZonedDateTime time, String payload) {
+        this.id = id;
+        this.time = time;
+        this.payload = payload;
+    }
 
-    EventDTOModule TEST_TYPE = EventDTOModule
-            .forEvent(TestEvent.class)
-            .convertToDTO(TestEventDTO.class)
-            .convertWith((event, typeName) -> new TestEventDTO(
-                typeName,
-                event.getData(),
-                event.eventId().serialize(),
-                event.getAggregateId().getId()))
-            .typeName("TestType")
-            .withFactory(EventDTOModule::new);
+    public Optional<Long> getId() {
+        return id;
+    }
 
-    EventDTOModule OTHER_TEST_TYPE =
-        EventDTOModule
-            .forEvent(OtherEvent.class)
-            .convertToDTO(OtherTestEventDTO.class)
-            .convertWith((event, typeName) -> new OtherTestEventDTO(
-                typeName,
-                event.getPayload(),
-                event.eventId().serialize(),
-                event.getAggregateId().getId()))
-            .typeName("other-type")
-            .withFactory(EventDTOModule::new);
+    public ZonedDateTime getTime() {
+        return time;
+    }
+
+    public String getPayload() {
+        return payload;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FirstDomainObject that = (FirstDomainObject) o;
+        return Objects.equals(id, that.id) &&
+                Objects.equals(time, that.time) &&
+                Objects.equals(payload, that.payload);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, time, payload);
+    }
 }

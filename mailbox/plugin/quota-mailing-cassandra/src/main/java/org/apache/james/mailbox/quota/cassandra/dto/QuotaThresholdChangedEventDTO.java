@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-class QuotaThresholdChangedEventDTO implements EventDTO {
+class QuotaThresholdChangedEventDTO implements EventDTO<QuotaThresholdChangedEvent> {
 
     @JsonIgnore
     public static QuotaThresholdChangedEventDTO from(QuotaThresholdChangedEvent event, String type) {

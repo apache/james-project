@@ -17,33 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.eventsourcing.eventstore.cassandra.dto;
+package org.apache.dto;
 
-import org.apache.james.eventsourcing.TestEvent;
+import org.apache.james.json.DTO;
+import org.apache.james.json.DTOModule;
 
-public interface TestEventDTOModules {
+public class TestModule<T extends BaseType, U extends DTO<T>> extends DTOModule<T, U> {
 
-
-    EventDTOModule TEST_TYPE = EventDTOModule
-            .forEvent(TestEvent.class)
-            .convertToDTO(TestEventDTO.class)
-            .convertWith((event, typeName) -> new TestEventDTO(
-                typeName,
-                event.getData(),
-                event.eventId().serialize(),
-                event.getAggregateId().getId()))
-            .typeName("TestType")
-            .withFactory(EventDTOModule::new);
-
-    EventDTOModule OTHER_TEST_TYPE =
-        EventDTOModule
-            .forEvent(OtherEvent.class)
-            .convertToDTO(OtherTestEventDTO.class)
-            .convertWith((event, typeName) -> new OtherTestEventDTO(
-                typeName,
-                event.getPayload(),
-                event.eventId().serialize(),
-                event.getAggregateId().getId()))
-            .typeName("other-type")
-            .withFactory(EventDTOModule::new);
+    protected TestModule(DTOConverter<T, U> converter, Class<T> domainObjectType, Class<U> dtoType, String typeName) {
+        super(converter, domainObjectType, dtoType, typeName);
+    }
 }

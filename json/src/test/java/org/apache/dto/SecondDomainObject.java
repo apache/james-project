@@ -17,33 +17,39 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.eventsourcing.eventstore.cassandra.dto;
+package org.apache.dto;
 
-import org.apache.james.eventsourcing.TestEvent;
+import java.util.Objects;
+import java.util.UUID;
 
-public interface TestEventDTOModules {
+public class SecondDomainObject implements BaseType {
+    private final UUID id;
+    private final String payload;
 
+    public SecondDomainObject(UUID id, String payload) {
+        this.id = id;
+        this.payload = payload;
+    }
 
-    EventDTOModule TEST_TYPE = EventDTOModule
-            .forEvent(TestEvent.class)
-            .convertToDTO(TestEventDTO.class)
-            .convertWith((event, typeName) -> new TestEventDTO(
-                typeName,
-                event.getData(),
-                event.eventId().serialize(),
-                event.getAggregateId().getId()))
-            .typeName("TestType")
-            .withFactory(EventDTOModule::new);
+    public UUID getId() {
+        return id;
+    }
 
-    EventDTOModule OTHER_TEST_TYPE =
-        EventDTOModule
-            .forEvent(OtherEvent.class)
-            .convertToDTO(OtherTestEventDTO.class)
-            .convertWith((event, typeName) -> new OtherTestEventDTO(
-                typeName,
-                event.getPayload(),
-                event.eventId().serialize(),
-                event.getAggregateId().getId()))
-            .typeName("other-type")
-            .withFactory(EventDTOModule::new);
+    public String getPayload() {
+        return payload;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SecondDomainObject that = (SecondDomainObject) o;
+        return Objects.equals(id, that.id) &&
+                Objects.equals(payload, that.payload);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, payload);
+    }
 }

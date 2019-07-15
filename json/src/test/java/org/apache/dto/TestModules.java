@@ -17,33 +17,31 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.eventsourcing.eventstore.cassandra.dto;
+package org.apache.dto;
 
-import org.apache.james.eventsourcing.TestEvent;
+import org.apache.james.json.DTOModule;
 
-public interface TestEventDTOModules {
+public interface TestModules {
 
-
-    EventDTOModule TEST_TYPE = EventDTOModule
-            .forEvent(TestEvent.class)
-            .convertToDTO(TestEventDTO.class)
-            .convertWith((event, typeName) -> new TestEventDTO(
+    TestModule FIRST_TYPE = DTOModule
+            .forDomainObject(FirstDomainObject.class)
+            .convertToDTO(FirstDTO.class)
+            .convertWith((domainObject, typeName) -> new FirstDTO(
                 typeName,
-                event.getData(),
-                event.eventId().serialize(),
-                event.getAggregateId().getId()))
-            .typeName("TestType")
-            .withFactory(EventDTOModule::new);
+                domainObject.getId(),
+                domainObject.getTime().toString(),
+                domainObject.getPayload()))
+            .typeName("first")
+            .withFactory(TestModule::new);
 
-    EventDTOModule OTHER_TEST_TYPE =
-        EventDTOModule
-            .forEvent(OtherEvent.class)
-            .convertToDTO(OtherTestEventDTO.class)
-            .convertWith((event, typeName) -> new OtherTestEventDTO(
+    TestModule SECOND_TYPE = DTOModule
+            .forDomainObject(SecondDomainObject.class)
+            .convertToDTO(SecondDTO.class)
+            .convertWith((domainObject, typeName) -> new SecondDTO(
                 typeName,
-                event.getPayload(),
-                event.eventId().serialize(),
-                event.getAggregateId().getId()))
-            .typeName("other-type")
-            .withFactory(EventDTOModule::new);
+                domainObject.getId().toString(),
+                domainObject.getPayload()))
+            .typeName("second")
+            .withFactory(TestModule::new);
+
 }

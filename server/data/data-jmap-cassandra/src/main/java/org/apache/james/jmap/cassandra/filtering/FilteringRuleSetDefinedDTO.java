@@ -21,7 +21,6 @@ package org.apache.james.jmap.cassandra.filtering;
 
 import java.util.Objects;
 
-import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.jmap.api.filtering.impl.FilteringAggregateId;
@@ -32,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 
-public class FilteringRuleSetDefinedDTO implements EventDTO {
+public class FilteringRuleSetDefinedDTO implements EventDTO<RuleSetDefined> {
 
     public static FilteringRuleSetDefinedDTO from(RuleSetDefined event, String type) {
         return new FilteringRuleSetDefinedDTO(
@@ -79,7 +78,7 @@ public class FilteringRuleSetDefinedDTO implements EventDTO {
 
     @JsonIgnore
     @Override
-    public Event toEvent() {
+    public RuleSetDefined toEvent() {
         return new RuleSetDefined(
             FilteringAggregateId.parse(aggregateId),
             EventId.fromSerialized(eventId),
