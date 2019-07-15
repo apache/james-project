@@ -20,9 +20,11 @@
 package org.apache.james.task;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,6 +97,10 @@ public interface Task {
 
     default String type() {
         return UNKNOWN;
+    }
+
+    default Map<String, String> parameters() {
+        throw new NotImplementedException("Tasks should implement 'parameters' to be serializable");
     }
 
     default Optional<TaskExecutionDetails.AdditionalInformation> details() {

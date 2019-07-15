@@ -104,6 +104,7 @@
         <module>queue/queue-rabbitmq</module>
 
         <module>task</module>
+        <module>task-json</module>
         <module>testing</module>
     </modules>
 
