@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 - Migration to ElasticSearch 6.3
 - Blob export to LinShare
+- Native DKIM support for outgoing mails. 
 
 ## [3.3.0] - 2019-03-26
 ### Added
