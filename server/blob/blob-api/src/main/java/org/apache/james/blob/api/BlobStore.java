@@ -40,4 +40,6 @@ public interface BlobStore {
     BucketName getDefaultBucketName();
 
     Mono<Void> deleteBucket(BucketName bucketName);
+
+    Mono<Void> delete(BucketName bucketName, BlobId blobId);
 }

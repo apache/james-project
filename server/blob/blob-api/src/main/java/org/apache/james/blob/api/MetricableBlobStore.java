@@ -23,6 +23,7 @@ import java.io.InputStream;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.metrics.api.MetricFactory;
 
 import reactor.core.publisher.Mono;
@@ -81,5 +82,10 @@ public class MetricableBlobStore implements BlobStore {
     @Override
     public BucketName getDefaultBucketName() {
         return blobStoreImpl.getDefaultBucketName();
+    }
+
+    @Override
+    public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
+        throw new NotImplementedException("not implemented");
     }
 }

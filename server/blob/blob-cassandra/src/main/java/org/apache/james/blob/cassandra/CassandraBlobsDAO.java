@@ -229,4 +229,9 @@ public class CassandraBlobsDAO implements BlobStore {
     public Mono<Void> deleteBucket(BucketName bucketName) {
         throw new NotImplementedException("not implemented");
     }
+
+    @Override
+    public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
+        throw new NotImplementedException("not implemented");
+    }
 }

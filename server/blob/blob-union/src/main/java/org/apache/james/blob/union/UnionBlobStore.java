@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
@@ -194,6 +195,11 @@ public class UnionBlobStore implements BlobStore {
     private <T> Mono<T> logAndReturnEmpty(Throwable throwable) {
         LOGGER.error("error happens from current blob store, fall back to legacy blob store", throwable);
         return Mono.empty();
+    }
+
+    @Override
+    public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
