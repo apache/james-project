@@ -23,7 +23,6 @@ import java.io.InputStream;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.metrics.api.MetricFactory;
 
 import reactor.core.publisher.Mono;
@@ -38,6 +37,7 @@ public class MetricableBlobStore implements BlobStore {
     static final String READ_BYTES_TIMER_NAME = BLOB_STORE_METRIC_PREFIX + "readBytes";
     static final String READ_TIMER_NAME = BLOB_STORE_METRIC_PREFIX + "read";
     static final String DELETE_TIMER_NAME = BLOB_STORE_METRIC_PREFIX + "delete";
+    static final String DELETE_BUCKET_TIMER_NAME = BLOB_STORE_METRIC_PREFIX + "deleteBucket";
 
     private final MetricFactory metricFactory;
     private final BlobStore blobStoreImpl;
@@ -76,7 +76,7 @@ public class MetricableBlobStore implements BlobStore {
     @Override
     public Mono<Void> deleteBucket(BucketName bucketName) {
         return metricFactory
-            .runPublishingTimerMetric(DELETE_TIMER_NAME, () -> blobStoreImpl.deleteBucket(bucketName));
+            .runPublishingTimerMetric(DELETE_BUCKET_TIMER_NAME, () -> blobStoreImpl.deleteBucket(bucketName));
     }
 
     @Override
@@ -86,6 +86,7 @@ public class MetricableBlobStore implements BlobStore {
 
     @Override
     public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
-        throw new NotImplementedException("not implemented");
+        return metricFactory
+            .runPublishingTimerMetric(DELETE_TIMER_NAME, () -> blobStoreImpl.delete(bucketName, blobId));
     }
 }

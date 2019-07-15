@@ -19,6 +19,7 @@
 
 package org.apache.james.blob.api;
 
+import static org.apache.james.blob.api.MetricableBlobStore.DELETE_BUCKET_TIMER_NAME;
 import static org.apache.james.blob.api.MetricableBlobStore.DELETE_TIMER_NAME;
 import static org.apache.james.blob.api.MetricableBlobStore.READ_BYTES_TIMER_NAME;
 import static org.apache.james.blob.api.MetricableBlobStore.READ_TIMER_NAME;
@@ -30,6 +31,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -104,13 +106,26 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
     }
 
     @Test
-    default void deleteBucketShouldPublishDeleteTimerMetrics() {
+    default void deleteBucketShouldPublishDeleteBucketTimerMetrics() {
         BucketName bucketName = BucketName.of("custom");
         testee().save(BucketName.DEFAULT, BYTES_CONTENT).block();
         testee().save(bucketName, BYTES_CONTENT).block();
 
         testee().deleteBucket(BucketName.DEFAULT).block();
         testee().deleteBucket(bucketName).block();
+
+        assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(DELETE_BUCKET_TIMER_NAME))
+            .hasSize(2);
+    }
+
+    @Test
+    @Disabled("JAMES-2829 Not supported yet")
+    default void deleteShouldPublishDeleteTimerMetrics() {
+        BlobId blobId1 = testee().save(testee().getDefaultBucketName(), BYTES_CONTENT).block();
+        BlobId blobId2 = testee().save(testee().getDefaultBucketName(), BYTES_CONTENT).block();
+
+        testee().delete(BucketName.DEFAULT, blobId1).block();
+        testee().delete(BucketName.DEFAULT, blobId2).block();
 
         assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(DELETE_TIMER_NAME))
             .hasSize(2);

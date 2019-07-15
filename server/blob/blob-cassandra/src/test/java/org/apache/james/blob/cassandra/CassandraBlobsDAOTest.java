@@ -72,7 +72,7 @@ public class CassandraBlobsDAOTest implements MetricableBlobStoreContract {
 
     @Override
     @Disabled("JAMES-2806: delete bucket not implemented yet for Cassandra")
-    public void deleteBucketShouldPublishDeleteTimerMetrics() {
+    public void deleteBucketShouldPublishDeleteBucketTimerMetrics() {
 
     }
 
