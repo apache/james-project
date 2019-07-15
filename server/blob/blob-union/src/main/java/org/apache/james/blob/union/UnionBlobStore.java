@@ -26,7 +26,6 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
@@ -154,7 +153,14 @@ public class UnionBlobStore implements BlobStore {
     public Mono<Void> deleteBucket(BucketName bucketName) {
         return Mono.defer(() -> currentBlobStore.deleteBucket(bucketName))
             .and(legacyBlobStore.deleteBucket(bucketName))
-            .onErrorResume(this::logAndReturnEmpty);
+            .onErrorResume(this::logDeleteFailureAndReturnEmpty);
+    }
+
+    @Override
+    public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
+        return Mono.defer(() -> currentBlobStore.delete(bucketName, blobId))
+            .and(legacyBlobStore.delete(bucketName, blobId))
+            .onErrorResume(this::logDeleteFailureAndReturnEmpty);
     }
 
     private InputStream readFallBackIfEmptyResult(BucketName bucketName, BlobId blobId) {
@@ -197,9 +203,9 @@ public class UnionBlobStore implements BlobStore {
         return Mono.empty();
     }
 
-    @Override
-    public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
-        throw new NotImplementedException("not implemented");
+    private <T> Mono<T> logDeleteFailureAndReturnEmpty(Throwable throwable) {
+        LOGGER.error("Cannot delete from either legacy or current blob store", throwable);
+        return Mono.empty();
     }
 
     @Override

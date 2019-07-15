@@ -27,7 +27,6 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
@@ -121,7 +120,14 @@ public class MemoryBlobStore implements BlobStore {
 
     @Override
     public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
-        throw new NotImplementedException("not implemented");
+        Preconditions.checkNotNull(bucketName);
+        Preconditions.checkNotNull(blobId);
+
+        return Mono.fromRunnable(() -> {
+            synchronized (blobs) {
+                blobs.remove(bucketName, blobId);
+            }
+        });
     }
 
 }

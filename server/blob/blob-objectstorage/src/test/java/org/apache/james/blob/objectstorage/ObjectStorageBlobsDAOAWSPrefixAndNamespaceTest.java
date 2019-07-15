@@ -32,6 +32,7 @@ import org.apache.james.blob.objectstorage.aws.DockerAwsS3Container;
 import org.apache.james.blob.objectstorage.aws.DockerAwsS3Extension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
@@ -79,5 +80,10 @@ public class ObjectStorageBlobsDAOAWSPrefixAndNamespaceTest implements Metricabl
         return new HashBlobId.Factory();
     }
 
+    @Override
+    @Disabled("JAMES-2829 Not supported yet")
+    public void deleteShouldPublishDeleteTimerMetrics() {
+
+    }
 }
 

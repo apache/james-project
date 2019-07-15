@@ -46,6 +46,7 @@ import org.jclouds.blobstore.domain.StorageType;
 import org.jclouds.domain.Location;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -204,6 +205,12 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract, B
         BlobId blobId = testee().save(testee.getDefaultBucketName(), BIG_STRING).block();
         Mono<byte[]> resultFuture = testee.readBytes(testee.getDefaultBucketName(), blobId).subscribeOn(Schedulers.elastic());
         assertThat(resultFuture.toFuture()).isNotCompleted();
+    }
+
+    @Override
+    @Disabled("JAMES-2829 Not supported yet")
+    public void deleteShouldPublishDeleteTimerMetrics() {
+
     }
 }
 

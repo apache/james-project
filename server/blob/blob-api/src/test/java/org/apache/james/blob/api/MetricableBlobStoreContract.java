@@ -31,7 +31,6 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -119,7 +118,6 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
     }
 
     @Test
-    @Disabled("JAMES-2829 Not supported yet")
     default void deleteShouldPublishDeleteTimerMetrics() {
         BlobId blobId1 = testee().save(testee().getDefaultBucketName(), BYTES_CONTENT).block();
         BlobId blobId2 = testee().save(testee().getDefaultBucketName(), BYTES_CONTENT).block();

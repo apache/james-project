@@ -93,4 +93,10 @@ public class CassandraBlobsDAOTest implements MetricableBlobStoreContract {
         assertThat(bytes).hasSameContentAs(new ZeroedInputStream(100_000_000));
     }
 
+    @Override
+    @Disabled("JAMES-2829 Not supported yet")
+    public void deleteShouldPublishDeleteTimerMetrics() {
+
+    }
+
 }
