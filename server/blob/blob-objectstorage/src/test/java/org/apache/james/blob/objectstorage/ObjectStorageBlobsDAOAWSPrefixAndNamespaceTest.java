@@ -23,6 +23,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketBlobStoreContract;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.DeleteBlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
@@ -32,11 +33,10 @@ import org.apache.james.blob.objectstorage.aws.DockerAwsS3Container;
 import org.apache.james.blob.objectstorage.aws.DockerAwsS3Extension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
-public class ObjectStorageBlobsDAOAWSPrefixAndNamespaceTest implements MetricableBlobStoreContract, BucketBlobStoreContract {
+public class ObjectStorageBlobsDAOAWSPrefixAndNamespaceTest implements MetricableBlobStoreContract, BucketBlobStoreContract, DeleteBlobStoreContract {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
     private BlobStore testee;
@@ -78,12 +78,6 @@ public class ObjectStorageBlobsDAOAWSPrefixAndNamespaceTest implements Metricabl
     @Override
     public BlobId.Factory blobIdFactory() {
         return new HashBlobId.Factory();
-    }
-
-    @Override
-    @Disabled("JAMES-2829 Not supported yet")
-    public void deleteShouldPublishDeleteTimerMetrics() {
-
     }
 }
 

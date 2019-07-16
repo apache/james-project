@@ -31,6 +31,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketBlobStoreContract;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.DeleteBlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
@@ -46,7 +47,6 @@ import org.jclouds.blobstore.domain.StorageType;
 import org.jclouds.domain.Location;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -57,7 +57,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 @ExtendWith(DockerSwiftExtension.class)
-public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract, BucketBlobStoreContract {
+public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract, BucketBlobStoreContract, DeleteBlobStoreContract {
 
     private static final String BIG_STRING = Strings.repeat("big blob content", 10 * 1024);
     private static final TenantName TENANT_NAME = TenantName.of("test");
@@ -205,12 +205,6 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract, B
         BlobId blobId = testee().save(testee.getDefaultBucketName(), BIG_STRING).block();
         Mono<byte[]> resultFuture = testee.readBytes(testee.getDefaultBucketName(), blobId).subscribeOn(Schedulers.elastic());
         assertThat(resultFuture.toFuture()).isNotCompleted();
-    }
-
-    @Override
-    @Disabled("JAMES-2829 Not supported yet")
-    public void deleteShouldPublishDeleteTimerMetrics() {
-
     }
 }
 
