@@ -16,36 +16,21 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.server.task.json.dto;
 
-import org.apache.james.server.task.json.TestTask;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class TestTaskDTO implements TaskDTO {
-    private final long parameter;
+public class ThrowingTaskDTO implements TaskDTO {
+
     private final String type;
 
-    public TestTaskDTO(@JsonProperty("type") String type, @JsonProperty("parameter") long parameter) {
+    public ThrowingTaskDTO(@JsonProperty("type") String type) {
         this.type = type;
-        this.parameter = parameter;
-    }
-
-    public long getParameter() {
-        return parameter;
     }
 
     @Override
     public String getType() {
         return type;
     }
-
-    @JsonIgnore
-    public TestTask toTask() {
-        return new TestTask(parameter);
-    }
-
-
 }
+

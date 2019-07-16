@@ -40,11 +40,9 @@ class SerialTaskManagerWorkerTest {
 
     private final SerialTaskManagerWorker worker = new SerialTaskManagerWorker();
 
-    private final Task successfulTask = () -> Task.Result.COMPLETED;
-    private final Task failedTask = () -> Task.Result.PARTIAL;
-    private final Task throwingTask = () -> {
-        throw new RuntimeException("Throwing Task");
-    };
+    private final Task successfulTask = new CompletedTask();
+    private final Task failedTask = new FailedTask();
+    private final Task throwingTask = new ThrowingTask();
 
     @AfterEach
     void tearDown() throws IOException {

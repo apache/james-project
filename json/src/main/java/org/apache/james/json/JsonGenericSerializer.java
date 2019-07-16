@@ -103,7 +103,7 @@ public class JsonGenericSerializer<T, U extends DTO> {
             U dto = objectMapper.readValue(objectMapper.treeAsTokens(jsonNode), dtoModule.getDTOClass());
             return dtoModule.getToDomainObjectConverter().convert(dto);
         } catch (MismatchedInputException e) {
-            throw new InvalidTypeException("Duplicate \"type\" properties found in the json document", e);
+            throw new InvalidTypeException("Unable to deserialize the json document", e);
         }
     }
 
