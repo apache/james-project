@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class SecondDTO implements DTO<SecondDomainObject> {
+public class SecondDTO implements DTO {
     private final String type;
     private final String id;
     private final String payload;
@@ -55,7 +55,6 @@ public class SecondDTO implements DTO<SecondDomainObject> {
     }
 
     @JsonIgnore
-    @Override
     public SecondDomainObject toDomainObject() {
         return new SecondDomainObject(UUID.fromString(id), payload);
     }

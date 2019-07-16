@@ -34,7 +34,7 @@ public class TestTask implements Task {
     }
 
     @Override
-    public Result run() throws InterruptedException {
+    public Result run() {
         return null;
     }
 

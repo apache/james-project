@@ -1,5 +1,4 @@
 package org.apache.james.json;
 
-public interface DTO<T> {
-    T toDomainObject();
+public interface DTO {
 }

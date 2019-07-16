@@ -17,20 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.server.task.json.dto;
+package org.apache.mailbox.tools.indexer.dto;
 
-import org.apache.james.server.task.json.TestTask;
+import org.apache.james.server.task.json.dto.TaskDTO;
 
-public interface TestTaskDTOModules {
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-    TaskDTOModule TEST_TYPE = TaskDTOModule
-        .forTask(TestTask.class)
-        .convertToDTO(TestTaskDTO.class)
-        .toDomainObjectConverter(TestTaskDTO::toTask)
-        .toDTOConverter((task, typeName) -> new TestTaskDTO(
-            typeName,
-            task.getParameter()))
-        .typeName("testTask")
-        .withFactory(TaskDTOModule::new);
+public class SingleMailboxReindexingTaskDTO implements TaskDTO {
 
+    private final String type;
+    private final String mailboxId;
+
+    public SingleMailboxReindexingTaskDTO(@JsonProperty("type") String type, @JsonProperty("mailboxId") String mailboxId) {
+        this.type = type;
+        this.mailboxId = mailboxId;
+    }
+
+    @Override
+    public String getType() {
+        return type;
+    }
+
+    public String getMailboxId() {
+        return mailboxId;
+    }
 }

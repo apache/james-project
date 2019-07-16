@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 
-class DLPConfigurationItemAddedDTO implements EventDTO<ConfigurationItemsAdded> {
+class DLPConfigurationItemAddedDTO implements EventDTO {
 
     public static DLPConfigurationItemAddedDTO from(ConfigurationItemsAdded event, String type) {
         return new DLPConfigurationItemAddedDTO(
@@ -83,7 +83,6 @@ class DLPConfigurationItemAddedDTO implements EventDTO<ConfigurationItemsAdded> 
     }
 
     @JsonIgnore
-    @Override
     public ConfigurationItemsAdded toEvent() {
         return new ConfigurationItemsAdded(
             DLPAggregateId.parse(aggregateId),

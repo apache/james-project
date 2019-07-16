@@ -46,7 +46,7 @@ public class JsonEventSerializer {
         }
     }
 
-    private JsonGenericSerializer<Event, EventDTO<Event>> jsonGenericSerializer;
+    private JsonGenericSerializer<Event, EventDTO> jsonGenericSerializer;
 
     @Inject
     public JsonEventSerializer(Set<EventDTOModule> modules) {

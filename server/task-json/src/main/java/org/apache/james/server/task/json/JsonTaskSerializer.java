@@ -46,7 +46,7 @@ public class JsonTaskSerializer {
         }
     }
 
-    private JsonGenericSerializer<Task, TaskDTO<Task>> jsonGenericSerializer;
+    private JsonGenericSerializer<Task, TaskDTO> jsonGenericSerializer;
 
     @Inject
     public JsonTaskSerializer(@SuppressWarnings("rawtypes") Set<TaskDTOModule> modules) {

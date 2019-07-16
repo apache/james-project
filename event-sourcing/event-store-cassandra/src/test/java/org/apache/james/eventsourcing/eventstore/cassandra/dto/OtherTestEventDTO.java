@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class OtherTestEventDTO implements EventDTO<OtherEvent> {
+public class OtherTestEventDTO implements EventDTO {
     private final String type;
     private final long data;
     private final int eventId;
@@ -61,7 +61,6 @@ public class OtherTestEventDTO implements EventDTO<OtherEvent> {
     }
 
     @JsonIgnore
-    @Override
     public OtherEvent toEvent() {
         return new OtherEvent(
             EventId.fromSerialized(eventId),

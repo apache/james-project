@@ -19,7 +19,6 @@
 
 package org.apache.mailbox.tools.indexer;
 
-import java.util.Map;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -27,9 +26,7 @@ import javax.inject.Inject;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.ImmutableMap;
+import org.apache.mailbox.tools.indexer.dto.SingleMailboxReindexingTaskDTO;
 
 public class SingleMailboxReindexingTask implements Task {
 
@@ -50,16 +47,18 @@ public class SingleMailboxReindexingTask implements Task {
 
     public static class Factory {
 
-        private MailboxId.Factory mailboxIdFactory;
+        private final ReIndexerPerformer reIndexerPerformer;
+        private final MailboxId.Factory mailboxIdFactory;
 
         @Inject
-        public Factory(MailboxId.Factory mailboxIdFactory) {
+        public Factory(ReIndexerPerformer reIndexerPerformer, MailboxId.Factory mailboxIdFactory) {
+            this.reIndexerPerformer = reIndexerPerformer;
             this.mailboxIdFactory = mailboxIdFactory;
         }
 
-        public Task create(JsonNode parameters) {
-            MailboxId mailboxId = mailboxIdFactory.fromString(parameters.get("mailboxId").asText());
-            return new SingleMailboxReindexingTask(null, mailboxId);
+        public SingleMailboxReindexingTask create(SingleMailboxReindexingTaskDTO dto) {
+            MailboxId mailboxId = mailboxIdFactory.fromString(dto.getMailboxId());
+            return new SingleMailboxReindexingTask(reIndexerPerformer, mailboxId);
         }
     }
 
@@ -90,14 +89,13 @@ public class SingleMailboxReindexingTask implements Task {
         return MAILBOX_RE_INDEXING;
     }
 
-    @Override
-    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(additionalInformation);
+    public MailboxId getMailboxId() {
+        return mailboxId;
     }
 
     @Override
-    public Map<String, String> parameters() {
-        return ImmutableMap.of("mailboxId", mailboxId.serialize());
+    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
+        return Optional.of(additionalInformation);
     }
 
 }

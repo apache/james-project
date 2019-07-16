@@ -22,14 +22,14 @@ package org.apache.james.eventsourcing.eventstore.cassandra.dto;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.json.DTOModule;
 
-public class EventDTOModule<T extends Event, U extends EventDTO<T>> extends DTOModule<T, U> {
+public class EventDTOModule<T extends Event, U extends EventDTO> extends DTOModule<T, U> {
 
     public static <EventTypeT extends Event> DTOModule.Builder<EventTypeT> forEvent(Class<EventTypeT> eventType) {
         return new DTOModule.Builder<>(eventType);
     }
 
-    public EventDTOModule(DTOConverter<T, U> converter, Class<T> domainObjectType, Class<U> dtoType, String typeName) {
-        super(converter, domainObjectType, dtoType, typeName);
+    public EventDTOModule(DTOConverter<T, U> converter, DomainObjectConverter<T, U> toDomainObjectConverter, Class<T> domainObjectType, Class<U> dtoType, String typeName) {
+        super(converter, toDomainObjectConverter, domainObjectType, dtoType, typeName);
     }
 
     @Override

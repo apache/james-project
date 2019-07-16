@@ -37,7 +37,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableSet;
 
-public class JsonGenericSerializer<T, U extends DTO<T>> {
+public class JsonGenericSerializer<T, U extends DTO> {
 
     public static class InvalidTypeException extends RuntimeException {
         public InvalidTypeException(String message) {
@@ -60,7 +60,7 @@ public class JsonGenericSerializer<T, U extends DTO<T>> {
     private final ObjectMapper objectMapper;
 
     @SafeVarargs
-    public static <T, U extends DTO<T>> JsonGenericSerializer of(DTOModule<T, U>... modules) {
+    public static <T, U extends DTO> JsonGenericSerializer of(DTOModule<T, U>... modules) {
         return new JsonGenericSerializer<>(ImmutableSet.copyOf(modules));
     }
 
@@ -99,18 +99,16 @@ public class JsonGenericSerializer<T, U extends DTO<T>> {
                 throw new InvalidTypeException("No \"type\" property found in the json document");
             }
 
-            U dto = objectMapper.readValue(
-                objectMapper.treeAsTokens(jsonNode),
-                retrieveDTOClass(typeNode.asText()));
-            return dto.toDomainObject();
+            DTOModule<T, U> dtoModule = retrieveModuleForType(typeNode.asText());
+            U dto = objectMapper.readValue(objectMapper.treeAsTokens(jsonNode), dtoModule.getDTOClass());
+            return dtoModule.getToDomainObjectConverter().convert(dto);
         } catch (MismatchedInputException e) {
             throw new InvalidTypeException("Duplicate \"type\" properties found in the json document", e);
         }
     }
 
-    private Class<? extends U> retrieveDTOClass(String type) {
+    private DTOModule<T, U> retrieveModuleForType(String type) {
         return Optional.ofNullable(typeToModule.get(type))
-            .map(DTOModule::getDTOClass)
             .orElseThrow(() -> new UnknownTypeException("unknown type " + type));
     }
 

@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class FirstDTO implements DTO<FirstDomainObject> {
+public class FirstDTO implements DTO {
     private final String type;
     private final Optional<Long> id;
     private final String time;
@@ -63,7 +63,6 @@ public class FirstDTO implements DTO<FirstDomainObject> {
     }
 
     @JsonIgnore
-    @Override
     public FirstDomainObject toDomainObject() {
         return new FirstDomainObject(id, ZonedDateTime.parse(time), payload);
     }

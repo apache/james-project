@@ -24,24 +24,26 @@ import org.apache.james.json.DTOModule;
 public interface TestModules {
 
     TestModule FIRST_TYPE = DTOModule
-            .forDomainObject(FirstDomainObject.class)
-            .convertToDTO(FirstDTO.class)
-            .convertWith((domainObject, typeName) -> new FirstDTO(
-                typeName,
-                domainObject.getId(),
-                domainObject.getTime().toString(),
-                domainObject.getPayload()))
-            .typeName("first")
-            .withFactory(TestModule::new);
+        .forDomainObject(FirstDomainObject.class)
+        .convertToDTO(FirstDTO.class)
+        .toDomainObjectConverter(FirstDTO::toDomainObject)
+        .toDTOConverter((domainObject, typeName) -> new FirstDTO(
+            typeName,
+            domainObject.getId(),
+            domainObject.getTime().toString(),
+            domainObject.getPayload()))
+        .typeName("first")
+        .withFactory(TestModule::new);
 
     TestModule SECOND_TYPE = DTOModule
-            .forDomainObject(SecondDomainObject.class)
-            .convertToDTO(SecondDTO.class)
-            .convertWith((domainObject, typeName) -> new SecondDTO(
-                typeName,
-                domainObject.getId().toString(),
-                domainObject.getPayload()))
-            .typeName("second")
-            .withFactory(TestModule::new);
+        .forDomainObject(SecondDomainObject.class)
+        .convertToDTO(SecondDTO.class)
+        .toDomainObjectConverter(SecondDTO::toDomainObject)
+        .toDTOConverter((domainObject, typeName) -> new SecondDTO(
+            typeName,
+            domainObject.getId().toString(),
+            domainObject.getPayload()))
+        .typeName("second")
+        .withFactory(TestModule::new);
 
 }

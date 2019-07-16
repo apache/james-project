@@ -21,13 +21,13 @@ package org.apache.james.server.task.json.dto;
 import org.apache.james.json.DTOModule;
 import org.apache.james.task.Task;
 
-public class TaskDTOModule<T extends Task, U extends TaskDTO<T>> extends DTOModule<T, U> {
+public class TaskDTOModule<T extends Task, U extends TaskDTO> extends DTOModule<T, U> {
 
     public static <TaskTypeT extends Task> Builder<TaskTypeT> forTask(Class<TaskTypeT> taskType) {
         return new Builder<>(taskType);
     }
 
-    public TaskDTOModule(DTOConverter<T, U> converter, Class<T> domainObjectType, Class<U> dtoType, String typeName) {
-        super(converter, domainObjectType, dtoType, typeName);
+    public TaskDTOModule(DTOConverter<T, U> converter, DomainObjectConverter<T, U> toDomainObjectConverter, Class<T> domainObjectType, Class<U> dtoType, String typeName) {
+        super(converter, toDomainObjectConverter, domainObjectType, dtoType, typeName);
     }
 }

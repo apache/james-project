@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class TestTaskDTO implements TaskDTO<TestTask> {
+public class TestTaskDTO implements TaskDTO {
     private final long parameter;
     private final String type;
 
@@ -46,7 +46,6 @@ public class TestTaskDTO implements TaskDTO<TestTask> {
     }
 
     @JsonIgnore
-    @Override
     public TestTask toTask() {
         return new TestTask(parameter);
     }
