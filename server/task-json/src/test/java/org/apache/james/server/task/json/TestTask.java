@@ -38,27 +38,20 @@ public class TestTask implements Task {
         return null;
     }
 
+    public long getParameter() {
+        return parameter;
+    }
+
     @Override
     public String type() {
         return "testTask";
     }
 
-    @Override
-    public Map<String, String> parameters() {
-        return ImmutableMap.of("parameter", String.valueOf(parameter));
-    }
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
         return Optional.empty();
     }
 
-    public static class Factory implements TaskDeserializer.Factory {
 
-        @Override
-        public Task create(JsonNode parameters) {
-            long parameter = parameters.get("parameter").asLong();
-            return new TestTask(parameter);
-        }
-    }
 }

@@ -16,7 +16,20 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.server.task.json;
 
-public class InvalidTaskTypeException extends RuntimeException {
+package org.apache.james.server.task.json.dto;
+
+import org.apache.james.server.task.json.TestTask;
+
+public interface TestTaskDTOModules {
+
+    TaskDTOModule TEST_TYPE = TaskDTOModule
+        .forTask(TestTask.class)
+        .convertToDTO(TestTaskDTO.class)
+        .convertWith((task, typeName) -> new TestTaskDTO(
+            typeName,
+            task.getParameter()))
+        .typeName("testTask")
+        .withFactory(TaskDTOModule::new);
+
 }

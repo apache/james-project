@@ -25,7 +25,6 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.server.task.json.TaskDeserializer;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
@@ -49,7 +48,7 @@ public class SingleMailboxReindexingTask implements Task {
         }
     }
 
-    public static class Factory implements TaskDeserializer.Factory {
+    public static class Factory {
 
         private MailboxId.Factory mailboxIdFactory;
 
@@ -58,7 +57,6 @@ public class SingleMailboxReindexingTask implements Task {
             this.mailboxIdFactory = mailboxIdFactory;
         }
 
-        @Override
         public Task create(JsonNode parameters) {
             MailboxId mailboxId = mailboxIdFactory.fromString(parameters.get("mailboxId").asText());
             return new SingleMailboxReindexingTask(null, mailboxId);

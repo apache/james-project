@@ -17,53 +17,53 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.eventsourcing.eventstore.cassandra;
+package org.apache.james.server.task.json;
 
 import java.io.IOException;
 import java.util.Set;
 
 import javax.inject.Inject;
 
-import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.json.JsonGenericSerializer;
+import org.apache.james.server.task.json.dto.TaskDTO;
+import org.apache.james.server.task.json.dto.TaskDTOModule;
+import org.apache.james.task.Task;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableSet;
 
-public class JsonEventSerializer {
+public class JsonTaskSerializer {
 
-    public static class UnknownEventException extends RuntimeException {
-        public UnknownEventException(JsonGenericSerializer.UnknownTypeException original) {
+    public static class UnknownTaskException extends RuntimeException {
+        public UnknownTaskException(JsonGenericSerializer.UnknownTypeException original) {
             super(original);
         }
     }
 
-    private JsonGenericSerializer<Event, EventDTO<Event>> jsonGenericSerializer;
+    private JsonGenericSerializer<Task, TaskDTO<Task>> jsonGenericSerializer;
 
     @Inject
-    public JsonEventSerializer(Set<EventDTOModule> modules) {
+    public JsonTaskSerializer(@SuppressWarnings("rawtypes") Set<TaskDTOModule> modules) {
         jsonGenericSerializer = new JsonGenericSerializer(modules);
     }
-    
-    public JsonEventSerializer(@SuppressWarnings("rawtypes") EventDTOModule... modules) {
+
+    public JsonTaskSerializer(@SuppressWarnings("rawtypes") TaskDTOModule... modules) {
         this(ImmutableSet.copyOf(modules));
     }
 
-    public String serialize(Event event) throws JsonProcessingException {
+    public String serialize(Task task) throws JsonProcessingException {
         try {
-            return jsonGenericSerializer.serialize(event);
+            return jsonGenericSerializer.serialize(task);
         } catch (JsonGenericSerializer.UnknownTypeException e) {
-            throw new UnknownEventException(e);
+            throw new UnknownTaskException(e);
         }
     }
 
-    public Event deserialize(String value) throws IOException {
+    public Task deserialize(String value) throws IOException {
         try {
             return jsonGenericSerializer.deserialize(value);
         } catch (JsonGenericSerializer.UnknownTypeException e) {
-            throw new UnknownEventException(e);
+            throw new UnknownTaskException(e);
         }
     }
 
