@@ -43,6 +43,8 @@ class JsonGenericSerializerTest {
     private static final FirstDomainObject FIRST = new FirstDomainObject(Optional.of(1L), ZonedDateTime.parse("2016-04-03T02:01+07:00[Asia/Vientiane]"), "first payload");
     private static final SecondDomainObject SECOND = new SecondDomainObject(UUID.fromString("4a2c853f-7ffc-4ce3-9410-a47e85b3b741"), "second payload");
 
+    private static final String MISSING_TYPE_JSON = "{\"id\":1,\"time\":\"2016-04-03T02:01+07:00[Asia/Vientiane]\",\"payload\":\"first payload\"}";
+    private static final String DUPLICATE_TYPE_JSON = "{\"type\":\"first\", \"type\":\"second\", \"id\":1,\"time\":\"2016-04-03T02:01+07:00[Asia/Vientiane]\",\"payload\":\"first payload\"}";
     private static final String FIRST_JSON = "{\"type\":\"first\",\"id\":1,\"time\":\"2016-04-03T02:01+07:00[Asia/Vientiane]\",\"payload\":\"first payload\"}";
     private static final String SECOND_JSON = "{\"type\":\"second\",\"id\":\"4a2c853f-7ffc-4ce3-9410-a47e85b3b741\",\"payload\":\"second payload\"}";
 
@@ -51,6 +53,22 @@ class JsonGenericSerializerTest {
         assertThat(JsonGenericSerializer.of(TestModules.FIRST_TYPE)
             .deserialize(FIRST_JSON))
             .isEqualTo(FIRST);
+    }
+
+    @Test
+    void shouldThrowWhenDeserializeEventWithMissingType() {
+        assertThatThrownBy(() -> JsonGenericSerializer.of(TestModules.FIRST_TYPE)
+            .deserialize(MISSING_TYPE_JSON))
+            .isInstanceOf(JsonGenericSerializer.InvalidTypeException.class);
+    }
+
+    @Test
+    void shouldThrowWhenDeserializeEventWithDuplicatedTypes() {
+        assertThatThrownBy(() -> JsonGenericSerializer.of(
+                TestModules.FIRST_TYPE,
+                TestModules.SECOND_TYPE)
+            .deserialize(DUPLICATE_TYPE_JSON))
+            .isInstanceOf(JsonGenericSerializer.InvalidTypeException.class);
     }
 
     @Test

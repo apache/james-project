@@ -39,6 +39,8 @@ class JsonEventSerializerTest {
 
     public static final String TEST_EVENT_JSON = "{\"type\":\"TestType\",\"data\":\"first\",\"eventId\":0,\"aggregate\":1}";
     public static final String OTHER_EVENT_JSON = "{\"type\":\"other-type\",\"data\":1,\"eventId\":0,\"aggregate\":1}";
+    public static final String MISSING_TYPE_EVENT_JSON = "{\"data\":1,\"eventId\":0,\"aggregate\":1}";
+    public static final String DUPLICATE_TYPE_EVENT_JSON = "{\"type\":\"TestType\", \"type\":\"other-type\",\"data\":1,\"eventId\":0,\"aggregate\":1}";
 
     @Test
     void shouldDeserializeKnownEvent() throws Exception {
@@ -84,6 +86,25 @@ class JsonEventSerializerTest {
             .isEqualTo(TEST_EVENT);
     }
 
+
+    @Test
+    void deserializeShouldThrowWhenEventWithDuplicatedTypes() {
+        assertThatThrownBy(() -> new JsonEventSerializer(
+                TestEventDTOModules.TEST_TYPE,
+                TestEventDTOModules.OTHER_TEST_TYPE)
+            .deserialize(DUPLICATE_TYPE_EVENT_JSON))
+            .isInstanceOf(JsonEventSerializer.InvalidEventException.class);
+    }
+
+    @Test
+    void deserializeShouldThrowWhenEventWithMissingType() {
+        assertThatThrownBy(() -> new JsonEventSerializer(
+                TestEventDTOModules.TEST_TYPE,
+                TestEventDTOModules.OTHER_TEST_TYPE)
+            .deserialize(MISSING_TYPE_EVENT_JSON))
+            .isInstanceOf(JsonEventSerializer.InvalidEventException.class);
+    }
+
     @Test
     void shouldSerializeKnownEvent() throws Exception {
         assertThatJson(new JsonEventSerializer(TestEventDTOModules.TEST_TYPE)
@@ -97,5 +118,6 @@ class JsonEventSerializerTest {
             .serialize(TEST_EVENT))
             .isInstanceOf(JsonEventSerializer.UnknownEventException.class);
     }
+
 
 }

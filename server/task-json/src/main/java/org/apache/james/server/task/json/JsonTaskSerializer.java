@@ -34,6 +34,12 @@ import com.google.common.collect.ImmutableSet;
 
 public class JsonTaskSerializer {
 
+    public static class InvalidTaskException  extends RuntimeException {
+        public InvalidTaskException(JsonGenericSerializer.InvalidTypeException original) {
+            super(original);
+        }
+    }
+
     public static class UnknownTaskException extends RuntimeException {
         public UnknownTaskException(JsonGenericSerializer.UnknownTypeException original) {
             super(original);
@@ -64,7 +70,10 @@ public class JsonTaskSerializer {
             return jsonGenericSerializer.deserialize(value);
         } catch (JsonGenericSerializer.UnknownTypeException e) {
             throw new UnknownTaskException(e);
+        } catch (JsonGenericSerializer.InvalidTypeException e) {
+            throw new InvalidTaskException(e);
         }
     }
+
 
 }

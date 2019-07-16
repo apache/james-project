@@ -34,6 +34,12 @@ import com.google.common.collect.ImmutableSet;
 
 public class JsonEventSerializer {
 
+    public static class InvalidEventException extends RuntimeException {
+        public InvalidEventException(JsonGenericSerializer.InvalidTypeException original) {
+            super(original);
+        }
+    }
+
     public static class UnknownEventException extends RuntimeException {
         public UnknownEventException(JsonGenericSerializer.UnknownTypeException original) {
             super(original);
@@ -64,6 +70,8 @@ public class JsonEventSerializer {
             return jsonGenericSerializer.deserialize(value);
         } catch (JsonGenericSerializer.UnknownTypeException e) {
             throw new UnknownEventException(e);
+        } catch (JsonGenericSerializer.InvalidTypeException e) {
+            throw new InvalidEventException(e);
         }
     }
 

@@ -27,8 +27,10 @@ import java.util.function.Function;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -36,6 +38,17 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableSet;
 
 public class JsonGenericSerializer<T, U extends DTO<T>> {
+
+    public static class InvalidTypeException extends RuntimeException {
+        public InvalidTypeException(String message) {
+            super(message);
+        }
+
+        public InvalidTypeException(String message, MismatchedInputException exception) {
+            super(message, exception);
+        }
+    }
+
     public static class UnknownTypeException extends RuntimeException {
         public UnknownTypeException(String message) {
             super(message);
@@ -57,7 +70,7 @@ public class JsonGenericSerializer<T, U extends DTO<T>> {
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.registerModule(new GuavaModule());
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_ABSENT);
-
+        objectMapper.enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
         typeToModule = modules.stream()
             .collect(Guavate.toImmutableMap(
                 DTOModule::getDomainObjectType,
@@ -77,14 +90,22 @@ public class JsonGenericSerializer<T, U extends DTO<T>> {
     }
 
     public T deserialize(String value) throws IOException {
-        JsonNode jsonNode = objectMapper.readTree(value);
+        try {
+            JsonNode jsonNode = objectMapper.readTree(value);
 
-        String type = jsonNode.path("type").asText();
+            JsonNode typeNode = jsonNode.path("type");
 
-        U dto = objectMapper.readValue(
-            objectMapper.treeAsTokens(jsonNode),
-            retrieveDTOClass(type));
-        return dto.toDomainObject();
+            if (typeNode.isMissingNode()) {
+                throw new InvalidTypeException("No \"type\" property found in the json document");
+            }
+
+            U dto = objectMapper.readValue(
+                objectMapper.treeAsTokens(jsonNode),
+                retrieveDTOClass(typeNode.asText()));
+            return dto.toDomainObject();
+        } catch (MismatchedInputException e) {
+            throw new InvalidTypeException("Duplicate \"type\" properties found in the json document", e);
+        }
     }
 
     private Class<? extends U> retrieveDTOClass(String type) {
@@ -92,5 +113,6 @@ public class JsonGenericSerializer<T, U extends DTO<T>> {
             .map(DTOModule::getDTOClass)
             .orElseThrow(() -> new UnknownTypeException("unknown type " + type));
     }
+
 
 }
