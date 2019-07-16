@@ -155,7 +155,7 @@
             <artifactId>logback-classic</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.internetitem</groupId>
+            <groupId>com.linagora</groupId>
             <artifactId>logback-elasticsearch-appender</artifactId>
         </dependency>
         <dependency>
