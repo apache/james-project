@@ -26,6 +26,15 @@
 <body>
 
   <section name="Blob Export Configuration">
+
+      <p>
+          Blob Exporting is the mechanism to help James to export a blob from an user to another user.
+          It is commonly used to export deleted messages (consult <a href="/server/config-vault">configuring deleted messages vault</a>).
+          The deleted messages are transformed into a blob and James will export that blob to the target user.
+
+          This configuration helps you choose the blob exporting mechanism fit with your James setup and it is only applicable with Guice products.
+      </p>
+
       <p>Consult <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties">blob.properties</a> in GIT to get some examples and hints.</p>
 
       <p>
@@ -34,6 +43,7 @@
       <dl>
           <dt><strong>blob.export.implementation</strong></dt>
           <dd>localFile: Local File Exporting Mechanism (explained below). Default: localFile</dd>
+          <dd>linshare: LinShare Exporting Mechanism (explained below)</dd>
       </dl>
 
       <subsection name="Local File Blob Export Configuration">
@@ -48,6 +58,24 @@
                   <a href="http://james.apache.org/server/3/apidocs/org/apache/james/filesystem/api/FileSystem.html">James File System scheme</a>.
                   Default: file://var/blobExporting
               </dd>
+          </dl>
+      </subsection>
+      <subsection name="LinShare Blob Export Configuration">
+          <p>
+              Instead of exporting blobs in local file system, using <a href="https://www.linshare.org/en/index.html">LinShare</a> helps you upload your blobs and people
+              you have been shared to can access those blobs by accessing to LinShare server and download them.
+
+              This way helps you to share via whole network as long as they can access to LinShare server.
+          </p>
+          <p>
+              To get an example or details explained, visit <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties">blob.properties</a>
+          </p>
+          <dl>
+              <dt><strong>blob.export.linshare.url</strong></dt>
+              <dd>the URL to connect to LinShare</dd>
+
+              <dt><strong>blob.export.linshare.token</strong></dt>
+              <dd>the authentication token to connect to LinShare</dd>
           </dl>
       </subsection>
   </section>

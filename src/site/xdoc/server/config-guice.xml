@@ -92,7 +92,11 @@
         <td><a href="config-smtp-lmtp.html">SMTP Configuration</a></td>
         <td></td>
       </tr>
-
+      <tr>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties">blob.properties</a></td>
+        <td><a href="config-blob-export.html">Blob Export Configuration</a></td>
+        <td></td>
+      </tr>
     </table>
 
     <p>See also more specific configurations related to <a href="config-ssl-tls.html">TLS</a>, 
