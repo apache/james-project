@@ -63,6 +63,11 @@
         <td></td>
       </tr>
       <tr>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties">rabbitmq.properties</a></td>
+        <td><a href="config-rabbitmq.html">RabbitMQ Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
         <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/imapserver.xml">imapserver.xml</a></td>
         <td><a href="config-imap4.html">IMAP4 Configuration</a></td>
         <td></td>

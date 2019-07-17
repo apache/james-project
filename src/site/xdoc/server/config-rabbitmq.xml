@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+ <properties>
+  <title>Apache James Server 3 - RabbitMQ Configuration</title>
+ </properties>
+
+<body>
+
+  <section name="RabbitMQ Server Configuration">
+      <p>
+          RabbitMQ is used in distributed James in order to have a distributed MailQueue and distributed Event dispatching system.
+
+          This configuration helps you configure components using RabbitMQ in case you want to setup a distributed James.
+          And it is only applicable with Guice products.
+      </p>
+      <p>
+          Consult <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties">rabbitmq.properties</a>
+          in GIT to get some examples and hints.
+      </p>
+
+      <p>
+          RabbitMQ Configuration
+      </p>
+      <dl>
+          <dt><strong>uri</strong></dt>
+          <dd>
+              the amqp URI pointing to RabbitMQ server. Details about amqp URI format is in <a href="https://www.rabbitmq.com/uri-spec.html">RabbitMQ URI Specification</a>
+          </dd>
+
+          <dt><strong>management.uri</strong></dt>
+          <dd>
+              the URI pointing to RabbitMQ Management Service. James need to retrieve some information about listing queues from this service in runtime.
+              Details about URI format is in <a href="https://www.rabbitmq.com/management.html#usage-ui">RabbitMQ Management URI</a>
+          </dd>
+
+          <dt><strong>management.user</strong></dt>
+          <dd>username used to access management service</dd>
+
+          <dt><strong>management.password</strong></dt>
+          <dd>password used to access management service</dd>
+      </dl>
+  </section>
+
+  <section name="RabbitMQ MailQueue Configuration">
+      <p>
+          RabbitMQ MailQueue Configuration
+      </p>
+      <p>
+          James mail queue is a component acting like a queue where it can enqueue and dequeue mails.
+          Beside of the basic features, it also allows some extra operations like getting size, browsing all items in the mail queue...
+          One of the mailqueue implementation is using RabbitMQ.
+          As RabbitMQ doesn't offer enough features to implement efficiently all mailqueue operations,
+          this implementation relies on Cassandra.
+      </p>
+      <dl>
+          <dt><strong>mailqueue.view.sliceWindow</strong></dt>
+          <dd>
+              James divide the view into slices, each slice contains data for a given period, sliceWindow parameter controls this period.
+              This dividing of periods allows faster browsing of the mail queue. Tips for choosing sliceWindow is explained in
+              <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties">rabbitmq.properties</a>
+          </dd>
+
+          <dt><strong>mailqueue.view.bucketCount</strong></dt>
+          <dd>
+              Mails in a mail queue are distributed across the underlying storage service.
+              BucketCount describes how to be distributing mails to fit with your James setup
+              Tips for choosing bucketCount is explained in
+              <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties">rabbitmq.properties</a>
+          </dd>
+
+          <dt><strong>mailqueue.view.updateBrowseStartPace</strong></dt>
+          <dd>
+              To browse, James needs a starting point and to continuously update that point in runtime.
+              UpdateBrowseStartPace describes the probability to update the starting point.
+              Tips for choosing updateBrowseStartPace is explained in
+              <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties">rabbitmq.properties</a>
+          </dd>
+      </dl>
+  </section>
+
+</body>
+
+</document>
