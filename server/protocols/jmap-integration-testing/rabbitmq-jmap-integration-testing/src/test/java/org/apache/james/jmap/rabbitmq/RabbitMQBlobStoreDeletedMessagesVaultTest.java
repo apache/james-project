@@ -30,9 +30,7 @@ import org.apache.james.jmap.methods.integration.DeletedMessagesVaultTest;
 import org.apache.james.modules.mailbox.CassandraDeletedMessageVaultModule;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
 import org.apache.james.webadmin.WebAdminConfiguration;
-import org.junit.Ignore;
 import org.junit.Rule;
-import org.junit.Test;
 
 public class RabbitMQBlobStoreDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
     @Rule
@@ -54,25 +52,5 @@ public class RabbitMQBlobStoreDeletedMessagesVaultTest extends DeletedMessagesVa
     @Override
     protected void awaitSearchUpToDate() {
         rule.await();
-    }
-
-    @Ignore("Will be implemented latter")
-    @Test
-    public void vaultDeleteShouldDeleteMessageThenExportWithNoEntry() throws Exception {
-    }
-
-    @Ignore("Will be implemented latter")
-    @Test
-    public void vaultDeleteShouldNotDeleteEmptyVaultThenExportNoEntry() throws Exception {
-    }
-
-    @Ignore("Will be implemented latter")
-    @Test
-    public void vaultDeleteShouldNotDeleteNotMatchedMessageInVaultThenExportAnEntry() throws Exception {
-    }
-
-    @Ignore("Will be implemented latter")
-    @Test
-    public void vaultDeleteShouldNotAppendMessageToTheUserMailbox() {
     }
 }

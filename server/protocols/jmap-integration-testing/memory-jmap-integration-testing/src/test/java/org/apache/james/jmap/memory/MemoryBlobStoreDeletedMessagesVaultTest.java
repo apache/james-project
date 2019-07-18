@@ -29,9 +29,7 @@ import org.apache.james.jmap.methods.integration.DeletedMessagesVaultTest;
 import org.apache.james.modules.mailbox.MemoryDeletedMessageVaultModule;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
 import org.apache.james.webadmin.WebAdminConfiguration;
-import org.junit.Ignore;
 import org.junit.Rule;
-import org.junit.Test;
 
 public class MemoryBlobStoreDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
     @Rule
@@ -50,25 +48,5 @@ public class MemoryBlobStoreDeletedMessagesVaultTest extends DeletedMessagesVaul
     @Override
     protected void awaitSearchUpToDate() {
 
-    }
-
-    @Ignore("Will be implemented latter")
-    @Test
-    public void vaultDeleteShouldDeleteMessageThenExportWithNoEntry() throws Exception {
-    }
-
-    @Ignore("Will be implemented latter")
-    @Test
-    public void vaultDeleteShouldNotDeleteEmptyVaultThenExportNoEntry() throws Exception {
-    }
-
-    @Ignore("Will be implemented latter")
-    @Test
-    public void vaultDeleteShouldNotDeleteNotMatchedMessageInVaultThenExportAnEntry() throws Exception {
-    }
-
-    @Ignore("Will be implemented latter")
-    @Test
-    public void vaultDeleteShouldNotAppendMessageToTheUserMailbox() {
     }
 }
