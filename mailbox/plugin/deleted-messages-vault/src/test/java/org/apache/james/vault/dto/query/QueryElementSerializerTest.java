@@ -21,10 +21,9 @@ package org.apache.james.vault.dto.query;
 
 import static org.apache.james.vault.DeletedMessageFixture.SUBJECT;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.vault.dto.query.QueryTranslator.FieldName;
 import org.apache.james.vault.dto.query.QueryTranslator.Operator;
+import org.apache.james.vault.search.FieldName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

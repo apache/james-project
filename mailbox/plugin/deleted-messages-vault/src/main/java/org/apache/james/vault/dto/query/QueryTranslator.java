@@ -19,13 +19,7 @@
 
 package org.apache.james.vault.dto.query;
 
-import static org.apache.james.vault.dto.query.QueryTranslator.FieldName.DELETION_DATE;
-import static org.apache.james.vault.dto.query.QueryTranslator.FieldName.DELIVERY_DATE;
-import static org.apache.james.vault.dto.query.QueryTranslator.FieldName.HAS_ATTACHMENT;
-import static org.apache.james.vault.dto.query.QueryTranslator.FieldName.ORIGIN_MAILBOXES;
-import static org.apache.james.vault.dto.query.QueryTranslator.FieldName.RECIPIENTS;
-import static org.apache.james.vault.dto.query.QueryTranslator.FieldName.SENDER;
-import static org.apache.james.vault.dto.query.QueryTranslator.FieldName.SUBJECT;
+
 import static org.apache.james.vault.dto.query.QueryTranslator.FieldValueParser.BOOLEAN_PARSER;
 import static org.apache.james.vault.dto.query.QueryTranslator.FieldValueParser.MAIL_ADDRESS_PARSER;
 import static org.apache.james.vault.dto.query.QueryTranslator.FieldValueParser.STRING_PARSER;
@@ -50,6 +44,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.vault.search.Criterion;
 import org.apache.james.vault.search.CriterionFactory;
+import org.apache.james.vault.search.FieldName;
 import org.apache.james.vault.search.Query;
 
 import com.github.fge.lambdas.Throwing;
@@ -66,6 +61,13 @@ public class QueryTranslator {
         }
     }
 
+    public static FieldName getField(String fieldNameString) throws QueryTranslator.QueryTranslatorException {
+        return Stream.of(FieldName.values())
+            .filter(fieldName -> fieldName.getValue().equals(fieldNameString))
+            .findFirst()
+            .orElseThrow(() -> new QueryTranslator.QueryTranslatorException("fieldName: '" + fieldNameString + "' is not supported"));
+    }
+
     enum Combinator {
         AND("and");
 
@@ -80,32 +82,7 @@ public class QueryTranslator {
         }
     }
 
-    enum FieldName {
-        DELETION_DATE("deletionDate"),
-        DELIVERY_DATE("deliveryDate"),
-        RECIPIENTS("recipients"),
-        SENDER("sender"),
-        HAS_ATTACHMENT("hasAttachment"),
-        ORIGIN_MAILBOXES("originMailboxes"),
-        SUBJECT("subject");
 
-        static FieldName getField(String fieldNameString) throws QueryTranslatorException {
-            return Stream.of(values())
-                .filter(fieldName -> fieldName.value.equals(fieldNameString))
-                .findFirst()
-                .orElseThrow(() -> new QueryTranslatorException("fieldName: '" + fieldNameString + "' is not supported"));
-        }
-
-        private final String value;
-
-        FieldName(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
-    }
 
     enum Operator {
         EQUALS("equals"),
@@ -177,23 +154,23 @@ public class QueryTranslator {
         FieldValueParser.MailboxIdValueParser mailboxIdParser = new FieldValueParser.MailboxIdValueParser(mailboxIdFactor);
 
         return defaultRegistryBuilder()
-            .put(ORIGIN_MAILBOXES, CONTAINS, testedValue -> CriterionFactory.containsOriginMailbox(mailboxIdParser.parse(testedValue)))
+            .put(FieldName.ORIGIN_MAILBOXES, CONTAINS, testedValue -> CriterionFactory.containsOriginMailbox(mailboxIdParser.parse(testedValue)))
             .build();
     }
 
     private ImmutableTable.Builder<FieldName, Operator, Function<String, Criterion<?>>> defaultRegistryBuilder() {
         return ImmutableTable.<FieldName, Operator, Function<String, Criterion<?>>>builder()
-            .put(DELETION_DATE, BEFORE_OR_EQUALS, testedValue -> CriterionFactory.deletionDate().beforeOrEquals(ZONED_DATE_TIME_PARSER.parse(testedValue)))
-            .put(DELETION_DATE, AFTER_OR_EQUALS, testedValue -> CriterionFactory.deletionDate().afterOrEquals(ZONED_DATE_TIME_PARSER.parse(testedValue)))
-            .put(DELIVERY_DATE, BEFORE_OR_EQUALS, testedValue -> CriterionFactory.deliveryDate().beforeOrEquals(ZONED_DATE_TIME_PARSER.parse(testedValue)))
-            .put(DELIVERY_DATE, AFTER_OR_EQUALS, testedValue -> CriterionFactory.deliveryDate().afterOrEquals(ZONED_DATE_TIME_PARSER.parse(testedValue)))
-            .put(RECIPIENTS, CONTAINS, testedValue -> CriterionFactory.containsRecipient(MAIL_ADDRESS_PARSER.parse(testedValue)))
-            .put(SENDER, EQUALS, testedValue -> CriterionFactory.hasSender(MAIL_ADDRESS_PARSER.parse(testedValue)))
-            .put(HAS_ATTACHMENT, EQUALS, testedValue -> CriterionFactory.hasAttachment(BOOLEAN_PARSER.parse(testedValue)))
-            .put(SUBJECT, EQUALS, testedValue -> CriterionFactory.subject().equals(STRING_PARSER.parse(testedValue)))
-            .put(SUBJECT, EQUALS_IGNORE_CASE, testedValue -> CriterionFactory.subject().equalsIgnoreCase(STRING_PARSER.parse(testedValue)))
-            .put(SUBJECT, CONTAINS, testedValue -> CriterionFactory.subject().contains(STRING_PARSER.parse(testedValue)))
-            .put(SUBJECT, CONTAINS_IGNORE_CASE, testedValue -> CriterionFactory.subject().containsIgnoreCase(STRING_PARSER.parse(testedValue)));
+            .put(FieldName.DELETION_DATE, BEFORE_OR_EQUALS, testedValue -> CriterionFactory.deletionDate().beforeOrEquals(ZONED_DATE_TIME_PARSER.parse(testedValue)))
+            .put(FieldName.DELETION_DATE, AFTER_OR_EQUALS, testedValue -> CriterionFactory.deletionDate().afterOrEquals(ZONED_DATE_TIME_PARSER.parse(testedValue)))
+            .put(FieldName.DELIVERY_DATE, BEFORE_OR_EQUALS, testedValue -> CriterionFactory.deliveryDate().beforeOrEquals(ZONED_DATE_TIME_PARSER.parse(testedValue)))
+            .put(FieldName.DELIVERY_DATE, AFTER_OR_EQUALS, testedValue -> CriterionFactory.deliveryDate().afterOrEquals(ZONED_DATE_TIME_PARSER.parse(testedValue)))
+            .put(FieldName.RECIPIENTS, CONTAINS, testedValue -> CriterionFactory.containsRecipient(MAIL_ADDRESS_PARSER.parse(testedValue)))
+            .put(FieldName.SENDER, EQUALS, testedValue -> CriterionFactory.hasSender(MAIL_ADDRESS_PARSER.parse(testedValue)))
+            .put(FieldName.HAS_ATTACHMENT, EQUALS, testedValue -> CriterionFactory.hasAttachment(BOOLEAN_PARSER.parse(testedValue)))
+            .put(FieldName.SUBJECT, EQUALS, testedValue -> CriterionFactory.subject().equals(STRING_PARSER.parse(testedValue)))
+            .put(FieldName.SUBJECT, EQUALS_IGNORE_CASE, testedValue -> CriterionFactory.subject().equalsIgnoreCase(STRING_PARSER.parse(testedValue)))
+            .put(FieldName.SUBJECT, CONTAINS, testedValue -> CriterionFactory.subject().contains(STRING_PARSER.parse(testedValue)))
+            .put(FieldName.SUBJECT, CONTAINS_IGNORE_CASE, testedValue -> CriterionFactory.subject().containsIgnoreCase(STRING_PARSER.parse(testedValue)));
     }
 
     private Criterion<?> translate(CriterionDTO dto) throws QueryTranslatorException {
@@ -204,7 +181,7 @@ public class QueryTranslator {
 
     private Function<String, Criterion<?>> getCriterionParser(CriterionDTO dto) {
         return criterionRegistry.get(
-            FieldName.getField(dto.getFieldName()),
+            getField(dto.getFieldName()),
             Operator.getOperator(dto.getOperator()));
     }
 

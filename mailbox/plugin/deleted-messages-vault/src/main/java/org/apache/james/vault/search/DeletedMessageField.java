@@ -19,6 +19,14 @@
 
 package org.apache.james.vault.search;
 
+import static org.apache.james.vault.search.DeletedMessageField.ValueExtractor.DELETION_DATE_EXTRACTOR;
+import static org.apache.james.vault.search.DeletedMessageField.ValueExtractor.DELIVERY_DATE_EXTRACTOR;
+import static org.apache.james.vault.search.DeletedMessageField.ValueExtractor.HAS_ATTACHMENT_EXTRACTOR;
+import static org.apache.james.vault.search.DeletedMessageField.ValueExtractor.ORIGIN_MAILBOXES_EXTRACTOR;
+import static org.apache.james.vault.search.DeletedMessageField.ValueExtractor.RECIPIENTS_EXTRACTOR;
+import static org.apache.james.vault.search.DeletedMessageField.ValueExtractor.SENDER_EXTRACTOR;
+import static org.apache.james.vault.search.DeletedMessageField.ValueExtractor.SUBJECT_EXTRACTOR;
+
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Optional;
@@ -27,7 +35,24 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.vault.DeletedMessage;
 
-public interface DeletedMessageField<T> {
+public class DeletedMessageField<T> {
+
+    private FieldName fieldName;
+    private ValueExtractor<T> valueExtractor;
+
+    private DeletedMessageField(FieldName fieldName, ValueExtractor<T> valueExtractor) {
+        this.fieldName = fieldName;
+        this.valueExtractor = valueExtractor;
+    }
+
+    public FieldName fieldName() {
+        return fieldName;
+    }
+
+    ValueExtractor<T> valueExtractor() {
+        return valueExtractor;
+    }
+
     interface ValueExtractor<T> {
         Optional<T> extract(DeletedMessage deletedMessage);
 
@@ -38,16 +63,14 @@ public interface DeletedMessageField<T> {
         ValueExtractor<Boolean> HAS_ATTACHMENT_EXTRACTOR = deletedMessage -> Optional.of(deletedMessage.hasAttachment());
         ValueExtractor<Collection<MailboxId>> ORIGIN_MAILBOXES_EXTRACTOR = deletedMessage -> Optional.of(deletedMessage.getOriginMailboxes());
         ValueExtractor<String> SUBJECT_EXTRACTOR = DeletedMessage::getSubject;
-
     }
 
-    DeletedMessageField<ZonedDateTime> DELETION_DATE = () -> ValueExtractor.DELETION_DATE_EXTRACTOR;
-    DeletedMessageField<ZonedDateTime> DELIVERY_DATE = () -> ValueExtractor.DELIVERY_DATE_EXTRACTOR;
-    DeletedMessageField<Collection<MailAddress>> RECIPIENTS = () -> ValueExtractor.RECIPIENTS_EXTRACTOR;
-    DeletedMessageField<MailAddress> SENDER = () -> ValueExtractor.SENDER_EXTRACTOR;
-    DeletedMessageField<Boolean> HAS_ATTACHMENT = () -> ValueExtractor.HAS_ATTACHMENT_EXTRACTOR;
-    DeletedMessageField<Collection<MailboxId>> ORIGIN_MAILBOXES = () -> ValueExtractor.ORIGIN_MAILBOXES_EXTRACTOR;
-    DeletedMessageField<String> SUBJECT = () -> ValueExtractor.SUBJECT_EXTRACTOR;
+    static final DeletedMessageField<ZonedDateTime> DELETION_DATE = new DeletedMessageField<ZonedDateTime>(FieldName.DELETION_DATE, DELETION_DATE_EXTRACTOR);
+    static final DeletedMessageField<ZonedDateTime> DELIVERY_DATE = new DeletedMessageField<ZonedDateTime>(FieldName.DELIVERY_DATE, DELIVERY_DATE_EXTRACTOR);
+    static final DeletedMessageField<Collection<MailAddress>> RECIPIENTS = new DeletedMessageField<Collection<MailAddress>>(FieldName.RECIPIENTS, RECIPIENTS_EXTRACTOR);
+    static final DeletedMessageField<MailAddress> SENDER = new DeletedMessageField<MailAddress>(FieldName.SENDER, SENDER_EXTRACTOR);
+    static final DeletedMessageField<Boolean> HAS_ATTACHMENT = new DeletedMessageField<Boolean>(FieldName.HAS_ATTACHMENT, HAS_ATTACHMENT_EXTRACTOR);
+    static final DeletedMessageField<Collection<MailboxId>> ORIGIN_MAILBOXES = new DeletedMessageField<Collection<MailboxId>>(FieldName.ORIGIN_MAILBOXES, ORIGIN_MAILBOXES_EXTRACTOR);
+    static final DeletedMessageField<String> SUBJECT = new DeletedMessageField<String>(FieldName.SUBJECT, SUBJECT_EXTRACTOR);
 
-    ValueExtractor<T> valueExtractor();
 }
