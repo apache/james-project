@@ -96,6 +96,7 @@ public abstract class DeletedMessagesVaultTest {
     private static final String SECOND_SUBJECT = "second subject";
     private static final String HOMER = "homer@" + DOMAIN;
     private static final String BART = "bart@" + DOMAIN;
+    private static final String JACK = "jack@" + DOMAIN;
     private static final String PASSWORD = "password";
     private static final String BOB_PASSWORD = "bobPassword";
     private static final ConditionFactory WAIT_TWO_MINUTES = calmlyAwait.atMost(Duration.TWO_MINUTES);
@@ -104,6 +105,10 @@ public abstract class DeletedMessagesVaultTest {
     private static final ExportRequest EXPORT_ALL_HOMER_MESSAGES_TO_BART = ExportRequest
         .userExportFrom(HOMER)
         .exportTo(BART)
+        .query(MATCH_ALL_QUERY);
+    private static final ExportRequest EXPORT_ALL_JACK_MESSAGES_TO_HOMER = ExportRequest
+        .userExportFrom(JACK)
+        .exportTo(HOMER)
         .query(MATCH_ALL_QUERY);
 
     private MailboxId otherMailboxId;
@@ -119,6 +124,7 @@ public abstract class DeletedMessagesVaultTest {
 
     private AccessToken homerAccessToken;
     private AccessToken bartAccessToken;
+    private AccessToken jackAccessToken;
     private GuiceJamesServer jmapServer;
     private RequestSpecification webAdminApi;
     private UpdatableTickingClock clock;
@@ -141,10 +147,12 @@ public abstract class DeletedMessagesVaultTest {
         dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(HOMER, PASSWORD);
         dataProbe.addUser(BART, BOB_PASSWORD);
+        dataProbe.addUser(JACK, PASSWORD);
         mailboxProbe.createMailbox("#private", HOMER, DefaultMailboxes.INBOX);
         otherMailboxId = mailboxProbe.createMailbox("#private", HOMER, MAILBOX_NAME);
         homerAccessToken = authenticateJamesUser(baseUri(jmapServer), HOMER, PASSWORD);
         bartAccessToken = authenticateJamesUser(baseUri(jmapServer), BART, BOB_PASSWORD);
+        jackAccessToken = authenticateJamesUser(baseUri(jmapServer), JACK, PASSWORD);
 
         webAdminApi = WebAdminUtils.spec(jmapServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort())
             .config(WebAdminUtils.defaultConfig()
@@ -742,6 +750,55 @@ public abstract class DeletedMessagesVaultTest {
             .hasSize(0);
     }
 
+    @Test
+    public void vaultDeleteShouldDeleteAllMessagesHavingSameBlobContent() throws Exception {
+        bartSendMessageToHomerAndJack();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        String homerInboxMessageId = listMessageIdsForAccount(homerAccessToken).get(0);
+        homerDeletesMessages(ImmutableList.of(homerInboxMessageId));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        // the message same with homer's one in inbox
+        String jackInboxMessageId = listMessageIdsForAccount(jackAccessToken).get(0);
+        jackDeletesMessages(ImmutableList.of(jackInboxMessageId));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(jackAccessToken).size() == 0);
+
+        // delete from homer's vault, expecting the message contains the same blob in jack's vault will be deleted
+        deleteFromVault(webAdminApi, HOMER, homerInboxMessageId);
+
+        String fileLocationOfBartMessages = exportAndGetFileLocationFromLastMail(EXPORT_ALL_JACK_MESSAGES_TO_HOMER, homerAccessToken);
+        try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocationOfBartMessages))) {
+            zipAssert.hasNoEntry();
+        }
+    }
+
+    @Test
+    public void vaultDeleteShouldNotDeleteAllMessagesHavingSameBlobContentWhenMessageNotDeletedWithinTheSameMonth() throws Exception {
+        bartSendMessageToHomerAndJack();
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+
+        String homerInboxMessageId = listMessageIdsForAccount(homerAccessToken).get(0);
+        homerDeletesMessages(ImmutableList.of(homerInboxMessageId));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
+
+        // one year later, delete jack's message
+        clock.setInstant(NOW.plusYears(1).toInstant());
+        // the message same with homer's one in inbox
+        String jackInboxMessageId = listMessageIdsForAccount(jackAccessToken).get(0);
+        jackDeletesMessages(ImmutableList.of(jackInboxMessageId));
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(jackAccessToken).size() == 0);
+
+        // delete from homer's vault, expecting jack's vault still be intact
+        deleteFromVault(webAdminApi, HOMER, homerInboxMessageId);
+
+        String fileLocationOfBartMessages = exportAndGetFileLocationFromLastMail(EXPORT_ALL_JACK_MESSAGES_TO_HOMER, homerAccessToken);
+        try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocationOfBartMessages))) {
+            zipAssert.hasEntriesSize(1)
+                .allSatisfies(entry -> EntryChecks.hasName(jackInboxMessageId + ".eml"));
+        }
+    }
+
     private String exportAndGetFileLocationFromLastMail(ExportRequest exportRequest, AccessToken shareeAccessToken) {
         int currentNumberOfMessages = listMessageIdsForAccount(shareeAccessToken).size();
         exportVaultContent(webAdminApi, exportRequest);
@@ -770,7 +827,7 @@ public abstract class DeletedMessagesVaultTest {
                 "    {" +
                 "      \"update\": {" +
                 "        \"" + otherMailboxId.serialize() + "\" : {" +
-                "          \"sharedWith\" : {\"" + BART + "\": [\"a\", \"w\", \"r\"]}" +
+                "          \"sharedWith\" : {\"" + BART + "\": [\"l\", \"w\", \"r\"]}" +
                 "        }" +
                 "      }" +
                 "    }," +
@@ -782,6 +839,38 @@ public abstract class DeletedMessagesVaultTest {
 
     private void bartSendMessageToHomer() {
         bartSendMessageToHomerWithSubject(SUBJECT);
+    }
+
+    private void bartSendMessageToHomerAndJack() {
+        String messageCreationId = "creationId";
+        String outboxId = getOutboxId(bartAccessToken);
+        String bigEnoughBody = Strings.repeat("123456789\n", 12 * 100);
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"headers\":{\"Disposition-Notification-To\":\"" + BART + "\"}," +
+            "        \"from\": { \"name\": \"Bob\", \"email\": \"" + BART + "\"}," +
+            "        \"to\": [{ \"name\": \"Homer\", \"email\": \"" + HOMER + "\"}, { \"name\": \"Jack\", \"email\": \"" + JACK + "\"}]," +
+            "        \"subject\": \"" + SUBJECT + "\"," +
+            "        \"textBody\": \"" + bigEnoughBody + "\"," +
+            "        \"htmlBody\": \"Test <b>body</b>, HTML version\"," +
+            "        \"mailboxIds\": [\"" + outboxId + "\"] " +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        with()
+            .header("Authorization", bartAccessToken.serialize())
+            .body(requestBody)
+            .post("/jmap")
+        .then()
+            .extract()
+            .body()
+            .path(ARGUMENTS + ".created." + messageCreationId + ".id");
     }
 
     private void bartSendMessageToHomerWithSubject(String subject) {
@@ -824,6 +913,10 @@ public abstract class DeletedMessagesVaultTest {
         deleteMessages(bartAccessToken, idsToDestroy);
     }
 
+    private void jackDeletesMessages(List<String> idsToDestroy) {
+        deleteMessages(jackAccessToken, idsToDestroy);
+    }
+
     private void restoreAllMessagesOfHomer() {
         restoreMessagesFor(HOMER);
     }
@@ -846,7 +939,7 @@ public abstract class DeletedMessagesVaultTest {
             "]";
 
         given()
-            .header("Authorization", bartAccessToken.serialize())
+            .header("Authorization", homerAccessToken.serialize())
             .body(updateRequestBody)
             .when()
             .post("/jmap");
