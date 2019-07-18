@@ -17,34 +17,20 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory;
+package org.apache.james.modules.vault;
 
-import java.io.IOException;
-import java.time.Clock;
+import org.apache.james.modules.mailbox.PreDeletionHookConfiguration;
+import org.apache.james.modules.mailbox.PreDeletionHooksConfiguration;
+import org.apache.james.vault.DeletedMessageVaultHook;
 
-import org.apache.james.GuiceJamesServer;
-import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.jmap.methods.integration.DeletedMessagesVaultTest;
-import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
-import org.apache.james.webadmin.WebAdminConfiguration;
-import org.junit.Rule;
+import com.google.inject.AbstractModule;
 
-public class MemoryDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
-    @Rule
-    public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
+public class TestDeleteMessageVaultPreDeletionHookModule extends AbstractModule {
 
     @Override
-    protected GuiceJamesServer createJmapServer(FileSystem fileSystem, Clock clock) throws IOException {
-        return memoryJmap.jmapServer(
-            new TestDeleteMessageVaultPreDeletionHookModule(),
-            binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION),
-            binder -> binder.bind(FileSystem.class).toInstance(fileSystem),
-            binder -> binder.bind(Clock.class).toInstance(clock));
-    }
-
-    @Override
-    protected void awaitSearchUpToDate() {
-
+    protected void configure() {
+        binder().bind(PreDeletionHooksConfiguration.class)
+            .toInstance(PreDeletionHooksConfiguration.forHooks(
+                PreDeletionHookConfiguration.forClass(DeletedMessageVaultHook.class)));
     }
 }

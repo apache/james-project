@@ -26,6 +26,8 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 import org.apache.james.blob.api.BucketName;
 
 public class BucketNameGenerator {
@@ -34,6 +36,7 @@ public class BucketNameGenerator {
 
     private final Clock clock;
 
+    @Inject
     public BucketNameGenerator(Clock clock) {
         this.clock = clock;
     }

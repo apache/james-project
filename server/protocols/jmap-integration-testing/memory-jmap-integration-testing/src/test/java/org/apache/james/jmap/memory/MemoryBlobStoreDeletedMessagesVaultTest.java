@@ -17,42 +17,58 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.rabbitmq;
+package org.apache.james.jmap.memory;
 
 import java.io.IOException;
 import java.time.Clock;
 
-import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
-import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.methods.integration.DeletedMessagesVaultTest;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.modules.mailbox.MemoryDeletedMessageVaultModule;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
-import org.apache.james.vault.MailRepositoryDeletedMessageVault;
 import org.apache.james.webadmin.WebAdminConfiguration;
+import org.junit.Ignore;
 import org.junit.Rule;
+import org.junit.Test;
 
-public class RabbitMQDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
+public class MemoryBlobStoreDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
     @Rule
-    public DockerCassandraRule cassandra = new DockerCassandraRule();
-
-    @Rule
-    public CassandraRabbitMQAwsS3JmapTestRule rule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();
+    public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 
     @Override
     protected GuiceJamesServer createJmapServer(FileSystem fileSystem, Clock clock) throws IOException {
-        return rule.jmapServer(cassandra.getModule(),
+        return memoryJmap.jmapServer(
+            new MemoryDeletedMessageVaultModule(),
             new TestDeleteMessageVaultPreDeletionHookModule(),
             binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION),
-            binder -> binder.bind(MailRepositoryDeletedMessageVault.Configuration.class)
-                .toInstance(new MailRepositoryDeletedMessageVault.Configuration(MailRepositoryUrl.from("cassandra://var/deletedMessages/user"))),
             binder -> binder.bind(FileSystem.class).toInstance(fileSystem),
             binder -> binder.bind(Clock.class).toInstance(clock));
     }
 
     @Override
     protected void awaitSearchUpToDate() {
-        rule.await();
+
+    }
+
+    @Ignore("Will be implemented latter")
+    @Test
+    public void vaultDeleteShouldDeleteMessageThenExportWithNoEntry() throws Exception {
+    }
+
+    @Ignore("Will be implemented latter")
+    @Test
+    public void vaultDeleteShouldNotDeleteEmptyVaultThenExportNoEntry() throws Exception {
+    }
+
+    @Ignore("Will be implemented latter")
+    @Test
+    public void vaultDeleteShouldNotDeleteNotMatchedMessageInVaultThenExportAnEntry() throws Exception {
+    }
+
+    @Ignore("Will be implemented latter")
+    @Test
+    public void vaultDeleteShouldNotAppendMessageToTheUserMailbox() {
     }
 }

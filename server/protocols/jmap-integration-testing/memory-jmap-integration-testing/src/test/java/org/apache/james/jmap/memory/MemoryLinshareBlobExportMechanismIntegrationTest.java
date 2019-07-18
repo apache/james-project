@@ -24,13 +24,9 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.methods.integration.LinshareBlobExportMechanismIntegrationTest;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.LinshareGuiceExtension;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.modules.mailbox.PreDeletionHookConfiguration;
-import org.apache.james.modules.mailbox.PreDeletionHooksConfiguration;
-import org.apache.james.vault.DeletedMessageVaultHook;
-import org.apache.james.vault.MailRepositoryDeletedMessageVault;
+import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -46,14 +42,10 @@ class MemoryLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExpor
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule())
             .overrideWith(binder -> {
                 binder.bind(WebAdminConfiguration.class)
                     .toInstance(WebAdminConfiguration.TEST_CONFIGURATION);
-                binder.bind(PreDeletionHooksConfiguration.class)
-                    .toInstance(PreDeletionHooksConfiguration.forHooks(
-                        PreDeletionHookConfiguration.forClass(DeletedMessageVaultHook.class)));
-                binder.bind(MailRepositoryDeletedMessageVault.Configuration.class)
-                    .toInstance(new MailRepositoryDeletedMessageVault.Configuration(MailRepositoryUrl.from("memory://var/deletedMessages/user")));
             }))
         .build();
 }

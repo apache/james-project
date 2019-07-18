@@ -17,34 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory;
+package org.apache.james.modules.vault;
 
-import java.io.IOException;
-import java.time.Clock;
+import org.apache.james.vault.DeletedMessageVault;
+import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
+import org.apache.james.vault.blob.BucketNameGenerator;
 
-import org.apache.james.GuiceJamesServer;
-import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.jmap.methods.integration.DeletedMessagesVaultTest;
-import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
-import org.apache.james.webadmin.WebAdminConfiguration;
-import org.junit.Rule;
+import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 
-public class MemoryDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
-    @Rule
-    public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
-
+public class BlobStoreDeletedMessageVaultModule extends AbstractModule {
     @Override
-    protected GuiceJamesServer createJmapServer(FileSystem fileSystem, Clock clock) throws IOException {
-        return memoryJmap.jmapServer(
-            new TestDeleteMessageVaultPreDeletionHookModule(),
-            binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION),
-            binder -> binder.bind(FileSystem.class).toInstance(fileSystem),
-            binder -> binder.bind(Clock.class).toInstance(clock));
-    }
+    protected void configure() {
+        install(new DeletedMessageVaultRetentionModule());
 
-    @Override
-    protected void awaitSearchUpToDate() {
-
+        bind(BucketNameGenerator.class).in(Scopes.SINGLETON);
+        bind(BlobStoreDeletedMessageVault.class).in(Scopes.SINGLETON);
+        bind(DeletedMessageVault.class)
+            .to(BlobStoreDeletedMessageVault.class);
     }
 }

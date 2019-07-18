@@ -775,6 +775,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>apache-james-mailbox-deleted-messages-vault-cassandra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mailbox-elasticsearch</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1510,6 +1515,12 @@
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-mailbox-plugin-deleted-messages-vault-guice</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-mailbox-plugin-deleted-messages-vault-guice</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>

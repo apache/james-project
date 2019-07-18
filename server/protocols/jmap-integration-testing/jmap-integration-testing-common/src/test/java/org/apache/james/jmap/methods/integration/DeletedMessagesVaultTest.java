@@ -47,8 +47,7 @@ import static org.hamcrest.Matchers.hasItem;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.Clock;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import org.apache.james.GuiceJamesServer;
@@ -91,8 +90,8 @@ import io.restassured.parsing.Parser;
 import io.restassured.specification.RequestSpecification;
 
 public abstract class DeletedMessagesVaultTest {
-    private static final Instant NOW = Instant.now();
-    private static final Instant ONE_DAY_AFTER_ONE_YEAR_EXPIRATION = NOW.plus(366, ChronoUnit.DAYS);
+    private static final ZonedDateTime NOW = ZonedDateTime.now();
+    private static final ZonedDateTime TWO_MONTH_AFTER_ONE_YEAR_EXPIRATION = NOW.plusYears(1).plusMonths(2);
     private static final String FIRST_SUBJECT = "first subject";
     private static final String SECOND_SUBJECT = "second subject";
     private static final String HOMER = "homer@" + DOMAIN;
@@ -127,7 +126,7 @@ public abstract class DeletedMessagesVaultTest {
 
     @Before
     public void setup() throws Throwable {
-        clock = new UpdatableTickingClock(NOW);
+        clock = new UpdatableTickingClock(NOW.toInstant());
         fileSystem = new FileSystemImpl(new JamesServerResourceLoader(tempFolder.getRoot().getPath()));
         jmapServer = createJmapServer(fileSystem, clock);
         jmapServer.start();
@@ -606,7 +605,7 @@ public abstract class DeletedMessagesVaultTest {
         homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
-        clock.setInstant(ONE_DAY_AFTER_ONE_YEAR_EXPIRATION);
+        clock.setInstant(TWO_MONTH_AFTER_ONE_YEAR_EXPIRATION.toInstant());
         purgeVault(webAdminApi);
 
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
@@ -628,7 +627,7 @@ public abstract class DeletedMessagesVaultTest {
 
         String messageIdOfNotExpiredMessage = listMessageIdsForAccount(homerAccessToken).get(0);
 
-        clock.setInstant(ONE_DAY_AFTER_ONE_YEAR_EXPIRATION);
+        clock.setInstant(TWO_MONTH_AFTER_ONE_YEAR_EXPIRATION.toInstant());
         homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
@@ -667,7 +666,7 @@ public abstract class DeletedMessagesVaultTest {
         homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
 
-        clock.setInstant(ONE_DAY_AFTER_ONE_YEAR_EXPIRATION);
+        clock.setInstant(TWO_MONTH_AFTER_ONE_YEAR_EXPIRATION.toInstant());
         purgeVault(webAdminApi);
 
         assertThat(listMessageIdsForAccount(homerAccessToken))

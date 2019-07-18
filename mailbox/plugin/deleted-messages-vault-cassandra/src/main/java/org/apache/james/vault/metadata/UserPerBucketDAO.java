@@ -28,6 +28,8 @@ import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.UserP
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.UserPerBucketTable.TABLE;
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.UserPerBucketTable.USER;
 
+import javax.inject.Inject;
+
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.User;
@@ -38,13 +40,14 @@ import com.datastax.driver.core.Session;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-class UserPerBucketDAO {
+public class UserPerBucketDAO {
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement addStatement;
     private final PreparedStatement removeStatement;
     private final PreparedStatement listStatement;
     private final PreparedStatement listBucketsStatement;
 
+    @Inject
     UserPerBucketDAO(Session session) {
         cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         addStatement = prepareAddUser(session);
