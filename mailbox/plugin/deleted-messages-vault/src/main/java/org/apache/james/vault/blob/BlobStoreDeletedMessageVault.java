@@ -32,6 +32,7 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.task.Task;
 import org.apache.james.vault.DeletedMessage;
 import org.apache.james.vault.DeletedMessageContentNotFoundException;
@@ -56,6 +57,14 @@ import reactor.core.scheduler.Schedulers;
 public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private static final Logger LOGGER = LoggerFactory.getLogger(BlobStoreDeletedMessageVault.class);
 
+    private static final String BLOBSTORE_DELETED_MESSAGE_VAULT_METRIC = "deletedMessageVault:blobStore:";
+    static final String APPEND_METRIC_NAME = BLOBSTORE_DELETED_MESSAGE_VAULT_METRIC + "append";
+    static final String LOAD_MIME_MESSAGE_METRIC_NAME = BLOBSTORE_DELETED_MESSAGE_VAULT_METRIC + "loadMimeMessage";
+    static final String SEARCH_METRIC_NAME = BLOBSTORE_DELETED_MESSAGE_VAULT_METRIC + "search";
+    static final String DELETE_METRIC_NAME = BLOBSTORE_DELETED_MESSAGE_VAULT_METRIC + "delete";
+    static final String DELETE_EXPIRED_MESSAGES_METRIC_NAME = BLOBSTORE_DELETED_MESSAGE_VAULT_METRIC + "deleteExpiredMessages";
+
+    private final MetricFactory metricFactory;
     private final DeletedMessageMetadataVault messageMetadataVault;
     private final BlobStore blobStore;
     private final BucketNameGenerator nameGenerator;
@@ -63,7 +72,11 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private final RetentionConfiguration retentionConfiguration;
 
     @Inject
-    BlobStoreDeletedMessageVault(DeletedMessageMetadataVault messageMetadataVault, BlobStore blobStore, BucketNameGenerator nameGenerator, Clock clock, RetentionConfiguration retentionConfiguration) {
+    BlobStoreDeletedMessageVault(MetricFactory metricFactory, DeletedMessageMetadataVault messageMetadataVault,
+                                 BlobStore blobStore, BucketNameGenerator nameGenerator,
+                                 Clock clock,
+                                 RetentionConfiguration retentionConfiguration) {
+        this.metricFactory = metricFactory;
         this.messageMetadataVault = messageMetadataVault;
         this.blobStore = blobStore;
         this.nameGenerator = nameGenerator;
@@ -76,6 +89,13 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         Preconditions.checkNotNull(deletedMessage);
         Preconditions.checkNotNull(mimeMessage);
         BucketName bucketName = nameGenerator.currentBucket();
+
+        return metricFactory.runPublishingTimerMetric(
+            APPEND_METRIC_NAME,
+            appendMessage(deletedMessage, mimeMessage, bucketName));
+    }
+
+    private Mono<Void> appendMessage(DeletedMessage deletedMessage, InputStream mimeMessage, BucketName bucketName) {
         return blobStore.save(bucketName, mimeMessage)
             .map(blobId -> StorageInformation.builder()
                 .bucketName(bucketName)
@@ -89,8 +109,11 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     public Publisher<InputStream> loadMimeMessage(User user, MessageId messageId) {
         Preconditions.checkNotNull(user);
         Preconditions.checkNotNull(messageId);
-        return Mono.from(messageMetadataVault.retrieveStorageInformation(user, messageId))
-            .flatMap(storageInformation -> loadMimeMessage(storageInformation, user, messageId));
+
+        return metricFactory.runPublishingTimerMetric(
+            LOAD_MIME_MESSAGE_METRIC_NAME,
+            Mono.from(messageMetadataVault.retrieveStorageInformation(user, messageId))
+                .flatMap(storageInformation -> loadMimeMessage(storageInformation, user, messageId)));
     }
 
     private Mono<InputStream> loadMimeMessage(StorageInformation storageInformation, User user, MessageId messageId) {
@@ -104,6 +127,13 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     public Publisher<DeletedMessage> search(User user, Query query) {
         Preconditions.checkNotNull(user);
         Preconditions.checkNotNull(query);
+
+        return metricFactory.runPublishingTimerMetric(
+            SEARCH_METRIC_NAME,
+            searchOn(user, query));
+    }
+
+    private Flux<DeletedMessage> searchOn(User user, Query query) {
         return Flux.from(messageMetadataVault.listRelatedBuckets())
             .concatMap(bucketName -> Flux.from(messageMetadataVault.listMessages(bucketName, user)))
             .map(DeletedMessageWithStorageInformation::getDeletedMessage)
@@ -115,6 +145,12 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         Preconditions.checkNotNull(user);
         Preconditions.checkNotNull(messageId);
 
+        return metricFactory.runPublishingTimerMetric(
+            DELETE_METRIC_NAME,
+            deleteMessage(user, messageId));
+    }
+
+    private Mono<Void> deleteMessage(User user, MessageId messageId) {
         return Mono.from(messageMetadataVault.retrieveStorageInformation(user, messageId))
             .flatMap(storageInformation -> Mono.from(messageMetadataVault.remove(storageInformation.getBucketName(), user, messageId))
                 .thenReturn(storageInformation))
@@ -127,10 +163,12 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         ZonedDateTime now = ZonedDateTime.now(clock);
         ZonedDateTime beginningOfRetentionPeriod = now.minus(retentionConfiguration.getRetentionPeriod());
 
-        Flux<BucketName> deleteOperation = retentionQualifiedBuckets(beginningOfRetentionPeriod)
-            .flatMap(bucketName -> deleteBucketData(bucketName).then(Mono.just(bucketName)));
+        Flux<BucketName> metricAbleDeleteOperation = metricFactory.runPublishingTimerMetric(
+            DELETE_EXPIRED_MESSAGES_METRIC_NAME,
+            retentionQualifiedBuckets(beginningOfRetentionPeriod)
+                .flatMap(bucketName -> deleteBucketData(bucketName).then(Mono.just(bucketName))));
 
-        return new BlobStoreVaultGarbageCollectionTask(beginningOfRetentionPeriod, deleteOperation);
+        return new BlobStoreVaultGarbageCollectionTask(beginningOfRetentionPeriod, metricAbleDeleteOperation);
     }
 
     @Override
