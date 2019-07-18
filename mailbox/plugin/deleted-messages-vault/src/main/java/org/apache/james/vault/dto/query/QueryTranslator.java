@@ -19,7 +19,6 @@
 
 package org.apache.james.vault.dto.query;
 
-
 import static org.apache.james.vault.dto.query.QueryTranslator.FieldValueParser.BOOLEAN_PARSER;
 import static org.apache.james.vault.dto.query.QueryTranslator.FieldValueParser.MAIL_ADDRESS_PARSER;
 import static org.apache.james.vault.dto.query.QueryTranslator.FieldValueParser.STRING_PARSER;
@@ -32,6 +31,7 @@ import static org.apache.james.vault.search.Operator.EQUALS;
 import static org.apache.james.vault.search.Operator.EQUALS_IGNORE_CASE;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -123,6 +123,36 @@ public class QueryTranslator {
         T parse(String input);
     }
 
+    interface FieldValueSerializer<T> {
+
+        FieldValueSerializer<MailboxId> MAILBOX_ID_SERIALIZER = MailboxId::serialize;
+        FieldValueSerializer<ZonedDateTime> ZONED_DATE_TIME_SERIALIZER = ZonedDateTime::toString;
+        FieldValueSerializer<String> STRING_SERIALIZER = input -> input;
+        FieldValueSerializer<Boolean> BOOLEAN_SERIALIZER = input -> input.toString();
+        FieldValueSerializer<MailAddress> MAIL_ADDRESS_SERIALIZER = MailAddress::asString;
+
+        static Optional<FieldValueSerializer> getSerializerForValue(Object value) {
+            if (value instanceof MailboxId) {
+                return Optional.of(MAILBOX_ID_SERIALIZER);
+            }
+            if (value instanceof ZonedDateTime) {
+                return Optional.of(ZONED_DATE_TIME_SERIALIZER);
+            }
+            if (value instanceof String) {
+                return Optional.of(STRING_SERIALIZER);
+            }
+            if (value instanceof Boolean) {
+                return Optional.of(BOOLEAN_SERIALIZER);
+            }
+            if (value instanceof MailAddress) {
+                return Optional.of(MAIL_ADDRESS_SERIALIZER);
+            }
+            return Optional.empty();
+        }
+
+       String serialize(T input);
+    }
+
     private final ImmutableTable<FieldName, Operator, Function<String, Criterion<?>>> criterionRegistry;
 
     @Inject
@@ -139,7 +169,7 @@ public class QueryTranslator {
             .build();
     }
 
-    private ImmutableTable.Builder<FieldName, Operator, Function<String, Criterion<?>>> defaultRegistryBuilder() {
+     private ImmutableTable.Builder<FieldName, Operator, Function<String, Criterion<?>>> defaultRegistryBuilder() {
         return ImmutableTable.<FieldName, Operator, Function<String, Criterion<?>>>builder()
             .put(FieldName.DELETION_DATE, BEFORE_OR_EQUALS, testedValue -> CriterionFactory.deletionDate().beforeOrEquals(ZONED_DATE_TIME_PARSER.parse(testedValue)))
             .put(FieldName.DELETION_DATE, AFTER_OR_EQUALS, testedValue -> CriterionFactory.deletionDate().afterOrEquals(ZONED_DATE_TIME_PARSER.parse(testedValue)))
@@ -161,9 +191,11 @@ public class QueryTranslator {
     }
 
     private Function<String, Criterion<?>> getCriterionParser(CriterionDTO dto) {
-        return criterionRegistry.get(
-            getField(dto.getFieldName()),
-            getOperator(dto.getOperator()));
+        return getCriterionParser(getField(dto.getFieldName()), getOperator(dto.getOperator()));
+    }
+
+    private Function<String, Criterion<?>> getCriterionParser(FieldName fieldName, Operator operator) {
+        return criterionRegistry.get(fieldName, operator);
     }
 
     public Query translate(QueryElement queryElement) throws QueryTranslatorException {
@@ -173,6 +205,24 @@ public class QueryTranslator {
             return Query.of(translate((CriterionDTO) queryElement));
         }
         throw new IllegalArgumentException("cannot resolve query type: " + queryElement.getClass().getName());
+    }
+
+    public QueryDTO toDTO(Query query) throws QueryTranslatorException {
+        List<QueryElement> queryElements = query.getCriteria().stream().map(criterion -> {
+            FieldName fieldName = criterion.getField().fieldName();
+            Operator operator = criterion.getValueMatcher().operator();
+            Object value = criterion.getValueMatcher().expectedValue();
+
+            FieldValueSerializer fieldValueSerializer = FieldValueSerializer.getSerializerForValue(value).orElseThrow(
+                () -> new IllegalArgumentException("Value of type " + value.getClass().getSimpleName()
+                    + "' is not handled by the combinaison of operator : " + operator.name()
+                    + " and field :" + fieldName.name())
+            );
+
+            return new CriterionDTO(fieldName.getValue(), operator.getValue(), fieldValueSerializer.serialize(value));
+        }).collect(Guavate.toImmutableList());
+
+        return new QueryDTO(Combinator.AND.value, queryElements);
     }
 
     Query translate(QueryDTO queryDTO) throws QueryTranslatorException {

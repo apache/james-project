@@ -50,4 +50,8 @@ public class Query {
             .reduce(Predicate::and)
             .orElse(MATCH_ALL);
     }
+
+    public List<Criterion<?>> getCriteria() {
+        return criteria;
+    }
 }

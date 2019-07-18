@@ -19,12 +19,19 @@
 
 package org.apache.james.vault.dto.query;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.ZonedDateTime;
+
+import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.model.TestId;
+import org.apache.james.vault.search.CriterionFactory;
 import org.apache.james.vault.search.FieldName;
 import org.apache.james.vault.search.Operator;
+import org.apache.james.vault.search.Query;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -56,8 +63,8 @@ class QueryTranslatorTest {
     @Test
     void translateShouldThrowWhenPassingNestedQuery() {
         assertThatThrownBy(() -> queryTranslator.translate(QueryDTO.and(
-                QueryDTO.and(new CriterionDTO(FieldName.SUBJECT.getValue(), Operator.CONTAINS.getValue(), "james"))
-            )))
+            QueryDTO.and(new CriterionDTO(FieldName.SUBJECT.getValue(), Operator.CONTAINS.getValue(), "james"))
+        )))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("nested query structure is not yet handled");
     }
@@ -65,10 +72,147 @@ class QueryTranslatorTest {
     @Test
     void translateShouldNotThrowWhenPassingFlattenQuery() {
         assertThatCode(() -> queryTranslator.translate(QueryDTO.and(
-                new CriterionDTO(FieldName.SUBJECT.getValue(), Operator.CONTAINS.getValue(), "james"),
-                new CriterionDTO(FieldName.SENDER.getValue(), Operator.EQUALS.getValue(), "user@james.org"),
-                new CriterionDTO(FieldName.HAS_ATTACHMENT.getValue(), Operator.EQUALS.getValue(), "true")
-            )))
+            new CriterionDTO(FieldName.SUBJECT.getValue(), Operator.CONTAINS.getValue(), "james"),
+            new CriterionDTO(FieldName.SENDER.getValue(), Operator.EQUALS.getValue(), "user@james.org"),
+            new CriterionDTO(FieldName.HAS_ATTACHMENT.getValue(), Operator.EQUALS.getValue(), "true")
+        )))
             .doesNotThrowAnyException();
+    }
+
+    @Test
+    void toDTOShouldConvertQueryWithDeletionDateBeforeOrEquals() throws Exception{
+        String serializedDate = "2007-12-03T10:15:30+01:00[Europe/Paris]";
+        Query query = Query.of(
+            CriterionFactory.deletionDate().beforeOrEquals(ZonedDateTime.parse(serializedDate))
+        );
+        assertThat(queryTranslator.toDTO(query)).isEqualTo(QueryDTO.and(
+            new CriterionDTO(FieldName.DELETION_DATE.getValue(), Operator.BEFORE_OR_EQUALS.getValue(), serializedDate)
+        ));
+    }
+
+    @Test
+    void toDTOShouldConvertQueryWithDeletionDateAfterOrEquals() throws Exception{
+        String serializedDate = "2007-12-03T10:15:30+01:00[Europe/Paris]";
+        Query query = Query.of(
+            CriterionFactory.deletionDate().afterOrEquals(ZonedDateTime.parse(serializedDate))
+        );
+        assertThat(queryTranslator.toDTO(query)).isEqualTo(QueryDTO.and(
+            new CriterionDTO(FieldName.DELETION_DATE.getValue(), Operator.AFTER_OR_EQUALS.getValue(), serializedDate)
+        ));
+    }
+    @Test
+    void toDTOShouldConvertQueryWithDeliveryDateBeforeOrEquals() throws Exception{
+        String serializedDate = "2007-12-03T10:15:30+01:00[Europe/Paris]";
+        Query query = Query.of(
+            CriterionFactory.deliveryDate().beforeOrEquals(ZonedDateTime.parse(serializedDate))
+        );
+        assertThat(queryTranslator.toDTO(query)).isEqualTo(QueryDTO.and(
+            new CriterionDTO(FieldName.DELIVERY_DATE.getValue(), Operator.BEFORE_OR_EQUALS.getValue(), serializedDate)
+        ));
+    }
+
+    @Test
+    void toDTOShouldConvertQueryWithDeliveryDateAfterOrEquals() throws Exception{
+        String serializedDate = "2007-12-03T10:15:30+01:00[Europe/Paris]";
+        Query query = Query.of(
+            CriterionFactory.deliveryDate().afterOrEquals(ZonedDateTime.parse(serializedDate))
+        );
+        assertThat(queryTranslator.toDTO(query)).isEqualTo(QueryDTO.and(
+            new CriterionDTO(FieldName.DELIVERY_DATE.getValue(), Operator.AFTER_OR_EQUALS.getValue(), serializedDate)
+        ));
+    }
+
+    @Test
+    void toDTOShouldConvertQueryWithRecipientsContains() throws Exception{
+        Query query = Query.of(
+            CriterionFactory.containsRecipient(new MailAddress("user@james.org"))
+        );
+        assertThat(queryTranslator.toDTO(query)).isEqualTo(QueryDTO.and(
+            new CriterionDTO(FieldName.RECIPIENTS.getValue(), Operator.CONTAINS.getValue(), "user@james.org")
+        ));
+    }
+
+    @Test
+    void toDTOShouldConvertQueryWithSenderEquals() throws Exception{
+        Query query = Query.of(
+            CriterionFactory.hasSender(new MailAddress("user@james.org"))
+        );
+        assertThat(queryTranslator.toDTO(query)).isEqualTo(QueryDTO.and(
+            new CriterionDTO(FieldName.SENDER.getValue(), Operator.EQUALS.getValue(), "user@james.org")
+        ));
+    }
+
+    @Test
+    void toDTOShouldConvertQueryWithHasAttachement() {
+        Query query = Query.of(
+            CriterionFactory.hasAttachment(true)
+        );
+        assertThat(queryTranslator.toDTO(query)).isEqualTo(QueryDTO.and(
+            new CriterionDTO(FieldName.HAS_ATTACHMENT.getValue(), Operator.EQUALS.getValue(), "true")
+        ));
+    }
+
+    @Test
+    void toDTOShouldConvertQueryWithSubjectEquals() {
+        Query query = Query.of(
+            CriterionFactory.subject().equals("james")
+        );
+        assertThat(queryTranslator.toDTO(query)).isEqualTo(QueryDTO.and(
+            new CriterionDTO(FieldName.SUBJECT.getValue(), Operator.EQUALS.getValue(), "james")
+        ));
+    }
+
+    @Test
+    void toDTOShouldConvertQueryWithSubjectEqualsIgnoreCase() {
+        Query query = Query.of(
+            CriterionFactory.subject().equalsIgnoreCase("james")
+        );
+        assertThat(queryTranslator.toDTO(query)).isEqualTo(QueryDTO.and(
+            new CriterionDTO(FieldName.SUBJECT.getValue(), Operator.EQUALS_IGNORE_CASE.getValue(), "james")
+        ));
+    }
+
+    @Test
+    void toDTOShouldConvertQueryWithSubjectContains() {
+        Query query = Query.of(
+            CriterionFactory.subject().contains("james")
+        );
+        assertThat(queryTranslator.toDTO(query)).isEqualTo(QueryDTO.and(
+            new CriterionDTO(FieldName.SUBJECT.getValue(), Operator.CONTAINS.getValue(), "james")
+        ));
+    }
+
+    @Test
+    void toDTOShouldConvertQueryWithSubjectContainsIgnoreCase() {
+        Query query = Query.of(
+            CriterionFactory.subject().containsIgnoreCase("james")
+        );
+        assertThat(queryTranslator.toDTO(query)).isEqualTo(QueryDTO.and(
+            new CriterionDTO(FieldName.SUBJECT.getValue(), Operator.CONTAINS_IGNORE_CASE.getValue(), "james")
+        ));
+    }
+
+    @Test
+    void toDTOShouldConvertQueryWithContainsOriginMailbox() {
+        Query query = Query.of(
+            CriterionFactory.containsOriginMailbox(TestId.of(1L))
+        );
+        assertThat(queryTranslator.toDTO(query)).isEqualTo(QueryDTO.and(
+            new CriterionDTO(FieldName.ORIGIN_MAILBOXES.getValue(), Operator.CONTAINS.getValue(), "1")
+        ));
+    }
+
+    @Test
+    void toDTOShouldConvertFlattenQuery() throws Exception {
+        Query query = Query.of(
+            CriterionFactory.subject().contains("james"),
+            CriterionFactory.hasSender(new MailAddress("user@james.org")),
+            CriterionFactory.hasAttachment(true)
+        );
+        assertThat(queryTranslator.toDTO(query)).isEqualTo(QueryDTO.and(
+            new CriterionDTO(FieldName.SUBJECT.getValue(), Operator.CONTAINS.getValue(), "james"),
+            new CriterionDTO(FieldName.SENDER.getValue(), Operator.EQUALS.getValue(), "user@james.org"),
+            new CriterionDTO(FieldName.HAS_ATTACHMENT.getValue(), Operator.EQUALS.getValue(), "true")
+        ));
     }
 }

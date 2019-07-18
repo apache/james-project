@@ -75,4 +75,12 @@ public class Criterion<T> {
             .map(valueMatcher::matches)
             .orElse(DEFAULT_TO_NON_MATCHED_IF_NON_EXIST);
     }
+
+    public DeletedMessageField<T> getField() {
+        return field;
+    }
+
+    public ValueMatcher<?, T> getValueMatcher() {
+        return valueMatcher;
+    }
 }
