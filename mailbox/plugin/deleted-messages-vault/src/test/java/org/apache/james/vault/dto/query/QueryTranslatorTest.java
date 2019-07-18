@@ -23,8 +23,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.vault.dto.query.QueryTranslator.Operator;
 import org.apache.james.vault.search.FieldName;
+import org.apache.james.vault.search.Operator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

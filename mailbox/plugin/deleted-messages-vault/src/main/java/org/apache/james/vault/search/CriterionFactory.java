@@ -26,6 +26,12 @@ import static org.apache.james.vault.search.DeletedMessageField.ORIGIN_MAILBOXES
 import static org.apache.james.vault.search.DeletedMessageField.RECIPIENTS;
 import static org.apache.james.vault.search.DeletedMessageField.SENDER;
 import static org.apache.james.vault.search.DeletedMessageField.SUBJECT;
+import static org.apache.james.vault.search.Operator.AFTER_OR_EQUALS;
+import static org.apache.james.vault.search.Operator.BEFORE_OR_EQUALS;
+import static org.apache.james.vault.search.Operator.CONTAINS;
+import static org.apache.james.vault.search.Operator.CONTAINS_IGNORE_CASE;
+import static org.apache.james.vault.search.Operator.EQUALS;
+import static org.apache.james.vault.search.Operator.EQUALS_IGNORE_CASE;
 
 import java.time.ZonedDateTime;
 import java.util.Collection;
@@ -45,19 +51,19 @@ public interface CriterionFactory {
         }
 
         public Criterion<String> contains(String subString) {
-            return builder.withMatcher(value -> value.contains(subString));
+            return builder.withMatcher(new Criterion.ValueMatcher<>(subString, CONTAINS, value -> value.contains(subString)));
         }
 
         public Criterion<String> containsIgnoreCase(String subString) {
-            return builder.withMatcher(value -> value.toLowerCase(Locale.US).contains(subString.toLowerCase(Locale.US)));
+            return builder.withMatcher(new Criterion.ValueMatcher<>(subString, CONTAINS_IGNORE_CASE, value -> value.toLowerCase(Locale.US).contains(subString.toLowerCase(Locale.US))));
         }
 
         public Criterion<String> equals(String expectedString) {
-            return builder.withMatcher(expectedString::equals);
+            return builder.withMatcher(new Criterion.ValueMatcher<>(expectedString, EQUALS, expectedString::equals));
         }
 
         public Criterion<String> equalsIgnoreCase(String expectedString) {
-            return builder.withMatcher(expectedString::equalsIgnoreCase);
+            return builder.withMatcher(new Criterion.ValueMatcher<>(expectedString, EQUALS_IGNORE_CASE, expectedString::equalsIgnoreCase));
         }
     }
 
@@ -70,11 +76,11 @@ public interface CriterionFactory {
         }
 
         public Criterion<ZonedDateTime> beforeOrEquals(ZonedDateTime expectedValue) {
-            return builder.withMatcher(actualValue -> !expectedValue.isBefore(actualValue));
+            return builder.withMatcher(new Criterion.ValueMatcher<>(expectedValue, BEFORE_OR_EQUALS, value -> !expectedValue.isBefore(value)));
         }
 
         public Criterion<ZonedDateTime> afterOrEquals(ZonedDateTime expectedValue) {
-            return builder.withMatcher(actualValue -> !expectedValue.isAfter(actualValue));
+            return builder.withMatcher(new Criterion.ValueMatcher<>(expectedValue, AFTER_OR_EQUALS, value -> !expectedValue.isAfter(value)));
         }
     }
 
@@ -88,12 +94,12 @@ public interface CriterionFactory {
 
     static Criterion<Collection<MailAddress>> containsRecipient(MailAddress recipient) {
         return Criterion.Builder.forField(RECIPIENTS)
-            .withMatcher(actualValue -> actualValue.contains(recipient));
+            .withMatcher(new Criterion.ValueMatcher<>(recipient, CONTAINS, value -> value.contains(recipient)));
     }
 
     static Criterion<MailAddress> hasSender(MailAddress sender) {
         return Criterion.Builder.forField(SENDER)
-            .withMatcher(sender::equals);
+            .withMatcher(new Criterion.ValueMatcher<>(sender, EQUALS, sender::equals));
     }
 
     static Criterion<Boolean> hasAttachment() {
@@ -106,7 +112,7 @@ public interface CriterionFactory {
 
     static Criterion<Boolean> hasAttachment(boolean hasAttachment) {
         return Criterion.Builder.forField(HAS_ATTACHMENT)
-            .withMatcher(actualValue -> hasAttachment == actualValue);
+            .withMatcher(new Criterion.ValueMatcher<>(hasAttachment, EQUALS, value -> hasAttachment == value));
     }
 
     static StringCriterionFactory subject() {
@@ -115,6 +121,6 @@ public interface CriterionFactory {
 
     static Criterion<Collection<MailboxId>> containsOriginMailbox(MailboxId mailboxId) {
         return Criterion.Builder.forField(ORIGIN_MAILBOXES)
-            .withMatcher(actualValue -> actualValue.contains(mailboxId));
+            .withMatcher(new Criterion.ValueMatcher<>(mailboxId, CONTAINS, value -> value.contains(mailboxId)));
     }
 }

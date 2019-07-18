@@ -22,8 +22,8 @@ package org.apache.james.vault.dto.query;
 import static org.apache.james.vault.DeletedMessageFixture.SUBJECT;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
 
-import org.apache.james.vault.dto.query.QueryTranslator.Operator;
 import org.apache.james.vault.search.FieldName;
+import org.apache.james.vault.search.Operator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

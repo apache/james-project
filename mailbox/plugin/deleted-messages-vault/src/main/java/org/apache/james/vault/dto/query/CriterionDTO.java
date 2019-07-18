@@ -22,6 +22,7 @@ package org.apache.james.vault.dto.query;
 import java.util.Objects;
 
 import org.apache.james.vault.search.FieldName;
+import org.apache.james.vault.search.Operator;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,7 +34,7 @@ import com.google.common.base.MoreObjects;
 public class CriterionDTO implements QueryElement {
 
     @VisibleForTesting
-    static CriterionDTO from(FieldName fieldName, QueryTranslator.Operator operator, String value) {
+    static CriterionDTO from(FieldName fieldName, Operator operator, String value) {
         return new CriterionDTO(fieldName.getValue(), operator.getValue(), value);
     }
 

@@ -24,12 +24,12 @@ import static org.apache.james.vault.dto.query.QueryTranslator.FieldValueParser.
 import static org.apache.james.vault.dto.query.QueryTranslator.FieldValueParser.MAIL_ADDRESS_PARSER;
 import static org.apache.james.vault.dto.query.QueryTranslator.FieldValueParser.STRING_PARSER;
 import static org.apache.james.vault.dto.query.QueryTranslator.FieldValueParser.ZONED_DATE_TIME_PARSER;
-import static org.apache.james.vault.dto.query.QueryTranslator.Operator.AFTER_OR_EQUALS;
-import static org.apache.james.vault.dto.query.QueryTranslator.Operator.BEFORE_OR_EQUALS;
-import static org.apache.james.vault.dto.query.QueryTranslator.Operator.CONTAINS;
-import static org.apache.james.vault.dto.query.QueryTranslator.Operator.CONTAINS_IGNORE_CASE;
-import static org.apache.james.vault.dto.query.QueryTranslator.Operator.EQUALS;
-import static org.apache.james.vault.dto.query.QueryTranslator.Operator.EQUALS_IGNORE_CASE;
+import static org.apache.james.vault.search.Operator.AFTER_OR_EQUALS;
+import static org.apache.james.vault.search.Operator.BEFORE_OR_EQUALS;
+import static org.apache.james.vault.search.Operator.CONTAINS;
+import static org.apache.james.vault.search.Operator.CONTAINS_IGNORE_CASE;
+import static org.apache.james.vault.search.Operator.EQUALS;
+import static org.apache.james.vault.search.Operator.EQUALS_IGNORE_CASE;
 
 import java.time.ZonedDateTime;
 import java.util.Objects;
@@ -45,6 +45,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.vault.search.Criterion;
 import org.apache.james.vault.search.CriterionFactory;
 import org.apache.james.vault.search.FieldName;
+import org.apache.james.vault.search.Operator;
 import org.apache.james.vault.search.Query;
 
 import com.github.fge.lambdas.Throwing;
@@ -68,6 +69,13 @@ public class QueryTranslator {
             .orElseThrow(() -> new QueryTranslator.QueryTranslatorException("fieldName: '" + fieldNameString + "' is not supported"));
     }
 
+    static Operator getOperator(String operator) throws QueryTranslatorException {
+        return Stream.of(Operator.values())
+            .filter(operatorString -> operatorString.getValue().equals(operator))
+            .findFirst()
+            .orElseThrow(() -> new QueryTranslatorException("operator: '" + operator + "' is not supported"));
+    }
+
     enum Combinator {
         AND("and");
 
@@ -82,33 +90,6 @@ public class QueryTranslator {
         }
     }
 
-
-
-    enum Operator {
-        EQUALS("equals"),
-        EQUALS_IGNORE_CASE("equalsIgnoreCase"),
-        CONTAINS("contains"),
-        CONTAINS_IGNORE_CASE("containsIgnoreCase"),
-        BEFORE_OR_EQUALS("beforeOrEquals"),
-        AFTER_OR_EQUALS("afterOrEquals");
-
-        static Operator getOperator(String operator) throws QueryTranslatorException {
-            return Stream.of(values())
-                .filter(operatorString -> operatorString.value.equals(operator))
-                .findFirst()
-                .orElseThrow(() -> new QueryTranslatorException("operator: '" + operator + "' is not supported"));
-        }
-
-        private final String value;
-
-        Operator(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
-    }
 
     interface FieldValueParser<T> {
 
@@ -182,7 +163,7 @@ public class QueryTranslator {
     private Function<String, Criterion<?>> getCriterionParser(CriterionDTO dto) {
         return criterionRegistry.get(
             getField(dto.getFieldName()),
-            Operator.getOperator(dto.getOperator()));
+            getOperator(dto.getOperator()));
     }
 
     public Query translate(QueryElement queryElement) throws QueryTranslatorException {
