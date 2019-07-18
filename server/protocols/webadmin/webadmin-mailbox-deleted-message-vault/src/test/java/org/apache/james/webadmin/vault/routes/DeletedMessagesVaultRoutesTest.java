@@ -103,6 +103,7 @@ import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.vault.DeletedMessage;
 import org.apache.james.vault.DeletedMessageZipper;
 import org.apache.james.vault.RetentionConfiguration;
+import org.apache.james.vault.dto.query.QueryTranslator;
 import org.apache.james.vault.memory.MemoryDeletedMessagesVault;
 import org.apache.james.vault.search.Query;
 import org.apache.james.vault.utils.DeleteByQueryExecutor;
@@ -112,7 +113,6 @@ import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.TasksRoutes;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
-import org.apache.james.webadmin.vault.routes.query.QueryTranslator;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -122,7 +122,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import com.google.common.collect.ImmutableList;
-
 import io.restassured.RestAssured;
 import io.restassured.filter.log.LogDetail;
 import reactor.core.publisher.Flux;

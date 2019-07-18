@@ -17,25 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.vault.routes.query;
+package org.apache.james.vault.dto.query;
 
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.FieldName.DELETION_DATE;
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.FieldName.DELIVERY_DATE;
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.FieldName.HAS_ATTACHMENT;
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.FieldName.ORIGIN_MAILBOXES;
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.FieldName.RECIPIENTS;
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.FieldName.SENDER;
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.FieldName.SUBJECT;
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.FieldValueParser.BOOLEAN_PARSER;
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.FieldValueParser.MAIL_ADDRESS_PARSER;
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.FieldValueParser.STRING_PARSER;
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.FieldValueParser.ZONED_DATE_TIME_PARSER;
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.Operator.AFTER_OR_EQUALS;
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.Operator.BEFORE_OR_EQUALS;
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.Operator.CONTAINS;
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.Operator.CONTAINS_IGNORE_CASE;
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.Operator.EQUALS;
-import static org.apache.james.webadmin.vault.routes.query.QueryTranslator.Operator.EQUALS_IGNORE_CASE;
+import static org.apache.james.vault.dto.query.QueryTranslator.FieldName.DELETION_DATE;
+import static org.apache.james.vault.dto.query.QueryTranslator.FieldName.DELIVERY_DATE;
+import static org.apache.james.vault.dto.query.QueryTranslator.FieldName.HAS_ATTACHMENT;
+import static org.apache.james.vault.dto.query.QueryTranslator.FieldName.ORIGIN_MAILBOXES;
+import static org.apache.james.vault.dto.query.QueryTranslator.FieldName.RECIPIENTS;
+import static org.apache.james.vault.dto.query.QueryTranslator.FieldName.SENDER;
+import static org.apache.james.vault.dto.query.QueryTranslator.FieldName.SUBJECT;
+import static org.apache.james.vault.dto.query.QueryTranslator.FieldValueParser.BOOLEAN_PARSER;
+import static org.apache.james.vault.dto.query.QueryTranslator.FieldValueParser.MAIL_ADDRESS_PARSER;
+import static org.apache.james.vault.dto.query.QueryTranslator.FieldValueParser.STRING_PARSER;
+import static org.apache.james.vault.dto.query.QueryTranslator.FieldValueParser.ZONED_DATE_TIME_PARSER;
+import static org.apache.james.vault.dto.query.QueryTranslator.Operator.AFTER_OR_EQUALS;
+import static org.apache.james.vault.dto.query.QueryTranslator.Operator.BEFORE_OR_EQUALS;
+import static org.apache.james.vault.dto.query.QueryTranslator.Operator.CONTAINS;
+import static org.apache.james.vault.dto.query.QueryTranslator.Operator.CONTAINS_IGNORE_CASE;
+import static org.apache.james.vault.dto.query.QueryTranslator.Operator.EQUALS;
+import static org.apache.james.vault.dto.query.QueryTranslator.Operator.EQUALS_IGNORE_CASE;
 
 import java.time.ZonedDateTime;
 import java.util.Objects;

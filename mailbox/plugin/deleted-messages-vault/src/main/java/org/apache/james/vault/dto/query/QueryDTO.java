@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.vault.routes.query;
+package org.apache.james.vault.dto.query;
 
 import java.util.List;
 import java.util.Objects;
