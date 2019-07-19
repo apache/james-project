@@ -23,12 +23,58 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.inject.Inject;
+
+import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.search.CriterionFactory;
 import org.apache.james.vault.search.Query;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class VaultGarbageCollectionTask implements Task {
+
+    public static class VaultGarbageCollectionTaskDTO implements TaskDTO {
+        private final String type;
+        private final String beginningOfRetentionPeriod;
+
+        public VaultGarbageCollectionTaskDTO(@JsonProperty("type") String type,
+                                             @JsonProperty("beginningOfRetentionPeriod") String beginningOfRetentionPeriod) {
+            this.type = type;
+            this.beginningOfRetentionPeriod = beginningOfRetentionPeriod;
+        }
+
+        @Override
+        public String getType() {
+            return type;
+        }
+
+        public String getBeginningOfRetentionPeriod() {
+            return beginningOfRetentionPeriod;
+        }
+
+        public static VaultGarbageCollectionTaskDTO of(String type, VaultGarbageCollectionTask task) {
+            return new VaultGarbageCollectionTaskDTO(type, task.beginningOfRetentionPeriod.toString());
+        }
+    }
+
+    public static class Factory {
+
+        private final DeletedMessageVault deletedMessageVault;
+
+        @Inject
+        public Factory(DeletedMessageVault deletedMessageVault) {
+            this.deletedMessageVault = deletedMessageVault;
+        }
+
+        public VaultGarbageCollectionTask create(VaultGarbageCollectionTaskDTO dto) {
+            ZonedDateTime beginningOfRetentionPeriod = ZonedDateTime.parse(dto.beginningOfRetentionPeriod);
+            return new VaultGarbageCollectionTask(deletedMessageVault, beginningOfRetentionPeriod);
+        }
+    }
+
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final ZonedDateTime beginningOfRetentionPeriod;
         private final long handledUserCount;
@@ -44,7 +90,7 @@ public class VaultGarbageCollectionTask implements Task {
             this.deletionErrorCount = deletionErrorCount;
         }
 
-        public  ZonedDateTime getBeginningOfRetentionPeriod() {
+        public ZonedDateTime getBeginningOfRetentionPeriod() {
             return beginningOfRetentionPeriod;
         }
 
@@ -67,7 +113,7 @@ public class VaultGarbageCollectionTask implements Task {
 
     public static final String TYPE = "deletedMessages/garbageCollection";
 
-    private final DeleteByQueryExecutor deleteByQueryExecutor;
+    private final DeletedMessageVault deletedMessageVault;
     private final DeleteByQueryExecutor.Notifiers notifiers;
     private final AtomicLong handledUserCount;
     private final AtomicLong permanantlyDeletedMessages;
@@ -75,8 +121,8 @@ public class VaultGarbageCollectionTask implements Task {
     private final AtomicLong deletionErrorCount;
     private final ZonedDateTime beginningOfRetentionPeriod;
 
-    public VaultGarbageCollectionTask(DeleteByQueryExecutor deleteByQueryExecutor, ZonedDateTime beginningOfRetentionPeriod) {
-        this.deleteByQueryExecutor = deleteByQueryExecutor;
+    public VaultGarbageCollectionTask(DeletedMessageVault deletedMessageVault, ZonedDateTime beginningOfRetentionPeriod) {
+        this.deletedMessageVault = deletedMessageVault;
         this.beginningOfRetentionPeriod = beginningOfRetentionPeriod;
 
         this.handledUserCount = new AtomicLong(0);
@@ -95,7 +141,8 @@ public class VaultGarbageCollectionTask implements Task {
     public Result run() {
         Query query = Query.of(CriterionFactory.deletionDate().beforeOrEquals(beginningOfRetentionPeriod));
 
-        return deleteByQueryExecutor.deleteByQuery(query, notifiers);
+        return deletedMessageVault.getDeleteByQueryExecutor()
+            .deleteByQuery(query, notifiers);
     }
 
     @Override

@@ -163,7 +163,7 @@ public class MailRepositoryDeletedMessageVault implements DeletedMessageVault {
         ZonedDateTime beginningOfRetentionPeriod = now.minus(retentionConfiguration.getRetentionPeriod());
 
         return new VaultGarbageCollectionTask(
-            deleteByQueryExecutor,
+            this,
             beginningOfRetentionPeriod);
     }
 
@@ -175,5 +175,9 @@ public class MailRepositoryDeletedMessageVault implements DeletedMessageVault {
         } catch (MailRepositoryStore.MailRepositoryStoreException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public DeleteByQueryExecutor getDeleteByQueryExecutor() {
+        return deleteByQueryExecutor;
     }
 }

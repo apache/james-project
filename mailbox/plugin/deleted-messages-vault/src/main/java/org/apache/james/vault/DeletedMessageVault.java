@@ -25,6 +25,7 @@ import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.task.Task;
 import org.apache.james.vault.search.Query;
+import org.apache.james.vault.utils.DeleteByQueryExecutor;
 import org.reactivestreams.Publisher;
 
 public interface DeletedMessageVault {
@@ -37,4 +38,6 @@ public interface DeletedMessageVault {
     Publisher<DeletedMessage> search(User user, Query query);
 
     Task deleteExpiredMessagesTask();
+
+    DeleteByQueryExecutor getDeleteByQueryExecutor();
 }

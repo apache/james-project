@@ -125,11 +125,10 @@ public class MemoryDeletedMessagesVault implements DeletedMessageVault {
         ZonedDateTime beginningOfRetentionPeriod = now.minus(retentionConfiguration.getRetentionPeriod());
 
         return new VaultGarbageCollectionTask(
-            getDeleteByQueryExecutor(),
+            this,
             beginningOfRetentionPeriod);
     }
 
-    @VisibleForTesting
     public DeleteByQueryExecutor getDeleteByQueryExecutor() {
         return deleteByQueryExecutor;
     }

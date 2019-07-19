@@ -40,6 +40,7 @@ import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
 import org.apache.james.vault.metadata.DeletedMessageWithStorageInformation;
 import org.apache.james.vault.metadata.StorageInformation;
 import org.apache.james.vault.search.Query;
+import org.apache.james.vault.utils.DeleteByQueryExecutor;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,6 +130,11 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
             .flatMap(bucketName -> deleteBucketData(bucketName).then(Mono.just(bucketName)));
 
         return new BlobStoreVaultGarbageCollectionTask(beginningOfRetentionPeriod, deleteOperation);
+    }
+
+    @Override
+    public DeleteByQueryExecutor getDeleteByQueryExecutor() {
+        throw new NotImplementedException("Will be implemented later");
     }
 
     @VisibleForTesting
