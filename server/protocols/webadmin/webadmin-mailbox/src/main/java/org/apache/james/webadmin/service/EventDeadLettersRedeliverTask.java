@@ -21,13 +21,18 @@ package org.apache.james.webadmin.service;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiFunction;
 
+import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.Group;
+import org.apache.james.server.task.json.dto.TaskDTO;
+import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class EventDeadLettersRedeliverTask implements Task {
     public static final String TYPE = "eventDeadLettersRedeliverTask";
@@ -64,6 +69,29 @@ public class EventDeadLettersRedeliverTask implements Task {
             return insertionId.map(insertionId -> insertionId.getId().toString());
         }
     }
+
+    private static class EventDeadLettersRedeliverTaskDTO implements TaskDTO {
+
+        private final String type;
+
+        public EventDeadLettersRedeliverTaskDTO(@JsonProperty("type") String type) {
+            this.type = type;
+        }
+
+        @Override
+        public String getType() {
+            return type;
+        }
+    }
+
+    public static final BiFunction<EventDeadLettersRedeliverService, EventRetriever, TaskDTOModule<EventDeadLettersRedeliverTask, EventDeadLettersRedeliverTaskDTO>> MODULE = (service, eventRetriever) ->
+        DTOModule
+            .forDomainObject(EventDeadLettersRedeliverTask.class)
+            .convertToDTO(EventDeadLettersRedeliverTaskDTO.class)
+            .toDomainObjectConverter(dto -> new EventDeadLettersRedeliverTask(service, eventRetriever))
+            .toDTOConverter((domainObject, typeName) -> new EventDeadLettersRedeliverTaskDTO(typeName))
+            .typeName(TYPE)
+            .withFactory(TaskDTOModule::new);
 
     private final EventDeadLettersRedeliverService service;
     private final EventRetriever eventRetriever;
