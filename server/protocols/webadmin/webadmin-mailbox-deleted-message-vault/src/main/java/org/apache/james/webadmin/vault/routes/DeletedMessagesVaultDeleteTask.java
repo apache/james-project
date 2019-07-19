@@ -20,16 +20,81 @@
 package org.apache.james.webadmin.vault.routes;
 
 import java.util.Optional;
+import java.util.function.Function;
+
+import javax.inject.Inject;
 
 import org.apache.james.core.User;
+import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.server.task.json.dto.TaskDTO;
+import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.vault.DeletedMessageVault;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import reactor.core.publisher.Mono;
 
 public class DeletedMessagesVaultDeleteTask implements Task {
+
+    static final String TYPE = "deletedMessages/delete";
+
+    public static final Function<DeletedMessagesVaultDeleteTask.Factory, TaskDTOModule> MODULE = (factory) ->
+        DTOModule
+            .forDomainObject(DeletedMessagesVaultDeleteTask.class)
+            .convertToDTO(DeletedMessagesVaultDeleteTask.DeletedMessagesVaultDeleteTaskDTO.class)
+            .toDomainObjectConverter(factory::create)
+            .toDTOConverter(DeletedMessagesVaultDeleteTask.DeletedMessagesVaultDeleteTaskDTO::of)
+            .typeName(TYPE)
+            .withFactory(TaskDTOModule::new);
+
+    public static class DeletedMessagesVaultDeleteTaskDTO implements TaskDTO {
+
+        private final String type;
+        private final String userName;
+        private final String messageId;
+
+        public DeletedMessagesVaultDeleteTaskDTO(@JsonProperty("type") String type, @JsonProperty("userName") String userName, @JsonProperty("messageId") String messageId) {
+            this.type = type;
+            this.userName = userName;
+            this.messageId = messageId;
+        }
+
+        public String getUserName() {
+            return userName;
+        }
+
+        public String getMessageId() {
+            return messageId;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public static DeletedMessagesVaultDeleteTaskDTO of(DeletedMessagesVaultDeleteTask task, String type) {
+            return new DeletedMessagesVaultDeleteTaskDTO(type, task.user.asString(), task.messageId.serialize());
+        }
+    }
+
+    public static class Factory {
+
+        private final DeletedMessageVault deletedMessageVault;
+        private final MessageId.Factory messageIdFactory;
+
+        @Inject
+        public Factory(DeletedMessageVault deletedMessageVault, MessageId.Factory messageIdFactory) {
+            this.deletedMessageVault = deletedMessageVault;
+            this.messageIdFactory = messageIdFactory;
+        }
+
+        public DeletedMessagesVaultDeleteTask create(DeletedMessagesVaultDeleteTaskDTO dto) {
+            MessageId messageId = messageIdFactory.fromString(dto.getMessageId());
+            User user = User.fromUsername(dto.getUserName());
+            return new DeletedMessagesVaultDeleteTask(deletedMessageVault, user, messageId);
+        }
+    }
 
     public class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
 
@@ -49,8 +114,6 @@ public class DeletedMessagesVaultDeleteTask implements Task {
             return deleteMessageId.serialize();
         }
     }
-
-    static final String TYPE = "deletedMessages/delete";
 
     private final DeletedMessageVault vault;
     private final User user;
