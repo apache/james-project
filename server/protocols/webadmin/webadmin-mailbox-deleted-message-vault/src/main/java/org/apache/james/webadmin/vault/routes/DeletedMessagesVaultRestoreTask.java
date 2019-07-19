@@ -23,16 +23,88 @@ import static org.apache.james.webadmin.vault.routes.RestoreService.RestoreResul
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
+
+import javax.inject.Inject;
 
 import org.apache.james.core.User;
+import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.server.task.json.dto.TaskDTO;
+import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.vault.dto.query.QueryDTO;
+import org.apache.james.vault.dto.query.QueryTranslator;
 import org.apache.james.vault.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.annotations.VisibleForTesting;
+
 class DeletedMessagesVaultRestoreTask implements Task {
+
+    static final String TYPE = "deletedMessages/restore";
+
+    public static final Function<DeletedMessagesVaultRestoreTask.Factory, TaskDTOModule> MODULE = (factory) ->
+        DTOModule
+            .forDomainObject(DeletedMessagesVaultRestoreTask.class)
+            .convertToDTO(DeletedMessagesVaultRestoreTask.DeletedMessagesVaultRestoreTaskDTO.class)
+            .toDomainObjectConverter(factory::create)
+            .toDTOConverter(factory::createDTO)
+            .typeName(TYPE)
+            .withFactory(TaskDTOModule::new);
+
+    public static class DeletedMessagesVaultRestoreTaskDTO implements TaskDTO {
+
+        private final String type;
+        private final String userToRestore;
+        private final QueryDTO query;
+
+        public DeletedMessagesVaultRestoreTaskDTO(@JsonProperty("type") String type,
+                                                  @JsonProperty("userToRestore") String userToRestore,
+                                                  @JsonProperty("query") QueryDTO query) {
+            this.type = type;
+            this.userToRestore = userToRestore;
+            this.query = query;
+        }
+
+        public String getUserToRestore() {
+            return userToRestore;
+        }
+
+        public QueryDTO getQuery() {
+            return query;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+    }
+
+    public static class Factory {
+
+        private final RestoreService restoreService;
+        private final QueryTranslator queryTranslator;
+
+        @Inject
+        public Factory(RestoreService restoreService, QueryTranslator queryTranslator) {
+            this.restoreService = restoreService;
+            this.queryTranslator = queryTranslator;
+        }
+
+        public DeletedMessagesVaultRestoreTask create(DeletedMessagesVaultRestoreTask.DeletedMessagesVaultRestoreTaskDTO dto) {
+            User userToRestore = User.fromUsername(dto.userToRestore);
+            Query query = queryTranslator.translate(dto.query);
+            return new DeletedMessagesVaultRestoreTask(restoreService, userToRestore, query);
+        }
+
+        public DeletedMessagesVaultRestoreTask.DeletedMessagesVaultRestoreTaskDTO createDTO(DeletedMessagesVaultRestoreTask task, String type) {
+            return new DeletedMessagesVaultRestoreTask.DeletedMessagesVaultRestoreTaskDTO(type, task.userToRestore.asString(), queryTranslator.toDTO(task.query));
+        }
+    }
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final User user;
@@ -68,12 +140,11 @@ class DeletedMessagesVaultRestoreTask implements Task {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeletedMessagesVaultRestoreTask.class);
 
-    static final String TYPE = "deletedMessages/restore";
-
     private final User userToRestore;
     private final RestoreService vaultRestore;
     private final AdditionalInformation additionalInformation;
-    private final Query query;
+    @VisibleForTesting
+    final Query query;
 
     DeletedMessagesVaultRestoreTask(RestoreService vaultRestore, User userToRestore, Query query) {
         this.query = query;
