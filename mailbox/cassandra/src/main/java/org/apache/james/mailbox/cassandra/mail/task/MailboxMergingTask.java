@@ -21,10 +21,16 @@ package org.apache.james.mailbox.cassandra.mail.task;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 
+import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.server.task.json.dto.TaskDTO;
+import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MailboxMergingTask implements Task {
     public static final String MAILBOX_MERGING = "mailboxMerging";
@@ -97,6 +103,70 @@ public class MailboxMergingTask implements Task {
             totalMessageFailed.incrementAndGet();
         }
     }
+
+    private static class MailboxMergingTaskDTO implements TaskDTO {
+        private static final CassandraId.Factory CASSANDRA_ID_FACTORY = new CassandraId.Factory();
+
+        public static MailboxMergingTaskDTO fromDTO(MailboxMergingTask domainObject, String typeName) {
+            return new MailboxMergingTaskDTO(
+                typeName,
+                domainObject.context.totalMessageCount,
+                domainObject.oldMailboxId.serialize(),
+                domainObject.newMailboxId.serialize()
+            );
+        }
+
+        private final String type;
+
+        private final long totalMessageCount;
+        private final String oldMailboxId;
+        private final String newMailboxId;
+
+        public MailboxMergingTaskDTO(@JsonProperty("type") String type,
+                                     @JsonProperty("totalMessageCount") long totalMessageCount,
+                                     @JsonProperty("oldMailboxId") String oldMailboxId,
+                                     @JsonProperty("newMailboxId") String newMailboxId) {
+            this.type = type;
+            this.totalMessageCount = totalMessageCount;
+            this.oldMailboxId = oldMailboxId;
+            this.newMailboxId = newMailboxId;
+        }
+
+        private MailboxMergingTask toDTO(MailboxMergingTaskRunner taskRunner) {
+            return new MailboxMergingTask(
+                taskRunner,
+                totalMessageCount,
+                CASSANDRA_ID_FACTORY.fromString(oldMailboxId),
+                CASSANDRA_ID_FACTORY.fromString(newMailboxId)
+            );
+        }
+
+        @Override
+        public String getType() {
+            return type;
+        }
+
+        public long getTotalMessageCount() {
+            return totalMessageCount;
+        }
+
+        public String getOldMailboxId() {
+            return oldMailboxId;
+        }
+
+        public String getNewMailboxId() {
+            return newMailboxId;
+        }
+    }
+
+    public static final Function<MailboxMergingTaskRunner, TaskDTOModule<MailboxMergingTask, MailboxMergingTaskDTO>> MODULE = (taskRunner) ->
+        DTOModule
+            .forDomainObject(MailboxMergingTask.class)
+            .convertToDTO(MailboxMergingTaskDTO.class)
+            .toDomainObjectConverter(dto -> dto.toDTO(taskRunner))
+            .toDTOConverter(MailboxMergingTaskDTO::fromDTO)
+            .typeName(MAILBOX_MERGING)
+            .withFactory(TaskDTOModule::new);
 
     private final MailboxMergingTaskRunner taskRunner;
     private final CassandraId oldMailboxId;
