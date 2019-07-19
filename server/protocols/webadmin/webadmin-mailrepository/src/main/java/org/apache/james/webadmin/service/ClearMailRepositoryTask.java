@@ -21,15 +21,20 @@ package org.apache.james.webadmin.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.json.DTOModule;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
+import org.apache.james.server.task.json.dto.TaskDTO;
+import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.fge.lambdas.Throwing;
 
 public class ClearMailRepositoryTask implements Task {
@@ -59,6 +64,65 @@ public class ClearMailRepositoryTask implements Task {
             return initialCount;
         }
     }
+
+    public static class UrlEncodingFailureSerializationException extends RuntimeException {
+
+        public UrlEncodingFailureSerializationException(MailRepositoryPath mailRepositoryPath) {
+            super("Unable to serialize: '" + mailRepositoryPath.asString() + "' can not be url encoded");
+        }
+    }
+
+    public static class InvalidMailRepositoryPathDeserializationException extends RuntimeException {
+
+        public InvalidMailRepositoryPathDeserializationException(String mailRepositoryPath) {
+            super("Unable to deserialize: '" + mailRepositoryPath + "' can not be url decoded");
+        }
+    }
+
+    private static class ClearMailRepositoryTaskDTO implements TaskDTO {
+
+        public static ClearMailRepositoryTaskDTO toDTO(ClearMailRepositoryTask domainObject, String typeName) {
+            try {
+                return new ClearMailRepositoryTaskDTO(typeName, domainObject.additionalInformation.repositoryPath.urlEncoded());
+            } catch (Exception e) {
+                throw new UrlEncodingFailureSerializationException(domainObject.additionalInformation.repositoryPath);
+            }
+        }
+
+        private final String type;
+        private final String mailRepositoryPath;
+
+        public ClearMailRepositoryTaskDTO(@JsonProperty("type") String type, @JsonProperty("mailRepositoryPath") String mailRepositoryPath) {
+            this.type = type;
+            this.mailRepositoryPath = mailRepositoryPath;
+        }
+
+        public ClearMailRepositoryTask fromDTO(List<MailRepository> mailRepositories) {
+            try {
+                return new ClearMailRepositoryTask(mailRepositories, MailRepositoryPath.fromEncoded(mailRepositoryPath));
+            } catch (Exception e) {
+                throw new InvalidMailRepositoryPathDeserializationException(mailRepositoryPath);
+            }
+        }
+
+        @Override
+        public String getType() {
+            return type;
+        }
+
+        public String getMailRepositoryPath() {
+            return mailRepositoryPath;
+        }
+    }
+
+    public static final Function<List<MailRepository>, TaskDTOModule<ClearMailRepositoryTask, ClearMailRepositoryTaskDTO>> MODULE = (mailRepositories) ->
+        DTOModule
+            .forDomainObject(ClearMailRepositoryTask.class)
+            .convertToDTO(ClearMailRepositoryTaskDTO.class)
+            .toDomainObjectConverter(dto -> dto.fromDTO(mailRepositories))
+            .toDTOConverter(ClearMailRepositoryTaskDTO::toDTO)
+            .typeName(TYPE)
+            .withFactory(TaskDTOModule::new);
 
     private final List<MailRepository> mailRepositories;
     private final AdditionalInformation additionalInformation;
