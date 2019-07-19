@@ -42,7 +42,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.api.ObjectStoreException;
+import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.cassandra.BlobTable.BlobParts;
 import org.apache.james.blob.cassandra.utils.DataChunker;
 import org.apache.james.blob.cassandra.utils.PipedStreamSubscriber;
@@ -211,7 +211,7 @@ public class CassandraBlobsDAO implements BlobStore {
         Integer rowCount = selectRowCount(blobId)
             .publishOn(Schedulers.elastic())
             .switchIfEmpty(Mono.error(
-                new ObjectStoreException(String.format("Could not retrieve blob metadata for %s", blobId))))
+                new ObjectNotFoundException(String.format("Could not retrieve blob metadata for %s", blobId))))
             .block();
         return Flux.range(0, rowCount)
             .publishOn(Schedulers.elastic(), PREFETCH)

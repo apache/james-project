@@ -23,6 +23,8 @@ import static org.apache.james.mailbox.MessageManager.AppendCommand;
 import static org.apache.james.webadmin.vault.routes.RestoreService.RestoreResult.RESTORE_FAILED;
 import static org.apache.james.webadmin.vault.routes.RestoreService.RestoreResult.RESTORE_SUCCEED;
 
+import java.util.function.Predicate;
+
 import javax.inject.Inject;
 
 import org.apache.james.core.User;
@@ -36,6 +38,7 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.vault.DeletedMessage;
+import org.apache.james.vault.DeletedMessageContentNotFoundException;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.search.Query;
 import org.slf4j.Logger;
@@ -54,6 +57,8 @@ class RestoreService {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RestoreService.class);
+    private static final Predicate<Throwable> CONTENT_NOT_FOUND_PREDICATE =
+        throwable -> throwable instanceof DeletedMessageContentNotFoundException;
 
     private final DeletedMessageVault deletedMessageVault;
     private final MailboxManager mailboxManager;
@@ -86,6 +91,14 @@ class RestoreService {
 
     private Mono<AppendCommand> appendCommand(DeletedMessage deletedMessage) {
         return Mono.from(deletedMessageVault.loadMimeMessage(deletedMessage.getOwner(), deletedMessage.getMessageId()))
+            .onErrorResume(CONTENT_NOT_FOUND_PREDICATE, throwable -> {
+                LOGGER.info(
+                    "Error happened when loading mime message associated with id {} of user {} in the vault",
+                    deletedMessage.getMessageId().serialize(),
+                    deletedMessage.getOwner().asString(),
+                    throwable);
+                return Mono.empty();
+            })
             .map(messageContentStream -> AppendCommand.builder()
                 .build(messageContentStream));
     }

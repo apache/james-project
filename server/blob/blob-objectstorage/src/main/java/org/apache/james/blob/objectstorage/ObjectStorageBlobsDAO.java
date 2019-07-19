@@ -31,6 +31,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 import org.apache.james.blob.objectstorage.aws.AwsS3ObjectStorage;
@@ -167,7 +168,7 @@ public class ObjectStorageBlobsDAO implements BlobStore {
             if (blob != null) {
                 return payloadCodec.read(new Payload(blob.getPayload(), Optional.empty()));
             } else {
-                throw new ObjectStoreException("fail to load blob with id " + blobId);
+                throw new ObjectNotFoundException("fail to load blob with id " + blobId);
             }
         } catch (IOException cause) {
             throw new ObjectStoreException(
