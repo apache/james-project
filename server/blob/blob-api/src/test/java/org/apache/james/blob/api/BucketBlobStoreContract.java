@@ -41,89 +41,113 @@ public interface BucketBlobStoreContract {
 
     @Test
     default void deleteBucketShouldThrowWhenNullBucketName() {
-        assertThatThrownBy(() -> testee().deleteBucket(null).block())
+        BlobStore store = testee();
+
+        assertThatThrownBy(() -> store.deleteBucket(null).block())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     default void deleteBucketShouldDeleteExistingBucketWithItsData() {
-        BlobId blobId = testee().save(CUSTOM, SHORT_BYTEARRAY).block();
-        testee().deleteBucket(CUSTOM).block();
+        BlobStore store = testee();
 
-        assertThatThrownBy(() -> testee().read(CUSTOM, blobId))
+        BlobId blobId = store.save(CUSTOM, SHORT_BYTEARRAY).block();
+        store.deleteBucket(CUSTOM).block();
+
+        assertThatThrownBy(() -> store.read(CUSTOM, blobId))
             .isInstanceOf(ObjectStoreException.class);
     }
 
     @Test
     default void deleteBucketShouldBeIdempotent(){
-        testee().save(CUSTOM, SHORT_BYTEARRAY).block();
-        testee().deleteBucket(CUSTOM).block();
+        BlobStore store = testee();
 
-        assertThatCode(() -> testee().deleteBucket(CUSTOM).block())
+        store.save(CUSTOM, SHORT_BYTEARRAY).block();
+        store.deleteBucket(CUSTOM).block();
+
+        assertThatCode(() -> store.deleteBucket(CUSTOM).block())
             .doesNotThrowAnyException();
     }
 
     @Test
     default void saveBytesShouldThrowWhenNullBucketName() {
-        assertThatThrownBy(() -> testee().save(null, SHORT_BYTEARRAY).block())
+        BlobStore store = testee();
+
+        assertThatThrownBy(() -> store.save(null, SHORT_BYTEARRAY).block())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     default void saveStringShouldThrowWhenNullBucketName() {
-        assertThatThrownBy(() -> testee().save(null, SHORT_STRING).block())
+        BlobStore store = testee();
+
+        assertThatThrownBy(() -> store.save(null, SHORT_STRING).block())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     default void saveInputStreamShouldThrowWhenNullBucketName() {
-        assertThatThrownBy(() -> testee().save(null, new ByteArrayInputStream(SHORT_BYTEARRAY)).block())
+        BlobStore store = testee();
+
+        assertThatThrownBy(() -> store.save(null, new ByteArrayInputStream(SHORT_BYTEARRAY)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     default void readShouldThrowWhenNullBucketName() {
-        BlobId blobId = testee().save(BucketName.DEFAULT, SHORT_BYTEARRAY).block();
-        assertThatThrownBy(() -> testee().read(null, blobId))
+        BlobStore store = testee();
+
+        BlobId blobId = store.save(BucketName.DEFAULT, SHORT_BYTEARRAY).block();
+        assertThatThrownBy(() -> store.read(null, blobId))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     default void readBytesStreamShouldThrowWhenNullBucketName() {
-        BlobId blobId = testee().save(BucketName.DEFAULT, SHORT_BYTEARRAY).block();
-        assertThatThrownBy(() -> testee().readBytes(null, blobId).block())
+        BlobStore store = testee();
+
+        BlobId blobId = store.save(BucketName.DEFAULT, SHORT_BYTEARRAY).block();
+        assertThatThrownBy(() -> store.readBytes(null, blobId).block())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     default void readStringShouldThrowWhenBucketDoesNotExist() {
-        BlobId blobId = testee().save(BucketName.DEFAULT, SHORT_BYTEARRAY).block();
-        assertThatThrownBy(() -> testee().read(CUSTOM, blobId))
+        BlobStore store = testee();
+
+        BlobId blobId = store.save(BucketName.DEFAULT, SHORT_BYTEARRAY).block();
+        assertThatThrownBy(() -> store.read(CUSTOM, blobId))
             .isInstanceOf(ObjectStoreException.class);
     }
 
     @Test
     default void readBytesStreamShouldThrowWhenBucketDoesNotExist() {
-        BlobId blobId = testee().save(BucketName.DEFAULT, SHORT_BYTEARRAY).block();
-        assertThatThrownBy(() -> testee().readBytes(CUSTOM, blobId).block())
+        BlobStore store = testee();
+
+        BlobId blobId = store.save(BucketName.DEFAULT, SHORT_BYTEARRAY).block();
+        assertThatThrownBy(() -> store.readBytes(CUSTOM, blobId).block())
             .isInstanceOf(ObjectStoreException.class);
     }
 
     @Test
     default void shouldBeAbleToSaveDataInMultipleBuckets() {
-        BlobId blobIdDefault = testee().save(BucketName.DEFAULT, SHORT_BYTEARRAY).block();
-        BlobId blobIdCustom = testee().save(CUSTOM, SHORT_BYTEARRAY).block();
+        BlobStore store = testee();
 
-        byte[] bytesDefault = testee().readBytes(BucketName.DEFAULT, blobIdDefault).block();
-        byte[] bytesCustom = testee().readBytes(CUSTOM, blobIdCustom).block();
+        BlobId blobIdDefault = store.save(BucketName.DEFAULT, SHORT_BYTEARRAY).block();
+        BlobId blobIdCustom = store.save(CUSTOM, SHORT_BYTEARRAY).block();
+
+        byte[] bytesDefault = store.readBytes(BucketName.DEFAULT, blobIdDefault).block();
+        byte[] bytesCustom = store.readBytes(CUSTOM, blobIdCustom).block();
 
         assertThat(bytesDefault).isEqualTo(bytesCustom);
     }
 
     @Test
     default void saveConcurrentlyWithNonPreExistingBucketShouldNotFail() throws Exception {
+        BlobStore store = testee();
+
         ConcurrentTestRunner.builder()
-            .operation(((threadNumber, step) -> testee().save(CUSTOM, SHORT_STRING + threadNumber + step).block()))
+            .operation(((threadNumber, step) -> store.save(CUSTOM, SHORT_STRING + threadNumber + step).block()))
             .threadCount(10)
             .operationCount(10)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
@@ -131,10 +155,12 @@ public interface BucketBlobStoreContract {
 
     @Test
     default void deleteBucketConcurrentlyShouldNotFail() throws Exception {
-        testee().save(CUSTOM, SHORT_BYTEARRAY).block();
+        BlobStore store = testee();
+
+        store.save(CUSTOM, SHORT_BYTEARRAY).block();
 
         ConcurrentTestRunner.builder()
-            .operation(((threadNumber, step) -> testee().deleteBucket(CUSTOM).block()))
+            .operation(((threadNumber, step) -> store.deleteBucket(CUSTOM).block()))
             .threadCount(10)
             .operationCount(10)
             .runSuccessfullyWithin(Duration.ofMinutes(1));

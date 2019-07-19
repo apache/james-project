@@ -49,56 +49,61 @@ public interface DeleteBlobStoreContract {
 
     @Test
     default void deleteShouldNotThrowWhenBlobDoesNotExist() {
-        BucketName defaultBucketName = testee().getDefaultBucketName();
+        BlobStore store = testee();
+        BucketName defaultBucketName = store.getDefaultBucketName();
 
-        assertThatCode(() -> testee().delete(defaultBucketName, blobIdFactory().randomId()).block())
+        assertThatCode(() -> store.delete(defaultBucketName, blobIdFactory().randomId()).block())
             .doesNotThrowAnyException();
     }
 
     @Test
     default void deleteShouldDeleteExistingBlobData() {
-        BucketName defaultBucketName = testee().getDefaultBucketName();
+        BlobStore store = testee();
+        BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = testee().save(defaultBucketName, SHORT_BYTEARRAY).block();
-        testee().delete(defaultBucketName, blobId).block();
+        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY).block();
+        store.delete(defaultBucketName, blobId).block();
 
-        assertThatThrownBy(() -> testee().read(defaultBucketName, blobId))
+        assertThatThrownBy(() -> store.read(defaultBucketName, blobId))
             .isInstanceOf(ObjectStoreException.class);
     }
 
     @Test
     default void deleteShouldBeIdempotent() {
-        BucketName defaultBucketName = testee().getDefaultBucketName();
+        BlobStore store = testee();
+        BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = testee().save(defaultBucketName, SHORT_BYTEARRAY).block();
-        testee().delete(defaultBucketName, blobId).block();
+        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY).block();
+        store.delete(defaultBucketName, blobId).block();
 
-        assertThatCode(() -> testee().delete(defaultBucketName, blobId).block())
+        assertThatCode(() -> store.delete(defaultBucketName, blobId).block())
             .doesNotThrowAnyException();
     }
 
     @Test
     default void deleteShouldNotDeleteOtherBlobs() {
-        BucketName defaultBucketName = testee().getDefaultBucketName();
+        BlobStore store = testee();
+        BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobIdToDelete = testee().save(defaultBucketName, SHORT_BYTEARRAY).block();
-        BlobId otherBlobId = testee().save(defaultBucketName, ELEVEN_KILOBYTES).block();
+        BlobId blobIdToDelete = store.save(defaultBucketName, SHORT_BYTEARRAY).block();
+        BlobId otherBlobId = store.save(defaultBucketName, ELEVEN_KILOBYTES).block();
 
-        testee().delete(defaultBucketName, blobIdToDelete).block();
+        store.delete(defaultBucketName, blobIdToDelete).block();
 
-        InputStream read = testee().read(defaultBucketName, otherBlobId);
+        InputStream read = store.read(defaultBucketName, otherBlobId);
 
         assertThat(read).hasSameContentAs(new ByteArrayInputStream(ELEVEN_KILOBYTES));
     }
 
     @Test
     default void deleteConcurrentlyShouldNotFail() throws Exception {
-        BucketName defaultBucketName = testee().getDefaultBucketName();
+        BlobStore store = testee();
+        BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = testee().save(defaultBucketName, TWELVE_MEGABYTES).block();
+        BlobId blobId = store.save(defaultBucketName, TWELVE_MEGABYTES).block();
 
         ConcurrentTestRunner.builder()
-            .operation(((threadNumber, step) -> testee().delete(defaultBucketName, blobId).block()))
+            .operation(((threadNumber, step) -> store.delete(defaultBucketName, blobId).block()))
             .threadCount(10)
             .operationCount(10)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
@@ -106,48 +111,52 @@ public interface DeleteBlobStoreContract {
 
     @Test
     default void deleteShouldThrowWhenNullBucketName() {
-        assertThatThrownBy(() -> testee().delete(null, blobIdFactory().randomId()).block())
+        BlobStore store = testee();
+        assertThatThrownBy(() -> store.delete(null, blobIdFactory().randomId()).block())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     default void deleteShouldNotDeleteFromOtherBucket() {
-        BucketName defaultBucketName = testee().getDefaultBucketName();
+        BlobStore store = testee();
+        BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId customBlobId = testee().save(CUSTOM, "custom_string").block();
-        BlobId defaultBlobId = testee().save(defaultBucketName, SHORT_BYTEARRAY).block();
+        BlobId customBlobId = store.save(CUSTOM, "custom_string").block();
+        BlobId defaultBlobId = store.save(defaultBucketName, SHORT_BYTEARRAY).block();
 
-        testee().delete(CUSTOM, customBlobId).block();
+        store.delete(CUSTOM, customBlobId).block();
 
-        InputStream read = testee().read(defaultBucketName, defaultBlobId);
+        InputStream read = store.read(defaultBucketName, defaultBlobId);
 
         assertThat(read).hasSameContentAs(new ByteArrayInputStream(SHORT_BYTEARRAY));
     }
 
     @Test
     default void deleteShouldNotDeleteFromOtherBucketWhenSameBlobId() {
-        BucketName defaultBucketName = testee().getDefaultBucketName();
+        BlobStore store = testee();
+        BucketName defaultBucketName = store.getDefaultBucketName();
 
-        testee().save(CUSTOM, SHORT_BYTEARRAY).block();
-        BlobId blobId = testee().save(defaultBucketName, SHORT_BYTEARRAY).block();
+        store.save(CUSTOM, SHORT_BYTEARRAY).block();
+        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY).block();
 
-        testee().delete(defaultBucketName, blobId).block();
+        store.delete(defaultBucketName, blobId).block();
 
-        InputStream read = testee().read(CUSTOM, blobId);
+        InputStream read = store.read(CUSTOM, blobId);
 
         assertThat(read).hasSameContentAs(new ByteArrayInputStream(SHORT_BYTEARRAY));
     }
 
     @Test
     default void readShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() throws Exception {
-        BucketName defaultBucketName = testee().getDefaultBucketName();
+        BlobStore store = testee();
+        BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = testee().save(defaultBucketName, TWELVE_MEGABYTES).block();
+        BlobId blobId = store.save(defaultBucketName, TWELVE_MEGABYTES).block();
 
         ConcurrentTestRunner.builder()
             .operation(((threadNumber, step) -> {
                 try {
-                    InputStream read = testee().read(defaultBucketName, blobId);
+                    InputStream read = store.read(defaultBucketName, blobId);
 
                     if (!IOUtils.toString(read, StandardCharsets.UTF_8).equals(TWELVE_MEGABYTES_STRING)) {
                         throw new RuntimeException("Should not read partial blob when an other thread is deleting it");
@@ -156,7 +165,7 @@ public interface DeleteBlobStoreContract {
                     // normal behavior here
                 }
 
-                testee().delete(defaultBucketName, blobId).block();
+                store.delete(defaultBucketName, blobId).block();
             }))
             .threadCount(10)
             .operationCount(10)
