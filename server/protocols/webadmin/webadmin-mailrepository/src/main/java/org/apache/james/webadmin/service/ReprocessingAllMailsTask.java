@@ -21,16 +21,21 @@ package org.apache.james.webadmin.service;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.json.DTOModule;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.server.task.json.dto.TaskDTO;
+import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ReprocessingAllMailsTask implements Task {
 
@@ -76,6 +81,99 @@ public class ReprocessingAllMailsTask implements Task {
             processedCount.incrementAndGet();
         }
     }
+
+    public static class UrlEncodingFailureSerializationException extends RuntimeException {
+
+        public UrlEncodingFailureSerializationException(MailRepositoryPath mailRepositoryPath) {
+            super("Unable to serialize: '" + mailRepositoryPath + "' can not be url encoded");
+        }
+    }
+
+    public static class InvalidMailRepositoryPathDeserializationException extends RuntimeException {
+
+        public InvalidMailRepositoryPathDeserializationException(String mailRepositoryPath) {
+            super("Unable to deserialize: '" + mailRepositoryPath + "' can not be url decoded");
+        }
+    }
+
+    private static class ReprocessingAllMailsTaskDTO implements TaskDTO {
+
+        public static ReprocessingAllMailsTaskDTO toDTO(ReprocessingAllMailsTask domainObject, String typeName) {
+            try {
+                return new ReprocessingAllMailsTaskDTO(
+                    typeName,
+                    domainObject.additionalInformation.initialCount,
+                    domainObject.repositoryPath.urlEncoded(),
+                    domainObject.targetQueue,
+                    domainObject.targetProcessor
+                );
+            } catch (Exception e) {
+                throw new UrlEncodingFailureSerializationException(domainObject.repositoryPath);
+            }
+        }
+
+        private final String type;
+        private final long repositorySize;
+        private final String repositoryPath;
+        private final String targetQueue;
+        private final Optional<String> targetProcessor;
+
+        public ReprocessingAllMailsTaskDTO(@JsonProperty("type") String type,
+                                           @JsonProperty("repositorySize") long repositorySize,
+                                           @JsonProperty("repositoryPath") String repositoryPath,
+                                           @JsonProperty("targetQueue") String targetQueue,
+                                           @JsonProperty("targetProcessor") Optional<String> targetProcessor) {
+            this.type = type;
+            this.repositorySize = repositorySize;
+            this.repositoryPath = repositoryPath;
+            this.targetQueue = targetQueue;
+            this.targetProcessor = targetProcessor;
+        }
+
+        public ReprocessingAllMailsTask fromDTO(ReprocessingService reprocessingService) {
+            try {
+                return new ReprocessingAllMailsTask(
+                    reprocessingService,
+                    repositorySize,
+                    MailRepositoryPath.fromEncoded(repositoryPath),
+                    targetQueue,
+                    targetProcessor
+                );
+            } catch (Exception e) {
+                throw new InvalidMailRepositoryPathDeserializationException(repositoryPath);
+            }
+        }
+
+        @Override
+        public String getType() {
+            return type;
+        }
+
+        public long getRepositorySize() {
+            return repositorySize;
+        }
+
+        public String getRepositoryPath() {
+            return repositoryPath;
+        }
+
+        public String getTargetQueue() {
+            return targetQueue;
+        }
+
+        public Optional<String> getTargetProcessor() {
+            return targetProcessor;
+        }
+    }
+
+    public static final Function<ReprocessingService, TaskDTOModule<ReprocessingAllMailsTask, ReprocessingAllMailsTaskDTO>> MODULE = (reprocessingService) ->
+        DTOModule
+            .forDomainObject(ReprocessingAllMailsTask.class)
+            .convertToDTO(ReprocessingAllMailsTaskDTO.class)
+            .toDomainObjectConverter(dto -> dto.fromDTO(reprocessingService))
+            .toDTOConverter(ReprocessingAllMailsTaskDTO::toDTO)
+            .typeName(TYPE)
+            .withFactory(TaskDTOModule::new);
 
     private final ReprocessingService reprocessingService;
     private final MailRepositoryPath repositoryPath;
