@@ -718,9 +718,10 @@ public abstract class DeletedMessagesVaultTest {
     public void vaultDeleteShouldNotDeleteNotMatchedMessageInVaultThenExportAnEntry() throws Exception {
         bartSendMessageToHomer();
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
-
-        String messageIdOfBart = listMessageIdsForAccount(bartAccessToken).get(0);
         String messageIdOfHomer = listMessageIdsForAccount(homerAccessToken).get(0);
+
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(bartAccessToken).size() == 1);
+        String messageIdOfBart = listMessageIdsForAccount(bartAccessToken).get(0);
 
         homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
         WAIT_TWO_MINUTES.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 0);
