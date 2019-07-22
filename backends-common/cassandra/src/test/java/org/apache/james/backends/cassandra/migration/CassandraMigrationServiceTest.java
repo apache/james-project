@@ -36,6 +36,7 @@ import java.util.concurrent.Executors;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.SchemaTransition;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.task.Task;
 import org.apache.james.util.concurrent.NamedThreadFactory;
@@ -54,6 +55,8 @@ public class CassandraMigrationServiceTest {
     private static final SchemaVersion INTERMEDIARY_VERSION = new SchemaVersion(2);
     private static final SchemaVersion CURRENT_VERSION = INTERMEDIARY_VERSION;
     private static final SchemaVersion OLDER_VERSION = new SchemaVersion(1);
+    private static final SchemaTransition FROM_OLDER_TO_CURRENT = SchemaTransition.to(CURRENT_VERSION);
+    private static final SchemaTransition FROM_CURRENT_TO_LATEST = SchemaTransition.to(LATEST_VERSION);
     private CassandraMigrationService testee;
     private CassandraSchemaVersionDAO schemaVersionDAO;
     private ExecutorService executorService;
@@ -69,11 +72,9 @@ public class CassandraMigrationServiceTest {
 
         successfulMigration = mock(Migration.class);
         when(successfulMigration.run()).thenReturn(Migration.Result.COMPLETED);
-        Map<SchemaVersion, Migration> allMigrationClazz = ImmutableMap.<SchemaVersion, Migration>builder()
-            .put(OLDER_VERSION, successfulMigration)
-            .put(CURRENT_VERSION, successfulMigration)
-            .put(LATEST_VERSION, successfulMigration)
-            .build();
+        Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(
+            FROM_OLDER_TO_CURRENT, successfulMigration,
+            FROM_CURRENT_TO_LATEST, successfulMigration);
         testee = new CassandraMigrationService(schemaVersionDAO, allMigrationClazz, LATEST_VERSION);
         executorService = Executors.newFixedThreadPool(2,
             NamedThreadFactory.withClassName(getClass()));
@@ -128,15 +129,14 @@ public class CassandraMigrationServiceTest {
 
         testee.upgradeToLastVersion().run();
 
+        verify(schemaVersionDAO, times(1)).updateVersion(eq(CURRENT_VERSION));
         verify(schemaVersionDAO, times(1)).updateVersion(eq(LATEST_VERSION));
     }
 
     @Test
     public void upgradeToVersionShouldThrowOnMissingVersion() throws InterruptedException {
-        Map<SchemaVersion, Migration> allMigrationClazz = ImmutableMap.<SchemaVersion, Migration>builder()
-            .put(OLDER_VERSION, successfulMigration)
-            .put(LATEST_VERSION, successfulMigration)
-            .build();
+        Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(FROM_OLDER_TO_CURRENT, successfulMigration);
+
         testee = new CassandraMigrationService(schemaVersionDAO, allMigrationClazz, LATEST_VERSION);
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(OLDER_VERSION)));
 
@@ -148,11 +148,10 @@ public class CassandraMigrationServiceTest {
     @Test
     public void upgradeToVersionShouldUpdateIntermediarySuccessfulMigrationsInCaseOfError() throws InterruptedException {
         try {
-            Map<SchemaVersion, Migration> allMigrationClazz = ImmutableMap.<SchemaVersion, Migration>builder()
-                .put(OLDER_VERSION, successfulMigration)
-                .put(INTERMEDIARY_VERSION, () -> Migration.Result.PARTIAL)
-                .put(LATEST_VERSION, successfulMigration)
-                .build();
+            Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(
+                FROM_OLDER_TO_CURRENT, successfulMigration,
+                FROM_CURRENT_TO_LATEST, () -> Migration.Result.PARTIAL);
+
             testee = new CassandraMigrationService(schemaVersionDAO, allMigrationClazz, LATEST_VERSION);
             when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(OLDER_VERSION)));
 
@@ -170,10 +169,10 @@ public class CassandraMigrationServiceTest {
         when(migration1.run()).thenReturn(Migration.Result.PARTIAL);
         Migration migration2 = successfulMigration;
 
-        Map<SchemaVersion, Migration> allMigrationClazz = ImmutableMap.<SchemaVersion, Migration>builder()
-            .put(OLDER_VERSION, migration1)
-            .put(CURRENT_VERSION, migration2)
-            .build();
+        Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(
+            FROM_OLDER_TO_CURRENT, migration1,
+            FROM_CURRENT_TO_LATEST, migration2);
+
         testee = new CassandraMigrationService(new InMemorySchemaDAO(OLDER_VERSION), allMigrationClazz, LATEST_VERSION);
 
         expectedException.expect(MigrationException.class);
@@ -188,10 +187,10 @@ public class CassandraMigrationServiceTest {
         Migration migration2 = mock(Migration.class);
         when(migration2.run()).thenReturn(Migration.Result.COMPLETED);
 
-        Map<SchemaVersion, Migration> allMigrationClazz = ImmutableMap.<SchemaVersion, Migration>builder()
-            .put(OLDER_VERSION, migration1)
-            .put(CURRENT_VERSION, migration2)
-            .build();
+        Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(
+                FROM_OLDER_TO_CURRENT, migration1,
+                FROM_CURRENT_TO_LATEST, migration2);
+
         testee = new CassandraMigrationService(new InMemorySchemaDAO(OLDER_VERSION), allMigrationClazz, LATEST_VERSION);
 
         expectedException.expect(MigrationException.class);

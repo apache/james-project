@@ -22,6 +22,7 @@ package org.apache.james.modules.server;
 import org.apache.james.backends.cassandra.migration.CassandraMigrationService;
 import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
+import org.apache.james.backends.cassandra.versions.SchemaTransition;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.mailbox.cassandra.mail.migration.AttachmentMessageIdCreation;
 import org.apache.james.mailbox.cassandra.mail.migration.AttachmentV2Migration;
@@ -38,11 +39,11 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 public class CassandraRoutesModule extends AbstractModule {
-    private static final SchemaVersion FROM_V2_TO_V3 = new SchemaVersion(2);
-    private static final SchemaVersion FROM_V3_TO_V4 = new SchemaVersion(3);
-    private static final SchemaVersion FROM_V4_TO_V5 = new SchemaVersion(4);
-    private static final SchemaVersion FROM_V5_TO_V6 = new SchemaVersion(5);
-    private static final SchemaVersion FROM_V6_TO_V7 = new SchemaVersion(6);
+    private static final SchemaTransition FROM_V2_TO_V3 = SchemaTransition.to(new SchemaVersion(3));
+    private static final SchemaTransition FROM_V3_TO_V4 = SchemaTransition.to(new SchemaVersion(4));
+    private static final SchemaTransition FROM_V4_TO_V5 = SchemaTransition.to(new SchemaVersion(5));
+    private static final SchemaTransition FROM_V5_TO_V6 = SchemaTransition.to(new SchemaVersion(6));
+    private static final SchemaTransition FROM_V6_TO_V7 = SchemaTransition.to(new SchemaVersion(7));
 
     @Override
     protected void configure() {
@@ -54,7 +55,7 @@ public class CassandraRoutesModule extends AbstractModule {
         routesMultibinder.addBinding().to(CassandraMigrationRoutes.class);
         routesMultibinder.addBinding().to(CassandraMailboxMergingRoutes.class);
 
-        MapBinder<SchemaVersion, Migration> allMigrationClazzBinder = MapBinder.newMapBinder(binder(), SchemaVersion.class, Migration.class);
+        MapBinder<SchemaTransition, Migration> allMigrationClazzBinder = MapBinder.newMapBinder(binder(), SchemaTransition.class, Migration.class);
         allMigrationClazzBinder.addBinding(FROM_V2_TO_V3).toInstance(() -> Migration.Result.COMPLETED);
         allMigrationClazzBinder.addBinding(FROM_V3_TO_V4).to(AttachmentV2Migration.class);
         allMigrationClazzBinder.addBinding(FROM_V4_TO_V5).to(AttachmentMessageIdCreation.class);
