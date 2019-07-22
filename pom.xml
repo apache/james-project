@@ -661,8 +661,8 @@
         <jackson1.version>1.9.2</jackson1.version>
         <logback.version>1.2.3</logback.version>
 
-        <scala.base>2.13</scala.base>
-        <scala.version>${scala.base}.0</scala.version>
+        <scala.base>2.12</scala.base>
+        <scala.version>${scala.base}.8</scala.version>
 
     </properties>
 

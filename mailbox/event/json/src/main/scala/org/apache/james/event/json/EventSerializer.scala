@@ -36,7 +36,7 @@ import org.apache.james.mailbox.events.{Event => JavaEvent, MessageMoveEvent => 
 import org.apache.james.mailbox.model.{MailboxId, MessageId, MessageMoves, QuotaRoot, MailboxACL => JavaMailboxACL, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota}
 import play.api.libs.json._
 
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 
 private sealed trait Event {
   def toJava: JavaEvent
@@ -73,7 +73,7 @@ private object DTO {
       user,
       path.toJava,
       mailboxId,
-      new JavaTreeMap[MessageUid, JavaMessageMetaData](added.view.mapValues(_.toJava).toMap.asJava),
+      new JavaTreeMap[MessageUid, JavaMessageMetaData](added.mapValues(_.toJava).toMap.asJava),
       eventId)
   }
 
@@ -84,7 +84,7 @@ private object DTO {
       user,
       path.toJava,
       mailboxId,
-      expunged.view.mapValues(_.toJava).toMap.asJava,
+      expunged.mapValues(_.toJava).toMap.asJava,
       eventId)
   }
 
@@ -161,7 +161,7 @@ private object ScalaConverter {
     user = event.getUser,
     path = MailboxPath.fromJava(event.getMailboxPath),
     mailboxId = event.getMailboxId,
-    added = event.getAdded.asScala.view.mapValues(DTOs.MessageMetaData.fromJava).toMap)
+    added = event.getAdded.asScala.mapValues(DTOs.MessageMetaData.fromJava).toMap)
 
   private def toScala(event: JavaExpunged): DTO.Expunged = DTO.Expunged(
     eventId = event.getEventId,
@@ -169,7 +169,7 @@ private object ScalaConverter {
     user = event.getUser,
     path = MailboxPath.fromJava(event.getMailboxPath),
     mailboxId = event.getMailboxId,
-    expunged = event.getExpunged.asScala.view.mapValues(DTOs.MessageMetaData.fromJava).toMap)
+    expunged = event.getExpunged.asScala.mapValues(DTOs.MessageMetaData.fromJava).toMap)
 
   private def toScala(event: JavaMessageMoveEvent): DTO.MessageMoveEvent = DTO.MessageMoveEvent(
     eventId = event.getEventId,

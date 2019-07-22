@@ -30,7 +30,7 @@ import org.apache.james.mailbox.acl.{ACLDiff => JavaACLDiff}
 import org.apache.james.mailbox.model.{MailboxACL, MessageId, MailboxPath => JavaMailboxPath, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota, UpdatedFlags => JavaUpdatedFlags}
 import org.apache.james.mailbox.{FlagsBuilder, MessageUid}
 
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 
 object DTOs {
 
