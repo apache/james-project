@@ -51,8 +51,12 @@ public class DockerJamesRule implements TestRule {
                 switch (frame.getType()) {
                     case STDOUT:
                         LOGGER.info(frame.getUtf8String());
+                        break;
                     case STDERR:
                         LOGGER.error(frame.getUtf8String());
+                        break;
+                    case END:
+                        break; //Ignore
                 }
             });
     }

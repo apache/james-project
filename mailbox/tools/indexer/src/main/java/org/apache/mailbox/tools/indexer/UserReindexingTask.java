@@ -38,7 +38,7 @@ public class UserReindexingTask implements Task {
 
     public static final String USER_RE_INDEXING = "userReIndexing";
 
-    public static final Function<UserReindexingTask.Factory, TaskDTOModule> MODULE = (factory) ->
+    public static final Function<UserReindexingTask.Factory, TaskDTOModule<UserReindexingTask, UserReindexingTask.UserReindexingTaskDTO>> MODULE = (factory) ->
         DTOModule
             .forDomainObject(UserReindexingTask.class)
             .convertToDTO(UserReindexingTask.UserReindexingTaskDTO.class)

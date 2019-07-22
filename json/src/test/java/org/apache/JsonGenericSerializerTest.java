@@ -48,6 +48,7 @@ class JsonGenericSerializerTest {
     private static final String FIRST_JSON = "{\"type\":\"first\",\"id\":1,\"time\":\"2016-04-03T02:01+07:00[Asia/Vientiane]\",\"payload\":\"first payload\"}";
     private static final String SECOND_JSON = "{\"type\":\"second\",\"id\":\"4a2c853f-7ffc-4ce3-9410-a47e85b3b741\",\"payload\":\"second payload\"}";
 
+    @SuppressWarnings("unchecked")
     @Test
     void shouldDeserializeKnownType() throws Exception {
         assertThat(JsonGenericSerializer.of(TestModules.FIRST_TYPE)
@@ -55,6 +56,7 @@ class JsonGenericSerializerTest {
             .isEqualTo(FIRST);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void shouldThrowWhenDeserializeEventWithMissingType() {
         assertThatThrownBy(() -> JsonGenericSerializer.of(TestModules.FIRST_TYPE)
@@ -62,6 +64,7 @@ class JsonGenericSerializerTest {
             .isInstanceOf(JsonGenericSerializer.InvalidTypeException.class);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void shouldThrowWhenDeserializeEventWithDuplicatedTypes() {
         assertThatThrownBy(() -> JsonGenericSerializer.of(
@@ -81,6 +84,7 @@ class JsonGenericSerializerTest {
     @ParameterizedTest
     @MethodSource
     void serializeShouldHandleAllKnownTypes(BaseType domainObject, String serializedJson) throws Exception {
+        @SuppressWarnings("unchecked")
         JsonGenericSerializer<BaseType, DTO> serializer = JsonGenericSerializer.of(
                 TestModules.FIRST_TYPE,
                 TestModules.SECOND_TYPE);
@@ -96,7 +100,8 @@ class JsonGenericSerializerTest {
     @ParameterizedTest
     @MethodSource
     void deserializeShouldHandleAllKnownTypes(BaseType domainObject, String serializedJson) throws Exception {
-        JsonGenericSerializer serializer = JsonGenericSerializer.of(
+        @SuppressWarnings("unchecked")
+        JsonGenericSerializer<BaseType, DTO> serializer = JsonGenericSerializer.of(
                 TestModules.FIRST_TYPE,
                 TestModules.SECOND_TYPE);
 
@@ -115,6 +120,7 @@ class JsonGenericSerializerTest {
         );
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void shouldSerializeKnownType() throws Exception {
         assertThatJson(JsonGenericSerializer.of(TestModules.FIRST_TYPE)

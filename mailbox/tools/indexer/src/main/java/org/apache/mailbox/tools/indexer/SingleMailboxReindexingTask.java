@@ -62,7 +62,7 @@ public class SingleMailboxReindexingTask implements Task {
 
     public static final String MAILBOX_RE_INDEXING = "mailboxReIndexing";
 
-    public static final Function<Factory, TaskDTOModule> MODULE = (factory) ->
+    public static final Function<Factory, TaskDTOModule<SingleMailboxReindexingTask, SingleMailboxReindexingTaskDTO>> MODULE = (factory) ->
         DTOModule
             .forDomainObject(SingleMailboxReindexingTask.class)
             .convertToDTO(SingleMailboxReindexingTaskDTO.class)

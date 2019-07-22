@@ -45,7 +45,6 @@ import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SMTPSendingException;
 import org.apache.james.utils.SmtpSendingStep;
 import org.junit.After;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;

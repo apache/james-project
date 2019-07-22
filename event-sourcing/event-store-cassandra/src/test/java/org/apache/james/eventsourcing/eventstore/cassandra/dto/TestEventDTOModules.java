@@ -24,7 +24,7 @@ import org.apache.james.eventsourcing.TestEvent;
 public interface TestEventDTOModules {
 
 
-    EventDTOModule TEST_TYPE = EventDTOModule
+    EventDTOModule<?, ?> TEST_TYPE = EventDTOModule
             .forEvent(TestEvent.class)
             .convertToDTO(TestEventDTO.class)
             .toDomainObjectConverter(TestEventDTO::toEvent)
@@ -36,7 +36,7 @@ public interface TestEventDTOModules {
             .typeName("TestType")
             .withFactory(EventDTOModule::new);
 
-    EventDTOModule OTHER_TEST_TYPE =
+    EventDTOModule<?, ?> OTHER_TEST_TYPE =
         EventDTOModule
             .forEvent(OtherEvent.class)
             .convertToDTO(OtherTestEventDTO.class)

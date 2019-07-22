@@ -50,8 +50,8 @@ interface ChannelPoolContract {
     @Test
     default void channelPoolShouldReleaseChannelWhenReturnedToThePool() {
         ChannelPool channelPool = getChannelPool(2);
-        Mono<? extends Channel> channelMono = channelPool.getChannelMono();
-        Channel channel1 = borrowChannel(channelPool);
+        channelPool.getChannelMono();
+        borrowChannel(channelPool);
         Channel channel2 = borrowChannel(channelPool);
 
         returnToThePool(channelPool, channel2);
@@ -64,8 +64,8 @@ interface ChannelPoolContract {
     @Test
     default void channelPoolShouldWaitTillTheNextReleaseWhenAllChannelsAreTaken() {
         ChannelPool channelPool = getChannelPool(2);
-        Mono<? extends Channel> channelMono = channelPool.getChannelMono();
-        Channel channel1 = borrowChannel(channelPool);
+        channelPool.getChannelMono();
+        borrowChannel(channelPool);
         Channel channel2 = borrowChannel(channelPool);
 
         Mono.delay(Duration.ofSeconds(2))
@@ -81,8 +81,8 @@ interface ChannelPoolContract {
     default void channelPoolShouldThrowAfterTimeoutWhenAllChannelsAreTaken() {
         ChannelPool channelPool = getChannelPool(2);
         Mono<? extends Channel> channelMono = channelPool.getChannelMono();
-        Channel channel1 = borrowChannel(channelPool);
-        Channel channel2 = borrowChannel(channelPool);
+        borrowChannel(channelPool);
+        borrowChannel(channelPool);
 
         assertThatThrownBy(channelMono::block)
             .isInstanceOf(NoSuchElementException.class)

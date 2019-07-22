@@ -41,7 +41,7 @@ public class FullReindexingTask implements Task {
     private final ReprocessingContextInformation additionalInformation;
     private final ReprocessingContext reprocessingContext;
 
-    public static final Function<FullReindexingTask.Factory, TaskDTOModule> MODULE = (factory) ->
+    public static final Function<FullReindexingTask.Factory, TaskDTOModule<FullReindexingTask, FullReindexingTaskDTO>> MODULE = (factory) ->
         DTOModule
             .forDomainObject(FullReindexingTask.class)
             .convertToDTO(FullReindexingTask.FullReindexingTaskDTO.class)

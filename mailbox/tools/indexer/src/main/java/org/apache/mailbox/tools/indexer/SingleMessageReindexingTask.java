@@ -42,7 +42,7 @@ public class SingleMessageReindexingTask implements Task {
 
     public static final String MESSAGE_RE_INDEXING = "messageReIndexing";
 
-    public static final Function<SingleMessageReindexingTask.Factory, TaskDTOModule> MODULE = (factory) ->
+    public static final Function<SingleMessageReindexingTask.Factory, TaskDTOModule<SingleMessageReindexingTask, SingleMessageReindexingTask.SingleMessageReindexingTaskDTO>> MODULE = (factory) ->
         DTOModule
             .forDomainObject(SingleMessageReindexingTask.class)
             .convertToDTO(SingleMessageReindexingTask.SingleMessageReindexingTaskDTO.class)

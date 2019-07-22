@@ -23,7 +23,7 @@ import org.apache.james.server.task.json.TestTask;
 
 public interface TestTaskDTOModules {
 
-    TaskDTOModule TEST_TYPE = TaskDTOModule
+    TaskDTOModule<TestTask, TestTaskDTO> TEST_TYPE = TaskDTOModule
         .forTask(TestTask.class)
         .convertToDTO(TestTaskDTO.class)
         .toDomainObjectConverter(TestTaskDTO::toTask)

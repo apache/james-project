@@ -32,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 class EventSourcingTaskManagerTest implements TaskManagerContract {
 
     private EventSourcingTaskManager taskManager;
+
     @BeforeEach
     void setUp() {
         EventStore eventStore = new InMemoryEventStore();

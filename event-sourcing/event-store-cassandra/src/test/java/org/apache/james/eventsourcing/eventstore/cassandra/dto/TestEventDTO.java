@@ -19,7 +19,6 @@
 
 package org.apache.james.eventsourcing.eventstore.cassandra.dto;
 
-import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.eventsourcing.TestAggregateId;
 import org.apache.james.eventsourcing.TestEvent;

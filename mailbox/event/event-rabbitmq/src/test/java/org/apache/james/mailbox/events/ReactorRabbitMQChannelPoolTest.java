@@ -35,7 +35,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.fge.lambdas.Throwing;
 import com.rabbitmq.client.Channel;
 
 import reactor.core.publisher.Mono;

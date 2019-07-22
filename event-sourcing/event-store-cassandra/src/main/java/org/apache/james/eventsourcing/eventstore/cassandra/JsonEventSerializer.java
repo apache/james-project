@@ -48,6 +48,7 @@ public class JsonEventSerializer {
 
     private JsonGenericSerializer<Event, EventDTO> jsonGenericSerializer;
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Inject
     public JsonEventSerializer(Set<EventDTOModule> modules) {
         jsonGenericSerializer = new JsonGenericSerializer(modules);

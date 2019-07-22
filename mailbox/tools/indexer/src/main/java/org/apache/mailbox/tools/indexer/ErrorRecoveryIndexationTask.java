@@ -43,7 +43,7 @@ import com.google.common.collect.Multimap;
 public class ErrorRecoveryIndexationTask implements Task {
     private static final String PREVIOUS_FAILURES_INDEXING = "ErrorRecoveryIndexation";
 
-    public static final Function<ErrorRecoveryIndexationTask.Factory, TaskDTOModule> MODULE = (factory) ->
+    public static final Function<ErrorRecoveryIndexationTask.Factory, TaskDTOModule<ErrorRecoveryIndexationTask, ErrorRecoveryIndexationTaskDTO>> MODULE = (factory) ->
         DTOModule
             .forDomainObject(ErrorRecoveryIndexationTask.class)
             .convertToDTO(ErrorRecoveryIndexationTask.ErrorRecoveryIndexationTaskDTO.class)

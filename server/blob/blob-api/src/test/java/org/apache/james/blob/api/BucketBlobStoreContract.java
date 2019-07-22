@@ -59,7 +59,7 @@ public interface BucketBlobStoreContract {
     }
 
     @Test
-    default void deleteBucketShouldBeIdempotent(){
+    default void deleteBucketShouldBeIdempotent() {
         BlobStore store = testee();
 
         store.save(CUSTOM, SHORT_BYTEARRAY).block();

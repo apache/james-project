@@ -356,7 +356,7 @@ public class StoreMessageManager implements MessageManager {
                 // component and not the parser itself
                 // https://issues.apache.org/jira/browse/IMAP-122
                 final MimeTokenStream parser = getParser(bIn);
-                final HeaderImpl header = readHeader(parser);
+                readHeader(parser);
                 final MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) parser.getBodyDescriptor();
                 final MediaType mediaType = getMediaType(descriptor);
                 final PropertyBuilder propertyBuilder = getPropertyBuilder(descriptor, mediaType.mediaType, mediaType.subType);
