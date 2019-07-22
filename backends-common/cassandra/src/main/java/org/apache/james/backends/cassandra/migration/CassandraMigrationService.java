@@ -21,7 +21,6 @@ package org.apache.james.backends.cassandra.migration;
 
 import static org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.DEFAULT_VERSION;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,6 +35,8 @@ import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.steveash.guavate.Guavate;
 
 public class CassandraMigrationService {
     public static final String LATEST_VERSION = "latestVersion";
@@ -59,18 +60,15 @@ public class CassandraMigrationService {
         return Optional.of(latestVersion);
     }
 
-    public Task upgradeToVersion(SchemaVersion newVersion) {
+    public Task upgradeToVersion(SchemaVersion target) {
         SchemaVersion currentVersion = getCurrentVersion().orElse(DEFAULT_VERSION);
 
-        List<Migration> migrations = new ArrayList<>();
-        SchemaVersion migrateTo = currentVersion.next();
-        while (newVersion.isAfterOrEquals(migrateTo)) {
-            SchemaTransition transition = SchemaTransition.to(migrateTo);
-            validateTransitionExists(transition);
-            migrations.add(toMigration(transition));
-            migrateTo = migrateTo.next();
-        }
-        return new MigrationTask(migrations, newVersion);
+        List<Migration> migrations = currentVersion.listTransitionsForTarget(target)
+                .stream()
+                .map(this::validateTransitionExists)
+                .map(this::toMigration)
+                .collect(Guavate.toImmutableList());
+        return new MigrationTask(migrations, target);
     }
 
     private SchemaTransition validateTransitionExists(SchemaTransition transition) {
