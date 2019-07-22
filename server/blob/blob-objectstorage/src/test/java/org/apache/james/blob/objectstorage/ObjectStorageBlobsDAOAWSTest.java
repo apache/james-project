@@ -32,6 +32,7 @@ import org.apache.james.blob.objectstorage.aws.DockerAwsS3Container;
 import org.apache.james.blob.objectstorage.aws.DockerAwsS3Extension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
@@ -76,5 +77,11 @@ public class ObjectStorageBlobsDAOAWSTest implements MetricableBlobStoreContract
     @Override
     public BlobId.Factory blobIdFactory() {
         return BLOB_ID_FACTORY;
+    }
+
+    @Override
+    @Disabled("JAMES-2829 Unstable with scality/S3 impl")
+    public void readShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() {
+
     }
 }

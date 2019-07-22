@@ -34,6 +34,7 @@ import org.apache.james.blob.objectstorage.crypto.CryptoConfig;
 import org.apache.james.blob.objectstorage.swift.Credentials;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
@@ -84,5 +85,11 @@ public class ObjectStorageBlobsDAOAWSCryptoTest implements MetricableBlobStoreCo
     @Override
     public BlobId.Factory blobIdFactory() {
         return BLOB_ID_FACTORY;
+    }
+
+    @Override
+    @Disabled("JAMES-2829 Unstable with scality/S3 impl")
+    public void readShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() {
+
     }
 }
