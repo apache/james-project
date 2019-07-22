@@ -56,7 +56,7 @@ public class CassandraRoutesModule extends AbstractModule {
         routesMultibinder.addBinding().to(CassandraMailboxMergingRoutes.class);
 
         MapBinder<SchemaTransition, Migration> allMigrationClazzBinder = MapBinder.newMapBinder(binder(), SchemaTransition.class, Migration.class);
-        allMigrationClazzBinder.addBinding(FROM_V2_TO_V3).toInstance(() -> Migration.Result.COMPLETED);
+        allMigrationClazzBinder.addBinding(FROM_V2_TO_V3).toInstance(() -> { });
         allMigrationClazzBinder.addBinding(FROM_V3_TO_V4).to(AttachmentV2Migration.class);
         allMigrationClazzBinder.addBinding(FROM_V4_TO_V5).to(AttachmentMessageIdCreation.class);
         allMigrationClazzBinder.addBinding(FROM_V5_TO_V6).to(MailboxPathV2Migration.class);

@@ -54,7 +54,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
-
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import reactor.core.publisher.Mono;
@@ -71,7 +70,6 @@ public class CassandraMigrationRoutesTest {
 
     private void createServer() throws InterruptedException {
         Migration successfulMigration = mock(Migration.class);
-        when(successfulMigration.run()).thenReturn(Migration.Result.COMPLETED);
 
         Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(
             FROM_OLDER_TO_CURRENT, successfulMigration,

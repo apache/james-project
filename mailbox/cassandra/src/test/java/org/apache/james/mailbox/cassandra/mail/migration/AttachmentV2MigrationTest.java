@@ -41,6 +41,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.task.Task;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -89,9 +90,9 @@ class AttachmentV2MigrationTest {
     }
 
     @Test
-    void emptyMigrationShouldSucceed() {
-        assertThat(migration.run())
-            .isEqualTo(Migration.Result.COMPLETED);
+    void emptyMigrationShouldSucceed() throws InterruptedException {
+        assertThat(migration.asTask().run())
+            .isEqualTo(Task.Result.COMPLETED);
     }
 
     @Test
@@ -99,8 +100,8 @@ class AttachmentV2MigrationTest {
         attachmentDAO.storeAttachment(attachment1).block();
         attachmentDAO.storeAttachment(attachment2).block();
 
-        assertThat(migration.run())
-            .isEqualTo(Migration.Result.COMPLETED);
+        assertThat(migration.asTask().run())
+            .isEqualTo(Task.Result.COMPLETED);
     }
 
     @Test
@@ -108,7 +109,7 @@ class AttachmentV2MigrationTest {
         attachmentDAO.storeAttachment(attachment1).block();
         attachmentDAO.storeAttachment(attachment2).block();
 
-        migration.run();
+        migration.apply();
 
         assertThat(attachmentDAOV2.getAttachment(ATTACHMENT_ID).blockOptional())
             .contains(CassandraAttachmentDAOV2.from(attachment1, BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
@@ -125,7 +126,7 @@ class AttachmentV2MigrationTest {
         attachmentDAO.storeAttachment(attachment1).block();
         attachmentDAO.storeAttachment(attachment2).block();
 
-        migration.run();
+        migration.apply();
 
         assertThat(attachmentDAO.getAttachment(ATTACHMENT_ID).blockOptional())
             .isEmpty();
@@ -134,7 +135,7 @@ class AttachmentV2MigrationTest {
     }
 
     @Test
-    void runShouldReturnPartialWhenInitialReadFail() {
+    void runShouldReturnPartialWhenInitialReadFail() throws InterruptedException {
         CassandraAttachmentDAO attachmentDAO = mock(CassandraAttachmentDAO.class);
         CassandraAttachmentDAOV2 attachmentDAOV2 = mock(CassandraAttachmentDAOV2.class);
         CassandraBlobsDAO blobsDAO = mock(CassandraBlobsDAO.class);
@@ -142,11 +143,11 @@ class AttachmentV2MigrationTest {
 
         when(attachmentDAO.retrieveAll()).thenReturn(Flux.error(new RuntimeException()));
 
-        assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
+        assertThat(migration.asTask().run()).isEqualTo(Task.Result.PARTIAL);
     }
 
     @Test
-    void runShouldReturnPartialWhenSavingBlobsFails() {
+    void runShouldReturnPartialWhenSavingBlobsFails() throws InterruptedException {
         CassandraAttachmentDAO attachmentDAO = mock(CassandraAttachmentDAO.class);
         CassandraAttachmentDAOV2 attachmentDAOV2 = mock(CassandraAttachmentDAOV2.class);
         CassandraBlobsDAO blobsDAO = mock(CassandraBlobsDAO.class);
@@ -157,11 +158,11 @@ class AttachmentV2MigrationTest {
             attachment2));
         when(blobsDAO.save(any(BucketName.class), any(byte[].class))).thenThrow(new RuntimeException());
 
-        assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
+        assertThat(migration.asTask().run()).isEqualTo(Task.Result.PARTIAL);
     }
 
     @Test
-    void runShouldReturnPartialWhenSavingAttachmentV2Fail() {
+    void runShouldReturnPartialWhenSavingAttachmentV2Fail() throws InterruptedException {
         CassandraAttachmentDAO attachmentDAO = mock(CassandraAttachmentDAO.class);
         CassandraAttachmentDAOV2 attachmentDAOV2 = mock(CassandraAttachmentDAOV2.class);
         CassandraBlobsDAO blobsDAO = mock(CassandraBlobsDAO.class);
@@ -176,11 +177,11 @@ class AttachmentV2MigrationTest {
             .thenReturn(Mono.just(BLOB_ID_FACTORY.forPayload(attachment2.getBytes())));
         when(attachmentDAOV2.storeAttachment(any())).thenThrow(new RuntimeException());
 
-        assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
+        assertThat(migration.asTask().run()).isEqualTo(Task.Result.PARTIAL);
     }
 
     @Test
-    void runShouldReturnPartialWhenDeleteV1AttachmentFail() {
+    void runShouldReturnPartialWhenDeleteV1AttachmentFail() throws InterruptedException {
         CassandraAttachmentDAO attachmentDAO = mock(CassandraAttachmentDAO.class);
         CassandraAttachmentDAOV2 attachmentDAOV2 = mock(CassandraAttachmentDAOV2.class);
         CassandraBlobsDAO blobsDAO = mock(CassandraBlobsDAO.class);
@@ -196,11 +197,11 @@ class AttachmentV2MigrationTest {
         when(attachmentDAOV2.storeAttachment(any())).thenReturn(Mono.empty());
         when(attachmentDAO.deleteAttachment(any())).thenThrow(new RuntimeException());
 
-        assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
+        assertThat(migration.asTask().run()).isEqualTo(Task.Result.PARTIAL);
     }
 
     @Test
-    void runShouldReturnPartialWhenAtLeastOneAttachmentMigrationFails() {
+    void runShouldReturnPartialWhenAtLeastOneAttachmentMigrationFails() throws InterruptedException {
         CassandraAttachmentDAO attachmentDAO = mock(CassandraAttachmentDAO.class);
         CassandraAttachmentDAOV2 attachmentDAOV2 = mock(CassandraAttachmentDAOV2.class);
         CassandraBlobsDAO blobsDAO = mock(CassandraBlobsDAO.class);
@@ -216,7 +217,7 @@ class AttachmentV2MigrationTest {
         when(attachmentDAOV2.storeAttachment(any())).thenReturn(Mono.empty());
         when(attachmentDAO.deleteAttachment(any())).thenReturn(Mono.empty());
 
-        assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
+        assertThat(migration.asTask().run()).isEqualTo(Task.Result.PARTIAL);
     }
 
 }

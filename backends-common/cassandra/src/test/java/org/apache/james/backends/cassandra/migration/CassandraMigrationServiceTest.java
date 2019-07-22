@@ -70,8 +70,10 @@ public class CassandraMigrationServiceTest {
         schemaVersionDAO = mock(CassandraSchemaVersionDAO.class);
         when(schemaVersionDAO.updateVersion(any())).thenReturn(Mono.empty());
 
+        Task successFulTask = mock(Task.class);
+        when(successFulTask.run()).thenReturn(Task.Result.COMPLETED);
         successfulMigration = mock(Migration.class);
-        when(successfulMigration.run()).thenReturn(Migration.Result.COMPLETED);
+        when(successfulMigration.asTask()).thenReturn(successFulTask);
         Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(
             FROM_OLDER_TO_CURRENT, successfulMigration,
             FROM_CURRENT_TO_LATEST, successfulMigration);
@@ -150,7 +152,9 @@ public class CassandraMigrationServiceTest {
         try {
             Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(
                 FROM_OLDER_TO_CURRENT, successfulMigration,
-                FROM_CURRENT_TO_LATEST, () -> Migration.Result.PARTIAL);
+                FROM_CURRENT_TO_LATEST, () -> {
+                    throw new RuntimeException();
+                });
 
             testee = new CassandraMigrationService(schemaVersionDAO, allMigrationClazz, LATEST_VERSION);
             when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(OLDER_VERSION)));
@@ -165,8 +169,9 @@ public class CassandraMigrationServiceTest {
 
     @Test
     public void partialMigrationShouldThrow() throws InterruptedException {
-        Migration migration1 = mock(Migration.class);
-        when(migration1.run()).thenReturn(Migration.Result.PARTIAL);
+        Task failingTask = mock(Task.class);
+        when(failingTask.run()).thenThrow(MigrationException.class);
+        Migration migration1 = failingTask::run;
         Migration migration2 = successfulMigration;
 
         Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(
@@ -182,10 +187,10 @@ public class CassandraMigrationServiceTest {
 
     @Test
     public void partialMigrationShouldAbortMigrations() throws InterruptedException {
-        Migration migration1 = mock(Migration.class);
-        when(migration1.run()).thenReturn(Migration.Result.PARTIAL);
+        Task failingTask = mock(Task.class);
+        when(failingTask.run()).thenThrow(MigrationException.class);
+        Migration migration1 = failingTask::run;
         Migration migration2 = mock(Migration.class);
-        when(migration2.run()).thenReturn(Migration.Result.COMPLETED);
 
         Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(
                 FROM_OLDER_TO_CURRENT, migration1,
@@ -198,8 +203,8 @@ public class CassandraMigrationServiceTest {
         try {
             testee.upgradeToVersion(LATEST_VERSION).run();
         } finally {
-            verify(migration1, times(1)).run();
-            verifyNoMoreInteractions(migration1);
+            verify(failingTask, times(1)).run();
+            verifyNoMoreInteractions(failingTask);
             verifyZeroInteractions(migration2);
         }
     }

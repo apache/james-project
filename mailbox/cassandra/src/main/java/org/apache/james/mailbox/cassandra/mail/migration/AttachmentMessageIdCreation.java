@@ -26,7 +26,6 @@ import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO.MessageIdAttachmentIds;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,24 +45,18 @@ public class AttachmentMessageIdCreation implements Migration {
     }
 
     @Override
-    public Result run() {
-        return cassandraMessageDAO.retrieveAllMessageIdAttachmentIds()
+    public void apply() {
+        cassandraMessageDAO.retrieveAllMessageIdAttachmentIds()
             .flatMap(this::createIndex)
-            .reduce(Result.COMPLETED, Task::combine)
-            .onErrorResume(this::errorHandling)
-            .block();
+            .doOnError(e -> LOGGER.error("Error while creation attachmentId -> messageIds index", e))
+            .blockLast();
     }
 
-    private Mono<Result> createIndex(MessageIdAttachmentIds message) {
+    private Mono<Void> createIndex(MessageIdAttachmentIds message) {
         MessageId messageId = message.getMessageId();
         return Flux.fromIterable(message.getAttachmentId())
             .flatMap(attachmentId -> attachmentMessageIdDAO.storeAttachmentForMessageId(attachmentId, messageId))
-            .then()
-            .thenReturn(Result.COMPLETED);
+            .then();
     }
 
-    private Mono<Result> errorHandling(Throwable e) {
-        LOGGER.error("Error while creation attachmentId -> messageIds index", e);
-        return Mono.just(Result.PARTIAL);
-    }
 }

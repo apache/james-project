@@ -26,7 +26,6 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.model.Attachment;
-import org.apache.james.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,24 +47,17 @@ public class AttachmentV2Migration implements Migration {
     }
 
     @Override
-    public Result run() {
-        return attachmentDAOV1.retrieveAll()
-            .flatMap(this::migrateAttachment)
-            .reduce(Result.COMPLETED, Task::combine)
-            .onErrorResume(this::handlError)
-            .block();
+    public void apply() {
+        attachmentDAOV1.retrieveAll()
+                .flatMap(this::migrateAttachment)
+                .doOnError(t -> LOGGER.error("Error while performing attachmentDAO V2 migration", t))
+                .blockLast();
     }
 
-    private Mono<Result> handlError(Throwable throwable) {
-        LOGGER.error("Error while performing attachmentDAO V2 migration", throwable);
-        return Mono.just(Result.PARTIAL);
-    }
-
-    private Mono<Result> migrateAttachment(Attachment attachment) {
+    private Mono<Void> migrateAttachment(Attachment attachment) {
         return blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes())
             .map(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
             .flatMap(attachmentDAOV2::storeAttachment)
-            .then(attachmentDAOV1.deleteAttachment(attachment.getAttachmentId()))
-            .thenReturn(Result.COMPLETED);
+            .then(attachmentDAOV1.deleteAttachment(attachment.getAttachmentId()));
     }
 }

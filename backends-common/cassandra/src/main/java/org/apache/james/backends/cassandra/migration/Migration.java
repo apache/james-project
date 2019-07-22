@@ -21,6 +21,21 @@ package org.apache.james.backends.cassandra.migration;
 
 import org.apache.james.task.Task;
 
-public interface Migration extends Task {
+public interface Migration {
+
+    void apply() throws InterruptedException;
+
+    default Task asTask() {
+        return this::runTask;
+    }
+
+    default Task.Result runTask() throws InterruptedException {
+        try {
+            this.apply();
+            return Task.Result.COMPLETED;
+        } catch (RuntimeException e) {
+            return Task.Result.PARTIAL;
+        }
+    }
 
 }

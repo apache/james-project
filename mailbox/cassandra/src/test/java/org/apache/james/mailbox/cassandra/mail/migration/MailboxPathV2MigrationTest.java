@@ -127,7 +127,7 @@ class MailboxPathV2MigrationTest {
     void migrationTaskShouldMoveDataToMostRecentDao() {
         daoV1.save(MAILBOX_PATH_1, MAILBOX_ID_1).block();
 
-        new MailboxPathV2Migration(daoV1, daoV2).run();
+        new MailboxPathV2Migration(daoV1, daoV2).apply();
 
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(daoV1.retrieveId(MAILBOX_PATH_1).blockOptional()).isEmpty();

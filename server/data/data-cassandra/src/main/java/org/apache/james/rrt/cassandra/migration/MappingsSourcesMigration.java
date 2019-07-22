@@ -26,6 +26,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.migration.Migration;
+import org.apache.james.backends.cassandra.migration.MigrationException;
 import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;
 import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTableDAO;
 import org.apache.james.rrt.lib.Mapping;
@@ -74,38 +75,52 @@ public class MappingsSourcesMigration implements Migration {
     }
 
     @Override
-    public Result run() {
-        return cassandraRecipientRewriteTableDAO.getAllMappings()
+    public void apply() {
+        cassandraRecipientRewriteTableDAO.getAllMappings()
             .flatMap(this::migrate)
-            .reduce(Result.COMPLETED, Task::combine)
-            .doOnError(e -> LOGGER.error("Error while migrating mappings sources", e))
-            .onErrorResume(e -> Mono.just(Result.PARTIAL))
+            .then(Mono.fromRunnable(() -> {
+                if (errorMappingsCount.get() > 0) {
+                    throw new MigrationException("MappingsSourcesMigration failed");
+                }
+            }))
+            .doOnError(t -> LOGGER.error("Error while migrating mappings sources", t))
             .block();
     }
 
-    private Mono<Result> migrate(Pair<MappingSource, Mapping> mappingEntry) {
+    private Mono<Void> migrate(Pair<MappingSource, Mapping> mappingEntry) {
         return cassandraMappingsSourcesDAO.addMapping(mappingEntry.getRight(), mappingEntry.getLeft())
-            .then(Mono.fromCallable(() -> {
-                successfulMappingsCount.incrementAndGet();
-                return Result.COMPLETED;
-            }))
-            .onErrorResume(e -> {
+            .then(Mono.fromCallable(successfulMappingsCount::incrementAndGet))
+            .then()
+            .onErrorResume(t -> {
                 LOGGER.error("Error while performing migration of mapping source: {} with mapping: {}",
-                    mappingEntry.getLeft().asString(), mappingEntry.getRight().asString(), e);
+                        mappingEntry.getLeft().asString(), mappingEntry.getRight().asString(), t);
                 errorMappingsCount.incrementAndGet();
-                return Mono.just(Result.PARTIAL);
+                return Mono.empty();
             });
     }
 
     @Override
-    public String type() {
-        return TYPE;
+    public Task asTask() {
+        return new Task() {
+
+            @Override
+            public Result run() throws InterruptedException {
+                return runTask();
+            }
+
+            @Override
+            public String type() {
+                return TYPE;
+            }
+
+            @Override
+            public Optional<TaskExecutionDetails.AdditionalInformation> details() {
+                return Optional.of(createAdditionalInformation());
+            }
+        };
     }
 
-    @Override
-    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(createAdditionalInformation());
-    }
+
 
     AdditionalInformation createAdditionalInformation() {
         return new AdditionalInformation(

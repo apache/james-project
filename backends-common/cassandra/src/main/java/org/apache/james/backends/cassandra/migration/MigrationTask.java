@@ -23,11 +23,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
+import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
 import com.google.common.collect.ImmutableList;
 
-public class MigrationTask implements Migration {
+public class MigrationTask implements Task {
     public static final String CASSANDRA_MIGRATION = "CassandraMigration";
 
     public static class Details implements TaskExecutionDetails.AdditionalInformation {
@@ -53,7 +54,7 @@ public class MigrationTask implements Migration {
     @Override
     public Result run() throws InterruptedException {
         for (Migration migration: migrations) {
-            migration.run();
+            migration.asTask().run();
         }
         return Result.COMPLETED;
     }

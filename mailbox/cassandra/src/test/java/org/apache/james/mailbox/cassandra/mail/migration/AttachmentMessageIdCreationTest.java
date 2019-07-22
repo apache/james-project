@@ -36,7 +36,6 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
@@ -54,6 +53,7 @@ import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.task.Task;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,7 +61,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import reactor.core.publisher.Flux;
 
 @ExtendWith(CassandraRestartExtension.class)
@@ -102,9 +101,9 @@ class AttachmentMessageIdCreationTest {
     }
 
     @Test
-    void emptyMigrationShouldSucceed() {
-        assertThat(migration.run())
-            .isEqualTo(Migration.Result.COMPLETED);
+    void emptyMigrationShouldSucceed() throws InterruptedException {
+        assertThat(migration.asTask().run())
+            .isEqualTo(Task.Result.COMPLETED);
     }
 
     @Test
@@ -114,8 +113,8 @@ class AttachmentMessageIdCreationTest {
 
         cassandraMessageDAO.save(message).block();
 
-        assertThat(migration.run())
-            .isEqualTo(Migration.Result.COMPLETED);
+        assertThat(migration.asTask().run())
+            .isEqualTo(Task.Result.COMPLETED);
     }
 
     @Test
@@ -125,8 +124,8 @@ class AttachmentMessageIdCreationTest {
 
         cassandraMessageDAO.save(message).block();
 
-        assertThat(migration.run())
-            .isEqualTo(Migration.Result.COMPLETED);
+        assertThat(migration.asTask().run())
+            .isEqualTo(Task.Result.COMPLETED);
     }
 
     @Test
@@ -136,7 +135,7 @@ class AttachmentMessageIdCreationTest {
 
         cassandraMessageDAO.save(message).block();
 
-        migration.run();
+        migration.apply();
 
         assertThat(attachmentMessageIdDAO.getOwnerMessageIds(attachment.getAttachmentId()).toIterable())
             .containsExactly(messageId);
@@ -150,7 +149,7 @@ class AttachmentMessageIdCreationTest {
 
         when(cassandraMessageDAO.retrieveAllMessageIdAttachmentIds()).thenReturn(Flux.error(new RuntimeException("Mocked exception")));
 
-        assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
+        assertThat(migration.asTask().run()).isEqualTo(Task.Result.PARTIAL);
     }
 
     @Test
@@ -167,7 +166,7 @@ class AttachmentMessageIdCreationTest {
         when(attachmentMessageIdDAO.storeAttachmentForMessageId(any(AttachmentId.class), any(MessageId.class)))
             .thenThrow(new RuntimeException());
 
-        assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
+        assertThat(migration.asTask().run()).isEqualTo(Task.Result.PARTIAL);
     }
 
     private SimpleMailboxMessage createMessage(MessageId messageId, Collection<MessageAttachment> attachments) {

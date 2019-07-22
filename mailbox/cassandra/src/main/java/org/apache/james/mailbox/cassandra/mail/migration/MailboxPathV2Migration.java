@@ -30,7 +30,6 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAOImpl;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV2DAO;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,38 +68,43 @@ public class MailboxPathV2Migration implements Migration {
     }
 
     @Override
-    public Result run() {
-        return daoV1.readAll()
+    public void apply() {
+        daoV1.readAll()
             .flatMap(this::migrate)
-            .reduce(Result.COMPLETED, Task::combine)
-            .onErrorResume(this::handleErrorRun)
-            .block();
+            .doOnError(t -> LOGGER.error("Error while performing migration", t))
+            .blockLast();
     }
 
-    private Mono<Result> handleErrorRun(Throwable throwable) {
-            LOGGER.error("Error while performing migration", throwable);
-            return Mono.just(Result.PARTIAL);
-    }
-
-    public Mono<Result> migrate(CassandraIdAndPath idAndPath) {
+    private Mono<Void> migrate(CassandraIdAndPath idAndPath) {
         return daoV2.save(idAndPath.getMailboxPath(), idAndPath.getCassandraId())
             .then(daoV1.delete(idAndPath.getMailboxPath()))
-            .thenReturn(Result.COMPLETED)
-            .onErrorResume(error -> handleErrorMigrate(idAndPath, error));
+            .onErrorResume(error -> handleErrorMigrate(idAndPath, error))
+            .then();
     }
 
-    private Mono<Result> handleErrorMigrate(CassandraIdAndPath idAndPath, Throwable throwable) {
+    private Mono<Void> handleErrorMigrate(CassandraIdAndPath idAndPath, Throwable throwable) {
         LOGGER.error("Error while performing migration for path {}", idAndPath.getMailboxPath(), throwable);
-        return Mono.just(Result.PARTIAL);
+        return Mono.empty();
     }
 
     @Override
-    public String type() {
-        return "Cassandra_mailboxPathV2Migration";
+    public Task asTask() {
+        return new Task() {
+            @Override
+            public Result run() throws InterruptedException {
+                return runTask();
+            }
+
+            @Override
+            public String type() {
+                return "Cassandra_mailboxPathV2Migration";
+            }
+
+            @Override
+            public Optional<TaskExecutionDetails.AdditionalInformation> details() {
+                return Optional.of(additionalInformation);
+            }
+        };
     }
 
-    @Override
-    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(additionalInformation);
-    }
 }

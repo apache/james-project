@@ -26,7 +26,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.james.backends.cassandra.migration.CassandraMigrationService;
-import org.apache.james.backends.cassandra.migration.Migration;
+import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
@@ -107,7 +107,7 @@ public class CassandraMigrationRoutes implements Routes {
     })
     public Object upgradeToLatest(Response response) {
         try {
-            Migration migration = cassandraMigrationService.upgradeToLastVersion();
+            Task migration = cassandraMigrationService.upgradeToLastVersion();
             TaskId taskId = taskManager.submit(migration);
             return TaskIdDto.respond(response, taskId);
         } catch (IllegalStateException e) {
@@ -143,7 +143,7 @@ public class CassandraMigrationRoutes implements Routes {
         LOGGER.debug("Cassandra upgrade launched");
         try {
             CassandraVersionRequest cassandraVersionRequest = CassandraVersionRequest.parse(request.body());
-            Migration migration = cassandraMigrationService.upgradeToVersion(cassandraVersionRequest.getValue());
+            Task migration = cassandraMigrationService.upgradeToVersion(cassandraVersionRequest.getValue());
             TaskId taskId = taskManager.submit(migration);
             return TaskIdDto.from(taskId);
         } catch (NullPointerException | IllegalArgumentException e) {

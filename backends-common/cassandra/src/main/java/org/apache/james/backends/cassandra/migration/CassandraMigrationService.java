@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.IntStream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -34,6 +33,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.SchemaTransition;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
+import org.apache.james.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +59,7 @@ public class CassandraMigrationService {
         return Optional.of(latestVersion);
     }
 
-    public Migration upgradeToVersion(SchemaVersion newVersion) {
+    public Task upgradeToVersion(SchemaVersion newVersion) {
         SchemaVersion currentVersion = getCurrentVersion().orElse(DEFAULT_VERSION);
 
         List<Migration> migrations = new ArrayList<>();
@@ -82,7 +82,7 @@ public class CassandraMigrationService {
         return transition;
     }
 
-    public Migration upgradeToLastVersion() {
+    public Task upgradeToLastVersion() {
         return upgradeToVersion(latestVersion);
     }
 
@@ -91,11 +91,11 @@ public class CassandraMigrationService {
             SchemaVersion currentVersion = getCurrentVersion().orElse(DEFAULT_VERSION);
             SchemaVersion targetVersion = transition.to();
             if (currentVersion.isAfterOrEquals(targetVersion)) {
-                return Migration.Result.COMPLETED;
+                return;
             }
 
             logger.info("Migrating to version {} ", transition.toAsString());
-            return allMigrationClazz.get(transition).run()
+            allMigrationClazz.get(transition).asTask().run()
                 .onComplete(() -> schemaVersionDAO.updateVersion(transition.to()).block(),
                     () -> logger.info("Migrating to version {} done", transition.toAsString()))
                 .onFailure(() -> logger.warn(failureMessage(transition.to())),

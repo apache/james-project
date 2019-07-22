@@ -33,13 +33,13 @@ import reactor.core.publisher.Mono;
 public class CassandraMappingsSolveInconsistenciesTask implements Task {
     public static final String TYPE = "cassandraMappingsSolveInconsistencies";
 
-    private final MappingsSourcesMigration mappingsSourcesMigration;
+    private final Task mappingsSourcesMigration;
     private final CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO;
 
     @Inject
     CassandraMappingsSolveInconsistenciesTask(MappingsSourcesMigration mappingsSourcesMigration,
                                               CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO) {
-        this.mappingsSourcesMigration = mappingsSourcesMigration;
+        this.mappingsSourcesMigration = mappingsSourcesMigration.asTask();
         this.cassandraMappingsSourcesDAO = cassandraMappingsSourcesDAO;
     }
 

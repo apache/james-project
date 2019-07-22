@@ -31,7 +31,6 @@ import java.util.stream.IntStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;
@@ -75,22 +74,22 @@ class MappingsSourcesMigrationTest {
     }
 
     @Test
-    void emptyMigrationShouldSucceed() {
-        assertThat(migration.run()).isEqualTo(Migration.Result.COMPLETED);
+    void emptyMigrationShouldSucceed() throws InterruptedException {
+        assertThat(migration.asTask().run()).isEqualTo(Task.Result.COMPLETED);
     }
 
     @Test
-    void migrationShouldSucceedWithData() {
+    void migrationShouldSucceedWithData() throws InterruptedException {
         cassandraRecipientRewriteTableDAO.addMapping(SOURCE, MAPPING).block();
 
-        assertThat(migration.run()).isEqualTo(Task.Result.COMPLETED);
+        assertThat(migration.asTask().run()).isEqualTo(Task.Result.COMPLETED);
     }
 
     @Test
     void migrationShouldCreateMappingSourceFromMapping() {
         cassandraRecipientRewriteTableDAO.addMapping(SOURCE, MAPPING).block();
 
-        migration.run();
+        migration.apply();
 
         assertThat(cassandraMappingsSourcesDAO.retrieveSources(MAPPING).collectList().block())
             .containsExactly(SOURCE);
@@ -106,7 +105,7 @@ class MappingsSourcesMigrationTest {
         cassandraRecipientRewriteTableDAO.addMapping(SOURCE, MAPPING).block();
         cassandraRecipientRewriteTableDAO.addMapping(source2, MAPPING).block();
 
-        migration.run();
+        migration.apply();
 
         assertThat(cassandraMappingsSourcesDAO.retrieveSources(MAPPING).collectList().block())
             .containsOnly(SOURCE, source2);
@@ -116,20 +115,20 @@ class MappingsSourcesMigrationTest {
     }
 
     @Test
-    void migrationShouldReturnPartialWhenGetAllMappingsFromMappingsFail() {
+    void migrationShouldReturnPartialWhenGetAllMappingsFromMappingsFail() throws InterruptedException {
         CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO = mock(CassandraRecipientRewriteTableDAO.class);
         CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO = mock(CassandraMappingsSourcesDAO.class);
         migration = new MappingsSourcesMigration(cassandraRecipientRewriteTableDAO, cassandraMappingsSourcesDAO);
 
         when(cassandraRecipientRewriteTableDAO.getAllMappings()).thenReturn(Flux.error(new RuntimeException()));
 
-        assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
+        assertThat(migration.asTask().run()).isEqualTo(Task.Result.PARTIAL);
         assertThat(migration.createAdditionalInformation().getSuccessfulMappingsCount()).isEqualTo(0);
         assertThat(migration.createAdditionalInformation().getErrorMappingsCount()).isEqualTo(0);
     }
 
     @Test
-    void migrationShouldReturnPartialAddMappingFails() {
+    void migrationShouldReturnPartialAddMappingFails() throws InterruptedException {
         CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO = mock(CassandraRecipientRewriteTableDAO.class);
         CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO = mock(CassandraMappingsSourcesDAO.class);
         migration = new MappingsSourcesMigration(cassandraRecipientRewriteTableDAO, cassandraMappingsSourcesDAO);
@@ -139,13 +138,13 @@ class MappingsSourcesMigrationTest {
         when(cassandraMappingsSourcesDAO.addMapping(any(Mapping.class), any(MappingSource.class)))
             .thenReturn(Mono.error(new RuntimeException()));
 
-        assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
+        assertThat(migration.asTask().run()).isEqualTo(Task.Result.PARTIAL);
         assertThat(migration.createAdditionalInformation().getSuccessfulMappingsCount()).isEqualTo(0);
         assertThat(migration.createAdditionalInformation().getErrorMappingsCount()).isEqualTo(1);
     }
 
     @Test
-    void migrationShouldHaveCorrectErrorCountWhenMultipleAddMappingFails() {
+    void migrationShouldHaveCorrectErrorCountWhenMultipleAddMappingFails() throws InterruptedException {
         MappingSource source2 = MappingSource.fromUser("bob", Domain.LOCALHOST);
 
         CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO = mock(CassandraRecipientRewriteTableDAO.class);
@@ -159,7 +158,7 @@ class MappingsSourcesMigrationTest {
         when(cassandraMappingsSourcesDAO.addMapping(any(Mapping.class), any(MappingSource.class)))
             .thenReturn(Mono.error(new RuntimeException()));
 
-        assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
+        assertThat(migration.asTask().run()).isEqualTo(Task.Result.PARTIAL);
         assertThat(migration.createAdditionalInformation().getSuccessfulMappingsCount()).isEqualTo(0);
         assertThat(migration.createAdditionalInformation().getErrorMappingsCount()).isEqualTo(2);
     }
@@ -171,7 +170,7 @@ class MappingsSourcesMigrationTest {
                 .addMapping(MappingSource.parse("source" + i + "@domain"), MAPPING).block());
 
         ConcurrentTestRunner.builder()
-            .operation((threadNumber, step) -> migration.run())
+            .operation((threadNumber, step) -> migration.apply())
             .threadCount(THREAD_COUNT)
             .operationCount(OPERATION_COUNT)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
