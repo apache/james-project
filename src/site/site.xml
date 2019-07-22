@@ -114,42 +114,42 @@
 
                     </item>
                     <item name="4. Configure James" href="/server/config.html" collapse="true" >
-                        <item name="System" href="/server/config-system.html" />
-                        <item name="Domain List" href="/server/config-domainlist.html" />
-                        <item name="Users" href="/server/config-users.html" />
-                        <item name="Recipient Rewrite" href="/server/config-recipientrewritetable.html" />
-                        <item name="Mailbox" href="/server/config-mailbox.html" />
-                        <item name="Mail Repository Stores" href="/server/config-mailrepositorystore.html" />
+                        <item name="Additional mailbox listeners" href="/server/config-listeners.html" />
+                        <item name="Anti Spam" href="/server/config-antispam.html" />
+                        <item name="Blob Export" href="/server/config-blob-export.html" />
+                        <item name="BlobStore" href="/server/config-blobstore.html" />
+                        <item name="Cassandra" href="/server/config-cassandra.html" />
+                        <item name="ElasticSearch" href="/server/config-elasticsearch.html" />
                         <item name="DNS Service" href="/server/config-dnsservice.html" />
-                        <item name="SMTP LMTP" href="/server/config-smtp-lmtp.html" />
-                        <item name="POP3" href="/server/config-pop3.html" />
+                        <item name="Domain List" href="/server/config-domainlist.html" />
+                        <item name="Events" href="/server/config-events.html" />
+                        <item name="FetchMail" href="/server/config-fetchmail.html" />
+                        <item name="Guice" href="/server/config-guice.html" />
                         <item name="IMAP4" href="/server/config-imap4.html" />
                         <item name="JMAP" href="/server/config-jmap.html" />
+                        <item name="Mail Repository Stores" href="/server/config-mailrepositorystore.html" />
+                        <item name="Mailbox" href="/server/config-mailbox.html" />
                         <item name="Mailet Container" href="/server/config-mailetcontainer.html" />
-                        <item name="FetchMail" href="/server/config-fetchmail.html" />
-                        <item name="SSL/TLS" href="/server/config-ssl-tls.html" />
-                        <item name="Sieve" href="/server/config-sieve.html" />
-                        <item name="Anti Spam" href="/server/config-antispam.html" />
-                        <item name="Guice" href="/server/config-guice.html" />
-                        <item name="ElasticSearch" href="/server/config-elasticsearch.html" />
-                        <item name="Cassandra" href="/server/config-cassandra.html" />
-                        <item name="RabbitMQ" href="/server/config-rabbitmq.html" />
-                        <item name="BlobStore" href="/server/config-blobstore.html" />
-                        <item name="Blob Export" href="/server/config-blob-export.html" />
-                        <item name="Spring JPA Postgres" href="/server/config-spring-jpa-postgres.html" />
+                        <item name="POP3" href="/server/config-pop3.html" />
                         <item name="Quota" href="/server/config-quota.html" />
-                        <item name="Events" href="/server/config-events.html" />
-                        <item name="Additional mailbox listeners" href="/server/config-listeners.html" />
+                        <item name="RabbitMQ" href="/server/config-rabbitmq.html" />
+                        <item name="Recipient Rewrite" href="/server/config-recipientrewritetable.html" />
+                        <item name="SMTP LMTP" href="/server/config-smtp-lmtp.html" />
+                        <item name="Sieve" href="/server/config-sieve.html" />
+                        <item name="SSL/TLS" href="/server/config-ssl-tls.html" />
+                        <item name="System" href="/server/config-system.html" />
+                        <item name="Spring JPA Postgres" href="/server/config-spring-jpa-postgres.html" />
+                        <item name="Users" href="/server/config-users.html" />
                     </item>
                     <item name="5. Manage" href="/server/manage.html" collapse="true" >
-                        <item name="WebAdmin" href="/server/manage-webadmin.html" />
                         <item name="Command line" href="/server/manage-cli.html" />
                         <item name="Metrics" href="/server/metrics.html" />
+                        <item name="WebAdmin" href="/server/manage-webadmin.html" />
                     </item>
                     <item name="6. Monitor" href="/server/monitor.html" collapse="true" >
-                        <item name="Logging" href="/server/monitor-logging.html" />
-                        <item name="JMX" href="/server/monitor-jmx.html" />
                         <item name="Folders" href="/server/monitor-folders.html" />
+                        <item name="JMX" href="/server/monitor-jmx.html" />
+                        <item name="Logging" href="/server/monitor-logging.html" />
                     </item>
                     <item name="7. Upgrade" href="/server/upgrade.html" collapse="true" >
                         <item name="Upgrade from 2.3" href="/server/upgrade-2.3.html" />

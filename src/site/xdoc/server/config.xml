@@ -52,30 +52,15 @@
         <th>Config Area</th>
         <th>Config Comment</th>
       </tr>
-    
+
+      <tr>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/dnsservice.xml">dnsservice.xml</a></td>
+        <td><a href="config-dnsservice.html">DNS Service Configuration</a></td>
+        <td></td>
+      </tr>
       <tr>
         <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/domainlist.xml">domainlist.xml</a></td>
         <td><a href="config-domainlist.html">Domain List Configuration</a></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/usersrepository.xml">usersrepository.xml</a></td>
-        <td><a href="config-users.html">Users Configuration</a></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/recipientrewritetable.xml">recipientrewritetable.xml</a></td>
-        <td><a href="config-recipientrewritetable.html">Recipient Rewrite Table Configuration</a></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailbox.xml">mailbox.xml</a></td>
-        <td><a href="config-mailbox.html">Mailbox Configuration (Spring only)</a></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/quota.xml">mailbox.xml</a></td>
-        <td><a href="config-quota.html">Quota Configuration (Spring only)</a></td>
         <td></td>
       </tr>
       <tr>
@@ -84,28 +69,8 @@
         <td></td>
       </tr>
       <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailrepositorystore.xml">mailrepositorystore.xml</a></td>
-        <td><a href="config-mailrepositorystore.html">Mail Repository Stores Configuration</a></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/dnsservice.xml">dnsservice.xml</a></td>
-        <td><a href="config-dnsservice.html">DNS Service Configuration</a></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/smtpserver.xml">smtpserver.xml</a></td>
-        <td><a href="config-smtp-lmtp.html">SMTP Configuration</a></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/lmtpserver.xml">lmtpserver.xml</a></td>
-        <td><a href="config-smtp-lmtp.html">LMTP Configuration</a></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/pop3server.xml">pop3server.xml</a></td>
-        <td><a href="config-pop3.html">POP3 Configuration</a></td>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/fetchmail.xml">fetchmail.xml</a></td>
+        <td><a href="config-fetchmail.html">FetchMail Configuration (Spring only)</a></td>
         <td></td>
       </tr>
       <tr>
@@ -114,28 +79,58 @@
         <td></td>
       </tr>
       <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailetcontainer.xml">mailetcontainer.xml</a></td>
-        <td><a href="config-mailetcontainer.html">Mailet Container Configuration</a></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/fetchmail.xml">fetchmail.xml</a></td>
-        <td><a href="config-fetchmail.html">FetchMail Configuration (Spring only)</a></td>
-        <td></td>
-      </tr>
-      <tr>
         <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/jmap.properties">jmap.properties</a></td>
         <td><a href="config-jmap.html">JMAP Configuration (Guice only)</a></td>
         <td></td>
       </tr>
       <tr>
-        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-ldap/destination/conf/webadmin.properties">webadmin.properties</a></td>
-        <td><a href="config-webadmin.html">WebAdmin Configuration</a></td>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/lmtpserver.xml">lmtpserver.xml</a></td>
+        <td><a href="config-smtp-lmtp.html">LMTP Configuration</a></td>
         <td></td>
       </tr>
       <tr>
-        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/deletedMessageVault.properties">deletedMessageVault.properties</a></td>
-        <td><a href="config-vault.html">Deleted Messages Vault Configuration</a></td>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailrepositorystore.xml">mailrepositorystore.xml</a></td>
+        <td><a href="config-mailrepositorystore.html">Mail Repository Stores Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailbox.xml">mailbox.xml</a></td>
+        <td><a href="config-mailbox.html">Mailbox Configuration (Spring only)</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/mailetcontainer.xml">mailetcontainer.xml</a></td>
+        <td><a href="config-mailetcontainer.html">Mailet Container Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/pop3server.xml">pop3server.xml</a></td>
+        <td><a href="config-pop3.html">POP3 Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/quota.xml">mailbox.xml</a></td>
+        <td><a href="config-quota.html">Quota Configuration (Spring only)</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/recipientrewritetable.xml">recipientrewritetable.xml</a></td>
+        <td><a href="config-recipientrewritetable.html">Recipient Rewrite Table Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/smtpserver.xml">smtpserver.xml</a></td>
+        <td><a href="config-smtp-lmtp.html">SMTP Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/usersrepository.xml">usersrepository.xml</a></td>
+        <td><a href="config-users.html">Users Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-ldap/destination/conf/webadmin.properties">webadmin.properties</a></td>
+        <td><a href="config-webadmin.html">WebAdmin Configuration</a></td>
         <td></td>
       </tr>
 

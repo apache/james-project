@@ -48,8 +48,23 @@
       </tr>
 
       <tr>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties">blob.properties</a></td>
+        <td><a href="config-blob-export.html">Blob Export Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties">blob.properties</a></td>
+        <td><a href="config-blobstore.html">BlobStore Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
         <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/cassandra.properties">cassandra.properties</a></td>
         <td><a href="config-cassandra.html">Cassandra Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/deletedMessageVault.properties">deletedMessageVault.properties</a></td>
+        <td><a href="config-vault.html">Deleted Messages Vault Configuration</a></td>
         <td></td>
       </tr>
       <tr>
@@ -60,11 +75,6 @@
       <tr>
         <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/elasticsearch.properties">elasticsearch.properties</a></td>
         <td><a href="config-elasticsearch.html">ElasticSearch Configuration</a></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties">rabbitmq.properties</a></td>
-        <td><a href="config-rabbitmq.html">RabbitMQ Configuration</a></td>
         <td></td>
       </tr>
       <tr>
@@ -88,18 +98,13 @@
         <td></td>
       </tr>
       <tr>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties">rabbitmq.properties</a></td>
+        <td><a href="config-rabbitmq.html">RabbitMQ Configuration</a></td>
+        <td></td>
+      </tr>
+      <tr>
         <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/smtpserver.xml">smtpserver.xml</a></td>
         <td><a href="config-smtp-lmtp.html">SMTP Configuration</a></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties">blob.properties</a></td>
-        <td><a href="config-blob-export.html">Blob Export Configuration</a></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties">blob.properties</a></td>
-        <td><a href="config-blobstore.html">BlobStore Configuration</a></td>
         <td></td>
       </tr>
     </table>
