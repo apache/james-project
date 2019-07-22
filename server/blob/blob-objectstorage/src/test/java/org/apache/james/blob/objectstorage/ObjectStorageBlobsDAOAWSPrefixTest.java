@@ -22,6 +22,7 @@ package org.apache.james.blob.objectstorage;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketBlobStoreContract;
+import org.apache.james.blob.api.DeleteBlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
@@ -35,7 +36,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
-public class ObjectStorageBlobsDAOAWSPrefixTest implements MetricableBlobStoreContract, BucketBlobStoreContract {
+public class ObjectStorageBlobsDAOAWSPrefixTest implements MetricableBlobStoreContract, BucketBlobStoreContract, DeleteBlobStoreContract {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
     private BlobStore testee;
@@ -79,8 +80,8 @@ public class ObjectStorageBlobsDAOAWSPrefixTest implements MetricableBlobStoreCo
     }
 
     @Override
-    @Disabled("JAMES-2829 Not supported yet")
-    public void deleteShouldPublishDeleteTimerMetrics() {
+    @Disabled("JAMES-2829 Unstable with scality/S3 impl")
+    public void readShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() {
 
     }
 }

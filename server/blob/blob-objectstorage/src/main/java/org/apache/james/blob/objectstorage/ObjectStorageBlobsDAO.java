@@ -28,7 +28,6 @@ import java.util.function.Supplier;
 import javax.annotation.PreDestroy;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
@@ -205,6 +204,8 @@ public class ObjectStorageBlobsDAO implements BlobStore {
 
     @Override
     public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
-        throw new NotImplementedException("not implemented");
+        ObjectStorageBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+        return Mono.<Void>fromRunnable(() -> blobStore.removeBlob(resolvedBucketName.asString(), blobId.asString()))
+            .subscribeOn(Schedulers.elastic());
     }
 }

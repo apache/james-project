@@ -169,6 +169,6 @@ public interface DeleteBlobStoreContract {
             }))
             .threadCount(10)
             .operationCount(10)
-            .runSuccessfullyWithin(Duration.ofMinutes(1));
+            .runSuccessfullyWithin(Duration.ofMinutes(3));
     }
 }
