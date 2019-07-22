@@ -21,6 +21,8 @@ package org.apache.james.backends.cassandra.migration;
 
 import static org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.DEFAULT_VERSION;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -60,17 +62,18 @@ public class CassandraMigrationService {
     public Migration upgradeToVersion(SchemaVersion newVersion) {
         SchemaVersion currentVersion = getCurrentVersion().orElse(DEFAULT_VERSION);
 
-        Migration migrationCombination = IntStream.range(currentVersion.getValue(), newVersion.getValue())
-            .mapToObj(SchemaVersion::new)
-            .map(SchemaVersion::next)
-            .map(SchemaTransition::to)
-            .map(this::validateVersionNumber)
-            .map(this::toMigration)
-            .reduce(Migration.IDENTITY, Migration::combine);
-        return new MigrationTask(migrationCombination, newVersion);
+        List<Migration> migrations = new ArrayList<>();
+        SchemaVersion migrateTo = currentVersion.next();
+        while (newVersion.isAfterOrEquals(migrateTo)) {
+            SchemaTransition transition = SchemaTransition.to(migrateTo);
+            validateTransitionExists(transition);
+            migrations.add(toMigration(transition));
+            migrateTo = migrateTo.next();
+        }
+        return new MigrationTask(migrations, newVersion);
     }
 
-    private SchemaTransition validateVersionNumber(SchemaTransition transition) {
+    private SchemaTransition validateTransitionExists(SchemaTransition transition) {
         if (!allMigrationClazz.containsKey(transition)) {
             String message = String.format("Can not migrate from %s to %s. No migration class registered.", transition.fromAsString(), transition.toAsString());
             logger.error(message);

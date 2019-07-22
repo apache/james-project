@@ -19,10 +19,13 @@
 
 package org.apache.james.backends.cassandra.migration;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.task.TaskExecutionDetails;
+
+import com.google.common.collect.ImmutableList;
 
 public class MigrationTask implements Migration {
     public static final String CASSANDRA_MIGRATION = "CassandraMigration";
@@ -39,17 +42,20 @@ public class MigrationTask implements Migration {
         }
     }
 
-    private final Migration migration;
+    private final ImmutableList<Migration> migrations;
     private final SchemaVersion toVersion;
 
-    public MigrationTask(Migration migration, SchemaVersion toVersion) {
-        this.migration = migration;
+    public MigrationTask(List<Migration> migration, SchemaVersion toVersion) {
+        this.migrations = ImmutableList.copyOf(migration);
         this.toVersion = toVersion;
     }
 
     @Override
     public Result run() throws InterruptedException {
-        return migration.run();
+        for (Migration migration: migrations) {
+            migration.run();
+        }
+        return Result.COMPLETED;
     }
 
     @Override

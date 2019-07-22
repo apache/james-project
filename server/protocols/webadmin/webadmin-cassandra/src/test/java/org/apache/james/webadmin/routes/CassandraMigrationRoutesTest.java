@@ -41,6 +41,7 @@ import org.apache.james.backends.cassandra.migration.CassandraMigrationService;
 import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.backends.cassandra.migration.MigrationTask;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.SchemaTransition;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.webadmin.WebAdminServer;
@@ -62,6 +63,8 @@ public class CassandraMigrationRoutesTest {
     private static final SchemaVersion LATEST_VERSION = new SchemaVersion(3);
     private static final SchemaVersion CURRENT_VERSION = new SchemaVersion(2);
     private static final SchemaVersion OLDER_VERSION = new SchemaVersion(1);
+    private static final SchemaTransition FROM_OLDER_TO_CURRENT = SchemaTransition.to(CURRENT_VERSION);
+    private static final SchemaTransition FROM_CURRENT_TO_LATEST = SchemaTransition.to(LATEST_VERSION);
     private WebAdminServer webAdminServer;
     private CassandraSchemaVersionDAO schemaVersionDAO;
     private MemoryTaskManager taskManager;
@@ -70,11 +73,10 @@ public class CassandraMigrationRoutesTest {
         Migration successfulMigration = mock(Migration.class);
         when(successfulMigration.run()).thenReturn(Migration.Result.COMPLETED);
 
-        Map<SchemaVersion, Migration> allMigrationClazz = ImmutableMap.<SchemaVersion, Migration>builder()
-            .put(OLDER_VERSION, successfulMigration)
-            .put(CURRENT_VERSION, successfulMigration)
-            .put(LATEST_VERSION, successfulMigration)
-            .build();
+        Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(
+            FROM_OLDER_TO_CURRENT, successfulMigration,
+            FROM_CURRENT_TO_LATEST, successfulMigration);
+
         schemaVersionDAO = mock(CassandraSchemaVersionDAO.class);
         when(schemaVersionDAO.updateVersion(any())).thenReturn(Mono.empty());
 
