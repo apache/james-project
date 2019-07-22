@@ -68,16 +68,17 @@ public class CassandraMigrationServiceTest {
     @Before
     public void setUp() throws Exception {
         schemaVersionDAO = mock(CassandraSchemaVersionDAO.class);
+        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.empty()));
         when(schemaVersionDAO.updateVersion(any())).thenReturn(Mono.empty());
 
         Task successFulTask = mock(Task.class);
         when(successFulTask.run()).thenReturn(Task.Result.COMPLETED);
         successfulMigration = mock(Migration.class);
         when(successfulMigration.asTask()).thenReturn(successFulTask);
-        Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(
+        CassandraSchemaTransitions transitions = new CassandraSchemaTransitions(ImmutableMap.of(
             FROM_OLDER_TO_CURRENT, successfulMigration,
-            FROM_CURRENT_TO_LATEST, successfulMigration);
-        testee = new CassandraMigrationService(schemaVersionDAO, allMigrationClazz, LATEST_VERSION);
+            FROM_CURRENT_TO_LATEST, successfulMigration));
+        testee = new CassandraMigrationService(schemaVersionDAO, transitions, version -> new MigrationTask(schemaVersionDAO, transitions, version), LATEST_VERSION);
         executorService = Executors.newFixedThreadPool(2,
             NamedThreadFactory.withClassName(getClass()));
     }
@@ -137,9 +138,9 @@ public class CassandraMigrationServiceTest {
 
     @Test
     public void upgradeToVersionShouldThrowOnMissingVersion() throws InterruptedException {
-        Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(FROM_OLDER_TO_CURRENT, successfulMigration);
+        CassandraSchemaTransitions transitions = new CassandraSchemaTransitions(ImmutableMap.of(FROM_OLDER_TO_CURRENT, successfulMigration));
 
-        testee = new CassandraMigrationService(schemaVersionDAO, allMigrationClazz, LATEST_VERSION);
+        testee = new CassandraMigrationService(schemaVersionDAO, transitions, version -> new MigrationTask(schemaVersionDAO, transitions, version), LATEST_VERSION);
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(OLDER_VERSION)));
 
         expectedException.expect(NotImplementedException.class);
@@ -150,13 +151,13 @@ public class CassandraMigrationServiceTest {
     @Test
     public void upgradeToVersionShouldUpdateIntermediarySuccessfulMigrationsInCaseOfError() throws InterruptedException {
         try {
-            Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(
+            CassandraSchemaTransitions transitions = new CassandraSchemaTransitions(ImmutableMap.of(
                 FROM_OLDER_TO_CURRENT, successfulMigration,
                 FROM_CURRENT_TO_LATEST, () -> {
                     throw new RuntimeException();
-                });
+                }));
 
-            testee = new CassandraMigrationService(schemaVersionDAO, allMigrationClazz, LATEST_VERSION);
+            testee = new CassandraMigrationService(schemaVersionDAO, transitions, version -> new MigrationTask(schemaVersionDAO, transitions, version), LATEST_VERSION);
             when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(OLDER_VERSION)));
 
             expectedException.expect(RuntimeException.class);
@@ -169,16 +170,17 @@ public class CassandraMigrationServiceTest {
 
     @Test
     public void partialMigrationShouldThrow() throws InterruptedException {
+        InMemorySchemaDAO schemaVersionDAO = new InMemorySchemaDAO(OLDER_VERSION);
         Task failingTask = mock(Task.class);
         when(failingTask.run()).thenThrow(MigrationException.class);
         Migration migration1 = failingTask::run;
         Migration migration2 = successfulMigration;
 
-        Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(
+        CassandraSchemaTransitions transitions = new CassandraSchemaTransitions(ImmutableMap.of(
             FROM_OLDER_TO_CURRENT, migration1,
-            FROM_CURRENT_TO_LATEST, migration2);
+            FROM_CURRENT_TO_LATEST, migration2));
 
-        testee = new CassandraMigrationService(new InMemorySchemaDAO(OLDER_VERSION), allMigrationClazz, LATEST_VERSION);
+        testee = new CassandraMigrationService(schemaVersionDAO, transitions, version -> new MigrationTask(schemaVersionDAO, transitions, version), LATEST_VERSION);
 
         expectedException.expect(MigrationException.class);
 
@@ -187,16 +189,17 @@ public class CassandraMigrationServiceTest {
 
     @Test
     public void partialMigrationShouldAbortMigrations() throws InterruptedException {
+        InMemorySchemaDAO schemaVersionDAO = new InMemorySchemaDAO(OLDER_VERSION);
         Task failingTask = mock(Task.class);
         when(failingTask.run()).thenThrow(MigrationException.class);
         Migration migration1 = failingTask::run;
         Migration migration2 = mock(Migration.class);
 
-        Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(
+        CassandraSchemaTransitions transitions = new CassandraSchemaTransitions(ImmutableMap.of(
                 FROM_OLDER_TO_CURRENT, migration1,
-                FROM_CURRENT_TO_LATEST, migration2);
+                FROM_CURRENT_TO_LATEST, migration2));
 
-        testee = new CassandraMigrationService(new InMemorySchemaDAO(OLDER_VERSION), allMigrationClazz, LATEST_VERSION);
+        testee = new CassandraMigrationService(schemaVersionDAO, transitions, version -> new MigrationTask(schemaVersionDAO, transitions, version), LATEST_VERSION);
 
         expectedException.expect(MigrationException.class);
 

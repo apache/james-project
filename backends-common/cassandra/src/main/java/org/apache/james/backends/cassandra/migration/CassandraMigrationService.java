@@ -21,8 +21,6 @@ package org.apache.james.backends.cassandra.migration;
 
 import static org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.DEFAULT_VERSION;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -36,20 +34,21 @@ import org.apache.james.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
-
 public class CassandraMigrationService {
     public static final String LATEST_VERSION = "latestVersion";
     private final CassandraSchemaVersionDAO schemaVersionDAO;
+    private final CassandraSchemaTransitions transitions;
+    private final MigrationTask.Factory taskFactory;
     private final SchemaVersion latestVersion;
-    private final Map<SchemaTransition, Migration> allMigrationClazz;
     private final Logger logger = LoggerFactory.getLogger(CassandraMigrationService.class);
 
     @Inject
-    public CassandraMigrationService(CassandraSchemaVersionDAO schemaVersionDAO, Map<SchemaTransition, Migration> allMigrationClazz, @Named(LATEST_VERSION) SchemaVersion latestVersion) {
+    public CassandraMigrationService(CassandraSchemaVersionDAO schemaVersionDAO, CassandraSchemaTransitions transitions,
+                                     MigrationTask.Factory factory, @Named(LATEST_VERSION) SchemaVersion latestVersion) {
         this.schemaVersionDAO = schemaVersionDAO;
+        this.transitions = transitions;
+        this.taskFactory = factory;
         this.latestVersion = latestVersion;
-        this.allMigrationClazz = allMigrationClazz;
     }
 
     public Optional<SchemaVersion> getCurrentVersion() {
@@ -61,53 +60,24 @@ public class CassandraMigrationService {
     }
 
     public Task upgradeToVersion(SchemaVersion target) {
-        SchemaVersion currentVersion = getCurrentVersion().orElse(DEFAULT_VERSION);
-
-        List<Migration> migrations = currentVersion.listTransitionsForTarget(target)
-                .stream()
-                .map(this::validateTransitionExists)
-                .map(this::toMigration)
-                .collect(Guavate.toImmutableList());
-        return new MigrationTask(migrations, target);
+        checkTarget(target);
+        return taskFactory.create(target);
     }
 
-    private SchemaTransition validateTransitionExists(SchemaTransition transition) {
-        if (!allMigrationClazz.containsKey(transition)) {
+    private void checkTarget(SchemaVersion target) {
+        getCurrentVersion().orElse(DEFAULT_VERSION).listTransitionsForTarget(target).forEach(this::checkMigration);
+    }
+
+    private void checkMigration(SchemaTransition transition) {
+        transitions.findMigration(transition).orElseThrow(() -> {
             String message = String.format("Can not migrate from %s to %s. No migration class registered.", transition.fromAsString(), transition.toAsString());
             logger.error(message);
-            throw new NotImplementedException(message);
-        }
-        return transition;
+            return new NotImplementedException(message);
+        });
     }
 
     public Task upgradeToLastVersion() {
         return upgradeToVersion(latestVersion);
-    }
-
-    private Migration toMigration(SchemaTransition transition) {
-        return () -> {
-            SchemaVersion currentVersion = getCurrentVersion().orElse(DEFAULT_VERSION);
-            SchemaVersion targetVersion = transition.to();
-            if (currentVersion.isAfterOrEquals(targetVersion)) {
-                return;
-            }
-
-            logger.info("Migrating to version {} ", transition.toAsString());
-            allMigrationClazz.get(transition).asTask().run()
-                .onComplete(() -> schemaVersionDAO.updateVersion(transition.to()).block(),
-                    () -> logger.info("Migrating to version {} done", transition.toAsString()))
-                .onFailure(() -> logger.warn(failureMessage(transition.to())),
-                    () -> throwMigrationException(transition.to()));
-        };
-    }
-
-    private void throwMigrationException(SchemaVersion newVersion) {
-        throw new MigrationException(failureMessage(newVersion));
-    }
-
-    private String failureMessage(SchemaVersion newVersion) {
-        return String.format("Migrating to version %d partially done. " +
-                "Please check logs for cause of failure and re-run this migration.", newVersion.getValue());
     }
 
 }

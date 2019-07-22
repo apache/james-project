@@ -19,16 +19,49 @@
 
 package org.apache.james.backends.cassandra.migration;
 
-import java.util.List;
+import static org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.DEFAULT_VERSION;
+
 import java.util.Optional;
 
+import javax.inject.Inject;
+
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.SchemaTransition;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
+import com.github.fge.lambdas.Throwing;
+import com.google.common.annotations.VisibleForTesting;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 public class MigrationTask implements Task {
+
+    public interface Factory {
+        MigrationTask create(SchemaVersion target);
+    }
+
+    public static class Impl implements Factory {
+        private final CassandraSchemaVersionDAO schemaVersionDAO;
+        private final CassandraSchemaTransitions transitions;
+
+        @Inject
+        private Impl(CassandraSchemaVersionDAO schemaVersionDAO, CassandraSchemaTransitions transitions) {
+            this.schemaVersionDAO = schemaVersionDAO;
+            this.transitions = transitions;
+        }
+
+        @Override
+        public MigrationTask create(SchemaVersion target) {
+            return new MigrationTask(schemaVersionDAO, transitions, target);
+        }
+    }
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MigrationTask.class);
+
     public static final String CASSANDRA_MIGRATION = "CassandraMigration";
 
     public static class Details implements TaskExecutionDetails.AdditionalInformation {
@@ -43,20 +76,64 @@ public class MigrationTask implements Task {
         }
     }
 
-    private final ImmutableList<Migration> migrations;
-    private final SchemaVersion toVersion;
+    private final CassandraSchemaVersionDAO schemaVersionDAO;
+    private final CassandraSchemaTransitions transitions;
+    private final SchemaVersion target;
 
-    public MigrationTask(List<Migration> migration, SchemaVersion toVersion) {
-        this.migrations = ImmutableList.copyOf(migration);
-        this.toVersion = toVersion;
+    @VisibleForTesting
+    public MigrationTask(CassandraSchemaVersionDAO schemaVersionDAO, CassandraSchemaTransitions transitions, SchemaVersion target) {
+        this.schemaVersionDAO = schemaVersionDAO;
+        this.transitions = transitions;
+        this.target = target;
     }
 
     @Override
-    public Result run() throws InterruptedException {
-        for (Migration migration: migrations) {
-            migration.asTask().run();
-        }
+    public Result run() {
+        getCurrentVersion().listTransitionsForTarget(target)
+                .stream()
+                .map(this::migration)
+                .forEach(Throwing.consumer(this::runMigration).sneakyThrow());
         return Result.COMPLETED;
+    }
+
+    private SchemaVersion getCurrentVersion() {
+        return schemaVersionDAO.getCurrentSchemaVersion().block().orElse(DEFAULT_VERSION);
+    }
+
+    private Tuple2<SchemaTransition, Migration> migration(SchemaTransition transition) {
+        return Tuples.of(
+                transition,
+                transitions.findMigration(transition)
+                        .orElseThrow(() -> new MigrationException("unable to find a required Migration for transition " + transition)));
+
+    }
+
+    private void runMigration(Tuple2<SchemaTransition, Migration> tuple) throws InterruptedException {
+        SchemaVersion currentVersion = getCurrentVersion();
+        SchemaTransition transition = tuple.getT1();
+        SchemaVersion targetVersion = transition.to();
+        if (currentVersion.isAfterOrEquals(targetVersion)) {
+            return;
+        }
+
+        LOGGER.info("Migrating to version {} ", transition.toAsString());
+        Migration migration = tuple.getT2();
+        migration.asTask().run()
+                .onComplete(
+                        () -> schemaVersionDAO.updateVersion(transition.to()).block(),
+                        () -> LOGGER.info("Migrating to version {} done", transition.toAsString()))
+                .onFailure(
+                        () -> LOGGER.warn(failureMessage(transition.to())),
+                        () -> throwMigrationException(transition.to()));
+    }
+
+    private void throwMigrationException(SchemaVersion newVersion) {
+        throw new MigrationException(failureMessage(newVersion));
+    }
+
+    private String failureMessage(SchemaVersion newVersion) {
+        return String.format("Migrating to version %d partially done. " +
+                "Please check logs for cause of failure and re-run this migration.", newVersion.getValue());
     }
 
     @Override
@@ -66,6 +143,6 @@ public class MigrationTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new Details(toVersion));
+        return Optional.of(new Details(target));
     }
 }

@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.migration.CassandraMigrationService;
+import org.apache.james.backends.cassandra.migration.CassandraSchemaTransitions;
 import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.backends.cassandra.migration.MigrationTask;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
@@ -69,19 +70,20 @@ public class CassandraMigrationRoutesTest {
     private MemoryTaskManager taskManager;
 
     private void createServer() throws InterruptedException {
-        Migration successfulMigration = mock(Migration.class);
+        Migration successfulMigration = () -> { };
 
-        Map<SchemaTransition, Migration> allMigrationClazz = ImmutableMap.of(
+        CassandraSchemaTransitions transitions = new CassandraSchemaTransitions(ImmutableMap.of(
             FROM_OLDER_TO_CURRENT, successfulMigration,
-            FROM_CURRENT_TO_LATEST, successfulMigration);
+            FROM_CURRENT_TO_LATEST, successfulMigration));
 
         schemaVersionDAO = mock(CassandraSchemaVersionDAO.class);
+        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.empty()));
         when(schemaVersionDAO.updateVersion(any())).thenReturn(Mono.empty());
 
         taskManager = new MemoryTaskManager();
         JsonTransformer jsonTransformer = new JsonTransformer();
         webAdminServer = WebAdminUtils.createWebAdminServer(
-                new CassandraMigrationRoutes(new CassandraMigrationService(schemaVersionDAO, allMigrationClazz, LATEST_VERSION),
+                new CassandraMigrationRoutes(new CassandraMigrationService(schemaVersionDAO, transitions, version -> new MigrationTask(schemaVersionDAO, transitions, version), LATEST_VERSION),
                     taskManager, jsonTransformer),
                 new TasksRoutes(taskManager, jsonTransformer))
             .start();
@@ -224,7 +226,7 @@ public class CassandraMigrationRoutesTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        verify(schemaVersionDAO, times(1)).getCurrentSchemaVersion();
+        verify(schemaVersionDAO, atLeastOnce()).getCurrentSchemaVersion();
         verifyNoMoreInteractions(schemaVersionDAO);
     }
 
@@ -311,7 +313,7 @@ public class CassandraMigrationRoutesTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        verify(schemaVersionDAO, times(1)).getCurrentSchemaVersion();
+        verify(schemaVersionDAO, atLeastOnce()).getCurrentSchemaVersion();
         verifyNoMoreInteractions(schemaVersionDAO);
     }
 }

@@ -21,6 +21,7 @@ package org.apache.james.modules.server;
 
 import org.apache.james.backends.cassandra.migration.CassandraMigrationService;
 import org.apache.james.backends.cassandra.migration.Migration;
+import org.apache.james.backends.cassandra.migration.MigrationTask;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaTransition;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
@@ -47,9 +48,12 @@ public class CassandraRoutesModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(MigrationTask.Impl.class).in(Scopes.SINGLETON);
         bind(CassandraRoutesModule.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxMergingRoutes.class).in(Scopes.SINGLETON);
         bind(CassandraMigrationService.class).in(Scopes.SINGLETON);
+
+        bind(MigrationTask.Factory.class).to(MigrationTask.Impl.class);
 
         Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
         routesMultibinder.addBinding().to(CassandraMigrationRoutes.class);
