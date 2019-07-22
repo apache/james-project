@@ -42,6 +42,7 @@ import javax.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.vault.search.Combinator;
 import org.apache.james.vault.search.Criterion;
 import org.apache.james.vault.search.CriterionFactory;
 import org.apache.james.vault.search.FieldName;
@@ -75,21 +76,6 @@ public class QueryTranslator {
             .findFirst()
             .orElseThrow(() -> new QueryTranslatorException("operator: '" + operator + "' is not supported"));
     }
-
-    enum Combinator {
-        AND("and");
-
-        private final String value;
-
-        Combinator(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
-    }
-
 
     interface FieldValueParser<T> {
 
@@ -128,7 +114,7 @@ public class QueryTranslator {
         FieldValueSerializer<MailboxId> MAILBOX_ID_SERIALIZER = MailboxId::serialize;
         FieldValueSerializer<ZonedDateTime> ZONED_DATE_TIME_SERIALIZER = ZonedDateTime::toString;
         FieldValueSerializer<String> STRING_SERIALIZER = input -> input;
-        FieldValueSerializer<Boolean> BOOLEAN_SERIALIZER = input -> input.toString();
+        FieldValueSerializer<Boolean> BOOLEAN_SERIALIZER = Object::toString;
         FieldValueSerializer<MailAddress> MAIL_ADDRESS_SERIALIZER = MailAddress::asString;
 
         static Optional<FieldValueSerializer> getSerializerForValue(Object value) {
@@ -208,21 +194,23 @@ public class QueryTranslator {
     }
 
     public QueryDTO toDTO(Query query) throws QueryTranslatorException {
-        List<QueryElement> queryElements = query.getCriteria().stream().map(criterion -> {
-            FieldName fieldName = criterion.getField().fieldName();
-            Operator operator = criterion.getValueMatcher().operator();
-            Object value = criterion.getValueMatcher().expectedValue();
+        List<QueryElement> queryElements = query.getCriteria().stream()
+            .map(this::toDTO)
+            .collect(Guavate.toImmutableList());
+        return new QueryDTO(Combinator.AND.getValue(), queryElements);
+    }
 
-            FieldValueSerializer fieldValueSerializer = FieldValueSerializer.getSerializerForValue(value).orElseThrow(
-                () -> new IllegalArgumentException("Value of type " + value.getClass().getSimpleName()
-                    + "' is not handled by the combinaison of operator : " + operator.name()
-                    + " and field :" + fieldName.name())
-            );
+    private CriterionDTO toDTO(Criterion<?> criterion) {
+        FieldName fieldName = criterion.getField().fieldName();
+        Operator operator = criterion.getValueMatcher().operator();
+        Object value = criterion.getValueMatcher().expectedValue();
 
-            return new CriterionDTO(fieldName.getValue(), operator.getValue(), fieldValueSerializer.serialize(value));
-        }).collect(Guavate.toImmutableList());
+        FieldValueSerializer fieldValueSerializer = FieldValueSerializer.getSerializerForValue(value).orElseThrow(
+            () -> new IllegalArgumentException("Value of type " + value.getClass().getSimpleName()
+                + "' is not handled by the combinaison of operator : " + operator.name()
+                + " and field :" + fieldName.name()));
 
-        return new QueryDTO(Combinator.AND.value, queryElements);
+        return new CriterionDTO(fieldName.getValue(), operator.getValue(), fieldValueSerializer.serialize(value));
     }
 
     Query translate(QueryDTO queryDTO) throws QueryTranslatorException {

@@ -22,6 +22,8 @@ package org.apache.james.vault.dto.query;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.james.vault.search.Combinator;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -33,7 +35,7 @@ public class QueryDTO implements QueryElement {
 
     @VisibleForTesting
     static QueryDTO and(QueryElement... queryElements) {
-        return new QueryDTO(QueryTranslator.Combinator.AND.getValue(), ImmutableList.copyOf(queryElements));
+        return new QueryDTO(Combinator.AND.getValue(), ImmutableList.copyOf(queryElements));
     }
 
     private final String combinator;
