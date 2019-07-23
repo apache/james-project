@@ -68,16 +68,4 @@ public abstract class JPAMailboxManager extends StoreMailboxManager {
         return MAILBOX_CAPABILITIES;
     }
 
-    /**
-     * Delete all mailboxes 
-     * 
-     * @param mailboxSession
-     * @throws MailboxException
-     */
-    public void deleteEverything(MailboxSession mailboxSession) throws MailboxException {
-        final JPAMailboxMapper mapper = (JPAMailboxMapper) getMapperFactory().getMailboxMapper(mailboxSession);
-        mapper.execute(Mapper.toTransaction(mapper::deleteAllMemberships));
-        mapper.execute(Mapper.toTransaction(mapper::deleteAllMailboxes));
-    }
-
 }
