@@ -1548,7 +1548,22 @@ Response codes:
 
 ## Address Mappings
 
+You can use **webadmin** to define address mappings.
+
+When a specific email is sent to the base mail address, every destination addresses will receive it.
+
+This feature uses [Recipients rewrite table](/server/config-recipientrewritetable.html) and requires
+the [RecipientRewriteTable mailet](https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java)
+to be configured.
+
+Note that email addresses are restricted to ASCII character set. Mail addresses not matching this criteria will be rejected.
+
+Please use address mappings with caution, as it's not a typed address. If you know the type of your address (forward, alias, domain, group, etc), prefer using the corresponding routes to those types.
+
+Here are the following actions available on address mappings:
+
  - [List all address mappings](#List_all_address_mappinig)
+ - [Add an address mapping](#Add_an_address_mapping)
 
 ### List all address mappings
 
@@ -1598,6 +1613,20 @@ Response body:
 
 Response code:
  - 200: OK
+
+### Add an address mapping
+
+```
+curl -XPOST http://ip:port/mappings/address/{mappingSource}/targets/{destinationAddress}
+```
+Add an address mapping to the [Recipients rewrite table](/server/config-recipientrewritetable.html)
+Mapping source is the value of {mappingSource}
+Mapping destination is the value of {destinationAddress}
+Type of mapping destination is Address
+
+Respond code:
+- 204: NO CONTENT
+- 400: INVALID PARAMETERS
 
 ## Administrating mail repositories
 
@@ -2924,7 +2953,7 @@ Messages in the Deleted Messages Vault of a specified user that are matched with
 }
 ```
 
- - For restoring all deleted messages, passing a query json with an empty criterion list to represent `matching all deleted messages`: 
+ - For restoring all deleted messages, passing a query json with an empty criterion list to represent `matching all deleted messages`:
 
 ```
 {
