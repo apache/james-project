@@ -39,6 +39,7 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
  - [Creating address forwards](#Creating_address_forwards)
  - [Creating address aliases](#Creating_address_aliases)
  - [Creating address domain](#Creating_address_domain)
+ - [Address Mappings](#Address_mappings)
  - [Administrating mail repositories](#Administrating_mail_repositories)
  - [Administrating mail queues](#Administrating_mail_queues)
  - [Administrating DLP Configuration](#Administrating_DLP_Configuration)
@@ -1544,6 +1545,59 @@ Response codes:
  - 204: OK
  - 400: The `fromDomain` resource name is invalid
  - 400: The destination domain specified in the body is invalid
+
+## Address Mappings
+
+ - [List all address mappings](#List_all_address_mappinig)
+
+### List all address mappings
+
+```
+curl -XGET http://ip:port/mappings
+```
+
+Get all mappings from the [Recipients rewrite table](/server/config-recipientrewritetable.html)
+Supported mapping types are the following:
+
+ - [Alias](#Creating_address_aliases)
+ - [Address](#Address_mappings)
+ - [Domain](#Creating_address_domain)
+ - Error
+ - [Forward](#Creating_address_forwards)
+ - [Group](#Creating_address_group)
+ - Regex
+
+Response body:
+
+```
+{
+  "alias@domain.tld": [
+    {
+      "type": "Alias",
+      "mapping": "user@domain.tld"
+    },
+    {
+      "type": "Group",
+      "mapping": "group-user@domain.tld"
+    }
+  ],
+  "aliasdomain.tld": [
+    {
+      "type": "Domain",
+      "mapping": "realdomain.tld"
+    }
+  ],
+  "group@domain.tld": [
+    {
+      "type": "Address",
+      "mapping": "user@domain.tld"
+    }
+  ]
+}
+```
+
+Response code:
+ - 200: OK
 
 ## Administrating mail repositories
 
