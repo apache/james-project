@@ -83,7 +83,7 @@ public class DomainMappingTest {
 
         jamesServer = TemporaryJamesServer.builder()
             .withMailetContainer(mailetContainer)
-            .build(temporaryFolder);
+            .build(temporaryFolder.newFolder());
 
         jamesServer.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN1)

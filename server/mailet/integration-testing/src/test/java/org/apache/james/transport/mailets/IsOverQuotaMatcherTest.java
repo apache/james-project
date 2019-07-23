@@ -88,7 +88,7 @@ public class IsOverQuotaMatcherTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .withMailetContainer(mailetContainer)
-            .build(temporaryFolder);
+            .build(temporaryFolder.newFolder());
 
         webAdminApi = WebAdminUtils.spec(jamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
 

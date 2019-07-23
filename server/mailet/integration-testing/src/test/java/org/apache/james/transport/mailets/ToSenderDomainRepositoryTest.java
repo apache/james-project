@@ -201,7 +201,7 @@ public class ToSenderDomainRepositoryTest {
     private void startJamesServerWithMailetContainer(MailetContainer.Builder mailetContainer) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withMailetContainer(mailetContainer)
-            .build(temporaryFolder);
+            .build(temporaryFolder.newFolder());
 
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()

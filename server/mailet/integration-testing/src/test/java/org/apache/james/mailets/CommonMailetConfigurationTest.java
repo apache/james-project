@@ -50,7 +50,7 @@ public class CommonMailetConfigurationTest {
 
     @Before
     public void setup() throws Exception {
-        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
+        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder.newFolder());
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

@@ -70,7 +70,7 @@ public class AddFooterTest {
                         .mailet(AddFooter.class)
                         .addProperty("text", MATCH_ME))
                     .addMailetsFrom(CommonProcessors.transport())))
-            .build(temporaryFolder);
+            .build(temporaryFolder.newFolder());
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

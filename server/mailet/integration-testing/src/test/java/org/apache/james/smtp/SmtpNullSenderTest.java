@@ -52,7 +52,7 @@ public class SmtpNullSenderTest {
     @Before
     public void setUp() throws Exception {
         jamesServer = TemporaryJamesServer.builder()
-            .build(temporaryFolder);
+            .build(temporaryFolder.newFolder());
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

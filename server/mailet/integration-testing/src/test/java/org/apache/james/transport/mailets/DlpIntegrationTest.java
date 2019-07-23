@@ -81,7 +81,7 @@ public class DlpIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(Modules.combine(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE, MemoryJamesServerMain.WEBADMIN_TESTING))
             .withMailetContainer(mailets)
-            .build(folder);
+            .build(folder.newFolder());
 
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()
