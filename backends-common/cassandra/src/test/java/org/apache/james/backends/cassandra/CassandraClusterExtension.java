@@ -40,8 +40,11 @@ public class CassandraClusterExtension implements BeforeAllCallback, AfterAllCal
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) {
-        cassandraExtension.beforeAll(extensionContext);
-        cassandraCluster = CassandraCluster.create(cassandraModule, cassandraExtension.getDockerCassandra().getHost());
+        Class<?> testClass = extensionContext.getRequiredTestClass();
+        if (testClass.getEnclosingClass() == null) {
+            cassandraExtension.beforeAll(extensionContext);
+            cassandraCluster = CassandraCluster.create(cassandraModule, cassandraExtension.getDockerCassandra().getHost());
+        }
     }
 
     @Override
@@ -51,8 +54,11 @@ public class CassandraClusterExtension implements BeforeAllCallback, AfterAllCal
 
     @Override
     public void afterAll(ExtensionContext extensionContext) {
-        cassandraCluster.close();
-        cassandraExtension.afterAll(extensionContext);
+        Class<?> testClass = extensionContext.getRequiredTestClass();
+        if (testClass.getEnclosingClass() == null) {
+            cassandraCluster.close();
+            cassandraExtension.afterAll(extensionContext);
+        }
     }
 
     @Override
