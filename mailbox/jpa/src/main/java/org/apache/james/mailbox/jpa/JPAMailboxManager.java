@@ -21,10 +21,7 @@ package org.apache.james.mailbox.jpa;
 import java.util.EnumSet;
 
 import org.apache.james.mailbox.MailboxPathLocker;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.EventBus;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.jpa.mail.JPAMailboxMapper;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.PreDeletionHooks;
@@ -35,7 +32,6 @@ import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
-import org.apache.james.mailbox.store.transaction.Mapper;
 
 /**
  * JPA implementation of {@link StoreMailboxManager}
