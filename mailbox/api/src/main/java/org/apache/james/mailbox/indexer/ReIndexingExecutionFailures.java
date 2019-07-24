@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.indexer;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxId;
@@ -43,6 +44,23 @@ public class ReIndexingExecutionFailures {
         public MessageUid getUid() {
             return uid;
         }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof ReIndexingFailure) {
+                ReIndexingFailure that = (ReIndexingFailure) o;
+
+                return Objects.equals(this.mailboxId, that.mailboxId)
+                    && Objects.equals(this.uid, that.uid);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(mailboxId, uid);
+        }
+
     }
 
     private final List<ReIndexingFailure> failures;
@@ -54,4 +72,20 @@ public class ReIndexingExecutionFailures {
     public List<ReIndexingFailure> failures() {
         return ImmutableList.copyOf(failures);
     }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof ReIndexingExecutionFailures) {
+            ReIndexingExecutionFailures that = (ReIndexingExecutionFailures) o;
+
+            return Objects.equals(this.failures, that.failures);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(failures);
+    }
+
 }
