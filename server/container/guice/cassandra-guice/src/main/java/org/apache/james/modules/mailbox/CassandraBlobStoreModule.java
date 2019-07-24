@@ -30,7 +30,7 @@ import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
-public class CassandraObjectStoreModule extends AbstractModule {
+public class CassandraBlobStoreModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(CassandraBlobStore.class).in(Scopes.SINGLETON);

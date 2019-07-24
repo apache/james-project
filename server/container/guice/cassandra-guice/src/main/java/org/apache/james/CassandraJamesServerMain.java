@@ -31,8 +31,8 @@ import org.apache.james.modules.data.CassandraSieveRepositoryModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.eventstore.CassandraEventStoreModule;
 import org.apache.james.modules.mailbox.BlobStoreAPIModule;
+import org.apache.james.modules.mailbox.CassandraBlobStoreModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
-import org.apache.james.modules.mailbox.CassandraObjectStoreModule;
 import org.apache.james.modules.mailbox.CassandraQuotaMailingModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
 import org.apache.james.modules.mailbox.ElasticSearchClientModule;
@@ -111,7 +111,7 @@ public class CassandraJamesServerMain {
         new CassandraEventStoreModule(),
         new CassandraMailRepositoryModule(),
         new CassandraMetricsModule(),
-        new CassandraObjectStoreModule(),
+        new CassandraBlobStoreModule(),
         new CassandraRecipientRewriteTableModule(),
         new CassandraSessionModule(),
         new CassandraSieveRepositoryModule(),
