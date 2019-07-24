@@ -53,7 +53,7 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
     void setUp(CassandraCluster cassandra) {
         testee = new MetricableBlobStore(
             metricsTestExtension.getMetricFactory(),
-            new CassandraBlobStore(cassandra.getConf(),
+            new CassandraBlobStore(new CassandraDefaultBucketDAO(cassandra.getConf()),
                 CassandraConfiguration.builder()
                     .blobPartSize(CHUNK_SIZE)
                     .build(),

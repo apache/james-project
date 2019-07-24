@@ -24,6 +24,7 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStore;
+import org.apache.james.blob.cassandra.CassandraDefaultBucketDAO;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -33,6 +34,7 @@ import com.google.inject.name.Names;
 public class CassandraBlobStoreModule extends AbstractModule {
     @Override
     protected void configure() {
+        bind(CassandraDefaultBucketDAO.class).in(Scopes.SINGLETON);
         bind(CassandraBlobStore.class).in(Scopes.SINGLETON);
 
         bind(BlobStore.class)

@@ -19,10 +19,13 @@
 
 package org.apache.james.blob.cassandra;
 
-public interface BlobTable {
-    String TABLE_NAME = "blobs";
-    String ID = "id";
-    String NUMBER_OF_CHUNK = "position";
+public interface BlobTables {
+
+    interface BlobTable {
+        String TABLE_NAME = "blobs";
+        String ID = "id";
+        String NUMBER_OF_CHUNK = "position";
+    }
 
     interface BlobParts {
         String TABLE_NAME = "blobParts";

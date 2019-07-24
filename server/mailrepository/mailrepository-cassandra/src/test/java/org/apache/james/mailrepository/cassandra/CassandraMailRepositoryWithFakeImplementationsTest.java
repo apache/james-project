@@ -35,7 +35,7 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.Store;
-import org.apache.james.blob.cassandra.BlobTable;
+import org.apache.james.blob.cassandra.BlobTables;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStore;
 import org.apache.james.blob.mail.MimeMessagePartsId;
@@ -197,7 +197,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
                     .hasMessage("Expected failure while storing mail parts");
 
             ResultSet resultSet = cassandra.getConf().execute(select()
-                    .from(BlobTable.TABLE_NAME));
+                    .from(BlobTables.BlobTable.TABLE_NAME));
             assertThat(resultSet.all()).hasSize(2);
         }
     }
@@ -272,7 +272,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
                     .hasMessage("Expected failure while storing keys");
 
             ResultSet resultSet = cassandra.getConf().execute(select()
-                    .from(BlobTable.TABLE_NAME));
+                    .from(BlobTables.BlobTable.TABLE_NAME));
             assertThat(resultSet.all()).hasSize(2);
         }
 

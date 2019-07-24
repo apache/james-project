@@ -40,6 +40,7 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStore;
+import org.apache.james.blob.cassandra.CassandraDefaultBucketDAO;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
 import org.apache.james.queue.api.MailQueue;
@@ -101,7 +102,7 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
 
     @BeforeEach
     void setup(DockerRabbitMQ rabbitMQ, CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
-        CassandraBlobStore blobStore = new CassandraBlobStore(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, BLOB_ID_FACTORY);
+        CassandraBlobStore blobStore = new CassandraBlobStore(new CassandraDefaultBucketDAO(cassandra.getConf()), CassandraConfiguration.DEFAULT_CONFIGURATION, BLOB_ID_FACTORY);
         MimeMessageStore.Factory mimeMessageStoreFactory = MimeMessageStore.factory(blobStore);
         clock = new UpdatableTickingClock(IN_SLICE_1);
 

@@ -19,25 +19,35 @@
 
 package org.apache.james.blob.cassandra;
 
+import static org.apache.james.blob.cassandra.BlobTables.BlobParts.CHUNK_NUMBER;
+import static org.apache.james.blob.cassandra.BlobTables.BlobParts.DATA;
+import static org.apache.james.blob.cassandra.BlobTables.BlobTable.ID;
+import static org.apache.james.blob.cassandra.BlobTables.BlobTable.NUMBER_OF_CHUNK;
+import static org.apache.james.blob.cassandra.BlobTables.BlobTable.TABLE_NAME;
+
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.blob.cassandra.BlobTables.BlobParts;
 
 import com.datastax.driver.core.DataType;
 
 public interface CassandraBlobModule {
     CassandraModule MODULE = CassandraModule
         .builder()
-        .table(BlobTable.BlobParts.TABLE_NAME)
+
+        .table(BlobParts.TABLE_NAME)
         .comment("Holds blob parts composing blobs ." +
             "Messages` headers and bodies are stored, chunked in blobparts.")
         .statement(statement -> statement
-            .addPartitionKey(BlobTable.ID, DataType.text())
-            .addClusteringColumn(BlobTable.BlobParts.CHUNK_NUMBER, DataType.cint())
-            .addColumn(BlobTable.BlobParts.DATA, DataType.blob()))
-        .table(BlobTable.TABLE_NAME)
+            .addPartitionKey(ID, DataType.text())
+            .addClusteringColumn(CHUNK_NUMBER, DataType.cint())
+            .addColumn(DATA, DataType.blob()))
+
+        .table(TABLE_NAME)
         .comment("Holds information for retrieving all blob parts composing this blob. " +
             "Messages` headers and bodies are stored as blobparts.")
         .statement(statement -> statement
-            .addPartitionKey(BlobTable.ID, DataType.text())
-            .addClusteringColumn(BlobTable.NUMBER_OF_CHUNK, DataType.cint()))
+            .addPartitionKey(ID, DataType.text())
+            .addClusteringColumn(NUMBER_OF_CHUNK, DataType.cint()))
+
         .build();
 }
