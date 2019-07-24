@@ -76,7 +76,7 @@ public class MetricableBlobStore implements BlobStore {
     @Override
     public Mono<Void> deleteBucket(BucketName bucketName) {
         return metricFactory
-            .runPublishingTimerMetric(DELETE_BUCKET_TIMER_NAME, () -> blobStoreImpl.deleteBucket(bucketName));
+            .runPublishingTimerMetric(DELETE_BUCKET_TIMER_NAME, blobStoreImpl.deleteBucket(bucketName));
     }
 
     @Override
@@ -87,6 +87,6 @@ public class MetricableBlobStore implements BlobStore {
     @Override
     public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
         return metricFactory
-            .runPublishingTimerMetric(DELETE_TIMER_NAME, () -> blobStoreImpl.delete(bucketName, blobId));
+            .runPublishingTimerMetric(DELETE_TIMER_NAME, blobStoreImpl.delete(bucketName, blobId));
     }
 }
