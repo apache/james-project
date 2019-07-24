@@ -120,6 +120,7 @@
                         <item name="BlobStore" href="/server/config-blobstore.html" />
                         <item name="Cassandra" href="/server/config-cassandra.html" />
                         <item name="ElasticSearch" href="/server/config-elasticsearch.html" />
+                        <item name="Deleted Messages Vault" href="/server/config-vault.html" />
                         <item name="DNS Service" href="/server/config-dnsservice.html" />
                         <item name="Domain List" href="/server/config-domainlist.html" />
                         <item name="Events" href="/server/config-events.html" />
@@ -140,6 +141,7 @@
                         <item name="System" href="/server/config-system.html" />
                         <item name="Spring JPA Postgres" href="/server/config-spring-jpa-postgres.html" />
                         <item name="Users" href="/server/config-users.html" />
+                        <item name="WebAdmin" href="/server/config-webadmin.html" />
                     </item>
                     <item name="5. Manage" href="/server/manage.html" collapse="true" >
                         <item name="Command line" href="/server/manage-cli.html" />
