@@ -20,12 +20,18 @@
 package org.apache.mailbox.tools.indexer;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 
+import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.server.task.json.dto.TaskDTO;
+import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class FullReindexingTask implements Task {
 
@@ -34,6 +40,44 @@ public class FullReindexingTask implements Task {
     private final ReIndexerPerformer reIndexerPerformer;
     private final ReprocessingContextInformation additionalInformation;
     private final ReprocessingContext reprocessingContext;
+
+    public static final Function<FullReindexingTask.Factory, TaskDTOModule> MODULE = (factory) ->
+        DTOModule
+            .forDomainObject(FullReindexingTask.class)
+            .convertToDTO(FullReindexingTask.FullReindexingTaskDTO.class)
+            .toDomainObjectConverter(factory::create)
+            .toDTOConverter((task, type) -> new FullReindexingTaskDTO(type))
+            .typeName(FULL_RE_INDEXING)
+            .withFactory(TaskDTOModule::new);
+
+    public static class FullReindexingTaskDTO implements TaskDTO {
+
+        private final String type;
+
+        public FullReindexingTaskDTO(@JsonProperty("type") String type) {
+            this.type = type;
+        }
+
+        @Override
+        public String getType() {
+            return type;
+        }
+
+    }
+
+    public static class Factory {
+
+        private final ReIndexerPerformer reIndexerPerformer;
+
+        @Inject
+        public Factory(ReIndexerPerformer reIndexerPerformer) {
+            this.reIndexerPerformer = reIndexerPerformer;
+        }
+
+        public FullReindexingTask create(FullReindexingTaskDTO dto) {
+            return new FullReindexingTask(reIndexerPerformer);
+        }
+    }
 
     @Inject
     public FullReindexingTask(ReIndexerPerformer reIndexerPerformer) {
