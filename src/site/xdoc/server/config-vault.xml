@@ -36,7 +36,7 @@
             <p>
                 Note: This feature requires Guice wiring.
                 To make James use DeletedMessageVault, you also need to configure the PreDeletionHook for it.
-                Example is at <a href="server/config-listeners.html">Mailbox Listener Configuration</a>
+                Example is at <a href="/server/config-listeners.html">Mailbox Listener Configuration</a>
             </p>
 
             <subsection name="deletedMessageVault.properties">
