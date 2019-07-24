@@ -20,17 +20,57 @@
 package org.apache.mailbox.tools.indexer;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 
 import org.apache.james.core.User;
+import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.server.task.json.dto.TaskDTO;
+import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class UserReindexingTask implements Task {
 
     public static final String USER_RE_INDEXING = "userReIndexing";
+
+    public static final Function<UserReindexingTask.Factory, TaskDTOModule> MODULE = (factory) ->
+        DTOModule
+            .forDomainObject(UserReindexingTask.class)
+            .convertToDTO(UserReindexingTask.UserReindexingTaskDTO.class)
+            .toDomainObjectConverter(factory::create)
+            .toDTOConverter(UserReindexingTask.UserReindexingTaskDTO::of)
+            .typeName(USER_RE_INDEXING)
+            .withFactory(TaskDTOModule::new);
+
+    public static class UserReindexingTaskDTO implements TaskDTO {
+
+        public static UserReindexingTaskDTO of(UserReindexingTask task, String type) {
+            return new UserReindexingTaskDTO(type, task.user.asString());
+        }
+
+        private final String type;
+        private final String username;
+
+        private UserReindexingTaskDTO(@JsonProperty("type") String type, @JsonProperty("username") String username) {
+            this.type = type;
+            this.username = username;
+        }
+
+        @Override
+        public String getType() {
+            return type;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+    }
 
     public static class AdditionalInformation extends ReprocessingContextInformation {
         private final User user;
@@ -56,6 +96,21 @@ public class UserReindexingTask implements Task {
         this.user = user;
         this.reprocessingContext = new ReprocessingContext();
         this.additionalInformation = new AdditionalInformation(reprocessingContext, user);
+    }
+
+    public static class Factory {
+
+        private final ReIndexerPerformer reIndexerPerformer;
+
+        @Inject
+        public Factory(ReIndexerPerformer reIndexerPerformer) {
+            this.reIndexerPerformer = reIndexerPerformer;
+        }
+
+        public UserReindexingTask create(UserReindexingTaskDTO dto) {
+            User user = User.fromUsername(dto.getUsername());
+            return new UserReindexingTask(reIndexerPerformer, user);
+        }
     }
 
     @Override
