@@ -40,7 +40,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.blob.cassandra.CassandraBlobsDAO;
+import org.apache.james.blob.cassandra.CassandraBlobStore;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -95,9 +95,9 @@ class CassandraMessageDAOTest {
     void setUp(CassandraCluster cassandra) {
         messageIdFactory = new CassandraMessageId.Factory();
         messageId = messageIdFactory.generate();
-        CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
+        CassandraBlobStore blobStore = new CassandraBlobStore(cassandra.getConf());
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
-        testee = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobsDAO, blobIdFactory,
+        testee = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(), blobStore, blobIdFactory,
             new CassandraMessageId.Factory());
 
         messageIds = ImmutableList.of(ComposedMessageIdWithMetaData.builder()

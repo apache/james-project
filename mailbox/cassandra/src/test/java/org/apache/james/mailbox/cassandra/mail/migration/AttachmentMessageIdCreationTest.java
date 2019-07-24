@@ -39,7 +39,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.blob.cassandra.CassandraBlobsDAO;
+import org.apache.james.blob.cassandra.CassandraBlobStore;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -75,7 +75,7 @@ class AttachmentMessageIdCreationTest {
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
             MODULES);
 
-    private CassandraBlobsDAO blobsDAO;
+    private CassandraBlobStore blobStore;
     private CassandraMessageDAO cassandraMessageDAO;
     private CassandraAttachmentMessageIdDAO attachmentMessageIdDAO;
 
@@ -88,9 +88,9 @@ class AttachmentMessageIdCreationTest {
     void setUp(CassandraCluster cassandra) {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
-        blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
+        blobStore = new CassandraBlobStore(cassandra.getConf());
         cassandraMessageDAO = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(),
-            blobsDAO, new HashBlobId.Factory(), messageIdFactory);
+            blobStore, new HashBlobId.Factory(), messageIdFactory);
 
         attachmentMessageIdDAO = new CassandraAttachmentMessageIdDAO(cassandra.getConf(),
             new CassandraMessageId.Factory());

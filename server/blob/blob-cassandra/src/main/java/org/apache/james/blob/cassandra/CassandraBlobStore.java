@@ -58,7 +58,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-public class CassandraBlobsDAO implements BlobStore {
+public class CassandraBlobStore implements BlobStore {
 
     private static final int PREFETCH = 16;
     private static final int MAX_CONCURRENCY = 2;
@@ -72,7 +72,7 @@ public class CassandraBlobsDAO implements BlobStore {
     private final HashBlobId.Factory blobIdFactory;
 
     @Inject
-    public CassandraBlobsDAO(Session session, CassandraConfiguration cassandraConfiguration, HashBlobId.Factory blobIdFactory) {
+    public CassandraBlobStore(Session session, CassandraConfiguration cassandraConfiguration, HashBlobId.Factory blobIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.configuration = cassandraConfiguration;
         this.blobIdFactory = blobIdFactory;
@@ -85,7 +85,7 @@ public class CassandraBlobsDAO implements BlobStore {
     }
 
     @VisibleForTesting
-    public CassandraBlobsDAO(Session session) {
+    public CassandraBlobStore(Session session) {
         this(session, CassandraConfiguration.DEFAULT_CONFIGURATION, new HashBlobId.Factory());
     }
 

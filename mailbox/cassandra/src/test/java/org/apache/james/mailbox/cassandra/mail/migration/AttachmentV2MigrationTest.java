@@ -34,7 +34,7 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.blob.cassandra.CassandraBlobsDAO;
+import org.apache.james.blob.cassandra.CassandraBlobStore;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
@@ -63,7 +63,7 @@ class AttachmentV2MigrationTest {
 
     private CassandraAttachmentDAO attachmentDAO;
     private CassandraAttachmentDAOV2 attachmentDAOV2;
-    private CassandraBlobsDAO blobsDAO;
+    private CassandraBlobStore blobsStore;
     private AttachmentV2Migration migration;
     private Attachment attachment1;
     private Attachment attachment2;
@@ -73,8 +73,8 @@ class AttachmentV2MigrationTest {
         attachmentDAO = new CassandraAttachmentDAO(cassandra.getConf(),
             CassandraConfiguration.DEFAULT_CONFIGURATION);
         attachmentDAOV2 = new CassandraAttachmentDAOV2(BLOB_ID_FACTORY, cassandra.getConf());
-        blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
-        migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsDAO);
+        blobsStore = new CassandraBlobStore(cassandra.getConf());
+        migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsStore);
 
         attachment1 = Attachment.builder()
             .attachmentId(ATTACHMENT_ID)
@@ -114,9 +114,9 @@ class AttachmentV2MigrationTest {
             .contains(CassandraAttachmentDAOV2.from(attachment1, BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
         assertThat(attachmentDAOV2.getAttachment(ATTACHMENT_ID_2).blockOptional())
             .contains(CassandraAttachmentDAOV2.from(attachment2, BLOB_ID_FACTORY.forPayload(attachment2.getBytes())));
-        assertThat(blobsDAO.readBytes(blobsDAO.getDefaultBucketName(), BLOB_ID_FACTORY.forPayload(attachment1.getBytes())).block())
+        assertThat(blobsStore.readBytes(blobsStore.getDefaultBucketName(), BLOB_ID_FACTORY.forPayload(attachment1.getBytes())).block())
             .isEqualTo(attachment1.getBytes());
-        assertThat(blobsDAO.readBytes(blobsDAO.getDefaultBucketName(), BLOB_ID_FACTORY.forPayload(attachment2.getBytes())).block())
+        assertThat(blobsStore.readBytes(blobsStore.getDefaultBucketName(), BLOB_ID_FACTORY.forPayload(attachment2.getBytes())).block())
             .isEqualTo(attachment2.getBytes());
     }
 
@@ -137,8 +137,8 @@ class AttachmentV2MigrationTest {
     void runShouldReturnPartialWhenInitialReadFail() throws InterruptedException {
         CassandraAttachmentDAO attachmentDAO = mock(CassandraAttachmentDAO.class);
         CassandraAttachmentDAOV2 attachmentDAOV2 = mock(CassandraAttachmentDAOV2.class);
-        CassandraBlobsDAO blobsDAO = mock(CassandraBlobsDAO.class);
-        migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsDAO);
+        CassandraBlobStore blobsStore = mock(CassandraBlobStore.class);
+        migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsStore);
 
         when(attachmentDAO.retrieveAll()).thenReturn(Flux.error(new RuntimeException()));
 
@@ -149,13 +149,13 @@ class AttachmentV2MigrationTest {
     void runShouldReturnPartialWhenSavingBlobsFails() throws InterruptedException {
         CassandraAttachmentDAO attachmentDAO = mock(CassandraAttachmentDAO.class);
         CassandraAttachmentDAOV2 attachmentDAOV2 = mock(CassandraAttachmentDAOV2.class);
-        CassandraBlobsDAO blobsDAO = mock(CassandraBlobsDAO.class);
-        migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsDAO);
+        CassandraBlobStore blobsStore = mock(CassandraBlobStore.class);
+        migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsStore);
 
         when(attachmentDAO.retrieveAll()).thenReturn(Flux.just(
             attachment1,
             attachment2));
-        when(blobsDAO.save(any(BucketName.class), any(byte[].class))).thenThrow(new RuntimeException());
+        when(blobsStore.save(any(BucketName.class), any(byte[].class))).thenThrow(new RuntimeException());
 
         assertThat(migration.asTask().run()).isEqualTo(Task.Result.PARTIAL);
     }
@@ -164,15 +164,15 @@ class AttachmentV2MigrationTest {
     void runShouldReturnPartialWhenSavingAttachmentV2Fail() throws InterruptedException {
         CassandraAttachmentDAO attachmentDAO = mock(CassandraAttachmentDAO.class);
         CassandraAttachmentDAOV2 attachmentDAOV2 = mock(CassandraAttachmentDAOV2.class);
-        CassandraBlobsDAO blobsDAO = mock(CassandraBlobsDAO.class);
-        migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsDAO);
+        CassandraBlobStore blobsStore = mock(CassandraBlobStore.class);
+        migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsStore);
 
         when(attachmentDAO.retrieveAll()).thenReturn(Flux.just(
             attachment1,
             attachment2));
-        when(blobsDAO.save(blobsDAO.getDefaultBucketName(), attachment1.getBytes()))
+        when(blobsStore.save(blobsStore.getDefaultBucketName(), attachment1.getBytes()))
             .thenReturn(Mono.just(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
-        when(blobsDAO.save(blobsDAO.getDefaultBucketName(), attachment2.getBytes()))
+        when(blobsStore.save(blobsStore.getDefaultBucketName(), attachment2.getBytes()))
             .thenReturn(Mono.just(BLOB_ID_FACTORY.forPayload(attachment2.getBytes())));
         when(attachmentDAOV2.storeAttachment(any())).thenThrow(new RuntimeException());
 
@@ -183,15 +183,15 @@ class AttachmentV2MigrationTest {
     void runShouldReturnPartialWhenDeleteV1AttachmentFail() throws InterruptedException {
         CassandraAttachmentDAO attachmentDAO = mock(CassandraAttachmentDAO.class);
         CassandraAttachmentDAOV2 attachmentDAOV2 = mock(CassandraAttachmentDAOV2.class);
-        CassandraBlobsDAO blobsDAO = mock(CassandraBlobsDAO.class);
-        migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsDAO);
+        CassandraBlobStore blobsStore = mock(CassandraBlobStore.class);
+        migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsStore);
 
         when(attachmentDAO.retrieveAll()).thenReturn(Flux.just(
             attachment1,
             attachment2));
-        when(blobsDAO.save(blobsDAO.getDefaultBucketName(), attachment1.getBytes()))
+        when(blobsStore.save(blobsStore.getDefaultBucketName(), attachment1.getBytes()))
             .thenReturn(Mono.just(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
-        when(blobsDAO.save(blobsDAO.getDefaultBucketName(), attachment2.getBytes()))
+        when(blobsStore.save(blobsStore.getDefaultBucketName(), attachment2.getBytes()))
             .thenReturn(Mono.just(BLOB_ID_FACTORY.forPayload(attachment2.getBytes())));
         when(attachmentDAOV2.storeAttachment(any())).thenReturn(Mono.empty());
         when(attachmentDAO.deleteAttachment(any())).thenThrow(new RuntimeException());
@@ -203,15 +203,15 @@ class AttachmentV2MigrationTest {
     void runShouldReturnPartialWhenAtLeastOneAttachmentMigrationFails() throws InterruptedException {
         CassandraAttachmentDAO attachmentDAO = mock(CassandraAttachmentDAO.class);
         CassandraAttachmentDAOV2 attachmentDAOV2 = mock(CassandraAttachmentDAOV2.class);
-        CassandraBlobsDAO blobsDAO = mock(CassandraBlobsDAO.class);
-        migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsDAO);
+        CassandraBlobStore blobsStore = mock(CassandraBlobStore.class);
+        migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsStore);
 
         when(attachmentDAO.retrieveAll()).thenReturn(Flux.just(
             attachment1,
             attachment2));
-        when(blobsDAO.save(blobsDAO.getDefaultBucketName(), attachment1.getBytes()))
+        when(blobsStore.save(blobsStore.getDefaultBucketName(), attachment1.getBytes()))
             .thenReturn(Mono.just(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
-        when(blobsDAO.save(blobsDAO.getDefaultBucketName(), attachment2.getBytes()))
+        when(blobsStore.save(blobsStore.getDefaultBucketName(), attachment2.getBytes()))
             .thenThrow(new RuntimeException());
         when(attachmentDAOV2.storeAttachment(any())).thenReturn(Mono.empty());
         when(attachmentDAO.deleteAttachment(any())).thenReturn(Mono.empty());

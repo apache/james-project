@@ -40,7 +40,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
 
-public class CassandraBlobsDAOTest implements MetricableBlobStoreContract {
+public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
     private static final int CHUNK_SIZE = 10240;
     private static final int MULTIPLE_CHUNK_SIZE = 3;
 
@@ -53,7 +53,7 @@ public class CassandraBlobsDAOTest implements MetricableBlobStoreContract {
     void setUp(CassandraCluster cassandra) {
         testee = new MetricableBlobStore(
             metricsTestExtension.getMetricFactory(),
-            new CassandraBlobsDAO(cassandra.getConf(),
+            new CassandraBlobStore(cassandra.getConf(),
                 CassandraConfiguration.builder()
                     .blobPartSize(CHUNK_SIZE)
                     .build(),

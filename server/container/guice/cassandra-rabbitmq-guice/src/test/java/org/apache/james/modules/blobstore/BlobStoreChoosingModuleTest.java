@@ -25,7 +25,7 @@ import static org.mockito.Mockito.mock;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.FakePropertiesProvider;
-import org.apache.james.blob.cassandra.CassandraBlobsDAO;
+import org.apache.james.blob.cassandra.CassandraBlobStore;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
 import org.apache.james.blob.union.UnionBlobStore;
 import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration.BlobStoreImplName;
@@ -36,8 +36,8 @@ import com.google.inject.Provider;
 
 class BlobStoreChoosingModuleTest {
 
-    private static CassandraBlobsDAO CASSANDRA_BLOBSTORE = mock(CassandraBlobsDAO.class);
-    private static Provider<CassandraBlobsDAO> CASSANDRA_BLOBSTORE_PROVIDER = () -> CASSANDRA_BLOBSTORE;
+    private static CassandraBlobStore CASSANDRA_BLOBSTORE = mock(CassandraBlobStore.class);
+    private static Provider<CassandraBlobStore> CASSANDRA_BLOBSTORE_PROVIDER = () -> CASSANDRA_BLOBSTORE;
     private static ObjectStorageBlobsDAO OBJECT_STORAGE_BLOBSTORE = mock(ObjectStorageBlobsDAO.class);
     private static Provider<ObjectStorageBlobsDAO> OBJECT_STORAGE_BLOBSTORE_PROVIDER = () -> OBJECT_STORAGE_BLOBSTORE;
 

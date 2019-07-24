@@ -33,7 +33,7 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.blob.cassandra.CassandraBlobsDAO;
+import org.apache.james.blob.cassandra.CassandraBlobStore;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
@@ -61,7 +61,7 @@ class CassandraAttachmentFallbackTest {
     private CassandraAttachmentDAOV2 attachmentDAOV2;
     private CassandraAttachmentDAO attachmentDAO;
     private CassandraAttachmentMapper attachmentMapper;
-    private CassandraBlobsDAO blobsDAO;
+    private CassandraBlobStore blobStore;
     private CassandraAttachmentMessageIdDAO attachmentMessageIdDAO;
 
 
@@ -70,10 +70,10 @@ class CassandraAttachmentFallbackTest {
         attachmentDAOV2 = new CassandraAttachmentDAOV2(BLOB_ID_FACTORY, cassandra.getConf());
         attachmentDAO = new CassandraAttachmentDAO(cassandra.getConf(),
             CassandraConfiguration.DEFAULT_CONFIGURATION);
-        blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
+        blobStore = new CassandraBlobStore(cassandra.getConf());
         attachmentMessageIdDAO = new CassandraAttachmentMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
         CassandraAttachmentOwnerDAO ownerDAO = new CassandraAttachmentOwnerDAO(cassandra.getConf());
-        attachmentMapper = new CassandraAttachmentMapper(attachmentDAO, attachmentDAOV2, blobsDAO, attachmentMessageIdDAO, ownerDAO);
+        attachmentMapper = new CassandraAttachmentMapper(attachmentDAO, attachmentDAOV2, blobStore, attachmentMessageIdDAO, ownerDAO);
     }
 
     @Test
@@ -101,7 +101,7 @@ class CassandraAttachmentFallbackTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        BlobId blobId = blobsDAO.save(blobsDAO.getDefaultBucketName(), attachment.getBytes()).block();
+        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes()).block();
         attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).block();
         attachmentDAO.storeAttachment(otherAttachment).block();
 
@@ -136,7 +136,7 @@ class CassandraAttachmentFallbackTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        BlobId blobId = blobsDAO.save(blobsDAO.getDefaultBucketName(), attachment.getBytes()).block();
+        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes()).block();
         attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).block();
         attachmentDAO.storeAttachment(otherAttachment).block();
 
@@ -171,7 +171,7 @@ class CassandraAttachmentFallbackTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        BlobId blobId = blobsDAO.save(blobsDAO.getDefaultBucketName(), attachment.getBytes()).block();
+        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes()).block();
         attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).block();
         attachmentDAO.storeAttachment(otherAttachment).block();
 

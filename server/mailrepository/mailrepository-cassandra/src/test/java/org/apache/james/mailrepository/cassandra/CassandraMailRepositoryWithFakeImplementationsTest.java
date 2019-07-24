@@ -37,7 +37,7 @@ import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.cassandra.BlobTable;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.blob.cassandra.CassandraBlobsDAO;
+import org.apache.james.blob.cassandra.CassandraBlobStore;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -52,6 +52,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
+
 import reactor.core.publisher.Mono;
 
 
@@ -126,10 +127,10 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             FailingMailDAO mailDAO = new FailingMailDAO();
             keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
             CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
-            CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
+            CassandraBlobStore blobStore = new CassandraBlobStore(cassandra.getConf());
 
             cassandraMailRepository = new CassandraMailRepository(URL,
-                    keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobsDAO).mimeMessageStore());
+                    keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore).mimeMessageStore());
         }
 
         class FailingMailDAO implements CassandraMailRepositoryMailDaoAPI {
@@ -211,10 +212,10 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             CassandraMailRepositoryMailDaoAPI mailDAO = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
             FailingKeysDAO keysDAO = new FailingKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
             countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
-            CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
+            CassandraBlobStore blobStore = new CassandraBlobStore(cassandra.getConf());
 
             cassandraMailRepository = new CassandraMailRepository(URL,
-                    keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobsDAO).mimeMessageStore());
+                    keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore).mimeMessageStore());
         }
 
         class FailingKeysDAO extends CassandraMailRepositoryKeysDAO {
