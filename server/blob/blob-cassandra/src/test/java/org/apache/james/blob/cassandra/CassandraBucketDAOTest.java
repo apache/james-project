@@ -34,8 +34,10 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.blob.api.HashBlobId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -48,7 +50,7 @@ class CassandraBucketDAOTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        testee = new CassandraBucketDAO(cassandraCluster.getCassandraCluster().getConf());
+        testee = new CassandraBucketDAO(new HashBlobId.Factory(), cassandraCluster.getCassandraCluster().getConf());
     }
 
     @Test
@@ -166,11 +168,28 @@ class CassandraBucketDAOTest {
     }
 
     @Test
-    void selectRowCountShouldNotReturnOtherBucketValue() {
+    void listAllShouldReturnEmptyWhenNone() {
+        assertThat(testee.listAll().toStream()).isEmpty();
+    }
+
+    @Test
+    void listAllShouldReturnPreviouslyInsertedData() {
+        testee.saveBlobPartsReferences(BUCKET_NAME, BLOB_ID, NUMBER_OF_CHUNK).block();
+        testee.saveBlobPartsReferences(BUCKET_NAME_2, BLOB_ID, NUMBER_OF_CHUNK).block();
+        testee.saveBlobPartsReferences(BUCKET_NAME, BLOB_ID_2, NUMBER_OF_CHUNK).block();
+
+        assertThat(testee.listAll().toStream()).containsOnly(
+            Pair.of(BUCKET_NAME, BLOB_ID),
+            Pair.of(BUCKET_NAME_2, BLOB_ID),
+            Pair.of(BUCKET_NAME, BLOB_ID_2));
+    }
+
+    @Test
+    void listAllShouldNotReturnDeletedData() {
         testee.saveBlobPartsReferences(BUCKET_NAME, BLOB_ID, NUMBER_OF_CHUNK).block();
 
-        Optional<Integer> maybeRowCount = testee.selectRowCount(BUCKET_NAME_2, BLOB_ID).blockOptional();
+        testee.deletePosition(BUCKET_NAME, BLOB_ID).block();
 
-        assertThat(maybeRowCount).isEmpty();
+        assertThat(testee.listAll().toStream()).isEmpty();
     }
 }

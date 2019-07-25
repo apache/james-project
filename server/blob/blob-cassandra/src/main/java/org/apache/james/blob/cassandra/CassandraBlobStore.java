@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
@@ -71,7 +70,7 @@ public class CassandraBlobStore implements BlobStore {
     @VisibleForTesting
     public CassandraBlobStore(Session session) {
         this(new CassandraDefaultBucketDAO(session),
-            new CassandraBucketDAO(session),
+            new CassandraBucketDAO(new HashBlobId.Factory(), session),
             CassandraConfiguration.DEFAULT_CONFIGURATION,
             new HashBlobId.Factory());
     }
@@ -154,7 +153,13 @@ public class CassandraBlobStore implements BlobStore {
 
     @Override
     public Mono<Void> deleteBucket(BucketName bucketName) {
-        throw new NotImplementedException("not implemented");
+        Preconditions.checkNotNull(bucketName);
+
+        return bucketDAO.listAll()
+            .filter(bucketNameBlobIdPair -> bucketNameBlobIdPair.getKey().equals(bucketName))
+            .map(Pair::getValue)
+            .flatMap(blobId -> delete(bucketName, blobId))
+            .then();
     }
 
     @Override

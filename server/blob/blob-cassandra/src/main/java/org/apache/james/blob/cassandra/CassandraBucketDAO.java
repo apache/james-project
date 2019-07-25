@@ -32,6 +32,7 @@ import java.nio.ByteBuffer;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
@@ -42,9 +43,11 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.google.common.annotations.VisibleForTesting;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class CassandraBucketDAO {
+class CassandraBucketDAO {
+    private final BlobId.Factory blobIdFactory;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insert;
     private final PreparedStatement insertPart;
@@ -52,10 +55,12 @@ public class CassandraBucketDAO {
     private final PreparedStatement selectPart;
     private final PreparedStatement delete;
     private final PreparedStatement deleteParts;
+    private final PreparedStatement listAll;
 
     @Inject
     @VisibleForTesting
-    public CassandraBucketDAO(Session session) {
+    CassandraBucketDAO(BlobId.Factory blobIdFactory, Session session) {
+        this.blobIdFactory = blobIdFactory;
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.insert = prepareInsert(session);
         this.select = prepareSelect(session);
@@ -63,6 +68,7 @@ public class CassandraBucketDAO {
         this.insertPart = prepareInsertPart(session);
         this.selectPart = prepareSelectPart(session);
         this.deleteParts = prepareDeleteParts(session);
+        this.listAll = prepareListAll(session);
     }
 
     private PreparedStatement prepareDeleteParts(Session session) {
@@ -77,6 +83,11 @@ public class CassandraBucketDAO {
             delete().from(BlobTables.BucketBlobTable.TABLE_NAME)
                 .where(eq(BUCKET, bindMarker(BUCKET)))
                 .and(eq(ID, bindMarker(ID))));
+    }
+
+    private PreparedStatement prepareListAll(Session session) {
+        return session.prepare(select()
+            .from(BlobTables.BucketBlobTable.TABLE_NAME));
     }
 
     private PreparedStatement prepareSelect(Session session) {
@@ -155,6 +166,11 @@ public class CassandraBucketDAO {
             deleteParts.bind()
                 .setString(BucketBlobParts.BUCKET, bucketName.asString())
                 .setString(BucketBlobParts.ID, blobId.asString()));
+    }
+
+    Flux<Pair<BucketName, BlobId>> listAll() {
+        return cassandraAsyncExecutor.executeRows(listAll.bind())
+            .map(row -> Pair.of(BucketName.of(row.getString(BUCKET)), blobIdFactory.from(row.getString(ID))));
     }
 
     private byte[] rowToData(Row row) {

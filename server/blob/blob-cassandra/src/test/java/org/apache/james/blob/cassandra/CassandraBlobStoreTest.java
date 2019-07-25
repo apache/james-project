@@ -53,14 +53,15 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract, Buck
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
+        HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
         testee = new MetricableBlobStore(
             metricsTestExtension.getMetricFactory(),
             new CassandraBlobStore(new CassandraDefaultBucketDAO(cassandra.getConf()),
-                new CassandraBucketDAO(cassandra.getConf()),
+                new CassandraBucketDAO(blobIdFactory, cassandra.getConf()),
                 CassandraConfiguration.builder()
                     .blobPartSize(CHUNK_SIZE)
                     .build(),
-                new HashBlobId.Factory()));
+                blobIdFactory));
     }
 
     @Override
@@ -71,36 +72,6 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract, Buck
     @Override
     public BlobId.Factory blobIdFactory() {
         return new HashBlobId.Factory();
-    }
-
-    @Override
-    @Disabled("JAMES-2806: delete bucket not implemented yet for Cassandra")
-    public void deleteBucketShouldPublishDeleteBucketTimerMetrics() {
-
-    }
-
-    @Override
-    @Disabled("Not implemented yet")
-    public void deleteBucketShouldBeIdempotent() {
-
-    }
-
-    @Override
-    @Disabled("Not implemented yet")
-    public void deleteBucketConcurrentlyShouldNotFail() {
-
-    }
-
-    @Override
-    @Disabled("Not implemented yet")
-    public void deleteBucketShouldDeleteExistingBucketWithItsData() {
-
-    }
-
-    @Override
-    @Disabled("Not implemented yet")
-    public void deleteBucketShouldThrowWhenNullBucketName() {
-
     }
 
     @Override
