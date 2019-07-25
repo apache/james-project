@@ -59,7 +59,7 @@ public class CassandraBlobStore implements BlobStore {
     private final HashBlobId.Factory blobIdFactory;
 
     @Inject
-    public CassandraBlobStore(CassandraDefaultBucketDAO defaultBucketDAO, CassandraConfiguration cassandraConfiguration, HashBlobId.Factory blobIdFactory) {
+    CassandraBlobStore(CassandraDefaultBucketDAO defaultBucketDAO, CassandraConfiguration cassandraConfiguration, HashBlobId.Factory blobIdFactory) {
         this.defaultBucketDAO = defaultBucketDAO;
         this.configuration = cassandraConfiguration;
         this.blobIdFactory = blobIdFactory;
