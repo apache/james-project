@@ -1,0 +1,14 @@
+{
+  "type": "deletedMessages/restore",
+  "userToRestore": "james",
+  "query": {
+    "combinator": "and",
+    "criteria": [
+      {
+        "fieldName": "sender",
+        "operator": "equals",
+        "value": "james@apache.org"
+      }
+    ]
+  }
+}

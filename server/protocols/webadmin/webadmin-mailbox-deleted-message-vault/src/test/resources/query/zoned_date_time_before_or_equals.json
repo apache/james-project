@@ -1,0 +1,14 @@
+{
+  "type": "deletedMessages/restore",
+  "userToRestore": "james",
+  "query": {
+    "combinator": "and",
+    "criteria": [
+      {
+        "fieldName": "deliveryDate",
+        "operator": "beforeOrEquals",
+        "value": "2007-12-03T10:15:30+01:00[Europe/Paris]"
+      }
+    ]
+  }
+}

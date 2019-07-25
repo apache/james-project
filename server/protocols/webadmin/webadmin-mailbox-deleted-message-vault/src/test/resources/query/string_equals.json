@@ -1,0 +1,14 @@
+{
+  "type": "deletedMessages/restore",
+  "userToRestore": "james",
+  "query": {
+    "combinator": "and",
+    "criteria": [
+      {
+        "fieldName": "subject",
+        "operator": "equals",
+        "value": "James"
+      }
+    ]
+  }
+}
