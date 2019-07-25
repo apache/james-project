@@ -159,7 +159,13 @@ public class CassandraBlobStore implements BlobStore {
 
     @Override
     public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
-        throw new NotImplementedException("not implemented");
+        if (isDefaultBucket(bucketName)) {
+            return defaultBucketDAO.deletePosition(blobId)
+                .then(defaultBucketDAO.deleteParts(blobId));
+        } else {
+            return bucketDAO.deletePosition(bucketName, blobId)
+                .then(bucketDAO.deleteParts(bucketName, blobId));
+        }
     }
 
     private Mono<byte[]> readPart(BucketName bucketName, BlobId blobId, Integer partIndex) {
