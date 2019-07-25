@@ -29,6 +29,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketBlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
@@ -40,7 +41,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
 
-public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
+public class CassandraBlobStoreTest implements MetricableBlobStoreContract, BucketBlobStoreContract {
     private static final int CHUNK_SIZE = 10240;
     private static final int MULTIPLE_CHUNK_SIZE = 3;
 
@@ -54,6 +55,7 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
         testee = new MetricableBlobStore(
             metricsTestExtension.getMetricFactory(),
             new CassandraBlobStore(new CassandraDefaultBucketDAO(cassandra.getConf()),
+                new CassandraBucketDAO(cassandra.getConf()),
                 CassandraConfiguration.builder()
                     .blobPartSize(CHUNK_SIZE)
                     .build(),
@@ -73,6 +75,30 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
     @Override
     @Disabled("JAMES-2806: delete bucket not implemented yet for Cassandra")
     public void deleteBucketShouldPublishDeleteBucketTimerMetrics() {
+
+    }
+
+    @Override
+    @Disabled("Not implemented yet")
+    public void deleteBucketShouldBeIdempotent() {
+
+    }
+
+    @Override
+    @Disabled("Not implemented yet")
+    public void deleteBucketConcurrentlyShouldNotFail() {
+
+    }
+
+    @Override
+    @Disabled("Not implemented yet")
+    public void deleteBucketShouldDeleteExistingBucketWithItsData() {
+
+    }
+
+    @Override
+    @Disabled("Not implemented yet")
+    public void deleteBucketShouldThrowWhenNullBucketName() {
 
     }
 
