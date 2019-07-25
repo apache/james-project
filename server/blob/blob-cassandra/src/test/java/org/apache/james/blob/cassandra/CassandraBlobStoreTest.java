@@ -20,6 +20,7 @@
 package org.apache.james.blob.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -88,6 +89,13 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract, Buck
         byte[] bytes = testee.readBytes(testee.getDefaultBucketName(), blobId).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEqualTo(longString);
+    }
+
+    @Test
+    void deleteBucketShouldThrowWhenDeletingDefaultBucket() {
+        assertThatThrownBy(() ->  testee.deleteBucket(testee.getDefaultBucketName()))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Deleting the default bucket is forbidden");
     }
 
     @Test

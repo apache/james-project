@@ -122,11 +122,10 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
         store.save(BucketName.DEFAULT, BYTES_CONTENT).block();
         store.save(bucketName, BYTES_CONTENT).block();
 
-        store.deleteBucket(BucketName.DEFAULT).block();
         store.deleteBucket(bucketName).block();
 
         assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(DELETE_BUCKET_TIMER_NAME))
-            .hasSize(2);
+            .hasSize(1);
     }
 
     @Test

@@ -154,6 +154,7 @@ public class CassandraBlobStore implements BlobStore {
     @Override
     public Mono<Void> deleteBucket(BucketName bucketName) {
         Preconditions.checkNotNull(bucketName);
+        Preconditions.checkArgument(!isDefaultBucket(bucketName), "Deleting the default bucket is forbidden");
 
         return bucketDAO.listAll()
             .filter(bucketNameBlobIdPair -> bucketNameBlobIdPair.getKey().equals(bucketName))
