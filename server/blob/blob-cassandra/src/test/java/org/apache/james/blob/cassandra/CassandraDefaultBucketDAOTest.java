@@ -27,6 +27,7 @@ import static org.apache.james.blob.cassandra.CassandraBlobStoreFixture.NUMBER_O
 import static org.apache.james.blob.cassandra.CassandraBlobStoreFixture.POSITION;
 import static org.apache.james.blob.cassandra.CassandraBlobStoreFixture.POSITION_2;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.nio.ByteBuffer;
 import java.util.Optional;
@@ -107,5 +108,50 @@ class CassandraDefaultBucketDAOTest {
         Optional<Integer> maybeRowCount = testee.selectRowCount(BLOB_ID_2).blockOptional();
 
         assertThat(maybeRowCount).isEmpty();
+    }
+
+    @Test
+    void deletePositionShouldNotThrowWhenMissing() {
+        assertThatCode(() -> testee.deletePosition(BLOB_ID).block())
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void deletePartShouldNotThrowWhenMissing() {
+        assertThatCode(() -> testee.deleteParts(BLOB_ID).block())
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void selectRowCountShouldNotReturnDeletedData() {
+        testee.saveBlobPartsReferences(BLOB_ID, NUMBER_OF_CHUNK).block();
+
+        testee.deletePosition(BLOB_ID).block();
+
+        Optional<Integer> maybeRowCount = testee.selectRowCount(BLOB_ID).blockOptional();
+        assertThat(maybeRowCount).isEmpty();
+    }
+
+    @Test
+    void readPartShouldNotReturnDeletedItem() {
+        testee.writePart(ByteBuffer.wrap(DATA), BLOB_ID, POSITION).block();
+
+        testee.deleteParts(BLOB_ID).block();
+
+        Optional<byte[]> maybeBytes = testee.readPart(BLOB_ID, POSITION).blockOptional();
+        assertThat(maybeBytes).isEmpty();
+    }
+
+    @Test
+    void readPartShouldNotReturnDeletedItems() {
+        testee.writePart(ByteBuffer.wrap(DATA), BLOB_ID, POSITION).block();
+        testee.writePart(ByteBuffer.wrap(DATA), BLOB_ID, POSITION_2).block();
+
+        testee.deleteParts(BLOB_ID).block();
+
+        Optional<byte[]> maybeBytes = testee.readPart(BLOB_ID, POSITION).blockOptional();
+        Optional<byte[]> maybeBytes2 = testee.readPart(BLOB_ID, POSITION_2).blockOptional();
+        assertThat(maybeBytes).isEmpty();
+        assertThat(maybeBytes2).isEmpty();
     }
 }

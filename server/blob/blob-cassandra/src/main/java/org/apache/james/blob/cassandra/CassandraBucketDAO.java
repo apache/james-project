@@ -20,6 +20,7 @@
 package org.apache.james.blob.cassandra;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
@@ -49,6 +50,8 @@ public class CassandraBucketDAO {
     private final PreparedStatement insertPart;
     private final PreparedStatement select;
     private final PreparedStatement selectPart;
+    private final PreparedStatement delete;
+    private final PreparedStatement deleteParts;
 
     @Inject
     @VisibleForTesting
@@ -56,8 +59,24 @@ public class CassandraBucketDAO {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.insert = prepareInsert(session);
         this.select = prepareSelect(session);
+        this.delete = prepareDelete(session);
         this.insertPart = prepareInsertPart(session);
         this.selectPart = prepareSelectPart(session);
+        this.deleteParts = prepareDeleteParts(session);
+    }
+
+    private PreparedStatement prepareDeleteParts(Session session) {
+        return session.prepare(
+            delete().from(BucketBlobParts.TABLE_NAME)
+                .where(eq(BucketBlobParts.BUCKET, bindMarker(BucketBlobParts.BUCKET)))
+                .and(eq(BucketBlobParts.ID, bindMarker(BucketBlobParts.ID))));
+    }
+
+    private PreparedStatement prepareDelete(Session session) {
+        return session.prepare(
+            delete().from(BlobTables.BucketBlobTable.TABLE_NAME)
+                .where(eq(BUCKET, bindMarker(BUCKET)))
+                .and(eq(ID, bindMarker(ID))));
     }
 
     private PreparedStatement prepareSelect(Session session) {
@@ -122,6 +141,20 @@ public class CassandraBucketDAO {
                 .setString(BucketBlobParts.ID, blobId.asString())
                 .setInt(BucketBlobParts.CHUNK_NUMBER, position))
             .map(this::rowToData);
+    }
+
+    Mono<Void> deletePosition(BucketName bucketName, BlobId blobId) {
+        return cassandraAsyncExecutor.executeVoid(
+            delete.bind()
+                .setString(BUCKET, bucketName.asString())
+                .setString(ID, blobId.asString()));
+    }
+
+    Mono<Void> deleteParts(BucketName bucketName, BlobId blobId) {
+        return cassandraAsyncExecutor.executeVoid(
+            deleteParts.bind()
+                .setString(BucketBlobParts.BUCKET, bucketName.asString())
+                .setString(BucketBlobParts.ID, blobId.asString()));
     }
 
     private byte[] rowToData(Row row) {

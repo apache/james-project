@@ -20,6 +20,7 @@
 package org.apache.james.blob.cassandra;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
@@ -47,15 +48,19 @@ public class CassandraDefaultBucketDAO {
     private final PreparedStatement insertPart;
     private final PreparedStatement select;
     private final PreparedStatement selectPart;
+    private final PreparedStatement delete;
+    private final PreparedStatement deleteParts;
 
     @Inject
     @VisibleForTesting
-    public CassandraDefaultBucketDAO(Session session) {
+    CassandraDefaultBucketDAO(Session session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.insert = prepareInsert(session);
         this.select = prepareSelect(session);
         this.insertPart = prepareInsertPart(session);
         this.selectPart = prepareSelectPart(session);
+        this.delete = prepareDelete(session);
+        this.deleteParts = prepareDeleteParts(session);
     }
 
     private PreparedStatement prepareSelect(Session session) {
@@ -82,6 +87,18 @@ public class CassandraDefaultBucketDAO {
             .value(DefaultBucketBlobParts.ID, bindMarker(DefaultBucketBlobParts.ID))
             .value(DefaultBucketBlobParts.CHUNK_NUMBER, bindMarker(DefaultBucketBlobParts.CHUNK_NUMBER))
             .value(DefaultBucketBlobParts.DATA, bindMarker(DefaultBucketBlobParts.DATA)));
+    }
+
+    private PreparedStatement prepareDeleteParts(Session session) {
+        return session.prepare(
+            delete().from(DefaultBucketBlobParts.TABLE_NAME)
+                .where(eq(DefaultBucketBlobParts.ID, bindMarker(DefaultBucketBlobParts.ID))));
+    }
+
+    private PreparedStatement prepareDelete(Session session) {
+        return session.prepare(
+            delete().from(BlobTables.DefaultBucketBlobTable.TABLE_NAME)
+                .where(eq(BlobTables.DefaultBucketBlobTable.ID, bindMarker(BlobTables.DefaultBucketBlobTable.ID))));
     }
 
     Mono<Void> writePart(ByteBuffer data, BlobId blobId, int position) {
@@ -112,6 +129,18 @@ public class CassandraDefaultBucketDAO {
                 .setString(DefaultBucketBlobParts.ID, blobId.asString())
                 .setInt(DefaultBucketBlobParts.CHUNK_NUMBER, position))
             .map(this::rowToData);
+    }
+
+    Mono<Void> deletePosition(BlobId blobId) {
+        return cassandraAsyncExecutor.executeVoid(
+            delete.bind()
+                .setString(ID, blobId.asString()));
+    }
+
+    Mono<Void> deleteParts(BlobId blobId) {
+        return cassandraAsyncExecutor.executeVoid(
+            deleteParts.bind()
+                .setString(DefaultBucketBlobParts.ID, blobId.asString()));
     }
 
     private byte[] rowToData(Row row) {
