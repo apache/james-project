@@ -65,7 +65,10 @@ public class CassandraMigrationService {
     }
 
     private void checkTarget(SchemaVersion target) {
-        getCurrentVersion().orElse(DEFAULT_VERSION).listTransitionsForTarget(target).forEach(this::checkMigration);
+        getCurrentVersion()
+            .orElse(DEFAULT_VERSION)
+            .listTransitionsForTarget(target)
+            .forEach(this::checkMigration);
     }
 
     private void checkMigration(SchemaTransition transition) {

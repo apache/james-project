@@ -49,9 +49,9 @@ public class AttachmentV2Migration implements Migration {
     @Override
     public void apply() {
         attachmentDAOV1.retrieveAll()
-                .flatMap(this::migrateAttachment)
-                .doOnError(t -> LOGGER.error("Error while performing attachmentDAO V2 migration", t))
-                .blockLast();
+            .flatMap(this::migrateAttachment)
+            .doOnError(t -> LOGGER.error("Error while performing attachmentDAO V2 migration", t))
+            .blockLast();
     }
 
     private Mono<Void> migrateAttachment(Attachment attachment) {

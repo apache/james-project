@@ -90,9 +90,9 @@ public class MigrationTask implements Task {
     @Override
     public Result run() {
         getCurrentVersion().listTransitionsForTarget(target)
-                .stream()
-                .map(this::migration)
-                .forEach(Throwing.consumer(this::runMigration).sneakyThrow());
+            .stream()
+            .map(this::migration)
+            .forEach(Throwing.consumer(this::runMigration).sneakyThrow());
         return Result.COMPLETED;
     }
 
@@ -102,10 +102,9 @@ public class MigrationTask implements Task {
 
     private Tuple2<SchemaTransition, Migration> migration(SchemaTransition transition) {
         return Tuples.of(
-                transition,
-                transitions.findMigration(transition)
-                        .orElseThrow(() -> new MigrationException("unable to find a required Migration for transition " + transition)));
-
+            transition,
+            transitions.findMigration(transition)
+                .orElseThrow(() -> new MigrationException("unable to find a required Migration for transition " + transition)));
     }
 
     private void runMigration(Tuple2<SchemaTransition, Migration> tuple) throws InterruptedException {
@@ -119,12 +118,12 @@ public class MigrationTask implements Task {
         LOGGER.info("Migrating to version {} ", transition.toAsString());
         Migration migration = tuple.getT2();
         migration.asTask().run()
-                .onComplete(
-                        () -> schemaVersionDAO.updateVersion(transition.to()).block(),
-                        () -> LOGGER.info("Migrating to version {} done", transition.toAsString()))
-                .onFailure(
-                        () -> LOGGER.warn(failureMessage(transition.to())),
-                        () -> throwMigrationException(transition.to()));
+            .onComplete(
+                () -> schemaVersionDAO.updateVersion(transition.to()).block(),
+                () -> LOGGER.info("Migrating to version {} done", transition.toAsString()))
+            .onFailure(
+                () -> LOGGER.warn(failureMessage(transition.to())),
+                () -> throwMigrationException(transition.to()));
     }
 
     private void throwMigrationException(SchemaVersion newVersion) {
