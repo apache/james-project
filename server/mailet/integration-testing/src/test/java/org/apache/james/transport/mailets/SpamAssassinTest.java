@@ -86,7 +86,7 @@ public class SpamAssassinTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withMailetContainer(mailets)
-            .build(temporaryFolder);
+            .build(temporaryFolder.newFolder());
 
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()

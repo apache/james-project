@@ -78,7 +78,7 @@ public class BounceIntegrationTest {
                 .matcher(All.class)
                 .mailet(DSNBounce.class)
                 .addProperty("passThrough", "false")))
-            .build(temporaryFolder);
+            .build(temporaryFolder.newFolder());
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -103,7 +103,7 @@ public class BounceIntegrationTest {
                 .matcher(All.class)
                 .mailet(Bounce.class)
                 .addProperty("passThrough", "false")))
-            .build(temporaryFolder);
+            .build(temporaryFolder.newFolder());
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -128,7 +128,7 @@ public class BounceIntegrationTest {
                 .mailet(Forward.class)
                 .addProperty("forwardTo", BOUNCE_RECEIVER)
                 .addProperty("passThrough", "false")))
-            .build(temporaryFolder);
+            .build(temporaryFolder.newFolder());
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -154,7 +154,7 @@ public class BounceIntegrationTest {
                     .mailet(Redirect.class)
                     .addProperty("recipients", BOUNCE_RECEIVER)
                     .addProperty("passThrough", "false")))
-            .build(temporaryFolder);
+            .build(temporaryFolder.newFolder());
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -180,7 +180,7 @@ public class BounceIntegrationTest {
                     .mailet(Resend.class)
                     .addProperty("recipients", BOUNCE_RECEIVER)
                     .addProperty("passThrough", "false")))
-            .build(temporaryFolder);
+            .build(temporaryFolder.newFolder());
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -205,7 +205,7 @@ public class BounceIntegrationTest {
                     .matcher(All.class)
                     .mailet(NotifySender.class)
                     .addProperty("passThrough", "false")))
-            .build(temporaryFolder);
+            .build(temporaryFolder.newFolder());
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
@@ -230,7 +230,7 @@ public class BounceIntegrationTest {
                     .matcher(All.class)
                     .mailet(NotifyPostmaster.class)
                     .addProperty("passThrough", "false")))
-            .build(temporaryFolder);
+            .build(temporaryFolder.newFolder());
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

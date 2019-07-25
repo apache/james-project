@@ -66,7 +66,7 @@ public class NetworkMatcherIntegrationTest {
             .withMailetContainer(TemporaryJamesServer.DEFAULT_MAILET_CONTAINER_CONFIGURATION
                 .putProcessor(rootProcessor)
                 .putProcessor(CommonProcessors.deliverOnlyTransport()))
-            .build(temporaryFolder);
+            .build(temporaryFolder.newFolder());
 
         DataProbe dataProbe = temporaryJamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

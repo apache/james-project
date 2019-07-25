@@ -101,7 +101,7 @@ public class ContactExtractorTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withMailetContainer(mailets)
-            .build(folder);
+            .build(folder.newFolder());
 
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()

@@ -125,7 +125,7 @@ public class DKIMIntegrationTest {
             .withBase(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .withOverrides(binder -> binder.bind(PublicKeyRecordRetriever.class).toInstance(MOCK_PUBLIC_KEY_RECORD_RETRIEVER))
             .withMailetContainer(mailetContainer)
-            .build(temporaryFolder);
+            .build(temporaryFolder.newFolder());
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

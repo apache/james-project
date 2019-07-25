@@ -70,7 +70,7 @@ public class RecipientRewriteTableIntegrationTest {
 
     @Before
     public void setup() throws Exception {
-        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
+        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder.newFolder());
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

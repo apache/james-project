@@ -44,7 +44,6 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.webadmin.WebAdminConfiguration;
-import org.junit.rules.TemporaryFolder;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
@@ -104,9 +103,9 @@ public class TemporaryJamesServer {
             return this;
         }
 
-        public TemporaryJamesServer build(TemporaryFolder temporaryFolder) throws Exception {
+        public TemporaryJamesServer build(File workingDir) throws Exception {
             return new TemporaryJamesServer(
-                temporaryFolder,
+                workingDir,
                 mailetConfiguration.orElse(DEFAULT_MAILET_CONTAINER_CONFIGURATION.build()),
                 smtpConfiguration.orElse(SmtpConfiguration.DEFAULT),
                 module.orElse(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE),
@@ -137,14 +136,13 @@ public class TemporaryJamesServer {
 
     private final GuiceJamesServer jamesServer;
 
-    private TemporaryJamesServer(TemporaryFolder temporaryFolder, MailetContainer mailetContainer, SmtpConfiguration smtpConfiguration,
+    private TemporaryJamesServer(File workingDir, MailetContainer mailetContainer, SmtpConfiguration smtpConfiguration,
                                  Module serverBaseModule, List<Module> additionalModules) throws Exception {
-        appendMailetConfigurations(temporaryFolder, mailetContainer);
-        appendSmtpConfigurations(temporaryFolder, smtpConfiguration);
+        appendMailetConfigurations(workingDir, mailetContainer);
+        appendSmtpConfigurations(workingDir, smtpConfiguration);
 
-        String workingDir = temporaryFolder.getRoot().getAbsolutePath();
         Configuration configuration = Configuration.builder().workingDirectory(workingDir).build();
-        copyResources(Paths.get(workingDir, "conf"));
+        copyResources(Paths.get(workingDir.getAbsolutePath(), "conf"));
 
         jamesServer = GuiceJamesServer.forConfiguration(configuration)
             .combineWith(serverBaseModule)
@@ -170,26 +168,34 @@ public class TemporaryJamesServer {
         }
     }
 
-    private void appendMailetConfigurations(TemporaryFolder temporaryFolder, MailetContainer mailetContainer) throws ConfigurationException, IOException {
-        try (OutputStream outputStream = createMailetConfigurationFile(temporaryFolder)) {
+    private void appendMailetConfigurations(File workingDir, MailetContainer mailetContainer) throws ConfigurationException, IOException {
+        try (OutputStream outputStream = createMailetConfigurationFile(workingDir)) {
             IOUtils.write(mailetContainer.serializeAsXml(), outputStream, StandardCharsets.UTF_8);
         }
     }
 
-    private void appendSmtpConfigurations(TemporaryFolder temporaryFolder, SmtpConfiguration smtpConfiguration) throws ConfigurationException, IOException {
-        try (OutputStream outputStream = createSmtpConfigurationFile(temporaryFolder)) {
+    private void appendSmtpConfigurations(File workingDir, SmtpConfiguration smtpConfiguration) throws ConfigurationException, IOException {
+        try (OutputStream outputStream = createSmtpConfigurationFile(workingDir)) {
             IOUtils.write(smtpConfiguration.serializeAsXml(), outputStream, StandardCharsets.UTF_8);
         }
     }
 
-    private FileOutputStream createMailetConfigurationFile(TemporaryFolder temporaryFolder) throws IOException {
-        File configurationFolder = temporaryFolder.newFolder("conf");
+    private FileOutputStream createMailetConfigurationFile(File workingDir) throws IOException {
+        File configurationFolder = confDirectory(workingDir);
         return new FileOutputStream(Paths.get(configurationFolder.getAbsolutePath(), MAILETCONTAINER_CONFIGURATION_FILENAME).toFile());
     }
 
-    private FileOutputStream createSmtpConfigurationFile(TemporaryFolder temporaryFolder) throws IOException {
-        File configurationFolder = temporaryFolder.getRoot().listFiles()[0];
+    private FileOutputStream createSmtpConfigurationFile(File workingDir) throws IOException {
+        File configurationFolder = confDirectory(workingDir);
         return new FileOutputStream(Paths.get(configurationFolder.getAbsolutePath(), SMTP_CONFIGURATION_FILENAME).toFile());
+    }
+
+    private File confDirectory(File workingDir) {
+        File configurationFolder = workingDir.toPath().resolve("conf").toFile();
+        if (!configurationFolder.exists()) {
+            configurationFolder.mkdir();
+        }
+        return configurationFolder;
     }
 
     public void shutdown() {

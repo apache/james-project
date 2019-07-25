@@ -52,7 +52,7 @@ public class SmtpSizeLimitationTest {
     private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withSmtpConfiguration(smtpConfiguration)
-            .build(temporaryFolder);
+            .build(temporaryFolder.newFolder());
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);

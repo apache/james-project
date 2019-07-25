@@ -24,6 +24,7 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
 import java.time.ZonedDateTime;
 
 import org.apache.james.MemoryJamesServerMain;
@@ -63,6 +64,7 @@ public class SMIMEDecryptIntegrationTest {
 
     @Before
     public void setup() throws Exception {
+        File workingDir = temporaryFolder.newFolder();
         MailetContainer mailetContainer = MailetContainer.builder()
             .putProcessor(CommonProcessors.root())
             .putProcessor(CommonProcessors.error())
@@ -71,7 +73,7 @@ public class SMIMEDecryptIntegrationTest {
                 .addMailet(MailetConfiguration.builder()
                     .mailet(SMIMEDecrypt.class)
                     .matcher(All.class)
-                    .addProperty("keyStoreFileName", temporaryFolder.getRoot().getAbsoluteFile().getAbsolutePath() + "/conf/smime.p12")
+                    .addProperty("keyStoreFileName", workingDir.toPath().resolve("conf").resolve("smime.p12").toAbsolutePath().toString())
                     .addProperty("keyStorePassword", "secret")
                     .addProperty("keyStoreType", "PKCS12")
                     .addProperty("debug", "true"))
@@ -82,7 +84,7 @@ public class SMIMEDecryptIntegrationTest {
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(() -> DATE_2015))
             .withMailetContainer(mailetContainer)
-            .build(temporaryFolder);
+            .build(workingDir);
 
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()
