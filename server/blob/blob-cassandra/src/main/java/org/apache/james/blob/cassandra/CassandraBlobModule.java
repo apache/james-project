@@ -19,14 +19,13 @@
 
 package org.apache.james.blob.cassandra;
 
-import static org.apache.james.blob.cassandra.BlobTables.BlobParts.CHUNK_NUMBER;
-import static org.apache.james.blob.cassandra.BlobTables.BlobParts.DATA;
-import static org.apache.james.blob.cassandra.BlobTables.BlobTable.ID;
-import static org.apache.james.blob.cassandra.BlobTables.BlobTable.NUMBER_OF_CHUNK;
-import static org.apache.james.blob.cassandra.BlobTables.BlobTable.TABLE_NAME;
+import static org.apache.james.blob.cassandra.BlobTables.DefaultBucketBlobParts.DATA;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.blob.cassandra.BlobTables.BlobParts;
+import org.apache.james.blob.cassandra.BlobTables.BucketBlobParts;
+import org.apache.james.blob.cassandra.BlobTables.BucketBlobTable;
+import org.apache.james.blob.cassandra.BlobTables.DefaultBucketBlobParts;
+import org.apache.james.blob.cassandra.BlobTables.DefaultBucketBlobTable;
 
 import com.datastax.driver.core.DataType;
 
@@ -34,20 +33,37 @@ public interface CassandraBlobModule {
     CassandraModule MODULE = CassandraModule
         .builder()
 
-        .table(BlobParts.TABLE_NAME)
-        .comment("Holds blob parts composing blobs ." +
+        .table(DefaultBucketBlobParts.TABLE_NAME)
+        .comment("Holds blob parts composing blobs in the default bucket." +
             "Messages` headers and bodies are stored, chunked in blobparts.")
         .statement(statement -> statement
-            .addPartitionKey(ID, DataType.text())
-            .addClusteringColumn(CHUNK_NUMBER, DataType.cint())
-            .addColumn(DATA, DataType.blob()))
+            .addPartitionKey(DefaultBucketBlobParts.ID, DataType.text())
+            .addClusteringColumn(DefaultBucketBlobParts.CHUNK_NUMBER, DataType.cint())
+            .addColumn(DefaultBucketBlobParts.DATA, DataType.blob()))
 
-        .table(TABLE_NAME)
-        .comment("Holds information for retrieving all blob parts composing this blob. " +
+        .table(DefaultBucketBlobTable.TABLE_NAME)
+        .comment("Holds information for retrieving all blob parts composing this blob within the default bucket. " +
             "Messages` headers and bodies are stored as blobparts.")
         .statement(statement -> statement
-            .addPartitionKey(ID, DataType.text())
-            .addClusteringColumn(NUMBER_OF_CHUNK, DataType.cint()))
+            .addPartitionKey(DefaultBucketBlobTable.ID, DataType.text())
+            .addClusteringColumn(DefaultBucketBlobTable.NUMBER_OF_CHUNK, DataType.cint()))
+
+        .table(BucketBlobParts.TABLE_NAME)
+        .comment("Holds blob parts composing blobs in a non-default bucket." +
+            "Messages` headers and bodies are stored, chunked in blobparts.")
+        .statement(statement -> statement
+            .addPartitionKey(BucketBlobParts.BUCKET, DataType.text())
+            .addPartitionKey(BucketBlobParts.ID, DataType.text())
+            .addClusteringColumn(BucketBlobParts.CHUNK_NUMBER, DataType.cint())
+            .addColumn(DATA, DataType.blob()))
+
+        .table(BucketBlobTable.TABLE_NAME)
+        .comment("Holds information for retrieving all blob parts composing this blob in a non-default bucket. " +
+            "Messages` headers and bodies are stored as blobparts.")
+        .statement(statement -> statement
+            .addPartitionKey(BucketBlobParts.BUCKET, DataType.text())
+            .addPartitionKey(BucketBlobParts.ID, DataType.text())
+            .addClusteringColumn(BucketBlobTable.NUMBER_OF_CHUNK, DataType.cint()))
 
         .build();
 }

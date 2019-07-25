@@ -21,6 +21,8 @@ package org.apache.james.blob.cassandra;
 
 import static org.apache.james.blob.cassandra.CassandraBlobStoreFixture.BLOB_ID;
 import static org.apache.james.blob.cassandra.CassandraBlobStoreFixture.BLOB_ID_2;
+import static org.apache.james.blob.cassandra.CassandraBlobStoreFixture.BUCKET_NAME;
+import static org.apache.james.blob.cassandra.CassandraBlobStoreFixture.BUCKET_NAME_2;
 import static org.apache.james.blob.cassandra.CassandraBlobStoreFixture.DATA;
 import static org.apache.james.blob.cassandra.CassandraBlobStoreFixture.DATA_2;
 import static org.apache.james.blob.cassandra.CassandraBlobStoreFixture.NUMBER_OF_CHUNK;
@@ -37,74 +39,91 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraDefaultBucketDAOTest {
-
+class CassandraBucketDAOTest {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobModule.MODULE);
 
-    private CassandraDefaultBucketDAO testee;
+    private CassandraBucketDAO testee;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        testee = new CassandraDefaultBucketDAO(cassandraCluster.getCassandraCluster().getConf());
+        testee = new CassandraBucketDAO(cassandraCluster.getCassandraCluster().getConf());
     }
 
     @Test
     void readPartShouldReturnEmptyWhenNone() {
-        Optional<byte[]> maybeBytes = testee.readPart(BLOB_ID, POSITION).blockOptional();
+        Optional<byte[]> maybeBytes = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION).blockOptional();
 
         assertThat(maybeBytes).isEmpty();
     }
 
     @Test
     void readPartShouldReturnPreviouslySavedData() {
-        testee.writePart(ByteBuffer.wrap(DATA), BLOB_ID, POSITION).block();
+        testee.writePart(ByteBuffer.wrap(DATA), BUCKET_NAME, BLOB_ID, POSITION).block();
 
-        Optional<byte[]> maybeBytes = testee.readPart(BLOB_ID, POSITION).blockOptional();
+        Optional<byte[]> maybeBytes = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION).blockOptional();
 
         assertThat(maybeBytes).contains(DATA);
     }
 
     @Test
     void readPartShouldNotReturnContentOfOtherParts() {
-        testee.writePart(ByteBuffer.wrap(DATA), BLOB_ID, POSITION).block();
+        testee.writePart(ByteBuffer.wrap(DATA), BUCKET_NAME, BLOB_ID, POSITION).block();
 
-        Optional<byte[]> maybeBytes = testee.readPart(BLOB_ID, POSITION_2).blockOptional();
+        Optional<byte[]> maybeBytes = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION_2).blockOptional();
+
+        assertThat(maybeBytes).isEmpty();
+    }
+
+    @Test
+    void readPartShouldNotReturnContentOfOtherBuckets() {
+        testee.writePart(ByteBuffer.wrap(DATA), BUCKET_NAME, BLOB_ID, POSITION).block();
+
+        Optional<byte[]> maybeBytes = testee.readPart(BUCKET_NAME_2, BLOB_ID, POSITION).blockOptional();
 
         assertThat(maybeBytes).isEmpty();
     }
 
     @Test
     void readPartShouldReturnLatestValue() {
-        testee.writePart(ByteBuffer.wrap(DATA), BLOB_ID, POSITION).block();
-        testee.writePart(ByteBuffer.wrap(DATA_2), BLOB_ID, POSITION).block();
+        testee.writePart(ByteBuffer.wrap(DATA), BUCKET_NAME, BLOB_ID, POSITION).block();
+        testee.writePart(ByteBuffer.wrap(DATA_2), BUCKET_NAME, BLOB_ID, POSITION).block();
 
-        Optional<byte[]> maybeBytes = testee.readPart(BLOB_ID, POSITION).blockOptional();
+        Optional<byte[]> maybeBytes = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION).blockOptional();
 
         assertThat(maybeBytes).contains(DATA_2);
     }
 
     @Test
     void selectRowCountShouldReturnEmptyByDefault() {
-        Optional<Integer> maybeRowCount = testee.selectRowCount(BLOB_ID).blockOptional();
+        Optional<Integer> maybeRowCount = testee.selectRowCount(BUCKET_NAME, BLOB_ID).blockOptional();
 
         assertThat(maybeRowCount).isEmpty();
     }
 
     @Test
     void selectRowCountShouldReturnPreviouslySavedValue() {
-        testee.saveBlobPartsReferences(BLOB_ID, NUMBER_OF_CHUNK).block();
+        testee.saveBlobPartsReferences(BUCKET_NAME, BLOB_ID, NUMBER_OF_CHUNK).block();
 
-        Optional<Integer> maybeRowCount = testee.selectRowCount(BLOB_ID).blockOptional();
+        Optional<Integer> maybeRowCount = testee.selectRowCount(BUCKET_NAME, BLOB_ID).blockOptional();
 
         assertThat(maybeRowCount).contains(NUMBER_OF_CHUNK);
     }
 
     @Test
     void selectRowCountShouldNotReturnOtherBlobIdValue() {
-        testee.saveBlobPartsReferences(BLOB_ID, NUMBER_OF_CHUNK).block();
+        testee.saveBlobPartsReferences(BUCKET_NAME, BLOB_ID, NUMBER_OF_CHUNK).block();
 
-        Optional<Integer> maybeRowCount = testee.selectRowCount(BLOB_ID_2).blockOptional();
+        Optional<Integer> maybeRowCount = testee.selectRowCount(BUCKET_NAME, BLOB_ID_2).blockOptional();
+
+        assertThat(maybeRowCount).isEmpty();
+    }
+
+    @Test
+    void selectRowCountShouldNotReturnOtherBucketValue() {
+        testee.saveBlobPartsReferences(BUCKET_NAME, BLOB_ID, NUMBER_OF_CHUNK).block();
+
+        Optional<Integer> maybeRowCount = testee.selectRowCount(BUCKET_NAME_2, BLOB_ID).blockOptional();
 
         assertThat(maybeRowCount).isEmpty();
     }

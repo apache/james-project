@@ -23,8 +23,9 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static org.apache.james.blob.cassandra.BlobTables.DefaultBucketBlobTable.ID;
-import static org.apache.james.blob.cassandra.BlobTables.DefaultBucketBlobTable.NUMBER_OF_CHUNK;
+import static org.apache.james.blob.cassandra.BlobTables.BucketBlobTable.BUCKET;
+import static org.apache.james.blob.cassandra.BlobTables.BucketBlobTable.ID;
+import static org.apache.james.blob.cassandra.BlobTables.BucketBlobTable.NUMBER_OF_CHUNK;
 
 import java.nio.ByteBuffer;
 
@@ -32,7 +33,8 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.cassandra.BlobTables.DefaultBucketBlobParts;
+import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.cassandra.BlobTables.BucketBlobParts;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
@@ -41,7 +43,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
 
-public class CassandraDefaultBucketDAO {
+public class CassandraBucketDAO {
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insert;
     private final PreparedStatement insertPart;
@@ -50,7 +52,7 @@ public class CassandraDefaultBucketDAO {
 
     @Inject
     @VisibleForTesting
-    public CassandraDefaultBucketDAO(Session session) {
+    public CassandraBucketDAO(Session session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.insert = prepareInsert(session);
         this.select = prepareSelect(session);
@@ -60,63 +62,71 @@ public class CassandraDefaultBucketDAO {
 
     private PreparedStatement prepareSelect(Session session) {
         return session.prepare(select()
-            .from(BlobTables.DefaultBucketBlobTable.TABLE_NAME)
-            .where(eq(ID, bindMarker(ID))));
+            .from(BlobTables.BucketBlobTable.TABLE_NAME)
+            .where(eq(BUCKET, bindMarker(BUCKET)))
+            .and(eq(ID, bindMarker(ID))));
     }
 
     private PreparedStatement prepareSelectPart(Session session) {
         return session.prepare(select()
-            .from(DefaultBucketBlobParts.TABLE_NAME)
-            .where(eq(DefaultBucketBlobParts.ID, bindMarker(DefaultBucketBlobParts.ID)))
-            .and(eq(DefaultBucketBlobParts.CHUNK_NUMBER, bindMarker(DefaultBucketBlobParts.CHUNK_NUMBER))));
+            .from(BucketBlobParts.TABLE_NAME)
+            .where(eq(BUCKET, bindMarker(BUCKET)))
+            .and(eq(ID, bindMarker(ID)))
+            .and(eq(BucketBlobParts.CHUNK_NUMBER, bindMarker(BucketBlobParts.CHUNK_NUMBER))));
     }
 
     private PreparedStatement prepareInsert(Session session) {
-        return session.prepare(insertInto(BlobTables.DefaultBucketBlobTable.TABLE_NAME)
+        return session.prepare(insertInto(BlobTables.BucketBlobTable.TABLE_NAME)
+            .value(BUCKET, bindMarker(BUCKET))
             .value(ID, bindMarker(ID))
             .value(NUMBER_OF_CHUNK, bindMarker(NUMBER_OF_CHUNK)));
     }
 
     private PreparedStatement prepareInsertPart(Session session) {
-        return session.prepare(insertInto(DefaultBucketBlobParts.TABLE_NAME)
-            .value(DefaultBucketBlobParts.ID, bindMarker(DefaultBucketBlobParts.ID))
-            .value(DefaultBucketBlobParts.CHUNK_NUMBER, bindMarker(DefaultBucketBlobParts.CHUNK_NUMBER))
-            .value(DefaultBucketBlobParts.DATA, bindMarker(DefaultBucketBlobParts.DATA)));
+        return session.prepare(insertInto(BucketBlobParts.TABLE_NAME)
+            .value(BucketBlobParts.BUCKET, bindMarker(BucketBlobParts.BUCKET))
+            .value(BucketBlobParts.ID, bindMarker(BucketBlobParts.ID))
+            .value(BucketBlobParts.CHUNK_NUMBER, bindMarker(BucketBlobParts.CHUNK_NUMBER))
+            .value(BucketBlobParts.DATA, bindMarker(BucketBlobParts.DATA)));
     }
 
-    Mono<Void> writePart(ByteBuffer data, BlobId blobId, int position) {
+    Mono<Void> writePart(ByteBuffer data, BucketName bucketName, BlobId blobId, int position) {
         return cassandraAsyncExecutor.executeVoid(
             insertPart.bind()
-                .setString(ID, blobId.asString())
-                .setInt(DefaultBucketBlobParts.CHUNK_NUMBER, position)
-                .setBytes(DefaultBucketBlobParts.DATA, data));
+                .setString(BucketBlobParts.BUCKET, bucketName.asString())
+                .setString(BucketBlobParts.ID, blobId.asString())
+                .setInt(BucketBlobParts.CHUNK_NUMBER, position)
+                .setBytes(BucketBlobParts.DATA, data));
     }
 
-    Mono<Void> saveBlobPartsReferences(BlobId blobId, int numberOfChunk) {
+    Mono<Void> saveBlobPartsReferences(BucketName bucketName, BlobId blobId, int numberOfChunk) {
         return cassandraAsyncExecutor.executeVoid(
             insert.bind()
+                .setString(BUCKET, bucketName.asString())
                 .setString(ID, blobId.asString())
                 .setInt(NUMBER_OF_CHUNK, numberOfChunk));
     }
 
-    Mono<Integer> selectRowCount(BlobId blobId) {
+    Mono<Integer> selectRowCount(BucketName bucketName, BlobId blobId) {
         return cassandraAsyncExecutor.executeSingleRow(
                 select.bind()
+                    .setString(BUCKET, bucketName.asString())
                     .setString(ID, blobId.asString()))
             .map(row -> row.getInt(NUMBER_OF_CHUNK));
     }
 
-    Mono<byte[]> readPart(BlobId blobId, int position) {
+    Mono<byte[]> readPart(BucketName bucketName, BlobId blobId, int position) {
         return cassandraAsyncExecutor.executeSingleRow(
             selectPart.bind()
-                .setString(DefaultBucketBlobParts.ID, blobId.asString())
-                .setInt(DefaultBucketBlobParts.CHUNK_NUMBER, position))
+                .setString(BucketBlobParts.BUCKET, bucketName.asString())
+                .setString(BucketBlobParts.ID, blobId.asString())
+                .setInt(BucketBlobParts.CHUNK_NUMBER, position))
             .map(this::rowToData);
     }
 
     private byte[] rowToData(Row row) {
-        byte[] data = new byte[row.getBytes(DefaultBucketBlobParts.DATA).remaining()];
-        row.getBytes(DefaultBucketBlobParts.DATA).get(data);
+        byte[] data = new byte[row.getBytes(BucketBlobParts.DATA).remaining()];
+        row.getBytes(BucketBlobParts.DATA).get(data);
         return data;
     }
 }

@@ -197,7 +197,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
                     .hasMessage("Expected failure while storing mail parts");
 
             ResultSet resultSet = cassandra.getConf().execute(select()
-                    .from(BlobTables.BlobTable.TABLE_NAME));
+                    .from(BlobTables.DefaultBucketBlobTable.TABLE_NAME));
             assertThat(resultSet.all()).hasSize(2);
         }
     }
@@ -272,7 +272,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
                     .hasMessage("Expected failure while storing keys");
 
             ResultSet resultSet = cassandra.getConf().execute(select()
-                    .from(BlobTables.BlobTable.TABLE_NAME));
+                    .from(BlobTables.DefaultBucketBlobTable.TABLE_NAME));
             assertThat(resultSet.all()).hasSize(2);
         }
 

@@ -19,33 +19,21 @@
 
 package org.apache.james.blob.cassandra;
 
-public interface BlobTables {
+import java.nio.charset.StandardCharsets;
 
-    interface DefaultBucketBlobTable {
-        String TABLE_NAME = "blobs";
-        String ID = "id";
-        String NUMBER_OF_CHUNK = "position";
-    }
+import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.HashBlobId;
 
-    interface DefaultBucketBlobParts {
-        String TABLE_NAME = "blobParts";
-        String ID = "id";
-        String CHUNK_NUMBER = "chunkNumber";
-        String DATA = "data";
-    }
-
-    interface BucketBlobTable {
-        String TABLE_NAME = "blobsInBucket";
-        String BUCKET = "bucket";
-        String ID = "id";
-        String NUMBER_OF_CHUNK = "position";
-    }
-
-    interface BucketBlobParts {
-        String TABLE_NAME = "blobPartsInBucket";
-        String BUCKET = "bucket";
-        String ID = "id";
-        String CHUNK_NUMBER = "chunkNumber";
-        String DATA = "data";
-    }
+public interface CassandraBlobStoreFixture {
+    byte[] DATA = "anydata".getBytes(StandardCharsets.UTF_8);
+    byte[] DATA_2 = "anydata2".getBytes(StandardCharsets.UTF_8);
+    int POSITION = 42;
+    int POSITION_2 = 43;
+    int NUMBER_OF_CHUNK = 17;
+    int NUMBER_OF_CHUNK_2 = 18;
+    BlobId BLOB_ID = new HashBlobId.Factory().from("05dcb33b-8382-4744-923a-bc593ad84d23");
+    BlobId BLOB_ID_2 = new HashBlobId.Factory().from("05dcb33b-8382-4744-923a-bc593ad84d24");
+    BucketName BUCKET_NAME = BucketName.of("aBucket");
+    BucketName BUCKET_NAME_2 = BucketName.of("anotherBucket");
 }
