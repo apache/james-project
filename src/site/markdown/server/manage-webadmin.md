@@ -2758,7 +2758,7 @@ Not implemented yet.
 
 ## Deleted Messages Vault
 
-The 'Deleted Message Vault plugin' allows you to keep users deleted messages during a given retention time. This set of routes allow you to *restore* users deleted messages or export them in an archive (not implemented yet).
+The 'Deleted Message Vault plugin' allows you to keep users deleted messages during a given retention time. This set of routes allow you to *restore* users deleted messages or export them in an archive.
 
 To move deleted messages in the vault, you need to specifically configure the DeletedMessageVault PreDeletionHook.
 
@@ -2769,7 +2769,7 @@ Here are the following actions available on the 'Deleted Messages Vault'
  - [Purge Deleted Messages](#Purge_Deleted_Messages)
  - [Permanently Remove Deleted Message](#Permanently_Remove_Deleted_Message)
 
- Note that the 'Deleted Messages Vault' feature is only supported on top of Cassandra-Guice.
+ Note that the 'Deleted Messages Vault' feature is supported on top of all available Guice products.
 
 ### Restore Deleted Messages
 
@@ -2778,7 +2778,7 @@ Deleted messages of a specific user can be restored by calling the following end
 ```
 curl -XPOST http://ip:port/deletedMessages/users/userToRestore@domain.ext?action=restore
 
-{"
+{
   "combinator": "and",
   "criteria": [
     {
@@ -2820,17 +2820,17 @@ curl -XPOST http://ip:port/deletedMessages/users/userToRestore@domain.ext?action
 };
 ```
 
-The requested Json body is made from list of criterion objects which have following structure:
+The requested Json body is made from a list of criterion objects which have the following structure:
 
 ```
 {
   "fieldName": "supportedFieldName",
   "operator": "supportedOperator",
-  "value": "A plain string represents for the matching value of the corresponding field"
+  "value": "A plain string representing the matching value of the corresponding field"
 }
 ```
 
-Deleted Messages which are matched with **all** criterions in the query body will be restored. Here are list of supported fieldName for the restoring:
+Deleted Messages which are matched with the **all** criterion in the query body will be restored. Here are a list of supported fieldName for the restoring:
 
  - subject: represents for deleted message `subject` field matching. Supports below string operators:
    - contains
@@ -2852,13 +2852,13 @@ Deleted Messages which are matched with **all** criterions in the query body wil
  - originMailboxes: represents for deleted message `originMailboxes` field matching. Tested value is a string serialized of mailbox id. Supports list mailbox id operators:
    - contains: does the tested deleted message's originMailbox ids contain tested mailbox id ?
    
-Messages in the Deleted Messages Vault of an specified user that are matched with Query Json Object in the body will be appended to his 'Restored-Messages' mailbox, which will be created if needed.
+Messages in the Deleted Messages Vault of a specified user that are matched with Query Json Object in the body will be appended to his 'Restored-Messages' mailbox, which will be created if needed.
 
 **Note**:
 
- - Query parameter `action` is required and should have value `restore` to represent for restoring feature. Otherwise, a bad request response will be returned
+ - Query parameter `action` is required and should have the value `restore` to represent the restoring feature. Otherwise, a bad request response will be returned
  - Query parameter `action` is case sensitive
- - fieldName & operator for passing to the routes are case sensitive
+ - fieldName & operator passed to the routes are case sensitive
  - Currently, we only support query combinator `and` value, otherwise, requests will be rejected 
  - If you only want to restore by only one criterion, the json body could be simplified to a single criterion:
 
@@ -2870,7 +2870,7 @@ Messages in the Deleted Messages Vault of an specified user that are matched wit
 }
 ```
 
- - For restoring all deleted messages, passing a query json with empty criterion list to represent `matching all deleted messages`: 
+ - For restoring all deleted messages, passing a query json with an empty criterion list to represent `matching all deleted messages`: 
 
 ```
 {
@@ -2951,9 +2951,9 @@ while:
  
 ### Purge Deleted Messages
  
-You can overwrite 'retentionPeriod' configuration in 'deletedMessageVault' configuration file or use default value is 1 year.
+You can overwrite 'retentionPeriod' configuration in 'deletedMessageVault' configuration file or use the default value of 1 year.
 
-Purge all deleted messages older than configured 'retentionPeriod'
+Purge all deleted messages older than the configured 'retentionPeriod'
 
 ```
 curl -XDEL http://ip:port/deletedMessages?scope=expired
