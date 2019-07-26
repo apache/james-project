@@ -139,14 +139,11 @@ public class JPAHostSystem extends JamesImapHostSystem {
     }
 
     @Override
-    public void afterTest() throws Exception {
-        if (mailboxManager != null) {
-            MailboxSession session = mailboxManager.createSystemSession("test");
-            mailboxManager.startProcessingRequest(session);
-            mailboxManager.deleteEverything(session);
-            mailboxManager.endProcessingRequest(session);
-            mailboxManager.logout(session, false);
-        }
+    public void afterTest() {
+        JPA_TEST_CLUSTER.clear(ImmutableList.<String>builder()
+            .addAll(JPAMailboxFixture.MAILBOX_TABLE_NAMES)
+            .addAll(JPAMailboxFixture.QUOTA_TABLES_NAMES)
+            .build());
     }
 
     @Override
