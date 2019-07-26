@@ -25,6 +25,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.core.healthcheck.Result;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,11 +34,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class CassandraHealthCheckTest {
 
     private CassandraHealthCheck healthCheck;
+    private CassandraCluster cassandra;
 
     @BeforeEach
     void setUp(DockerCassandraExtension.DockerCassandra cassandraServer) {
-        CassandraCluster cassandra = CassandraCluster.create(CassandraModule.builder().build(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraModule.builder().build(), cassandraServer.getHost());
         healthCheck = new CassandraHealthCheck(cassandra.getConf());
+    }
+
+    @AfterEach
+    void tearDown() {
+        cassandra.close();
     }
 
     @Test

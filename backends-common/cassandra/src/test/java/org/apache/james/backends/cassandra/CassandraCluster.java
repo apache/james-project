@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.backends.cassandra;
 
+import java.util.Optional;
+
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraTableManager;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
@@ -33,13 +35,23 @@ import com.datastax.driver.core.Session;
 public final class CassandraCluster implements AutoCloseable {
     public static final String KEYSPACE = "testing";
 
+    private static Optional<Exception> startStackTrace = Optional.empty();
     private final CassandraModule module;
     private Session session;
     private CassandraTypesProvider typesProvider;
     private Cluster cluster;
 
     public static CassandraCluster create(CassandraModule module, Host host) {
-        return new CassandraCluster(module, host);
+        assertClusterNotRunning();
+        CassandraCluster cassandraCluster = new CassandraCluster(module, host);
+        startStackTrace = Optional.of(new Exception("initial connection call trace"));
+        return cassandraCluster;
+    }
+
+    private static void assertClusterNotRunning() {
+      startStackTrace.ifPresent( e ->  {
+          throw new IllegalStateException("Cluster already running, look at the cause for the initial connection creation call trace", e);
+      });
     }
 
     private CassandraCluster(CassandraModule module, Host host) throws RuntimeException {
@@ -85,7 +97,8 @@ public final class CassandraCluster implements AutoCloseable {
     }
 
     public void closeCluster() {
-        cluster.closeAsync();
+        cluster.closeAsync().force();
+        startStackTrace = Optional.empty();
     }
 
     public void clearTables() {
