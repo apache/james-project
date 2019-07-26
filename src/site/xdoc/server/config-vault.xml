@@ -35,8 +35,14 @@
 
             <p>
                 Note: This feature requires Guice wiring.
-                To make James use DeletedMessageVault, you also need to configure the PreDeletionHook for it.
+                To make James use DeletedMessageVault, you need to configure the PreDeletionHook for it.
                 Example is at <a href="/server/config-listeners.html">Mailbox Listener Configuration</a>
+            </p>
+
+            <p>
+                The Deleted Messages Vault also stores and manages deleted messages into a BlobStore. The BlobStore can be either
+                based on an object storage or on Cassandra. For configuring the BlobStore the vault will use, you can look at
+                <a href="/server/config-blobstore.xml">BlobStore Configuration</a>.
             </p>
 
             <subsection name="deletedMessageVault.properties">
@@ -45,11 +51,11 @@
                     to get some examples and hints.</p>
                 <br/>
                 <dl>
-                    <dt><strong>urlPrefix</strong></dt>
-                    <dd>Define prefix value of namespace in MailRepository where deleted messages are stored (default: default mail repository protocol + var/deletedMessages/vault)</dd>
-
                     <dt><strong>retentionPeriod</strong></dt>
-                    <dd>Deleted messages stored in the Deleted Messages Vault are expired after this period, (default: 1 year)</dd>
+                    <dd>
+                        Deleted messages stored in the Deleted Messages Vault are expired after this period (default: 1 year).
+                        It can be expressed in <b>y</b> years, <b>d</b> days, <b>h</b> hours, ...
+                    </dd>
                 </dl>
 
             </subsection>
