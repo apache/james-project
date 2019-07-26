@@ -30,7 +30,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.ObjectStoreException;
+import org.apache.james.blob.api.ObjectNotFoundException;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -109,7 +109,7 @@ public class MemoryBlobStore implements BlobStore {
     private byte[] retrieveStoredValue(BucketName bucketName, BlobId blobId) {
         synchronized (blobs) {
             return Optional.ofNullable(blobs.get(bucketName, blobId))
-                .orElseThrow(() -> new ObjectStoreException("Unable to find blob with id " + blobId + " in bucket " + bucketName.asString()));
+                .orElseThrow(() -> new ObjectNotFoundException("Unable to find blob with id " + blobId + " in bucket " + bucketName.asString()));
         }
     }
 

@@ -21,6 +21,7 @@ package org.apache.james.webadmin.vault.routes;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
@@ -32,9 +33,12 @@ import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.User;
 import org.apache.james.vault.DeletedMessage;
+import org.apache.james.vault.DeletedMessageContentNotFoundException;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.DeletedMessageZipper;
 import org.apache.james.vault.search.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.ByteSource;
@@ -44,6 +48,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 class ExportService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExportService.class);
+    private static final Predicate<Throwable> CONTENT_NOT_FOUND_PREDICATE =
+        throwable -> throwable instanceof DeletedMessageContentNotFoundException;
+
     private final BlobExportMechanism blobExport;
     private final BlobStore blobStore;
     private final DeletedMessageZipper zipper;
@@ -81,7 +90,16 @@ class ExportService {
     }
 
     private DeletedMessageZipper.DeletedMessageContentLoader contentLoader(User user) {
-        return message -> Mono.from(vault.loadMimeMessage(user, message.getMessageId())).blockOptional();
+        return message -> Mono.from(vault.loadMimeMessage(user, message.getMessageId()))
+            .onErrorResume(CONTENT_NOT_FOUND_PREDICATE, throwable -> {
+                LOGGER.info(
+                    "Error happened when loading mime message associated with id {} of user {} in the vault",
+                    message.getMessageId().serialize(),
+                    user.asString(),
+                    throwable);
+                return Mono.empty();
+            })
+            .blockOptional();
     }
 
     private String exportMessage(User user) {

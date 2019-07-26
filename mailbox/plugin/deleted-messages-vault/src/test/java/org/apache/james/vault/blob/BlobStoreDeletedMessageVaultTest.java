@@ -39,7 +39,6 @@ import org.apache.james.vault.DeletedMessageVaultSearchContract;
 import org.apache.james.vault.RetentionConfiguration;
 import org.apache.james.vault.memory.metadata.MemoryDeletedMessageMetadataVault;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Mono;
@@ -90,41 +89,5 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, D
             .containsOnly(
                 BucketName.of("deleted-messages-2007-12-01"),
                 BucketName.of("deleted-messages-2008-01-01"));
-    }
-
-
-    @Disabled("JAMES-2811 need vault.delete() to be implemented because this test uses that method")
-    @Override
-    public void deleteExpiredMessagesTaskShouldCompleteWhenAllMailsDeleted() {
-    }
-
-    @Disabled("Will be implemented later")
-    @Override
-    public void deleteShouldRunSuccessfullyInAConcurrentContext() {
-
-    }
-
-    @Disabled("Will be implemented later")
-    @Override
-    public void searchAllShouldNotReturnDeletedItems() {
-
-    }
-
-    @Disabled("Will be implemented later")
-    @Override
-    public void loadMimeMessageShouldReturnEmptyWhenDeleted() {
-
-    }
-
-    @Disabled("Will be implemented later")
-    @Override
-    public void deleteShouldThrowOnNullMessageId() {
-
-    }
-
-    @Disabled("Will be implemented later")
-    @Override
-    public void deleteShouldThrowOnNullUser() {
-
     }
 }

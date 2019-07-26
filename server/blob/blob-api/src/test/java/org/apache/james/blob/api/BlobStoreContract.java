@@ -141,7 +141,7 @@ public interface BlobStoreContract {
         BucketName defaultBucketName = store.getDefaultBucketName();
 
         assertThatThrownBy(() -> store.readBytes(defaultBucketName, blobIdFactory().from("unknown")).block())
-            .isExactlyInstanceOf(ObjectStoreException.class);
+            .isExactlyInstanceOf(ObjectNotFoundException.class);
     }
 
     @Test
@@ -186,7 +186,7 @@ public interface BlobStoreContract {
         BucketName defaultBucketName = store.getDefaultBucketName();
 
         assertThatThrownBy(() -> store.read(defaultBucketName, blobIdFactory().from("unknown")))
-            .isInstanceOf(ObjectStoreException.class);
+            .isInstanceOf(ObjectNotFoundException.class);
     }
 
     @Test

@@ -26,13 +26,14 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.task.Task;
 import org.apache.james.vault.DeletedMessage;
+import org.apache.james.vault.DeletedMessageContentNotFoundException;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.RetentionConfiguration;
 import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
@@ -48,6 +49,7 @@ import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private static final Logger LOGGER = LoggerFactory.getLogger(BlobStoreDeletedMessageVault.class);
@@ -86,7 +88,14 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         Preconditions.checkNotNull(user);
         Preconditions.checkNotNull(messageId);
         return Mono.from(messageMetadataVault.retrieveStorageInformation(user, messageId))
-            .map(storageInformation -> blobStore.read(storageInformation.getBucketName(), storageInformation.getBlobId()));
+            .flatMap(storageInformation -> loadMimeMessage(storageInformation, user, messageId));
+    }
+
+    private Mono<InputStream> loadMimeMessage(StorageInformation storageInformation, User user, MessageId messageId) {
+        return Mono.fromSupplier(() -> blobStore.read(storageInformation.getBucketName(), storageInformation.getBlobId()))
+            .onErrorResume(
+                ObjectNotFoundException.class,
+                ex -> Mono.error(new DeletedMessageContentNotFoundException(user, messageId)));
     }
 
     @Override
@@ -101,7 +110,14 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
 
     @Override
     public Publisher<Void> delete(User user, MessageId messageId) {
-        throw new NotImplementedException("Will be implemented later");
+        Preconditions.checkNotNull(user);
+        Preconditions.checkNotNull(messageId);
+
+        return Mono.from(messageMetadataVault.retrieveStorageInformation(user, messageId))
+            .flatMap(storageInformation -> Mono.from(messageMetadataVault.remove(storageInformation.getBucketName(), user, messageId))
+                .thenReturn(storageInformation))
+            .flatMap(storageInformation -> blobStore.delete(storageInformation.getBucketName(), storageInformation.getBlobId()))
+            .subscribeOn(Schedulers.elastic());
     }
 
     @Override

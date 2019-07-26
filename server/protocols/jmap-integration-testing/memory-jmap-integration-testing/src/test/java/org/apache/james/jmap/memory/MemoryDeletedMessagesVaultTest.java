@@ -28,7 +28,9 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.methods.integration.DeletedMessagesVaultTest;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
 import org.apache.james.webadmin.WebAdminConfiguration;
+import org.junit.Ignore;
 import org.junit.Rule;
+import org.junit.Test;
 
 public class MemoryDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
     @Rule
@@ -46,5 +48,12 @@ public class MemoryDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
     @Override
     protected void awaitSearchUpToDate() {
 
+    }
+
+    @Ignore("This side effect behaviour is specific to Blobstore based implementation relying on deduplication, " +
+        "which is not the case of the tested implementation")
+    @Test
+    @Override
+    public void vaultDeleteShouldDeleteAllMessagesHavingSameBlobContent() {
     }
 }

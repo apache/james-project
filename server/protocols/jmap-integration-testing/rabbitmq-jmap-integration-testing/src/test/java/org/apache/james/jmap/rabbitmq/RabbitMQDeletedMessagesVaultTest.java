@@ -31,7 +31,9 @@ import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
 import org.apache.james.vault.MailRepositoryDeletedMessageVault;
 import org.apache.james.webadmin.WebAdminConfiguration;
+import org.junit.Ignore;
 import org.junit.Rule;
+import org.junit.Test;
 
 public class RabbitMQDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
     @Rule
@@ -55,4 +57,12 @@ public class RabbitMQDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
     protected void awaitSearchUpToDate() {
         rule.await();
     }
+
+    @Ignore("This side effect behaviour is specific to Blobstore based implementation relying on deduplication, " +
+        "which is not the case of the tested implementation")
+    @Test
+    @Override
+    public void vaultDeleteShouldDeleteAllMessagesHavingSameBlobContent() {
+    }
 }
+

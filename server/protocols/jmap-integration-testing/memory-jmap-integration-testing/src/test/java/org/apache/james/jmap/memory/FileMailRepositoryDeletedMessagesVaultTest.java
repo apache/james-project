@@ -30,7 +30,9 @@ import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
 import org.apache.james.vault.MailRepositoryDeletedMessageVault;
 import org.apache.james.webadmin.WebAdminConfiguration;
+import org.junit.Ignore;
 import org.junit.Rule;
+import org.junit.Test;
 
 public class FileMailRepositoryDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
 
@@ -51,5 +53,12 @@ public class FileMailRepositoryDeletedMessagesVaultTest extends DeletedMessagesV
                 .toInstance(new MailRepositoryDeletedMessageVault.Configuration(MailRepositoryUrl.from("file://var/deletedMessages/user"))),
             binder -> binder.bind(FileSystem.class).toInstance(fileSystem),
             binder -> binder.bind(Clock.class).toInstance(clock));
+    }
+
+    @Ignore("This side effect behaviour is specific to Blobstore based implementation relying on deduplication, " +
+        "which is not the case of the tested implementation")
+    @Test
+    @Override
+    public void vaultDeleteShouldDeleteAllMessagesHavingSameBlobContent() {
     }
 }
