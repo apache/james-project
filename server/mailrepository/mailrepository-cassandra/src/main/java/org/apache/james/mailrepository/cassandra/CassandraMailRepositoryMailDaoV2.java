@@ -30,9 +30,9 @@ import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.BO
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.CONTENT_TABLE_NAME;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.ERROR_MESSAGE;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.HEADER_BLOB_ID;
-import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.HeaderEntrty.HEADER_NAME_INDEX;
-import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.HeaderEntrty.HEADER_VALUE_INDEX;
-import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.HeaderEntrty.USER_INDEX;
+import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.HeaderEntry.HEADER_NAME_INDEX;
+import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.HeaderEntry.HEADER_VALUE_INDEX;
+import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.HeaderEntry.USER_INDEX;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.LAST_UPDATED;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.MAIL_KEY;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.MAIL_PROPERTIES;
@@ -78,6 +78,7 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
 import reactor.core.publisher.Mono;
 
 public class CassandraMailRepositoryMailDaoV2 implements CassandraMailRepositoryMailDaoAPI {

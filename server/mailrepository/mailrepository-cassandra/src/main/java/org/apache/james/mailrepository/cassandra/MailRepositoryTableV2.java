@@ -37,7 +37,7 @@ public interface MailRepositoryTableV2 {
     String LAST_UPDATED = "lastUpdated";
     String PER_RECIPIENT_SPECIFIC_HEADERS = "perRecipientSpecificHeaders";
 
-    interface HeaderEntrty {
+    interface HeaderEntry {
         int USER_INDEX = 0;
         int HEADER_NAME_INDEX = 1;
         int HEADER_VALUE_INDEX = 2;
