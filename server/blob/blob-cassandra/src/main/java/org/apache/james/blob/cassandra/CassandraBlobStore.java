@@ -139,9 +139,9 @@ public class CassandraBlobStore implements BlobStore {
         return Flux.range(0, rowCount)
             .publishOn(Schedulers.elastic(), PREFETCH)
             .flatMapSequential(partIndex -> readPart(bucketName, blobId, partIndex)
-                .switchIfEmpty(Mono.error(new IllegalStateException(
-                    String.format("Missing blob part for blobId %s and position %d", blobId, partIndex))))
-                , MAX_CONCURRENCY, PREFETCH);
+                .switchIfEmpty(Mono.error(new ObjectStoreException(
+                    String.format("Missing blob part for blobId %s and position %d", blobId, partIndex)))),
+                MAX_CONCURRENCY, PREFETCH);
     }
 
     @Override

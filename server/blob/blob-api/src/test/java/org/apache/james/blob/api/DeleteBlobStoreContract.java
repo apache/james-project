@@ -158,8 +158,35 @@ public interface DeleteBlobStoreContract {
                 try {
                     InputStream read = store.read(defaultBucketName, blobId);
 
-                    if (!IOUtils.toString(read, StandardCharsets.UTF_8).equals(TWELVE_MEGABYTES_STRING)) {
-                        throw new RuntimeException("Should not read partial blob when an other thread is deleting it");
+                    String string = IOUtils.toString(read, StandardCharsets.UTF_8);
+                    if (!string.equals(TWELVE_MEGABYTES_STRING)) {
+                        throw new RuntimeException("Should not read partial blob when an other thread is deleting it. Size : " + string.length());
+                    }
+                } catch (ObjectStoreException exception) {
+                    // normal behavior here
+                }
+
+                store.delete(defaultBucketName, blobId).block();
+            }))
+            .threadCount(10)
+            .operationCount(10)
+            .runSuccessfullyWithin(Duration.ofMinutes(3));
+    }
+
+    @Test
+    default void readBytesShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() throws Exception {
+        BlobStore store = testee();
+        BucketName defaultBucketName = store.getDefaultBucketName();
+
+        BlobId blobId = store.save(defaultBucketName, TWELVE_MEGABYTES).block();
+
+        ConcurrentTestRunner.builder()
+            .operation(((threadNumber, step) -> {
+                try {
+                    byte[] read = store.readBytes(defaultBucketName, blobId).block();
+                    String string = IOUtils.toString(read, StandardCharsets.UTF_8.displayName());
+                    if (!string.equals(TWELVE_MEGABYTES_STRING)) {
+                        throw new RuntimeException("Should not read partial blob when an other thread is deleting it. Size : " + string.length());
                     }
                 } catch (ObjectStoreException exception) {
                     // normal behavior here

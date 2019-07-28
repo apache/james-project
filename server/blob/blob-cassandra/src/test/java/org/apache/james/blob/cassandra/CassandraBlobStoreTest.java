@@ -21,10 +21,13 @@ package org.apache.james.blob.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
@@ -35,6 +38,7 @@ import org.apache.james.blob.api.DeleteBlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
+import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.util.ZeroedInputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -42,6 +46,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
+
+import reactor.core.publisher.Mono;
 
 public class CassandraBlobStoreTest implements MetricableBlobStoreContract, BucketBlobStoreContract, DeleteBlobStoreContract {
     private static final int CHUNK_SIZE = 10240;
@@ -51,14 +57,17 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract, Buck
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobModule.MODULE);
 
     private BlobStore testee;
+    private CassandraDefaultBucketDAO defaultBucketDAO;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, cassandra.getConf());
+        defaultBucketDAO = spy(new CassandraDefaultBucketDAO(cassandra.getConf()));
         testee = new MetricableBlobStore(
             metricsTestExtension.getMetricFactory(),
-            new CassandraBlobStore(new CassandraDefaultBucketDAO(cassandra.getConf()),
-                new CassandraBucketDAO(blobIdFactory, cassandra.getConf()),
+            new CassandraBlobStore(defaultBucketDAO,
+                bucketDAO,
                 CassandraConfiguration.builder()
                     .blobPartSize(CHUNK_SIZE)
                     .build(),
@@ -76,7 +85,7 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract, Buck
     }
 
     @Override
-    @Disabled("Concurrent read and delete can lead to partial reads (no transactions)")
+    @Disabled("JAMES-2838 Read inputStream relies on a pipedInputStream model that does not allow to propagate partial read exceptions")
     public void readShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() {
 
     }
@@ -89,6 +98,33 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract, Buck
         byte[] bytes = testee.readBytes(testee.getDefaultBucketName(), blobId).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEqualTo(longString);
+    }
+
+    @Test
+    void readBytesShouldNotReturnInvalidResultsWhenPartialDataPresent() {
+        int repeatCount = MULTIPLE_CHUNK_SIZE * CHUNK_SIZE;
+        String longString = Strings.repeat("0123456789\n", repeatCount);
+        BlobId blobId = testee.save(testee.getDefaultBucketName(), longString).block();
+
+        when(defaultBucketDAO.readPart(blobId, 1)).thenReturn(Mono.empty());
+
+        assertThatThrownBy(() -> testee.readBytes(testee.getDefaultBucketName(), blobId).block())
+            .isInstanceOf(ObjectStoreException.class)
+            .hasMessageContaining("Missing blob part for blobId");
+    }
+
+    @Disabled("JAMES-2838 Read inputStream relies on a pipedInputStream model that does not allow to propagate partial read exceptions")
+    @Test
+    void readShouldNotReturnInvalidResultsWhenPartialDataPresent() {
+        int repeatCount = MULTIPLE_CHUNK_SIZE * CHUNK_SIZE;
+        String longString = Strings.repeat("0123456789\n", repeatCount);
+        BlobId blobId = testee.save(testee.getDefaultBucketName(), longString).block();
+
+        when(defaultBucketDAO.readPart(blobId, 1)).thenReturn(Mono.empty());
+
+        assertThatThrownBy(() -> IOUtils.toString(testee.read(testee.getDefaultBucketName(), blobId), StandardCharsets.UTF_8))
+            .isInstanceOf(ObjectStoreException.class)
+            .hasMessageContaining("Missing blob part for blobId");
     }
 
     @Test
