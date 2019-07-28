@@ -41,7 +41,6 @@ import org.apache.james.blob.api.MetricableBlobStoreContract;
 import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.util.ZeroedInputStream;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -84,12 +83,6 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract, Buck
         return new HashBlobId.Factory();
     }
 
-    @Override
-    @Disabled("JAMES-2838 Read inputStream relies on a pipedInputStream model that does not allow to propagate partial read exceptions")
-    public void readShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() {
-
-    }
-
     @Test
     void readBytesShouldReturnSplitSavedDataByChunk() {
         String longString = Strings.repeat("0123456789\n", MULTIPLE_CHUNK_SIZE);
@@ -113,7 +106,6 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract, Buck
             .hasMessageContaining("Missing blob part for blobId");
     }
 
-    @Disabled("JAMES-2838 Read inputStream relies on a pipedInputStream model that does not allow to propagate partial read exceptions")
     @Test
     void readShouldNotReturnInvalidResultsWhenPartialDataPresent() {
         int repeatCount = MULTIPLE_CHUNK_SIZE * CHUNK_SIZE;

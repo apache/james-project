@@ -20,7 +20,6 @@
 package org.apache.james.blob.cassandra;
 
 import java.io.InputStream;
-import java.io.PipedInputStream;
 import java.nio.ByteBuffer;
 import java.util.Comparator;
 import java.util.stream.Collectors;
@@ -36,7 +35,9 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectNotFoundException;
+import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.cassandra.utils.DataChunker;
+import org.apache.james.blob.cassandra.utils.PipedInputStreamHandlingError;
 import org.apache.james.blob.cassandra.utils.PipedStreamSubscriber;
 
 import com.datastax.driver.core.Session;
@@ -119,7 +120,7 @@ public class CassandraBlobStore implements BlobStore {
 
     @Override
     public InputStream read(BucketName bucketName, BlobId blobId) {
-        PipedInputStream pipedInputStream = new PipedInputStream();
+        PipedInputStreamHandlingError pipedInputStream = new PipedInputStreamHandlingError();
         readBlobParts(bucketName, blobId)
             .subscribe(new PipedStreamSubscriber(pipedInputStream));
         return pipedInputStream;

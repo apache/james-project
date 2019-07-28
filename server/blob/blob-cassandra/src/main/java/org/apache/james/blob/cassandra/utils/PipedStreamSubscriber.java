@@ -20,8 +20,6 @@
 package org.apache.james.blob.cassandra.utils;
 
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.io.UncheckedIOException;
 
 import org.reactivestreams.Subscription;
@@ -29,16 +27,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+
 import reactor.core.publisher.BaseSubscriber;
 
 public class PipedStreamSubscriber extends BaseSubscriber<byte[]> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final PipedInputStream in;
-    private PipedOutputStream out;
+    private final PipedInputStreamHandlingError in;
+    private PipedOutputStreamHandlingError out;
 
-    public PipedStreamSubscriber(PipedInputStream in) {
+    public PipedStreamSubscriber(PipedInputStreamHandlingError in) {
         Preconditions.checkNotNull(in, "The input stream must not be null");
         this.in = in;
     }
@@ -47,7 +46,7 @@ public class PipedStreamSubscriber extends BaseSubscriber<byte[]> {
     protected void hookOnSubscribe(Subscription subscription) {
         super.hookOnSubscribe(subscription);
         try {
-            this.out = new PipedOutputStream(in);
+            this.out = new PipedOutputStreamHandlingError(in);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -70,6 +69,13 @@ public class PipedStreamSubscriber extends BaseSubscriber<byte[]> {
     @Override
     protected void hookOnError(Throwable error) {
         logger.error("Failure processing stream", error);
+
+        if (error instanceof RuntimeException) {
+            out.propagateError((RuntimeException) error);
+        } else {
+            out.propagateError(new RuntimeException(error));
+        }
+
         close();
     }
 
