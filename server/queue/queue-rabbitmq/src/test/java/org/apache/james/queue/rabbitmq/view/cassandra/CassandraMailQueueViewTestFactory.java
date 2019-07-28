@@ -22,7 +22,6 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 import java.time.Clock;
 import java.util.Optional;
 
-import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
@@ -41,12 +40,11 @@ import reactor.core.publisher.Mono;
 public class CassandraMailQueueViewTestFactory {
 
     public static CassandraMailQueueView.Factory factory(Clock clock, Session session,
-                                                         CassandraTypesProvider typesProvider,
                                                          CassandraMailQueueViewConfiguration configuration,
                                                          MimeMessageStore.Factory mimeMessageStoreFactory) {
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
 
-        EnqueuedMailsDAO enqueuedMailsDao = new EnqueuedMailsDAO(session, typesProvider, blobIdFactory);
+        EnqueuedMailsDAO enqueuedMailsDao = new EnqueuedMailsDAO(session, blobIdFactory);
         BrowseStartDAO browseStartDao = new BrowseStartDAO(session);
         DeletedMailsDAO deletedMailsDao = new DeletedMailsDAO(session);
 

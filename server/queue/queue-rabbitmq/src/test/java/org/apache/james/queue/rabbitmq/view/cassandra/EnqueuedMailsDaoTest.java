@@ -73,7 +73,7 @@ class EnqueuedMailsDaoTest {
         BlobId.Factory blobFactory = new HashBlobId.Factory();
         testee = new EnqueuedMailsDAO(
             cassandra.getConf(),
-            cassandra.getTypesProvider(), blobFactory);
+            blobFactory);
     }
 
     @Test

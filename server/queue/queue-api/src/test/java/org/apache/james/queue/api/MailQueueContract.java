@@ -281,6 +281,28 @@ public interface MailQueueContract {
     }
 
     @Test
+    default void queueShouldPreserveMultiplePerRecipientHeaders() throws Exception {
+        PerRecipientHeaders.Header header = PerRecipientHeaders.Header.builder()
+            .name("any")
+            .value("any")
+            .build();
+        PerRecipientHeaders.Header header2 = PerRecipientHeaders.Header.builder()
+            .name("any2")
+            .value("any")
+            .build();
+        enQueue(defaultMail()
+            .name("mail")
+            .addHeaderForRecipient(header, RECIPIENT1)
+            .addHeaderForRecipient(header2, RECIPIENT1)
+            .build());
+
+        MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
+        assertThat(mailQueueItem.getMail().getPerRecipientSpecificHeaders()
+            .getHeadersForRecipient(RECIPIENT1))
+            .containsOnly(header, header2);
+    }
+
+    @Test
     default void queueShouldPreserveNonStringMailAttribute() throws Exception {
         Attribute attribute = Attribute.convertToAttribute("any", new SerializableAttribute("value"));
         enQueue(defaultMail()

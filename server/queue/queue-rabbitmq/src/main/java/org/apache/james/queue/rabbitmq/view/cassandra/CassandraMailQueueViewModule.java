@@ -26,14 +26,17 @@ import static com.datastax.driver.core.DataType.map;
 import static com.datastax.driver.core.DataType.text;
 import static com.datastax.driver.core.DataType.timestamp;
 import static com.datastax.driver.core.DataType.uuid;
-import static com.datastax.driver.core.schemabuilder.SchemaBuilder.frozen;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
+
+import com.datastax.driver.core.CodecRegistry;
+import com.datastax.driver.core.ProtocolVersion;
+import com.datastax.driver.core.TupleType;
 
 public interface CassandraMailQueueViewModule {
 
     interface EnqueuedMailsTable {
-        String TABLE_NAME = "enqueuedMailsV2";
+        String TABLE_NAME = "enqueuedMailsV3";
 
         String QUEUE_NAME = "queueName";
         String TIME_RANGE_START = "timeRangeStart";
@@ -53,10 +56,6 @@ public interface CassandraMailQueueViewModule {
         String REMOTE_ADDR = "remoteAddr";
         String LAST_UPDATED = "lastUpdated";
         String PER_RECIPIENT_SPECIFIC_HEADERS = "perRecipientSpecificHeaders";
-
-        String HEADER_TYPE = "enqueuedMailHeaders";
-        String HEADER_NAME = "headerName";
-        String HEADER_VALUE = "headerValue";
     }
 
     interface BrowseStartTable {
@@ -73,11 +72,13 @@ public interface CassandraMailQueueViewModule {
         String ENQUEUE_ID = "enqueueId";
     }
 
+    interface HeaderEntry {
+        int USER_INDEX = 0;
+        int HEADER_NAME_INDEX = 1;
+        int HEADER_VALUE_INDEX = 2;
+    }
+
     CassandraModule MODULE = CassandraModule
-        .type(EnqueuedMailsTable.HEADER_TYPE)
-            .statement(statement -> statement
-                .addColumn(EnqueuedMailsTable.HEADER_NAME, text())
-                .addColumn(EnqueuedMailsTable.HEADER_VALUE, text()))
         .table(EnqueuedMailsTable.TABLE_NAME)
         .comment("store enqueued mails, if a mail is enqueued into a mail queue, it also being stored in this table," +
             " when a mail is dequeued from a mail queue, the record associated with that mail still available in this" +
@@ -101,7 +102,7 @@ public interface CassandraMailQueueViewModule {
             .addColumn(EnqueuedMailsTable.REMOTE_HOST, text())
             .addColumn(EnqueuedMailsTable.REMOTE_ADDR, text())
             .addColumn(EnqueuedMailsTable.LAST_UPDATED, timestamp())
-            .addUDTMapColumn(EnqueuedMailsTable.PER_RECIPIENT_SPECIFIC_HEADERS, text(), frozen(EnqueuedMailsTable.HEADER_TYPE)))
+            .addColumn(EnqueuedMailsTable.PER_RECIPIENT_SPECIFIC_HEADERS, list(TupleType.of(ProtocolVersion.NEWEST_SUPPORTED, CodecRegistry.DEFAULT_INSTANCE, text(), text(), text()))))
 
         .table(BrowseStartTable.TABLE_NAME)
         .comment("this table allows to find the starting point of iteration from the table: "
