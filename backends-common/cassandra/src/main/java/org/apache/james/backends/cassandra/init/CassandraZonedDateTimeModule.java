@@ -22,7 +22,14 @@ package org.apache.james.backends.cassandra.init;
 import static com.datastax.driver.core.DataType.text;
 import static com.datastax.driver.core.DataType.timestamp;
 
+import java.time.ZonedDateTime;
+import java.util.Optional;
+
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.utils.ZonedDateTimeRepresentation;
+
+import com.datastax.driver.core.UDTValue;
+import com.datastax.driver.core.UserType;
 
 public interface CassandraZonedDateTimeModule {
     String ZONED_DATE_TIME = "zonedDateTime";
@@ -34,4 +41,20 @@ public interface CassandraZonedDateTimeModule {
             .addColumn(DATE, timestamp())
             .addColumn(TIME_ZONE, text()))
         .build();
+
+    static Optional<UDTValue> toUDT(UserType zonedDateTimeUserType, Optional<ZonedDateTime> zonedDateTimeOptional) {
+        return zonedDateTimeOptional.map(ZonedDateTimeRepresentation::fromZonedDateTime)
+            .map(representation -> zonedDateTimeUserType.newValue()
+                .setTimestamp(CassandraZonedDateTimeModule.DATE, representation.getDate())
+                .setString(CassandraZonedDateTimeModule.TIME_ZONE, representation.getSerializedZoneId()));
+    }
+
+    static Optional<ZonedDateTime> fromUDT(UDTValue value) {
+        return Optional.ofNullable(value)
+            .map(udtValue -> ZonedDateTimeRepresentation.fromDate(
+                    udtValue.getTimestamp(CassandraZonedDateTimeModule.DATE),
+                    udtValue.getString(CassandraZonedDateTimeModule.TIME_ZONE))
+                .getZonedDateTime());
+    }
+
 }
