@@ -40,7 +40,7 @@ public class DeletedMessagesVaultDeleteTask implements Task {
 
     static final String TYPE = "deletedMessages/delete";
 
-    public static final Function<DeletedMessagesVaultDeleteTask.Factory, TaskDTOModule> MODULE = (factory) ->
+    public static final Function<DeletedMessagesVaultDeleteTask.Factory, TaskDTOModule<DeletedMessagesVaultDeleteTask, DeletedMessagesVaultDeleteTaskDTO>> MODULE = (factory) ->
         DTOModule
             .forDomainObject(DeletedMessagesVaultDeleteTask.class)
             .convertToDTO(DeletedMessagesVaultDeleteTask.DeletedMessagesVaultDeleteTaskDTO.class)

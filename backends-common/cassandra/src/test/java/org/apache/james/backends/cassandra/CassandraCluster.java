@@ -49,7 +49,7 @@ public final class CassandraCluster implements AutoCloseable {
     }
 
     private static void assertClusterNotRunning() {
-      startStackTrace.ifPresent( e ->  {
+      startStackTrace.ifPresent(e -> {
           throw new IllegalStateException("Cluster already running, look at the cause for the initial connection creation call trace", e);
       });
     }

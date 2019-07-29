@@ -47,7 +47,7 @@ class DeletedMessagesVaultExportTask implements Task {
 
     static final String TYPE = "deletedMessages/export";
 
-    public static final Function<DeletedMessagesVaultExportTask.Factory, TaskDTOModule> MODULE = (factory) ->
+    public static final Function<DeletedMessagesVaultExportTask.Factory, TaskDTOModule<DeletedMessagesVaultExportTask, DeletedMessagesVaultExportTaskDTO>> MODULE = (factory) ->
         DTOModule
             .forDomainObject(DeletedMessagesVaultExportTask.class)
             .convertToDTO(DeletedMessagesVaultExportTask.DeletedMessagesVaultExportTaskDTO.class)

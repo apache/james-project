@@ -38,7 +38,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 class TaskSerializationTest {
 
     private static final String SERIALIZED_FAILED_TASK = "{\"type\": \"failed-task\"}";
-    private TaskDTOModule failedTaskModule = DTOModule
+    private TaskDTOModule<FailedTask, FailedTaskDTO> failedTaskModule = DTOModule
         .forDomainObject(FailedTask.class)
         .convertToDTO(FailedTaskDTO.class)
         .toDomainObjectConverter(dto -> new FailedTask())
@@ -47,7 +47,7 @@ class TaskSerializationTest {
         .withFactory(TaskDTOModule::new);
 
     private static final String SERIALIZED_COMPLETED_TASK = "{\"type\": \"completed-task\"}";
-    private TaskDTOModule completedTaskModule = DTOModule
+    private TaskDTOModule<CompletedTask, CompletedTaskDTO> completedTaskModule = DTOModule
         .forDomainObject(CompletedTask.class)
         .convertToDTO(CompletedTaskDTO.class)
         .toDomainObjectConverter(dto -> new CompletedTask())
@@ -56,7 +56,7 @@ class TaskSerializationTest {
         .withFactory(TaskDTOModule::new);
 
     private static final String SERIALIZED_THROWING_TASK = "{\"type\": \"throwing-task\"}";
-    private TaskDTOModule throwingTaskModule = DTOModule
+    private TaskDTOModule<ThrowingTask, ThrowingTaskDTO> throwingTaskModule = DTOModule
         .forDomainObject(ThrowingTask.class)
         .convertToDTO(ThrowingTaskDTO.class)
         .toDomainObjectConverter(dto -> new ThrowingTask())

@@ -46,7 +46,7 @@ class VaultGarbageCollectionTaskSerializationTest {
         taskSerializer = new JsonTaskSerializer(moduleVaultGarbageCollection());
     }
 
-    private TaskDTOModule moduleVaultGarbageCollection() {
+    private TaskDTOModule<VaultGarbageCollectionTask, VaultGarbageCollectionTask.VaultGarbageCollectionTaskDTO> moduleVaultGarbageCollection() {
         VaultGarbageCollectionTask.Factory factory = new VaultGarbageCollectionTask.Factory(vault);
         return TaskDTOModule
             .forTask(VaultGarbageCollectionTask.class)

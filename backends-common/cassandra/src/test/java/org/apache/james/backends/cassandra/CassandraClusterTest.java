@@ -61,7 +61,7 @@ class CassandraClusterTest {
         connection.close();
         assertThatCode(() -> {
             try (CassandraCluster cluster = createCluster()) {
-
+                // Trigger autoclose
             }
         }).doesNotThrowAnyException();
     }

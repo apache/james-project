@@ -117,6 +117,7 @@ public class QueryTranslator {
         FieldValueSerializer<Boolean> BOOLEAN_SERIALIZER = Object::toString;
         FieldValueSerializer<MailAddress> MAIL_ADDRESS_SERIALIZER = MailAddress::asString;
 
+        @SuppressWarnings("rawtypes")
         static Optional<FieldValueSerializer> getSerializerForValue(Object value) {
             if (value instanceof MailboxId) {
                 return Optional.of(MAILBOX_ID_SERIALIZER);
@@ -205,12 +206,15 @@ public class QueryTranslator {
         Operator operator = criterion.getValueMatcher().operator();
         Object value = criterion.getValueMatcher().expectedValue();
 
+        @SuppressWarnings("rawtypes")
         FieldValueSerializer fieldValueSerializer = FieldValueSerializer.getSerializerForValue(value).orElseThrow(
             () -> new IllegalArgumentException("Value of type " + value.getClass().getSimpleName()
                 + "' is not handled by the combinaison of operator : " + operator.name()
                 + " and field :" + fieldName.name()));
 
-        return new CriterionDTO(fieldName.getValue(), operator.getValue(), fieldValueSerializer.serialize(value));
+        @SuppressWarnings("unchecked")
+        CriterionDTO result = new CriterionDTO(fieldName.getValue(), operator.getValue(), fieldValueSerializer.serialize(value));
+        return result;
     }
 
     Query translate(QueryDTO queryDTO) throws QueryTranslatorException {

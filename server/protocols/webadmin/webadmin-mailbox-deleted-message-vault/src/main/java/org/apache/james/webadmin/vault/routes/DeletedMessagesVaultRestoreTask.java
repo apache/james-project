@@ -47,7 +47,7 @@ class DeletedMessagesVaultRestoreTask implements Task {
 
     static final String TYPE = "deletedMessages/restore";
 
-    public static final Function<DeletedMessagesVaultRestoreTask.Factory, TaskDTOModule> MODULE = (factory) ->
+    public static final Function<DeletedMessagesVaultRestoreTask.Factory, TaskDTOModule<DeletedMessagesVaultRestoreTask, DeletedMessagesVaultRestoreTaskDTO>> MODULE = (factory) ->
         DTOModule
             .forDomainObject(DeletedMessagesVaultRestoreTask.class)
             .convertToDTO(DeletedMessagesVaultRestoreTask.DeletedMessagesVaultRestoreTaskDTO.class)
