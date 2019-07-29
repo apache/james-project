@@ -29,7 +29,7 @@ Feature: Rewrite Tables tests
   @readonly
   Scenario: storing an invalid regexp mapping should not work
     When store an invalid ".*):" regexp mapping for user "test" at domain "localhost"
-    Then a "RecipientRewriteTableException" exception should have been thrown
+    Then a "InvalidRegexException" exception should have been thrown
 
 # Address mapping
 

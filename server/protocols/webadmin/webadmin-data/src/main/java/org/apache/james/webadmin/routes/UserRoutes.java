@@ -184,7 +184,4 @@ public class UserRoutes implements Routes {
                 .haltError();
         }
     }
-
-
-
 }

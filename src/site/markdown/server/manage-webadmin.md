@@ -35,10 +35,11 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
  - [Administrating global quotas](#Administrating_global_quotas)
  - [Cassandra Schema upgrades](#Cassandra_Schema_upgrades)
  - [Correcting ghost mailbox](#Correcting_ghost_mailbox)
- - [Creating address group](#Creating_address_group)
- - [Creating address forwards](#Creating_address_forwards)
  - [Creating address aliases](#Creating_address_aliases)
  - [Creating address domain](#Creating_address_domain)
+ - [Creating address forwards](#Creating_address_forwards)
+ - [Creating address group](#Creating_address_group)
+ - [Creating regex mapping](#Creating_regex_mapping)
  - [Address Mappings](#Address_mappings)
  - [Administrating mail repositories](#Administrating_mail_repositories)
  - [Administrating mail queues](#Administrating_mail_queues)
@@ -1456,7 +1457,6 @@ Response codes:
  - 400: Alias structure or member is not valid
 
 ## Creating address domain
-
 You can use **webadmin** to define domain mappings.
 
 Given a configured source (from) domain and a destination (to) domain, when an email is sent to an address belonging to the source domain, then the domain part of this address is overwritten, the destination domain is then used.
@@ -1545,6 +1545,43 @@ Response codes:
  - 204: OK
  - 400: The `fromDomain` resource name is invalid
  - 400: The destination domain specified in the body is invalid
+
+## Creating regex mapping
+You can use **webadmin** to create regex mappings.
+
+A regex mapping contains a mapping source and a Java Regular Expression (regex) in String as the mapping value. 
+Everytime, if a mail containing a recipient matched with the mapping source, 
+then that mail will be re-routed to a new recipient address 
+which is re written by the regex.
+
+This feature uses [Recipients rewrite table](/server/config-recipientrewritetable.html) and 
+requires the [RecipientRewriteTable API](https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java)
+to be configured.
+ - [Adding a regex mapping](#Adding_a_regex_mapping)
+
+### Adding a regex mapping
+
+```
+POST /mappings/regex/mappingSource/targets/regex
+```
+
+Where:
+ - the `mappingSource` is the path parameter represents for the Regex Mapping mapping source
+ - the `regex` is the path parameter represents for the Regex Mapping regex
+
+The route will add a regex mapping made from `mappingSource` and `regex` to RecipientRewriteTable.
+
+Example:
+
+```
+curl -XPOST http://ip:port/mappings/regex/james@domain.tld/targets/james@.*:james-intern@james.org
+```
+
+Response codes:
+
+ - 204: Mapping added successfully.
+ - 400: Invalid `mappingSource` path parameter.
+ - 400: Invalid `regex` path parameter.
 
 ## Address Mappings
 

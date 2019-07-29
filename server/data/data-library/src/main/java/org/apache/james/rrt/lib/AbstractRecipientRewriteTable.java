@@ -35,6 +35,7 @@ import org.apache.james.core.User;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.rrt.api.InvalidRegexException;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -182,7 +183,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         try {
             Pattern.compile(regex);
         } catch (PatternSyntaxException e) {
-            throw new RecipientRewriteTableException("Invalid regex: " + regex, e);
+            throw new InvalidRegexException("Invalid regex: " + regex, e);
         }
 
         Mapping mapping = Mapping.regex(regex);

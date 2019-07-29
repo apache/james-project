@@ -28,6 +28,7 @@ import org.apache.james.webadmin.routes.DomainsRoutes;
 import org.apache.james.webadmin.routes.ForwardRoutes;
 import org.apache.james.webadmin.routes.GroupsRoutes;
 import org.apache.james.webadmin.routes.MappingRoutes;
+import org.apache.james.webadmin.routes.RegexMappingRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
 
@@ -46,6 +47,7 @@ public class DataRoutesModules extends AbstractModule {
         routesMultibinder.addBinding().to(ForwardRoutes.class);
         routesMultibinder.addBinding().to(GroupsRoutes.class);
         routesMultibinder.addBinding().to(MappingRoutes.class);
+        routesMultibinder.addBinding().to(RegexMappingRoutes.class);
         routesMultibinder.addBinding().to(UserRoutes.class);
 
         Multibinder<JsonTransformerModule> jsonTransformerModuleMultibinder = Multibinder.newSetBinder(binder(), JsonTransformerModule.class);
