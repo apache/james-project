@@ -36,7 +36,9 @@ class EventSourcingTaskManagerTest implements TaskManagerContract {
     @BeforeEach
     void setUp() {
         EventStore eventStore = new InMemoryEventStore();
-        taskManager = new EventSourcingTaskManager(eventStore);
+        RecentTasksProjection recentTasksProjection = new MemoryRecentTasksProjection();
+        TaskExecutionDetailsProjection executionDetailsProjection = new MemoryTaskExecutionDetailsProjection();
+        taskManager = new EventSourcingTaskManager(eventStore, executionDetailsProjection, recentTasksProjection);
     }
 
     @AfterEach

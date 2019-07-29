@@ -23,18 +23,24 @@ import java.util.concurrent.ConcurrentLinkedDeque
 import org.apache.james.eventsourcing.Subscriber
 import org.apache.james.task.TaskId
 
-class RecentTasksProjection() {
-
-  import scala.collection.JavaConverters._
-
-  private val tasks = new ConcurrentLinkedDeque[TaskId]
-
-  def list(): List[TaskId] = tasks.asScala.toList
-
-  private def add(taskId: TaskId): Unit = tasks.add(taskId)
+trait RecentTasksProjection {
+  def list(): List[TaskId]
 
   def asSubscriber: Subscriber = {
     case Created(aggregateId, _, _) => add(aggregateId.taskId)
     case _ =>
   }
+
+  def add(taskId: TaskId): Unit
+}
+
+class MemoryRecentTasksProjection() extends RecentTasksProjection {
+
+  import scala.collection.JavaConverters._
+
+  private val tasks = new ConcurrentLinkedDeque[TaskId]
+
+  override def list(): List[TaskId] = tasks.asScala.toList
+
+  override def add(taskId: TaskId): Unit = tasks.add(taskId)
 }

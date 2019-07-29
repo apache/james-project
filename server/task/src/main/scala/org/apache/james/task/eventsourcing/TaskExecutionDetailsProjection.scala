@@ -23,9 +23,7 @@ import java.util.concurrent.ConcurrentHashMap
 import org.apache.james.eventsourcing.Subscriber
 import org.apache.james.task.{TaskExecutionDetails, TaskId}
 
-class TaskExecutionDetailsProjection() {
-  private[this] val projections = new ConcurrentHashMap[TaskId, TaskExecutionDetails]
-
+trait TaskExecutionDetailsProjection {
   val asSubscriber: Subscriber = {
     case created: Created =>
       update(created.getAggregateId.taskId, TaskExecutionDetails.from(created.task, created.aggregateId.taskId))
@@ -39,15 +37,21 @@ class TaskExecutionDetailsProjection() {
       update(failed.aggregateId.taskId)(_.failed())
     case canceled: Cancelled =>
       update(canceled.aggregateId.taskId)(_.cancelEffectively())
-    case _ =>
   }
-
-  def load(taskId: TaskId): Option[TaskExecutionDetails] = Option(projections.get(taskId))
-
-  private def update(taskId: TaskId, details: TaskExecutionDetails): Unit = projections.put(taskId, details)
 
   private def update(taskId: TaskId)(updater: TaskExecutionDetails => TaskExecutionDetails): Unit =
     load(taskId)
       .map(updater)
       .foreach(update(taskId, _))
+
+  def load(taskId: TaskId): Option[TaskExecutionDetails]
+  def update(taskId: TaskId, details: TaskExecutionDetails): Unit
+}
+
+class MemoryTaskExecutionDetailsProjection() extends TaskExecutionDetailsProjection {
+  private[this] val details = new ConcurrentHashMap[TaskId, TaskExecutionDetails]
+
+  override def load(taskId: TaskId): Option[TaskExecutionDetails] = Option(this.details.get(taskId))
+
+  override def update(taskId: TaskId, details: TaskExecutionDetails): Unit = this.details.put(taskId, details)
 }
