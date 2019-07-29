@@ -46,7 +46,7 @@ public class MemoryTaskManager implements TaskManager {
 
         @Override
         public void started() {
-            updater.accept(TaskExecutionDetails::start);
+            updater.accept(TaskExecutionDetails::started);
         }
 
         @Override

@@ -28,15 +28,15 @@ trait TaskExecutionDetailsProjection {
     case created: Created =>
       update(created.getAggregateId.taskId, TaskExecutionDetails.from(created.task, created.aggregateId.taskId))
     case cancelRequested: CancelRequested =>
-      update(cancelRequested.aggregateId.taskId)(_.cancelRequested())
+      update(cancelRequested.aggregateId.taskId)(_.cancelRequested)
     case started: Started =>
-      update(started.aggregateId.taskId)(_.start())
+      update(started.aggregateId.taskId)(_.started)
     case completed: Completed =>
-      update(completed.aggregateId.taskId)(_.completed())
+      update(completed.aggregateId.taskId)(_.completed)
     case failed: Failed =>
-      update(failed.aggregateId.taskId)(_.failed())
+      update(failed.aggregateId.taskId)(_.failed)
     case canceled: Cancelled =>
-      update(canceled.aggregateId.taskId)(_.cancelEffectively())
+      update(canceled.aggregateId.taskId)(_.cancelEffectively)
   }
 
   private def update(taskId: TaskId)(updater: TaskExecutionDetails => TaskExecutionDetails): Unit =
