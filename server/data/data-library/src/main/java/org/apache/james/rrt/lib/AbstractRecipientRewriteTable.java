@@ -206,6 +206,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         checkHasValidAddress(mapping);
         checkDuplicateMapping(source, mapping);
         checkDomainMappingSourceIsManaged(source);
+        checkNotSameSourceAndDestination(source, address);
 
         LOGGER.info("Add address mapping => {} for source: {}", mapping.asString(), source.asString());
         addMapping(source, mapping);
