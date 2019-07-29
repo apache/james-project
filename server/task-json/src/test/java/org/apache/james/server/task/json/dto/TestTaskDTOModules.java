@@ -19,7 +19,11 @@
 
 package org.apache.james.server.task.json.dto;
 
+import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.TestTask;
+import org.apache.james.task.CompletedTask;
+import org.apache.james.task.FailedTask;
+import org.apache.james.task.ThrowingTask;
 
 public interface TestTaskDTOModules {
 
@@ -33,4 +37,27 @@ public interface TestTaskDTOModules {
         .typeName("testTask")
         .withFactory(TaskDTOModule::new);
 
+    TaskDTOModule<FailedTask, FailedTaskDTO> FAILED_TASK_MODULE = DTOModule
+        .forDomainObject(FailedTask.class)
+        .convertToDTO(FailedTaskDTO.class)
+        .toDomainObjectConverter(dto -> new FailedTask())
+        .toDTOConverter((task, typeName) -> new FailedTaskDTO(typeName))
+        .typeName("failed-task")
+        .withFactory(TaskDTOModule::new);
+
+    TaskDTOModule<CompletedTask, CompletedTaskDTO> COMPLETED_TASK_MODULE = DTOModule
+        .forDomainObject(CompletedTask.class)
+        .convertToDTO(CompletedTaskDTO.class)
+        .toDomainObjectConverter(dto -> new CompletedTask())
+        .toDTOConverter((task, typeName) -> new CompletedTaskDTO(typeName))
+        .typeName("completed-task")
+        .withFactory(TaskDTOModule::new);
+
+    TaskDTOModule<ThrowingTask, ThrowingTaskDTO> THROWING_TASK_MODULE = DTOModule
+        .forDomainObject(ThrowingTask.class)
+        .convertToDTO(ThrowingTaskDTO.class)
+        .toDomainObjectConverter(dto -> new ThrowingTask())
+        .toDTOConverter((task, typeName) -> new ThrowingTaskDTO(typeName))
+        .typeName("throwing-task")
+        .withFactory(TaskDTOModule::new);
 }
