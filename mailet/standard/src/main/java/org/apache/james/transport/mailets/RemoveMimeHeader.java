@@ -19,20 +19,23 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
+import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.GenericMailet;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Remove mime headers
+ * Remove mime headers from the message (global) and per recipient (specific).
  * 
  * Sample configuration:
  * 
@@ -63,9 +66,28 @@ public class RemoveMimeHeader extends GenericMailet {
     @Override
     public void service(Mail mail) throws MessagingException {
         MimeMessage  message = mail.getMessage();
+        
         for (String header : headers) {
             message.removeHeader(header);
         }
+        
+        removeSpecific(mail);
+
         message.saveChanges();
+    }
+
+    protected void removeSpecific(Mail mail) {
+        mail.getPerRecipientSpecificHeaders().getRecipientsWithSpecificHeaders() 
+                .stream()
+                .collect(Collectors.toList()) // Streaming for concurrent modifications
+                .forEach(recipient -> {
+                    Iterator<Header> it = mail.getPerRecipientSpecificHeaders().getHeadersForRecipient(recipient).iterator();
+                    while (it.hasNext()) {
+                        Header next = it.next();
+                        if (headers.contains(next.getName())) {
+                            it.remove();
+                        }
+                    }
+                });
     }
 }

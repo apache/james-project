@@ -27,8 +27,10 @@ import static org.mockito.Mockito.when;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mail;
+import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -39,6 +41,8 @@ class RemoveMimeHeaderTest {
 
     private static final String HEADER1 = "header1";
     private static final String HEADER2 = "header2";
+    private static final String RECIPIENT1 = "r1@example.com";
+    private static final String RECIPIENT2 = "r2@example.com";
 
     private GenericMailet mailet;
 
@@ -71,6 +75,26 @@ class RemoveMimeHeaderTest {
     }
 
     @Test
+    public void serviceShouldRemoveSpecificHeaderWhenOneMatching() throws MessagingException {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("name", HEADER1)
+                .build();
+        mailet.init(mailetConfig);
+
+        Mail mail = FakeMail.fromMessage(MimeMessageBuilder.mimeMessageBuilder().addToRecipient(RECIPIENT1).addToRecipient(RECIPIENT2));
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER1).value("1").build(), new MailAddress(RECIPIENT1));
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER2).value("1").build(), new MailAddress(RECIPIENT2));
+
+        mailet.service(mail);
+
+        assertThat(mail.getMessage().getHeader(HEADER1)).isNull();
+        assertThat(mail.getMessage().getHeader(HEADER2)).isNull();
+        assertThat(mail.getPerRecipientSpecificHeaders().getHeaderNamesForRecipient(new MailAddress(RECIPIENT1))).isEmpty();
+        assertThat(mail.getPerRecipientSpecificHeaders().getHeaderNamesForRecipient(new MailAddress(RECIPIENT2))).isNotEmpty();
+    }
+
+    @Test
     void serviceShouldRemoveHeadersWhenTwoMatching() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -86,6 +110,48 @@ class RemoveMimeHeaderTest {
 
         assertThat(mail.getMessage().getHeader(HEADER1)).isNull();
         assertThat(mail.getMessage().getHeader(HEADER2)).isNull();
+    }
+    
+    @Test
+    public void serviceShouldRemoveSpecificHeadersWhenTwoMatching() throws MessagingException {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("name", HEADER1 + "," + HEADER2)
+                .build();
+        mailet.init(mailetConfig);
+
+        Mail mail = FakeMail.fromMessage(MimeMessageBuilder.mimeMessageBuilder().addToRecipient(RECIPIENT1).addToRecipient(RECIPIENT2));
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER1).value("1").build(), new MailAddress(RECIPIENT1));
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER2).value("1").build(), new MailAddress(RECIPIENT2));
+
+        mailet.service(mail);
+
+        assertThat(mail.getMessage().getHeader(HEADER1)).isNull();
+        assertThat(mail.getMessage().getHeader(HEADER2)).isNull();
+        assertThat(mail.getPerRecipientSpecificHeaders().getHeaderNamesForRecipient(new MailAddress(RECIPIENT1))).isEmpty();
+        assertThat(mail.getPerRecipientSpecificHeaders().getHeaderNamesForRecipient(new MailAddress(RECIPIENT2))).isEmpty();
+    }
+    
+    @Test
+    public void serviceShouldRemoveSpecificAndGlobalHeadersWhenMixed() throws MessagingException {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName("Test")
+                .setProperty("name", HEADER1)
+                .build();
+        mailet.init(mailetConfig);
+        
+        Mail mail = FakeMail.fromMessage(MimeMessageBuilder.mimeMessageBuilder().addToRecipient(RECIPIENT1).addToRecipient(RECIPIENT2)
+                .addHeader(HEADER1, "true")
+                .addHeader(HEADER2, "true"));
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER1).value("1").build(), new MailAddress(RECIPIENT1));
+        mail.addSpecificHeaderForRecipient(Header.builder().name(HEADER2).value("1").build(), new MailAddress(RECIPIENT2));
+
+        mailet.service(mail);
+
+        assertThat(mail.getMessage().getHeader(HEADER1)).isNull();
+        assertThat(mail.getMessage().getHeader(HEADER2)).isNotNull();
+        assertThat(mail.getPerRecipientSpecificHeaders().getHeaderNamesForRecipient(new MailAddress(RECIPIENT1))).isEmpty();
+        assertThat(mail.getPerRecipientSpecificHeaders().getHeaderNamesForRecipient(new MailAddress(RECIPIENT2))).isNotEmpty();
     }
 
     @Test
