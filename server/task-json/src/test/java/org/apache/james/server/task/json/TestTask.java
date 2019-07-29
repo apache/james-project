@@ -43,11 +43,8 @@ public class TestTask implements Task {
         return "testTask";
     }
 
-
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
         return Optional.empty();
     }
-
-
 }
