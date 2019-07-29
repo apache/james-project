@@ -22,10 +22,8 @@ package org.apache.james;
 
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.eventsourcing.EventSourcingTaskManager;
-import org.apache.james.task.eventsourcing.MemoryRecentTasksProjection;
-import org.apache.james.task.eventsourcing.MemoryTaskExecutionDetailsProjection;
-import org.apache.james.task.eventsourcing.RecentTasksProjection;
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
+import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjection;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -33,11 +31,9 @@ import com.google.inject.Scopes;
 public class DistributedTaskManagerModule extends AbstractModule {
     @Override
     protected void configure() {
-        bind(RecentTasksProjection.class).in(Scopes.SINGLETON);
         bind(TaskExecutionDetailsProjection.class).in(Scopes.SINGLETON);
         bind(TaskManager.class).in(Scopes.SINGLETON);
-        bind(RecentTasksProjection.class).to(MemoryRecentTasksProjection.class);
-        bind(TaskExecutionDetailsProjection.class).to(MemoryTaskExecutionDetailsProjection.class);
+        bind(TaskExecutionDetailsProjection.class).to(CassandraTaskExecutionDetailsProjection.class);
         bind(TaskManager.class).to(EventSourcingTaskManager.class);
     }
 }

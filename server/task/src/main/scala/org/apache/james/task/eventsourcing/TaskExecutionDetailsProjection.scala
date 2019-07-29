@@ -22,11 +22,12 @@ import java.util.concurrent.ConcurrentHashMap
 
 import org.apache.james.eventsourcing.Subscriber
 import org.apache.james.task.{TaskExecutionDetails, TaskId}
+import collection.JavaConverters._
 
 trait TaskExecutionDetailsProjection {
   val asSubscriber: Subscriber = {
     case created: Created =>
-      update(created.getAggregateId.taskId, TaskExecutionDetails.from(created.task, created.aggregateId.taskId))
+      update(TaskExecutionDetails.from(created.task, created.aggregateId.taskId))
     case cancelRequested: CancelRequested =>
       update(cancelRequested.aggregateId.taskId)(_.cancelRequested)
     case started: Started =>
@@ -42,10 +43,11 @@ trait TaskExecutionDetailsProjection {
   private def update(taskId: TaskId)(updater: TaskExecutionDetails => TaskExecutionDetails): Unit =
     load(taskId)
       .map(updater)
-      .foreach(update(taskId, _))
+      .foreach(update)
 
   def load(taskId: TaskId): Option[TaskExecutionDetails]
-  def update(taskId: TaskId, details: TaskExecutionDetails): Unit
+  def list: List[TaskExecutionDetails]
+  def update(details: TaskExecutionDetails): Unit
 }
 
 class MemoryTaskExecutionDetailsProjection() extends TaskExecutionDetailsProjection {
@@ -53,5 +55,7 @@ class MemoryTaskExecutionDetailsProjection() extends TaskExecutionDetailsProject
 
   override def load(taskId: TaskId): Option[TaskExecutionDetails] = Option(this.details.get(taskId))
 
-  override def update(taskId: TaskId, details: TaskExecutionDetails): Unit = this.details.put(taskId, details)
+  override def list: List[TaskExecutionDetails] = this.details.values().asScala.toList
+
+  override def update(details: TaskExecutionDetails): Unit = this.details.put(details.taskId, details)
 }

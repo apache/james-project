@@ -31,8 +31,7 @@ import org.apache.james.task.eventsourcing.TaskCommand._
 import scala.annotation.tailrec
 
 class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing](val eventStore: EventStore,
-                                                                                 val executionDetailsProjection: TaskExecutionDetailsProjection,
-                                                                                 val recentTasksProjection: RecentTasksProjection) extends TaskManager with Closeable {
+                                                                                 val executionDetailsProjection: TaskExecutionDetailsProjection) extends TaskManager with Closeable {
 
   private val workQueue: WorkQueue = WorkQueue.builder().worker(new SerialTaskManagerWorker)
   private val delayBetweenPollingInMs = 500
@@ -59,8 +58,7 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
       new FailCommandHandler(loadHistory)),
     subscribers = Set(
       executionDetailsProjection.asSubscriber,
-      workDispatcher,
-      recentTasksProjection.asSubscriber),
+      workDispatcher),
     eventStore = eventStore)
 
   override def submit(task: Task): TaskId = {
@@ -79,9 +77,9 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
     .filter(details => details.getStatus == status)
     .asJava
 
-  private def listScala: List[TaskExecutionDetails] = recentTasksProjection
-    .list()
-    .flatMap(executionDetailsProjection.load)
+  private def listScala: List[TaskExecutionDetails] = executionDetailsProjection
+    .list
+    .flatMap(details => executionDetailsProjection.load(details.taskId))
 
   override def cancel(id: TaskId): Unit = {
     val command = RequestCancel(id)

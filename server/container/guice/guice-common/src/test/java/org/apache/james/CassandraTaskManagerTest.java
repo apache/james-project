@@ -19,8 +19,14 @@
 
 package org.apache.james;
 
+import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreExtension;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.server.task.json.dto.TestTaskDTOModules;
@@ -29,18 +35,20 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.eventsourcing.EventSourcingTaskManager;
-import org.apache.james.task.eventsourcing.MemoryRecentTasksProjection;
-import org.apache.james.task.eventsourcing.MemoryTaskExecutionDetailsProjection;
-import org.apache.james.task.eventsourcing.RecentTasksProjection;
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
+import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjection;
+import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionDAO;
+import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionModule;
 import org.apache.james.task.eventsourcing.cassandra.TasksSerializationModule;
 
+import com.github.steveash.guavate.Guavate;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,17 +56,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CassandraTaskManagerTest {
     private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(TestTaskDTOModules.COMPLETED_TASK_MODULE);
 
-    private static final List<EventDTOModule<?, ?>> MODULES = TasksSerializationModule.MODULES.apply(TASK_SERIALIZER);
+    private static final Set<EventDTOModule> MODULES = TasksSerializationModule.MODULES.apply(TASK_SERIALIZER).stream().collect(Guavate.toImmutableSet());
+
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
+        CassandraModule.aggregateModules(
+            CassandraSchemaVersionModule.MODULE,
+            CassandraEventStoreModule.MODULE,
+            CassandraZonedDateTimeModule.MODULE,
+            CassandraTaskExecutionDetailsProjectionModule.MODULE()));
 
     @RegisterExtension
-    static CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(MODULES.stream().toArray(EventDTOModule[]::new));
+    static CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(cassandraCluster, MODULES);
 
     @Test
     void givenOneEventStoreTwoEventTaskManagersShareTheSameEvents(EventStore eventStore) {
-        RecentTasksProjection recentTasksProjection = new MemoryRecentTasksProjection();
-        TaskExecutionDetailsProjection executionDetailsProjection = new MemoryTaskExecutionDetailsProjection();
-        TaskManager taskManager1 = new EventSourcingTaskManager(eventStore, executionDetailsProjection, recentTasksProjection);
-        TaskManager taskManager2 = new EventSourcingTaskManager(eventStore, executionDetailsProjection, recentTasksProjection);
+        CassandraCluster cassandra = cassandraCluster.getCassandraCluster();
+        CassandraTaskExecutionDetailsProjectionDAO cassandraTaskExecutionDetailsProjectionDAO = new CassandraTaskExecutionDetailsProjectionDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        TaskExecutionDetailsProjection executionDetailsProjection = new CassandraTaskExecutionDetailsProjection(cassandraTaskExecutionDetailsProjectionDAO);
+        TaskManager taskManager1 = new EventSourcingTaskManager(eventStore, executionDetailsProjection);
+        TaskManager taskManager2 = new EventSourcingTaskManager(eventStore, executionDetailsProjection);
 
         TaskId taskId = taskManager1.submit(new CompletedTask());
         Awaitility.await()
