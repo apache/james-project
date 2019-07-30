@@ -27,6 +27,7 @@ object CassandraTaskExecutionDetailsProjectionTable {
   val TABLE_NAME: String = "taskExecutionDetailsProjection"
 
   val TASK_ID: String = "taskID"
+  val ADDITIONAL_INFORMATION: String = "additionalInformation"
   val TYPE: String = "type"
   val STATUS: String = "status"
   val SUBMITTED_DATE: String = "submittedDate"
@@ -46,6 +47,7 @@ object CassandraTaskExecutionDetailsProjectionModule {
         SchemaBuilder.noRows()))
     .statement((statement: Create) => statement
       .addPartitionKey(CassandraTaskExecutionDetailsProjectionTable.TASK_ID, uuid)
+      .addColumn(CassandraTaskExecutionDetailsProjectionTable.ADDITIONAL_INFORMATION, text)
       .addColumn(CassandraTaskExecutionDetailsProjectionTable.TYPE, text)
       .addColumn(CassandraTaskExecutionDetailsProjectionTable.STATUS, text)
       .addUDTColumn(CassandraTaskExecutionDetailsProjectionTable.SUBMITTED_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))

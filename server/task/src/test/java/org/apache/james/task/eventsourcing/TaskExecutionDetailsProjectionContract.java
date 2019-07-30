@@ -23,6 +23,7 @@ package org.apache.james.task.eventsourcing;
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_DETAILS;
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_DETAILS_2;
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_DETAILS_UPDATED;
+import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_DETAILS_WITH_ADDITIONAL_INFORMATION;
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.task.TaskExecutionDetails;
+
 import org.junit.jupiter.api.Test;
 
 import scala.collection.JavaConverters;
@@ -46,6 +48,15 @@ public interface TaskExecutionDetailsProjectionContract {
 
         Optional<TaskExecutionDetails> taskExecutionDetails = OptionConverters.toJava(testee.load(TASK_ID()));
         assertThat(taskExecutionDetails).contains(TASK_EXECUTION_DETAILS());
+    }
+
+    @Test
+    default void readDetailsShouldBeAbleToRetrieveASavedRecordWithAdditionalInformation() {
+        TaskExecutionDetailsProjection testee = testee();
+        testee.update(TASK_EXECUTION_DETAILS_WITH_ADDITIONAL_INFORMATION());
+
+        Optional<TaskExecutionDetails> taskExecutionDetails = OptionConverters.toJava(testee.load(TASK_ID()));
+        assertThat(taskExecutionDetails).contains(TASK_EXECUTION_DETAILS_WITH_ADDITIONAL_INFORMATION());
     }
 
     @Test

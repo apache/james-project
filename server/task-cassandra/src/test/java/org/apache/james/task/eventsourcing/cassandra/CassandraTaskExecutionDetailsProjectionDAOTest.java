@@ -23,6 +23,7 @@ package org.apache.james.task.eventsourcing.cassandra;
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_DETAILS;
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_DETAILS_2;
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_DETAILS_UPDATED;
+import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_DETAILS_WITH_ADDITIONAL_INFORMATION;
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,6 +37,7 @@ import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.task.TaskExecutionDetails;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -58,6 +60,15 @@ class CassandraTaskExecutionDetailsProjectionDAOTest {
 
         TaskExecutionDetails taskExecutionDetails = testee.readDetails(TASK_ID()).block();
         assertThat(taskExecutionDetails).isEqualTo(TASK_EXECUTION_DETAILS());
+    }
+
+    @Test
+    @Disabled("Serialization and deserialization of additionalInformations is not implemented")
+    void readDetailsShouldBeAbleToRetrieveASavedRecordWithAdditionalInformation() {
+        testee.saveDetails(TASK_EXECUTION_DETAILS_WITH_ADDITIONAL_INFORMATION()).block();
+
+        TaskExecutionDetails taskExecutionDetails = testee.readDetails(TASK_ID()).block();
+        assertThat(taskExecutionDetails).isEqualTo(TASK_EXECUTION_DETAILS_WITH_ADDITIONAL_INFORMATION());
     }
 
     @Test
