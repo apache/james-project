@@ -23,17 +23,12 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 
 import org.reactivestreams.Subscription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.BaseSubscriber;
 
 public class PipedStreamSubscriber extends BaseSubscriber<byte[]> {
-
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
     private final PipedInputStreamHandlingError in;
     private PipedOutputStreamHandlingError out;
 
@@ -68,8 +63,6 @@ public class PipedStreamSubscriber extends BaseSubscriber<byte[]> {
 
     @Override
     protected void hookOnError(Throwable error) {
-        logger.error("Failure processing stream", error);
-
         if (error instanceof RuntimeException) {
             out.propagateError((RuntimeException) error);
         } else {
