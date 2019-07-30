@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
@@ -45,6 +46,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
+import com.google.common.hash.Hashing;
+import com.google.common.hash.HashingInputStream;
 
 import reactor.core.publisher.Mono;
 
@@ -127,9 +130,22 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract, Buck
     }
 
     @Test
-    void blobStoreShouldSupport100MBBlob() {
-        BlobId blobId = testee.save(testee.getDefaultBucketName(), new ZeroedInputStream(100_000_000)).block();
+    void blobStoreShouldSupport100MBBlob() throws IOException {
+        ZeroedInputStream data = new ZeroedInputStream(100_000_000);
+        HashingInputStream writeHash = new HashingInputStream(Hashing.sha256(), data);
+        BlobId blobId = testee.save(testee.getDefaultBucketName(), writeHash).block();
+
         InputStream bytes = testee.read(testee.getDefaultBucketName(), blobId);
-        assertThat(bytes).hasSameContentAs(new ZeroedInputStream(100_000_000));
+        HashingInputStream readHash = new HashingInputStream(Hashing.sha256(), bytes);
+        consumeStream(readHash);
+
+        assertThat(readHash.hash().toString()).isEqualTo(writeHash.hash().toString());
+    }
+
+    private void consumeStream(InputStream tmpMsgIn) throws IOException {
+        byte[] discard = new byte[4096];
+        while (tmpMsgIn.read(discard) != -1) {
+            // consume the rest of the stream
+        }
     }
 }
