@@ -52,7 +52,7 @@ import reactor.core.scheduler.Schedulers;
 public class CassandraBlobStore implements BlobStore {
 
     private static final int PREFETCH = 16;
-    private static final int MAX_CONCURRENCY = 2;
+    private static final int MAX_CONCURRENCY = 1;
     private final CassandraDefaultBucketDAO defaultBucketDAO;
     private final CassandraBucketDAO bucketDAO;
     private final DataChunker dataChunker;
