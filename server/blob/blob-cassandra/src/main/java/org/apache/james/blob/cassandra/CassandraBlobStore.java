@@ -22,6 +22,7 @@ package org.apache.james.blob.cassandra;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Comparator;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,7 +36,6 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectNotFoundException;
-import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.cassandra.utils.DataChunker;
 import org.apache.james.blob.cassandra.utils.PipedInputStreamHandlingError;
 import org.apache.james.blob.cassandra.utils.PipedStreamSubscriber;
@@ -134,14 +134,16 @@ public class CassandraBlobStore implements BlobStore {
     private Flux<byte[]> readBlobParts(BucketName bucketName, BlobId blobId) {
         Integer rowCount = selectRowCount(bucketName, blobId)
             .publishOn(Schedulers.elastic())
-            .switchIfEmpty(Mono.error(
+            .single()
+            .onErrorResume(NoSuchElementException.class, e -> Mono.error(
                 new ObjectNotFoundException(String.format("Could not retrieve blob metadata for %s", blobId))))
             .block();
         return Flux.range(0, rowCount)
             .publishOn(Schedulers.elastic(), PREFETCH)
             .flatMapSequential(partIndex -> readPart(bucketName, blobId, partIndex)
-                .switchIfEmpty(Mono.error(new ObjectStoreException(
-                    String.format("Missing blob part for blobId %s and position %d", blobId, partIndex)))),
+                .single()
+                .onErrorResume(NoSuchElementException.class, e -> Mono.error(
+                    new ObjectNotFoundException(String.format("Missing blob part for blobId %s and position %d", blobId, partIndex)))),
                 MAX_CONCURRENCY, PREFETCH);
     }
 
