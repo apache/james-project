@@ -20,6 +20,7 @@ package org.apache.james.task;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -32,17 +33,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Mono;
 
 class SerialTaskManagerWorkerTest {
-
-    private final SerialTaskManagerWorker worker = new SerialTaskManagerWorker();
+    private TaskManagerWorker.Listener listener;
+    private SerialTaskManagerWorker worker;
 
     private final Task successfulTask = new CompletedTask();
     private final Task failedTask = new FailedTask();
     private final Task throwingTask = new ThrowingTask();
+
+    @BeforeEach
+    void beforeEach() {
+        listener = mock(TaskManagerWorker.Listener.class);
+        worker = new SerialTaskManagerWorker(listener);
+    }
 
     @AfterEach
     void tearDown() throws IOException {
@@ -53,35 +61,31 @@ class SerialTaskManagerWorkerTest {
     void aSuccessfullTaskShouldCompleteSuccessfully() {
         TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), this.successfulTask);
 
-        TaskManagerWorker.Listener listener = mock(TaskManagerWorker.Listener.class);
-
-        Mono<Task.Result> result = worker.executeTask(taskWithId, listener);
+        Mono<Task.Result> result = worker.executeTask(taskWithId);
 
         assertThat(result.block()).isEqualTo(Task.Result.COMPLETED);
 
-        verify(listener, atLeastOnce()).completed(Task.Result.COMPLETED);
+        verify(listener, atLeastOnce()).completed(taskWithId.getId(), Task.Result.COMPLETED);
     }
 
     @Test
     void aFailedTaskShouldCompleteWithFailedStatus() {
         TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), failedTask);
-        TaskManagerWorker.Listener listener = mock(TaskManagerWorker.Listener.class);
 
-        Mono<Task.Result> result = worker.executeTask(taskWithId, listener);
+        Mono<Task.Result> result = worker.executeTask(taskWithId);
 
         assertThat(result.block()).isEqualTo(Task.Result.PARTIAL);
-        verify(listener, atLeastOnce()).failed();
+        verify(listener, atLeastOnce()).failed(taskWithId.getId());
     }
 
     @Test
     void aThrowingTaskShouldCompleteWithFailedStatus() {
         TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), throwingTask);
-        TaskManagerWorker.Listener listener = mock(TaskManagerWorker.Listener.class);
 
-        Mono<Task.Result> result = worker.executeTask(taskWithId, listener);
+        Mono<Task.Result> result = worker.executeTask(taskWithId);
 
         assertThat(result.block()).isEqualTo(Task.Result.PARTIAL);
-        verify(listener, atLeastOnce()).failed(any(RuntimeException.class));
+        verify(listener, atLeastOnce()).failed(eq(taskWithId.getId()), any(RuntimeException.class));
     }
 
     @Test
@@ -98,12 +102,10 @@ class SerialTaskManagerWorkerTest {
 
         TaskWithId taskWithId = new TaskWithId(id, inProgressTask);
 
-        TaskManagerWorker.Listener listener = mock(TaskManagerWorker.Listener.class);
-
-        worker.executeTask(taskWithId, listener).subscribe();
+        worker.executeTask(taskWithId).subscribe();
 
         await(taskLaunched);
-        verify(listener, atLeastOnce()).started();
+        verify(listener, atLeastOnce()).started(id);
         verifyNoMoreInteractions(listener);
         latch.countDown();
     }
@@ -122,19 +124,17 @@ class SerialTaskManagerWorkerTest {
 
         TaskWithId taskWithId = new TaskWithId(id, inProgressTask);
 
-        TaskManagerWorker.Listener listener = mock(TaskManagerWorker.Listener.class);
-
-        Mono<Task.Result> resultMono = worker.executeTask(taskWithId, listener).cache();
+        Mono<Task.Result> resultMono = worker.executeTask(taskWithId).cache();
         resultMono.subscribe();
 
         Awaitility.waitAtMost(org.awaitility.Duration.TEN_SECONDS)
-            .untilAsserted(() -> verify(listener, atLeastOnce()).started());
+            .untilAsserted(() -> verify(listener, atLeastOnce()).started(id));
 
         worker.cancelTask(id);
 
         resultMono.block(Duration.ofSeconds(10));
 
-        verify(listener, atLeastOnce()).cancelled();
+        verify(listener, atLeastOnce()).cancelled(id);
         verifyNoMoreInteractions(listener);
     }
 

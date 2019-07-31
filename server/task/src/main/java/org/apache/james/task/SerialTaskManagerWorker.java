@@ -45,19 +45,21 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SerialTaskManagerWorker.class);
     private final ExecutorService taskExecutor;
+    private final Listener listener;
     private final AtomicReference<Tuple2<TaskId, Future<?>>> runningTask;
     private final Semaphore semaphore;
     private final Set<TaskId> cancelledTasks;
 
-    public SerialTaskManagerWorker() {
+    public SerialTaskManagerWorker(Listener listener) {
         this.taskExecutor = Executors.newSingleThreadExecutor(NamedThreadFactory.withName("task executor"));
+        this.listener = listener;
         this.cancelledTasks = Sets.newConcurrentHashSet();
         this.runningTask = new AtomicReference<>();
         this.semaphore = new Semaphore(1);
     }
 
     @Override
-    public Mono<Task.Result> executeTask(TaskWithId taskWithId, Listener listener) {
+    public Mono<Task.Result> executeTask(TaskWithId taskWithId) {
             return Mono
                 .using(
                     acquireSemaphore(taskWithId, listener),
@@ -72,7 +74,7 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
                     semaphore.acquire();
                     return semaphore;
                 } catch (InterruptedException e) {
-                    listener.cancelled();
+                    listener.cancelled(taskWithId.getId());
                     throw e;
                 }
             };
@@ -87,14 +89,14 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
                 return Mono.fromFuture(future)
                         .doOnError(exception -> {
                             if (exception instanceof CancellationException) {
-                                listener.cancelled();
+                                listener.cancelled(taskWithId.getId());
                             } else {
-                                listener.failed(exception);
+                                listener.failed(taskWithId.getId(), exception);
                             }
                         })
                         .onErrorReturn(Task.Result.PARTIAL);
             } else {
-                listener.cancelled();
+                listener.cancelled(taskWithId.getId());
                 return Mono.empty();
             }
         };
@@ -110,21 +112,21 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
     }
 
     private Task.Result run(TaskWithId taskWithId, Listener listener) {
-        listener.started();
+        listener.started(taskWithId.getId());
         try {
             return taskWithId.getTask()
                 .run()
-                .onComplete(listener::completed)
+                .onComplete(result -> listener.completed(taskWithId.getId(), result))
                 .onFailure(() -> {
                     LOGGER.error("Task was partially performed. Check logs for more details. Taskid : " + taskWithId.getId());
-                    listener.failed();
+                    listener.failed(taskWithId.getId());
                 });
         } catch (InterruptedException e) {
-            listener.cancelled();
+            listener.cancelled(taskWithId.getId());
             return Task.Result.PARTIAL;
         } catch (Exception e) {
             LOGGER.error("Error while running task {}", taskWithId.getId(), e);
-            listener.failed(e);
+            listener.failed(taskWithId.getId(), e);
             return Task.Result.PARTIAL;
         }
     }

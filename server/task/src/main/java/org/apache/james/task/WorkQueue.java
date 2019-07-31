@@ -22,7 +22,7 @@ import java.io.Closeable;
 
 public interface WorkQueue extends Closeable {
 
-    void submit(TaskWithId taskWithId, TaskManagerWorker.Listener listener);
+    void submit(TaskWithId taskWithId);
 
     void cancel(TaskId taskId);
 }

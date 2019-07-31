@@ -36,38 +36,45 @@ import reactor.core.scheduler.Schedulers;
 
 public class MemoryTaskManager implements TaskManager {
 
+    @FunctionalInterface
+    private interface TaskExecutionDetailsUpdaterFactory {
+        Consumer<TaskExecutionDetailsUpdater> apply(TaskId taskId);
+    }
+
     private static class DetailsUpdater implements TaskManagerWorker.Listener {
 
-        private final Consumer<TaskExecutionDetailsUpdater> updater;
+        private final TaskExecutionDetailsUpdaterFactory updaterFactory;
 
-        DetailsUpdater(Consumer<TaskExecutionDetailsUpdater> updater) {
-            this.updater = updater;
+        DetailsUpdater(TaskExecutionDetailsUpdaterFactory updaterFactory) {
+            this.updaterFactory = updaterFactory;
         }
 
         @Override
-        public void started() {
-            updater.accept(TaskExecutionDetails::started);
+        public void started(TaskId taskId) {
+            updaterFactory.apply(taskId).accept(TaskExecutionDetails::started);
         }
 
         @Override
-        public void completed(Task.Result result) {
-            updater.accept(TaskExecutionDetails::completed);
-
+        public void completed(TaskId taskId, Task.Result result) {
+            updaterFactory.apply(taskId)
+                .accept(TaskExecutionDetails::completed);
         }
 
         @Override
-        public void failed(Throwable t) {
-            failed();
+        public void failed(TaskId taskId, Throwable t) {
+            failed(taskId);
         }
 
         @Override
-        public void failed() {
-            updater.accept(TaskExecutionDetails::failed);
+        public void failed(TaskId taskId) {
+            updaterFactory.apply(taskId)
+                .accept(TaskExecutionDetails::failed);
         }
 
         @Override
-        public void cancelled() {
-            updater.accept(TaskExecutionDetails::cancelEffectively);
+        public void cancelled(TaskId taskId) {
+            updaterFactory.apply(taskId)
+                .accept(TaskExecutionDetails::cancelEffectively);
         }
     }
 
@@ -80,7 +87,7 @@ public class MemoryTaskManager implements TaskManager {
     public MemoryTaskManager() {
 
         idToExecutionDetails = new ConcurrentHashMap<>();
-        worker = new SerialTaskManagerWorker();
+        worker = new SerialTaskManagerWorker(updater());
         workQueue = new MemoryWorkQueue(worker);
     }
 
@@ -88,7 +95,7 @@ public class MemoryTaskManager implements TaskManager {
         TaskId taskId = TaskId.generateTaskId();
         TaskExecutionDetails executionDetails = TaskExecutionDetails.from(task, taskId);
         idToExecutionDetails.put(taskId, executionDetails);
-        workQueue.submit(new TaskWithId(taskId, task), updater(taskId));
+        workQueue.submit(new TaskWithId(taskId, task));
         return taskId;
     }
 
@@ -148,8 +155,8 @@ public class MemoryTaskManager implements TaskManager {
         }
     }
 
-    private DetailsUpdater updater(TaskId id) {
-        return new DetailsUpdater(updateDetails(id));
+    private DetailsUpdater updater() {
+        return new DetailsUpdater(this::updateDetails);
     }
 
     private Consumer<TaskExecutionDetailsUpdater> updateDetails(TaskId taskId) {

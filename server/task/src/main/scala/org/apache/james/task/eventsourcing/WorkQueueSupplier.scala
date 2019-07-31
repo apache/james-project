@@ -16,23 +16,12 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  * ***************************************************************/
-
 package org.apache.james.task.eventsourcing
 
 import org.apache.james.eventsourcing.EventSourcingSystem
-import org.apache.james.task.Task.Result
-import org.apache.james.task.eventsourcing.TaskCommand._
-import org.apache.james.task.{TaskId, TaskManagerWorker}
+import org.apache.james.task.WorkQueue
 
-case class WorkerStatusListener(eventSourcingSystem: EventSourcingSystem) extends TaskManagerWorker.Listener {
-
-  override def started(taskId: TaskId): Unit = eventSourcingSystem.dispatch(Start(taskId))
-
-  override def completed(taskId: TaskId, result: Result): Unit = eventSourcingSystem.dispatch(Complete(taskId, result))
-
-  override def failed(taskId: TaskId, t: Throwable): Unit = eventSourcingSystem.dispatch(Fail(taskId))
-
-  override def failed(taskId: TaskId): Unit = eventSourcingSystem.dispatch(Fail(taskId))
-
-  override def cancelled(taskId: TaskId): Unit = eventSourcingSystem.dispatch(Cancel(taskId))
+@FunctionalInterface
+trait WorkQueueSupplier {
+  def apply(eventSourcingSystem: EventSourcingSystem): WorkQueue
 }

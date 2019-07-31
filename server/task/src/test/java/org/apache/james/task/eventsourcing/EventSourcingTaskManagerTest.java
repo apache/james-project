@@ -27,7 +27,6 @@ import org.apache.james.task.SerialTaskManagerWorker;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskManagerContract;
 import org.apache.james.task.TaskManagerWorker;
-import org.apache.james.task.WorkQueue;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,11 +38,14 @@ class EventSourcingTaskManagerTest implements TaskManagerContract {
 
     @BeforeEach
     void setUp() {
-        TaskManagerWorker worker = new SerialTaskManagerWorker();
-        WorkQueue workQueue = new MemoryWorkQueue(worker);
         EventStore eventStore = new InMemoryEventStore();
         TaskExecutionDetailsProjection executionDetailsProjection = new MemoryTaskExecutionDetailsProjection();
-        taskManager = new EventSourcingTaskManager(worker, workQueue, eventStore, executionDetailsProjection);
+        WorkQueueSupplier workQueueSupplier = eventSourcingSystem -> {
+            WorkerStatusListener listener = new WorkerStatusListener(eventSourcingSystem);
+            TaskManagerWorker worker = new SerialTaskManagerWorker(listener);
+            return new MemoryWorkQueue(worker);
+        };
+        taskManager = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection);
     }
 
     @AfterEach

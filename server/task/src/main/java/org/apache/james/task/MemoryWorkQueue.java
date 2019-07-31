@@ -25,14 +25,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
 
 public class MemoryWorkQueue implements WorkQueue {
 
     private final TaskManagerWorker worker;
     private final Disposable subscription;
-    private final LinkedBlockingQueue<Tuple2<TaskWithId, TaskManagerWorker.Listener>> tasks;
+    private final LinkedBlockingQueue<TaskWithId> tasks;
 
     public MemoryWorkQueue(TaskManagerWorker worker) {
         this.worker = worker;
@@ -44,17 +42,15 @@ public class MemoryWorkQueue implements WorkQueue {
             .subscribe();
     }
 
-    private Mono<?> dispatchTaskToWorker(Tuple2<TaskWithId, TaskManagerWorker.Listener> tuple) {
-        TaskWithId taskWithId = tuple.getT1();
-        TaskManagerWorker.Listener listener = tuple.getT2();
-        return worker.executeTask(taskWithId, listener);
+    private Mono<?> dispatchTaskToWorker(TaskWithId taskWithId) {
+        return worker.executeTask(taskWithId);
     }
 
-    public void submit(TaskWithId taskWithId, TaskManagerWorker.Listener listener) {
+    public void submit(TaskWithId taskWithId) {
         try {
-            tasks.put(Tuples.of(taskWithId, listener));
+            tasks.put(taskWithId);
         } catch (InterruptedException e) {
-            listener.cancelled();
+            worker.cancelTask(taskWithId.getId());
         }
     }
 
