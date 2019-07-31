@@ -92,4 +92,10 @@ public class ObjectStorageBlobsDAOAWSCryptoTest implements MetricableBlobStoreCo
     public void readShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() {
 
     }
+
+    @Override
+    @Disabled("JAMES-2838 Unstable with scality/S3 impl")
+    public void readBytesShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() {
+
+    }
 }

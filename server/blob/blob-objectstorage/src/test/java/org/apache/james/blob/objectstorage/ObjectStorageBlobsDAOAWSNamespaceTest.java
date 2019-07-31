@@ -85,5 +85,11 @@ public class ObjectStorageBlobsDAOAWSNamespaceTest implements MetricableBlobStor
     public void readShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() {
 
     }
+
+    @Override
+    @Disabled("JAMES-2838 Unstable with scality/S3 impl")
+    public void readBytesShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() {
+
+    }
 }
 
