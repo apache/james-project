@@ -2907,7 +2907,7 @@
                     <version>2.22.2</version>
                     <configuration>
                         <argLine>-Xms512m -Xmx1024m</argLine>
-                        <reuseForks>false</reuseForks>
+                        <reuseForks>true</reuseForks>
                         <!-- Fail tests longer than 2 hours, prevent form random locking tests -->
                         <forkedProcessTimeoutInSeconds>7200</forkedProcessTimeoutInSeconds>
                     </configuration>
