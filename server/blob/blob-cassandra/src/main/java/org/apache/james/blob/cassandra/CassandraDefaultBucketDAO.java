@@ -144,8 +144,9 @@ public class CassandraDefaultBucketDAO {
     }
 
     private byte[] rowToData(Row row) {
-        byte[] data = new byte[row.getBytes(DefaultBucketBlobParts.DATA).remaining()];
-        row.getBytes(DefaultBucketBlobParts.DATA).get(data);
+        ByteBuffer byteBuffer = row.getBytes(DefaultBucketBlobParts.DATA);
+        byte[] data = new byte[byteBuffer.remaining()];
+        byteBuffer.get(data);
         return data;
     }
 }
