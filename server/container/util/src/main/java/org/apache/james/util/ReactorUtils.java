@@ -18,10 +18,80 @@
  ****************************************************************/
 package org.apache.james.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Optional;
+import java.util.Spliterator;
+import java.util.stream.Stream;
+
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class ReactorUtils {
     public static <T> Mono<T> executeAndEmpty(Runnable runnable) {
         return Mono.fromRunnable(runnable).then(Mono.empty());
+    }
+
+    public static InputStream toInputStream(Flux<byte[]> byteArrays) {
+        return new StreamInputStream(byteArrays.toStream(1));
+    }
+
+    private static  class StreamInputStream extends InputStream {
+        private static final int NO_MORE_DATA = -1;
+
+        private final Stream<byte[]> source;
+        private final Spliterator<byte[]> spliterator;
+        private Optional<ByteArrayInputStream> currentItemByteStream;
+
+        StreamInputStream(Stream<byte[]> source) {
+            this.source = source;
+            this.spliterator = source.spliterator();
+            this.currentItemByteStream = Optional.empty();
+        }
+
+        @Override
+        public int read() {
+            try {
+                if (!dataAvailableToRead()) {
+                    switchToNextChunk();
+                }
+
+                if (!dataAvailableToRead()) {
+                    source.close();
+                    return NO_MORE_DATA;
+                }
+
+                return currentItemByteStream.map(ByteArrayInputStream::read)
+                    .filter(readResult -> readResult != NO_MORE_DATA)
+                    .orElseGet(this::readNextChunk);
+            } catch (Throwable t) {
+                source.close();
+                throw t;
+            }
+        }
+
+        private boolean dataAvailableToRead() {
+            return currentItemByteStream.isPresent();
+        }
+
+        private void switchToNextChunk() {
+            spliterator.tryAdvance(bytes ->
+                currentItemByteStream = Optional.of(new ByteArrayInputStream(bytes)));
+        }
+
+        private Integer readNextChunk() {
+            currentItemByteStream = Optional.empty();
+            return read();
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                source.close();
+            } finally {
+                super.close();
+            }
+        }
     }
 }

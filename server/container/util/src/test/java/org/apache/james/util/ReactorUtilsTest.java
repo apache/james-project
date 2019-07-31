@@ -20,10 +20,18 @@ package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 class ReactorUtilsTest {
 
@@ -67,6 +75,78 @@ class ReactorUtilsTest {
             public Integer getCounter() {
                 return counter;
             }
+        }
+    }
+
+    @Nested
+    class ToInputStream {
+        @Test
+        void givenAFluxOnOneByteShouldConsumeOnlyTheReadBytesAndThePrefetch() throws IOException, InterruptedException {
+            AtomicInteger generateElements = new AtomicInteger(0);
+            Flux<byte[]> source = Flux.range(0, 10)
+                .subscribeOn(Schedulers.elastic())
+                .limitRate(2)
+                .doOnRequest(request -> generateElements.getAndAdd((int) request))
+                .map(index -> new byte[] {(byte) (int) index});
+
+            InputStream inputStream = ReactorUtils.toInputStream(source);
+            byte[] readBytes = new byte[5];
+            inputStream.read(readBytes, 0, readBytes.length);
+
+            assertThat(readBytes).contains(0, 1, 2, 3, 4);
+            Thread.sleep(200);
+            assertThat(generateElements.get()).isEqualTo(6);
+        }
+
+        @Test
+        void givenAFluxOf3BytesShouldConsumeOnlyTheReadBytesAndThePrefetch() throws IOException, InterruptedException {
+            AtomicInteger generateElements = new AtomicInteger(0);
+            Flux<byte[]> source = Flux.just(new byte[] {0, 1, 2}, new byte[] {3, 4, 5}, new byte[] {6, 7, 8})
+                    .subscribeOn(Schedulers.elastic())
+                    .limitRate(2)
+                    .doOnRequest(request -> generateElements.getAndAdd((int) request));
+
+            InputStream inputStream = ReactorUtils.toInputStream(source);
+            byte[] readBytes = new byte[5];
+            inputStream.read(readBytes, 0, readBytes.length);
+
+            assertThat(readBytes).contains(0, 1, 2, 3, 4);
+            Thread.sleep(200);
+            assertThat(generateElements.get()).isEqualTo(3);
+        }
+
+        @Test
+        void givenAFluxOf3BytesWithAnEmptyByteArrayShouldConsumeOnlyTheReadBytesAndThePrefetch() throws IOException, InterruptedException {
+            AtomicInteger generateElements = new AtomicInteger(0);
+            Flux<byte[]> source = Flux.just(new byte[] {0, 1, 2}, new byte[] {}, new byte[] {3, 4, 5}, new byte[] {6, 7, 8}, new byte[] {9, 10, 11})
+                    .subscribeOn(Schedulers.elastic())
+                    .limitRate(2)
+                    .doOnRequest(request -> generateElements.getAndAdd((int) request));
+
+            InputStream inputStream = ReactorUtils.toInputStream(source);
+            byte[] readBytes = new byte[5];
+            inputStream.read(readBytes, 0, readBytes.length);
+
+            assertThat(readBytes).contains(0, 1, 2, 3, 4);
+            Thread.sleep(200);
+            assertThat(generateElements.get()).isEqualTo(4);
+        }
+
+        @Test
+        void givenAnEmptyFluxShouldConsumeOnlyThePrefetch() throws IOException, InterruptedException {
+            AtomicInteger generateElements = new AtomicInteger(0);
+            Flux<byte[]> source = Flux.<byte[]>empty()
+                    .subscribeOn(Schedulers.elastic())
+                    .limitRate(2)
+                    .doOnRequest(request -> generateElements.getAndAdd((int) request));
+
+            InputStream inputStream = ReactorUtils.toInputStream(source);
+            byte[] readBytes = new byte[5];
+            inputStream.read(readBytes, 0, readBytes.length);
+
+            assertThat(readBytes).contains(0, 0, 0, 0, 0);
+            Thread.sleep(200);
+            assertThat(generateElements.get()).isEqualTo(1);
         }
     }
 }
