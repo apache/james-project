@@ -30,10 +30,12 @@ import org.apache.james.task.eventsourcing.TaskCommand._
 
 import scala.annotation.tailrec
 
-class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing](val eventStore: EventStore,
+class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing](
+                                                                                 val serialTaskManagerWorker: TaskManagerWorker,
+                                                                                 val workQueue: WorkQueue,
+                                                                                 val eventStore: EventStore,
                                                                                  val executionDetailsProjection: TaskExecutionDetailsProjection) extends TaskManager with Closeable {
 
-  private val workQueue: WorkQueue = WorkQueue.builder().worker(new SerialTaskManagerWorker)
   private val delayBetweenPollingInMs = 500
 
   private def workDispatcher: Subscriber = {

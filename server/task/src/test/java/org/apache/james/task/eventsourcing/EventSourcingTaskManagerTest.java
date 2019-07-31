@@ -22,8 +22,12 @@ package org.apache.james.task.eventsourcing;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
 import org.apache.james.task.CountDownLatchExtension;
+import org.apache.james.task.MemoryWorkQueue;
+import org.apache.james.task.SerialTaskManagerWorker;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskManagerContract;
+import org.apache.james.task.TaskManagerWorker;
+import org.apache.james.task.WorkQueue;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,9 +39,11 @@ class EventSourcingTaskManagerTest implements TaskManagerContract {
 
     @BeforeEach
     void setUp() {
+        TaskManagerWorker worker = new SerialTaskManagerWorker();
+        WorkQueue workQueue = new MemoryWorkQueue(worker);
         EventStore eventStore = new InMemoryEventStore();
         TaskExecutionDetailsProjection executionDetailsProjection = new MemoryTaskExecutionDetailsProjection();
-        taskManager = new EventSourcingTaskManager(eventStore, executionDetailsProjection);
+        taskManager = new EventSourcingTaskManager(worker, workQueue, eventStore, executionDetailsProjection);
     }
 
     @AfterEach

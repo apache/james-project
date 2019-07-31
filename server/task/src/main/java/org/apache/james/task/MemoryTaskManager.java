@@ -81,7 +81,7 @@ public class MemoryTaskManager implements TaskManager {
 
         idToExecutionDetails = new ConcurrentHashMap<>();
         worker = new SerialTaskManagerWorker();
-        workQueue = WorkQueue.builder().worker(worker);
+        workQueue = new MemoryWorkQueue(worker);
     }
 
     public TaskId submit(Task task) {

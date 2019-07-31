@@ -16,69 +16,13 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.task;
 
 import java.io.Closeable;
-import java.io.IOException;
-import java.util.concurrent.LinkedBlockingQueue;
 
-import reactor.core.Disposable;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
+public interface WorkQueue extends Closeable {
 
-public class WorkQueue implements Closeable {
+    void submit(TaskWithId taskWithId, TaskManagerWorker.Listener listener);
 
-    public static RequireWorker builder() {
-        return WorkQueue::new;
-    }
-
-    public interface RequireWorker {
-        WorkQueue worker(TaskManagerWorker worker);
-    }
-
-    private final TaskManagerWorker worker;
-    private final Disposable subscription;
-    private final LinkedBlockingQueue<Tuple2<TaskWithId, TaskManagerWorker.Listener>> tasks;
-
-    private WorkQueue(TaskManagerWorker worker) {
-        this.worker = worker;
-        this.tasks = new LinkedBlockingQueue<>();
-        this.subscription = Mono.fromCallable(tasks::take)
-            .repeat()
-            .subscribeOn(Schedulers.elastic())
-            .flatMapSequential(this::dispatchTaskToWorker)
-            .subscribe();
-    }
-
-    private Mono<?> dispatchTaskToWorker(Tuple2<TaskWithId, TaskManagerWorker.Listener> tuple) {
-        TaskWithId taskWithId = tuple.getT1();
-        TaskManagerWorker.Listener listener = tuple.getT2();
-        return worker.executeTask(taskWithId, listener);
-    }
-
-    public void submit(TaskWithId taskWithId, TaskManagerWorker.Listener listener) {
-        try {
-            tasks.put(Tuples.of(taskWithId, listener));
-        } catch (InterruptedException e) {
-            listener.cancelled();
-        }
-    }
-
-    public void cancel(TaskId taskId) {
-        worker.cancelTask(taskId);
-    }
-
-    @Override
-    public void close() throws IOException {
-        try {
-            subscription.dispose();
-        } catch (Throwable ignore) {
-            //avoid failing during close
-        }
-        worker.close();
-    }
-
+    void cancel(TaskId taskId);
 }
