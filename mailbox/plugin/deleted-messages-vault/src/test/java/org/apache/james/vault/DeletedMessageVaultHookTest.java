@@ -29,6 +29,8 @@ import java.time.Clock;
 import java.time.ZoneOffset;
 import java.util.List;
 
+import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.memory.MemoryBlobStore;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.core.User;
@@ -46,14 +48,19 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.mime4j.dom.Message;
-import org.apache.james.vault.memory.MemoryDeletedMessagesVault;
+import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
+import org.apache.james.vault.blob.BucketNameGenerator;
+import org.apache.james.vault.memory.metadata.MemoryDeletedMessageMetadataVault;
 import org.apache.james.vault.search.Query;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Flux;
 
 class DeletedMessageVaultHookTest {
 
@@ -70,7 +77,7 @@ class DeletedMessageVaultHookTest {
     private MailboxManager mailboxManager;
     private MessageIdManager messageIdManager;
     private Message mailContent;
-    private MemoryDeletedMessagesVault messageVault;
+    private DeletedMessageVault messageVault;
     private Clock clock;
     private MailboxSession aliceSession;
     private MailboxSession bobSession;
@@ -100,7 +107,9 @@ class DeletedMessageVaultHookTest {
     @BeforeEach
     void setUp() throws Exception {
         clock = Clock.fixed(DELETION_DATE.toInstant(), ZoneOffset.UTC);
-        messageVault = new MemoryDeletedMessagesVault(RetentionConfiguration.DEFAULT, clock);
+        messageVault = new BlobStoreDeletedMessageVault(new NoopMetricFactory(), new MemoryDeletedMessageMetadataVault(),
+            new MemoryBlobStore(new HashBlobId.Factory()), new BucketNameGenerator(clock), clock,
+            RetentionConfiguration.DEFAULT);
 
         DeletedMessageConverter deletedMessageConverter = new DeletedMessageConverter();
 
@@ -144,7 +153,7 @@ class DeletedMessageVaultHookTest {
         messageIdManager.delete(ImmutableList.of(messageId), aliceSession);
 
         DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(aliceMailbox), messageId, ALICE, messageSize);
-        assertThat(messageVault.search(ALICE, Query.ALL).blockFirst())
+        assertThat(Flux.from(messageVault.search(ALICE, Query.ALL)).blockFirst())
             .isEqualTo(deletedMessage);
     }
 
@@ -168,7 +177,7 @@ class DeletedMessageVaultHookTest {
         DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(aliceMailbox), messageId, ALICE, messageSize);
         bobMessageManager.delete(bobMessageManager.search(searchQuery, bobSession).collect(Guavate.toImmutableList()), bobSession);
 
-        assertThat(messageVault.search(ALICE, Query.ALL).blockFirst())
+        assertThat(Flux.from(messageVault.search(ALICE, Query.ALL)).blockFirst())
             .isEqualTo(deletedMessage);
     }
 
@@ -189,7 +198,7 @@ class DeletedMessageVaultHookTest {
 
         bobMessageManager.delete(bobMessageManager.search(searchQuery, bobSession).collect(Guavate.toImmutableList()), bobSession);
 
-        assertThat(messageVault.search(BOB, Query.ALL).collectList().block())
+        assertThat(Flux.from(messageVault.search(BOB, Query.ALL)).collectList().block())
             .isEmpty();
     }
 
@@ -215,7 +224,7 @@ class DeletedMessageVaultHookTest {
         DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(bobMailbox), messageId, BOB, messageSize);
         bobMessageManager.delete(bobMessageManager.search(searchQuery, bobSession).collect(Guavate.toImmutableList()), bobSession);
 
-        assertThat(messageVault.search(BOB, Query.ALL).blockFirst())
+        assertThat(Flux.from(messageVault.search(BOB, Query.ALL)).blockFirst())
             .isEqualTo(deletedMessage);
     }
 
@@ -239,7 +248,7 @@ class DeletedMessageVaultHookTest {
 
         bobMessageManager.delete(bobMessageManager.search(searchQuery, bobSession).collect(Guavate.toImmutableList()), bobSession);
 
-        assertThat(messageVault.search(ALICE, Query.ALL).collectList().block())
+        assertThat(Flux.from(messageVault.search(ALICE, Query.ALL)).collectList().block())
             .isEmpty();
     }
 
@@ -265,7 +274,7 @@ class DeletedMessageVaultHookTest {
         DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(bobMailbox), messageId, BOB, messageSize);
         bobMessageManager.delete(bobMessageManager.search(searchQuery, bobSession).collect(Guavate.toImmutableList()), bobSession);
 
-        assertThat(messageVault.search(BOB, Query.ALL).blockFirst())
+        assertThat(Flux.from(messageVault.search(BOB, Query.ALL)).blockFirst())
             .isEqualTo(deletedMessage);
     }
 
@@ -289,7 +298,7 @@ class DeletedMessageVaultHookTest {
 
         bobMessageManager.delete(bobMessageManager.search(searchQuery, bobSession).collect(Guavate.toImmutableList()), bobSession);
 
-        assertThat(messageVault.search(ALICE, Query.ALL).collectList().block())
+        assertThat(Flux.from(messageVault.search(ALICE, Query.ALL)).collectList().block())
             .isEmpty();
     }
 

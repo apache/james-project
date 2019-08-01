@@ -64,6 +64,8 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.utils.MailboxManagerDefinition;
+import org.apache.james.vault.memory.metadata.MemoryDeletedMessageMetadataVault;
+import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -104,6 +106,8 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(TextExtractor.class).to(JsoupTextExtractor.class);
         bind(RightManager.class).to(StoreRightManager.class);
 
+        bind(DeletedMessageMetadataVault.class).to(MemoryDeletedMessageMetadataVault.class);
+
         bind(StoreBlobManager.class).in(Scopes.SINGLETON);
         bind(InMemoryMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
         bind(InMemoryModSeqProvider.class).in(Scopes.SINGLETON);
@@ -117,6 +121,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(StoreMessageIdManager.class).in(Scopes.SINGLETON);
         bind(StoreAttachmentManager.class).in(Scopes.SINGLETON);
         bind(StoreRightManager.class).in(Scopes.SINGLETON);
+        bind(MemoryDeletedMessageMetadataVault.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class)
             .addBinding()

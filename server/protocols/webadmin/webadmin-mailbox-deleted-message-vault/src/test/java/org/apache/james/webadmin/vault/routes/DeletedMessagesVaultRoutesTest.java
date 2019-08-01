@@ -46,6 +46,8 @@ import static org.apache.mailet.base.MailAddressFixture.RECIPIENT3;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import static org.apache.mailet.base.MailAddressFixture.SENDER2;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
@@ -63,7 +65,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.Clock;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -72,6 +73,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.export.api.BlobExportMechanism;
 import org.apache.james.blob.memory.MemoryBlobStore;
@@ -98,16 +100,19 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.user.memory.MemoryUsersRepository;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.vault.DeletedMessage;
+import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.DeletedMessageZipper;
 import org.apache.james.vault.RetentionConfiguration;
+import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
+import org.apache.james.vault.blob.BucketNameGenerator;
 import org.apache.james.vault.dto.query.QueryTranslator;
-import org.apache.james.vault.memory.MemoryDeletedMessagesVault;
+import org.apache.james.vault.memory.metadata.MemoryDeletedMessageMetadataVault;
 import org.apache.james.vault.search.Query;
-import org.apache.james.vault.utils.DeleteByQueryExecutor;
-import org.apache.james.vault.utils.VaultGarbageCollectionTask;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.TasksRoutes;
@@ -122,6 +127,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import com.google.common.collect.ImmutableList;
+
 import io.restassured.RestAssured;
 import io.restassured.filter.log.LogDetail;
 import reactor.core.publisher.Flux;
@@ -140,6 +146,9 @@ class DeletedMessagesVaultRoutesTest {
         }
     }
 
+    private static final ZonedDateTime NOW = ZonedDateTime.parse("2015-10-30T16:12:00Z");
+    private static final ZonedDateTime OLD_DELIVERY_DATE = ZonedDateTime.parse("2010-10-30T14:12:00Z");
+    private static final ZonedDateTime OLD_DELETION_DATE = ZonedDateTime.parse("2010-10-30T15:12:00Z");
     private static final String MATCH_ALL_QUERY = "{" +
         "\"combinator\": \"and\"," +
         "\"criteria\": []" +
@@ -150,7 +159,7 @@ class DeletedMessagesVaultRoutesTest {
     private static final String BOB_DELETE_PATH = BOB_PATH + SEPARATOR + DELETED_MESSAGE_PARAM_PATH;
 
     private WebAdminServer webAdminServer;
-    private MemoryDeletedMessagesVault vault;
+    private DeletedMessageVault vault;
     private InMemoryMailboxManager mailboxManager;
     private MemoryTaskManager taskManager;
     private NoopBlobExporting blobExporting;
@@ -159,12 +168,16 @@ class DeletedMessagesVaultRoutesTest {
     private MemoryUsersRepository usersRepository;
     private ExportService exportService;
     private HashBlobId.Factory blobIdFactory;
-    private Clock clock;
+    private UpdatableTickingClock clock;
 
     @BeforeEach
     void beforeEach() throws Exception {
-        clock = Clock.systemUTC();
-        vault = spy(new MemoryDeletedMessagesVault(RetentionConfiguration.DEFAULT, clock));
+        blobIdFactory = new HashBlobId.Factory();
+        blobStore = spy(new MemoryBlobStore(blobIdFactory));
+        clock = new UpdatableTickingClock(OLD_DELETION_DATE.toInstant());
+        vault = spy(new BlobStoreDeletedMessageVault(new NoopMetricFactory(), new MemoryDeletedMessageMetadataVault(),
+            blobStore, new BucketNameGenerator(clock), clock,
+            RetentionConfiguration.DEFAULT));
         InMemoryIntegrationResources inMemoryResource = InMemoryIntegrationResources.defaultResources();
         mailboxManager = spy(inMemoryResource.getMailboxManager());
 
@@ -173,8 +186,6 @@ class DeletedMessagesVaultRoutesTest {
 
         RestoreService vaultRestore = new RestoreService(vault, mailboxManager);
         blobExporting = spy(new NoopBlobExporting());
-        blobIdFactory = new HashBlobId.Factory();
-        blobStore = new MemoryBlobStore(blobIdFactory);
         zipper = new DeletedMessageZipper();
         exportService = new ExportService(blobExporting, blobStore, zipper, vault);
         QueryTranslator queryTranslator = new QueryTranslator(new InMemoryId.Factory());
@@ -369,8 +380,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"restore", "export"})
-        void userVaultAPIShouldReturnBadRequestWhenPassingUnsupportedField(String action) throws Exception {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+        void userVaultAPIShouldReturnBadRequestWhenPassingUnsupportedField(String action) {
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
             String query =
                 "{" +
@@ -398,8 +409,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"restore", "export"})
-        void userVaultAPIShouldReturnBadRequestWhenPassingUnsupportedOperator(String action) throws Exception {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+        void userVaultAPIShouldReturnBadRequestWhenPassingUnsupportedOperator(String action) {
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
             String query =
                 "{" +
@@ -427,8 +438,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"restore", "export"})
-        void userVaultAPIShouldReturnBadRequestWhenPassingUnsupportedPairOfFieldNameAndOperator(String action) throws Exception {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+        void userVaultAPIShouldReturnBadRequestWhenPassingUnsupportedPairOfFieldNameAndOperator(String action) {
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
             String query =
                 "{" +
@@ -456,8 +467,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"restore", "export"})
-        void userVaultAPIShouldReturnBadRequestWhenPassingInvalidMailAddress(String action) throws Exception {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+        void userVaultAPIShouldReturnBadRequestWhenPassingInvalidMailAddress(String action) {
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
             String query =
                 "{" +
@@ -485,8 +496,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"restore", "export"})
-        void userVaultAPIShouldReturnBadRequestWhenPassingOrCombinator(String action) throws Exception {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+        void userVaultAPIShouldReturnBadRequestWhenPassingOrCombinator(String action) {
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
             String query =
                 "{" +
@@ -515,8 +526,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"restore", "export"})
-        void userVaultAPIShouldReturnBadRequestWhenPassingNestedStructuredQuery(String action) throws Exception {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+        void userVaultAPIShouldReturnBadRequestWhenPassingNestedStructuredQuery(String action) {
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
             String query =
                 "{" +
@@ -558,9 +569,9 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldAppendMessageToMailboxWhenMatchingSubjectContains() throws Exception {
-                    vault.append(FINAL_STAGE.get()
+                    Mono.from(vault.append(FINAL_STAGE.get()
                         .subject("subject contains should match")
-                        .build(), new ByteArrayInputStream(CONTENT)).block();
+                        .build(), new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -592,9 +603,9 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldNotAppendMessageToMailboxWhenSubjectDoesntContains() throws Exception {
-                    vault.append(FINAL_STAGE.get()
+                    Mono.from(vault.append(FINAL_STAGE.get()
                         .subject("subject")
-                        .build(), new ByteArrayInputStream(CONTENT)).block();
+                        .build(), new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -624,9 +635,9 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldAppendMessageToMailboxWhenMatchingSubjectContainsIgnoreCase() throws Exception {
-                    vault.append(FINAL_STAGE.get()
+                    Mono.from(vault.append(FINAL_STAGE.get()
                         .subject("SUBJECT contains should match")
-                        .build(), new ByteArrayInputStream(CONTENT)).block();
+                        .build(), new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -658,9 +669,9 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldNotAppendMessageToMailboxWhenSubjectDoesntContainsIgnoreCase() throws Exception {
-                    vault.append(FINAL_STAGE.get()
+                    Mono.from(vault.append(FINAL_STAGE.get()
                         .subject("subject")
-                        .build(), new ByteArrayInputStream(CONTENT)).block();
+                        .build(), new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -690,9 +701,9 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldAppendMessageToMailboxWhenMatchingSubjectEquals() throws Exception {
-                    vault.append(FINAL_STAGE.get()
+                    Mono.from(vault.append(FINAL_STAGE.get()
                         .subject("subject should match")
-                        .build(), new ByteArrayInputStream(CONTENT)).block();
+                        .build(), new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -724,9 +735,9 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldNotAppendMessageToMailboxWhenSubjectDoesntEquals() throws Exception {
-                    vault.append(FINAL_STAGE.get()
+                    Mono.from(vault.append(FINAL_STAGE.get()
                         .subject("subject")
-                        .build(), new ByteArrayInputStream(CONTENT)).block();
+                        .build(), new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -756,9 +767,9 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldAppendMessageToMailboxWhenMatchingSubjectEqualsIgnoreCase() throws Exception {
-                    vault.append(FINAL_STAGE.get()
+                    Mono.from(vault.append(FINAL_STAGE.get()
                         .subject("SUBJECT should MatCH")
-                        .build(), new ByteArrayInputStream(CONTENT)).block();
+                        .build(), new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -790,9 +801,9 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldNotAppendMessageToMailboxWhenSubjectDoesntEqualsIgnoreCase() throws Exception {
-                    vault.append(FINAL_STAGE.get()
+                    Mono.from(vault.append(FINAL_STAGE.get()
                         .subject("subject")
-                        .build(), new ByteArrayInputStream(CONTENT)).block();
+                        .build(), new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -826,7 +837,7 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldAppendMessageToMailboxWhenMatchingDeletionDateBeforeOrEquals() throws Exception {
-                    vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -858,7 +869,7 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldNotAppendMessageToMailboxWhenNotMatchingDeletionDateBeforeOrEquals() throws Exception {
-                    vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -888,7 +899,7 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldAppendMessageToMailboxWhenMatchingDeletionDateAfterOrEquals() throws Exception {
-                    vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -920,7 +931,7 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldNotAppendMessageToMailboxWhenNotMatchingDeletionDateAfterOrEquals() throws Exception {
-                    vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -954,7 +965,7 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldAppendMessageToMailboxWhenMatchingDeliveryDateBeforeOrEquals() throws Exception {
-                    vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -986,7 +997,7 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldNotAppendMessageToMailboxWhenNotMatchingDeliveryDateBeforeOrEquals() throws Exception {
-                    vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -1016,7 +1027,7 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldAppendMessageToMailboxWhenMatchingDeliveryDateAfterOrEquals() throws Exception {
-                    vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -1048,7 +1059,7 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldNotAppendMessageToMailboxWhenNotMatchingDeliveryDateAfterOrEquals() throws Exception {
-                    vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -1082,7 +1093,7 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldAppendMessageToMailboxWhenMatchingRecipientContains() throws Exception {
-                    vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -1114,7 +1125,7 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldNotAppendMessageToMailboxWhenMatchingRecipientsDoNotContain() throws Exception {
-                    vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -1147,7 +1158,7 @@ class DeletedMessagesVaultRoutesTest {
             class SenderTest {
                 @Test
                 void restoreShouldAppendMessageToMailboxWhenMatchingSenderEquals() throws Exception {
-                    vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -1179,7 +1190,7 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldAppendMessageToMailboxWhenMatchingSenderDoesntEquals() throws Exception {
-                    vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -1323,7 +1334,7 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldAppendMessageToMailboxWhenContainsMailboxId() throws Exception {
-                    vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -1355,7 +1366,7 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldNotAppendMessageToMailboxWhenDoNotContainsMailboxId() throws Exception {
-                    vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
                     String query =
                         "{" +
@@ -1389,8 +1400,8 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldAppendMessageToMailboxWhenAllcriteriaAreMatched() throws Exception {
-                    vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-                    vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+                    Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
                     String query = "" +
                         "{" +
@@ -1442,8 +1453,8 @@ class DeletedMessagesVaultRoutesTest {
 
                 @Test
                 void restoreShouldNotAppendMessageToMailboxWhenASingleCriterionDoesntMatch() throws Exception {
-                    vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-                    vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+                    Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
                     String query = "" +
                         "{" +
@@ -1498,8 +1509,8 @@ class DeletedMessagesVaultRoutesTest {
 
             @Test
             void restoreShouldProduceFailedTaskWhenTheVaultGetsError() {
-                vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-                vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+                Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+                Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
                 doThrow(new RuntimeException("mock exception"))
                     .when(vault)
@@ -1532,8 +1543,8 @@ class DeletedMessagesVaultRoutesTest {
 
             @Test
             void restoreShouldProduceFailedTaskWithErrorRestoreCountWhenMessageAppendGetsError() throws Exception {
-                vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-                vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+                Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+                Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
                 MessageManager mockMessageManager = mock(MessageManager.class);
                 doReturn(mockMessageManager)
@@ -1570,8 +1581,8 @@ class DeletedMessagesVaultRoutesTest {
 
             @Test
             void restoreShouldProduceFailedTaskWhenMailboxMangerGetsError() throws Exception {
-                vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-                vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+                Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+                Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
                 doThrow(new RuntimeException("mock exception"))
                     .when(mailboxManager)
@@ -1616,8 +1627,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void restoreShouldProduceASuccessfulTaskWithAdditionalInformation() {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-            vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
             String taskId =
                 given()
@@ -1646,8 +1657,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void restoreShouldKeepAllMessagesInTheVaultOfCorrespondingUser() {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-            vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
             String taskId =
                 given()
@@ -1679,8 +1690,8 @@ class DeletedMessagesVaultRoutesTest {
                 MessageManager.AppendCommand.builder().build(new ByteArrayInputStream(CONTENT)),
                 session);
 
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-            vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
             String taskId =
                 given()
@@ -1704,8 +1715,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void restoreShouldAppendAllMessageFromVaultToRestoreMailboxOfCorrespondingUser() throws Exception {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-            vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
             String taskId =
                 given()
@@ -1731,8 +1742,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void restoreShouldNotAppendMessagesToAnOtherUserMailbox() throws Exception {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-            vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
             String taskId =
                 given()
@@ -1811,8 +1822,8 @@ class DeletedMessagesVaultRoutesTest {
 
             @Test
             void exportShouldProduceASuccessfulTaskWithInformation() {
-                vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-                vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+                Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+                Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
                 String taskId =
                     with()
@@ -1842,8 +1853,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void exportShouldCallBlobExportingTargetToExportAddress() throws Exception {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-            vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
             String taskId =
                 with()
@@ -1864,8 +1875,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void exportShouldNotDeleteMessagesInTheVault() {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-            vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
             String taskId =
                 with()
@@ -1885,8 +1896,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void exportShouldSaveDeletedMessagesDataToBlobStore() throws Exception {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-            vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
             String taskId =
                 with()
@@ -1932,8 +1943,10 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void purgeShouldProduceASuccessfulTaskWithAdditionalInformation() {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-            vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+
+            clock.setInstant(NOW.toInstant());
 
             String taskId =
                 with()
@@ -1949,12 +1962,9 @@ class DeletedMessagesVaultRoutesTest {
             .then()
                 .body("status", is("completed"))
                 .body("taskId", is(taskId))
-                .body("type", is(VaultGarbageCollectionTask.TYPE))
+                .body("type", is("deletedMessages/blobStoreBasedGarbageCollection"))
                 .body("additionalInformation.beginningOfRetentionPeriod", is(notNullValue()))
-                .body("additionalInformation.handledUserCount", is(1))
-                .body("additionalInformation.permanantlyDeletedMessages", is(2))
-                .body("additionalInformation.vaultSearchErrorCount", is(0))
-                .body("additionalInformation.deletionErrorCount", is(0))
+                .body("additionalInformation.deletedBuckets", contains("deleted-messages-2010-10-01"))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
                 .body("completedDate", is(notNullValue()));
@@ -1974,9 +1984,12 @@ class DeletedMessagesVaultRoutesTest {
                 .size(CONTENT.length)
                 .build();
 
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-            vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
-            vault.append(notExpiredMessage, new ByteArrayInputStream(CONTENT)).block();
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+
+            clock.setInstant(NOW.toInstant());
+
+            Mono.from(vault.append(notExpiredMessage, new ByteArrayInputStream(CONTENT))).block();
 
             String taskId =
                 with()
@@ -1995,8 +2008,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void purgeShouldNotAppendMessagesToUserMailbox() throws Exception {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-            vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
             String taskId =
                 with()
@@ -2015,51 +2028,16 @@ class DeletedMessagesVaultRoutesTest {
 
         @Nested
         class FailingPurgeTest {
-
             @Test
-            void purgeShouldProduceAFailedTaskWithVaultSearchError() {
-                vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-                vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+            void purgeShouldProduceAFailedTaskWhenFailingDeletingBucket() {
+                Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+                Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
-                doReturn(new DeleteByQueryExecutor(vault, vault::usersWithVault)).when(vault).getDeleteByQueryExecutor();
-                doReturn(Flux.error(new RuntimeException("mock exception")))
-                    .when(vault)
-                    .search(any(), any());
-
-                String taskId =
-                    with()
-                        .queryParam("scope", "expired")
-                        .delete()
-                    .jsonPath()
-                        .get("taskId");
-
-                given()
-                    .basePath(TasksRoutes.BASE)
-                .when()
-                    .get(taskId + "/await")
-                .then()
-                    .body("status", is("failed"))
-                    .body("taskId", is(taskId))
-                    .body("type", is(VaultGarbageCollectionTask.TYPE))
-                    .body("additionalInformation.beginningOfRetentionPeriod", is(notNullValue()))
-                    .body("additionalInformation.handledUserCount", is(1))
-                    .body("additionalInformation.permanantlyDeletedMessages", is(0))
-                    .body("additionalInformation.vaultSearchErrorCount", is(1))
-                    .body("additionalInformation.deletionErrorCount", is(0))
-                    .body("startedDate", is(notNullValue()))
-                    .body("submitDate", is(notNullValue()))
-                    .body("completedDate", is(nullValue()));
-            }
-
-            @Test
-            void purgeShouldProduceAFailedTaskWithVaultDeleteError() {
-                vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-                vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
-
-                doReturn(new DeleteByQueryExecutor(vault, vault::usersWithVault)).when(vault).getDeleteByQueryExecutor();
                 doReturn(Mono.error(new RuntimeException("mock exception")))
-                    .when(vault)
-                    .delete(any(), any());
+                    .when(blobStore)
+                    .deleteBucket(BucketName.of("deleted-messages-2010-10-01"));
+
+                clock.setInstant(NOW.toInstant());
 
                 String taskId =
                     with()
@@ -2075,12 +2053,9 @@ class DeletedMessagesVaultRoutesTest {
                 .then()
                     .body("status", is("failed"))
                     .body("taskId", is(taskId))
-                    .body("type", is(VaultGarbageCollectionTask.TYPE))
+                    .body("type", is("deletedMessages/blobStoreBasedGarbageCollection"))
                     .body("additionalInformation.beginningOfRetentionPeriod", is(notNullValue()))
-                    .body("additionalInformation.handledUserCount", is(1))
-                    .body("additionalInformation.permanantlyDeletedMessages", is(0))
-                    .body("additionalInformation.vaultSearchErrorCount", is(0))
-                    .body("additionalInformation.deletionErrorCount", is(2))
+                    .body("additionalInformation.deletedBuckets", hasSize(0))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()))
                     .body("completedDate", is(nullValue()));
@@ -2125,8 +2100,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void deleteShouldProduceASuccessfulTask() {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-            vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
             String taskId =
                 with()
@@ -2151,8 +2126,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void deleteShouldNotAppendMessagesToUserMailbox() throws Exception {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
-            vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
             String taskId =
                 with()
@@ -2169,8 +2144,8 @@ class DeletedMessagesVaultRoutesTest {
         }
 
         @Test
-        void deleteShouldDeleteMessagesFromTheVault() throws Exception {
-            vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT)).block();
+        void deleteShouldDeleteMessagesFromTheVault() {
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
             String taskId =
                 with()
@@ -2187,8 +2162,8 @@ class DeletedMessagesVaultRoutesTest {
         }
 
         @Test
-        void deleteShouldNotDeleteNotMatchMessagesFromTheVault() throws Exception {
-            vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT)).block();
+        void deleteShouldNotDeleteNotMatchMessagesFromTheVault() {
+            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
             String taskId =
                 with()
@@ -2308,9 +2283,8 @@ class DeletedMessagesVaultRoutesTest {
             .recipients(RECIPIENT1, RECIPIENT2);
     }
 
-    private DeletedMessage storeDeletedMessage(DeletedMessage deletedMessage) {
-        Mono.from(vault.append(deletedMessage, new ByteArrayInputStream(CONTENT)))
+    private void storeDeletedMessage(DeletedMessage deletedMessage) {
+        Mono.from(Mono.from(vault.append(deletedMessage, new ByteArrayInputStream(CONTENT))))
             .block();
-        return deletedMessage;
     }
 }

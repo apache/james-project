@@ -27,7 +27,6 @@ import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.methods.integration.DeletedMessagesVaultTest;
-import org.apache.james.modules.mailbox.CassandraDeletedMessageVaultModule;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.Rule;
@@ -42,7 +41,6 @@ public class RabbitMQDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
     @Override
     protected GuiceJamesServer createJmapServer(FileSystem fileSystem, Clock clock) throws IOException {
         return rule.jmapServer(cassandra.getModule(),
-            new CassandraDeletedMessageVaultModule(),
             new TestDeleteMessageVaultPreDeletionHookModule(),
             binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION),
             binder -> binder.bind(FileSystem.class).toInstance(fileSystem),

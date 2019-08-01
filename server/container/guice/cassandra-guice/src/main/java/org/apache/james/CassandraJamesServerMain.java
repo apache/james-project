@@ -32,6 +32,7 @@ import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.eventstore.CassandraEventStoreModule;
 import org.apache.james.modules.mailbox.BlobStoreAPIModule;
 import org.apache.james.modules.mailbox.CassandraBlobStoreModule;
+import org.apache.james.modules.mailbox.CassandraDeletedMessageVaultModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
 import org.apache.james.modules.mailbox.CassandraQuotaMailingModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
@@ -62,7 +63,6 @@ import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
-import org.apache.james.modules.vault.DeletedMessageVaultModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.server.core.configuration.Configuration;
 
@@ -120,7 +120,7 @@ public class CassandraJamesServerMain {
 
     public static final Module CASSANDRA_MAILBOX_MODULE = Modules.combine(
         new CassandraMailboxModule(),
-        new DeletedMessageVaultModule(),
+        new CassandraDeletedMessageVaultModule(),
         new ElasticSearchClientModule(),
         new ElasticSearchMailboxModule(),
         new ElasticSearchMetricReporterModule(),

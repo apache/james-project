@@ -26,7 +26,6 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
@@ -42,7 +41,6 @@ import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
 import org.apache.james.vault.metadata.DeletedMessageWithStorageInformation;
 import org.apache.james.vault.metadata.StorageInformation;
 import org.apache.james.vault.search.Query;
-import org.apache.james.vault.utils.DeleteByQueryExecutor;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +70,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private final RetentionConfiguration retentionConfiguration;
 
     @Inject
-    BlobStoreDeletedMessageVault(MetricFactory metricFactory, DeletedMessageMetadataVault messageMetadataVault,
+    public BlobStoreDeletedMessageVault(MetricFactory metricFactory, DeletedMessageMetadataVault messageMetadataVault,
                                  BlobStore blobStore, BucketNameGenerator nameGenerator,
                                  Clock clock,
                                  RetentionConfiguration retentionConfiguration) {
@@ -169,11 +167,6 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
                 .flatMap(bucketName -> deleteBucketData(bucketName).then(Mono.just(bucketName))));
 
         return new BlobStoreVaultGarbageCollectionTask(beginningOfRetentionPeriod, metricAbleDeleteOperation);
-    }
-
-    @Override
-    public DeleteByQueryExecutor getDeleteByQueryExecutor() {
-        throw new NotImplementedException("Will be implemented later");
     }
 
     @VisibleForTesting
