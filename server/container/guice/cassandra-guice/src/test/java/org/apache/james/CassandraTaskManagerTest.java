@@ -49,7 +49,7 @@ import org.apache.james.task.eventsourcing.WorkerStatusListener;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionDAO;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionModule;
-import org.apache.james.task.eventsourcing.cassandra.TasksSerializationModule;
+import org.apache.james.task.eventsourcing.distributed.TasksSerializationModule;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.junit.jupiter.api.Test;
