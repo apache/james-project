@@ -78,7 +78,6 @@
         <module>mailet/mailetcontainer-camel</module>
         <module>mailet/mailets</module>
 
-        <module>mailrepository/deleted-messages-vault-repository</module>
         <module>mailrepository/mailrepository-api</module>
         <module>mailrepository/mailrepository-cassandra</module>
         <module>mailrepository/mailrepository-memory</module>

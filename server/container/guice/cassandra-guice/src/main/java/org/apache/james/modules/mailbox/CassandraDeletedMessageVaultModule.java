@@ -20,7 +20,7 @@
 package org.apache.james.modules.mailbox;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.modules.vault.BlobStoreDeletedMessageVaultModule;
+import org.apache.james.modules.vault.DeletedMessageVaultModule;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
 import org.apache.james.vault.blob.BucketNameGenerator;
@@ -40,7 +40,7 @@ public class CassandraDeletedMessageVaultModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new BlobStoreDeletedMessageVaultModule());
+        install(new DeletedMessageVaultModule());
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions

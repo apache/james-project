@@ -27,13 +27,10 @@ import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.methods.integration.DeletedMessagesVaultTest;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.modules.mailbox.CassandraDeletedMessageVaultModule;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
-import org.apache.james.vault.MailRepositoryDeletedMessageVault;
 import org.apache.james.webadmin.WebAdminConfiguration;
-import org.junit.Ignore;
 import org.junit.Rule;
-import org.junit.Test;
 
 public class RabbitMQDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
     @Rule
@@ -45,10 +42,9 @@ public class RabbitMQDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
     @Override
     protected GuiceJamesServer createJmapServer(FileSystem fileSystem, Clock clock) throws IOException {
         return rule.jmapServer(cassandra.getModule(),
+            new CassandraDeletedMessageVaultModule(),
             new TestDeleteMessageVaultPreDeletionHookModule(),
             binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION),
-            binder -> binder.bind(MailRepositoryDeletedMessageVault.Configuration.class)
-                .toInstance(new MailRepositoryDeletedMessageVault.Configuration(MailRepositoryUrl.from("cassandra://var/deletedMessages/user"))),
             binder -> binder.bind(FileSystem.class).toInstance(fileSystem),
             binder -> binder.bind(Clock.class).toInstance(clock));
     }
@@ -57,12 +53,4 @@ public class RabbitMQDeletedMessagesVaultTest extends DeletedMessagesVaultTest {
     protected void awaitSearchUpToDate() {
         rule.await();
     }
-
-    @Ignore("This side effect behaviour is specific to Blobstore based implementation relying on deduplication, " +
-        "which is not the case of the tested implementation")
-    @Test
-    @Override
-    public void vaultDeleteShouldDeleteAllMessagesHavingSameBlobContent() {
-    }
 }
-

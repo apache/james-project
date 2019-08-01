@@ -27,15 +27,13 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.jmap.methods.integration.LinshareBlobExportMechanismIntegrationTest;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.LinshareGuiceExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
-import org.apache.james.vault.MailRepositoryDeletedMessageVault;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExportMechanismIntegrationTest {
+class CassandraLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExportMechanismIntegrationTest {
 
     private static final long LIMIT_TO_10_MESSAGES = 10;
 
@@ -50,11 +48,7 @@ public class CassandraLinshareBlobExportMechanismIntegrationTest extends Linshar
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
             .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule())
-            .overrideWith(binder -> {
-                binder.bind(WebAdminConfiguration.class)
-                    .toInstance(WebAdminConfiguration.TEST_CONFIGURATION);
-                binder.bind(MailRepositoryDeletedMessageVault.Configuration.class)
-                    .toInstance(new MailRepositoryDeletedMessageVault.Configuration(MailRepositoryUrl.from("cassandra://var/deletedMessages/user")));
-            }))
+            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class)
+                .toInstance(WebAdminConfiguration.TEST_CONFIGURATION)))
         .build();
 }

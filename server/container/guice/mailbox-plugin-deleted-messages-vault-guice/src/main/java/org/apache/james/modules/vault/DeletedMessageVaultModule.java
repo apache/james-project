@@ -19,51 +19,21 @@
 
 package org.apache.james.modules.vault;
 
-import javax.inject.Singleton;
-
-import org.apache.commons.configuration.Configuration;
-import org.apache.james.mailrepository.api.MailRepositoryPath;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
-import org.apache.james.mailrepository.api.Protocol;
-import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
-import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.vault.DeletedMessageVault;
-import org.apache.james.vault.MailRepositoryDeletedMessageVault;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
+import org.apache.james.vault.blob.BucketNameGenerator;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.ConfigurationException;
-import com.google.inject.Provides;
 import com.google.inject.Scopes;
 
 public class DeletedMessageVaultModule extends AbstractModule {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeletedMessageVaultModule.class);
-    private static final MailRepositoryPath DEFAULT_PATH = MailRepositoryPath.from("var/deletedMessages/vault");
-
     @Override
     protected void configure() {
         install(new DeletedMessageVaultRetentionModule());
 
-        bind(MailRepositoryDeletedMessageVault.class).in(Scopes.SINGLETON);
+        bind(BucketNameGenerator.class).in(Scopes.SINGLETON);
+        bind(BlobStoreDeletedMessageVault.class).in(Scopes.SINGLETON);
         bind(DeletedMessageVault.class)
-            .to(MailRepositoryDeletedMessageVault.class);
+            .to(BlobStoreDeletedMessageVault.class);
     }
-
-    @Provides
-    @Singleton
-    MailRepositoryDeletedMessageVault.Configuration providesConfiguration(PropertiesProvider propertiesProvider, MailRepositoryStoreConfiguration mailRepositoryStoreConfiguration) throws ConfigurationException  {
-        try {
-            Configuration configuration = propertiesProvider.getConfiguration("deletedMessageVault");
-            return MailRepositoryDeletedMessageVault.Configuration.from(configuration);
-        } catch (Exception e) {
-            LOGGER.warn("Error encountered while retrieving Deleted message vault configuration. Using default MailRepository URL instead.");
-            Protocol defaultProtocol = mailRepositoryStoreConfiguration.getDefaultProtocol()
-                .orElseThrow(() -> new IllegalStateException("No default MailRepository Protocol could be inferred. We can not configure the default deletedMessages vault."));
-
-            return new MailRepositoryDeletedMessageVault.Configuration(
-                MailRepositoryUrl.fromPathAndProtocol(defaultProtocol, DEFAULT_PATH));
-        }
-    }
-
 }

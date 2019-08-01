@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.mailbox;
 
-import org.apache.james.modules.vault.BlobStoreDeletedMessageVaultModule;
+import org.apache.james.modules.vault.DeletedMessageVaultModule;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
 import org.apache.james.vault.blob.BucketNameGenerator;
@@ -32,7 +32,7 @@ import com.google.inject.Scopes;
 public class MemoryDeletedMessageVaultModule extends AbstractModule {
     @Override
     protected void configure() {
-        install(new BlobStoreDeletedMessageVaultModule());
+        install(new DeletedMessageVaultModule());
 
         bind(MemoryDeletedMessageMetadataVault.class).in(Scopes.SINGLETON);
         bind(DeletedMessageMetadataVault.class).to(MemoryDeletedMessageMetadataVault.class);
