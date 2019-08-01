@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.events;
+package org.apache.james.backend.rabbitmq;
 
 import java.time.Duration;
 import java.util.Comparator;
@@ -40,7 +40,7 @@ import reactor.core.publisher.SignalType;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.ChannelPool;
 
-class ReactorRabbitMQChannelPool implements ChannelPool {
+public class ReactorRabbitMQChannelPool implements ChannelPool {
 
     static class ChannelFactory extends BasePooledObjectFactory<Channel> {
 
@@ -90,7 +90,7 @@ class ReactorRabbitMQChannelPool implements ChannelPool {
     private final GenericObjectPool<Channel> pool;
     private final ConcurrentSkipListSet<Channel> borrowedChannels;
 
-    ReactorRabbitMQChannelPool(Mono<Connection> connectionMono, int poolSize) {
+    public ReactorRabbitMQChannelPool(Mono<Connection> connectionMono, int poolSize) {
         ChannelFactory channelFactory = new ChannelFactory(connectionMono);
 
         GenericObjectPoolConfig<Channel> config = new GenericObjectPoolConfig<>();
