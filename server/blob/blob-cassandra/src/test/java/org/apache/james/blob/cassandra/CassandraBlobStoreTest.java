@@ -34,8 +34,6 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.BucketBlobStoreContract;
-import org.apache.james.blob.api.DeleteBlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
@@ -51,7 +49,7 @@ import com.google.common.hash.HashingInputStream;
 
 import reactor.core.publisher.Mono;
 
-public class CassandraBlobStoreTest implements MetricableBlobStoreContract, BucketBlobStoreContract, DeleteBlobStoreContract {
+public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
     private static final int CHUNK_SIZE = 10240;
     private static final int MULTIPLE_CHUNK_SIZE = 3;
 

@@ -29,9 +29,7 @@ import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.BucketBlobStoreContract;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.DeleteBlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
@@ -57,7 +55,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 @ExtendWith(DockerSwiftExtension.class)
-public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract, BucketBlobStoreContract, DeleteBlobStoreContract {
+public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
 
     private static final String BIG_STRING = Strings.repeat("big blob content", 10 * 1024);
     private static final TenantName TENANT_NAME = TenantName.of("test");
