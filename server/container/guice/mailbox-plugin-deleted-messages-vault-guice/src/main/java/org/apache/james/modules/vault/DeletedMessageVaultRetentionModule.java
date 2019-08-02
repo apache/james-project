@@ -48,7 +48,7 @@ public class DeletedMessageVaultRetentionModule extends AbstractModule {
             Configuration configuration = propertiesProvider.getConfiguration("deletedMessageVault");
             return RetentionConfiguration.from(configuration);
         } catch (FileNotFoundException e) {
-            LOGGER.warn("Error encountered while retrieving Deleted message vault configuration. Using default MailRepository RetentionTime (1 year) instead.");
+            LOGGER.warn("Error encountered while retrieving Deleted message vault configuration. Using default RetentionTime (1 year) instead.");
             return RetentionConfiguration.DEFAULT;
         }
     }
