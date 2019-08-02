@@ -37,8 +37,7 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.cassandra.utils.DataChunker;
-import org.apache.james.blob.cassandra.utils.PipedInputStreamHandlingError;
-import org.apache.james.blob.cassandra.utils.PipedStreamSubscriber;
+import org.apache.james.util.ReactorUtils;
 
 import com.datastax.driver.core.Session;
 import com.google.common.annotations.VisibleForTesting;
@@ -120,10 +119,7 @@ public class CassandraBlobStore implements BlobStore {
 
     @Override
     public InputStream read(BucketName bucketName, BlobId blobId) {
-        PipedInputStreamHandlingError pipedInputStream = new PipedInputStreamHandlingError();
-        readBlobParts(bucketName, blobId)
-            .subscribe(new PipedStreamSubscriber(pipedInputStream));
-        return pipedInputStream;
+        return ReactorUtils.toInputStream(readBlobParts(bucketName, blobId));
     }
 
     @Override
