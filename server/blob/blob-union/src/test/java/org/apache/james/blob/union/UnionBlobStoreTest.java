@@ -33,7 +33,9 @@ import java.util.stream.Stream;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreContract;
+import org.apache.james.blob.api.BucketBlobStoreContract;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.DeleteBlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.memory.MemoryBlobStore;
@@ -52,7 +54,7 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 
-class UnionBlobStoreTest implements BlobStoreContract {
+class UnionBlobStoreTest implements BlobStoreContract, DeleteBlobStoreContract, BucketBlobStoreContract {
 
     private static class FailingBlobStore implements BlobStore {
 
