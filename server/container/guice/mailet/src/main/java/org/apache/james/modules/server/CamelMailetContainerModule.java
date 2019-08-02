@@ -57,6 +57,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
@@ -87,10 +88,94 @@ public class CamelMailetContainerModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), MailetConfigurationOverride.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SpoolerProbe.class);
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MailetModuleConfigurationPerformer.class);
+        Multibinder<ConfigurationPerformer> configurationPerformers = Multibinder.newSetBinder(binder(), ConfigurationPerformer.class);
+        configurationPerformers.addBinding().to(MailetModuleConfigurationPerformer.class);
+        configurationPerformers.addBinding().to(SpoolerStarter.class);
+        configurationPerformers.addBinding().to(MailetContextConfigurationPerformer.class);
 
         Multibinder<CamelMailetContainerModule.TransportProcessorCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), CamelMailetContainerModule.TransportProcessorCheck.class);
         transportProcessorChecks.addBinding().toInstance(BCC_Check);
+    }
+
+    @Singleton
+    @Provides
+    public DefaultCamelContext provideCamelContext() {
+        DefaultCamelContext camelContext = new DefaultCamelContext();
+        camelContext.disableJMX();
+        camelContext.setRegistry(new SimpleRegistry());
+        return camelContext;
+    }
+
+    @Singleton
+    public static class SpoolerStarter implements ConfigurationPerformer {
+        private final CamelCompositeProcessor camelCompositeProcessor;
+        private final JamesMailSpooler jamesMailSpooler;
+        private final ConfigurationProvider configurationProvider;
+
+        @Inject
+        public SpoolerStarter(CamelCompositeProcessor camelCompositeProcessor, JamesMailSpooler jamesMailSpooler, ConfigurationProvider configurationProvider) {
+            this.camelCompositeProcessor = camelCompositeProcessor;
+            this.jamesMailSpooler = jamesMailSpooler;
+            this.configurationProvider = configurationProvider;
+        }
+
+        @Override
+        public void initModule() {
+            jamesMailSpooler.setMailProcessor(camelCompositeProcessor);
+            jamesMailSpooler.configure(getJamesSpoolerConfiguration());
+            jamesMailSpooler.init();
+        }
+
+        private HierarchicalConfiguration getJamesSpoolerConfiguration() {
+            try {
+                return configurationProvider.getConfiguration("mailetcontainer")
+                    .configurationAt("spooler");
+            } catch (Exception e) {
+                LOGGER.warn("Could not locate configuration for James Spooler. Assuming empty configuration for this component.");
+                return new HierarchicalConfiguration();
+            }
+        }
+
+        @Override
+        public List<Class<? extends Startable>> forClasses() {
+            return ImmutableList.of(JamesMailSpooler.class);
+        }
+    }
+
+    @Singleton
+    public static class MailetContextConfigurationPerformer implements ConfigurationPerformer {
+        private final ConfigurationProvider configurationProvider;
+        private final JamesMailetContext mailetContext;
+
+        @Inject
+        public MailetContextConfigurationPerformer(ConfigurationProvider configurationProvider, JamesMailetContext mailetContext) {
+            this.configurationProvider = configurationProvider;
+            this.mailetContext = mailetContext;
+        }
+
+        @Override
+        public void initModule() {
+            try {
+                mailetContext.configure(getMailetContextConfiguration());
+            } catch (ConfigurationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private HierarchicalConfiguration getMailetContextConfiguration() {
+            try {
+                return configurationProvider.getConfiguration("mailetcontainer")
+                    .configurationAt("context");
+            } catch (Exception e) {
+                LOGGER.warn("Could not locate configuration for Mailet context. Assuming empty configuration for this component.");
+                return new HierarchicalConfiguration();
+            }
+        }
+
+        @Override
+        public List<Class<? extends Startable>> forClasses() {
+            return ImmutableList.of(JamesMailetContext.class);
+        }
     }
 
     @Singleton
@@ -98,40 +183,30 @@ public class CamelMailetContainerModule extends AbstractModule {
 
         private final ConfigurationProvider configurationProvider;
         private final CamelCompositeProcessor camelCompositeProcessor;
-        private final JamesMailSpooler jamesMailSpooler;
-        private final JamesMailetContext mailetContext;
         private final DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier;
         private final Set<TransportProcessorCheck> transportProcessorCheckSet;
+        private final DefaultCamelContext camelContext;
 
         @Inject
         public MailetModuleConfigurationPerformer(ConfigurationProvider configurationProvider,
-                                                CamelCompositeProcessor camelCompositeProcessor,
-                                                JamesMailSpooler jamesMailSpooler,
-                                                JamesMailetContext mailetContext,
-                                                Set<TransportProcessorCheck> transportProcessorCheckSet,
-                                                DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier) {
+                                                  CamelCompositeProcessor camelCompositeProcessor,
+                                                  Set<TransportProcessorCheck> transportProcessorCheckSet,
+                                                  DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier, DefaultCamelContext camelContext) {
             this.configurationProvider = configurationProvider;
             this.camelCompositeProcessor = camelCompositeProcessor;
-            this.jamesMailSpooler = jamesMailSpooler;
-            this.mailetContext = mailetContext;
             this.transportProcessorCheckSet = transportProcessorCheckSet;
             this.defaultProcessorsConfigurationSupplier = defaultProcessorsConfigurationSupplier;
+            this.camelContext = camelContext;
         }
 
         @Override
         public void initModule() {
             try {
-                DefaultCamelContext camelContext = new DefaultCamelContext();
-                camelContext.disableJMX();
-                camelContext.setRegistry(new SimpleRegistry());
                 configureProcessors(camelContext);
                 checkProcessors();
-                configureJamesSpooler();
-                configureMailetContext();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-
         }
 
         private void configureProcessors(DefaultCamelContext camelContext) throws Exception {
@@ -150,36 +225,6 @@ public class CamelMailetContainerModule extends AbstractModule {
             }
         }
 
-        private void configureJamesSpooler() {
-            jamesMailSpooler.setMailProcessor(camelCompositeProcessor);
-            jamesMailSpooler.configure(getJamesSpoolerConfiguration());
-            jamesMailSpooler.init();
-        }
-
-        private HierarchicalConfiguration getJamesSpoolerConfiguration() {
-            try {
-                return configurationProvider.getConfiguration("mailetcontainer")
-                    .configurationAt("spooler");
-            } catch (Exception e) {
-                LOGGER.warn("Could not locate configuration for James Spooler. Assuming empty configuration for this component.");
-                return new HierarchicalConfiguration();
-            }
-        }
-
-        private void configureMailetContext() throws ConfigurationException {
-            mailetContext.configure(getMailetContextConfiguration());
-        }
-
-        private HierarchicalConfiguration getMailetContextConfiguration() {
-            try {
-                return configurationProvider.getConfiguration("mailetcontainer")
-                    .configurationAt("context");
-            } catch (Exception e) {
-                LOGGER.warn("Could not locate configuration for Mailet context. Assuming empty configuration for this component.");
-                return new HierarchicalConfiguration();
-            }
-        }
-
         private void checkProcessors() throws ConfigurationException {
             MailProcessor mailProcessor = Optional.ofNullable(camelCompositeProcessor.getProcessor("transport"))
                 .orElseThrow(() -> new RuntimeException("JMAP needs a transport processor"));
@@ -195,7 +240,7 @@ public class CamelMailetContainerModule extends AbstractModule {
 
         @Override
         public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(CamelCompositeProcessor.class, JamesMailSpooler.class, JamesMailetContext.class);
+            return ImmutableList.of(CamelCompositeProcessor.class);
         }
     }
 
