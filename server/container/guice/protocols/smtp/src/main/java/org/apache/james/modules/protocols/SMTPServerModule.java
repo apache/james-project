@@ -19,8 +19,6 @@
 
 package org.apache.james.modules.protocols;
 
-import java.util.List;
-
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.smtpserver.SendMailHandler;
@@ -29,7 +27,6 @@ import org.apache.james.smtpserver.netty.SMTPServerFactory;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceProbe;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Scopes;
@@ -76,8 +73,8 @@ public class SMTPServerModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(SMTPServerFactory.class);
+        public Class<? extends Startable> forClass() {
+            return SMTPServerFactory.class;
         }
     }
 

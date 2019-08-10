@@ -55,7 +55,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
@@ -138,8 +137,8 @@ public class CamelMailetContainerModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(JamesMailSpooler.class);
+        public Class<? extends Startable> forClass() {
+            return JamesMailSpooler.class;
         }
     }
 
@@ -174,14 +173,13 @@ public class CamelMailetContainerModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(JamesMailetContext.class);
+        public Class<? extends Startable> forClass() {
+            return JamesMailetContext.class;
         }
     }
 
     @Singleton
     public static class MailetModuleConfigurationPerformer implements ConfigurationPerformer {
-
         private final ConfigurationProvider configurationProvider;
         private final CamelCompositeProcessor camelCompositeProcessor;
         private final DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier;
@@ -240,8 +238,8 @@ public class CamelMailetContainerModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(CamelCompositeProcessor.class);
+        public Class<? extends Startable> forClass() {
+            return CamelCompositeProcessor.class;
         }
     }
 

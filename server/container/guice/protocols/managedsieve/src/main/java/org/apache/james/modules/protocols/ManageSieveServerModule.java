@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.modules.protocols;
 
-import java.util.List;
-
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.managesieve.core.CoreProcessor;
@@ -29,7 +27,6 @@ import org.apache.james.util.LoggingLevel;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceProbe;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -46,7 +43,6 @@ public class ManageSieveServerModule extends AbstractModule {
 
     @Singleton
     public static class ManageSieveModuleConfigurationPerformer implements ConfigurationPerformer {
-
         private final ConfigurationProvider configurationProvider;
         private final ManageSieveServerFactory manageSieveServerFactory;
 
@@ -67,8 +63,8 @@ public class ManageSieveServerModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(ManageSieveServerFactory.class);
+        public Class<? extends Startable> forClass() {
+            return ManageSieveServerFactory.class;
         }
     }
 }

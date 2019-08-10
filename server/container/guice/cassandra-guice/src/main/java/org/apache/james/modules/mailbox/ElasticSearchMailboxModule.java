@@ -23,7 +23,6 @@ import static org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearche
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -53,7 +52,6 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
@@ -86,7 +84,6 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     }
 
     static class ElasticSearchMailboxIndexCreationPerformer implements ConfigurationPerformer {
-
         private final MailboxIndexCreator mailboxIndexCreator;
 
         @Inject
@@ -104,8 +101,8 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(MailboxIndexCreator.class);
+        public Class<? extends Startable> forClass() {
+            return MailboxIndexCreator.class;
         }
     }
 

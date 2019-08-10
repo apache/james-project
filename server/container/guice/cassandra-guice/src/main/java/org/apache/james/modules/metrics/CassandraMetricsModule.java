@@ -19,14 +19,11 @@
 
 package org.apache.james.modules.metrics;
 
-import java.util.List;
-
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.ConfigurationPerformer;
 
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.Session;
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Scopes;
@@ -44,7 +41,7 @@ public class CassandraMetricsModule extends AbstractModule {
             .to(CassandraMetricsInjector.class);
     }
 
-    public static class CassandraMetricsInjector implements ConfigurationPerformer {
+    public static class CassandraMetricsInjector implements ConfigurationPerformer, Startable {
 
         private final MetricRegistry metricRegistry;
         private final Session session;
@@ -64,8 +61,8 @@ public class CassandraMetricsModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of();
+        public Class<? extends Startable> forClass() {
+            return CassandraMetricsInjector.class;
         }
     }
 }

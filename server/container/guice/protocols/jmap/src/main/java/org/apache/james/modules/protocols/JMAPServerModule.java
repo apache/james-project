@@ -20,7 +20,6 @@
 package org.apache.james.modules.protocols;
 
 import java.security.Security;
-import java.util.List;
 
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.JMAPModule;
@@ -33,7 +32,6 @@ import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.MessageIdProbe;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -51,7 +49,6 @@ public class JMAPServerModule extends AbstractModule {
 
     @Singleton
     public static class JMAPModuleConfigurationPerformer implements ConfigurationPerformer {
-
         private final JMAPServer server;
         private final JamesSignatureHandler signatureHandler;
         private final JMAPConfiguration jmapConfiguration;
@@ -81,8 +78,8 @@ public class JMAPServerModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(JMAPServer.class);
+        public Class<? extends Startable> forClass() {
+            return JMAPServer.class;
         }
     }
 

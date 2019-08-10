@@ -21,8 +21,6 @@ package org.apache.james.modules;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
-
 import javax.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
@@ -33,7 +31,6 @@ import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.ConfigurationsPerformer;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
@@ -66,7 +63,6 @@ public class ConfigurationsPerformerTest {
     }
 
     private static class AConfigurationPerformer implements ConfigurationPerformer {
-
         private final A a;
 
         @Inject
@@ -84,13 +80,12 @@ public class ConfigurationsPerformerTest {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(A.class);
+        public Class<? extends Startable> forClass() {
+            return A.class;
         }
     }
 
     private static class BConfigurationPerformer implements ConfigurationPerformer {
-
         private final B b;
 
         @Inject
@@ -108,13 +103,12 @@ public class ConfigurationsPerformerTest {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(B.class);
+        public Class<? extends Startable> forClass() {
+            return B.class;
         }
     }
 
     private static class A implements Configurable {
-
         @SuppressWarnings("unused")
         private final C c;
         private boolean configured;
@@ -136,7 +130,6 @@ public class ConfigurationsPerformerTest {
     }
 
     private static class B implements Configurable {
-
         private final A a;
         @SuppressWarnings("unused")
         private final C c;
@@ -160,62 +153,5 @@ public class ConfigurationsPerformerTest {
     }
 
     private static class C {
-    }
-
-    @Test
-    public void initModulesShouldBePerformedOneTimeWhenConfigurableModuleContainsMultipleDependencies() throws Exception {
-        Injector injector = Guice.createInjector(new StartablesModule(),
-                new DualResponsibilityConfigurationPerformerModule());
-
-        injector.getInstance(ConfigurationsPerformer.class).initModules();
-
-        assertThat(injector.getInstance(A.class).isConfigured()).isTrue();
-        assertThat(injector.getInstance(B.class).isConfigured()).isTrue();
-    }
-
-    private static class DualResponsibilityConfigurationPerformer implements ConfigurationPerformer {
-
-        private final A a;
-        private final B b;
-        private boolean configured;
-
-        @Inject
-        private DualResponsibilityConfigurationPerformer(A a, B b) {
-            this.a = a;
-            this.b = b;
-            this.configured = false;
-        }
-
-        @Override
-        public void initModule() {
-            if (configured) {
-                throw new RuntimeException("Already configured");
-            }
-
-            try {
-                a.configure(null);
-                b.configure(null);
-                configured = true;
-            } catch (ConfigurationException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(A.class, B.class);
-        }
-    }
-
-    private static class DualResponsibilityConfigurationPerformerModule extends StartablesModule {
-
-        @Override
-        protected void configure() {
-            bind(B.class).in(Scopes.SINGLETON);
-            bind(A.class).in(Scopes.SINGLETON);
-            bind(C.class).in(Scopes.SINGLETON);
-    
-            Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(DualResponsibilityConfigurationPerformer.class);
-        }
     }
 }

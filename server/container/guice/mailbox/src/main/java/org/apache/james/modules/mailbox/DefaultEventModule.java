@@ -19,8 +19,6 @@
 
 package org.apache.james.modules.mailbox;
 
-import java.util.List;
-
 import javax.inject.Inject;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -36,7 +34,6 @@ import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
@@ -87,8 +84,8 @@ public class DefaultEventModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(MailboxListenersLoaderImpl.class);
+        public Class<? extends Startable> forClass() {
+            return MailboxListenersLoaderImpl.class;
         }
     }
 }

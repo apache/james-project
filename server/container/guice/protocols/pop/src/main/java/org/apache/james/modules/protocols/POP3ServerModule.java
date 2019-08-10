@@ -19,8 +19,6 @@
 
 package org.apache.james.modules.protocols;
 
-import java.util.List;
-
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.pop3server.netty.OioPOP3ServerFactory;
 import org.apache.james.pop3server.netty.POP3ServerFactory;
@@ -28,7 +26,6 @@ import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceProbe;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Scopes;
@@ -48,7 +45,6 @@ public class POP3ServerModule extends AbstractModule {
 
     @Singleton
     public static class POP3ModuleConfigurationPerformer implements ConfigurationPerformer {
-
         private final ConfigurationProvider configurationProvider;
         private final POP3ServerFactory pop3ServerFactory;
 
@@ -69,8 +65,8 @@ public class POP3ServerModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(POP3ServerFactory.class);
+        public Class<? extends Startable> forClass() {
+            return POP3ServerFactory.class;
         }
     }
 

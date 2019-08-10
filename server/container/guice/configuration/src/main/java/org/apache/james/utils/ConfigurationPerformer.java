@@ -19,8 +19,6 @@
 
 package org.apache.james.utils;
 
-import java.util.List;
-
 import org.apache.james.lifecycle.api.Startable;
 
 public interface ConfigurationPerformer {
@@ -30,11 +28,9 @@ public interface ConfigurationPerformer {
     /**
      * In order to initialize components in the right order, every
      * {@link ConfigurationPerformer} is supposed to declare which
-     * classes it will initialize.
+     * class it will initialize.
      *
-     * @return the list of Classes that this object will initialize.
-     *  The list should never be empty.
+     * @return the Class that this object will initialize.
      */
-    List<Class<? extends Startable>> forClasses();
-
+    Class<? extends Startable> forClass();
 }

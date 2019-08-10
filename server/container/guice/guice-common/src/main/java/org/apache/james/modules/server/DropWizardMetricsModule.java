@@ -19,8 +19,6 @@
 
 package org.apache.james.modules.server;
 
-import java.util.List;
-
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
@@ -30,7 +28,6 @@ import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
 import org.apache.james.utils.ConfigurationPerformer;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Scopes;
@@ -53,39 +50,25 @@ public class DropWizardMetricsModule extends AbstractModule {
     }
 
     @Singleton
-    public static class DropWizardConfigurationPerformer implements ConfigurationPerformer {
-        private final DropWizardInitializer dropWizardInitializer;
-
-        @Inject
-        public DropWizardConfigurationPerformer(DropWizardInitializer dropWizardInitializer) {
-            this.dropWizardInitializer = dropWizardInitializer;
-        }
-
-        @Override
-        public void initModule() {
-            dropWizardInitializer.start();
-        }
-
-        @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(DropWizardInitializer.class);
-        }
-    }
-
-    public static class DropWizardInitializer implements Startable {
+    public static class DropWizardConfigurationPerformer implements ConfigurationPerformer, Startable {
         private final DropWizardMetricFactory dropWizardMetricFactory;
         private final DropWizardJVMMetrics dropWizardJVMMetrics;
 
         @Inject
-        public DropWizardInitializer(DropWizardMetricFactory dropWizardMetricFactory, DropWizardJVMMetrics dropWizardJVMMetrics) {
+        public DropWizardConfigurationPerformer(DropWizardMetricFactory dropWizardMetricFactory, DropWizardJVMMetrics dropWizardJVMMetrics) {
             this.dropWizardMetricFactory = dropWizardMetricFactory;
             this.dropWizardJVMMetrics = dropWizardJVMMetrics;
         }
 
-        public void start() {
+        @Override
+        public void initModule() {
             dropWizardMetricFactory.start();
             dropWizardJVMMetrics.start();
         }
-    }
 
+        @Override
+        public Class<? extends Startable> forClass() {
+            return DropWizardConfigurationPerformer.class;
+        }
+    }
 }

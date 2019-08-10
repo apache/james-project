@@ -55,7 +55,7 @@ public class ConfigurationsPerformer {
 
     private Stream<ConfigurationPerformer> configurationPerformerFor(Class<? extends Startable> configurable) {
         return configurationPerformers.stream()
-                .filter(x -> x.forClasses().contains(configurable));
+                .filter(x -> x.forClass().equals(configurable));
     }
 
     private void processOthers(Set<ConfigurationPerformer> processed) {

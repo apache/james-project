@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.modules.data;
 
-import java.util.List;
-
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
@@ -27,7 +25,6 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.jpa.JPAUsersRepository;
 import org.apache.james.utils.ConfigurationPerformer;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Scopes;
@@ -45,7 +42,6 @@ public class JPAUsersRepositoryModule extends AbstractModule {
 
     @Singleton
     public static class JPAUsersRepositoryConfigurationPerformer implements ConfigurationPerformer {
-
         private final ConfigurationProvider configurationProvider;
         private final JPAUsersRepository usersRepository;
 
@@ -65,8 +61,8 @@ public class JPAUsersRepositoryModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(JPAUsersRepository.class);
+        public Class<? extends Startable> forClass() {
+            return JPAUsersRepository.class;
         }
     }
 

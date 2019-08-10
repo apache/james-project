@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.modules.data;
 
-import java.util.List;
-
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.lifecycle.api.Startable;
@@ -31,7 +29,6 @@ import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTableDAO;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Scopes;
@@ -53,7 +50,6 @@ public class CassandraRecipientRewriteTableModule extends AbstractModule {
 
     @Singleton
     public static class CassandraRecipientRewriteTablePerformer implements ConfigurationPerformer {
-
         private final ConfigurationProvider configurationProvider;
         private final CassandraRecipientRewriteTable recipientRewriteTable;
 
@@ -73,8 +69,8 @@ public class CassandraRecipientRewriteTableModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(CassandraRecipientRewriteTable.class);
+        public Class<? extends Startable> forClass() {
+            return CassandraRecipientRewriteTable.class;
         }
     }
 

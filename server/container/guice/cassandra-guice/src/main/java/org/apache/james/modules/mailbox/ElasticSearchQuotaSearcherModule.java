@@ -23,7 +23,6 @@ import static org.apache.james.modules.mailbox.ElasticSearchMailboxModule.ELASTI
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -45,7 +44,6 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -95,8 +93,8 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(ElasticSearchQuotaIndexCreator.class);
+        public Class<? extends Startable> forClass() {
+            return ElasticSearchQuotaIndexCreator.class;
         }
     }
 

@@ -19,8 +19,6 @@
 
 package org.apache.james.modules.data;
 
-import java.util.List;
-
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.dlp.api.DLPConfigurationStore;
@@ -80,7 +78,9 @@ public class MemoryDataModule extends AbstractModule {
         bind(EventSourcingDLPConfigurationStore.class).in(Scopes.SINGLETON);
         bind(DLPConfigurationStore.class).to(EventSourcingDLPConfigurationStore.class);
 
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MemoryDataConfigurationPerformer.class);
+        Multibinder<ConfigurationPerformer> configurationPerformers = Multibinder.newSetBinder(binder(), ConfigurationPerformer.class);
+        configurationPerformers.addBinding().to(MemoryRRTConfigurationPerformer.class);
+        configurationPerformers.addBinding().to(MemoryDomainListConfigurationPerformer.class);
 
         bind(MailStoreRepositoryModule.DefaultItemSupplier.class).toInstance(() -> MEMORY_MAILREPOSITORY_DEFAULT_DECLARATION);
 
@@ -99,25 +99,45 @@ public class MemoryDataModule extends AbstractModule {
     }
 
     @Singleton
-    public static class MemoryDataConfigurationPerformer implements ConfigurationPerformer {
-
-        private final ConfigurationProvider configurationProvider;
+    public static class MemoryDomainListConfigurationPerformer implements ConfigurationPerformer {
         private final DomainListConfiguration domainListConfiguration;
         private final MemoryDomainList memoryDomainList;
-        private final MemoryRecipientRewriteTable memoryRecipientRewriteTable;
 
         @Inject
-        public MemoryDataConfigurationPerformer(ConfigurationProvider configurationProvider, DomainListConfiguration domainListConfiguration, MemoryDomainList memoryDomainList, MemoryRecipientRewriteTable memoryRecipientRewriteTable) {
-            this.configurationProvider = configurationProvider;
+        public MemoryDomainListConfigurationPerformer(DomainListConfiguration domainListConfiguration, MemoryDomainList memoryDomainList) {
             this.domainListConfiguration = domainListConfiguration;
             this.memoryDomainList = memoryDomainList;
-            this.memoryRecipientRewriteTable = memoryRecipientRewriteTable;
         }
 
         @Override
         public void initModule() {
             try {
                 memoryDomainList.configure(domainListConfiguration);
+            } catch (ConfigurationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public Class<? extends Startable> forClass() {
+            return MemoryDomainList.class;
+        }
+    }
+
+    @Singleton
+    public static class MemoryRRTConfigurationPerformer implements ConfigurationPerformer {
+        private final ConfigurationProvider configurationProvider;
+        private final MemoryRecipientRewriteTable memoryRecipientRewriteTable;
+
+        @Inject
+        public MemoryRRTConfigurationPerformer(ConfigurationProvider configurationProvider, MemoryRecipientRewriteTable memoryRecipientRewriteTable) {
+            this.configurationProvider = configurationProvider;
+            this.memoryRecipientRewriteTable = memoryRecipientRewriteTable;
+        }
+
+        @Override
+        public void initModule() {
+            try {
                 memoryRecipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable"));
             } catch (ConfigurationException e) {
                 throw new RuntimeException(e);
@@ -125,8 +145,8 @@ public class MemoryDataModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(MemoryDomainList.class, MemoryRecipientRewriteTable.class);
+        public Class<? extends Startable> forClass() {
+            return MemoryRecipientRewriteTable.class;
         }
     }
 }

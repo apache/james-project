@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.modules.data;
 
-import java.util.List;
-
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.rrt.api.RecipientRewriteTable;
@@ -27,7 +25,6 @@ import org.apache.james.rrt.jpa.JPARecipientRewriteTable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Scopes;
@@ -45,7 +42,6 @@ public class JPARecipientRewriteTableModule extends AbstractModule {
 
     @Singleton
     public static class JPARecipientRewriteTablePerformer implements ConfigurationPerformer {
-
         private final ConfigurationProvider configurationProvider;
         private final JPARecipientRewriteTable recipientRewriteTable;
 
@@ -65,8 +61,8 @@ public class JPARecipientRewriteTableModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(JPARecipientRewriteTable.class);
+        public Class<? extends Startable> forClass() {
+            return JPARecipientRewriteTable.class;
         }
     }
 

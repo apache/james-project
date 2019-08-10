@@ -19,8 +19,6 @@
 
 package org.apache.james.modules.protocols;
 
-import java.util.List;
-
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.lmtpserver.netty.LMTPServerFactory;
 import org.apache.james.lmtpserver.netty.OioLMTPServerFactory;
@@ -29,7 +27,6 @@ import org.apache.james.util.LoggingLevel;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceProbe;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Scopes;
@@ -70,8 +67,8 @@ public class LMTPServerModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(LMTPServerFactory.class);
+        public Class<? extends Startable> forClass() {
+            return LMTPServerFactory.class;
         }
     }
 

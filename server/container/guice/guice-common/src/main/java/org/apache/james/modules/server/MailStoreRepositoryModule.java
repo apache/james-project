@@ -19,7 +19,6 @@
 
 package org.apache.james.modules.server;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
@@ -37,7 +36,6 @@ import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
@@ -93,8 +91,8 @@ public class MailStoreRepositoryModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(MemoryMailRepositoryStore.class);
+        public Class<? extends Startable> forClass() {
+            return MemoryMailRepositoryStore.class;
         }
     }
 

@@ -3,8 +3,6 @@ package org.apache.james;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.List;
-
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.utils.ConfigurationPerformer;
@@ -14,7 +12,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.multibindings.Multibinder;
 
 class GuiceJamesServerTest {
@@ -66,8 +63,8 @@ class GuiceJamesServerTest {
             }
 
             @Override
-            public List<Class<? extends Startable>> forClasses() {
-                return ImmutableList.of();
+            public Class<? extends Startable> forClass() {
+                return Startable.class;
             }
         };
 

@@ -20,7 +20,6 @@
 package org.apache.james.modules.server;
 
 import java.io.FileNotFoundException;
-import java.util.List;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -32,7 +31,6 @@ import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
@@ -87,7 +85,6 @@ public class ElasticSearchMetricReporterModule extends AbstractModule {
 
     @Singleton
     public static class ESMetricReporterStarter implements ConfigurationPerformer {
-
         private final ESMetricReporter esMetricReporter;
 
         @Inject
@@ -101,8 +98,8 @@ public class ElasticSearchMetricReporterModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(ESMetricReporter.class);
+        public Class<? extends Startable> forClass() {
+            return ESMetricReporter.class;
         }
     }
 

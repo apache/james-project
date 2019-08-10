@@ -20,7 +20,6 @@
 package org.apache.james.modules.server;
 
 import java.io.FileNotFoundException;
-import java.util.List;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.adapter.mailbox.MailboxCopierManagement;
@@ -53,7 +52,6 @@ import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
@@ -165,8 +163,8 @@ public class JMXServerModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(JMXServer.class);
+        public Class<? extends Startable> forClass() {
+            return JMXServer.class;
         }
     }
 

@@ -18,15 +18,12 @@
  ****************************************************************/
 package org.apache.james.modules.server;
 
-import java.util.List;
-
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.dnsjava.DNSJavaService;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Scopes;
@@ -66,8 +63,8 @@ public class DNSServiceModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(DNSJavaService.class);
+        public Class<? extends Startable> forClass() {
+            return DNSJavaService.class;
         }
     }
 }

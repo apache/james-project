@@ -22,8 +22,6 @@ package org.apache.james;
 import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
-import java.util.List;
-
 import javax.inject.Inject;
 
 import org.apache.james.lifecycle.api.Startable;
@@ -35,7 +33,6 @@ import org.apache.james.utils.ConfigurationPerformer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.multibindings.Multibinder;
 
 class CassandraMessageIdManagerInjectionTest {
@@ -60,7 +57,7 @@ class CassandraMessageIdManagerInjectionTest {
         assertThatCode(server::start).doesNotThrowAnyException();
     }
 
-    public static class CallMe implements ConfigurationPerformer {
+    public static class CallMe implements ConfigurationPerformer, Startable {
         @Inject
         public CallMe(MessageIdManager messageIdManager) {
         }
@@ -71,8 +68,8 @@ class CassandraMessageIdManagerInjectionTest {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of();
+        public Class<? extends Startable> forClass() {
+            return CallMe.class;
         }
     }
 }

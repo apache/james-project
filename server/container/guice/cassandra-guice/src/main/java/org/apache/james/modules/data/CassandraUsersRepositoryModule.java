@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.modules.data;
 
-import java.util.List;
-
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.lifecycle.api.Startable;
@@ -28,7 +26,6 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersRepository;
 import org.apache.james.utils.ConfigurationPerformer;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Scopes;
@@ -68,8 +65,8 @@ public class CassandraUsersRepositoryModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(CassandraUsersRepository.class);
+        public Class<? extends Startable> forClass() {
+            return CassandraUsersRepository.class;
         }
     }
 

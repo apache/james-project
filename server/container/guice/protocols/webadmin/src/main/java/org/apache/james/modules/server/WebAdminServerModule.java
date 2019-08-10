@@ -22,7 +22,6 @@ package org.apache.james.modules.server;
 import static org.apache.james.webadmin.WebAdminConfiguration.DISABLED_CONFIGURATION;
 
 import java.io.FileNotFoundException;
-import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.Configuration;
@@ -44,7 +43,6 @@ import org.apache.james.webadmin.utils.JsonTransformerModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
@@ -127,7 +125,6 @@ public class WebAdminServerModule extends AbstractModule {
 
     @Singleton
     public static class WebAdminServerModuleConfigurationPerformer implements ConfigurationPerformer {
-
         private final WebAdminServer webAdminServer;
 
         @Inject
@@ -141,8 +138,8 @@ public class WebAdminServerModule extends AbstractModule {
         }
 
         @Override
-        public List<Class<? extends Startable>> forClasses() {
-            return ImmutableList.of(WebAdminServer.class);
+        public Class<? extends Startable> forClass() {
+            return WebAdminServer.class;
         }
     }
 
