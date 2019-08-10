@@ -61,15 +61,11 @@ public class JMAPServerModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
-                if (jmapConfiguration.isEnabled()) {
-                    signatureHandler.init();
-                    server.start();
-                    registerPEMWithSecurityProvider();
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+        public void initModule() throws Exception {
+            if (jmapConfiguration.isEnabled()) {
+                signatureHandler.init();
+                server.start();
+                registerPEMWithSecurityProvider();
             }
         }
 

@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.modules.data;
 
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
@@ -52,12 +51,8 @@ public class JPAUsersRepositoryModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
-                usersRepository.configure(configurationProvider.getConfiguration("usersrepository"));
-            } catch (ConfigurationException e) {
-                throw new RuntimeException(e);
-            }
+        public void initModule() throws Exception {
+            usersRepository.configure(configurationProvider.getConfiguration("usersrepository"));
         }
 
         @Override

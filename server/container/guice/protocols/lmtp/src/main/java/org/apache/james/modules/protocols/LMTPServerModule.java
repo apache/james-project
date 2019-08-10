@@ -57,13 +57,9 @@ public class LMTPServerModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
-                lmtpServerFactory.configure(configurationProvider.getConfiguration("lmtpserver", LoggingLevel.INFO));
-                lmtpServerFactory.init();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        public void initModule() throws Exception {
+            lmtpServerFactory.configure(configurationProvider.getConfiguration("lmtpserver", LoggingLevel.INFO));
+            lmtpServerFactory.init();
         }
 
         @Override

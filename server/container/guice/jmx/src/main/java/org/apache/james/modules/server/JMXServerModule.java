@@ -146,20 +146,16 @@ public class JMXServerModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
-                jmxServer.start();
-                jmxServer.register(JMX_COMPONENT_DOMAINLIST, domainListManagementMBean);
-                jmxServer.register(JMX_COMPONENT_USERS_REPOSITORY, usersRepositoryManagementMBean);
-                jmxServer.register(JMX_COMPONENT_RECIPIENTREWRITETABLE, recipientRewriteTableManagementMBean);
-                jmxServer.register(JMX_COMPONENT_NAME_MAILBOXMANAGERBEAN, mailboxManagerManagementMBean);
-                jmxServer.register(JMX_COMPONENT_MAILBOXCOPIER, mailboxCopierManagementMBean);
-                jmxServer.register(JMX_COMPONENT_REINDEXER, reIndexerManagementMBean);
-                jmxServer.register(JMX_COMPONENT_QUOTA, quotaManagementMBean);
-                jmxServer.register(JMX_COMPONENT_SIEVE, sieveRepositoryManagementMBean);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        public void initModule() throws Exception {
+            jmxServer.start();
+            jmxServer.register(JMX_COMPONENT_DOMAINLIST, domainListManagementMBean);
+            jmxServer.register(JMX_COMPONENT_USERS_REPOSITORY, usersRepositoryManagementMBean);
+            jmxServer.register(JMX_COMPONENT_RECIPIENTREWRITETABLE, recipientRewriteTableManagementMBean);
+            jmxServer.register(JMX_COMPONENT_NAME_MAILBOXMANAGERBEAN, mailboxManagerManagementMBean);
+            jmxServer.register(JMX_COMPONENT_MAILBOXCOPIER, mailboxCopierManagementMBean);
+            jmxServer.register(JMX_COMPONENT_REINDEXER, reIndexerManagementMBean);
+            jmxServer.register(JMX_COMPONENT_QUOTA, quotaManagementMBean);
+            jmxServer.register(JMX_COMPONENT_SIEVE, sieveRepositoryManagementMBean);
         }
 
         @Override

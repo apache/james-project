@@ -64,12 +64,8 @@ public class JPADomainListModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
-                jpaDomainList.configure(configuration);
-            } catch (ConfigurationException e) {
-                throw new RuntimeException(e);
-            }
+        public void initModule() throws Exception {
+            jpaDomainList.configure(configuration);
         }
 
         @Override

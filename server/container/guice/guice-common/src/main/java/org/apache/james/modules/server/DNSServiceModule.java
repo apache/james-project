@@ -41,7 +41,6 @@ public class DNSServiceModule extends AbstractModule {
 
     @Singleton
     public static class DNSServiceConfigurationPerformer implements ConfigurationPerformer {
-
         private final ConfigurationProvider configurationProvider;
         private final DNSJavaService dnsService;
 
@@ -53,13 +52,9 @@ public class DNSServiceModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
-                dnsService.configure(configurationProvider.getConfiguration("dnsservice"));
-                dnsService.init();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        public void initModule()  throws Exception {
+            dnsService.configure(configurationProvider.getConfiguration("dnsservice"));
+            dnsService.init();
         }
 
         @Override

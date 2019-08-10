@@ -52,7 +52,6 @@ public class LdapUsersRepositoryModule extends AbstractModule {
 
     @Singleton
     public static class LdapUsersRepositoryConfigurationPerformer implements ConfigurationPerformer {
-
         private final LdapRepositoryConfiguration configuration;
         private final ReadOnlyUsersLDAPRepository usersRepository;
 
@@ -63,13 +62,9 @@ public class LdapUsersRepositoryModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
-                usersRepository.configure(configuration);
-                usersRepository.init();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        public void initModule() throws Exception {
+            usersRepository.configure(configuration);
+            usersRepository.init();
         }
 
         @Override
@@ -77,5 +72,4 @@ public class LdapUsersRepositoryModule extends AbstractModule {
             return ReadOnlyUsersLDAPRepository.class;
         }
     }
-
 }

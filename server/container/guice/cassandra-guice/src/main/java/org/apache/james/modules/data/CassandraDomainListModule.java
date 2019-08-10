@@ -66,12 +66,8 @@ public class CassandraDomainListModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
-                cassandraDomainList.configure(configuration);
-            } catch (ConfigurationException e) {
-                throw new RuntimeException(e);
-            }
+        public void initModule() throws Exception {
+            cassandraDomainList.configure(configuration);
         }
 
         @Override

@@ -62,14 +62,10 @@ public class SMTPServerModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
+        public void initModule() throws Exception {
                 smtpServerFactory.configure(configurationProvider.getConfiguration("smtpserver"));
                 smtpServerFactory.init();
                 sendMailHandler.init(null);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
         }
 
         @Override

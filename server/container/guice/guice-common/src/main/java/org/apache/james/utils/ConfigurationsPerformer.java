@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 
 import org.apache.james.lifecycle.api.Startable;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.inject.Inject;
 
 public class ConfigurationsPerformer {
@@ -39,7 +40,6 @@ public class ConfigurationsPerformer {
     }
 
     public void initModules() throws Exception {
-        
         Set<ConfigurationPerformer> processed = processConfigurables();
         
         processOthers(processed);
@@ -49,7 +49,7 @@ public class ConfigurationsPerformer {
         return configurables.get().stream()
             .flatMap(this::configurationPerformerFor)
             .distinct()
-            .peek(ConfigurationPerformer::initModule)
+            .peek(Throwing.consumer(ConfigurationPerformer::initModule).sneakyThrow())
             .collect(Collectors.toSet());
     }
 
@@ -61,6 +61,6 @@ public class ConfigurationsPerformer {
     private void processOthers(Set<ConfigurationPerformer> processed) {
         configurationPerformers.stream()
             .filter(x -> !processed.contains(x))
-            .forEach(ConfigurationPerformer::initModule);
+            .forEach(Throwing.consumer(ConfigurationPerformer::initModule).sneakyThrow());
     }
 }

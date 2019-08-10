@@ -110,12 +110,8 @@ public class MemoryDataModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
-                memoryDomainList.configure(domainListConfiguration);
-            } catch (ConfigurationException e) {
-                throw new RuntimeException(e);
-            }
+        public void initModule() throws Exception {
+            memoryDomainList.configure(domainListConfiguration);
         }
 
         @Override
@@ -136,12 +132,8 @@ public class MemoryDataModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
-                memoryRecipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable"));
-            } catch (ConfigurationException e) {
-                throw new RuntimeException(e);
-            }
+        public void initModule() throws Exception {
+            memoryRecipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable"));
         }
 
         @Override

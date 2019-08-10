@@ -75,7 +75,6 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
     }
 
     static class ElasticSearchQuotaIndexCreationPerformer implements ConfigurationPerformer {
-
         private final ElasticSearchQuotaIndexCreator indexCreator;
 
         @Inject
@@ -84,12 +83,8 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
-                indexCreator.createIndex();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        public void initModule() throws Exception {
+            indexCreator.createIndex();
         }
 
         @Override

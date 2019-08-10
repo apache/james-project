@@ -98,13 +98,9 @@ public class IMAPServerModule extends AbstractModule {
         }
 
         @Override
-        public void initModule()  {
-            try {
-                imapServerFactory.configure(configurationProvider.getConfiguration("imapserver"));
-                imapServerFactory.init();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        public void initModule() throws Exception {
+            imapServerFactory.configure(configurationProvider.getConfiguration("imapserver"));
+            imapServerFactory.init();
         }
 
         @Override

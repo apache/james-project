@@ -82,12 +82,8 @@ public class MailStoreRepositoryModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
-                javaMailRepositoryStore.init();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        public void initModule() throws Exception {
+            javaMailRepositoryStore.init();
         }
 
         @Override

@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.modules.data;
 
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.rrt.api.RecipientRewriteTable;
@@ -60,12 +59,8 @@ public class CassandraRecipientRewriteTableModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
-                recipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable"));
-            } catch (ConfigurationException e) {
-                throw new RuntimeException(e);
-            }
+        public void initModule() throws Exception {
+            recipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable"));
         }
 
         @Override

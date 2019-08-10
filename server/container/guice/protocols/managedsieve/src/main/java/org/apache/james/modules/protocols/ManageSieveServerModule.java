@@ -53,13 +53,9 @@ public class ManageSieveServerModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
-                manageSieveServerFactory.configure(configurationProvider.getConfiguration("managesieveserver", LoggingLevel.INFO));
-                manageSieveServerFactory.init();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        public void initModule() throws Exception {
+            manageSieveServerFactory.configure(configurationProvider.getConfiguration("managesieveserver", LoggingLevel.INFO));
+            manageSieveServerFactory.init();
         }
 
         @Override

@@ -23,7 +23,7 @@ import org.apache.james.lifecycle.api.Startable;
 
 public interface ConfigurationPerformer {
 
-    void initModule();
+    void initModule() throws Exception;
 
     /**
      * In order to initialize components in the right order, every

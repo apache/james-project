@@ -92,12 +92,8 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
-                mailboxIndexCreator.createIndex();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        public void initModule()  throws Exception {
+            mailboxIndexCreator.createIndex();
         }
 
         @Override

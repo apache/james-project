@@ -55,13 +55,9 @@ public class POP3ServerModule extends AbstractModule {
         }
 
         @Override
-        public void initModule() {
-            try {
-                pop3ServerFactory.configure(configurationProvider.getConfiguration("pop3server"));
-                pop3ServerFactory.init();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        public void initModule() throws Exception {
+            pop3ServerFactory.configure(configurationProvider.getConfiguration("pop3server"));
+            pop3ServerFactory.init();
         }
 
         @Override
