@@ -26,7 +26,7 @@ import org.apache.james.rrt.cassandra.CassandraRRTModule;
 import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTable;
 import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTableDAO;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
-import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.InitialisationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -44,11 +44,11 @@ public class CassandraRecipientRewriteTableModule extends AbstractModule {
         bind(RecipientRewriteTable.class).to(CassandraRecipientRewriteTable.class);
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraRRTModule.MODULE);
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(CassandraRecipientRewriteTablePerformer.class);
+        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(CassandraRecipientRewriteTablePerformer.class);
     }
 
     @Singleton
-    public static class CassandraRecipientRewriteTablePerformer implements ConfigurationPerformer {
+    public static class CassandraRecipientRewriteTablePerformer implements InitialisationOperation {
         private final ConfigurationProvider configurationProvider;
         private final CassandraRecipientRewriteTable recipientRewriteTable;
 

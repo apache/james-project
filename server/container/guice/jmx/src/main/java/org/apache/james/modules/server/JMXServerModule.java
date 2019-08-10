@@ -45,7 +45,7 @@ import org.apache.james.sieverepository.api.SieveRepositoryManagementMBean;
 import org.apache.james.sieverepository.lib.SieveRepositoryManagement;
 import org.apache.james.user.api.UsersRepositoryManagementMBean;
 import org.apache.james.user.lib.UsersRepositoryManagement;
-import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.InitialisationOperation;
 import org.apache.james.utils.GuiceMailboxManagerResolver;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
@@ -96,8 +96,8 @@ public class JMXServerModule extends AbstractModule {
         bind(ReIndexerManagementMBean.class).to(ReIndexerManagement.class);
         bind(QuotaManagementMBean.class).to(QuotaManagement.class);
         bind(SieveRepositoryManagementMBean.class).to(SieveRepositoryManagement.class);
-        Multibinder<ConfigurationPerformer> configurationMultibinder = Multibinder.newSetBinder(binder(), ConfigurationPerformer.class);
-        configurationMultibinder.addBinding().to(JMXModuleConfigurationPerformer.class);
+        Multibinder<InitialisationOperation> configurationMultibinder = Multibinder.newSetBinder(binder(), InitialisationOperation.class);
+        configurationMultibinder.addBinding().to(JMXModuleInitialisationOperation.class);
     }
 
     @Provides
@@ -112,7 +112,7 @@ public class JMXServerModule extends AbstractModule {
     }
 
     @Singleton
-    public static class JMXModuleConfigurationPerformer implements ConfigurationPerformer {
+    public static class JMXModuleInitialisationOperation implements InitialisationOperation {
 
         private final JMXServer jmxServer;
         private final DomainListManagementMBean domainListManagementMBean;
@@ -125,15 +125,15 @@ public class JMXServerModule extends AbstractModule {
         private final SieveRepositoryManagementMBean sieveRepositoryManagementMBean;
 
         @Inject
-        public JMXModuleConfigurationPerformer(JMXServer jmxServer,
-                                               DomainListManagementMBean domainListManagementMBean,
-                                               UsersRepositoryManagementMBean usersRepositoryManagementMBean,
-                                               RecipientRewriteTableManagementMBean recipientRewriteTableManagementMBean,
-                                               MailboxManagerManagementMBean mailboxManagerManagementMBean,
-                                               MailboxCopierManagementMBean mailboxCopierManagementMBean,
-                                               ReIndexerManagementMBean reIndexerManagementMBean,
-                                               QuotaManagementMBean quotaManagementMBean,
-                                               SieveRepositoryManagementMBean sieveRepositoryManagementMBean) {
+        public JMXModuleInitialisationOperation(JMXServer jmxServer,
+                                                DomainListManagementMBean domainListManagementMBean,
+                                                UsersRepositoryManagementMBean usersRepositoryManagementMBean,
+                                                RecipientRewriteTableManagementMBean recipientRewriteTableManagementMBean,
+                                                MailboxManagerManagementMBean mailboxManagerManagementMBean,
+                                                MailboxCopierManagementMBean mailboxCopierManagementMBean,
+                                                ReIndexerManagementMBean reIndexerManagementMBean,
+                                                QuotaManagementMBean quotaManagementMBean,
+                                                SieveRepositoryManagementMBean sieveRepositoryManagementMBean) {
             this.jmxServer = jmxServer;
             this.domainListManagementMBean = domainListManagementMBean;
             this.usersRepositoryManagementMBean = usersRepositoryManagementMBean;

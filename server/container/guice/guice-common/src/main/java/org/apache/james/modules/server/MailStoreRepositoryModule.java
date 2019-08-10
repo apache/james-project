@@ -30,7 +30,7 @@ import org.apache.james.mailrepository.file.FileMailRepositoryProvider;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
-import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.InitialisationOperation;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.slf4j.Logger;
@@ -56,7 +56,7 @@ public class MailStoreRepositoryModule extends AbstractModule {
 
         Multibinder<MailRepositoryProvider> multibinder = Multibinder.newSetBinder(binder(), MailRepositoryProvider.class);
         multibinder.addBinding().to(FileMailRepositoryProvider.class);
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MailRepositoryStoreModuleConfigurationPerformer.class);
+        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(MailRepositoryStoreModuleInitialisationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MailRepositoryProbeImpl.class);
     }
 
@@ -73,11 +73,11 @@ public class MailStoreRepositoryModule extends AbstractModule {
     }
 
     @Singleton
-    public static class MailRepositoryStoreModuleConfigurationPerformer implements ConfigurationPerformer {
+    public static class MailRepositoryStoreModuleInitialisationOperation implements InitialisationOperation {
         private final MemoryMailRepositoryStore javaMailRepositoryStore;
 
         @Inject
-        public MailRepositoryStoreModuleConfigurationPerformer(MemoryMailRepositoryStore javaMailRepositoryStore) {
+        public MailRepositoryStoreModuleInitialisationOperation(MemoryMailRepositoryStore javaMailRepositoryStore) {
             this.javaMailRepositoryStore = javaMailRepositoryStore;
         }
 

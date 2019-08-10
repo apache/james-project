@@ -28,7 +28,7 @@ import org.apache.james.modules.IsStartedProbeModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.onami.lifecycle.Stager;
 import org.apache.james.server.core.configuration.Configuration;
-import org.apache.james.utils.ConfigurationsPerformer;
+import org.apache.james.utils.InitializationOperations;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.GuiceProbeProvider;
 
@@ -80,7 +80,7 @@ public class GuiceJamesServer {
         preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {}));
         injector.getInstance(StartUpChecksPerformer.class)
             .performCheck();
-        injector.getInstance(ConfigurationsPerformer.class).initModules();
+        injector.getInstance(InitializationOperations.class).initModules();
         guiceProbeProvider = injector.getInstance(GuiceProbeProvider.class);
         isStartedProbe.notifyStarted();
     }

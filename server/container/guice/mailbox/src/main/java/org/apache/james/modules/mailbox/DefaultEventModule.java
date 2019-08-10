@@ -32,7 +32,7 @@ import org.apache.james.mailbox.events.RetryBackoffConfiguration;
 import org.apache.james.mailbox.events.delivery.EventDelivery;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
-import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.InitialisationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -43,7 +43,7 @@ import com.google.inject.multibindings.Multibinder;
 public class DefaultEventModule extends AbstractModule {
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(ListenerRegistrationPerformer.class);
+        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(ListenerRegistrationPerformer.class);
 
         bind(MailboxListenerFactory.class).in(Scopes.SINGLETON);
         bind(MailboxListenersLoaderImpl.class).in(Scopes.SINGLETON);
@@ -68,7 +68,7 @@ public class DefaultEventModule extends AbstractModule {
     }
 
     @Singleton
-    public static class ListenerRegistrationPerformer implements ConfigurationPerformer {
+    public static class ListenerRegistrationPerformer implements InitialisationOperation {
         private final MailboxListenersLoaderImpl listeners;
         private final ListenersConfiguration configuration;
 

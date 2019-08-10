@@ -24,7 +24,7 @@ import org.apache.james.lmtpserver.netty.LMTPServerFactory;
 import org.apache.james.lmtpserver.netty.OioLMTPServerFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.util.LoggingLevel;
-import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.InitialisationOperation;
 import org.apache.james.utils.GuiceProbe;
 
 import com.google.inject.AbstractModule;
@@ -40,18 +40,18 @@ public class LMTPServerModule extends AbstractModule {
         bind(LMTPServerFactory.class).in(Scopes.SINGLETON);
         bind(OioLMTPServerFactory.class).in(Scopes.SINGLETON);
 
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(LMTPModuleConfigurationPerformer.class);
+        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(LMTPModuleInitialisationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(LmtpGuiceProbe.class);
     }
 
     @Singleton
-    public static class LMTPModuleConfigurationPerformer implements ConfigurationPerformer {
+    public static class LMTPModuleInitialisationOperation implements InitialisationOperation {
 
         private final ConfigurationProvider configurationProvider;
         private final LMTPServerFactory lmtpServerFactory;
 
         @Inject
-        public LMTPModuleConfigurationPerformer(ConfigurationProvider configurationProvider, LMTPServerFactory lmtpServerFactory) {
+        public LMTPModuleInitialisationOperation(ConfigurationProvider configurationProvider, LMTPServerFactory lmtpServerFactory) {
             this.configurationProvider = configurationProvider;
             this.lmtpServerFactory = lmtpServerFactory;
         }

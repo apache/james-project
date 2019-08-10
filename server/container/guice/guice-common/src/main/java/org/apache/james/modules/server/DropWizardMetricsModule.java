@@ -25,7 +25,7 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.dropwizard.DropWizardGaugeRegistry;
 import org.apache.james.metrics.dropwizard.DropWizardJVMMetrics;
 import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
-import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.InitialisationOperation;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;
@@ -46,16 +46,16 @@ public class DropWizardMetricsModule extends AbstractModule {
 
         bind(GaugeRegistry.class).to(DropWizardGaugeRegistry.class);
 
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(DropWizardConfigurationPerformer.class);
+        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(DropWizardInitialisationOperation.class);
     }
 
     @Singleton
-    public static class DropWizardConfigurationPerformer implements ConfigurationPerformer, Startable {
+    public static class DropWizardInitialisationOperation implements InitialisationOperation, Startable {
         private final DropWizardMetricFactory dropWizardMetricFactory;
         private final DropWizardJVMMetrics dropWizardJVMMetrics;
 
         @Inject
-        public DropWizardConfigurationPerformer(DropWizardMetricFactory dropWizardMetricFactory, DropWizardJVMMetrics dropWizardJVMMetrics) {
+        public DropWizardInitialisationOperation(DropWizardMetricFactory dropWizardMetricFactory, DropWizardJVMMetrics dropWizardJVMMetrics) {
             this.dropWizardMetricFactory = dropWizardMetricFactory;
             this.dropWizardJVMMetrics = dropWizardJVMMetrics;
         }
@@ -68,7 +68,7 @@ public class DropWizardMetricsModule extends AbstractModule {
 
         @Override
         public Class<? extends Startable> forClass() {
-            return DropWizardConfigurationPerformer.class;
+            return DropWizardInitialisationOperation.class;
         }
     }
 }

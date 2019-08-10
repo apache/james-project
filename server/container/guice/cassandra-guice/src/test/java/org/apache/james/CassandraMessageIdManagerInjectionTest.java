@@ -29,7 +29,7 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.InitialisationOperation;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -46,7 +46,7 @@ class CassandraMessageIdManagerInjectionTest {
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-            .overrideWith(binder -> Multibinder.newSetBinder(binder, ConfigurationPerformer.class)
+            .overrideWith(binder -> Multibinder.newSetBinder(binder, InitialisationOperation.class)
                 .addBinding()
                 .to(CallMe.class)))
         .disableAutoStart()
@@ -57,7 +57,7 @@ class CassandraMessageIdManagerInjectionTest {
         assertThatCode(server::start).doesNotThrowAnyException();
     }
 
-    public static class CallMe implements ConfigurationPerformer, Startable {
+    public static class CallMe implements InitialisationOperation, Startable {
         @Inject
         public CallMe(MessageIdManager messageIdManager) {
         }

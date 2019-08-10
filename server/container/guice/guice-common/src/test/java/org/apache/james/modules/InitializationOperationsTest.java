@@ -27,8 +27,8 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.Startable;
-import org.apache.james.utils.ConfigurationPerformer;
-import org.apache.james.utils.ConfigurationsPerformer;
+import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperations;
 import org.junit.Test;
 
 import com.google.inject.Guice;
@@ -36,14 +36,14 @@ import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 
-public class ConfigurationsPerformerTest {
+public class InitializationOperationsTest {
 
     @Test
     public void initModulesShouldNotFailWhenBindingsInWrongOrder() throws Exception {
         Injector injector = Guice.createInjector(new StartablesModule(),
                 new UnorderedBindingsModule());
 
-        injector.getInstance(ConfigurationsPerformer.class).initModules();
+        injector.getInstance(InitializationOperations.class).initModules();
 
         assertThat(injector.getInstance(A.class).isConfigured()).isTrue();
         assertThat(injector.getInstance(B.class).isConfigured()).isTrue();
@@ -57,16 +57,16 @@ public class ConfigurationsPerformerTest {
             bind(A.class).in(Scopes.SINGLETON);
             bind(C.class).in(Scopes.SINGLETON);
     
-            Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(BConfigurationPerformer.class);
-            Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(AConfigurationPerformer.class);
+            Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(BInitialisationOperation.class);
+            Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(AInitialisationOperation.class);
         }
     }
 
-    private static class AConfigurationPerformer implements ConfigurationPerformer {
+    private static class AInitialisationOperation implements InitialisationOperation {
         private final A a;
 
         @Inject
-        private AConfigurationPerformer(A a) {
+        private AInitialisationOperation(A a) {
             this.a = a;
         }
 
@@ -85,11 +85,11 @@ public class ConfigurationsPerformerTest {
         }
     }
 
-    private static class BConfigurationPerformer implements ConfigurationPerformer {
+    private static class BInitialisationOperation implements InitialisationOperation {
         private final B b;
 
         @Inject
-        private BConfigurationPerformer(B b) {
+        private BInitialisationOperation(B b) {
             this.b = b;
         }
 

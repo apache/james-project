@@ -40,7 +40,7 @@ import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
-import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.InitialisationOperation;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
@@ -78,9 +78,9 @@ public class MemoryDataModule extends AbstractModule {
         bind(EventSourcingDLPConfigurationStore.class).in(Scopes.SINGLETON);
         bind(DLPConfigurationStore.class).to(EventSourcingDLPConfigurationStore.class);
 
-        Multibinder<ConfigurationPerformer> configurationPerformers = Multibinder.newSetBinder(binder(), ConfigurationPerformer.class);
-        configurationPerformers.addBinding().to(MemoryRRTConfigurationPerformer.class);
-        configurationPerformers.addBinding().to(MemoryDomainListConfigurationPerformer.class);
+        Multibinder<InitialisationOperation> initialisationOperations = Multibinder.newSetBinder(binder(), InitialisationOperation.class);
+        initialisationOperations.addBinding().to(MemoryRRTInitialisationOperation.class);
+        initialisationOperations.addBinding().to(MemoryDomainListInitialisationOperation.class);
 
         bind(MailStoreRepositoryModule.DefaultItemSupplier.class).toInstance(() -> MEMORY_MAILREPOSITORY_DEFAULT_DECLARATION);
 
@@ -99,12 +99,12 @@ public class MemoryDataModule extends AbstractModule {
     }
 
     @Singleton
-    public static class MemoryDomainListConfigurationPerformer implements ConfigurationPerformer {
+    public static class MemoryDomainListInitialisationOperation implements InitialisationOperation {
         private final DomainListConfiguration domainListConfiguration;
         private final MemoryDomainList memoryDomainList;
 
         @Inject
-        public MemoryDomainListConfigurationPerformer(DomainListConfiguration domainListConfiguration, MemoryDomainList memoryDomainList) {
+        public MemoryDomainListInitialisationOperation(DomainListConfiguration domainListConfiguration, MemoryDomainList memoryDomainList) {
             this.domainListConfiguration = domainListConfiguration;
             this.memoryDomainList = memoryDomainList;
         }
@@ -121,12 +121,12 @@ public class MemoryDataModule extends AbstractModule {
     }
 
     @Singleton
-    public static class MemoryRRTConfigurationPerformer implements ConfigurationPerformer {
+    public static class MemoryRRTInitialisationOperation implements InitialisationOperation {
         private final ConfigurationProvider configurationProvider;
         private final MemoryRecipientRewriteTable memoryRecipientRewriteTable;
 
         @Inject
-        public MemoryRRTConfigurationPerformer(ConfigurationProvider configurationProvider, MemoryRecipientRewriteTable memoryRecipientRewriteTable) {
+        public MemoryRRTInitialisationOperation(ConfigurationProvider configurationProvider, MemoryRecipientRewriteTable memoryRecipientRewriteTable) {
             this.configurationProvider = configurationProvider;
             this.memoryRecipientRewriteTable = memoryRecipientRewriteTable;
         }

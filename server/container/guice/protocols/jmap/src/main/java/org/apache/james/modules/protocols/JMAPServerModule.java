@@ -26,7 +26,7 @@ import org.apache.james.jmap.JMAPModule;
 import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.crypto.JamesSignatureHandler;
 import org.apache.james.lifecycle.api.Startable;
-import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.InitialisationOperation;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.MessageIdProbe;
@@ -42,19 +42,19 @@ public class JMAPServerModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new JMAPModule());
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(JMAPModuleConfigurationPerformer.class);
+        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(JMAPModuleInitialisationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(JmapGuiceProbe.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MessageIdProbe.class);
     }
 
     @Singleton
-    public static class JMAPModuleConfigurationPerformer implements ConfigurationPerformer {
+    public static class JMAPModuleInitialisationOperation implements InitialisationOperation {
         private final JMAPServer server;
         private final JamesSignatureHandler signatureHandler;
         private final JMAPConfiguration jmapConfiguration;
 
         @Inject
-        public JMAPModuleConfigurationPerformer(JMAPServer server, JamesSignatureHandler signatureHandler, JMAPConfiguration jmapConfiguration) {
+        public JMAPModuleInitialisationOperation(JMAPServer server, JamesSignatureHandler signatureHandler, JMAPConfiguration jmapConfiguration) {
             this.server = server;
             this.signatureHandler = signatureHandler;
             this.jmapConfiguration = jmapConfiguration;

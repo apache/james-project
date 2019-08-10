@@ -24,7 +24,7 @@ import org.apache.james.domainlist.jpa.JPADomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
-import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.InitialisationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -39,7 +39,7 @@ public class JPADomainListModule extends AbstractModule {
     public void configure() {
         bind(JPADomainList.class).in(Scopes.SINGLETON);
         bind(DomainList.class).to(JPADomainList.class);
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(JPADomainListConfigurationPerformer.class);
+        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(JPADomainListInitialisationOperation.class);
     }
 
     @Provides
@@ -53,12 +53,12 @@ public class JPADomainListModule extends AbstractModule {
     }
     
     @Singleton
-    public static class JPADomainListConfigurationPerformer implements ConfigurationPerformer {
+    public static class JPADomainListInitialisationOperation implements InitialisationOperation {
         private final DomainListConfiguration configuration;
         private final JPADomainList jpaDomainList;
 
         @Inject
-        public JPADomainListConfigurationPerformer(DomainListConfiguration configuration, JPADomainList jpaDomainList) {
+        public JPADomainListInitialisationOperation(DomainListConfiguration configuration, JPADomainList jpaDomainList) {
             this.configuration = configuration;
             this.jpaDomainList = jpaDomainList;
         }

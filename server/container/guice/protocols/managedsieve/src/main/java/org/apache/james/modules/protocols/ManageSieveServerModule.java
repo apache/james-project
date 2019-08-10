@@ -24,7 +24,7 @@ import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieveserver.netty.ManageSieveServerFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.util.LoggingLevel;
-import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.InitialisationOperation;
 import org.apache.james.utils.GuiceProbe;
 
 import com.google.inject.AbstractModule;
@@ -37,17 +37,17 @@ public class ManageSieveServerModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(CoreCommands.class).to(CoreProcessor.class);
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(ManageSieveModuleConfigurationPerformer.class);
+        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(ManageSieveModuleInitialisationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SieveProbeImpl.class);
     }
 
     @Singleton
-    public static class ManageSieveModuleConfigurationPerformer implements ConfigurationPerformer {
+    public static class ManageSieveModuleInitialisationOperation implements InitialisationOperation {
         private final ConfigurationProvider configurationProvider;
         private final ManageSieveServerFactory manageSieveServerFactory;
 
         @Inject
-        public ManageSieveModuleConfigurationPerformer(ConfigurationProvider configurationProvider, ManageSieveServerFactory manageSieveServerFactory) {
+        public ManageSieveModuleInitialisationOperation(ConfigurationProvider configurationProvider, ManageSieveServerFactory manageSieveServerFactory) {
             this.configurationProvider = configurationProvider;
             this.manageSieveServerFactory = manageSieveServerFactory;
         }

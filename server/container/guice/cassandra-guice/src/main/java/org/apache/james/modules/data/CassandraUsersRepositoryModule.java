@@ -23,7 +23,7 @@ import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersRepository;
-import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.InitialisationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -39,17 +39,17 @@ public class CassandraUsersRepositoryModule extends AbstractModule {
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(org.apache.james.user.cassandra.CassandraUsersRepositoryModule.MODULE);
 
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(CassandraUsersRepositoryConfigurationPerformer.class);
+        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(CassandraUsersRepositoryInitialisationOperation.class);
     }
 
     @Singleton
-    public static class CassandraUsersRepositoryConfigurationPerformer implements ConfigurationPerformer {
+    public static class CassandraUsersRepositoryInitialisationOperation implements InitialisationOperation {
 
         private final ConfigurationProvider configurationProvider;
         private final CassandraUsersRepository usersRepository;
 
         @Inject
-        public CassandraUsersRepositoryConfigurationPerformer(ConfigurationProvider configurationProvider, CassandraUsersRepository usersRepository) {
+        public CassandraUsersRepositoryInitialisationOperation(ConfigurationProvider configurationProvider, CassandraUsersRepository usersRepository) {
             this.configurationProvider = configurationProvider;
             this.usersRepository = usersRepository;
         }

@@ -22,7 +22,7 @@ import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.jpa.JPARecipientRewriteTable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
-import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.InitialisationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -36,11 +36,11 @@ public class JPARecipientRewriteTableModule extends AbstractModule {
     public void configure() {
         bind(JPARecipientRewriteTable.class).in(Scopes.SINGLETON);
         bind(RecipientRewriteTable.class).to(JPARecipientRewriteTable.class);
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(JPARecipientRewriteTablePerformer.class);
+        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(JPARecipientRewriteTablePerformer.class);
     }
 
     @Singleton
-    public static class JPARecipientRewriteTablePerformer implements ConfigurationPerformer {
+    public static class JPARecipientRewriteTablePerformer implements InitialisationOperation {
         private final ConfigurationProvider configurationProvider;
         private final JPARecipientRewriteTable recipientRewriteTable;
 

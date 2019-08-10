@@ -28,39 +28,39 @@ import org.apache.james.lifecycle.api.Startable;
 import com.github.fge.lambdas.Throwing;
 import com.google.inject.Inject;
 
-public class ConfigurationsPerformer {
+public class InitializationOperations {
 
-    private final Set<ConfigurationPerformer> configurationPerformers;
+    private final Set<InitialisationOperation> initialisationOperations;
     private final Startables configurables;
 
     @Inject
-    public ConfigurationsPerformer(Set<ConfigurationPerformer> configurationPerformers, Startables configurables) {
-        this.configurationPerformers = configurationPerformers;
+    public InitializationOperations(Set<InitialisationOperation> initialisationOperations, Startables configurables) {
+        this.initialisationOperations = initialisationOperations;
         this.configurables = configurables;
     }
 
     public void initModules() throws Exception {
-        Set<ConfigurationPerformer> processed = processConfigurables();
+        Set<InitialisationOperation> processed = processConfigurables();
         
         processOthers(processed);
     }
 
-    private Set<ConfigurationPerformer> processConfigurables() {
+    private Set<InitialisationOperation> processConfigurables() {
         return configurables.get().stream()
             .flatMap(this::configurationPerformerFor)
             .distinct()
-            .peek(Throwing.consumer(ConfigurationPerformer::initModule).sneakyThrow())
+            .peek(Throwing.consumer(InitialisationOperation::initModule).sneakyThrow())
             .collect(Collectors.toSet());
     }
 
-    private Stream<ConfigurationPerformer> configurationPerformerFor(Class<? extends Startable> configurable) {
-        return configurationPerformers.stream()
+    private Stream<InitialisationOperation> configurationPerformerFor(Class<? extends Startable> configurable) {
+        return initialisationOperations.stream()
                 .filter(x -> x.forClass().equals(configurable));
     }
 
-    private void processOthers(Set<ConfigurationPerformer> processed) {
-        configurationPerformers.stream()
+    private void processOthers(Set<InitialisationOperation> processed) {
+        initialisationOperations.stream()
             .filter(x -> !processed.contains(x))
-            .forEach(Throwing.consumer(ConfigurationPerformer::initModule).sneakyThrow());
+            .forEach(Throwing.consumer(InitialisationOperation::initModule).sneakyThrow());
     }
 }

@@ -22,7 +22,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.dnsjava.DNSJavaService;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
-import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.InitialisationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -36,17 +36,17 @@ public class DNSServiceModule extends AbstractModule {
     protected void configure() {
         bind(DNSJavaService.class).in(Scopes.SINGLETON);
         bind(DNSService.class).to(DNSJavaService.class);
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(DNSServiceConfigurationPerformer.class);
+        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(DNSServiceInitialisationOperation.class);
     }
 
     @Singleton
-    public static class DNSServiceConfigurationPerformer implements ConfigurationPerformer {
+    public static class DNSServiceInitialisationOperation implements InitialisationOperation {
         private final ConfigurationProvider configurationProvider;
         private final DNSJavaService dnsService;
 
         @Inject
-        public DNSServiceConfigurationPerformer(ConfigurationProvider configurationProvider,
-                                                DNSJavaService dnsService) {
+        public DNSServiceInitialisationOperation(ConfigurationProvider configurationProvider,
+                                                 DNSJavaService dnsService) {
             this.configurationProvider = configurationProvider;
             this.dnsService = dnsService;
         }

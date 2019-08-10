@@ -38,7 +38,7 @@ import org.apache.james.quota.search.elasticsearch.ElasticSearchQuotaSearcher;
 import org.apache.james.quota.search.elasticsearch.QuotaSearchIndexCreationUtil;
 import org.apache.james.quota.search.elasticsearch.events.ElasticSearchQuotaMailboxListener;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
-import org.apache.james.utils.ConfigurationPerformer;
+import org.apache.james.utils.InitialisationOperation;
 import org.apache.james.utils.PropertiesProvider;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
@@ -74,7 +74,7 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
         }
     }
 
-    static class ElasticSearchQuotaIndexCreationPerformer implements ConfigurationPerformer {
+    static class ElasticSearchQuotaIndexCreationPerformer implements InitialisationOperation {
         private final ElasticSearchQuotaIndexCreator indexCreator;
 
         @Inject
@@ -101,7 +101,7 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
             .addBinding()
             .to(ElasticSearchQuotaMailboxListener.class);
 
-        Multibinder.newSetBinder(binder(), ConfigurationPerformer.class)
+        Multibinder.newSetBinder(binder(), InitialisationOperation.class)
             .addBinding()
             .to(ElasticSearchQuotaIndexCreationPerformer.class);
     }
