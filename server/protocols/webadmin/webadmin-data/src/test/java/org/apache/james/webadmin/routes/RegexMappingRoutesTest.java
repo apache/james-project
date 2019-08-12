@@ -156,4 +156,127 @@ class RegexMappingRoutesTest {
             .getStoredMappings(MappingSource.fromUser(User.fromUsername("james@domain.tld"))))
             .containsOnly(Mapping.regex("^[aei?ou].*james@domain.tld"));
     }
+
+    @Test
+    void removeRegexMappingShouldReturnNoContentWhenSuccess() throws Exception {
+        MappingSource mappingSource = MappingSource.fromUser(User.fromUsername("abc@domain.tld"));
+        memoryRecipientRewriteTable
+            .addRegexMapping(mappingSource, "valar.*@apache.org");
+
+        with()
+            .delete("abc@domain.tld/targets/valar.*@apache.org")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204)
+            .contentType(ContentType.JSON);
+
+        assertThat(memoryRecipientRewriteTable.getStoredMappings(mappingSource))
+            .doesNotContain(Mapping.regex("valar.*@apache.org"));
+    }
+
+    @Test
+    void removeRegexMappingShouldAllowUserWithoutDomain() throws Exception {
+        MappingSource mappingSource = MappingSource.fromUser(User.fromUsername("abcdomaintld"));
+        memoryRecipientRewriteTable
+            .addRegexMapping(mappingSource, "valar.*@apache.org");
+
+        with()
+            .delete("abcdomaintld/targets/valar.*@apache.org")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204)
+            .contentType(ContentType.JSON);
+
+        assertThat(memoryRecipientRewriteTable.getStoredMappings(mappingSource))
+            .doesNotContain(Mapping.regex("valar.*@apache.org"));
+    }
+
+    @Test
+    void removeRegexMappingShouldReturnNotFoundWhenSourceIsEmpty() {
+        with()
+            .delete("/targets/valar.*@apache.org")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .contentType(ContentType.JSON)
+            .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+            .body("type", is("notFound"))
+            .body("message", is("DELETE /mappings/regex/targets/valar.*@apache.org can not be found"));
+    }
+
+    @Test
+    void removeRegexMappingShouldReturnNotFoundWhenRegexIsEmpty() {
+         with()
+            .delete("abc@domain.tld/targets/")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .contentType(ContentType.JSON)
+            .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+            .body("type", is("notFound"))
+            .body("message", is("DELETE /mappings/regex/abc@domain.tld/targets/ can not be found"));
+    }
+
+    @Test
+    void removeRegexMappingShouldReturnNotFoundWhenSourceAndRegexEmpty() {
+        with()
+            .delete("/targets/")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .contentType(ContentType.JSON)
+            .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+            .body("type", is("notFound"))
+            .body("message", is("DELETE /mappings/regex/targets/ can not be found"));
+    }
+
+    @Test
+    void removeRegexMappingShouldReturnNoContentWhenTwoSameRequestArrive() throws Exception {
+        MappingSource mappingSource = MappingSource.fromUser(User.fromUsername("abc@domain.tld"));
+        memoryRecipientRewriteTable
+            .addRegexMapping(mappingSource, "valar.*@apache.org");
+
+        with()
+            .delete("abc@domain.tld/targets/valar.*@apache.org")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204)
+            .contentType(ContentType.JSON);
+
+        with()
+            .delete("abc@domain.tld/targets/valar.*@apache.org")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204)
+            .contentType(ContentType.JSON);
+
+        assertThat(memoryRecipientRewriteTable.getStoredMappings(mappingSource))
+            .doesNotContain(Mapping.regex("valar.*@apache.org"));
+    }
+
+    @Test
+    void removeRegexMappingShouldReturnNoContentDespiteTheSourceExistence() throws Exception {
+        with()
+            .delete("abc@domain.tld/targets/valar.*@apache.org")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204)
+            .contentType(ContentType.JSON);
+
+        MappingSource mappingSource = MappingSource.fromUser(User.fromUsername("abc@domain.tld"));
+        memoryRecipientRewriteTable
+            .addRegexMapping(mappingSource, "valar.*@apache.org");
+    }
+
+    @Test
+    void removeRegexMappingShouldReturnNotFoundWhenRegexContainsBackslash() throws Exception {
+        with()
+            .delete("abc@domain.tld/targets/valar.*/@apache.org")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .contentType(ContentType.JSON)
+            .body("message", is("DELETE /mappings/regex/abc@domain.tld/targets/valar.*/@apache.org can not be found"))
+            .body("statusCode", is(HttpStatus.NOT_FOUND_404));
+    }
+
+    @Test
+    void removeRegexMappingShouldReturnNoContentWhenRegexContainsValidQuestionMark() {
+        with()
+            .delete("abc@domain.tld/targets/valar.*%3F@apache.org")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204)
+            .contentType(ContentType.JSON);
+    }
 }

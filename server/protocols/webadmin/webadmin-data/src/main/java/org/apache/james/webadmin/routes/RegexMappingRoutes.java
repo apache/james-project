@@ -26,6 +26,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 import javax.inject.Inject;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -33,6 +34,7 @@ import javax.ws.rs.Produces;
 import org.apache.james.core.User;
 import org.apache.james.rrt.api.InvalidRegexException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
@@ -60,6 +62,8 @@ public class RegexMappingRoutes implements Routes {
     static final String REGEX_PARAM = ":regex";
     static final String ADD_ADDRESS_MAPPING_PATH = BASE_PATH + SEPARATOR
         + MAPPING_SOURCE_PARAM + "/targets/" + REGEX_PARAM;
+    static final String REMOVE_ADDRESS_MAPPING_PATH = BASE_PATH + SEPARATOR
+        + MAPPING_SOURCE_PARAM + "/targets/" + REGEX_PARAM;
 
     private final RecipientRewriteTable recipientRewriteTable;
 
@@ -77,6 +81,7 @@ public class RegexMappingRoutes implements Routes {
     @Override
     public void define(Service service) {
         service.post(ADD_ADDRESS_MAPPING_PATH, this::addRegexMapping);
+        service.delete(REMOVE_ADDRESS_MAPPING_PATH, this::removeRegexMapping);
     }
 
     @POST
@@ -95,6 +100,28 @@ public class RegexMappingRoutes implements Routes {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message(e.getMessage())
+                .haltError();
+        }
+        return halt(HttpStatus.NO_CONTENT_204);
+    }
+
+    @DELETE
+    @Path(REMOVE_ADDRESS_MAPPING_PATH)
+    @ApiOperation(value = "removing a regex mapping")
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "Mapping deleted successfully"),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request path parameter")
+    })
+    private HaltException removeRegexMapping(Request request, Response response) throws Exception {
+        try {
+            MappingSource mappingSource = MappingSource.parse(request.params(MAPPING_SOURCE_PARAM));
+            String regex = URLDecoder.decode(request.params(REGEX_PARAM), StandardCharsets.UTF_8.toString());
+            recipientRewriteTable.removeRegexMapping(mappingSource, regex);
+        } catch (RecipientRewriteTableException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .type(ErrorResponder.ErrorType.SERVER_ERROR)
                 .message(e.getMessage())
                 .haltError();
         }

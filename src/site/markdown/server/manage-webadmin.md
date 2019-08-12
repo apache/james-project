@@ -1558,6 +1558,7 @@ This feature uses [Recipients rewrite table](/server/config-recipientrewritetabl
 requires the [RecipientRewriteTable API](https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java)
 to be configured.
  - [Adding a regex mapping](#Adding_a_regex_mapping)
+ - [Removing a regex mapping](#Removing_a_regex_mapping)
 
 ### Adding a regex mapping
 
@@ -1580,6 +1581,31 @@ curl -XPOST http://ip:port/mappings/regex/james@domain.tld/targets/james@.*:jame
 Response codes:
 
  - 204: Mapping added successfully.
+ - 400: Invalid `mappingSource` path parameter.
+ - 400: Invalid `regex` path parameter.
+
+### Removing a regex mapping
+
+```
+DELETE /mappings/regex/mappingSource/targets/regex
+```
+
+Where:
+ - the `mappingSource` is the path parameter represents for the Regex Mapping mapping source
+ - the `regex` is the path parameter represents for the Regex Mapping regex
+
+The route will remove the regex mapping made from `regex` from the mapping source `mappingSource` 
+to RecipientRewriteTable.
+
+Example:
+
+```
+curl -XDELETE http://ip:port/mappings/regex/james@domain.tld/targets/[O_O]:james-intern@james.org
+```
+
+Response codes:
+
+ - 204: Mapping deleted successfully.
  - 400: Invalid `mappingSource` path parameter.
  - 400: Invalid `regex` path parameter.
 
