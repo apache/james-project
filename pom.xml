@@ -624,7 +624,7 @@
         <karaf.version>2.3.0</karaf.version>
         <karaf.tooling.exam.container.version>2.3.0</karaf.tooling.exam.container.version>
         <pax-logging-api.version>1.6.4</pax-logging-api.version>
-        <jackson.version>2.9.6</jackson.version>
+        <jackson.version>2.9.9</jackson.version>
         <feign.version>10.3.0</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
         <jetty.version>9.4.7.v20170914</jetty.version>
