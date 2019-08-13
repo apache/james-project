@@ -656,7 +656,7 @@
         <xercesImpl.version>2.12.0</xercesImpl.version>
         <xml-apis.version>1.4.01</xml-apis.version>
         <jasypt.version>1.9.2</jasypt.version>
-        <guice.version>4.2.0</guice.version>
+        <guice.version>4.2.2</guice.version>
         <jackrabbit-core.version>2.5.2</jackrabbit-core.version>
         <jackson1.version>1.9.2</jackson1.version>
         <logback.version>1.2.3</logback.version>
@@ -1963,7 +1963,7 @@
             <dependency>
                 <groupId>com.google.inject.extensions</groupId>
                 <artifactId>guice-multibindings</artifactId>
-                <version>4.0</version>
+                <version>${guice.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.ibm.icu</groupId>
