@@ -1931,7 +1931,7 @@
             <dependency>
                 <groupId>com.github.kongchen</groupId>
                 <artifactId>swagger-maven-plugin</artifactId>
-                <version>3.1.7</version>
+                <version>3.1.8</version>
             </dependency>
             <dependency>
                 <groupId>com.github.spullara.mustache.java</groupId>
