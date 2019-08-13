@@ -649,7 +649,7 @@
         <javax.activation.groupId>javax.activation</javax.activation.groupId>
         <javax.activation.artifactId>activation</javax.activation.artifactId>
         <javax.persistence.version>1.0.2</javax.persistence.version>
-        <jaxb.version>2.2.11</jaxb.version>
+        <jaxb.version>2.3.1</jaxb.version>
         <lucene.version>3.6.2</lucene.version>
         <xercesImpl.version>2.12.0</xercesImpl.version>
         <xml-apis.version>1.4.01</xml-apis.version>
@@ -2034,7 +2034,7 @@
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>
                 <artifactId>jaxb-core</artifactId>
-                <version>${jaxb.version}</version>
+                <version>2.3.0.1</version>
             </dependency>
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>
