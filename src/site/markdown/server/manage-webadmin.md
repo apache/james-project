@@ -1591,8 +1591,8 @@ DELETE /mappings/regex/mappingSource/targets/regex
 ```
 
 Where:
- - the `mappingSource` is the path parameter represents for the Regex Mapping mapping source
- - the `regex` is the path parameter represents for the Regex Mapping regex
+ - the `mappingSource` is the path parameter representing the Regex Mapping mapping source
+ - the `regex` is the path parameter representing the Regex Mapping regex
 
 The route will remove the regex mapping made from `regex` from the mapping source `mappingSource` 
 to RecipientRewriteTable.
