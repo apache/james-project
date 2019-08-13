@@ -604,7 +604,6 @@
         <javax-activation.version>1.1.1</javax-activation.version>
         <slf4j.version>1.7.25</slf4j.version>
         <servlet-api.version>2.4</servlet-api.version>
-        <commons-logging.version>1.1.1</commons-logging.version>
 
         <dnsjava.version>2.1.8</dnsjava.version>
         <junit.version>4.12</junit.version>
