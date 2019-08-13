@@ -33,7 +33,7 @@
     <name>Apache James :: Server :: JMAP</name>
 
     <properties>
-        <zalando.version>1.9.0</zalando.version>
+        <zalando.version>1.13.0</zalando.version>
     </properties>
 
     <dependencies>
