@@ -19,12 +19,12 @@
 
 package org.apache.james.mailbox.model;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.core.Domain;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 
 /**
  * Represents RFC 2087 Quota root
@@ -43,15 +43,20 @@ public class QuotaRoot {
         this.domain = domain;
     }
 
-    public boolean equals(Object o) {
-        if (o == null || !(o instanceof QuotaRoot)) {
-            return false;
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof QuotaRoot) {
+            QuotaRoot quotaRoot = (QuotaRoot) o;
+
+            return Objects.equals(this.value, quotaRoot.value)
+                && Objects.equals(this.domain, quotaRoot.domain);
         }
-        return value.equals(((QuotaRoot) o).getValue());
+        return false;
     }
 
-    public int hashCode() {
-        return Objects.hashCode(value, domain);
+    @Override
+    public final int hashCode() {
+        return Objects.hash(value, domain);
     }
 
     public String getValue() {
