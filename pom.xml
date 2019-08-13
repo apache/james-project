@@ -659,6 +659,8 @@
         <jackson1.version>1.9.2</jackson1.version>
         <logback.version>1.2.3</logback.version>
 
+        <bouncycastle.version>1.62</bouncycastle.version>
+
         <scala.base>2.12</scala.base>
         <scala.version>${scala.base}.8</scala.version>
 
@@ -2518,17 +2520,17 @@
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcmail-jdk15on</artifactId>
-                <version>1.60</version>
+                <version>${bouncycastle.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcpkix-jdk15on</artifactId>
-                <version>1.60</version>
+                <version>${bouncycastle.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk15on</artifactId>
-                <version>1.60</version>
+                <version>${bouncycastle.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
