@@ -588,7 +588,7 @@
         <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
         <activemq.version>5.15.9</activemq.version>
         <apache-mime4j.version>0.8.3</apache-mime4j.version>
-        <apache.openjpa.version>3.0.0</apache.openjpa.version>
+        <apache.openjpa.version>3.1.0</apache.openjpa.version>
         <camel.version>2.24.1</camel.version>
         <derby.version>10.14.2.0</derby.version>
         <hadoop.version>1.1.1</hadoop.version>
@@ -2108,28 +2108,6 @@
                 <version>2.6</version>
             </dependency>
             <dependency>
-<<<<<<< HEAD
-=======
-                <groupId>commons-logging</groupId>
-                <artifactId>commons-logging</artifactId>
-                <version>1.1</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>logkit</groupId>
-                        <artifactId>logkit</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>avalon-framework</groupId>
-                        <artifactId>avalon-framework</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>log4j</groupId>
-                        <artifactId>log4j</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
->>>>>>> JAMES-2855 remove javax.servlet:servlet-api
                 <groupId>commons-net</groupId>
                 <artifactId>commons-net</artifactId>
                 <version>3.6</version>
