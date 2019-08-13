@@ -627,7 +627,7 @@
         <jackson.version>2.9.9</jackson.version>
         <feign.version>10.3.0</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
-        <jetty.version>9.4.7.v20170914</jetty.version>
+        <jetty.version>9.4.19.v20190610</jetty.version>
         <metrics.version>3.2.6</metrics.version>
         <testcontainers.version>1.11.1</testcontainers.version>
         <assertj.version>3.3.0</assertj.version>
