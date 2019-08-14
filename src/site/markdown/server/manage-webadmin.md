@@ -41,6 +41,7 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
  - [Creating address group](#Creating_address_group)
  - [Creating regex mapping](#Creating_regex_mapping)
  - [Address Mappings](#Address_mappings)
+ - [User mappings](#User_mappings)
  - [Administrating mail repositories](#Administrating_mail_repositories)
  - [Administrating mail queues](#Administrating_mail_queues)
  - [Administrating DLP Configuration](#Administrating_DLP_Configuration)
@@ -1457,6 +1458,7 @@ Response codes:
  - 400: Alias structure or member is not valid
 
 ## Creating address domain
+
 You can use **webadmin** to define domain mappings.
 
 Given a configured source (from) domain and a destination (to) domain, when an email is sent to an address belonging to the source domain, then the domain part of this address is overwritten, the destination domain is then used.
@@ -1549,12 +1551,12 @@ Response codes:
 ## Creating regex mapping
 You can use **webadmin** to create regex mappings.
 
-A regex mapping contains a mapping source and a Java Regular Expression (regex) in String as the mapping value. 
-Everytime, if a mail containing a recipient matched with the mapping source, 
-then that mail will be re-routed to a new recipient address 
+A regex mapping contains a mapping source and a Java Regular Expression (regex) in String as the mapping value.
+Everytime, if a mail containing a recipient matched with the mapping source,
+then that mail will be re-routed to a new recipient address
 which is re written by the regex.
 
-This feature uses [Recipients rewrite table](/server/config-recipientrewritetable.html) and 
+This feature uses [Recipients rewrite table](/server/config-recipientrewritetable.html) and
 requires the [RecipientRewriteTable API](https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java)
 to be configured.
  - [Adding a regex mapping](#Adding_a_regex_mapping)
@@ -1690,6 +1692,45 @@ Type of mapping destination is Address
 Respond code:
 - 204: NO CONTENT
 - 400: INVALID PARAMETERS
+
+## User Mappings
+
+ - [Listing User Mappings](#Listing_user_mapping)
+
+### Listing User Mappings
+
+This endpoint allows receiving all mappings of a corresponding user.
+
+```
+curl -XGET http://ip:port/mappings/user/userAddress
+```
+
+Return all mappings of a user where:
+ - userAddress: is the selected user
+
+Response body:
+
+```
+[
+  {
+    "type": "Address",
+    "mapping": "user123@domain.tld"
+  },
+  {
+    "type": "Alias",
+    "mapping": "aliasuser123@domain.tld"
+  },
+  {
+    "type": "Group",
+    "mapping": "group123@domain.tld"
+  }
+]
+```
+
+Response codes:
+
+- 200: OK
+- 400: Invalid parameter value
 
 ## Administrating mail repositories
 
