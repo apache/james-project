@@ -80,7 +80,7 @@ public interface KeyContract extends EventBusContract {
             IntStream.range(0, eventCount)
                 .forEach(i -> eventBus().dispatch(EVENT, KEY_1).block());
 
-            WAIT_CONDITION.atMost(com.jayway.awaitility.Duration.TEN_MINUTES).until(() -> finishedExecutions.get() == eventCount);
+            WAIT_CONDITION.atMost(org.awaitility.Duration.TEN_MINUTES).until(() -> finishedExecutions.get() == eventCount);
             assertThat(rateExceeded).isFalse();
         }
 
@@ -317,7 +317,7 @@ public interface KeyContract extends EventBusContract {
             eventBus().dispatch(EVENT_2, KEY_1).block();
 
             WAIT_CONDITION
-                .until(() -> assertThat(listener.numberOfEventCalls()).isEqualTo(1));
+                .until(() -> listener.numberOfEventCalls() == 1);
         }
 
         @Test

@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.events;
 
-import static com.jayway.awaitility.Awaitility.await;
 import static org.apache.james.backend.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backend.rabbitmq.Constants.DIRECT_EXCHANGE;
 import static org.apache.james.backend.rabbitmq.Constants.DURABLE;
@@ -40,6 +39,7 @@ import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXC
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -201,10 +201,9 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 .runSuccessfullyWithin(Duration.ofMinutes(3));
 
             await()
-                .pollInterval(com.jayway.awaitility.Duration.FIVE_SECONDS)
-                .timeout(com.jayway.awaitility.Duration.TEN_MINUTES).until(() ->
-                    assertThat(countingListener1.numberOfEventCalls())
-                        .isEqualTo(totalGlobalRegistrations * totalDispatchOperations));
+                .pollInterval(org.awaitility.Duration.FIVE_SECONDS)
+                .timeout(org.awaitility.Duration.TEN_MINUTES).until(() ->
+                    countingListener1.numberOfEventCalls() == (totalGlobalRegistrations * totalDispatchOperations));
         }
 
         @Override
@@ -246,15 +245,15 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
             eventBus.dispatch(EVENT, NO_KEYS).block();
             WAIT_CONDITION
-                .until(() -> assertThat(eventBusListener.numberOfEventCalls()).isEqualTo(1));
+                .until(() -> eventBusListener.numberOfEventCalls() == 1);
             eventBus.stop();
 
             WAIT_CONDITION
-                .until(() -> assertThat(eventBus2Listener.numberOfEventCalls()).isEqualTo(1));
+                .until(() -> eventBus2Listener.numberOfEventCalls() == 1);
             eventBus2.stop();
 
             WAIT_CONDITION
-                .until(() -> assertThat(eventBus3Listener.numberOfEventCalls()).isEqualTo(1));
+                .until(() -> eventBus3Listener.numberOfEventCalls() == 1);
         }
     }
 

@@ -92,7 +92,7 @@ public interface GroupContract {
             IntStream.range(0, eventCount)
                 .forEach(i -> eventBus().dispatch(EVENT, NO_KEYS).block());
 
-            WAIT_CONDITION.atMost(com.jayway.awaitility.Duration.TEN_MINUTES).until(() -> finishedExecutions.get() == eventCount);
+            WAIT_CONDITION.atMost(org.awaitility.Duration.TEN_MINUTES).until(() -> finishedExecutions.get() == eventCount);
             assertThat(rateExceeded).isFalse();
         }
 
@@ -261,7 +261,7 @@ public interface GroupContract {
             eventBus().dispatch(EVENT_2, NO_KEYS).block();
 
             WAIT_CONDITION
-                .until(() -> assertThat(listener.numberOfEventCalls()).isEqualTo(1));
+                .until(() -> listener.numberOfEventCalls() == 1);
         }
 
         @Test

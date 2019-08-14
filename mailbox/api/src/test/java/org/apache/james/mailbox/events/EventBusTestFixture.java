@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.events;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -33,11 +33,11 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
+import org.awaitility.Duration;
+import org.awaitility.core.ConditionFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
 
 public interface EventBusTestFixture {
 

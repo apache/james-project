@@ -87,6 +87,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>${james.protocols.groupId}</groupId>
+            <artifactId>protocols-smtp</artifactId>
+        </dependency>
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <scope>test</scope>
@@ -94,11 +98,6 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jayway.awaitility</groupId>
-            <artifactId>awaitility</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.sun.mail</groupId>
@@ -125,10 +124,6 @@
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>artemis-jms-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.protocols.groupId}</groupId>
-            <artifactId>protocols-smtp</artifactId>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>

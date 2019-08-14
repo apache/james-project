@@ -57,13 +57,13 @@ import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.message.SingleBodyBuilder;
 import org.apache.james.util.ClassLoaderUtils;
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
 
 public abstract class AbstractMessageSearchIndexTest {
 

@@ -19,30 +19,29 @@
 
 package org.apache.james.mailbox.events;
 
-import static com.jayway.awaitility.Awaitility.await;
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT;
 import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_1;
 import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_2;
 import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_3;
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
 import static org.apache.james.mailbox.events.EventDeadLettersContract.GROUP_A;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.jayway.awaitility.core.ConditionFactory;
 
 public interface EventBusConcurrentTestContract {
 
     Duration FIVE_SECONDS = Duration.ofSeconds(5);
-    ConditionFactory AWAIT_CONDITION = await().timeout(new com.jayway.awaitility.Duration(5, TimeUnit.SECONDS));
+    ConditionFactory AWAIT_CONDITION = await().timeout(new org.awaitility.Duration(5, TimeUnit.SECONDS));
 
     int THREAD_COUNT = 10;
     int OPERATION_COUNT = 30;
@@ -79,9 +78,9 @@ public interface EventBusConcurrentTestContract {
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
 
-            AWAIT_CONDITION.until(() -> assertThat(totalEventsReceived(ImmutableList
-                    .of(countingListener1, countingListener2, countingListener3)))
-                .isEqualTo(totalGlobalRegistrations * TOTAL_DISPATCH_OPERATIONS));
+            AWAIT_CONDITION.until(() ->
+                totalEventsReceived(ImmutableList.of(countingListener1, countingListener2, countingListener3))
+                    == (totalGlobalRegistrations * TOTAL_DISPATCH_OPERATIONS));
         }
 
         @Test
@@ -102,9 +101,9 @@ public interface EventBusConcurrentTestContract {
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
 
-            AWAIT_CONDITION.until(() -> assertThat(totalEventsReceived(ImmutableList
-                    .of(countingListener1, countingListener2, countingListener3)))
-                .isEqualTo(totalKeyListenerRegistrations * totalEventBus * TOTAL_DISPATCH_OPERATIONS));
+            AWAIT_CONDITION.until(() ->
+                totalEventsReceived(ImmutableList.of(countingListener1, countingListener2, countingListener3))
+                    == (totalKeyListenerRegistrations * totalEventBus * TOTAL_DISPATCH_OPERATIONS));
         }
 
         @Test
@@ -132,9 +131,9 @@ public interface EventBusConcurrentTestContract {
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
 
-            AWAIT_CONDITION.until(() -> assertThat(totalEventsReceived(ImmutableList
-                    .of(countingListener1, countingListener2, countingListener3)))
-                .isEqualTo(totalEventDeliveredGlobally + totalEventDeliveredByKeys));
+            AWAIT_CONDITION.until(() ->
+                totalEventsReceived(ImmutableList.of(countingListener1, countingListener2, countingListener3))
+                    == (totalEventDeliveredGlobally + totalEventDeliveredByKeys));
         }
     }
 
@@ -164,9 +163,9 @@ public interface EventBusConcurrentTestContract {
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
 
-            AWAIT_CONDITION.until(() -> assertThat(totalEventsReceived(ImmutableList
-                    .of(countingListener1, countingListener2, countingListener3)))
-                .isEqualTo(totalGlobalRegistrations * TOTAL_DISPATCH_OPERATIONS));
+            AWAIT_CONDITION.until(() ->
+                totalEventsReceived(ImmutableList.of(countingListener1, countingListener2, countingListener3))
+                    == (totalGlobalRegistrations * TOTAL_DISPATCH_OPERATIONS));
         }
 
         @Test
@@ -192,9 +191,9 @@ public interface EventBusConcurrentTestContract {
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
 
-            AWAIT_CONDITION.until(() -> assertThat(totalEventsReceived(ImmutableList
-                    .of(countingListener1, countingListener2, countingListener3)))
-                .isEqualTo(totalKeyListenerRegistrations * totalEventBus * TOTAL_DISPATCH_OPERATIONS));
+            AWAIT_CONDITION.until(() ->
+                totalEventsReceived(ImmutableList.of(countingListener1, countingListener2, countingListener3))
+                    == (totalKeyListenerRegistrations * totalEventBus * TOTAL_DISPATCH_OPERATIONS));
         }
 
         @Test
@@ -228,9 +227,9 @@ public interface EventBusConcurrentTestContract {
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
 
-            AWAIT_CONDITION.until(() -> assertThat(totalEventsReceived(ImmutableList
-                    .of(countingListener1, countingListener2, countingListener3)))
-                .isEqualTo(totalEventDeliveredGlobally + totalEventDeliveredByKeys));
+            AWAIT_CONDITION.until(() ->
+                totalEventsReceived(ImmutableList.of(countingListener1, countingListener2, countingListener3))
+                    == (totalEventDeliveredGlobally + totalEventDeliveredByKeys));
         }
     }
 }
