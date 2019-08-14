@@ -37,7 +37,6 @@ class MappingSourceTest {
     @Test
     void shouldRespectBeanContract() {
         EqualsVerifier.forClass(MappingSource.class)
-            .withIgnoredFields("wildcard")
             .verify();
     }
 
