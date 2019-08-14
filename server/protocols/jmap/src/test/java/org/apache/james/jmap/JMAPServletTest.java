@@ -107,7 +107,7 @@ public class JMAPServletTest {
             .post("/")
         .then()
             .statusCode(200)
-            .content(equalTo("[[\"error\",{\"type\":\"invalidArgument\"},\"#0\"]]"));
+            .body(equalTo("[[\"error\",{\"type\":\"invalidArgument\"},\"#0\"]]"));
     }
 
     @Test
@@ -129,7 +129,7 @@ public class JMAPServletTest {
             .post("/")
         .then()
             .statusCode(200)
-            .content(equalTo("[[\"accounts\",{" + 
+            .body(equalTo("[[\"accounts\",{" +
                     "\"state\":\"f6a7e214\"," + 
                     "\"list\":[" + 
                         "{" + 
