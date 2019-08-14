@@ -145,7 +145,8 @@ public class PostDequeueDecoratorTest {
         
         MessageManager sentMailbox = mailboxManager.getMailbox(SENT_MAILBOX_PATH, mailboxSession);
         MessageResultIterator resultIterator = sentMailbox.getMessages(MessageRange.one(UID), FetchGroupImpl.FULL_CONTENT, mailboxSession);
-        assertThat(resultIterator).hasSize(1);
+        assertThat(resultIterator).toIterable()
+            .hasSize(1);
     }
     
     @Test
@@ -162,7 +163,8 @@ public class PostDequeueDecoratorTest {
         
         MessageManager mailbox = mailboxManager.getMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
         MessageResultIterator resultIterator = mailbox.getMessages(MessageRange.one(UID), FetchGroupImpl.FULL_CONTENT, mailboxSession);
-        assertThat(resultIterator).hasSize(0);
+        assertThat(resultIterator).toIterable()
+            .hasSize(0);
     }
     
     @Test
@@ -179,7 +181,8 @@ public class PostDequeueDecoratorTest {
         
         MessageManager mailbox = mailboxManager.getMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
         MessageResultIterator resultIterator = mailbox.getMessages(MessageRange.one(UID), FetchGroupImpl.FULL_CONTENT, mailboxSession);
-        assertThat(resultIterator).hasSize(1);
+        assertThat(resultIterator).toIterable()
+            .hasSize(1);
     }
     
     @Test
@@ -194,7 +197,8 @@ public class PostDequeueDecoratorTest {
         
         MessageManager mailbox = mailboxManager.getMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
         MessageResultIterator resultIterator = mailbox.getMessages(MessageRange.one(UID), FetchGroupImpl.FULL_CONTENT, mailboxSession);
-        assertThat(resultIterator).hasSize(1);
+        assertThat(resultIterator).toIterable()
+            .hasSize(1);
     }
     
     @Test
@@ -210,7 +214,8 @@ public class PostDequeueDecoratorTest {
         
         MessageManager mailbox = mailboxManager.getMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
         MessageResultIterator resultIterator = mailbox.getMessages(MessageRange.one(UID), FetchGroupImpl.FULL_CONTENT, mailboxSession);
-        assertThat(resultIterator).hasSize(1);
+        assertThat(resultIterator).toIterable()
+            .hasSize(1);
     }
     
     @Test
@@ -226,7 +231,8 @@ public class PostDequeueDecoratorTest {
         
         MessageManager mailbox = mailboxManager.getMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
         MessageResultIterator resultIterator = mailbox.getMessages(MessageRange.one(UID), FetchGroupImpl.FULL_CONTENT, mailboxSession);
-        assertThat(resultIterator).hasSize(1);
+        assertThat(resultIterator).toIterable()
+            .hasSize(1);
     }
     
     @Test
@@ -243,7 +249,8 @@ public class PostDequeueDecoratorTest {
         
         MessageManager mailbox = mailboxManager.getMailbox(OUTBOX_MAILBOX_PATH, mailboxSession);
         MessageResultIterator resultIterator = mailbox.getMessages(MessageRange.one(UID), FetchGroupImpl.FULL_CONTENT, mailboxSession);
-        assertThat(resultIterator).hasSize(1);
+        assertThat(resultIterator).toIterable()
+            .hasSize(1);
     }
 
     @Test

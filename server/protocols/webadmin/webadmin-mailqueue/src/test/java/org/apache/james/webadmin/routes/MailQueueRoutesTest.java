@@ -521,6 +521,7 @@ class MailQueueRoutesTest {
                     .patch(FIRST_QUEUE + "/mails");
 
                 assertThat(queue.browse())
+                    .toIterable()
                     .extracting(ManageableMailQueue.MailQueueItemView::getNextDelivery)
                     .hasSize(3)
                     .allSatisfy((delivery) -> {
@@ -798,6 +799,7 @@ class MailQueueRoutesTest {
                     .body("status", is("completed"));
 
                 assertThat(queue.browse())
+                    .toIterable()
                     .hasSize(1)
                     .first()
                     .satisfies(mailView -> assertThat(mailView.getMail().getName()).isEqualTo(FAKE_MAIL_NAME_2));
@@ -829,6 +831,7 @@ class MailQueueRoutesTest {
                     .body("status", is("completed"));
 
                 assertThat(queue.browse())
+                    .toIterable()
                     .hasSize(1)
                     .first()
                     .satisfies(mailView -> assertThat(mailView.getMail().getName()).isEqualTo(FAKE_MAIL_NAME_2));
@@ -867,6 +870,7 @@ class MailQueueRoutesTest {
                     .body("status", is("completed"));
 
                 assertThat(queue.browse())
+                    .toIterable()
                     .hasSize(2)
                     .extracting(ManageableMailQueue.MailQueueItemView::getMail)
                     .extracting(Mail::getName)
@@ -899,6 +903,7 @@ class MailQueueRoutesTest {
 
                 MailAddress deletedRecipientMailAddress = new MailAddress(recipient);
                 assertThat(queue.browse())
+                    .toIterable()
                     .hasSize(2)
                     .allSatisfy((ManageableMailQueue.MailQueueItemView item) -> {
                         assertThat(item.getMail().getRecipients()).doesNotContain(deletedRecipientMailAddress);

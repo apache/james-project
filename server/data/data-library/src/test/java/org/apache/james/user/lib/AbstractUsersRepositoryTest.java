@@ -109,7 +109,9 @@ public abstract class AbstractUsersRepositoryTest {
         //When
         Iterator<String> actual = usersRepository.list();
         //Then
-        assertThat(actual).isEmpty();
+        assertThat(actual)
+            .toIterable()
+            .isEmpty();
     }
     
     @Test
@@ -125,7 +127,9 @@ public abstract class AbstractUsersRepositoryTest {
         //When
         Iterator<String> actual = usersRepository.list();
         //Then
-        assertThat(actual).containsOnly(user1, user2, user3);
+        assertThat(actual)
+            .toIterable()
+            .containsOnly(user1, user2, user3);
     }
     
     @Test

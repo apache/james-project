@@ -136,7 +136,7 @@ public class GetQuotaRootProcessorTest {
 
         assertThat(responseCaptor.getValue())
             .extracting(StatusResponse::getServerResponseType)
-            .containsOnlyOnce(StatusResponse.Type.BAD);
+            .isEqualTo(StatusResponse.Type.BAD);
     }
 
     @Test
@@ -157,7 +157,7 @@ public class GetQuotaRootProcessorTest {
 
         assertThat(responseCaptor.getValue())
             .extracting(StatusResponse::getServerResponseType)
-            .containsOnlyOnce(StatusResponse.Type.NO);
+            .isEqualTo(StatusResponse.Type.NO);
     }
 
 }

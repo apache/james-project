@@ -74,6 +74,7 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
         getManageableMailQueue().flush();
 
         assertThat(getManageableMailQueue().browse())
+            .toIterable()
             .extracting(ManageableMailQueue.MailQueueItemView::getMail)
             .extracting(Mail::getName)
             .containsExactly("name1", "name2", "name3");

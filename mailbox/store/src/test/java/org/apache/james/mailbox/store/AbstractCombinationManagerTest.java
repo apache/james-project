@@ -184,7 +184,9 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setFlags(deleted, FlagsUpdateMode.ADD, messageId.getMessageId(), ImmutableList.of(mailbox1.getMailboxId()), session);
 
-        assertThat(messageManager1.expunge(MessageRange.all(), session)).containsOnly(messageId.getUid());
+        assertThat(messageManager1.expunge(MessageRange.all(), session))
+            .toIterable()
+            .containsOnly(messageId.getUid());
     }
 
     @Test
@@ -197,7 +199,9 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setInMailboxes(messageId.getMessageId(), ImmutableList.of(mailbox1.getMailboxId()), session);
 
-        assertThat(messageManager1.expunge(MessageRange.all(), session)).containsOnly(messageId.getUid());
+        assertThat(messageManager1.expunge(MessageRange.all(), session))
+            .toIterable()
+            .containsOnly(messageId.getUid());
     }
 
     @Test
@@ -257,7 +261,9 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        assertThat(messageManager2.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, session)).hasSize(1);
+        assertThat(messageManager2.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, session))
+            .toIterable()
+            .hasSize(1);
     }
 
     @Test
@@ -381,8 +387,11 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox2.getMailboxId()), session);
 
-        assertThat(messageManager1.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, session)).isEmpty();
+        assertThat(messageManager1.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, session))
+            .toIterable()
+            .isEmpty();
         assertThat(messageManager2.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, session))
+            .toIterable()
             .hasSize(1)
             .extracting(MessageResult::getMessageId)
             .containsOnly(messageId);

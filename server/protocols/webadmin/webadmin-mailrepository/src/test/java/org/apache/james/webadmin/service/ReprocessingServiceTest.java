@@ -102,8 +102,8 @@ public class ReprocessingServiceTest {
 
         reprocessingService.reprocess(PATH, KEY_2, NO_TARGET_PROCESSOR, SPOOL);
 
-        assertThat(queueFactory.getQueue(SPOOL).get()
-            .browse())
+        assertThat(queueFactory.getQueue(SPOOL).get().browse())
+            .toIterable()
             .extracting(item -> item.getMail().getName())
             .containsOnly(NAME_2);
     }
@@ -117,7 +117,8 @@ public class ReprocessingServiceTest {
 
         reprocessingService.reprocess(PATH, KEY_2, NO_TARGET_PROCESSOR, SPOOL);
 
-        assertThat(repository.list()).containsOnly(KEY_1, KEY_3);
+        assertThat(repository.list()).toIterable()
+            .containsOnly(KEY_1, KEY_3);
     }
 
     @Test
@@ -129,7 +130,8 @@ public class ReprocessingServiceTest {
 
         reprocessingService.reprocessAll(PATH, NO_TARGET_PROCESSOR, SPOOL, NOOP_CONSUMER);
 
-        assertThat(repository.list()).isEmpty();
+        assertThat(repository.list()).toIterable()
+            .isEmpty();
     }
 
     @Test
@@ -141,8 +143,8 @@ public class ReprocessingServiceTest {
 
         reprocessingService.reprocessAll(PATH, NO_TARGET_PROCESSOR, SPOOL, NOOP_CONSUMER);
 
-        assertThat(queueFactory.getQueue(SPOOL).get()
-            .browse())
+        assertThat(queueFactory.getQueue(SPOOL).get().browse())
+            .toIterable()
             .extracting(item -> item.getMail().getName())
             .containsOnly(NAME_1, NAME_2, NAME_3);
     }
@@ -172,8 +174,8 @@ public class ReprocessingServiceTest {
 
         reprocessingService.reprocessAll(PATH, NO_TARGET_PROCESSOR, SPOOL, concurrentRemoveConsumer);
 
-        assertThat(queueFactory.getQueue(SPOOL).get()
-            .browse())
+        assertThat(queueFactory.getQueue(SPOOL).get().browse())
+            .toIterable()
             .hasSize(2);
     }
 

@@ -182,7 +182,8 @@ public abstract class MessageWithAttachmentMapperTest {
         MessageMapper.FetchType fetchType = MessageMapper.FetchType.Body;
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(messageWith1Attachment.getUid()), fetchType, LIMIT);
         assertThat(retrievedMessageIterator.next()).isEqualTo(messageWith1Attachment, fetchType);
-        assertThat(retrievedMessageIterator).isEmpty();
+        assertThat(retrievedMessageIterator).toIterable()
+            .isEmpty();
     }
 
     private Mailbox createMailbox(MailboxPath mailboxPath) {

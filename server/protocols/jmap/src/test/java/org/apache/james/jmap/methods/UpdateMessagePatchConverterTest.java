@@ -50,7 +50,8 @@ public class UpdateMessagePatchConverterTest {
         UpdateMessagePatch result = sut.fromJsonNode(dummynode);
 
         assertThat(result).extracting(UpdateMessagePatch::getValidationErrors)
-                .isNotEmpty();
+            .asList()
+            .isNotEmpty();
     }
 
     @Test

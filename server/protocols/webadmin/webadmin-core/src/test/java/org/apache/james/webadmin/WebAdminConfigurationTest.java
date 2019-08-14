@@ -47,7 +47,7 @@ public class WebAdminConfigurationTest {
             .disabled()
             .build())
             .extracting(WebAdminConfiguration::isEnabled)
-            .containsExactly(false);
+            .isEqualTo(false);
     }
 
     @Test
@@ -65,7 +65,7 @@ public class WebAdminConfigurationTest {
                 .port(PORT)
                 .build())
             .extracting(WebAdminConfiguration::getPort)
-            .containsExactly(PORT);
+            .isEqualTo(PORT);
     }
 
 
@@ -77,7 +77,7 @@ public class WebAdminConfigurationTest {
                 .port(PORT)
                 .build())
             .extracting(WebAdminConfiguration::isEnabled)
-            .containsExactly(true);
+            .isEqualTo(true);
     }
 
     @Test
@@ -93,7 +93,7 @@ public class WebAdminConfigurationTest {
                 .port(PORT)
                 .build())
             .extracting(WebAdminConfiguration::getTlsConfiguration)
-            .containsExactly(tlsConfiguration);
+            .isEqualTo(tlsConfiguration);
     }
 
     @Test
@@ -109,7 +109,7 @@ public class WebAdminConfigurationTest {
                 .port(PORT)
                 .build())
             .extracting(WebAdminConfiguration::getTlsConfiguration)
-            .containsExactly(tlsConfiguration);
+            .isEqualTo(tlsConfiguration);
     }
 
     @Test
@@ -120,7 +120,7 @@ public class WebAdminConfigurationTest {
                 .port(PORT)
                 .build())
             .extracting(WebAdminConfiguration::isTlsEnabled)
-            .containsExactly(false);
+            .isEqualTo(false);
     }
 
     @Test
@@ -132,7 +132,7 @@ public class WebAdminConfigurationTest {
                 .corsEnabled()
                 .build())
             .extracting(WebAdminConfiguration::isEnableCORS)
-            .containsExactly(true);
+            .isEqualTo(true);
     }
 
     @Test
@@ -144,7 +144,7 @@ public class WebAdminConfigurationTest {
                 .corsEnabled()
                 .build())
             .extracting(WebAdminConfiguration::getUrlCORSOrigin)
-            .containsExactly("*");
+            .isEqualTo("*");
     }
 
     @Test
@@ -156,7 +156,7 @@ public class WebAdminConfigurationTest {
                 .corsDisabled()
                 .build())
             .extracting(WebAdminConfiguration::isEnableCORS)
-            .containsExactly(false);
+            .isEqualTo(false);
     }
 
     @Test
@@ -170,7 +170,7 @@ public class WebAdminConfigurationTest {
                 .urlCORSOrigin(origin)
                 .build())
             .extracting(WebAdminConfiguration::getUrlCORSOrigin)
-            .containsExactly(origin);
+            .isEqualTo(origin);
     }
 
     @Test
@@ -181,7 +181,7 @@ public class WebAdminConfigurationTest {
                 .port(PORT)
                 .build())
             .extracting(WebAdminConfiguration::getHost)
-            .containsExactly(WebAdminConfiguration.DEFAULT_HOST);
+            .isEqualTo(WebAdminConfiguration.DEFAULT_HOST);
     }
 
     @Test
@@ -194,7 +194,7 @@ public class WebAdminConfigurationTest {
                 .host(host)
                 .build())
             .extracting(WebAdminConfiguration::getHost)
-            .containsExactly(host);
+            .isEqualTo(host);
     }
 
     @Test

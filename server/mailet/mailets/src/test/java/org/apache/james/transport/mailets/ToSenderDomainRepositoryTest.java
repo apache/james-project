@@ -109,6 +109,7 @@ class ToSenderDomainRepositoryTest {
         MailRepository mailRepository = mailRepositoryStore.select(JAMES_LOCAL_REPOSITORY_URL);
 
         assertThat(mailRepository.list())
+            .toIterable()
             .extracting(mailRepository::retrieve)
             .extracting(Mail::getName)
             .containsOnly(mailName);

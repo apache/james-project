@@ -39,7 +39,7 @@ public class BlobIdTest {
 
     @Test
     public void shouldCreateInstanceWhenSimpleString() {
-        assertThat(BlobId.of("simple string")).extracting(BlobId::getRawValue).containsExactly("simple string");
+        assertThat(BlobId.of("simple string")).extracting(BlobId::getRawValue).isEqualTo("simple string");
     }
     
     @Test

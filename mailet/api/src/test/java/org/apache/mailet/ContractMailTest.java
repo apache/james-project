@@ -240,7 +240,9 @@ public abstract class ContractMailTest {
         void getAttributeNamesShouldReturnEmptyByDefault() {
             Mail mail = newMail();
 
-            assertThat(mail.getAttributeNames()).isEmpty();
+            assertThat(mail.getAttributeNames())
+                .toIterable()
+                .isEmpty();
         }
 
         @Test
@@ -248,7 +250,9 @@ public abstract class ContractMailTest {
             Mail mail = newMail();
             mail.setAttribute(KEY, VALUE);
 
-            assertThat(mail.getAttributeNames()).containsOnly(KEY);
+            assertThat(mail.getAttributeNames())
+                .toIterable()
+                .containsOnly(KEY);
         }
     }
 }

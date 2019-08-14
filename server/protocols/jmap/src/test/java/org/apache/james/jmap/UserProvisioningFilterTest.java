@@ -66,7 +66,8 @@ public class UserProvisioningFilterTest {
         sut.doFilter(request, response, chain);
 
         verify(chain).doFilter(request, response);
-        assertThat(usersRepository.list()).isEmpty();
+        assertThat(usersRepository.list()).toIterable()
+            .isEmpty();
     }
 
     @Test
@@ -79,7 +80,8 @@ public class UserProvisioningFilterTest {
         sut.doFilter(request, response, chain);
 
         verify(chain).doFilter(request, response);
-        assertThat(usersRepository.list()).contains(USERNAME);
+        assertThat(usersRepository.list()).toIterable()
+            .contains(USERNAME);
     }
 
     @Test
@@ -92,7 +94,8 @@ public class UserProvisioningFilterTest {
         sut.doFilter(request, response, chain);
 
         verify(chain).doFilter(request, response);
-        assertThat(usersRepository.list()).contains(USERNAME);
+        assertThat(usersRepository.list()).toIterable()
+            .contains(USERNAME);
     }
 
     @Test

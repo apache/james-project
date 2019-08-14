@@ -1152,22 +1152,22 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 softly -> {
                     softly.assertThat(metaData)
                         .extracting(MessageManager.MetaData::getHighestModSeq)
-                        .contains(0L);
+                        .isEqualTo(0L);
                     softly.assertThat(metaData)
                         .extracting(MessageManager.MetaData::getUidNext)
-                        .contains(MessageUid.MIN_VALUE);
+                        .isEqualTo(MessageUid.MIN_VALUE);
                     softly.assertThat(metaData)
                         .extracting(MessageManager.MetaData::getMessageCount)
-                        .contains(0L);
+                        .isEqualTo(0L);
                     softly.assertThat(metaData)
                         .extracting(MessageManager.MetaData::getUnseenCount)
-                        .contains(0L);
+                        .isEqualTo(0L);
                     softly.assertThat(metaData)
                         .extracting(MessageManager.MetaData::getRecent)
-                        .contains(ImmutableList.of());
+                        .isEqualTo(ImmutableList.of());
                     softly.assertThat(metaData)
                         .extracting(MessageManager.MetaData::getPermanentFlags)
-                        .contains(new Flags());
+                        .isEqualTo(new Flags());
                 });
         }
     }
@@ -1568,6 +1568,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 latchForHook2.await();
 
                 assertThat(inboxManager.getMessages(MessageRange.one(composeId1.getUid()), FetchGroupImpl.MINIMAL, session))
+                    .toIterable()
                     .isEmpty();
             }
         }

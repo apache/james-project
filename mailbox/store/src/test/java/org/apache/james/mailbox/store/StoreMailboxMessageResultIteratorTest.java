@@ -200,7 +200,8 @@ public class StoreMailboxMessageResultIteratorTest {
         BatchSizes batchSize = BatchSizes.uniqueBatchSize(3);
         StoreMessageResultIterator it = new StoreMessageResultIterator(new TestMessageMapper(MessageRange.all()), null, range, batchSize, new TestFetchGroup());
 
-        assertThat(it).extracting(input -> input.getUid().asLong())
+        assertThat(it).toIterable()
+            .extracting(input -> input.getUid().asLong())
             .containsExactly(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L);
     }
 

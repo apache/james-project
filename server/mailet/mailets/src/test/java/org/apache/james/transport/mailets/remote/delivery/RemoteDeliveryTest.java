@@ -118,6 +118,7 @@ public class RemoteDeliveryTest {
 
 
         assertThat(mailQueue.browse())
+            .toIterable()
             .extracting(MailProjection::from)
             .containsOnly(MailProjection.from(
                 FakeMail.builder()
@@ -139,6 +140,7 @@ public class RemoteDeliveryTest {
 
 
         assertThat(mailQueue.browse())
+            .toIterable()
             .extracting(MailProjection::from)
             .containsOnly(
                 MailProjection.from(FakeMail.builder()
@@ -165,6 +167,7 @@ public class RemoteDeliveryTest {
 
 
         assertThat(mailQueue.browse())
+            .toIterable()
             .extracting(MailProjection::from)
             .containsOnly(
                 MailProjection.from(FakeMail.builder()
@@ -195,6 +198,7 @@ public class RemoteDeliveryTest {
 
 
         assertThat(mailQueue.browse())
+            .toIterable()
             .extracting(MailProjection::from)
             .containsOnly(MailProjection.from(FakeMail.builder()
                 .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
@@ -211,7 +215,8 @@ public class RemoteDeliveryTest {
         Mail mail = FakeMail.builder().name(MAIL_NAME).build();
         remoteDelivery.service(mail);
 
-        assertThat(mailQueue.browse()).isEmpty();
+        assertThat(mailQueue.browse()).toIterable()
+            .isEmpty();
     }
 
     @Test
@@ -223,6 +228,7 @@ public class RemoteDeliveryTest {
         Mail mail = FakeMail.builder().name(MAIL_NAME).build();
         remoteDelivery.service(mail);
 
-        assertThat(mailQueue.browse()).isEmpty();
+        assertThat(mailQueue.browse()).toIterable()
+            .isEmpty();
     }
 }

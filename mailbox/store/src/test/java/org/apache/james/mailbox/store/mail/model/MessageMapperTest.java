@@ -172,7 +172,9 @@ public abstract class MessageMapperTest {
     public void deletedMessagesShouldBeRemovedFromStorage() throws MailboxException {
         saveMessages();
         messageMapper.delete(benwaInboxMailbox, message1);
-        assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), MessageMapper.FetchType.Metadata, LIMIT)).isEmpty();
+        assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), MessageMapper.FetchType.Metadata, LIMIT))
+            .toIterable()
+            .isEmpty();
     }
 
     @Test
@@ -187,7 +189,9 @@ public abstract class MessageMapperTest {
 
     @Test
     public void noMessageShouldBeRetrievedInEmptyMailbox() throws MailboxException {
-        assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(MessageUid.MIN_VALUE), MessageMapper.FetchType.Metadata, LIMIT)).isEmpty();
+        assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(MessageUid.MIN_VALUE), MessageMapper.FetchType.Metadata, LIMIT))
+            .toIterable()
+            .isEmpty();
     }
 
     @Test
@@ -256,7 +260,9 @@ public abstract class MessageMapperTest {
         MessageMapper.FetchType fetchType = MessageMapper.FetchType.Metadata;
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), fetchType, LIMIT);
         assertThat(retrievedMessageIterator.next()).isEqualTo(message1, fetchType);
-        assertThat(retrievedMessageIterator).isEmpty();
+        assertThat(retrievedMessageIterator)
+            .toIterable()
+            .isEmpty();
     }
 
     @Test
@@ -265,7 +271,9 @@ public abstract class MessageMapperTest {
         MessageMapper.FetchType fetchType = MessageMapper.FetchType.Headers;
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), fetchType, LIMIT);
         assertThat(retrievedMessageIterator.next()).isEqualTo(message1, fetchType);
-        assertThat(retrievedMessageIterator).isEmpty();
+        assertThat(retrievedMessageIterator)
+            .toIterable()
+            .isEmpty();
     }
 
     @Test
@@ -274,7 +282,9 @@ public abstract class MessageMapperTest {
         MessageMapper.FetchType fetchType = MessageMapper.FetchType.Body;
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), fetchType, LIMIT);
         assertThat(retrievedMessageIterator.next()).isEqualToWithoutAttachment(message1, fetchType);
-        assertThat(retrievedMessageIterator).isEmpty();
+        assertThat(retrievedMessageIterator)
+            .toIterable()
+            .isEmpty();
     }
 
     @Test
@@ -283,14 +293,18 @@ public abstract class MessageMapperTest {
         MessageMapper.FetchType fetchType = FetchType.Full;
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), fetchType, LIMIT);
         assertThat(retrievedMessageIterator.next()).isEqualToWithoutAttachment(message1, fetchType);
-        assertThat(retrievedMessageIterator).isEmpty();
+        assertThat(retrievedMessageIterator)
+            .toIterable()
+            .isEmpty();
     }
 
     @Test
     public void retrievingMessagesWithALimitShouldLimitTheNumberOfMessages() throws MailboxException {
         int limit = 2;
         saveMessages();
-        assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Full, limit)).hasSize(2);
+        assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), MessageMapper.FetchType.Full, limit))
+            .toIterable()
+            .hasSize(2);
     }
 
     @Test
@@ -650,6 +664,7 @@ public abstract class MessageMapperTest {
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
         long modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
         assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.ADD), MessageRange.one(message1.getUid())))
+            .toIterable()
             .containsOnly(UpdatedFlags.builder()
                     .uid(message1.getUid())
                     .modSeq(modSeq + 1)
@@ -682,6 +697,7 @@ public abstract class MessageMapperTest {
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new FlagsBuilder().add(Flags.Flag.FLAGGED, Flags.Flag.SEEN).build(), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
         long modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
         assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REMOVE), MessageRange.one(message1.getUid())))
+            .toIterable()
             .containsOnly(
                 UpdatedFlags.builder()
                     .uid(message1.getUid())
@@ -703,19 +719,24 @@ public abstract class MessageMapperTest {
     public void updateFlagsOnRangeShouldAffectMessagesContainedInThisRange() throws MailboxException {
         saveMessages();
         assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE), MessageRange.range(message1.getUid(), message3.getUid())))
+            .toIterable()
             .hasSize(3);
     }
 
     @Test
     public void updateFlagsWithRangeFromShouldAffectMessagesContainedInThisRange() throws MailboxException {
         saveMessages();
-        assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE), MessageRange.from(message3.getUid()))).hasSize(3);
+        assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE), MessageRange.from(message3.getUid())))
+            .toIterable()
+            .hasSize(3);
     }
 
     @Test
     public void updateFlagsWithRangeAllRangeShouldAffectAllMessages() throws MailboxException {
         saveMessages();
-        assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE), MessageRange.all())).hasSize(5);
+        assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE), MessageRange.all()))
+            .toIterable()
+            .hasSize(5);
     }
 
     @Test
@@ -803,6 +824,7 @@ public abstract class MessageMapperTest {
         saveMessages();
         long modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
         assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(USER_FLAG), FlagsUpdateMode.ADD), MessageRange.one(message1.getUid())))
+            .toIterable()
             .containsOnly(
                 UpdatedFlags.builder()
                     .uid(message1.getUid())
@@ -820,6 +842,7 @@ public abstract class MessageMapperTest {
             messageMapper.updateFlags(benwaInboxMailbox,
                 new FlagsUpdateCalculator(new Flags(USER_FLAG), FlagsUpdateMode.REMOVE),
                 MessageRange.one(message1.getUid())))
+            .toIterable()
             .containsOnly(
                 UpdatedFlags.builder()
                     .uid(message1.getUid())
@@ -1111,6 +1134,7 @@ public abstract class MessageMapperTest {
         saveMessages();
 
         assertThat(messageMapper.listAllMessageUids(benwaInboxMailbox))
+            .toIterable()
             .containsOnly(message1.getUid(),
                 message2.getUid(),
                 message3.getUid(),
@@ -1129,6 +1153,7 @@ public abstract class MessageMapperTest {
         messageMapper.deleteMessages(benwaInboxMailbox, uids);
 
         assertThat(messageMapper.listAllMessageUids(benwaInboxMailbox))
+            .toIterable()
             .containsOnly(message1.getUid(), message5.getUid());
     }
 

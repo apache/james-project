@@ -85,6 +85,7 @@ public interface PriorityManageableMailQueueContract extends ManageableMailQueue
             .build());
 
         assertThat(getManageableMailQueue().browse())
+            .toIterable()
             .extracting(ManageableMailQueue.MailQueueItemView::getMail)
             .extracting(Mail::getName)
             .containsExactly("name9", "name8", "name7", "name6", "name5", "name4", "name3", "name2", "name1", "name0");

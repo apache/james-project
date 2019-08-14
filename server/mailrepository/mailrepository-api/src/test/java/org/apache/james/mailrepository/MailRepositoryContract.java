@@ -267,7 +267,9 @@ public interface MailRepositoryContract {
     default void newlyCreatedRepositoryShouldNotContainAnyMail() throws Exception {
         MailRepository testee = retrieveRepository();
 
-        assertThat(testee.list()).isEmpty();
+        assertThat(testee.list())
+            .toIterable()
+            .isEmpty();
     }
 
     @Test
@@ -291,7 +293,9 @@ public interface MailRepositoryContract {
 
         testee.remove(MAIL_1);
 
-        assertThat(retrieveRepository().list()).doesNotContain(MAIL_1);
+        assertThat(retrieveRepository().list())
+            .toIterable()
+            .doesNotContain(MAIL_1);
         assertThat(retrieveRepository().retrieve(MAIL_1)).isNull();
     }
 
@@ -303,7 +307,9 @@ public interface MailRepositoryContract {
 
         testee.remove(MAIL_1);
 
-        assertThat(retrieveRepository().list()).contains(MAIL_2);
+        assertThat(retrieveRepository().list())
+            .toIterable()
+            .contains(MAIL_2);
     }
 
     @Test
@@ -321,6 +327,7 @@ public interface MailRepositoryContract {
         testee.remove(ImmutableList.of(mail1, mail3));
 
         assertThat(retrieveRepository().list())
+            .toIterable()
             .contains(MAIL_2)
             .doesNotContain(MAIL_1, key3);
     }
@@ -340,6 +347,7 @@ public interface MailRepositoryContract {
         testee.remove(mail2);
 
         assertThat(retrieveRepository().list())
+            .toIterable()
             .contains(MAIL_1, key3)
             .doesNotContain(MAIL_2);
     }
@@ -350,7 +358,9 @@ public interface MailRepositoryContract {
 
         testee.remove(ImmutableList.of(createMail(UNKNOWN_KEY)));
 
-        assertThat(retrieveRepository().list()).isEmpty();
+        assertThat(retrieveRepository().list())
+            .toIterable()
+            .isEmpty();
     }
 
     @Test
@@ -382,7 +392,9 @@ public interface MailRepositoryContract {
 
         testee.remove(createMail(UNKNOWN_KEY));
 
-        assertThat(retrieveRepository().list()).isEmpty();
+        assertThat(retrieveRepository().list())
+            .toIterable()
+            .isEmpty();
     }
 
     @Test
@@ -392,7 +404,9 @@ public interface MailRepositoryContract {
 
         testee.store(createMail(MAIL_2));
 
-        assertThat(testee.list()).containsOnly(MAIL_1, MAIL_2);
+        assertThat(testee.list())
+            .toIterable()
+            .containsOnly(MAIL_1, MAIL_2);
     }
 
     @Test
@@ -403,7 +417,9 @@ public interface MailRepositoryContract {
         Mail updatedMail = createMail(MAIL_1, "modified content");
         testee.store(updatedMail);
 
-        assertThat(testee.list()).hasSize(1);
+        assertThat(testee.list())
+            .toIterable()
+            .hasSize(1);
         assertThat(testee.retrieve(MAIL_1)).satisfies(actual -> checkMailEquality(actual, updatedMail));
     }
 
@@ -416,7 +432,9 @@ public interface MailRepositoryContract {
         mail.setAttribute(new Attribute(TEST_ATTRIBUTE.getName(), AttributeValue.of("newValue")));
         testee.store(mail);
 
-        assertThat(testee.list()).hasSize(1);
+        assertThat(testee.list())
+            .toIterable()
+            .hasSize(1);
         assertThat(testee.retrieve(MAIL_1)).satisfies(actual -> checkMailEquality(actual, mail));
     }
 
@@ -431,7 +449,10 @@ public interface MailRepositoryContract {
         mail.addSpecificHeaderForRecipient(PerRecipientHeaders.Header.builder().name("fizz").value("buzz").build(), recipient1);
         testee.store(mail);
 
-        assertThat(testee.list()).hasSize(1).containsOnly(MAIL_1);
+        assertThat(testee.list())
+            .toIterable()
+            .hasSize(1)
+            .containsOnly(MAIL_1);
         assertThat(testee.retrieve(MAIL_1)).satisfies(actual -> checkMailEquality(actual, mail));
     }
 
@@ -473,7 +494,9 @@ public interface MailRepositoryContract {
             .operationCount(20)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
-        assertThat(testee.list()).containsOnlyElementsOf(expectedResult);
+        assertThat(testee.list())
+            .toIterable()
+            .containsOnlyElementsOf(expectedResult);
     }
 
     default MailKey computeKey(int keyIndex) {

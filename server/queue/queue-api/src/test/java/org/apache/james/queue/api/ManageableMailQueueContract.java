@@ -117,7 +117,9 @@ public interface ManageableMailQueueContract extends MailQueueContract {
     default void browseShouldReturnEmptyByDefault() throws Exception {
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
 
-        assertThat(items).isEmpty();
+        assertThat(items)
+            .toIterable()
+            .isEmpty();
     }
 
     @Test
@@ -128,7 +130,9 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
 
-        assertThat(items).extracting(ManageableMailQueue.MailQueueItemView::getMail)
+        assertThat(items)
+            .toIterable()
+            .extracting(ManageableMailQueue.MailQueueItemView::getMail)
             .extracting(Mail::getName)
             .containsExactly("name");
     }
@@ -148,6 +152,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
 
         assertThat(items)
+            .toIterable()
             .extracting(ManageableMailQueue.MailQueueItemView::getMail)
             .extracting(Mail::getName)
             .containsExactly("name1", "name2", "name3");
@@ -518,6 +523,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "name2");
 
         assertThat(getManageableMailQueue().browse())
+            .toIterable()
             .extracting(ManageableMailQueue.MailQueueItemView::getMail)
             .extracting(Mail::getName)
             .containsExactly("name1");
@@ -537,6 +543,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         getManageableMailQueue().remove(ManageableMailQueue.Type.Sender, OTHER_AT_LOCAL.asString());
 
         assertThat(getManageableMailQueue().browse())
+            .toIterable()
             .extracting(ManageableMailQueue.MailQueueItemView::getMail)
             .extracting(Mail::getName)
             .containsExactly("name2");
@@ -556,6 +563,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         getManageableMailQueue().remove(ManageableMailQueue.Type.Recipient, RECIPIENT2.asString());
 
         assertThat(getManageableMailQueue().browse())
+            .toIterable()
             .extracting(ManageableMailQueue.MailQueueItemView::getMail)
             .extracting(Mail::getName)
             .containsExactly("name1");
@@ -575,6 +583,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         getManageableMailQueue().remove(ManageableMailQueue.Type.Recipient, RECIPIENT2.asString());
 
         assertThat(getManageableMailQueue().browse())
+            .toIterable()
             .extracting(ManageableMailQueue.MailQueueItemView::getMail)
             .extracting(Mail::getName)
             .containsExactly("name2");
@@ -616,7 +625,9 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         getManageableMailQueue().clear();
 
-        assertThat(getManageableMailQueue().browse()).isEmpty();
+        assertThat(getManageableMailQueue().browse())
+            .toIterable()
+            .isEmpty();
     }
 
     @Test
