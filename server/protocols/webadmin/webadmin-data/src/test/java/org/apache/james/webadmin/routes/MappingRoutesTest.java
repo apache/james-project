@@ -49,6 +49,15 @@ import net.javacrumbs.jsonunit.core.Option;
 
 class MappingRoutesTest {
 
+    public static final String ALICE_ADDRESS = "alice123@domain.tld";
+    public static final String ALICE_USER = "user123@domain.tld";
+    public static final String ALICE_ALIAS = "aliasuser123@domain.tld";
+    public static final String ALICE_GROUP = "group123@domain.tld";
+    public static final String BOB_ADDRESS = "bob456@domain.tld";
+    public static final String BOB_USER = "user456@domain.tld";
+    public static final String BOB_ALIAS = "aliasuser456@domain.tld";
+    public static final String BOB_GROUP = "group456@domain.tld";
+
     private WebAdminServer webAdminServer;
     private MemoryRecipientRewriteTable recipientRewriteTable;
 
@@ -60,6 +69,8 @@ class MappingRoutesTest {
         DomainList domainList = new MemoryDomainList(dnsService);
         domainList.addDomain(Domain.of("domain.tld"));
         domainList.addDomain(Domain.of("aliasdomain.tld"));
+        domainList.addDomain(Domain.of("abc"));
+        domainList.addDomain(Domain.of("xyz"));
 
         recipientRewriteTable.setDomainList(domainList);
 
@@ -414,4 +425,146 @@ class MappingRoutesTest {
                 "}"
             );
     }
+
+     @Test
+    void getUserMappingsShouldReturnNotFoundByDefault() {
+        when()
+            .get("/user/")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .body("statusCode", is(HttpStatus.NOT_FOUND_404));
+    }
+
+    @Test
+    void getUserMappingsShouldBeEmptyWhenUserIsNotFound() {
+        when()
+            .get("/user/randomuser@domain.tld")
+        .then()
+            .contentType(ContentType.JSON)
+            .statusCode(HttpStatus.OK_200)
+            .body(is("[]"));
+    }
+
+    @Test
+    void getUserMappingsShouldReturnCorrespondingMappingsFromUsername() throws Exception {
+        recipientRewriteTable.addAddressMapping(
+            MappingSource.fromUser(User.fromUsername(ALICE_ADDRESS)), ALICE_USER);
+        recipientRewriteTable.addAliasMapping(
+            MappingSource.fromUser(User.fromUsername(ALICE_ADDRESS)), ALICE_ALIAS);
+        recipientRewriteTable.addGroupMapping(
+            MappingSource.fromUser(User.fromUsername(ALICE_ADDRESS)), ALICE_GROUP);
+
+        recipientRewriteTable.addAddressMapping(
+            MappingSource.fromUser(User.fromUsername(BOB_ADDRESS)), BOB_USER);
+        recipientRewriteTable.addAliasMapping(
+            MappingSource.fromUser(User.fromUsername(BOB_ADDRESS)), BOB_ALIAS);
+        recipientRewriteTable.addGroupMapping(
+            MappingSource.fromUser(User.fromUsername(BOB_ADDRESS)), BOB_GROUP);
+
+        String jsonBody = when()
+                .get("/user/alice123@domain.tld")
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+            .extract()
+                .body()
+                .asString();
+
+        assertThatJson(jsonBody)
+            .when(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo("[" +
+                "  {" +
+                "    \"type\": \"Address\"," +
+                "    \"mapping\": \"user123@domain.tld\"" +
+                "  }," +
+                "  {" +
+                "    \"type\": \"Alias\"," +
+                "    \"mapping\": \"aliasuser123@domain.tld\"" +
+                "  }," +
+                "  {" +
+                "    \"type\": \"Group\"," +
+                "    \"mapping\": \"group123@domain.tld\"" +
+                "  }" +
+                "]");
+    }
+
+    @Test
+    void getUserMappingsShouldReturnSameMappingsWhenParametersInUpperCase() throws RecipientRewriteTableException {
+        recipientRewriteTable.addAddressMapping(
+            MappingSource.fromUser(User.fromUsername(ALICE_ADDRESS)), ALICE_USER);
+        recipientRewriteTable.addAliasMapping(
+            MappingSource.fromUser(User.fromUsername(ALICE_ADDRESS)), ALICE_ALIAS);
+        recipientRewriteTable.addGroupMapping(
+            MappingSource.fromUser(User.fromUsername(ALICE_ADDRESS)), ALICE_GROUP);
+
+        recipientRewriteTable.addAddressMapping(
+            MappingSource.fromUser(User.fromUsername(BOB_ADDRESS)), BOB_USER);
+        recipientRewriteTable.addAliasMapping(
+            MappingSource.fromUser(User.fromUsername(BOB_ADDRESS)), BOB_ALIAS);
+        recipientRewriteTable.addGroupMapping(
+            MappingSource.fromUser(User.fromUsername(BOB_ADDRESS)), BOB_GROUP);
+
+        String jsonBody = when()
+                .get("/user/AliCE123@domain.tld")
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+            .extract()
+                .body()
+                .asString();
+
+        assertThatJson(jsonBody)
+            .when(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo("[" +
+                "  {" +
+                "    \"type\": \"Address\"," +
+                "    \"mapping\": \"user123@domain.tld\"" +
+                "  }," +
+                "  {" +
+                "    \"type\": \"Alias\"," +
+                "    \"mapping\": \"aliasuser123@domain.tld\"" +
+                "  }," +
+                "  {" +
+                "    \"type\": \"Group\"," +
+                "    \"mapping\": \"group123@domain.tld\"" +
+                "  }" +
+                "]");
+    }
+
+    @Test
+    void getUserMappingShouldReturnBadRequestWhenInvalidParameter() {
+        when()
+            .get("/user/alice123@domain@domain.tld")
+        .then()
+            .contentType((ContentType.JSON))
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+        .body("statusCode", is(400))
+        .body("type", is("InvalidArgument"))
+        .body("message", is("Invalid arguments supplied in the user request"))
+        .body("details", is("The username should not contain multiple domain delimiter."));
+    }
+
+    @Test
+    void getUserMappingShouldReturnEmptyWhenNoDomainOnUserParameter() throws RecipientRewriteTableException {
+        recipientRewriteTable.addAddressMapping(
+            MappingSource.fromUser(User.fromUsername(ALICE_ADDRESS)), ALICE_USER);
+        recipientRewriteTable.addAliasMapping(
+            MappingSource.fromUser(User.fromUsername(ALICE_ADDRESS)), ALICE_ALIAS);
+        recipientRewriteTable.addGroupMapping(
+            MappingSource.fromUser(User.fromUsername(ALICE_ADDRESS)), ALICE_GROUP);
+
+        String jsonBody = when()
+                .get("/user/alice")
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+            .extract()
+                .body()
+                .asString();
+
+        assertThatJson(jsonBody)
+            .when(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo("[]");
+    }
+    
 }
