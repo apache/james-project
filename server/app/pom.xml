@@ -434,19 +434,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!-- Comment jackrabbit dependency to avoid lucene version clash with mailbox-lucene (JAMES-1297)
-            <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-core</artifactId>
-            <scope>runtime</scope>
-            <exclusions>
-            <exclusion>
-            <groupId>jdom</groupId>
-            <artifactId>jdom</artifactId>
-            </exclusion>
-            </exclusions>
-            </dependency>
-        -->
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>

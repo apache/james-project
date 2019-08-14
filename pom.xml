@@ -594,7 +594,6 @@
         <javax.inject.version>1</javax.inject.version>
         <javax.activation.groupId>javax.activation</javax.activation.groupId>
         <javax.activation.artifactId>activation</javax.activation.artifactId>
-        <jackrabbit.version>2.17.5</jackrabbit.version>
         <jsieve.version>0.7</jsieve.version>
         <spring.version>3.2.18.RELEASE</spring.version>
         <activmq-artemis.version>2.9.0</activmq-artemis.version>
@@ -654,7 +653,6 @@
         <xml-apis.version>1.4.01</xml-apis.version>
         <jasypt.version>1.9.3</jasypt.version>
         <guice.version>4.2.2</guice.version>
-        <jackrabbit-core.version>2.5.2</jackrabbit-core.version>
         <jackson1.version>1.9.2</jackson1.version>
         <logback.version>1.2.3</logback.version>
 
@@ -2334,21 +2332,6 @@
                     <exclusion>
                         <groupId>commons-logging</groupId>
                         <artifactId>commons-logging</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.jackrabbit</groupId>
-                <artifactId>jackrabbit-core</artifactId>
-                <version>${jackrabbit.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.pdfbox</groupId>
-                        <artifactId>pdfbox</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>edu.ucar</groupId>
-                        <artifactId>netcdf</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
