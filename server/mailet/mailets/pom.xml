@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>james-server-mailets</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Mailets</name>
 
@@ -290,10 +290,6 @@
                 <configuration>
                     <outputDirectory>target/mailetdocs</outputDirectory>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

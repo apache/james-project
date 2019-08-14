@@ -87,29 +87,6 @@ to the library requiring no extra coding.</description>
                     -->
                 </configuration>
             </plugin>
-            <!--
-                <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <version>1.4.3</version>
-                <executions>
-                <execution>
-                <id>bundle-manifest</id>
-                <phase>process-classes</phase>
-                <goals>
-                <goal>manifest</goal>
-                </goals>
-                </execution>
-                </executions>
-                <extensions>true</extensions>
-                <configuration>
-                <instructions>
-                <Export-Package>org.apache.james.mpt.maven</Export-Package>
-                <Embed-Dependency>*;scope=runtime</Embed-Dependency>
-                </instructions>
-                </configuration>
-                </plugin>
-            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>

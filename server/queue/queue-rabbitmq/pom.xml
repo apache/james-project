@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>james-server-queue-rabbitmq</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Mail Queue :: RabbitMQ</name>
 

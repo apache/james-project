@@ -140,25 +140,6 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>versions-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <artifactId>maven-release-plugin</artifactId>
-                <configuration>
-                    <!-- During release:perform, enable the "release" profile -->
-                    <releaseProfiles>with-assembly</releaseProfiles>
-                    <goals>deploy assembly:single</goals>
-                </configuration>
-            </plugin>
-        </plugins>
     </build>
 
 </project>

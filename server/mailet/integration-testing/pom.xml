@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>james-server-mailets-integration-testing</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Mailets Integration Testing</name>
 

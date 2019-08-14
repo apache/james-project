@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>james-server-filesystem-api</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Filesystem API</name>
 
@@ -75,11 +75,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
             </plugin>
         </plugins>
     </build>

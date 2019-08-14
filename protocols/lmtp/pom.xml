@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>protocols-lmtp</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Protocols :: LMTP</name>
 

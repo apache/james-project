@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>james-server-data-jpa</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Data :: JPA Persistence</name>
 
@@ -189,11 +189,6 @@
                         <phase>process-classes</phase>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

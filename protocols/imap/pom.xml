@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>protocols-imap</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Protocols :: IMAP</name>
 

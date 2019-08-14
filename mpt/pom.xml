@@ -52,6 +52,7 @@
     </issueManagement>
 
     <properties>
+        <felix.plugin.version>3.3.0</felix.plugin.version>
         <commons-lang.version>2.6</commons-lang.version>
         <derby.version>10.14.2.0</derby.version>
         <guice.version>4.0</guice.version>

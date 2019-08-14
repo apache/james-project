@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>protocols-pop3</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Protocols :: POP3</name>
 

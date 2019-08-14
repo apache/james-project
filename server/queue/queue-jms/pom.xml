@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>james-server-queue-jms</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Mail Queue :: JMS</name>
 
@@ -159,13 +159,4 @@
             <artifactId>threeten-extra</artifactId>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 </project>

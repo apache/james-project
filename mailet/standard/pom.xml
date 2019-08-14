@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>apache-mailet-standard</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Standard Mailets</name>
     <description>Apache James Standard Mailets is a rich collection of general purpose mailets

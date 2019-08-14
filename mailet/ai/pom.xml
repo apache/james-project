@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>apache-mailet-ai</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: AI Mailets</name>
     <description>Collects mail processors making use of artificial intelligence (AI) methods.</description>

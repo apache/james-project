@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>apache-mailet-crypto</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Crypto Mailets</name>
     <description>Apache James Cryptographic Mailets is a collection of mailets which use cryptography.
@@ -66,15 +66,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <configuration>
-                    <instructions>
-                        <Export-Package>org.apache.james.mailet.crypto.*</Export-Package>
-                    </instructions>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>maven-mailetdocs-plugin</artifactId>

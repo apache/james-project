@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>protocols-netty</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Protocols :: Netty Implementation</name>
 

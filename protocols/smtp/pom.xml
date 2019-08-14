@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>protocols-smtp</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Protocols :: SMTP</name>
 

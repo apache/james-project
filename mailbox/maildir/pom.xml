@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>apache-james-mailbox-maildir</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>Apache James :: Mailbox :: Maildir</name>
 
     <dependencies>

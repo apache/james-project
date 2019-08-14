@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>apache-mailet-api</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Mailet API</name>
     <description>The Apache Mailet API is a flexible specification for mail processing agents.</description>

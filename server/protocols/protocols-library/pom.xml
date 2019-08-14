@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>james-server-protocols-library</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Protocols Library</name>
 
@@ -106,10 +106,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

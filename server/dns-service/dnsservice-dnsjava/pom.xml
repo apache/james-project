@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>james-server-dnsservice-dnsjava</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Server :: DNS Service :: Implementation</name>
 
@@ -103,15 +103,5 @@
             <artifactId>slf4j-log4j12</artifactId>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

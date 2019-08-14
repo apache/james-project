@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>zookeeper-sequence-provider</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>Apache James :: Mailbox :: Zookeeper Sequence Provider</name>
     <description>High performance distribuited sequence provider based on ZooKeepr</description>
 

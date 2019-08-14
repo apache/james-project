@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>james-server-data-library</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Data :: Library</name>
 
@@ -163,11 +163,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
             </plugin>
         </plugins>
     </build>

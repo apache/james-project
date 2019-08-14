@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>james-server-mailbox-jmx</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Mailbox :: JMX</name>
 
@@ -89,15 +89,4 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-            </plugin>
-        </plugins>
-    </build>
-
 </project>
