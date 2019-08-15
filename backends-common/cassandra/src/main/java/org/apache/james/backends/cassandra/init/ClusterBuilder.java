@@ -137,7 +137,8 @@ public class ClusterBuilder {
         Preconditions.checkState(!(servers.isPresent() && port.isPresent()), "You can't specify a list of servers and a port at the same time");
         Preconditions.checkState(username.isPresent() == password.isPresent(), "If you specify username, you must specify password");
 
-        Cluster.Builder clusterBuilder = Cluster.builder();
+        Cluster.Builder clusterBuilder = Cluster.builder()
+            .withoutJMXReporting();
         getServers().forEach(
                 (server) -> clusterBuilder.addContactPoint(server.getHostName()).withPort(server.getPort())
         );
