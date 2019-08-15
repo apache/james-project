@@ -43,7 +43,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-event-memory</artifactId>
         </dependency>
         <dependency>
@@ -57,11 +57,6 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-mime4j-james-utils</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>metrics-tests</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -79,6 +74,11 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>metrics-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>metrics-tests</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
