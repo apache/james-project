@@ -430,6 +430,11 @@ public class FakeMail implements Mail {
     }
 
     @Override
+    public Map<AttributeName, Attribute> getAttributes() {
+        return attributes;
+    }
+
+    @Override
     public Stream<Attribute> attributes() {
         return attributes.values().stream();
     }

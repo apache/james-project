@@ -664,6 +664,11 @@ public class MailImpl implements Disposable, Mail {
         message = null;
     }
 
+    @Override
+    public Map<AttributeName, Attribute> getAttributes() {
+        return attributes;
+    }
+
     /**
      * <p>
      * This method is necessary, when Mail repositories needs to deal explicitly
