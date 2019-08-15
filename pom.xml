@@ -646,7 +646,6 @@
         <javax.persistence.version>1.0.2</javax.persistence.version>
         <jaxb.version>2.3.1</jaxb.version>
         <lucene.version>3.6.2</lucene.version>
-        <xercesImpl.version>2.12.0</xercesImpl.version>
         <jasypt.version>1.9.3</jasypt.version>
         <guice.version>4.2.2</guice.version>
         <jackson1.version>1.9.2</jackson1.version>
@@ -656,7 +655,6 @@
 
         <scala.base>2.12</scala.base>
         <scala.version>${scala.base}.8</scala.version>
-
     </properties>
 
     <dependencyManagement>
@@ -2714,11 +2712,6 @@
                 <groupId>pl.pragmatists</groupId>
                 <artifactId>JUnitParams</artifactId>
                 <version>1.1.1</version>
-            </dependency>
-            <dependency>
-                <groupId>xerces</groupId>
-                <artifactId>xercesImpl</artifactId>
-                <version>${xercesImpl.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
