@@ -616,7 +616,6 @@
 
         <felix.version>4.0.3</felix.version>
         <karaf.version>2.3.0</karaf.version>
-        <karaf.tooling.exam.container.version>2.3.0</karaf.tooling.exam.container.version>
         <pax-logging-api.version>1.6.4</pax-logging-api.version>
         <jackson.version>2.9.9</jackson.version>
         <feign.version>10.3.0</feign.version>
@@ -2374,11 +2373,6 @@
                 <artifactId>protocols-smtp</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.tooling.exam</groupId>
-                <artifactId>org.apache.karaf.tooling.exam.container</artifactId>
-                <version>${karaf.tooling.exam.container.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven</groupId>

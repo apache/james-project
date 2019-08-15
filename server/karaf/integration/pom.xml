@@ -15,6 +15,7 @@
 
     <properties>
         <exam.version>2.6.0</exam.version>
+        <karaf.tooling.exam.container.version>2.3.0</karaf.tooling.exam.container.version>
         <pax-swissbox-tinybundles.version>1.3.1</pax-swissbox-tinybundles.version>
         <url.version>1.4.0</url.version>
     </properties>
@@ -83,6 +84,7 @@
             <groupId>org.apache.karaf.tooling.exam</groupId>
             <artifactId>org.apache.karaf.tooling.exam.container</artifactId>
             <scope>test</scope>
+            <version>${karaf.tooling.exam.container.version}</version>
         </dependency>
 
         <!-- Pax-Exam dependencies -->
