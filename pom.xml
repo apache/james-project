@@ -627,7 +627,6 @@
         <guava.version>25.1-jre</guava.version>
 
         <jutf7.version>1.0.0</jutf7.version>
-        <plugin.mailetdocs.version>0.1</plugin.mailetdocs.version>
         <httpclient-osgi.version>4.5.1</httpclient-osgi.version>
         <apache.httpcomponents.version>4.5.9</apache.httpcomponents.version>
         <!-- maven-mailetdocs-plugin artifacts -->

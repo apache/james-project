@@ -126,7 +126,7 @@
         <plugins>
             <plugin>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>maven-mailetdocs-plugin</artifactId>
+                <artifactId>mailetdocs-maven-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
