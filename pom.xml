@@ -2306,7 +2306,7 @@
             <dependency>
                 <groupId>org.apache.directory.api</groupId>
                 <artifactId>api-ldap-model</artifactId>
-                <version>1.0.2</version>
+                <version>1.0.3</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.felix</groupId>
