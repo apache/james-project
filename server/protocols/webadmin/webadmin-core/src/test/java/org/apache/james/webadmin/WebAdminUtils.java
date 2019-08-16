@@ -70,7 +70,8 @@ public class WebAdminUtils {
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
             .setConfig(defaultConfig())
-            .setPort(port.getValue());
+            .setPort(port.getValue())
+            .setBasePath("/");
     }
 
     public static RestAssuredConfig defaultConfig() {
