@@ -25,6 +25,7 @@ import org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.mailbox.quota.QuotaRootDeserializer;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -48,6 +49,7 @@ public class JpaQuotaModule extends AbstractModule {
 
         bind(UserQuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
         bind(QuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
+        bind(QuotaRootDeserializer.class).to(DefaultUserQuotaRootResolver.class);
         bind(MaxQuotaManager.class).to(JPAPerUserMaxQuotaManager.class);
         bind(QuotaManager.class).to(StoreQuotaManager.class);
         bind(CurrentQuotaManager.class).to(JpaCurrentQuotaManager.class);

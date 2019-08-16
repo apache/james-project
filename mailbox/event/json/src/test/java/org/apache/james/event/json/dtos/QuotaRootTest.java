@@ -21,10 +21,12 @@ package org.apache.james.event.json.dtos;
 
 import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
 
 import org.apache.james.core.Domain;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.junit.jupiter.api.Test;
 
@@ -43,8 +45,8 @@ class QuotaRootTest {
 
     @Test
     void quotaRootWithDomainShouldBeWellDeSerialized() {
-        assertThat(DTO_JSON_SERIALIZE.quotaRootReads().reads(new JsString("bob@domain.tld")).get())
-            .isEqualTo(QuotaRoot.quotaRoot("bob@domain.tld", Optional.of(Domain.of("domain.tld"))));
+        assertThat(DTO_JSON_SERIALIZE.quotaRootReads().reads(new JsString("#private&bob@domain.tld")).get())
+            .isEqualTo(QuotaRoot.quotaRoot("#private&bob@domain.tld", Optional.of(Domain.of("domain.tld"))));
     }
 
     @Test
@@ -55,8 +57,8 @@ class QuotaRootTest {
 
     @Test
     void quotaRootShouldBeWellDeSerialized() {
-        assertThat(DTO_JSON_SERIALIZE.quotaRootReads().reads(new JsString("bob")).get())
-            .isEqualTo(QuotaRoot.quotaRoot("bob", Optional.empty()));
+        assertThat(DTO_JSON_SERIALIZE.quotaRootReads().reads(new JsString("#private&bob")).get())
+            .isEqualTo(QuotaRoot.quotaRoot("#private&bob", Optional.empty()));
     }
 
     @Test
@@ -67,8 +69,9 @@ class QuotaRootTest {
 
     @Test
     void emptyQuotaRootShouldBeWellDeSerialized() {
-        assertThat(DTO_JSON_SERIALIZE.quotaRootReads().reads(new JsString("")).get())
-            .isEqualTo(QuotaRoot.quotaRoot("", Optional.empty()));
+        assertThatThrownBy(() -> DTO_JSON_SERIALIZE.quotaRootReads().reads(new JsString("")).get())
+            .isInstanceOf(MailboxException.class)
+            .hasMessage(" used as QuotaRoot should contain exactly one \"&\"");
     }
 
     @Test

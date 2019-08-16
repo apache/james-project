@@ -20,12 +20,12 @@
 package org.apache.james.event.json
 
 import java.time.Instant
-import java.util.{Optional, TreeMap => JavaTreeMap}
+import java.util.{TreeMap => JavaTreeMap}
 
 import javax.inject.Inject
 import julienrf.json.derived
+import org.apache.james.core.User
 import org.apache.james.core.quota.{QuotaCount, QuotaSize, QuotaValue}
-import org.apache.james.core.{Domain, User}
 import org.apache.james.event.json.DTOs.SystemFlag.SystemFlag
 import org.apache.james.event.json.DTOs._
 import org.apache.james.mailbox.MailboxSession.SessionId
@@ -34,6 +34,7 @@ import org.apache.james.mailbox.events.Event.EventId
 import org.apache.james.mailbox.events.MailboxListener.{Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
 import org.apache.james.mailbox.events.{Event => JavaEvent, MessageMoveEvent => JavaMessageMoveEvent}
 import org.apache.james.mailbox.model.{MailboxId, MessageId, MessageMoves, QuotaRoot, MailboxACL => JavaMailboxACL, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota}
+import org.apache.james.mailbox.quota.QuotaRootDeserializer
 import play.api.libs.json._
 
 import scala.collection.JavaConverters._
@@ -200,7 +201,7 @@ private object ScalaConverter {
   }
 }
 
-class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory) {
+class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory, quotaRootDeserializer: QuotaRootDeserializer) {
   implicit val systemFlagsWrites: Writes[SystemFlag] = Writes.enumNameWrites
   implicit val userWriters: Writes[User] = (user: User) => JsString(user.asString)
   implicit val quotaRootWrites: Writes[QuotaRoot] = quotaRoot => JsString(quotaRoot.getValue)
@@ -243,7 +244,7 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
     case _ => JsError()
   }
   implicit val quotaRootReads: Reads[QuotaRoot] = {
-    case JsString(quotaRoot) => JsSuccess(QuotaRoot.quotaRoot(quotaRoot, Optional.empty[Domain]))
+    case JsString(quotaRoot) => JsSuccess(quotaRootDeserializer.fromString(quotaRoot))
     case _ => JsError()
   }
   implicit val quotaScopeReads: Reads[JavaQuota.Scope] = {
@@ -332,8 +333,8 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
     .map(event => event.toJava)
 }
 
-class EventSerializer @Inject() (mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory) {
-  private val jsonSerialize = new JsonSerialize(mailboxIdFactory, messageIdFactory)
+class EventSerializer @Inject() (mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory, quotaRootDeserializer: QuotaRootDeserializer) {
+  private val jsonSerialize = new JsonSerialize(mailboxIdFactory, messageIdFactory, quotaRootDeserializer)
 
   def toJson(event: JavaEvent): String = jsonSerialize.toJson(event)
   def fromJson(json: String): JsResult[JavaEvent] = jsonSerialize.fromJson(json)

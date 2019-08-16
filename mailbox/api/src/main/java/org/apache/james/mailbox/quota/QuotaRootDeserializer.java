@@ -19,26 +19,9 @@
 
 package org.apache.james.mailbox.quota;
 
-import java.util.List;
-
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
 
-public interface QuotaRootResolver extends QuotaRootDeserializer {
-
-    /**
-     * Return the quotaRoot associated with the given mailbox name.
-     *
-     * @param mailboxPath The name of the mailbox
-     * @return QuotaRoot ruling this mailbox ( we uses user owning this mailbox name )
-     * @throws MailboxException
-     */
-    QuotaRoot getQuotaRoot(MailboxPath mailboxPath) throws MailboxException;
-
-    QuotaRoot getQuotaRoot(MailboxId mailboxId) throws MailboxException;
-
-    List<MailboxPath> retrieveAssociatedMailboxes(QuotaRoot quotaRoot, MailboxSession mailboxSession) throws MailboxException;
+public interface QuotaRootDeserializer {
+    QuotaRoot fromString(String serializedQuotaRoot) throws MailboxException;
 }

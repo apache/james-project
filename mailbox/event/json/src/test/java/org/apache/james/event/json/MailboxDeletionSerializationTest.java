@@ -29,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
@@ -47,7 +48,7 @@ class MailboxDeletionSerializationTest {
     private static final User USER = User.fromUsername("user");
     private static final MailboxPath MAILBOX_PATH = new MailboxPath(USER_NAMESPACE, USER.asString(), "mailboxName");
     private static final MailboxId MAILBOX_ID = TestId.of(789);
-    private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("user@domain", Optional.empty());
+    private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&user@domain", Optional.of(Domain.of("domain")));
     private static final QuotaCount DELETED_MESSAGE_COUNT = QuotaCount.count(60);
     private static final QuotaSize TOTAL_DELETED_SIZE = QuotaSize.size(100);
     private static final MailboxListener.MailboxDeletion DEFAULT_MAILBOX_DELETION_EVENT = new MailboxListener.MailboxDeletion(
@@ -71,7 +72,7 @@ class MailboxDeletionSerializationTest {
         "      \"user\":\"user\"," +
         "      \"name\":\"mailboxName\"" +
         "    }," +
-        "    \"quotaRoot\":\"user@domain\"," +
+        "    \"quotaRoot\":\"#private&user@domain\"," +
         "    \"deletedMessageCount\":60," +
         "    \"totalDeletedSize\":100," +
         "    \"mailboxId\":\"789\"" +
@@ -104,7 +105,7 @@ class MailboxDeletionSerializationTest {
                     "      \"user\":\"user\"," +
                     "      \"name\":\"mailboxName\"" +
                     "    }," +
-                    "    \"quotaRoot\":\"user@domain\"," +
+                    "    \"quotaRoot\":\"#private&user@domain\"," +
                     "    \"deletedMessageCount\":60," +
                     "    \"totalDeletedSize\":100," +
                     "    \"mailboxId\":\"789\"" +
@@ -125,7 +126,7 @@ class MailboxDeletionSerializationTest {
                     "      \"user\":\"user\"," +
                     "      \"name\":\"mailboxName\"" +
                     "    }," +
-                    "    \"quotaRoot\":\"user@domain\"," +
+                    "    \"quotaRoot\":\"#private&user@domain\"," +
                     "    \"deletedMessageCount\":60," +
                     "    \"totalDeletedSize\":100," +
                     "    \"mailboxId\":\"789\"" +
@@ -146,7 +147,7 @@ class MailboxDeletionSerializationTest {
                     "      \"user\":\"user\"," +
                     "      \"name\":\"mailboxName\"" +
                     "    }," +
-                    "    \"quotaRoot\":\"user@domain\"," +
+                    "    \"quotaRoot\":\"#private&user@domain\"," +
                     "    \"deletedMessageCount\":60," +
                     "    \"totalDeletedSize\":100," +
                     "    \"mailboxId\":\"789\"" +
@@ -189,7 +190,7 @@ class MailboxDeletionSerializationTest {
                     "      \"user\":\"user\"," +
                     "      \"name\":\"mailboxName\"" +
                     "    }," +
-                    "    \"quotaRoot\":\"user@domain\"," +
+                    "    \"quotaRoot\":\"#private&user@domain\"," +
                     "    \"totalDeletedSize\":100," +
                     "    \"mailboxId\":\"789\"" +
                     "  }" +
@@ -210,7 +211,7 @@ class MailboxDeletionSerializationTest {
                     "      \"user\":\"user\"," +
                     "      \"name\":\"mailboxName\"" +
                     "    }," +
-                    "    \"quotaRoot\":\"user@domain\"," +
+                    "    \"quotaRoot\":\"#private&user@domain\"," +
                     "    \"deletedMessageCount\":60," +
                     "    \"mailboxId\":\"789\"" +
                     "  }" +
@@ -231,7 +232,7 @@ class MailboxDeletionSerializationTest {
                     "      \"user\":\"user\"," +
                     "      \"name\":\"mailboxName\"" +
                     "    }," +
-                    "    \"quotaRoot\":\"user@domain\"," +
+                    "    \"quotaRoot\":\"#private&user@domain\"," +
                     "    \"deletedMessageCount\":60," +
                     "    \"totalDeletedSize\":100" +
                     "  }" +
@@ -247,7 +248,7 @@ class MailboxDeletionSerializationTest {
                     "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"sessionId\":3652," +
                     "    \"user\":\"user\"," +
-                    "    \"quotaRoot\":\"user@domain\"," +
+                    "    \"quotaRoot\":\"#private&user@domain\"," +
                     "    \"deletedMessageCount\":60," +
                     "    \"totalDeletedSize\":100," +
                     "    \"mailboxId\":\"789\"" +

@@ -21,6 +21,7 @@ package org.apache.james.modules.mailbox;
 
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.mailbox.quota.QuotaRootDeserializer;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -41,6 +42,7 @@ public class DefaultQuotaModule extends AbstractModule {
         bind(MaxQuotaManager.class).toInstance(new NoMaxQuotaManager());
         bind(QuotaManager.class).to(NoQuotaManager.class);
         bind(QuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
+        bind(QuotaRootDeserializer.class).to(DefaultUserQuotaRootResolver.class);
         bind(UserQuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
     }
     

@@ -34,6 +34,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -47,7 +48,7 @@ class CassandraEventDeadLettersDAOTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandraCluster) {
-        EventSerializer eventSerializer = new EventSerializer(new TestId.Factory(), new TestMessageId.Factory());
+        EventSerializer eventSerializer = new EventSerializer(new TestId.Factory(), new TestMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
         cassandraEventDeadLettersDAO = new CassandraEventDeadLettersDAO(cassandraCluster.getConf(), eventSerializer);
     }
 

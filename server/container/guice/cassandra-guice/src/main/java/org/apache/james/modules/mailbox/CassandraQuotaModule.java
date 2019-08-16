@@ -29,6 +29,7 @@ import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.mailbox.quota.QuotaRootDeserializer;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -57,6 +58,7 @@ public class CassandraQuotaModule extends AbstractModule {
         bind(MaxQuotaManager.class).to(CassandraPerUserMaxQuotaManager.class);
         bind(QuotaManager.class).to(StoreQuotaManager.class);
         bind(QuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
+        bind(QuotaRootDeserializer.class).to(DefaultUserQuotaRootResolver.class);
         bind(StoreCurrentQuotaManager.class).to(CassandraCurrentQuotaManager.class);
         bind(UserQuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
 

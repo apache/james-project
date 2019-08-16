@@ -38,7 +38,7 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.junit.jupiter.api.Test;
 
 class QuotaUsageUpdatedEventSerializationTest {
-    private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("foo", Optional.empty());
+    private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&foo", Optional.empty());
     private static final Quota<QuotaCount> QUOTA_COUNT = Quota.<QuotaCount>builder()
         .used(QuotaCount.count(12))
         .computedLimit(QuotaCount.count(100))
@@ -59,7 +59,7 @@ class QuotaUsageUpdatedEventSerializationTest {
         "{" +
         "    \"QuotaUsageUpdatedEvent\":{" +
         "        \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
-        "        \"quotaRoot\":\"foo\"," +
+        "        \"quotaRoot\":\"#private&foo\"," +
         "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
         "        \"time\":\"2018-11-13T12:00:55Z\"," +
         "        \"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
@@ -85,7 +85,7 @@ class QuotaUsageUpdatedEventSerializationTest {
             "{" +
             "    \"QuotaUsageUpdatedEvent\":{" +
             "        \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
-            "        \"quotaRoot\":\"foo\"," +
+            "        \"quotaRoot\":\"#private&foo\"," +
             "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
             "        \"time\":\"2018-11-13T12:00:55Z\"," +
             "        \"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}" +
@@ -102,7 +102,7 @@ class QuotaUsageUpdatedEventSerializationTest {
             "{" +
             "    \"QuotaUsageUpdatedEvent\":{" +
             "        \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
-            "        \"quotaRoot\":\"foo\"," +
+            "        \"quotaRoot\":\"#private&foo\"," +
             "        \"time\":\"2018-11-13T12:00:55Z\"," +
             "        \"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
             "        \"user\":\"onlyUsername\"" +
@@ -119,7 +119,7 @@ class QuotaUsageUpdatedEventSerializationTest {
             "{" +
             "    \"QuotaUsageUpdatedEvent\":{" +
             "        \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
-            "        \"quotaRoot\":\"foo\"," +
+            "        \"quotaRoot\":\"#private&foo\"," +
             "        \"time\":\"2018-11-13T12:00:55Z\"," +
             "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
             "        \"user\":\"onlyUsername\"" +
@@ -136,7 +136,7 @@ class QuotaUsageUpdatedEventSerializationTest {
             "{" +
             "    \"QuotaUsageUpdatedEvent\":{" +
             "        \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
-            "        \"quotaRoot\":\"foo\"," +
+            "        \"quotaRoot\":\"#private&foo\"," +
             "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{\"Domain\":100}}," +
             "        \"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
             "        \"user\":\"user\"" +
@@ -153,7 +153,7 @@ class QuotaUsageUpdatedEventSerializationTest {
             "{" +
             "    \"QuotaUsageUpdatedEvent\":{" +
             "        \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
-            "        \"quotaRoot\":\"foo\"," +
+            "        \"quotaRoot\":\"#private&foo\"," +
             "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{\"Domain\":100}}," +
             "        \"time\":\"\"," +
             "        \"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +

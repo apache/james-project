@@ -62,6 +62,7 @@ import org.apache.james.mailbox.events.EventBusTestFixture.GroupA;
 import org.apache.james.mailbox.events.EventBusTestFixture.MailboxListenerCountingSuccessfulExecution;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.util.EventCollector;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
@@ -107,7 +108,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         memoryEventDeadLetters = new MemoryEventDeadLetters();
 
         TestId.Factory mailboxIdFactory = new TestId.Factory();
-        eventSerializer = new EventSerializer(mailboxIdFactory, new TestMessageId.Factory());
+        eventSerializer = new EventSerializer(mailboxIdFactory, new TestMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
         routingKeyConverter = RoutingKeyConverter.forFactories(new MailboxIdRegistrationKey.Factory(mailboxIdFactory));
 
         eventBus = newEventBus();
