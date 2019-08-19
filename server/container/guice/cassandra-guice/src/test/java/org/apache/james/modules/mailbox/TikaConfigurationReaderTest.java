@@ -24,8 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.StringReader;
 import java.time.Duration;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.junit.Test;
 
@@ -35,8 +35,8 @@ public class TikaConfigurationReaderTest {
 
     @Test
     public void readTikaConfigurationShouldAcceptMandatoryValues() throws Exception {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(
+        PropertiesConfiguration configuration = newConfiguration();
+        configuration.read(new StringReader(
                 "tika.enabled=true\n" +
             "tika.host=172.0.0.5\n" +
             "tika.port=889\n" +
@@ -57,8 +57,8 @@ public class TikaConfigurationReaderTest {
 
     @Test
     public void readTikaConfigurationShouldReturnDefaultOnMissingHost() throws Exception {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(
+        PropertiesConfiguration configuration = newConfiguration();
+        configuration.read(new StringReader(
             "tika.enabled=true\n" +
             "tika.port=889\n" +
             "tika.timeoutInMillis=500\n"));
@@ -75,8 +75,8 @@ public class TikaConfigurationReaderTest {
 
     @Test
     public void readTikaConfigurationShouldReturnDefaultOnMissingPort() throws Exception {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(
+        PropertiesConfiguration configuration = newConfiguration();
+        configuration.read(new StringReader(
             "tika.enabled=true\n" +
             "tika.host=172.0.0.5\n" +
             "tika.timeoutInMillis=500\n"));
@@ -93,8 +93,8 @@ public class TikaConfigurationReaderTest {
 
     @Test
     public void readTikaConfigurationShouldReturnDefaultOnMissingTimeout() throws Exception {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(
+        PropertiesConfiguration configuration = newConfiguration();
+        configuration.read(new StringReader(
             "tika.enabled=true\n" +
             "tika.host=172.0.0.5\n" +
             "tika.port=889\n"));
@@ -111,8 +111,8 @@ public class TikaConfigurationReaderTest {
 
     @Test
     public void tikaShouldBeDisabledByDefault() throws Exception {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(""));
+        PropertiesConfiguration configuration = newConfiguration();
+        configuration.read(new StringReader(""));
 
         assertThat(TikaConfigurationReader.readTikaConfiguration(configuration))
             .isEqualTo(
@@ -123,8 +123,8 @@ public class TikaConfigurationReaderTest {
 
     @Test
     public void readTikaConfigurationShouldParseUnitForCacheEvictionPeriod() throws Exception {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(
+        PropertiesConfiguration configuration = newConfiguration();
+        configuration.read(new StringReader(
             "tika.enabled=true\n" +
             "tika.host=172.0.0.5\n" +
             "tika.port=889\n" +
@@ -144,8 +144,8 @@ public class TikaConfigurationReaderTest {
 
     @Test
     public void readTikaConfigurationShouldDefaultToSecondWhenMissingUnitForCacheEvitionPeriod() throws Exception {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(
+        PropertiesConfiguration configuration = newConfiguration();
+        configuration.read(new StringReader(
             "tika.enabled=true\n" +
             "tika.host=172.0.0.5\n" +
             "tika.port=889\n" +
@@ -165,8 +165,8 @@ public class TikaConfigurationReaderTest {
 
     @Test
     public void readTikaConfigurationShouldParseUnitForCacheWeightMax() throws Exception {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(
+        PropertiesConfiguration configuration = newConfiguration();
+        configuration.read(new StringReader(
             "tika.enabled=true\n" +
             "tika.host=172.0.0.5\n" +
             "tika.port=889\n" +
@@ -186,8 +186,8 @@ public class TikaConfigurationReaderTest {
 
     @Test
     public void readTikaConfigurationShouldDefaultToByteAsSizeUnit() throws Exception {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(
+        PropertiesConfiguration configuration = newConfiguration();
+        configuration.read(new StringReader(
             "tika.enabled=true\n" +
             "tika.host=172.0.0.5\n" +
             "tika.port=889\n" +
@@ -207,8 +207,8 @@ public class TikaConfigurationReaderTest {
 
     @Test
     public void readTikaConfigurationShouldEnableCacheWhenConfigured() throws Exception {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(
+        PropertiesConfiguration configuration = newConfiguration();
+        configuration.read(new StringReader(
             "tika.enabled=true\n" +
             "tika.cache.enabled=true\n" +
             "tika.host=172.0.0.5\n" +
@@ -229,9 +229,9 @@ public class TikaConfigurationReaderTest {
     }
 
     @Test
-    public void readTikaConfigurationShouldNotHaveContentTypeBlacklist() throws ConfigurationException {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(
+    public void readTikaConfigurationShouldNotHaveContentTypeBlacklist() throws Exception {
+        PropertiesConfiguration configuration = newConfiguration();
+        configuration.read(new StringReader(
             "tika.enabled=true\n" +
                 "tika.cache.enabled=true\n" +
                 "tika.host=172.0.0.5\n" +
@@ -252,9 +252,9 @@ public class TikaConfigurationReaderTest {
     }
 
     @Test
-    public void readTikaConfigurationShouldHaveContentTypeBlacklist() throws ConfigurationException {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(
+    public void readTikaConfigurationShouldHaveContentTypeBlacklist() throws Exception {
+        PropertiesConfiguration configuration = newConfiguration();
+        configuration.read(new StringReader(
             "tika.enabled=true\n" +
                 "tika.cache.enabled=true\n" +
                 "tika.host=172.0.0.5\n" +
@@ -277,9 +277,9 @@ public class TikaConfigurationReaderTest {
     }
 
     @Test
-    public void readTikaConfigurationShouldHaveContentTypeBlacklistWithWhiteSpace() throws ConfigurationException {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(
+    public void readTikaConfigurationShouldHaveContentTypeBlacklistWithWhiteSpace() throws Exception {
+        PropertiesConfiguration configuration = newConfiguration();
+        configuration.read(new StringReader(
             "tika.enabled=true\n" +
                 "tika.cache.enabled=true\n" +
                 "tika.host=172.0.0.5\n" +
@@ -299,5 +299,11 @@ public class TikaConfigurationReaderTest {
                     .cacheWeightInBytes(1520000)
                     .contentTypeBlacklist(ImmutableSet.of("application/ics", "application/zip"))
                     .build());
+    }
+
+    private PropertiesConfiguration newConfiguration() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.setListDelimiterHandler(new DefaultListDelimiterHandler(','));
+        return configuration;
     }
 }

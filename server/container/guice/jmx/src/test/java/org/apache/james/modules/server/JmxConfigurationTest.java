@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.StringReader;
 import java.util.Optional;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.util.Host;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +46,7 @@ public class JmxConfigurationTest {
     @Test
     void fromPropertiesShouldReturnConfiguredValues() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(
+        configuration.read(new StringReader(
                 "jmx.address=172.0.0.5\n" +
                 "jmx.port=889\n"));
 
@@ -57,7 +57,7 @@ public class JmxConfigurationTest {
     @Test
     void fromPropertiesShouldReturnDisabledWhenConfiguredAsDisabled() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(
+        configuration.read(new StringReader(
                     "jmx.enabled=false\n"));
 
         assertThat(JmxConfiguration.fromProperties(configuration))
@@ -67,7 +67,7 @@ public class JmxConfigurationTest {
     @Test
     void fromPropertiesShouldReturnDisabledWhenConfiguredAsDisabledWithHost() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(
+        configuration.read(new StringReader(
                     "jmx.enabled=false\n" +
                 "jmx.address=172.0.0.5\n" +
                 "jmx.port=889\n"));

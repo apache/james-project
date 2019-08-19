@@ -26,7 +26,7 @@ import java.io.StringReader;
 import java.net.URI;
 import java.util.Optional;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.blob.objectstorage.swift.Credentials;
 import org.apache.james.blob.objectstorage.swift.Region;
@@ -60,7 +60,7 @@ class SwiftKeystone2ConfigurationReaderTest {
     @Test
     void readBasicKeystone2Configuration() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(StringUtils.joinWith("\n",
+        configuration.read(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
             CONFIG_CREDENTIALS,
             CONFIG_USER_NAME,
@@ -79,7 +79,7 @@ class SwiftKeystone2ConfigurationReaderTest {
     @Test
     void readKeystone2ConfigurationWithRegion() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(StringUtils.joinWith("\n",
+        configuration.read(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
             CONFIG_CREDENTIALS,
             CONFIG_USER_NAME,
@@ -100,7 +100,7 @@ class SwiftKeystone2ConfigurationReaderTest {
     @Test
     void failToReadSwiftKeystone2ConfigurationWhenMissingEndpoint() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(StringUtils.joinWith("\n",
+        configuration.read(new StringReader(StringUtils.joinWith("\n",
             CONFIG_CREDENTIALS,
             CONFIG_USER_NAME,
             CONFIG_TENANT_NAME,
@@ -113,7 +113,7 @@ class SwiftKeystone2ConfigurationReaderTest {
     @Test
     void failToReadSwiftKeystone2ConfigurationWhenMissingCrendentials() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(StringUtils.joinWith("\n",
+        configuration.read(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
             CONFIG_USER_NAME,
             CONFIG_TENANT_NAME,
@@ -126,7 +126,7 @@ class SwiftKeystone2ConfigurationReaderTest {
     @Test
     void failToReadSwiftKeystone2ConfigurationWhenMissingUserName() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(StringUtils.joinWith("\n",
+        configuration.read(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
             CONFIG_CREDENTIALS,
             CONFIG_TENANT_NAME,
@@ -139,7 +139,7 @@ class SwiftKeystone2ConfigurationReaderTest {
     @Test
     void failToReadSwiftKeystone2ConfigurationWhenMissingTenantName() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(StringUtils.joinWith("\n",
+        configuration.read(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
             CONFIG_CREDENTIALS,
             CONFIG_USER_NAME,

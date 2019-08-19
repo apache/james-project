@@ -26,7 +26,7 @@ import java.io.StringReader;
 import java.net.URI;
 import java.util.Optional;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.blob.objectstorage.swift.Credentials;
 import org.apache.james.blob.objectstorage.swift.DomainId;
@@ -78,7 +78,7 @@ class SwiftKeystone3ConfigurationReaderTest {
     @Test
     void readUnscopedKeystone3Configuration() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(StringUtils.joinWith("\n",
+        configuration.read(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
             CONFIG_CREDENTIALS,
             CONFIG_USER_NAME,
@@ -96,7 +96,7 @@ class SwiftKeystone3ConfigurationReaderTest {
     @Test
     void readUnscopedKeystone3ConfigurationWithRegion() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(StringUtils.joinWith("\n",
+        configuration.read(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
             CONFIG_CREDENTIALS,
             CONFIG_USER_NAME,
@@ -116,7 +116,7 @@ class SwiftKeystone3ConfigurationReaderTest {
     @Test
     void failsToReadKeystone3ConfigurationWithoutEndpoint() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(StringUtils.joinWith("\n",
+        configuration.read(new StringReader(StringUtils.joinWith("\n",
             CONFIG_CREDENTIALS,
             CONFIG_USER_NAME,
             CONFIG_USER_DOMAIN_NAME)));
@@ -127,7 +127,7 @@ class SwiftKeystone3ConfigurationReaderTest {
     @Test
     void failsToReadKeystone3ConfigurationWithoutCredentials() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(StringUtils.joinWith("\n",
+        configuration.read(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
             CONFIG_USER_NAME,
             CONFIG_USER_DOMAIN_NAME)));
@@ -138,7 +138,7 @@ class SwiftKeystone3ConfigurationReaderTest {
     @Test
     void failsToReadKeystone3ConfigurationWithoutUserName() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(StringUtils.joinWith("\n",
+        configuration.read(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
             CONFIG_CREDENTIALS,
             CONFIG_USER_DOMAIN_NAME)));
@@ -149,7 +149,7 @@ class SwiftKeystone3ConfigurationReaderTest {
     @Test
     void failsToReadKeystone3ConfigurationWithoutUserDomainName() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(StringUtils.joinWith("\n",
+        configuration.read(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
             CONFIG_CREDENTIALS,
             CONFIG_USER_NAME)));
@@ -160,7 +160,7 @@ class SwiftKeystone3ConfigurationReaderTest {
     @Test
     void readDomainScopedKeystone3Configuration() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(StringUtils.joinWith("\n",
+        configuration.read(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
             CONFIG_CREDENTIALS,
             CONFIG_USER_NAME,
@@ -180,7 +180,7 @@ class SwiftKeystone3ConfigurationReaderTest {
     @Test
     void readProjectScopedKeystone3Configuration() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(StringUtils.joinWith("\n",
+        configuration.read(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
             CONFIG_CREDENTIALS,
             CONFIG_USER_NAME,
@@ -202,7 +202,7 @@ class SwiftKeystone3ConfigurationReaderTest {
     @Test
     void readProjectOfDomainNameScopedKeystone3Configuration() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(StringUtils.joinWith("\n",
+        configuration.read(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
             CONFIG_CREDENTIALS,
             CONFIG_USER_NAME,
@@ -229,7 +229,7 @@ class SwiftKeystone3ConfigurationReaderTest {
     @Test
     void readProjectOfDomainIdScopedKeystone3Configuration() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.load(new StringReader(StringUtils.joinWith("\n",
+        configuration.read(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
             CONFIG_CREDENTIALS,
             CONFIG_USER_NAME,
