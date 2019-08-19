@@ -27,9 +27,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
-import org.apache.commons.configuration.ConversionException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.plist.PropertyListConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConversionException;
+import org.apache.commons.configuration2.plist.PropertyListConfiguration;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainList;
 import org.junit.jupiter.api.BeforeEach;
@@ -197,9 +197,9 @@ public class ReadOnlyUsersLDAPRepositoryTest {
     private static HierarchicalConfiguration ldapRepositoryConfiguration() {
         PropertyListConfiguration configuration = new PropertyListConfiguration();
         configuration.addProperty("[@ldapHost]", DockerLdapSingleton.ldapContainer.getLdapHost());
-        configuration.addProperty("[@principal]", "cn=admin\\,dc=james\\,dc=org");
+        configuration.addProperty("[@principal]", "cn=admin,dc=james,dc=org");
         configuration.addProperty("[@credentials]", ADMIN_PASSWORD);
-        configuration.addProperty("[@userBase]", "ou=People\\,dc=james\\,dc=org");
+        configuration.addProperty("[@userBase]", "ou=People,dc=james,dc=org");
         configuration.addProperty("[@userIdAttribute]", "uid");
         configuration.addProperty("[@userObjectClass]", "inetOrgPerson");
         configuration.addProperty("[@maxRetries]", "4");
@@ -212,9 +212,9 @@ public class ReadOnlyUsersLDAPRepositoryTest {
     private static HierarchicalConfiguration ldapRepositoryConfigurationWithVirtualHosting() {
         PropertyListConfiguration configuration = new PropertyListConfiguration();
         configuration.addProperty("[@ldapHost]", DockerLdapSingleton.ldapContainer.getLdapHost());
-        configuration.addProperty("[@principal]", "cn=admin\\,dc=james\\,dc=org");
+        configuration.addProperty("[@principal]", "cn=admin,dc=james,dc=org");
         configuration.addProperty("[@credentials]", ADMIN_PASSWORD);
-        configuration.addProperty("[@userBase]", "ou=People\\,dc=james\\,dc=org");
+        configuration.addProperty("[@userBase]", "ou=People,dc=james,dc=org");
         configuration.addProperty("[@userIdAttribute]", "mail");
         configuration.addProperty("[@userObjectClass]", "inetOrgPerson");
         configuration.addProperty("[@maxRetries]", "4");
