@@ -27,10 +27,10 @@ import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.collections4.map.ReferenceMap;
-import org.apache.commons.configuration.CombinedConfiguration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.CombinedConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.container.spring.bean.factory.AbstractBeanFactory;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.MailRepository;
@@ -184,7 +184,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
             if (defConf != null) {
                 config.addConfiguration(defConf);
             }
-            DefaultConfigurationBuilder builder = new DefaultConfigurationBuilder();
+            HierarchicalConfiguration builder = new BaseHierarchicalConfiguration();
             builder.addProperty("[@destinationURL]", destination.asString());
             config.addConfiguration(builder);
 

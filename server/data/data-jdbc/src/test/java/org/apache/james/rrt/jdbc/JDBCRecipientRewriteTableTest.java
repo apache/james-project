@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.rrt.jdbc;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
@@ -47,7 +47,7 @@ public class JDBCRecipientRewriteTableTest extends AbstractRecipientRewriteTable
         JDBCRecipientRewriteTable localVirtualUserTable = new JDBCRecipientRewriteTable();
         localVirtualUserTable.setDataSource(getDataSource());
         localVirtualUserTable.setFileSystem(new MockFileSystem());
-        DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();
+        BaseHierarchicalConfiguration defaultConfiguration = new BaseHierarchicalConfiguration();
         defaultConfiguration.addProperty("[@destinationURL]", "db://maildb/RecipientRewriteTable");
         defaultConfiguration.addProperty("sqlFile", "file://conf/sqlResources.xml");
         localVirtualUserTable.configure(defaultConfiguration);

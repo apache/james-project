@@ -26,8 +26,9 @@ import java.util.function.Predicate;
 
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.SimpleRegistry;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.MailetLoader;
@@ -132,7 +133,7 @@ public class CamelMailetContainerModule extends AbstractModule {
                     .configurationAt("spooler");
             } catch (Exception e) {
                 LOGGER.warn("Could not locate configuration for James Spooler. Assuming empty configuration for this component.");
-                return new HierarchicalConfiguration();
+                return new BaseHierarchicalConfiguration();
             }
         }
 
@@ -168,7 +169,7 @@ public class CamelMailetContainerModule extends AbstractModule {
                     .configurationAt("context");
             } catch (Exception e) {
                 LOGGER.warn("Could not locate configuration for Mailet context. Assuming empty configuration for this component.");
-                return new HierarchicalConfiguration();
+                return new BaseHierarchicalConfiguration();
             }
         }
 

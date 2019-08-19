@@ -23,7 +23,7 @@ import java.util.Iterator;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
@@ -72,7 +72,7 @@ public class JamesUsersJdbcRepositoryTest extends AbstractUsersJdbcRepositoryTes
         res.setFileSystem(new MockFileSystem());
         DataSource dataSource = getDataSource();
         res.setDatasource(dataSource);
-        DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
+        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("[@destinationURL]", "db://maildb/" + tableString);
         configuration.addProperty("sqlFile", "file://conf/sqlResources.xml");
         res.configure(configuration);

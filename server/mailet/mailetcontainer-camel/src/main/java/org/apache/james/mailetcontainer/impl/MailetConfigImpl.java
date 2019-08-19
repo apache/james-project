@@ -24,8 +24,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.convert.DisabledListDelimiterHandler;
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
 
@@ -122,10 +123,10 @@ public class MailetConfigImpl implements MailetConfig {
      *            the new Configuration for the mailet
      */
     public void setConfiguration(Configuration newConfiguration) {
-        DefaultConfigurationBuilder builder = new DefaultConfigurationBuilder();
+        BaseHierarchicalConfiguration builder = new BaseHierarchicalConfiguration();
         
         // Disable the delimiter parsing. See JAMES-1232
-        builder.setDelimiterParsingDisabled(true);
+        builder.setListDelimiterHandler(new DisabledListDelimiterHandler());
         Iterator<String> keys = newConfiguration.getKeys();
         while (keys.hasNext()) {
             String key = keys.next();

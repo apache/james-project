@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mpt.smtp;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.GuiceJamesServer;
@@ -56,7 +56,7 @@ public final class CassandraRabbitMQAwsS3SmtpTestRuleFactory {
                 SmtpTestRule.SMTP_PROTOCOL_MODULE,
                 binder -> binder.bind(MailQueueItemDecoratorFactory.class).to(RawMailQueueItemDecoratorFactory.class),
                 binder -> binder.bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
-                    .toInstance(DefaultConfigurationBuilder::new))
+                    .toInstance(BaseHierarchicalConfiguration::new))
             .overrideWith(
                 new RabbitMQModule(),
                 new BlobStoreChoosingModule())

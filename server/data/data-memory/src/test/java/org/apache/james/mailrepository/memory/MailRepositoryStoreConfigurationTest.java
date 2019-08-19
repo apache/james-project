@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.mailrepository.api.Protocol;
 import org.junit.jupiter.api.Test;
 
@@ -43,7 +43,7 @@ class MailRepositoryStoreConfigurationTest {
             new MailRepositoryStoreConfiguration.Item(
                 ImmutableList.of(),
                 "class.fqdn",
-                new HierarchicalConfiguration())));
+                new BaseHierarchicalConfiguration())));
 
         assertThat(defaultProtocol).isEmpty();
     }
@@ -54,7 +54,7 @@ class MailRepositoryStoreConfigurationTest {
             new MailRepositoryStoreConfiguration.Item(
                 ImmutableList.of(new Protocol("1"), new Protocol("2")),
                 "class.fqdn",
-                new HierarchicalConfiguration())));
+                new BaseHierarchicalConfiguration())));
 
         assertThat(defaultProtocol).contains(new Protocol("1"));
     }
@@ -65,11 +65,11 @@ class MailRepositoryStoreConfigurationTest {
             new MailRepositoryStoreConfiguration.Item(
                 ImmutableList.of(),
                 "class.fqdn",
-                new HierarchicalConfiguration()),
+                new BaseHierarchicalConfiguration()),
             new MailRepositoryStoreConfiguration.Item(
                 ImmutableList.of(new Protocol("1")),
                 "class.fqdn",
-                new HierarchicalConfiguration())));
+                new BaseHierarchicalConfiguration())));
 
         assertThat(defaultProtocol).contains(new Protocol("1"));
     }

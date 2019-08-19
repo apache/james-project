@@ -71,7 +71,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
@@ -211,7 +211,7 @@ class DeletedMessagesVaultRoutesTest {
 
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting();
         usersRepository.setDomainList(domainList);
-        usersRepository.configure(new DefaultConfigurationBuilder());
+        usersRepository.configure(new BaseHierarchicalConfiguration());
 
         usersRepository.addUser(USER.asString(), "userPassword");
 

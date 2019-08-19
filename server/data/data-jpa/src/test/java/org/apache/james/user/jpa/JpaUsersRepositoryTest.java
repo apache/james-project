@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.user.jpa;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.user.jpa.model.JPAUser;
 import org.apache.james.user.lib.AbstractUsersRepository;
@@ -47,7 +47,7 @@ public class JpaUsersRepositoryTest extends AbstractUsersRepositoryTest {
     protected AbstractUsersRepository getUsersRepository() throws Exception {
         JPAUsersRepository repos = new JPAUsersRepository();
         repos.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
-        repos.configure(new DefaultConfigurationBuilder());
+        repos.configure(new BaseHierarchicalConfiguration());
         return repos;
     }
 }

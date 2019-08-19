@@ -23,7 +23,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
@@ -114,7 +115,7 @@ public class MailRepositoryStoreConfiguration {
         if (configuration.getKeys("config").hasNext()) {
             return configuration.configurationAt("config");
         }
-        return new HierarchicalConfiguration();
+        return new BaseHierarchicalConfiguration();
     }
 
 

@@ -19,14 +19,14 @@
 
 package org.apache.james.smtpserver;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.smtpserver.fastfail.DNSRBLHandler;
 import org.apache.james.smtpserver.fastfail.MaxRcptHandler;
 import org.apache.james.smtpserver.fastfail.ResolvableEhloHeloHandler;
 import org.apache.james.smtpserver.fastfail.ReverseEqualsEhloHeloHandler;
 import org.apache.james.smtpserver.fastfail.ValidSenderDomainHandler;
 
-public class SMTPTestConfiguration extends DefaultConfigurationBuilder {
+public class SMTPTestConfiguration extends BaseHierarchicalConfiguration {
 
     private int maxMessageSizeKB = 0;
     private String authorizedAddresses = "127.0.0.0/8";

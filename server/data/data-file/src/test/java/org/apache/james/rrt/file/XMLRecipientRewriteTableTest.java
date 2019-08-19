@@ -21,7 +21,8 @@ package org.apache.james.rrt.file;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.convert.DisabledListDelimiterHandler;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
@@ -37,12 +38,12 @@ import org.junit.Test;
 
 public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
 
-    private final DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();
+    private final BaseHierarchicalConfiguration defaultConfiguration = new BaseHierarchicalConfiguration();
 
     @Override
     @Before
     public void setUp() throws Exception {
-        defaultConfiguration.setDelimiterParsingDisabled(true);
+        defaultConfiguration.setListDelimiterHandler(new DisabledListDelimiterHandler());
         super.setUp();
     }
 

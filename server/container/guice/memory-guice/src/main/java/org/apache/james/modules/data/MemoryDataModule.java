@@ -21,8 +21,8 @@ package org.apache.james.modules.data;
 
 import java.util.List;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.dlp.api.DLPConfigurationStore;
 import org.apache.james.dlp.eventsourcing.EventSourcingDLPConfigurationStore;
 import org.apache.james.domainlist.api.DomainList;
@@ -56,7 +56,7 @@ public class MemoryDataModule extends AbstractModule {
     private static final MailRepositoryStoreConfiguration.Item MEMORY_MAILREPOSITORY_DEFAULT_DECLARATION = new MailRepositoryStoreConfiguration.Item(
         ImmutableList.of(new Protocol("memory")),
         MemoryMailRepository.class.getName(),
-        new HierarchicalConfiguration());
+        new BaseHierarchicalConfiguration());
 
     @Override
     protected void configure() {

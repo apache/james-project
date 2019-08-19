@@ -45,7 +45,7 @@ import java.util.List;
 
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.core.builder.MimeMessageBuilder.BodyPartBuilder;
@@ -1770,11 +1770,11 @@ public class MailRepositoriesRoutesTest {
             new MailRepositoryStoreConfiguration.Item(
                 ImmutableList.of(new Protocol("memory")),
                 MemoryMailRepository.class.getName(),
-                new HierarchicalConfiguration()),
+                new BaseHierarchicalConfiguration()),
             new MailRepositoryStoreConfiguration.Item(
                 ImmutableList.of(new Protocol("other")),
                 MemoryMailRepository.class.getName(),
-                new HierarchicalConfiguration()));
+                new BaseHierarchicalConfiguration()));
         mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(new MemoryMailRepositoryProvider()), configuration);
 
         mailRepositoryStore.init();

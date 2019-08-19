@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
@@ -185,7 +185,7 @@ public class ReprocessingServiceTest {
             new MailRepositoryStoreConfiguration.Item(
                 ImmutableList.of(new Protocol("memory")),
                 MemoryMailRepository.class.getName(),
-                new HierarchicalConfiguration()));
+                new BaseHierarchicalConfiguration()));
 
         MemoryMailRepositoryStore mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(new MemoryMailRepositoryProvider()), configuration);
         mailRepositoryStore.init();

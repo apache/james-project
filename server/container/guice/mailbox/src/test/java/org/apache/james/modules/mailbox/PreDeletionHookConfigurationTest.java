@@ -22,8 +22,9 @@ package org.apache.james.modules.mailbox;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -37,7 +38,7 @@ class PreDeletionHookConfigurationTest {
 
     @Test
     void fromShouldThrowWhenClassNameIsMissing() {
-        HierarchicalConfiguration configuration = new HierarchicalConfiguration();
+        HierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
 
         assertThatThrownBy(() -> PreDeletionHookConfiguration.from(configuration))
             .isInstanceOf(ConfigurationException.class);
@@ -45,7 +46,7 @@ class PreDeletionHookConfigurationTest {
 
     @Test
     void fromShouldThrowWhenClassNameIsEmpty() {
-        HierarchicalConfiguration configuration = new HierarchicalConfiguration();
+        HierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("class", "");
 
         assertThatThrownBy(() -> PreDeletionHookConfiguration.from(configuration))
@@ -54,7 +55,7 @@ class PreDeletionHookConfigurationTest {
 
     @Test
     void fromShouldReturnValueWithCorrectClassName() throws ConfigurationException {
-        HierarchicalConfiguration configuration = new HierarchicalConfiguration();
+        HierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         String className = "a.class";
         configuration.addProperty("class", className);
 

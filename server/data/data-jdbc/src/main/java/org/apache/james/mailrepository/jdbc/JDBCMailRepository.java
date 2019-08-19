@@ -48,9 +48,9 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.sql.DataSource;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.filesystem.api.FileSystem;
@@ -245,7 +245,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
             if (filestore != null) {
 
                 // prepare Configurations for stream repositories
-                DefaultConfigurationBuilder streamConfiguration = new DefaultConfigurationBuilder();
+                HierarchicalConfiguration streamConfiguration = new BaseHierarchicalConfiguration();
 
                 streamConfiguration.addProperty("[@destinationURL]", filestore);
 

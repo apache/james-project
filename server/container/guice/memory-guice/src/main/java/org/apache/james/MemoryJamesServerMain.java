@@ -21,7 +21,7 @@ package org.apache.james;
 
 import java.util.Optional;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.BlobMemoryModule;
@@ -113,7 +113,7 @@ public class MemoryJamesServerMain {
         new SMTPServerModule(),
         new RawPostDequeueDecoratorModule(),
         binder -> binder.bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
-            .toInstance(DefaultConfigurationBuilder::new));
+            .toInstance(BaseHierarchicalConfiguration::new));
 
 
     public static final Module SMTP_AND_IMAP_MODULE = Modules.combine(

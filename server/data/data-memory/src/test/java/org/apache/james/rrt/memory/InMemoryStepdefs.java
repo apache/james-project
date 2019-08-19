@@ -19,7 +19,7 @@
 
 package org.apache.james.rrt.memory;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
@@ -41,7 +41,7 @@ public class InMemoryStepdefs {
 
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         MemoryRecipientRewriteTable rrt = new MemoryRecipientRewriteTable();
-        rrt.configure(new DefaultConfigurationBuilder());
+        rrt.configure(new BaseHierarchicalConfiguration());
         rrt.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
         return rrt;
     }

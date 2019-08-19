@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 
 import javax.mail.MessagingException;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
@@ -73,7 +73,7 @@ class ToSenderDomainRepositoryTest {
            new MailRepositoryStoreConfiguration.Item(
                 ImmutableList.of(new Protocol("memory")),
                 MemoryMailRepository.class.getName(),
-                new HierarchicalConfiguration()));
+                new BaseHierarchicalConfiguration()));
 
         mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(new MemoryMailRepositoryProvider()), configuration);
         mailRepositoryStore.init();

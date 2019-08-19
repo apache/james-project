@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mpt.smtp;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
@@ -49,7 +49,7 @@ public final class CassandraSmtpTestRuleFactory {
                 SmtpTestRule.SMTP_PROTOCOL_MODULE,
                 binder -> binder.bind(MailQueueItemDecoratorFactory.class).to(RawMailQueueItemDecoratorFactory.class),
                 binder -> binder.bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
-                    .toInstance(DefaultConfigurationBuilder::new))
+                    .toInstance(BaseHierarchicalConfiguration::new))
             .overrideWith(
                 binder -> binder.bind(ClusterConfiguration.class).toInstance(
                     ClusterConfiguration.builder()

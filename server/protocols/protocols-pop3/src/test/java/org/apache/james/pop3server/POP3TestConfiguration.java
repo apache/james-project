@@ -19,10 +19,10 @@
 
 package org.apache.james.pop3server;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.pop3server.core.CoreCmdHandlerLoader;
 
-public class POP3TestConfiguration extends DefaultConfigurationBuilder {
+public class POP3TestConfiguration extends BaseHierarchicalConfiguration {
 
     public void init() {
         addProperty("[@enabled]", true);

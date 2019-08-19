@@ -23,7 +23,7 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
@@ -44,7 +44,7 @@ public class JDBCMailRepositoryTest implements MailRepositoryContract {
         DataSource datasource = getDataSource();
         mailRepository = new JDBCMailRepository();
 
-        DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();
+        BaseHierarchicalConfiguration defaultConfiguration = new BaseHierarchicalConfiguration();
         defaultConfiguration.addProperty("[@destinationURL]", "db://maildb/mr/testrepo");
         defaultConfiguration.addProperty("sqlFile", "file://conf/sqlResources.xml");
         defaultConfiguration.addProperty("[@type]", "MAIL");

@@ -20,7 +20,7 @@ package org.apache.james.modules.mailbox;
 
 import java.util.List;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
@@ -28,11 +28,12 @@ import com.google.common.annotations.VisibleForTesting;
 public class ListenersConfiguration {
 
     public static ListenersConfiguration from(HierarchicalConfiguration configuration) {
-        return new ListenersConfiguration(
-                configuration.configurationsAt("listener")
-                    .stream()
-                    .map(ListenerConfiguration::from)
-                    .collect(Guavate.toImmutableList()));
+        List<HierarchicalConfiguration> listeners = configuration.configurationsAt("listener");
+
+        return new ListenersConfiguration(listeners
+            .stream()
+            .map(ListenerConfiguration::from)
+            .collect(Guavate.toImmutableList()));
     }
     
     private final List<ListenerConfiguration> listenersConfiguration;

@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.data;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.mailrepository.api.MailRepositoryProvider;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
@@ -46,7 +46,7 @@ public class CassandraMailRepositoryModule extends AbstractModule {
     private static final MailRepositoryStoreConfiguration.Item CASSANDRA_MAILREPOSITORY_DEFAULT_DECLARATION = new MailRepositoryStoreConfiguration.Item(
         ImmutableList.of(new Protocol("cassandra")),
         CassandraMailRepository.class.getName(),
-        new HierarchicalConfiguration());
+        new BaseHierarchicalConfiguration());
 
     @Override
     protected void configure() {

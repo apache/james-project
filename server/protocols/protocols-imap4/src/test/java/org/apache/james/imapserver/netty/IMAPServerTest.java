@@ -23,7 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.james.imap.api.ImapConfiguration;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,7 +38,7 @@ public class IMAPServerTest {
 
     @Test
     public void getImapConfigurationShouldReturnDefaultValuesWhenEmpty() throws Exception {
-        ImapConfiguration imapConfiguration = IMAPServer.getImapConfiguration(new DefaultConfigurationBuilder());
+        ImapConfiguration imapConfiguration = IMAPServer.getImapConfiguration(new BaseHierarchicalConfiguration());
 
         ImapConfiguration expectImapConfiguration = ImapConfiguration.builder()
                 .enableIdle(ImapConfiguration.DEFAULT_ENABLE_IDLE)
@@ -51,7 +52,7 @@ public class IMAPServerTest {
 
     @Test
     public void getImapConfigurationShouldReturnSetValue() throws Exception {
-        DefaultConfigurationBuilder configurationBuilder = new DefaultConfigurationBuilder();
+        HierarchicalConfiguration configurationBuilder = new BaseHierarchicalConfiguration();
         configurationBuilder.addProperty("enableIdle", "false");
         configurationBuilder.addProperty("idleTimeInterval", "1");
         configurationBuilder.addProperty("idleTimeIntervalUnit", "MINUTES");

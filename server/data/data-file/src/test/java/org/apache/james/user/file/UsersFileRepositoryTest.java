@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -82,7 +82,7 @@ public class UsersFileRepositoryTest extends AbstractUsersRepositoryTest {
 
         };
 
-        DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder("test");
+        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("destination.[@URL]", "file://target/var/users");
         // Configure with ignoreCase = false, we need some more work to support true
         configuration.addProperty("ignoreCase", "false");

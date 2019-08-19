@@ -22,7 +22,8 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.james.mailbox.events.MailboxListener;
 
 import com.google.common.base.Preconditions;
@@ -74,7 +75,7 @@ public class MailboxListenerFactory {
                 binder -> binder.bind(MailboxListener.ExecutionMode.class)
                     .toInstance(executionMode.orElse(MailboxListener.ExecutionMode.SYNCHRONOUS)),
                 binder -> binder.bind(HierarchicalConfiguration.class)
-                    .toInstance(configuration.orElse(new HierarchicalConfiguration())))
+                    .toInstance(configuration.orElse(new BaseHierarchicalConfiguration())))
                 .getInstance(clazz.get());
         }
     }

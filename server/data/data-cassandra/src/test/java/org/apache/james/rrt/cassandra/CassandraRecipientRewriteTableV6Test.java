@@ -19,7 +19,7 @@
 
 package org.apache.james.rrt.cassandra;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -70,7 +70,7 @@ public class CassandraRecipientRewriteTableV6Test extends AbstractRecipientRewri
             new CassandraRecipientRewriteTableDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
             new CassandraMappingsSourcesDAO(cassandra.getConf()),
             cassandraSchemaVersionDAO);
-        rrt.configure(new DefaultConfigurationBuilder());
+        rrt.configure(new BaseHierarchicalConfiguration());
 
         cassandraSchemaVersionDAO.updateVersion(SCHEMA_VERSION_V6);
 

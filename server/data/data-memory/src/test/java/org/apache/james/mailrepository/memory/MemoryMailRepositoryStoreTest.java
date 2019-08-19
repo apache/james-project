@@ -24,8 +24,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
@@ -109,7 +109,7 @@ public class MemoryMailRepositoryStoreTest {
 
     @Test
     public void configureShouldNotThrowOnEmptyConfiguration() throws Exception {
-        MailRepositoryStoreConfiguration configuration = MailRepositoryStoreConfiguration.parse(new HierarchicalConfiguration());
+        MailRepositoryStoreConfiguration configuration = MailRepositoryStoreConfiguration.parse(new BaseHierarchicalConfiguration());
 
         repositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(
             new MemoryMailRepositoryProvider()), configuration);

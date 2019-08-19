@@ -19,7 +19,7 @@
 
 package org.apache.james.mailrepository;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.file.FileMailRepository;
@@ -43,13 +43,13 @@ public class FileMailRepositoryTest {
             mailRepository.init();
         }
 
-        protected DefaultConfigurationBuilder getConfiguration() {
-            DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
+        protected BaseHierarchicalConfiguration getConfiguration() {
+            BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
             configuration.addProperty("[@destinationURL]", "file://target/var/mailRepository");
             return withConfigurationOptions(configuration);
         }
 
-        protected abstract DefaultConfigurationBuilder withConfigurationOptions(DefaultConfigurationBuilder configuration);
+        protected abstract BaseHierarchicalConfiguration withConfigurationOptions(BaseHierarchicalConfiguration configuration);
 
         @AfterEach
         void tearDown() {
@@ -67,7 +67,7 @@ public class FileMailRepositoryTest {
     public class DefaultFileMailRepositoryTest extends GenericFileMailRepositoryTest {
 
         @Override
-        protected DefaultConfigurationBuilder withConfigurationOptions(DefaultConfigurationBuilder configuration) {
+        protected BaseHierarchicalConfiguration withConfigurationOptions(BaseHierarchicalConfiguration configuration) {
             configuration.addProperty("[@FIFO]", "false");
             configuration.addProperty("[@CACHEKEYS]", "true");
             return configuration;
@@ -79,7 +79,7 @@ public class FileMailRepositoryTest {
     public class NoCacheFileMailRepositoryTest extends GenericFileMailRepositoryTest {
 
         @Override
-        protected DefaultConfigurationBuilder withConfigurationOptions(DefaultConfigurationBuilder configuration) {
+        protected BaseHierarchicalConfiguration withConfigurationOptions(BaseHierarchicalConfiguration configuration) {
             configuration.addProperty("[@FIFO]", "false");
             configuration.addProperty("[@CACHEKEYS]", "false");
             return configuration;
@@ -91,7 +91,7 @@ public class FileMailRepositoryTest {
     public class FifoFileMailRepositoryTest extends GenericFileMailRepositoryTest {
 
         @Override
-        protected DefaultConfigurationBuilder withConfigurationOptions(DefaultConfigurationBuilder configuration) {
+        protected BaseHierarchicalConfiguration withConfigurationOptions(BaseHierarchicalConfiguration configuration) {
             configuration.addProperty("[@FIFO]", "true");
             configuration.addProperty("[@CACHEKEYS]", "true");
             return configuration;
@@ -103,7 +103,7 @@ public class FileMailRepositoryTest {
     public class FifoNoCacheFileMailRepositoryTest extends GenericFileMailRepositoryTest {
 
         @Override
-        protected DefaultConfigurationBuilder withConfigurationOptions(DefaultConfigurationBuilder configuration) {
+        protected BaseHierarchicalConfiguration withConfigurationOptions(BaseHierarchicalConfiguration configuration) {
             configuration.addProperty("[@FIFO]", "true");
             configuration.addProperty("[@CACHEKEYS]", "false");
             return configuration;
