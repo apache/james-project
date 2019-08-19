@@ -26,9 +26,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.configuration.AbstractConfiguration;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.util.Host;
 
 import com.github.steveash.guavate.Guavate;
@@ -143,7 +142,6 @@ public class ElasticSearchConfiguration {
     }
 
     private static ImmutableList<Host> getHosts(Configuration propertiesReader) throws ConfigurationException {
-        AbstractConfiguration.setDefaultListDelimiter(',');
         Optional<String> masterHost = Optional.ofNullable(
             propertiesReader.getString(ELASTICSEARCH_MASTER_HOST, null));
         Optional<Integer> masterPort = Optional.ofNullable(

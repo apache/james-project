@@ -25,8 +25,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.configuration.AbstractConfiguration;
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.james.backends.cassandra.init.ClusterBuilder;
 import org.apache.james.util.Host;
 
@@ -177,7 +176,6 @@ public class ClusterConfiguration {
     }
 
     public static ClusterConfiguration from(Configuration configuration) {
-        AbstractConfiguration.setDefaultListDelimiter(',');
         return ClusterConfiguration.builder()
             .hosts(listCassandraServers(configuration))
             .keyspace(Optional.ofNullable(configuration.getString(CASSANDRA_KEYSPACE, null)))

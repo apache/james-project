@@ -77,4 +77,10 @@ class PropertiesProviderTest {
         assertThat(testee.getConfiguration("a").getString("prop"))
             .isEqualTo("value1");
     }
+
+    @Test
+    void getConfigurationShouldLoadListValues() throws Exception {
+        assertThat(testee.getConfiguration("a").getList(String.class, "keyByList"))
+            .containsExactly("value1", "value2");
+    }
 }

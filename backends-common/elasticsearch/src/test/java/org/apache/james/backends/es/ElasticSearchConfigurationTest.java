@@ -24,12 +24,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.util.Host;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class ElasticSearchConfigurationTest {
@@ -154,6 +156,7 @@ public class ElasticSearchConfigurationTest {
         String hostname2 = "myOtherHost";
         int port = 2154;
         PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.setListDelimiterHandler(new DefaultListDelimiterHandler(','));
         configuration.addProperty("elasticsearch.hosts", hostname + "," + hostname2 + ":" + port);
 
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);

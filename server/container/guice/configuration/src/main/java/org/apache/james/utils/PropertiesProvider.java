@@ -26,9 +26,13 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.FileBasedConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.util.OptionalUtils;
 
@@ -37,6 +41,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 public class PropertiesProvider {
+
+    private static final char COMMA = ',';
 
     private final FileSystem fileSystem;
     private final String configurationPrefix;
@@ -54,7 +60,7 @@ public class PropertiesProvider {
             .findFirst()
             .orElseThrow(() -> new FileNotFoundException(Joiner.on(",").join(filenames) + " not found"));
 
-        return new PropertiesConfiguration(file);
+        return getConfiguration(file);
     }
 
     public Configuration getConfiguration(String fileName) throws FileNotFoundException, ConfigurationException {
@@ -63,7 +69,17 @@ public class PropertiesProvider {
         File file = getConfigurationFile(fileName)
             .orElseThrow(() -> new FileNotFoundException(fileName));
 
-        return new PropertiesConfiguration(file);
+        return getConfiguration(file);
+    }
+
+    private Configuration getConfiguration(File propertiesFile) throws ConfigurationException {
+        FileBasedConfigurationBuilder<FileBasedConfiguration> builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class)
+            .configure(new Parameters()
+                .fileBased()
+                .setListDelimiterHandler(new DefaultListDelimiterHandler(COMMA))
+                .setFile(propertiesFile));
+
+        return builder.getConfiguration();
     }
 
     private Optional<File> getConfigurationFile(String fileName) {

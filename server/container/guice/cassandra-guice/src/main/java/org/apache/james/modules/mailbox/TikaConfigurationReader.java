@@ -24,8 +24,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.commons.configuration.AbstractConfiguration;
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.util.DurationParser;
 import org.apache.james.util.Size;
@@ -45,7 +44,6 @@ public class TikaConfigurationReader {
     public static final String TIKA_CONTENT_TYPE_BLACKLIST = "tika.contentType.blacklist";
 
     public static TikaConfiguration readTikaConfiguration(Configuration configuration) {
-        AbstractConfiguration.setDefaultListDelimiter(',');
         Optional<Boolean> enabled = Optional.ofNullable(
             configuration.getBoolean(TIKA_ENABLED, null));
 

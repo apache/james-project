@@ -21,8 +21,11 @@ package org.apache.james.backends.cassandra.init;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.FileBasedConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.junit.Test;
 
@@ -37,8 +40,12 @@ public class CassandraConfigurationReadingTest {
 
     @Test
     public void provideCassandraConfigurationShouldReturnRightConfigurationFile() throws ConfigurationException {
-        CassandraConfiguration configuration = CassandraConfiguration.from(new PropertiesConfiguration(
-            ClassLoader.getSystemResource("cassandra.properties")));
+        FileBasedConfigurationBuilder<FileBasedConfiguration> builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class)
+            .configure(new Parameters()
+                .fileBased()
+                .setURL(ClassLoader.getSystemResource("cassandra.properties")));
+
+        CassandraConfiguration configuration = CassandraConfiguration.from(builder.getConfiguration());
 
         assertThat(configuration)
             .isEqualTo(CassandraConfiguration.builder()
